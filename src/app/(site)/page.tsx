@@ -8,10 +8,7 @@ import { nl2br, stripTags } from "@/lib/html";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await prisma.page.findUnique({ where: { slug: "index" } });
-  return {
-    title: page?.seoTitle ?? undefined,
-    description: page?.seoDescription ?? page?.lead ?? undefined,
-  };
+  return { description: page?.seoDescription ?? page?.lead ?? undefined };
 }
 
 export default async function HomePage() {

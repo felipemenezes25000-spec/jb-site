@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await prisma.page.findUnique({ where: { slug: "solucoes" } });
-  return { title: page?.seoTitle ?? page?.title, description: page?.seoDescription ?? page?.lead };
+  return { description: page?.seoDescription ?? page?.lead };
 }
 
 export default async function SolucoesPage() {
