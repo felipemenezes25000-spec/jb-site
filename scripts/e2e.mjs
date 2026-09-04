@@ -7,7 +7,12 @@ import { chromium } from "playwright";
 const BASE = process.env.BASE_URL || "http://localhost:3000";
 const EMAIL = process.env.ADMIN_EMAIL || "comercial@jbsolucoesodontologicas.com.br";
 const SENHA = process.env.ADMIN_PASSWORD || "";
-const browser = await chromium.launch();
+// permite testar um domínio cujo DNS local ainda não propagou:
+//   HOST_RULES="MAP www.exemplo.com.br 76.76.21.241" node scripts/e2e.mjs
+const HOST_RULES = process.env.HOST_RULES;
+const browser = await chromium.launch(
+  HOST_RULES ? { args: [`--host-resolver-rules=${HOST_RULES}`] } : {},
+);
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 let falhas = 0;
 

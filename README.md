@@ -68,46 +68,32 @@ existe a aba **HTML**, que edita a marcação crua.
 
 | | |
 |---|---|
-| Site | https://jb-site-mu.vercel.app |
-| Painel | https://jb-site-mu.vercel.app/admin |
+| Site | https://jbsolucoesodontologicas.com.br |
+| Painel | https://jbsolucoesodontologicas.com.br/admin |
 | Repositório | https://github.com/felipemenezes25000-spec/jb-site (privado) |
 | Projeto Vercel | `felipemenezes25000-specs-projects/jb-site` |
 | Banco | Neon Postgres (`neon-bisque-window`), provisionado pela Vercel |
-| Domínio | `jbsolucoesodontologicas.com.br` — adicionado ao projeto, aguardando DNS |
+| Domínio | https://jbsolucoesodontologicas.com.br — no ar, com HTTPS |
 
 Todo `git push` para `main` publica sozinho.
 
-### O que falta: apontar o DNS no registro.br
+### DNS (concluído)
 
-O domínio está registrado e usa hoje o DNS automático do registro.br, sem
-nenhum registro. Entre em registro.br › o domínio › **DNS** › **Editar zona** e
-crie:
+A zona no registro.br tem os dois registros abaixo, e o domínio usa os
+nameservers `e.sec.dns.br` / `f.sec.dns.br` do próprio registro.br:
 
 | Tipo | Nome | Valor |
 |---|---|---|
-| A | *(deixe vazio — é o domínio raiz)* | `76.76.21.21` |
+| A | *(raiz)* | `76.76.21.21` |
 | CNAME | `www` | `cname.vercel-dns.com` |
 
-Salve e aguarde a propagação (de minutos a algumas horas). A Vercel emite o
-certificado HTTPS sozinha assim que enxergar os registros, e avisa por e-mail.
+Certificado HTTPS emitido pela Vercel; `http` redireciona para `https` com 308.
 
-Para conferir:
+### Blob (concluído)
 
-```bash
-nslookup jbsolucoesodontologicas.com.br 8.8.8.8
-curl -I https://www.jbsolucoesodontologicas.com.br
-```
-
-### O que falta: ligar o Blob às imagens novas
-
-O Blob store `jb-midia` já existe, mas o CLI não consegue vinculá-lo ao
-projeto sem interação. Em vercel.com › Storage › `jb-midia` › **Connect
-Project** › `jb-site`. Isso cria a variável `BLOB_READ_WRITE_TOKEN`, e a partir
-daí os uploads do painel vão para o Blob.
-
-Sem esse passo o site funciona por completo — todas as imagens atuais estão no
-repositório. O que não funciona é *enviar imagem nova pelo painel*, porque o
-disco da Vercel é efêmero.
+O store `jb-midia` está conectado ao projeto e `BLOB_READ_WRITE_TOKEN` existe
+nos três ambientes. Uploads do painel vão para
+`*.public.blob.vercel-storage.com`. Verificado com `scripts/testa-upload.mjs`.
 
 ### Rodar comandos contra o banco de produção
 
@@ -122,7 +108,15 @@ o desenvolvimento local passaria a escrever no banco de produção sem avisar.
 ### Testar a produção
 
 ```bash
-BASE_URL="https://jb-site-mu.vercel.app" ADMIN_PASSWORD="a senha do painel"   node scripts/e2e.mjs
+BASE_URL="https://www.jbsolucoesodontologicas.com.br" ADMIN_PASSWORD="a senha do painel"   node scripts/e2e.mjs
+
+BASE_URL="https://www.jbsolucoesodontologicas.com.br" ADMIN_PASSWORD="a senha do painel"   node scripts/testa-upload.mjs
+```
+
+Se o DNS ainda não tiver propagado na sua rede, force a resolução:
+
+```bash
+HOST_RULES="MAP www.jbsolucoesodontologicas.com.br 76.76.21.241"   BASE_URL="https://www.jbsolucoesodontologicas.com.br" node scripts/e2e.mjs
 ```
 
 ## Como o conteúdo foi migrado
