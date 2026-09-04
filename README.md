@@ -8,7 +8,7 @@ tecnologia por baixo e o painel de administração.
 |---|---|---|
 | Linguagem | PHP 5.6 (`mysql_connect`, sem suporte desde 2018) | TypeScript + React 19 |
 | Framework | — | Next.js 16 (App Router) |
-| Banco | MySQL 5.6 | SQLite no local · Postgres na Vercel (Prisma) |
+| Banco | MySQL 5.6 | Postgres (Prisma) — o mesmo local e em produção |
 | Painel | MARS v5.3.1 (G4web, 2010) | Painel próprio em `/admin` |
 | Senhas | texto plano no banco | hash bcrypt |
 | Hospedagem | servidor PHP | Vercel |
@@ -20,12 +20,17 @@ modo que a comparação lado a lado bate pixel a pixel.
 ## Rodar localmente
 
 ```bash
+cp .env.example .env
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"   # cole em AUTH_SECRET
+docker compose up -d        # Postgres na porta 5433
 pnpm install
-pnpm db:seed     # carrega o conteúdo migrado do site antigo
+pnpm prisma migrate deploy
+pnpm db:seed                # carrega o conteúdo migrado do site antigo
 pnpm dev
 ```
 
 Site em `http://localhost:3000`, painel em `http://localhost:3000/admin`.
+O seed imprime a senha do primeiro acesso.
 
 ## Comandos
 
@@ -61,33 +66,75 @@ existe a aba **HTML**, que edita a marcação crua.
 
 ## Deploy na Vercel
 
-1. **Banco.** Em Storage › Create › Postgres, crie o banco e copie a
-   `DATABASE_URL`. Antes do primeiro deploy, troque em `prisma/schema.prisma`:
+O projeto já está pronto: Postgres nos dois ambientes, `postinstall` gerando o
+cliente Prisma e `db:deploy` aplicando as migrações.
 
-   ```prisma
-   datasource db {
-     provider = "postgresql"   // era "sqlite"
-     url      = env("DATABASE_URL")
-   }
-   ```
+### 1. Subir o código
 
-   Depois rode `pnpm prisma migrate deploy` e `pnpm db:seed` apontando para ele.
+```bash
+git remote add origin git@github.com:SEU-USUARIO/jb-site.git
+git push -u origin main
+```
 
-2. **Imagens.** Em Storage › Create › Blob. A Vercel injeta
-   `BLOB_READ_WRITE_TOKEN` sozinha, e a rota de upload passa a gravar no Blob em
-   vez do disco — o disco da Vercel é efêmero e perderia os arquivos.
+### 2. Criar o projeto
 
-3. **Variáveis.** Veja `.env.example`. `AUTH_SECRET` precisa ser uma chave
-   aleatória longa:
+Em vercel.com › Add New › Project, importe o repositório. A Vercel detecta o
+Next.js sozinha; não mude nada nas configurações de build.
 
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   ```
+### 3. Banco
 
-4. **Domínio.** No painel da Vercel, Settings › Domains, adicione
-   `jbsolucoesodontologicas.com.br`. A Vercel mostra os registros DNS; copie-os
-   no painel do registro.br (Alterar servidores DNS / Editar zona). O
-   certificado HTTPS é emitido automaticamente.
+Storage › Create › Postgres. Ao conectar ao projeto, a Vercel preenche
+`DATABASE_URL` automaticamente.
+
+Com o banco criado, rode uma vez a partir da sua máquina, apontando para ele:
+
+```bash
+DATABASE_URL="<a url do Postgres da Vercel>" pnpm prisma migrate deploy
+DATABASE_URL="<a url do Postgres da Vercel>" ADMIN_PASSWORD="uma senha forte" pnpm db:seed
+```
+
+### 4. Imagens
+
+Storage › Create › Blob, conectado ao projeto. A Vercel injeta
+`BLOB_READ_WRITE_TOKEN`, e a rota de upload passa a gravar no Blob — o disco da
+Vercel é efêmero e perderia os arquivos a cada deploy.
+
+### 5. Variáveis
+
+Settings › Environment Variables:
+
+| Variável | Valor |
+|---|---|
+| `AUTH_SECRET` | uma chave nova, diferente da de desenvolvimento |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.jbsolucoesodontologicas.com.br` |
+
+`DATABASE_URL` e `BLOB_READ_WRITE_TOKEN` já vêm dos passos 3 e 4.
+
+### 6. Domínio no registro.br
+
+O domínio está registrado e hoje usa o DNS automático do registro.br
+(`a.auto.dns.br` / `b.auto.dns.br`), sem nenhum registro apontando para lugar
+nenhum.
+
+Na Vercel, Settings › Domains, adicione `jbsolucoesodontologicas.com.br` e
+`www.jbsolucoesodontologicas.com.br`. A Vercel mostra os registros a criar.
+
+No registro.br, entre no domínio › DNS › Editar zona e adicione:
+
+| Tipo | Nome | Valor |
+|---|---|---|
+| A | (vazio, o domínio raiz) | `76.76.21.21` |
+| CNAME | `www` | `cname.vercel-dns.com` |
+
+Confira os valores na tela da Vercel antes de salvar — ela é a fonte da
+verdade e eles podem mudar. A propagação leva de minutos a algumas horas; o
+certificado HTTPS é emitido sozinho depois disso.
+
+### 7. Conferir
+
+```bash
+BASE_URL="https://www.jbsolucoesodontologicas.com.br" node scripts/e2e.mjs
+```
 
 ## Como o conteúdo foi migrado
 
