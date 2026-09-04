@@ -52,3 +52,9 @@ prisma/*.db-journal
 
 # o exemplo precisa ir para o repositório
 !.env.example
+
+.vercel
+.env*.local
+
+# ajudante local para rodar comandos contra o banco de produção
+_prod.sh

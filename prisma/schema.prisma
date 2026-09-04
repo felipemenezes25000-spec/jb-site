@@ -8,7 +8,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // O Neon entrega uma URL com pool (pgbouncer) para a aplicação e uma direta
+  // para as migrações, que precisam de sessão real.
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 /// Usuários do painel. Substitui `usuarios` (que guardava senha em texto plano).
