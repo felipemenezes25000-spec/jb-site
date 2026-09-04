@@ -1,0 +1,24 @@
+# Banco de desenvolvimento. Mesmo motor do Postgres da Vercel, para o que roda
+# aqui ser igual ao que roda em produção.
+#
+#   docker compose up -d
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: jb-pg
+    environment:
+      POSTGRES_USER: jb
+      POSTGRES_PASSWORD: jb
+      POSTGRES_DB: jb
+    ports:
+      - "5433:5432"
+    volumes:
+      - jb-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jb"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  jb-pgdata:
