@@ -4,7 +4,9 @@
  */
 import { chromium } from "playwright";
 
-const BASE = process.env.BASE_URL || "http://localhost:60813";
+const BASE = process.env.BASE_URL || "http://localhost:3000";
+const EMAIL = process.env.ADMIN_EMAIL || "comercial@jbsolucoesodontologicas.com.br";
+const SENHA = process.env.ADMIN_PASSWORD || "";
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 let falhas = 0;
@@ -17,8 +19,8 @@ const checar = (nome, ok, detalhe = "") => {
 /* ---------- 1. login ---------- */
 const admin = await ctx.newPage();
 await admin.goto(`${BASE}/admin/login`, { waitUntil: "domcontentloaded" });
-await admin.fill("#campo-email", "comercial@jbsolucoesodontologicas.com.br");
-await admin.fill("#campo-senha", "TroqueEssaSenha2026");
+await admin.fill("#campo-email", EMAIL);
+await admin.fill("#campo-senha", SENHA);
 await admin.click('button:has-text("Entrar")');
 await admin.waitForURL(/\/admin$/, { timeout: 20000 });
 checar("login no painel", true);
@@ -26,7 +28,7 @@ checar("login no painel", true);
 /* ---------- 2. senha errada é recusada ---------- */
 const intruso = await (await browser.newContext()).newPage();
 await intruso.goto(`${BASE}/admin/login`, { waitUntil: "domcontentloaded" });
-await intruso.fill("#campo-email", "comercial@jbsolucoesodontologicas.com.br");
+await intruso.fill("#campo-email", EMAIL);
 await intruso.fill("#campo-senha", "senha-errada");
 await intruso.click('button:has-text("Entrar")');
 await intruso.waitForTimeout(1500);

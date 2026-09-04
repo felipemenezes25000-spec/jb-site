@@ -64,76 +64,65 @@ O editor de conteúdo preserva os `<span style="color:…">` que o conteúdo ant
 usa nos marcadores vermelhos. Para qualquer coisa que ele não represente bem,
 existe a aba **HTML**, que edita a marcação crua.
 
-## Deploy na Vercel
+## Produção
 
-O projeto já está pronto: Postgres nos dois ambientes, `postinstall` gerando o
-cliente Prisma e `db:deploy` aplicando as migrações.
-
-### 1. Subir o código
-
-```bash
-git remote add origin git@github.com:SEU-USUARIO/jb-site.git
-git push -u origin main
-```
-
-### 2. Criar o projeto
-
-Em vercel.com › Add New › Project, importe o repositório. A Vercel detecta o
-Next.js sozinha; não mude nada nas configurações de build.
-
-### 3. Banco
-
-Storage › Create › Postgres. Ao conectar ao projeto, a Vercel preenche
-`DATABASE_URL` automaticamente.
-
-Com o banco criado, rode uma vez a partir da sua máquina, apontando para ele:
-
-```bash
-DATABASE_URL="<a url do Postgres da Vercel>" pnpm prisma migrate deploy
-DATABASE_URL="<a url do Postgres da Vercel>" ADMIN_PASSWORD="uma senha forte" pnpm db:seed
-```
-
-### 4. Imagens
-
-Storage › Create › Blob, conectado ao projeto. A Vercel injeta
-`BLOB_READ_WRITE_TOKEN`, e a rota de upload passa a gravar no Blob — o disco da
-Vercel é efêmero e perderia os arquivos a cada deploy.
-
-### 5. Variáveis
-
-Settings › Environment Variables:
-
-| Variável | Valor |
+| | |
 |---|---|
-| `AUTH_SECRET` | uma chave nova, diferente da de desenvolvimento |
-| `NEXT_PUBLIC_SITE_URL` | `https://www.jbsolucoesodontologicas.com.br` |
+| Site | https://jb-site-mu.vercel.app |
+| Painel | https://jb-site-mu.vercel.app/admin |
+| Repositório | https://github.com/felipemenezes25000-spec/jb-site (privado) |
+| Projeto Vercel | `felipemenezes25000-specs-projects/jb-site` |
+| Banco | Neon Postgres (`neon-bisque-window`), provisionado pela Vercel |
+| Domínio | `jbsolucoesodontologicas.com.br` — adicionado ao projeto, aguardando DNS |
 
-`DATABASE_URL` e `BLOB_READ_WRITE_TOKEN` já vêm dos passos 3 e 4.
+Todo `git push` para `main` publica sozinho.
 
-### 6. Domínio no registro.br
+### O que falta: apontar o DNS no registro.br
 
-O domínio está registrado e hoje usa o DNS automático do registro.br
-(`a.auto.dns.br` / `b.auto.dns.br`), sem nenhum registro apontando para lugar
-nenhum.
-
-Na Vercel, Settings › Domains, adicione `jbsolucoesodontologicas.com.br` e
-`www.jbsolucoesodontologicas.com.br`. A Vercel mostra os registros a criar.
-
-No registro.br, entre no domínio › DNS › Editar zona e adicione:
+O domínio está registrado e usa hoje o DNS automático do registro.br, sem
+nenhum registro. Entre em registro.br › o domínio › **DNS** › **Editar zona** e
+crie:
 
 | Tipo | Nome | Valor |
 |---|---|---|
-| A | (vazio, o domínio raiz) | `76.76.21.21` |
+| A | *(deixe vazio — é o domínio raiz)* | `76.76.21.21` |
 | CNAME | `www` | `cname.vercel-dns.com` |
 
-Confira os valores na tela da Vercel antes de salvar — ela é a fonte da
-verdade e eles podem mudar. A propagação leva de minutos a algumas horas; o
-certificado HTTPS é emitido sozinho depois disso.
+Salve e aguarde a propagação (de minutos a algumas horas). A Vercel emite o
+certificado HTTPS sozinha assim que enxergar os registros, e avisa por e-mail.
 
-### 7. Conferir
+Para conferir:
 
 ```bash
-BASE_URL="https://www.jbsolucoesodontologicas.com.br" node scripts/e2e.mjs
+nslookup jbsolucoesodontologicas.com.br 8.8.8.8
+curl -I https://www.jbsolucoesodontologicas.com.br
+```
+
+### O que falta: ligar o Blob às imagens novas
+
+O Blob store `jb-midia` já existe, mas o CLI não consegue vinculá-lo ao
+projeto sem interação. Em vercel.com › Storage › `jb-midia` › **Connect
+Project** › `jb-site`. Isso cria a variável `BLOB_READ_WRITE_TOKEN`, e a partir
+daí os uploads do painel vão para o Blob.
+
+Sem esse passo o site funciona por completo — todas as imagens atuais estão no
+repositório. O que não funciona é *enviar imagem nova pelo painel*, porque o
+disco da Vercel é efêmero.
+
+### Rodar comandos contra o banco de produção
+
+```bash
+vercel env pull .env.local          # baixa as variáveis de produção
+DATABASE_URL="$(grep '^DATABASE_URL=' .env.local | cut -d= -f2- | tr -d '"')" DATABASE_URL_UNPOOLED="$(grep '^DATABASE_URL_UNPOOLED=' .env.local | cut -d= -f2- | tr -d '"')"   pnpm prisma migrate deploy
+```
+
+Apague o `.env.local` depois: o Next.js dá prioridade a ele sobre o `.env`, e
+o desenvolvimento local passaria a escrever no banco de produção sem avisar.
+
+### Testar a produção
+
+```bash
+BASE_URL="https://jb-site-mu.vercel.app" ADMIN_PASSWORD="a senha do painel"   node scripts/e2e.mjs
 ```
 
 ## Como o conteúdo foi migrado
