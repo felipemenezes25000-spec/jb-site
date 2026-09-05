@@ -59,7 +59,12 @@ export async function finalizarCheckout(
   }
 
   if (dados.data.entrega === "sob_orcamento") {
-    const faltandoEndereco = !dados.data.cep || !dados.data.endereco || !dados.data.numero || !dados.data.cidade || !dados.data.estado;
+    const faltandoEndereco =
+      !dados.data.cep ||
+      !dados.data.endereco ||
+      !dados.data.numero ||
+      !dados.data.cidade ||
+      !dados.data.estado;
     if (faltandoEndereco) {
       return { erro: "Para entrega, informe CEP, endereço, número, cidade e UF." };
     }
@@ -73,6 +78,7 @@ export async function finalizarCheckout(
 
   const sessao = await sessaoCliente();
   const email = dados.data.email.toLowerCase();
+  let numeroPedido = "";
 
   try {
     const pedido = await prisma.$transaction(async (tx) => {
@@ -119,7 +125,10 @@ export async function finalizarCheckout(
           }
 
           const addons = carrinho.items.filter((a) => a.parentId === item.id);
-          const addonsCents = addons.reduce((soma, addon) => soma + (addon.service?.priceCents ?? 0) * item.quantity, 0);
+          const addonsCents = addons.reduce(
+            (soma, addon) => soma + (addon.service?.priceCents ?? 0) * item.quantity,
+            0,
+          );
           const total = produto.priceCents * item.quantity + addonsCents;
           subtotalCents += total;
 
@@ -257,8 +266,11 @@ export async function finalizarCheckout(
       const itemPedidoPorCarrinho = new Map<string, string>();
 
       for (const preparado of itensPreparados) {
-        const parentCartId = carrinho.items.find((i) => i.id === preparado.cartItemId)?.parentId ?? null;
-        const parentOrderId = parentCartId ? itemPedidoPorCarrinho.get(parentCartId) ?? null : null;
+        const parentCartId =
+          carrinho.items.find((i) => i.id === preparado.cartItemId)?.parentId ?? null;
+        const parentOrderId = parentCartId
+          ? itemPedidoPorCarrinho.get(parentCartId) ?? null
+          : null;
 
         const itemPedido = await tx.orderItem.create({
           data: {
@@ -289,6 +301,16 @@ export async function finalizarCheckout(
             throw new Error(`O estoque de ${preparado.name} mudou durante a compra. Revise o carrinho.`);
           }
 
+          await tx.inventoryMovement.create({
+            data: {
+              productId: preparado.productId,
+              kind: "reserva",
+              quantity: preparado.quantity,
+              reason: `Reserva do pedido ${ordem.number}`,
+              orderId: ordem.id,
+            },
+          });
+
           if (preparado.unique) {
             const unidade = await tx.inventoryUnit.findFirst({
               where: { productId: preparado.productId, status: "disponivel" },
@@ -305,7 +327,10 @@ export async function finalizarCheckout(
       }
 
       if (cupom && descontoCents > 0) {
-        await tx.coupon.update({ where: { id: cupom.id }, data: { usedCount: { increment: 1 } } });
+        await tx.coupon.update({
+          where: { id: cupom.id },
+          data: { usedCount: { increment: 1 } },
+        });
       }
 
       if (!aguardandoFrete) {
@@ -324,9 +349,11 @@ export async function finalizarCheckout(
       return ordem;
     });
 
-    redirect(`/pedido-confirmado?pedido=${encodeURIComponent(pedido.number)}`);
+    numeroPedido = pedido.number;
   } catch (erro) {
     const mensagem = erro instanceof Error ? erro.message : "Não foi possível concluir o pedido.";
     return { erro: mensagem };
   }
+
+  redirect(`/pedido-confirmado?pedido=${encodeURIComponent(numeroPedido)}`);
 }
