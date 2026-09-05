@@ -17,11 +17,12 @@ import { prisma } from "@/lib/prisma";
  *
  * 2. `enfileirar` — a mensagem que sai da JB por e-mail ou WhatsApp. Grava
  *    `OutboundMessage` com status `pendente`. NADA é enviado aqui: o envio
- *    real é trabalho de um worker (cron/queue) que ainda não existe. Ele vai
- *    ler as pendentes com `mensagensPendentes`, renderizar o template pelo
- *    par (`template`, `refTipo`/`refId`) e fechar cada uma com
- *    `concluirMensagem`. Não há integração de e-mail ou WhatsApp neste
- *    arquivo, e não deve haver: quem chama não pode ficar esperando rede.
+ *    real é do worker em `@/lib/mensageria`, chamado pelo cron de `/api/fila`
+ *    ou pelo botão de `/admin/mensagens`. Ele lê as pendentes com
+ *    `mensagensPendentes`, renderiza o template pelo par (`template`,
+ *    `refTipo`/`refId`) e fecha cada uma com `concluirMensagem`. Não há
+ *    integração de e-mail ou WhatsApp neste arquivo, e não deve haver: quem
+ *    chama não pode ficar esperando rede.
  *
  * O schema de `OutboundMessage` guarda canal, destinatário, template, chave de
  * deduplicação e status — não guarda assunto nem corpo. Por isso o corpo é

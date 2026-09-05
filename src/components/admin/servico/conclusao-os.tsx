@@ -25,11 +25,12 @@ import { paraInputDate } from "@/lib/format";
    Sem PDF anexado, o laudo continua vivendo na própria OS — não se cria uma
    linha de documento apontando para o vazio.
 
-   ATENÇÃO ao storage: o PDF sobe por /api/upload, que hoje grava em local
-   público (Vercel Blob público ou public/uploads). O `Document` guarda esse
-   endereço em `storageKey`. Quem tiver o link abre o arquivo sem passar por
-   autenticação. Quando existir storage privado com rota autorizada, é aqui e
-   em `concluirOS` que a chave precisa passar a apontar para ele.
+   SOBRE O STORAGE: o PDF sobe na pasta `documentos`, que é PRIVADA em
+   `@/lib/upload` — o endereço guardado em `storageKey` não abre no navegador.
+   O laudo só sai pelas rotas que conferem quem está pedindo:
+   /admin/documentos/[id]/baixar para a equipe e /minha-jb/documentos/[id]/baixar
+   para o cliente dono. Não troque esta pasta por uma pública: o laudo traz nome
+   e endereço de clínica, e a URL voltaria a ser a única barreira.
    ============================================================================ */
 
 export function ConcluirOS({
@@ -135,7 +136,7 @@ export function ConcluirOS({
 
         <AnexoUnico
           prefixo="laudo"
-          pasta="ordens"
+          pasta="documentos"
           rotulo="Laudo assinado (PDF)"
           aceita="application/pdf"
           ajuda="Opcional. Com arquivo, o laudo aparece nos documentos do cliente; sem arquivo, fica só nesta OS."

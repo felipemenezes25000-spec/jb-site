@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ImageOff, Receipt } from "lucide-react";
@@ -10,12 +10,14 @@ import { Cartao } from "@/components/ui/data";
 import { PainelLateral } from "@/components/ui/painel";
 import { formatarPreco, plural } from "@/lib/format";
 import type { LinhaCarrinho } from "@/lib/carrinho";
+import type { FreteExibido } from "@/lib/frete";
 
 /* ============================================================================
    Resumo do pedido no checkout
-   Os números chegam prontos do servidor (calcularTotais sobre o carrinho do
-   banco). Este componente não soma nada: se somasse, existiria um segundo
-   lugar onde o preço pode divergir.
+   Os números dos itens chegam prontos do servidor (calcularTotais sobre o
+   carrinho do banco). O frete chega do mesmo lugar, pela ação consultarFrete.
+   Este componente só soma uma coisa: itens + frete — e só quando o frete já
+   tem valor fechado.
 
    No desktop fica fixo ao lado do formulário. No mobile vira uma barra no pé
    da tela com o total sempre visível e uma gaveta com o detalhamento — em
@@ -30,6 +32,71 @@ type Props = {
   cupomCodigo: string;
   totalCents: number;
 };
+
+/* ---------------------------------------------------- frete compartilhado */
+
+/**
+ * O frete é escolhido no formulário e exibido aqui — e os dois são irmãos na
+ * página, montados lado a lado pelo Server Component do checkout. Sem um pai
+ * comum em que pendurar estado, o caminho é uma loja externa mínima: o
+ * formulário publica, o resumo assina.
+ *
+ * `useSyncExternalStore` em vez de um evento no `window` porque é ele que
+ * garante a leitura consistente durante a renderização concorrente — e porque
+ * o React reclama, com razão, de estado externo lido sem assinatura.
+ */
+export type EstadoFrete = {
+  frete: FreteExibido | null;
+  carregando: boolean;
+};
+
+export const FRETE_VAZIO: EstadoFrete = { frete: null, carregando: false };
+
+let estadoFrete: EstadoFrete = FRETE_VAZIO;
+const ouvintes = new Set<() => void>();
+
+/** Chamado pelo formulário de checkout a cada resposta do servidor. */
+export function publicarFrete(proximo: EstadoFrete) {
+  estadoFrete = proximo;
+  for (const avisar of ouvintes) avisar();
+}
+
+function assinarFrete(avisar: () => void) {
+  ouvintes.add(avisar);
+  return () => {
+    ouvintes.delete(avisar);
+  };
+}
+
+function lerFrete() {
+  return estadoFrete;
+}
+
+// no servidor não há CEP digitado ainda; devolver sempre o mesmo objeto evita
+// laço de renderização e diferença na hidratação
+function lerFreteNoServidor() {
+  return FRETE_VAZIO;
+}
+
+function useFrete() {
+  return useSyncExternalStore(assinarFrete, lerFrete, lerFreteNoServidor);
+}
+
+/** "até 5 dias úteis" — o prazo cadastrado na faixa, quando existe. */
+export function textoDoPrazo(dias: number | null): string {
+  if (dias === null || dias <= 0) return "";
+  return `até ${plural(dias, "dia útil", "dias úteis")}`;
+}
+
+/**
+ * Quanto do frete entra no total.
+ *
+ * Frete ainda por orçar vale zero na conta — e a tela precisa dizer isso com
+ * todas as letras, senão "R$ 0,00" na linha do frete lê-se como "de graça".
+ */
+export function freteQueSoma(frete: FreteExibido | null): number {
+  return frete && !frete.orcadoDepois ? frete.valorCents : 0;
+}
 
 function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
   return (
@@ -77,12 +144,55 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
   );
 }
 
+/** A linha do frete, com os quatro estados que ela realmente tem. */
+function ValorDoFrete({ frete, carregando }: EstadoFrete) {
+  if (carregando) {
+    return <dd className="text-right text-xs leading-snug text-graf-500">calculando…</dd>;
+  }
+
+  if (!frete) {
+    return (
+      <dd className="text-right text-xs leading-snug text-graf-500">
+        informe o CEP na etapa de entrega
+      </dd>
+    );
+  }
+
+  if (frete.orcadoDepois) {
+    return (
+      <dd className="max-w-44 text-right text-xs leading-snug text-warn-700">
+        a combinar — a JB envia o valor antes de despachar
+      </dd>
+    );
+  }
+
+  const prazo = textoDoPrazo(frete.prazoDias);
+
+  return (
+    <dd className="text-right">
+      <span
+        className={
+          frete.valorCents === 0
+            ? "text-sm font-semibold text-ok-700"
+            : "text-sm font-semibold tabular text-graf-900"
+        }
+      >
+        {frete.valorCents === 0 ? "Grátis" : formatarPreco(frete.valorCents)}
+      </span>
+      {prazo ? <span className="block text-xs leading-snug text-graf-500">{prazo}</span> : null}
+    </dd>
+  );
+}
+
 function Totais({
   subtotalCents,
   descontoCents,
   cupomCodigo,
   totalCents,
 }: Omit<Props, "linhas">) {
+  const { frete, carregando } = useFrete();
+  const total = totalCents + freteQueSoma(frete);
+
   return (
     <>
       <dl className="space-y-2.5 text-sm">
@@ -102,20 +212,30 @@ function Totais({
           </div>
         ) : null}
 
-        <div className="flex justify-between gap-4">
-          <dt className="text-graf-600">Frete</dt>
-          <dd className="text-right text-xs leading-snug text-graf-500">
-            combinado após o pedido
-          </dd>
+        <div className="flex items-start justify-between gap-4">
+          <dt className="text-graf-600">
+            Frete
+            {frete && !frete.orcadoDepois ? (
+              <span className="block text-xs leading-snug text-graf-500">{frete.rotulo}</span>
+            ) : null}
+          </dt>
+          <ValorDoFrete frete={frete} carregando={carregando} />
         </div>
       </dl>
 
       <div className="mt-4 flex items-baseline justify-between border-t border-graf-200 pt-4">
         <span className="text-sm font-bold text-graf-900">Total</span>
         <span className="text-2xl font-extrabold tracking-tight tabular text-graf-950">
-          {formatarPreco(totalCents)}
+          {formatarPreco(total)}
         </span>
       </div>
+
+      {frete?.orcadoDepois ? (
+        <p className="mt-2 text-xs leading-relaxed text-graf-600">
+          O frete não está neste total. A JB confere as dimensões do equipamento e o endereço, e
+          combina o valor com você antes de despachar.
+        </p>
+      ) : null}
     </>
   );
 }
@@ -129,6 +249,8 @@ export function ResumoCheckout({
 }: Props) {
   const [gaveta, setGaveta] = useState(false);
   const quantidade = linhas.reduce((soma, l) => soma + l.quantidade, 0);
+  const { frete } = useFrete();
+  const total = totalCents + freteQueSoma(frete);
 
   return (
     <>
@@ -168,9 +290,10 @@ export function ResumoCheckout({
           <div className="min-w-0">
             <p className="text-xs text-graf-500">
               Total · {plural(quantidade, "item", "itens")}
+              {frete?.orcadoDepois ? " · frete à parte" : null}
             </p>
             <p className="text-lg font-extrabold tabular leading-tight text-graf-950">
-              {formatarPreco(totalCents)}
+              {formatarPreco(total)}
             </p>
           </div>
           <Botao type="button" variante="secundario" onClick={() => setGaveta(true)}>

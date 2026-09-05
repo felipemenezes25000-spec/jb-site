@@ -10,6 +10,7 @@ import {
 } from "@/app/acoes/admin-servico";
 import { CampoAcao, MoedaAcao, SelecaoAcao } from "@/components/admin/servico/campos";
 import { FormularioAcao, Oculto } from "@/components/admin/servico/formulario";
+import { BotaoConfirmar } from "@/components/ui/confirmar";
 import { Vazio } from "@/components/ui/data";
 import { formatarPreco } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,10 @@ import { cn } from "@/lib/utils";
 
    Cada linha tem o próprio formulário de remoção: form dentro de form não
    existe em HTML, então a lista fica fora do formulário de inclusão.
+
+   A remoção pergunta antes. A lixeira fica a um clique do lado do valor da
+   linha, e remover item mexe no total que o cliente vai pagar — não é o tipo
+   de coisa que pode acontecer por engano de mira.
    ============================================================================ */
 
 export type ItemDaOS = {
@@ -109,17 +114,20 @@ export function ItensDaOS({
                 >
                   <Oculto nome="ordemId" valor={ordemId} />
                   <Oculto nome="itemId" valor={item.id} />
-                  <button
-                    type="submit"
-                    className={cn(
-                      "inline-flex size-11 items-center justify-center rounded-lg text-graf-500 transition-colors",
-                      "hover:bg-jb-50 hover:text-jb-700",
-                      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-                    )}
-                  >
-                    <Trash2 className="size-4" aria-hidden />
-                    <span className="sr-only">Remover {item.description}</span>
-                  </button>
+                  <BotaoConfirmar
+                    variante="texto"
+                    className="h-11 w-11 px-0 text-graf-500 hover:bg-jb-50 hover:text-jb-700"
+                    title={`Remover ${item.description}`}
+                    rotulo={
+                      <>
+                        <Trash2 className="size-4" aria-hidden />
+                        <span className="sr-only">Remover {item.description}</span>
+                      </>
+                    }
+                    pergunta="Remover este item da OS?"
+                    detalhe={`"${item.description}" sai da ordem e o total cai ${formatarPreco(item.totalCents)}. Para voltar atrás é preciso lançar o item de novo.`}
+                    rotuloConfirmar="Remover"
+                  />
                 </FormularioAcao>
               ) : null}
             </li>

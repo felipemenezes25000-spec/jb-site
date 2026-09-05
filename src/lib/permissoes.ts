@@ -25,18 +25,25 @@ import { sessaoStaff, type StaffUser } from "@/lib/auth";
 export type AreaAdmin =
   | "painel"
   | "pedidos"
+  | "pagamentos"
+  | "clientes"
+  | "suporte"
+  | "orcamentos"
+  | "cupons"
+  | "frete"
   | "produtos"
   | "estoque"
-  | "clientes"
   | "assistencia"
   | "os"
-  | "orcamentos"
+  | "agenda"
   | "manutencao"
   | "equipamentos"
+  | "tecnicos"
   | "conteudo"
   | "leads"
   | "usuarios"
   | "configuracoes"
+  | "mensagens"
   | "auditoria";
 
 /** Agrupamento do menu lateral, na ordem em que aparece. */
@@ -63,7 +70,11 @@ export const ORDEM_GRUPOS: GrupoAdmin[] = [
 export type DefinicaoArea = {
   rotulo: string;
   href: string;
-  /** Nome do ícone no lucide-react. O componente é resolvido por um mapa fechado. */
+  /**
+   * Nome do ícone no lucide-react. O componente é resolvido pelo mapa fechado
+   * `ICONES` de `@/components/admin/menu-admin` — nome novo aqui só desenha no
+   * menu depois de ser importado lá; sem isso o item cai no ícone padrão.
+   */
   icone: string;
   /** Papéis que abrem a área e podem escrever nela. */
   papeis: StaffRole[];
@@ -95,6 +106,15 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     grupo: "comercial",
     descricao: "Vendas da loja, pagamento, separação e entrega",
   },
+  pagamentos: {
+    rotulo: "Pagamentos",
+    href: "/admin/pagamentos",
+    icone: "CreditCard",
+    papeis: ["admin", "gestor", "comercial"],
+    leitura: [],
+    grupo: "comercial",
+    descricao: "Cobranças de cada pedido: Pix, cartão, aprovação e estorno",
+  },
   clientes: {
     rotulo: "Clientes",
     href: "/admin/clientes",
@@ -104,6 +124,15 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     grupo: "comercial",
     descricao: "Cadastro, endereços, histórico de compras e chamados",
   },
+  suporte: {
+    rotulo: "Suporte",
+    href: "/admin/suporte",
+    icone: "LifeBuoy",
+    papeis: ["admin", "gestor", "comercial"],
+    leitura: [],
+    grupo: "comercial",
+    descricao: "Tickets de atendimento abertos pelo cliente e as respostas da equipe",
+  },
   orcamentos: {
     rotulo: "Orçamentos",
     href: "/admin/orcamentos",
@@ -112,6 +141,27 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     leitura: [],
     grupo: "comercial",
     descricao: "Propostas comerciais e de assistência, com aprovação do cliente",
+  },
+  cupons: {
+    rotulo: "Cupons",
+    href: "/admin/cupons",
+    icone: "TicketPercent",
+    papeis: ["admin", "gestor", "comercial"],
+    leitura: [],
+    grupo: "comercial",
+    descricao: "Códigos de desconto do carrinho, validade e limite de uso",
+  },
+  // Frete fica no grupo Comercial, e não em Sistema, porque quem responde pelo
+  // prazo e pelo valor da entrega é quem vende. As chaves de provedor e os
+  // dados fiscais continuam em Configurações, restritos ao administrador.
+  frete: {
+    rotulo: "Frete",
+    href: "/admin/frete",
+    icone: "Truck",
+    papeis: ["admin", "gestor", "comercial"],
+    leitura: [],
+    grupo: "comercial",
+    descricao: "Perfis de entrega, faixas de CEP, prazo e valor",
   },
 
   produtos: {
@@ -151,6 +201,15 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     grupo: "assistencia",
     descricao: "Execução em campo: diagnóstico, peças, mão de obra e laudo",
   },
+  agenda: {
+    rotulo: "Agenda",
+    href: "/admin/agenda",
+    icone: "CalendarDays",
+    papeis: ["admin", "gestor", "tecnico"],
+    leitura: [],
+    grupo: "assistencia",
+    descricao: "Visitas, preventivas e instalações no mesmo calendário",
+  },
   manutencao: {
     rotulo: "Manutenção",
     href: "/admin/manutencao",
@@ -168,6 +227,18 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     leitura: [],
     grupo: "assistencia",
     descricao: "Parque instalado dos clientes, garantia e histórico",
+  },
+  // Cadastro de equipe, não de trabalho: define quem atende em campo, com quais
+  // especialidades e em que cor aparece na agenda. Por isso o próprio técnico
+  // NÃO entra — quem escala a equipe é administrador ou gestor.
+  tecnicos: {
+    rotulo: "Técnicos",
+    href: "/admin/tecnicos",
+    icone: "HardHat",
+    papeis: ["admin", "gestor"],
+    leitura: [],
+    grupo: "assistencia",
+    descricao: "Equipe de campo: especialidades, cor na agenda e carga de trabalho",
   },
 
   conteudo: {
@@ -207,6 +278,18 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     grupo: "sistema",
     descricao: "Dados da empresa, contato, frete, pagamento e SEO",
   },
+  // Fila de saída. Fica em Sistema e não em Conteúdo porque o que se decide
+  // aqui é infraestrutura de envio — reprocessar lote, reenviar linha travada
+  // —, não o texto que o cliente lê.
+  mensagens: {
+    rotulo: "Mensagens",
+    href: "/admin/mensagens",
+    icone: "Send",
+    papeis: ["admin", "gestor"],
+    leitura: [],
+    grupo: "sistema",
+    descricao: "Fila de e-mails: o que saiu, o que falhou e o que ainda vai sair",
+  },
   auditoria: {
     rotulo: "Auditoria",
     href: "/admin/auditoria",
@@ -229,8 +312,9 @@ export const ROTULO_PAPEL: Record<StaffRole, string> = {
 export const DESCRICAO_PAPEL: Record<StaffRole, string> = {
   admin: "Acesso total, incluindo equipe e configurações",
   gestor: "Operação inteira, sem mexer em equipe e configurações",
-  comercial: "Pedidos, clientes e orçamentos; catálogo só para consulta",
-  tecnico: "Chamados, ordens de serviço, manutenção e equipamentos",
+  comercial:
+    "Pedidos, pagamentos, clientes, suporte, orçamentos, cupons e frete; catálogo só para consulta",
+  tecnico: "Chamados, ordens de serviço, agenda, manutenção e equipamentos",
   editor: "Conteúdo do site e leads",
 };
 

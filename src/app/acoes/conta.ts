@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -15,7 +16,10 @@ import {
 } from "@/lib/auth-cliente";
 import { esquecerCarrinhoDoNavegador, fundirCarrinhoNoLogin } from "@/lib/carrinho";
 import { cnpjValido, cpfValido, formatarTelefone, somenteDigitos } from "@/lib/format";
+import { LIMITE_RECUPERACAO, checarFormulario, mensagemDeEspera } from "@/lib/limite";
+import { enfileirar } from "@/lib/notificacoes";
 import { prisma } from "@/lib/prisma";
+import { ipDoPedido } from "@/lib/seguranca";
 
 /**
  * Identidade do cliente final.
@@ -250,29 +254,45 @@ const esquemaRecuperar = z.object({ email: z.email("Informe um e-mail válido.")
 /**
  * Enfileira o e-mail de redefinição.
  *
- * Ainda não há módulo de notificações no projeto, então o registro fica em
- * OutboundMessage com status `simulado`: a fila é real, o disparo é que
- * depende do provedor de e-mail ser ligado.
+ * Vai por `enfileirar`, e não por um INSERT à mão em `OutboundMessage`, por
+ * duas razões: o status precisa ser `pendente` para o worker da fila pegar a
+ * linha (`simulado` ele ignora), e a `dedupeKey` precisa sair no formato
+ * canônico `canal|template|refTipo|refId` para o modelo conseguir ler a
+ * referência de volta.
+ *
+ * O TOKEN INTEIRO é o `refId` porque ele é a única forma de remontar o link:
+ * `PasswordResetToken` guarda apenas o sha256, e `OutboundMessage` não tem
+ * coluna de corpo (schema congelado). O preço é que o token viaja em texto
+ * claro na chave da fila; ele vale por uma hora, serve uma vez só e é
+ * invalidado por um pedido novo — mas quem lê a fila no painel, durante essa
+ * hora, consegue entrar na conta. Se a coluna de corpo existir um dia, o link
+ * deve ser montado aqui e a chave voltar a ser o id do cliente.
  */
 async function enfileirarEmailDeReset(email: string, token: string) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const link = `${base}/redefinir-senha?token=${encodeURIComponent(token)}`;
-
-  await prisma.outboundMessage.create({
-    data: {
-      channel: "email",
-      to: email,
-      template: "senha_reset",
-      // o token é aleatório: o prefixo já garante a unicidade da chave
-      dedupeKey: `senha_reset:${token.slice(0, 24)}`,
-      status: "simulado",
-    },
+  const resultado = await enfileirar({
+    canal: "email",
+    para: email,
+    assunto: "Redefinição de senha",
+    corpo: "",
+    refTipo: "senha",
+    refId: token,
+    template: "senha_reset",
   });
 
   if (process.env.NODE_ENV !== "production") {
-    // Sem provedor ligado, o link precisa aparecer em algum lugar para o fluxo
-    // ser testável em desenvolvimento. Em produção nunca é registrado.
-    console.error("[senha_reset] link de redefinição:", link);
+    // Sem provedor de e-mail ligado, o link precisa aparecer em algum lugar
+    // para o fluxo ser testável em desenvolvimento. Em produção, nunca.
+    const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    console.error(
+      "[senha_reset] link de redefinição:",
+      `${base}/redefinir-senha?token=${encodeURIComponent(token)}`,
+    );
+  }
+
+  // não muda a resposta da tela (ela é sempre a mesma), mas sem isto uma fila
+  // recusando mensagem ficaria invisível
+  if (!resultado.ok) {
+    console.error("[senha_reset] e-mail não entrou na fila:", resultado.motivo);
   }
 }
 
@@ -284,6 +304,28 @@ export async function pedirRecuperacao(
   if (!dados.success) return primeiroProblema(dados.error);
 
   const email = dados.data.email.toLowerCase().trim();
+
+  /*
+   * Freio de taxa — a tela não tinha nenhum, e cada envio manda um e-mail para
+   * uma caixa que pode não ser de quem digitou.
+   *
+   * A recusa por volume não vira oráculo: a contagem é do que foi digitado,
+   * pelo IP e pelo e-mail, e não muda conforme a conta existir ou não. Por isso
+   * pode dizer a verdade ("muitos pedidos") em vez de repetir a resposta única.
+   *
+   * Vale por instância do processo — ver o cabeçalho de `@/lib/limite`. Aqui
+   * não há tabela para contar pedidos de redefinição (o token de reset não
+   * guarda o e-mail digitado quando a conta não existe), então esta é a única
+   * camada; um armazenamento compartilhado entra por `checarLimiteEm` no dia
+   * em que houver um.
+   */
+  const ip = ipDoPedido(await headers());
+  const freio = checarFormulario("/recuperar-senha", { ip, email }, LIMITE_RECUPERACAO);
+  if (!freio.ok) {
+    return {
+      erro: `Muitos pedidos de redefinição em pouco tempo. ${mensagemDeEspera(freio.esperaMs)}`,
+    };
+  }
 
   try {
     const cliente = await prisma.customer.findUnique({

@@ -50,7 +50,7 @@ const ORDENAVEIS: Record<string, keyof Prisma.PaymentOrderByWithRelationInput> =
 };
 
 export default async function PagamentosPage({ searchParams }: { searchParams: Busca }) {
-  await exigirArea("pedidos");
+  await exigirArea("pagamentos");
   const params = await searchParams;
 
   const busca = texto(params.q);

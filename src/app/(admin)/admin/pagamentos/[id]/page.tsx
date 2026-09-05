@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PagamentoPage({ params }: Props) {
-  const usuario = await exigirArea("pedidos");
+  const usuario = await exigirArea("pagamentos");
   const { id } = await params;
 
   const pagamento = await prisma.payment.findUnique({

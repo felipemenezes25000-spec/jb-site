@@ -23,6 +23,16 @@ import {
 } from "@/lib/assistencia";
 import { sessaoCliente } from "@/lib/auth-cliente";
 import { formatarTelefone, somenteDigitos } from "@/lib/format";
+import {
+  LIMITE_CHAMADO,
+  LIMITE_ORCAMENTO,
+  LIMITE_RESPOSTA_CHAMADO,
+  type LimitesDoFormulario,
+  chaveDeEmail,
+  chaveDeIp,
+  registrarUso,
+  usosNaJanela,
+} from "@/lib/limite";
 import { enfileirar } from "@/lib/notificacoes";
 import { ErroDeOrcamento, criarOrcamento } from "@/lib/orcamento";
 import { prisma } from "@/lib/prisma";
@@ -72,34 +82,34 @@ export type EstadoAssistencia = {
 const TEMPO_MINIMO_MS = 4_000;
 const TEMPO_MAXIMO_MS = 12 * 60 * 60_000;
 
-const JANELA_MS = 15 * 60_000;
-
 /**
- * Contagem em memória do processo. Não é barreira distribuída — em serverless
- * cada instância conta a sua —, mas resolve o caso real de um formulário
- * disparando em sequência. O freio que precisa sobreviver a tudo é o do banco.
+ * Contagem em memória do processo, agora feita por `@/lib/limite` — antes este
+ * arquivo tinha o seu próprio `Map`, a sua própria faxina e a sua própria
+ * janela, diferentes das dos outros formulários. Continua valendo o que valia:
+ * é contagem POR INSTÂNCIA, e em serverless cada instância conta a sua fatia.
+ * O freio que sobrevive a tudo é o do banco, logo adiante em cada ação.
+ *
+ * A leitura (`usosNaJanela`) e o registro (`registrarUso`) são separados de
+ * propósito: o contador só anda quando o envio vira registro, para que um erro
+ * de digitação não empurre quem preenche de boa-fé para o desafio da imagem.
  */
-const envios = new Map<string, number[]>();
-
-function usosRecentes(chave: string) {
-  const agora = Date.now();
-
-  if (envios.size > 500) {
-    for (const [id, marcas] of envios) {
-      if (marcas.every((t) => agora - t >= JANELA_MS)) envios.delete(id);
-    }
-  }
-
-  const recentes = (envios.get(chave) ?? []).filter((t) => agora - t < JANELA_MS);
-  if (recentes.length === 0) envios.delete(chave);
-  else envios.set(chave, recentes);
-  return recentes.length;
+function excedeuPorEmail(escopo: string, limites: LimitesDoFormulario, email: string) {
+  if (!email || !limites.porEmail) return false;
+  const usos = usosNaJanela(chaveDeEmail(email, escopo), limites.porEmail.janelaMs);
+  return usos >= limites.porEmail.limite;
 }
 
-function registrarEnvio(chave: string) {
-  const recentes = (envios.get(chave) ?? []).filter((t) => Date.now() - t < JANELA_MS);
-  recentes.push(Date.now());
-  envios.set(chave, recentes);
+/** Conta o envio que deu certo nas duas chaves do escopo. */
+function registrarEnvioAceito(
+  escopo: string,
+  limites: LimitesDoFormulario,
+  quem: { ip: string; email?: string },
+) {
+  registrarUso(chaveDeIp(quem.ip, escopo), limites.porIp.janelaMs);
+  const email = (quem.email ?? "").trim().toLowerCase();
+  if (email && limites.porEmail) {
+    registrarUso(chaveDeEmail(email, escopo), limites.porEmail.janelaMs);
+  }
 }
 
 async function ipDaRequisicao() {
@@ -151,10 +161,13 @@ type Conferencia = { ok: true; ip: string } | { ok: false; estado: EstadoAssiste
  * Confere isca, tempo e limite por IP. Não incrementa nada: o contador só
  * anda quando o registro é de fato criado, para que um erro de digitação não
  * empurre quem está preenchendo de boa-fé para o desafio da imagem.
+ *
+ * O teto rígido é o do próprio escopo (`limites.porIp.limite`); o brando é
+ * quanto antes dele o desafio da imagem entra.
  */
 async function conferirEnvio(
   formData: FormData,
-  opcoes: { escopo: string; limiteBrando: number; limiteRigido: number },
+  opcoes: { escopo: string; limites: LimitesDoFormulario; limiteBrando: number },
 ): Promise<Conferencia> {
   const isca = String(formData.get(CAMPO_ISCA) ?? "").trim();
   if (isca) return { ok: false, estado: { erro: RECUSA_GENERICA } };
@@ -174,9 +187,9 @@ async function conferirEnvio(
   }
 
   const ip = await ipDaRequisicao();
-  const usos = usosRecentes(`${opcoes.escopo}:${ip || "sem-ip"}`);
+  const usos = usosNaJanela(chaveDeIp(ip, opcoes.escopo), opcoes.limites.porIp.janelaMs);
 
-  if (usos >= opcoes.limiteRigido) {
+  if (usos >= opcoes.limites.porIp.limite) {
     return {
       ok: false,
       estado: {
@@ -268,7 +281,7 @@ const esquemaChamado = z
   });
 
 /** Máximo de chamados que o mesmo e-mail pode abrir dentro da janela. */
-const MAX_CHAMADOS_POR_EMAIL = 3;
+const MAX_CHAMADOS_POR_EMAIL = LIMITE_CHAMADO.porEmail.limite;
 
 export async function abrirChamadoPublico(
   _anterior: EstadoAssistencia,
@@ -276,8 +289,8 @@ export async function abrirChamadoPublico(
 ): Promise<EstadoAssistencia> {
   const conferencia = await conferirEnvio(formData, {
     escopo: "chamado",
+    limites: LIMITE_CHAMADO,
     limiteBrando: 2,
-    limiteRigido: 6,
   });
   if (!conferencia.ok) return conferencia.estado;
 
@@ -311,12 +324,20 @@ export async function abrirChamadoPublico(
   const email = entrada.email.toLowerCase();
   const cliente = await sessaoCliente();
 
-  // Freio que sobrevive ao reinício do processo: o mesmo e-mail não enfileira
-  // chamados iguais enquanto ninguém da equipe olhou o primeiro.
-  const recentesDoEmail = await prisma.serviceRequest.count({
-    where: { contactEmail: email, createdAt: { gte: new Date(Date.now() - JANELA_MS) } },
-  });
-  if (recentesDoEmail >= MAX_CHAMADOS_POR_EMAIL) {
+  // Duas camadas para a mesma pergunta: o mesmo e-mail não enfileira chamados
+  // iguais enquanto ninguém da equipe olhou o primeiro. A de memória responde
+  // sem ir ao banco e conta por instância do processo; a do banco sobrevive ao
+  // reinício e vale para todas as instâncias — é a que decide de verdade.
+  const chamadosDemais =
+    excedeuPorEmail("chamado", LIMITE_CHAMADO, email) ||
+    (await prisma.serviceRequest.count({
+      where: {
+        contactEmail: email,
+        createdAt: { gte: new Date(Date.now() - LIMITE_CHAMADO.porEmail.janelaMs) },
+      },
+    })) >= MAX_CHAMADOS_POR_EMAIL;
+
+  if (chamadosDemais) {
     return {
       erro:
         "Já registramos chamados demais para este e-mail nos últimos minutos. " +
@@ -443,7 +464,7 @@ export async function abrirChamadoPublico(
     return { erro: "Não conseguimos registrar o chamado agora. Tente de novo em instantes." };
   }
 
-  registrarEnvio(`chamado:${conferencia.ip || "sem-ip"}`);
+  registrarEnvioAceito("chamado", LIMITE_CHAMADO, { ip: conferencia.ip, email });
 
   // Quem acabou de abrir não precisa provar o contato para ver o próprio
   // chamado: o comprovante de acesso é gravado aqui, antes do redirecionamento.
@@ -653,8 +674,14 @@ export async function responderChamadoPublico(
   }
 
   const ip = await ipDaRequisicao();
-  const chave = `resposta:${chamado.id}:${ip || "sem-ip"}`;
-  if (usosRecentes(chave) >= 10) {
+  // O escopo carrega o id do chamado: quem responde dois chamados diferentes
+  // não gasta o limite de um no outro.
+  const escopoDaResposta = `resposta:${chamado.id}`;
+  const chave = chaveDeIp(ip, escopoDaResposta);
+  if (
+    usosNaJanela(chave, LIMITE_RESPOSTA_CHAMADO.porIp.janelaMs) >=
+    LIMITE_RESPOSTA_CHAMADO.porIp.limite
+  ) {
     return { erro: "Muitas mensagens seguidas. Espere alguns minutos." };
   }
 
@@ -679,7 +706,7 @@ export async function responderChamadoPublico(
     return { erro: "Não conseguimos registrar a mensagem agora. Tente de novo." };
   }
 
-  registrarEnvio(chave);
+  registrarEnvioAceito(escopoDaResposta, LIMITE_RESPOSTA_CHAMADO, { ip });
 
   const s = await getSettings();
   await enfileirar({
@@ -719,6 +746,11 @@ const esquemaOrcamento = z.object({
 /** Máximo de pedidos vindos do mesmo IP na última hora, contado no banco. */
 const MAX_LEADS_POR_IP = 8;
 
+/** Mesma recusa para orçamento e plano: os dois nascem Lead pela mesma porta. */
+const RECUSA_POR_VOLUME =
+  "Recebemos pedidos demais deste acesso na última hora. " +
+  "Se for urgente, fale com a JB pelo telefone ou pelo WhatsApp.";
+
 async function excedeuLeadsDoIp(ip: string) {
   if (!ip) return false;
   const recentes = await prisma.lead.count({
@@ -741,8 +773,8 @@ export async function pedirOrcamento(
 ): Promise<EstadoAssistencia> {
   const conferencia = await conferirEnvio(formData, {
     escopo: "orcamento",
+    limites: LIMITE_ORCAMENTO,
     limiteBrando: 2,
-    limiteRigido: 6,
   });
   if (!conferencia.ok) return conferencia.estado;
 
@@ -789,16 +821,16 @@ export async function pedirOrcamento(
     };
   }
 
-  if (await excedeuLeadsDoIp(conferencia.ip)) {
-    return {
-      erro:
-        "Recebemos pedidos demais deste acesso na última hora. " +
-        "Se for urgente, fale com a JB pelo telefone ou pelo WhatsApp.",
-    };
+  const emailDoPedido = entrada.email.toLowerCase();
+  if (
+    excedeuPorEmail("orcamento", LIMITE_ORCAMENTO, emailDoPedido) ||
+    (await excedeuLeadsDoIp(conferencia.ip))
+  ) {
+    return { erro: RECUSA_POR_VOLUME };
   }
 
   const cliente = await sessaoCliente();
-  const email = entrada.email.toLowerCase();
+  const email = emailDoPedido;
   const agente = await agenteDaRequisicao();
 
   const observacao = [
@@ -849,7 +881,7 @@ export async function pedirOrcamento(
     return { erro: "Não conseguimos registrar seu pedido agora. Tente de novo." };
   }
 
-  registrarEnvio(`orcamento:${conferencia.ip || "sem-ip"}`);
+  registrarEnvioAceito("orcamento", LIMITE_ORCAMENTO, { ip: conferencia.ip, email });
 
   const s = await getSettings();
   const marca = `${email}:${Date.now()}`;
@@ -929,8 +961,8 @@ export async function interesseEmPlano(
 ): Promise<EstadoAssistencia> {
   const conferencia = await conferirEnvio(formData, {
     escopo: "plano",
+    limites: LIMITE_ORCAMENTO,
     limiteBrando: 2,
-    limiteRigido: 6,
   });
   if (!conferencia.ok) return conferencia.estado;
 
@@ -961,15 +993,14 @@ export async function interesseEmPlano(
     return { erro: "Este plano não está mais disponível. Escolha outro.", campo: "plano" };
   }
 
-  if (await excedeuLeadsDoIp(conferencia.ip)) {
-    return {
-      erro:
-        "Recebemos pedidos demais deste acesso na última hora. " +
-        "Se for urgente, fale com a JB pelo telefone ou pelo WhatsApp.",
-    };
+  const email = entrada.email.toLowerCase();
+  if (
+    excedeuPorEmail("plano", LIMITE_ORCAMENTO, email) ||
+    (await excedeuLeadsDoIp(conferencia.ip))
+  ) {
+    return { erro: RECUSA_POR_VOLUME };
   }
 
-  const email = entrada.email.toLowerCase();
   const agente = await agenteDaRequisicao();
 
   const observacao = [
@@ -1000,7 +1031,7 @@ export async function interesseEmPlano(
     return { erro: "Não conseguimos registrar seu interesse agora. Tente de novo." };
   }
 
-  registrarEnvio(`plano:${conferencia.ip || "sem-ip"}`);
+  registrarEnvioAceito("plano", LIMITE_ORCAMENTO, { ip: conferencia.ip, email });
 
   const s = await getSettings();
   const marca = `${plano.id}:${email}:${Date.now()}`;

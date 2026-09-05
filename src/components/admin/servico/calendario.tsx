@@ -1,6 +1,11 @@
 import Link from "next/link";
 
+import {
+  AcoesDoAgendamento,
+  type TecnicoDaEscala,
+} from "@/components/admin/servico/acoes-agendamento";
 import { Vazio } from "@/components/ui/data";
+import { plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -61,7 +66,44 @@ export type Compromisso = {
   corDoTecnico?: string | null;
   status: string;
   cancelado?: boolean;
+  /**
+   * `ServiceAppointment.id` da visita técnica. Preenchido, a agenda oferece
+   * remarcar e cancelar sem sair da tela.
+   */
+  agendamentoId?: string | null;
+  /**
+   * `Technician.id` de quem está escalado. Anda junto com `tecnicos` na
+   * `Calendario`: sem os dois, o campo de técnico nem aparece na remarcação —
+   * um select vazio enviaria "" e apagaria a escala em silêncio.
+   */
+  tecnicoId?: string | null;
 };
+
+const PREFIXO_VISITA = "visita-";
+
+/**
+ * Descobre qual `ServiceAppointment` está por trás do compromisso.
+ *
+ * O caminho oficial é o campo `agendamentoId`. O `id` com prefixo é a rede de
+ * segurança para quem monta a lista à moda antiga (`visita-<id>`, que é como os
+ * três tipos convivem sem colidir): sem ele, os botões simplesmente não
+ * aparecem — nada quebra, só deixa de ser oferecido.
+ */
+function agendamentoDe(compromisso: Compromisso) {
+  if (compromisso.tipo !== "visita") return null;
+  if (compromisso.agendamentoId) return compromisso.agendamentoId;
+  return compromisso.id.startsWith(PREFIXO_VISITA)
+    ? compromisso.id.slice(PREFIXO_VISITA.length)
+    : null;
+}
+
+/** Visita que ainda pode mudar de dia. Concluída e cancelada são história. */
+function visitaEmAberto(compromisso: Compromisso) {
+  return (
+    compromisso.tipo === "visita" &&
+    (compromisso.status === "agendado" || compromisso.status === "em_andamento")
+  );
+}
 
 export const ROTULO_TIPO_AGENDA: Record<TipoCompromisso, string> = {
   visita: "Visita técnica",
@@ -151,12 +193,18 @@ export function Calendario({
   ancora,
   compromissos,
   hoje,
+  tecnicos = [],
 }: {
   visao: "mes" | "semana";
   /** Dia de referência, no formato "AAAA-MM-DD". */
   ancora: string;
   compromissos: Compromisso[];
   hoje: string;
+  /**
+   * Escala disponível para remarcar. Lista vazia esconde o campo de técnico —
+   * é diferente de mostrá-lo vazio, que apagaria o técnico já escalado.
+   */
+  tecnicos?: TecnicoDaEscala[];
 }) {
   const dias = gradeDeDias(visao, ancora);
   const mesAtual = primeiroDiaDoMes(ancora).slice(0, 7);
@@ -270,7 +318,91 @@ export function Calendario({
           </ul>
         )}
       </div>
+
+      <VisitasParaRemarcar compromissos={compromissos} tecnicos={tecnicos} />
     </>
+  );
+}
+
+/**
+ * Visitas técnicas do período que ainda podem mudar de dia.
+ *
+ * Fica embaixo da grade, e não dentro de cada quadradinho, por uma razão de
+ * espaço: a célula de um dia tem pouco mais de cem pixels — dois botões ali
+ * empurrariam o compromisso para fora da vista. Aqui embaixo eles cabem, e o
+ * gesto continua na mesma tela: o telefone toca pedindo para adiar a visita de
+ * quinta e a pessoa resolve sem navegar para o chamado.
+ *
+ * A lista some sozinha quando não há nada em aberto — e some também no perfil
+ * que não escreve, porque a área de assistência não tem papel só de leitura:
+ * quem abre a agenda é quem opera a agenda.
+ */
+function VisitasParaRemarcar({
+  compromissos,
+  tecnicos,
+}: {
+  compromissos: Compromisso[];
+  tecnicos: TecnicoDaEscala[];
+}) {
+  const abertas = compromissos
+    .filter((item) => visitaEmAberto(item) && agendamentoDe(item))
+    .sort((a, b) => a.quando.getTime() - b.quando.getTime());
+
+  if (abertas.length === 0) return null;
+
+  return (
+    <section className="rounded-xl border border-graf-200 bg-white p-5 shadow-card">
+      <h2 className="text-base font-bold text-graf-950">Visitas técnicas em aberto</h2>
+      <p className="mt-0.5 text-sm text-graf-500">
+        {plural(abertas.length, "visita marcada", "visitas marcadas")} neste período.
+        Remarcar move o compromisso — não cria um segundo.
+      </p>
+
+      <ul className="mt-4 divide-y divide-graf-200 border-t border-graf-200">
+        {abertas.map((visita) => {
+          const agendamentoId = agendamentoDe(visita);
+          if (!agendamentoId) return null;
+
+          /*
+           * O campo de técnico só entra quando a escala é conhecida: ou o
+           * compromisso trouxe o `tecnicoId`, ou não há técnico nenhum para
+           * perder. Não sabendo o id de quem está escalado, mostrar o select
+           * seria oferecer um "Definir depois" que apagaria a escala.
+           */
+          const conheceEscala = visita.tecnicoId !== undefined || !visita.tecnico;
+
+          return (
+            <li
+              key={visita.id}
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3"
+            >
+              <span className="min-w-0 flex-1">
+                <Link
+                  href={visita.href}
+                  className="block truncate text-sm font-semibold text-graf-900 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                >
+                  {formatoDiaLongo.format(visita.quando)} ·{" "}
+                  {formatoHora.format(visita.quando)} — {visita.titulo}
+                </Link>
+                <span className="block truncate text-xs text-graf-500">
+                  {visita.detalhe || "Sem chamado vinculado"}
+                  {visita.tecnico ? ` · ${visita.tecnico}` : " · sem técnico"}
+                </span>
+              </span>
+
+              <AcoesDoAgendamento
+                agendamentoId={agendamentoId}
+                quandoAtual={visita.quando.toISOString()}
+                status={visita.status}
+                titulo={`a visita de ${formatoDiaLongo.format(visita.quando)}`}
+                tecnicoAtual={visita.tecnicoId ?? null}
+                tecnicos={conheceEscala ? tecnicos : []}
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

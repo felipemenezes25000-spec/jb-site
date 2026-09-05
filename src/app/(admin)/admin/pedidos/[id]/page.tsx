@@ -623,7 +623,7 @@ export default async function PedidoPage({ params }: Props) {
               id: documento.id,
               titulo: documento.title,
               tipo: ROTULO_DOCUMENTO[documento.kind],
-              endereco: documento.storageKey,
+              endereco: `/admin/documentos/${documento.id}/baixar`,
               detalhe: `${formatarData(documento.createdAt)} · ${tamanhoLegivel(documento.size)}`,
             }))}
           />

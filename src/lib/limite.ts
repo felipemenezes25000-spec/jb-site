@@ -214,3 +214,145 @@ export function chaveDeSessao(id: string, rota?: string) {
 export function segundosDeEspera(esperaMs: number) {
   return Math.max(1, Math.ceil(esperaMs / 1000));
 }
+
+/** Frase curta com o tempo de espera, para colar no fim da mensagem de erro. */
+export function mensagemDeEspera(esperaMs: number) {
+  const segundos = segundosDeEspera(esperaMs);
+  if (segundos < 60) return `Tente de novo em ${segundos} segundos.`;
+  const minutos = Math.ceil(segundos / 60);
+  return `Tente de novo em ${minutos} ${minutos === 1 ? "minuto" : "minutos"}.`;
+}
+
+/* ------------------------------------------------- consulta e registro soltos */
+
+/**
+ * Quantas passagens já estão registradas na janela — sem registrar mais uma.
+ *
+ * Existe para o formulário que escalona (passa direto, depois pede o código da
+ * imagem, depois recusa) e que só quer contar o envio que virou registro: erro
+ * de digitação não pode empurrar quem está preenchendo de boa-fé para o
+ * desafio. Quem não precisa disso usa `checarLimite`, que decide e registra de
+ * uma vez.
+ */
+export function usosNaJanela(chave: string, janelaMs: number): number {
+  const inicio = Date.now() - Math.max(1, Math.floor(janelaMs));
+  const registro = mapa.get(chave);
+  if (!registro) return 0;
+
+  const marcas = registro.marcas.filter((instante) => instante > inicio);
+  if (marcas.length === 0) {
+    mapa.delete(chave);
+    return 0;
+  }
+
+  mapa.set(chave, { marcas, ultimoUso: Date.now() });
+  return marcas.length;
+}
+
+/**
+ * Registra uma passagem sem julgar. Par de `usosNaJanela`: quem já decidiu
+ * chama isto depois que o trabalho deu certo.
+ */
+export function registrarUso(chave: string, janelaMs: number): void {
+  const agora = Date.now();
+  const inicio = agora - Math.max(1, Math.floor(janelaMs));
+  const marcas = (mapa.get(chave)?.marcas ?? []).filter((instante) => instante > inicio);
+  marcas.push(agora);
+  mapa.set(chave, { marcas, ultimoUso: agora });
+}
+
+/* ------------------------------------------------------- formulários públicos */
+
+/**
+ * Tetos dos formulários abertos ao público, num lugar só.
+ *
+ * Antes cada formulário trazia os seus números e o seu contador escrito à mão;
+ * a partir daqui todos leem daqui e contam pelo mesmo mapa. Os valores são
+ * folgados de propósito: quem está com o equipamento parado às vezes envia duas
+ * vezes por nervosismo, e barrar essa pessoa é pior do que deixar passar um
+ * robô — que ainda vai esbarrar na isca, no tempo mínimo e no freio de banco.
+ *
+ * LEMBRETE QUE VALE PARA TODOS: a contagem é do processo. Em serverless cada
+ * instância conta a sua fatia, então isto segura repetição de formulário, não
+ * ataque distribuído. O freio que precisa valer para todas as instâncias
+ * continua sendo o do banco (contagem de `Lead`, de `ServiceRequest` e de
+ * `LoginAttempt`), e os dois convivem: memória primeiro, porque é barata;
+ * banco depois, porque é a que vale.
+ */
+export type LimitesDoFormulario = {
+  porIp: OpcoesDeLimite;
+  /** Ausente quando o formulário não pede e-mail. */
+  porEmail?: OpcoesDeLimite;
+};
+
+/** Janela padrão dos formulários públicos. */
+export const JANELA_FORMULARIO_MS = 15 * 60_000;
+
+/** Contato do site: janela mais curta, porque o texto é curto e o abuso é rápido. */
+/**
+ * Contato do site.
+ *
+ * O teto por IP é generoso de propósito: consultório é escritório, e dez
+ * pessoas atrás do mesmo IP de operadora é o caso comum, não a exceção. Três
+ * envios por IP barravam a recepcionista que mandou, viu um erro de digitação
+ * e mandou de novo. Quem segura spam de verdade aqui é o teto por e-mail, que
+ * continua curto, mais a isca escondida do formulário.
+ */
+export const LIMITE_CONTATO = {
+  porIp: { limite: 12, janelaMs: 60 * 60_000 },
+  porEmail: { limite: 3, janelaMs: 10 * 60_000 },
+} satisfies LimitesDoFormulario;
+
+/** Abertura de chamado de assistência. */
+export const LIMITE_CHAMADO = {
+  porIp: { limite: 6, janelaMs: JANELA_FORMULARIO_MS },
+  porEmail: { limite: 3, janelaMs: JANELA_FORMULARIO_MS },
+} satisfies LimitesDoFormulario;
+
+/** Pedido de orçamento e interesse em plano — mesma porta comercial. */
+export const LIMITE_ORCAMENTO = {
+  porIp: { limite: 6, janelaMs: JANELA_FORMULARIO_MS },
+  porEmail: { limite: 4, janelaMs: JANELA_FORMULARIO_MS },
+} satisfies LimitesDoFormulario;
+
+/** Resposta do cliente dentro de um chamado já liberado. */
+export const LIMITE_RESPOSTA_CHAMADO = {
+  porIp: { limite: 10, janelaMs: JANELA_FORMULARIO_MS },
+} satisfies LimitesDoFormulario;
+
+/**
+ * Pedido de link de redefinição de senha.
+ *
+ * Janela maior e teto menor: o link vale por uma hora, então não há motivo
+ * legítimo para pedir cinco em quinze minutos — e cada pedido manda um e-mail
+ * para uma caixa que pode não ser de quem digitou.
+ */
+export const LIMITE_RECUPERACAO = {
+  porIp: { limite: 5, janelaMs: 30 * 60_000 },
+  porEmail: { limite: 3, janelaMs: 30 * 60_000 },
+} satisfies LimitesDoFormulario;
+
+/** Qual das duas chaves recusou — útil para escolher a mensagem. */
+export type ResultadoFormulario = ResultadoLimite & { origem: "ip" | "email" };
+
+/**
+ * Freio de formulário público pelas duas chaves de uma vez.
+ *
+ * O IP é conferido primeiro e, quando ele recusa, a chave de e-mail nem é
+ * tocada — assim quem já está bloqueado pelo endereço não queima também o
+ * limite do próprio e-mail. Cada chamada aceita conta como uma passagem nas
+ * duas chaves, então chame uma vez por tentativa.
+ */
+export function checarFormulario(
+  rota: string,
+  quem: { ip: string; email?: string },
+  limites: LimitesDoFormulario,
+): ResultadoFormulario {
+  const porIp = checarLimite(chaveDeIp(quem.ip, rota), limites.porIp);
+  if (!porIp.ok) return { ...porIp, origem: "ip" };
+
+  const email = (quem.email ?? "").trim().toLowerCase();
+  if (!email || !limites.porEmail) return { ...porIp, origem: "ip" };
+
+  return { ...checarLimite(chaveDeEmail(email, rota), limites.porEmail), origem: "email" };
+}

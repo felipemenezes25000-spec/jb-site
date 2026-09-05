@@ -562,43 +562,63 @@ export type ChamadoParaLinha = {
  * Os catorze status viram seis etapas legíveis. A data de cada etapa sai do
  * primeiro evento que a alcançou — não do `updatedAt`, que mudaria a cada
  * anotação interna.
+ *
+ * CANCELADO NÃO É CONCLUÍDO
+ * -------------------------
+ * `ETAPA_DO_STATUS` manda `cancelado` para a etapa `concluido`, porque as duas
+ * fecham o chamado e a listagem do painel precisa agrupá-las. Aqui isso não
+ * pode valer: o evento de cancelamento carimbava a última etapa como
+ * alcançada, e o cliente via as seis etapas com o ✓ verde — inclusive
+ * "Equipamento testado e devolvido em funcionamento", que nunca aconteceu.
+ *
+ * Então o status `cancelado` é ignorado ao datar as etapas, e o chamado
+ * cancelado é desenhado assim: as etapas que ele realmente completou ficam
+ * concluídas, a etapa em que ele parou fica marcada como cancelada (chegou,
+ * não terminou), as seguintes também — não vão acontecer, e mostrá-las como
+ * "ainda não iniciada" prometeria um atendimento que não vem —, e um último
+ * passo diz o cancelamento com a data.
  */
 export function passosDoChamado(chamado: ChamadoParaLinha): PassoLinha[] {
   const eventos = [...(chamado.events ?? [])].sort(
     (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
   );
 
+  const cancelado = chamado.status === "cancelado";
+
   const quandoDaEtapa = new Map<ServiceRequestStatus, Date>();
   quandoDaEtapa.set("solicitacao_recebida", chamado.createdAt);
   for (const evento of eventos) {
-    if (!evento.status) continue;
+    // desvio, não avanço: cancelar não alcança a etapa "Concluído"
+    if (!evento.status || evento.status === "cancelado") continue;
     const etapa = ETAPA_DO_STATUS[evento.status];
     if (!quandoDaEtapa.has(etapa)) quandoDaEtapa.set(etapa, evento.createdAt);
   }
 
-  const cancelado = chamado.status === "cancelado";
-  const etapaAtual = ETAPA_DO_STATUS[chamado.status];
+  // Até onde o atendimento chegou de verdade. No cancelado, é a etapa mais
+  // avançada que tem data; nos outros, a etapa do status atual.
   const indiceAtual = cancelado
-    ? Math.max(
-        0,
-        ETAPAS_VISIVEIS.reduce(
-          (maior, etapa, i) => (quandoDaEtapa.has(etapa) ? i : maior),
-          0,
-        ),
-      )
-    : ETAPAS_VISIVEIS.indexOf(etapaAtual);
+    ? ETAPAS_VISIVEIS.reduce((maior, etapa, i) => (quandoDaEtapa.has(etapa) ? i : maior), 0)
+    : ETAPAS_VISIVEIS.indexOf(ETAPA_DO_STATUS[chamado.status]);
+
+  const encerrado = chamado.status === "concluido";
 
   const passos: PassoLinha[] = ETAPAS_VISIVEIS.map((etapa, i) => {
     const quando = quandoDaEtapa.get(etapa);
-    const estado: PassoLinha["estado"] = cancelado
-      ? i <= indiceAtual
-        ? "concluido"
-        : "cancelado"
-      : i < indiceAtual
-        ? "concluido"
-        : i === indiceAtual
-          ? "atual"
-          : "futuro";
+
+    let estado: PassoLinha["estado"];
+    if (cancelado) {
+      // a etapa em que parou não foi concluída: ela é o ponto do corte
+      estado = i < indiceAtual ? "concluido" : "cancelado";
+    } else if (encerrado) {
+      // chamado concluído não tem etapa "atual": o atendimento terminou
+      estado = "concluido";
+    } else if (i < indiceAtual) {
+      estado = "concluido";
+    } else if (i === indiceAtual) {
+      estado = "atual";
+    } else {
+      estado = "futuro";
+    }
 
     return {
       titulo: ROTULO_CHAMADO[etapa],
@@ -611,6 +631,7 @@ export function passosDoChamado(chamado: ChamadoParaLinha): PassoLinha[] {
   if (cancelado) {
     passos.push({
       titulo: "Chamado cancelado",
+      descricao: "O atendimento foi encerrado antes do fim. Para retomar, abra um novo chamado.",
       quando: chamado.closedAt ? formatarDataHora(chamado.closedAt) : undefined,
       estado: "cancelado",
     });

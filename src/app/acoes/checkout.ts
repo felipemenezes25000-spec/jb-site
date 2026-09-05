@@ -3,13 +3,20 @@
 import crypto from "node:crypto";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { Order, PaymentMethod } from "@prisma/client";
 
 import { criarSessaoCliente, hashSenhaCliente, sessaoCliente } from "@/lib/auth-cliente";
-import { lerCarrinho } from "@/lib/carrinho";
+import { calcularTotais, lerCarrinho, type CarrinhoCompleto } from "@/lib/carrinho";
+import {
+  calcularFreteDePedido,
+  freteDeRetirada,
+  paraExibicao,
+  type Frete,
+  type FreteExibido,
+} from "@/lib/frete";
 import {
   calcularParcelas,
   cnpjValido,
@@ -17,6 +24,8 @@ import {
   paraCentavos,
   somenteDigitos,
 } from "@/lib/format";
+import { chaveDeIp, checarLimite, segundosDeEspera } from "@/lib/limite";
+import { enfileirar } from "@/lib/notificacoes";
 import { provedorPagamento } from "@/lib/pagamento";
 import {
   confirmarPagamento,
@@ -25,9 +34,13 @@ import {
   ErroDeItemIndisponivel,
 } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
+import { ipDoPedido } from "@/lib/seguranca";
 import { getSettings } from "@/lib/settings";
 
 export type EstadoCheckout = { erro?: string; campo?: string; ok?: boolean };
+
+/** Resposta de `consultarFrete` — a tela mostra, o servidor decide. */
+export type RespostaFrete = { erro?: string; frete?: FreteExibido };
 
 /* --------------------------------------------- acompanhamento do convidado */
 
@@ -144,6 +157,68 @@ const esquema = z
     }
   });
 
+/* ------------------------------------------------------------------ frete */
+
+/**
+ * Produtos do carrinho que exigem transporte.
+ *
+ * Serviço não viaja, adicional viaja junto do produto pai, e item despublicado
+ * não entra no pedido — nenhum dos três pode puxar o frete para cima.
+ */
+function produtosParaFrete(carrinho: CarrinhoCompleto): string[] {
+  return carrinho.items.flatMap((item) =>
+    !item.parentId && item.productId && item.product?.status === "active" ? [item.productId] : [],
+  );
+}
+
+/**
+ * Frete deste carrinho para este CEP.
+ *
+ * O CEP é a única coisa que vem do formulário. Preço, prazo e faixa saem da
+ * tabela cadastrada em /admin/frete; o navegador não tem como propor valor.
+ */
+async function freteDoCarrinho(carrinho: CarrinhoCompleto, cep: string): Promise<Frete> {
+  const totais = calcularTotais(carrinho);
+  return calcularFreteDePedido({
+    cep,
+    // o mínimo do frete grátis vale sobre o que a pessoa efetivamente paga
+    // pelos itens: com cupom aplicado, é este o valor da compra
+    subtotalCents: Math.max(0, totais.subtotalCents - totais.descontoCents),
+    produtoIds: produtosParaFrete(carrinho),
+  });
+}
+
+/**
+ * Prévia do frete para a etapa de entrega.
+ *
+ * Existe para a tela poder mostrar valor e prazo assim que o CEP fica
+ * completo. O que ela devolve é informativo: quem cobra é `finalizarCompra`,
+ * que refaz esta mesma conta no fechamento.
+ *
+ * Só lê o carrinho deste navegador e a tabela de frete, que é pública na
+ * página /entrega. Mesmo assim vai com freio por IP: sem ele, este endpoint
+ * seria uma sonda barata para varrer a tabela de zonas CEP a CEP.
+ */
+export async function consultarFrete(cepBruto: string): Promise<RespostaFrete> {
+  const cep = somenteDigitos(typeof cepBruto === "string" ? cepBruto : "");
+  if (cep.length !== 8) return { erro: "Informe o CEP com 8 dígitos." };
+
+  const { ok, esperaMs } = checarLimite(
+    chaveDeIp(ipDoPedido(await headers()), "/checkout/frete"),
+    { limite: 40, janelaMs: 60_000 },
+  );
+  if (!ok) {
+    return {
+      erro: `Muitas consultas de CEP seguidas. Tente de novo em ${segundosDeEspera(esperaMs)}s.`,
+    };
+  }
+
+  const carrinho = await lerCarrinho();
+  if (!carrinho || carrinho.items.length === 0) return { erro: "Seu carrinho está vazio." };
+
+  return { frete: paraExibicao(await freteDoCarrinho(carrinho, cep)) };
+}
+
 /**
  * Fecha o pedido.
  *
@@ -230,6 +305,21 @@ export async function finalizarCompra(
 
   const retirada = dados.data.entrega === "retirada";
 
+  /**
+   * O frete é decidido aqui, no servidor, no momento do fechamento.
+   *
+   * O formulário mandou o CEP e mais nada: valor, prazo e faixa saem da tabela
+   * de /admin/frete. Quando nenhuma faixa cobre o CEP, `calcularFrete` devolve
+   * `sob_orcamento` com valor zero — que é exatamente o que a loja fazia para
+   * todo mundo antes de existir cálculo.
+   *
+   * `criarPedido` refaz o subtotal dentro da transação; o mínimo do frete
+   * grátis é conferido com o subtotal lido um instante antes. A diferença só
+   * aparece se um preço mudar entre as duas leituras, e nesse caso quem vale é
+   * o valor de frete calculado aqui — o mesmo que a pessoa acabou de ver.
+   */
+  const frete = retirada ? freteDeRetirada() : await freteDoCarrinho(carrinho, dados.data.cep);
+
   let pedido;
   try {
     pedido = await criarPedido({
@@ -244,10 +334,9 @@ export async function finalizarCompra(
         razaoSocial: dados.data.razaoSocial,
       },
       entrega: {
-        tipo: retirada ? "retirada" : "sob_orcamento",
-        rotulo: retirada ? "Retirada na JB" : "Entrega — frete calculado após análise",
-        // frete de equipamento grande é orçado depois; nada é cobrado aqui
-        valorCents: 0,
+        tipo: frete.tipo,
+        rotulo: frete.rotulo,
+        valorCents: frete.valorCents,
         cep: dados.data.cep,
         logradouro: dados.data.logradouro,
         numero: dados.data.numero,
@@ -294,6 +383,32 @@ export async function finalizarCompra(
         },
       });
     }
+  }
+
+  /*
+   * Confirmação por e-mail.
+   *
+   * Fica AQUI, e não dentro de `criarPedido`, porque lá tudo roda numa
+   * transação: uma mensagem enfileirada de dentro dela sobreviveria a um
+   * rollback e o cliente receberia "recebemos seu pedido" de um pedido que
+   * não existe. Neste ponto a transação já foi confirmada.
+   *
+   * A fila é idempotente pela chave (canal|template|pedido|id), então um
+   * duplo envio do formulário não gera dois e-mails. Falha aqui não derruba
+   * a compra: `enfileirar` devolve o motivo em vez de lançar, e o pedido
+   * está fechado de qualquer jeito.
+   */
+  const naFila = await enfileirar({
+    canal: "email",
+    para: pedido.buyerEmail,
+    assunto: `Recebemos seu pedido ${pedido.number}`,
+    corpo: "",
+    refTipo: "pedido",
+    refId: pedido.id,
+    template: "pedido_recebido",
+  });
+  if (!naFila.ok) {
+    console.error("[checkout] confirmação não entrou na fila:", naFila.motivo);
   }
 
   await abrirCobranca(pedido.id, dados.data.metodo, dados.data.parcelas, {

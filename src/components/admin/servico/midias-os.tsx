@@ -5,6 +5,7 @@ import { FileText, Trash2 } from "lucide-react";
 import { anexarMidiaNaOS, removerMidiaDaOS } from "@/app/acoes/admin-servico";
 import { Anexos } from "@/components/admin/servico/anexos";
 import { FormularioAcao, Oculto } from "@/components/admin/servico/formulario";
+import { BotaoConfirmar } from "@/components/ui/confirmar";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -15,7 +16,9 @@ import { cn } from "@/lib/utils";
    sem ordem não prova nada.
 
    Remover apaga só o vínculo com a OS — o arquivo continua na biblioteca de
-   mídia, porque ele pode estar sendo usado em outro lugar.
+   mídia, porque ele pode estar sendo usado em outro lugar. Mesmo assim a
+   remoção pergunta antes: a lixeira fica por cima da miniatura, no caminho do
+   dedo de quem só queria abrir a foto, e a prova do serviço sai da OS.
    ============================================================================ */
 
 export type MidiaDaOS = {
@@ -122,17 +125,20 @@ function Fase({
                 >
                   <Oculto nome="ordemId" valor={ordemId} />
                   <Oculto nome="midiaId" valor={midia.id} />
-                  <button
-                    type="submit"
-                    className={cn(
-                      "inline-flex size-11 items-center justify-center rounded-lg bg-white/90 text-graf-600 shadow-card transition-colors",
-                      "hover:bg-white hover:text-jb-700",
-                      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-                    )}
-                  >
-                    <Trash2 className="size-4" aria-hidden />
-                    <span className="sr-only">Remover anexo {midia.nome}</span>
-                  </button>
+                  <BotaoConfirmar
+                    variante="texto"
+                    className="h-11 w-11 bg-white/90 px-0 text-graf-600 shadow-card hover:bg-white hover:text-jb-700"
+                    title={`Remover anexo ${midia.nome}`}
+                    rotulo={
+                      <>
+                        <Trash2 className="size-4" aria-hidden />
+                        <span className="sr-only">Remover anexo {midia.nome}</span>
+                      </>
+                    }
+                    pergunta="Remover este anexo da OS?"
+                    detalhe={`"${midia.nome}" deixa de aparecer nesta ordem de serviço. O arquivo continua na biblioteca de mídia, mas o vínculo com a OS precisa ser refeito à mão.`}
+                    rotuloConfirmar="Remover"
+                  />
                 </FormularioAcao>
               ) : null}
             </li>

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import type { PersonType, Prisma } from "@prisma/client";
-import { Building2, UserPlus, Users } from "lucide-react";
+import { Building2, FileText, UserPlus, Users } from "lucide-react";
 
 import { FiltrosLista } from "@/components/admin/filtros-lista";
 import { Indicador, Indicadores } from "@/components/admin/indicador";
@@ -211,10 +211,18 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
         titulo="Clientes"
         apoio="Cadastro, histórico de compras, equipamentos e chamados."
         acoes={
-          <LinkBotao href="/admin/orcamentos/novo" variante="secundario" tamanho="sm">
-            <UserPlus className="size-4" aria-hidden />
-            Novo orçamento
-          </LinkBotao>
+          <>
+            <LinkBotao href="/admin/orcamentos/novo" variante="secundario" tamanho="sm">
+              <FileText className="size-4" aria-hidden />
+              Novo orçamento
+            </LinkBotao>
+            {/* /admin/clientes/novo só era alcançável pela busca da abertura de
+                chamado. O cadastro de cliente pertence à lista de clientes. */}
+            <LinkBotao href="/admin/clientes/novo" tamanho="sm">
+              <UserPlus className="size-4" aria-hidden />
+              Novo cliente
+            </LinkBotao>
+          </>
         }
       />
 

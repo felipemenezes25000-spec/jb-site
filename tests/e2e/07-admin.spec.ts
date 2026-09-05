@@ -86,6 +86,11 @@ test.describe("Painel da equipe", () => {
     const original = await chamada.inputValue();
 
     await chamada.fill(marca);
+    // confere o campo ANTES de salvar: o editor rico monta depois da hidratação
+    // e já derrubou o que tinha sido digitado — sem esta linha, o teste falhava
+    // lá na frente, longe da causa
+    await expect(chamada).toHaveValue(marca);
+
     await page.getByRole("button", { name: "Salvar alterações" }).click();
     await expect(page.getByText("Página salva.")).toBeVisible({ timeout: 30_000 });
 
@@ -95,11 +100,27 @@ test.describe("Painel da equipe", () => {
     // devolve o texto original — o teste não pode deixar rastro no conteúdo
     await page.goto("/admin/conteudo/paginas/sobre");
     await page.getByLabel("Chamada").fill(original);
+    await expect(page.getByLabel("Chamada")).toHaveValue(original);
     await page.getByRole("button", { name: "Salvar alterações" }).click();
     await expect(page.getByText("Página salva.")).toBeVisible({ timeout: 30_000 });
 
-    await page.goto("/sobre");
-    await expect(page.getByText(marca)).toHaveCount(0);
+    /**
+     * Recarrega a cada tentativa, em vez de olhar o DOM de uma busca só.
+     *
+     * `goto` traz a página uma vez; se a revalidação ainda não tinha chegado
+     * naquele instante, o `toHaveCount` ficava observando um HTML velho que
+     * nunca mudaria — e o teste falhava sem que houvesse defeito. A regeneração
+     * acontece no PRÓXIMO pedido, então quem tem que repetir é o pedido.
+     */
+    await expect
+      .poll(
+        async () => {
+          await page.goto("/sobre");
+          return page.getByText(marca).count();
+        },
+        { timeout: 30_000, message: "o texto de verificação não saiu de /sobre" },
+      )
+      .toBe(0);
   });
 });
 

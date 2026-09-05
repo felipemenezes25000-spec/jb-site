@@ -33,7 +33,7 @@ export default async function PaginaDetalheDoTicket({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const usuario = await exigirArea("clientes");
+  const usuario = await exigirArea("suporte");
   const { id } = await params;
 
   const ticket = await prisma.supportTicket.findUnique({
@@ -66,7 +66,7 @@ export default async function PaginaDetalheDoTicket({
 
   if (!ticket) notFound();
 
-  const podeEscrever = podeEditar(usuario, "clientes");
+  const podeEscrever = podeEditar(usuario, "suporte");
 
   // SupportMessage guarda só o id de quem escreveu; o nome vem daqui
   const idsDaEquipe = [

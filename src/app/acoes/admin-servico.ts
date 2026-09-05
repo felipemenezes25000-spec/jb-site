@@ -6,6 +6,7 @@ import {
   ContractStatus,
   EquipmentStatus,
   ServiceRequestStatus,
+  Urgency,
   VisitStatus,
   WorkOrderStatus,
 } from "@prisma/client";
@@ -13,6 +14,7 @@ import { z } from "zod";
 
 import {
   ROTULO_CHAMADO,
+  abrirChamado,
   agendarVisita,
   atribuirTecnico,
   mudarStatusChamado,
@@ -24,7 +26,13 @@ import {
   mudarStatusEquipamento,
   registrarEvento,
 } from "@/lib/equipamento";
-import { formatarData, formatarDataHora, gerarSlug } from "@/lib/format";
+import {
+  formatarData,
+  formatarDataHora,
+  formatarPreco,
+  gerarSlug,
+  somenteDigitos,
+} from "@/lib/format";
 import {
   agendarVisitaDeManutencao,
   concluirVisita,
@@ -197,6 +205,188 @@ function revalidarChamado(chamadoId: string) {
   ]);
 }
 
+const esquemaNovoChamado = z.object({
+  customerId: idOpcional,
+  equipamentoId: idOpcional,
+  unidadeId: idOpcional,
+  contatoNome: z.string().trim().max(160).optional().default(""),
+  contatoEmail: z.string().trim().max(160).optional().default(""),
+  contatoTelefone: z.string().trim().max(30).optional().default(""),
+  categoriaId: idOpcional,
+  marca: z.string().trim().max(80).optional().default(""),
+  modelo: z.string().trim().max(80).optional().default(""),
+  serie: z.string().trim().max(80).optional().default(""),
+  tipoProblema: z.string().trim().max(120).optional().default(""),
+  descricao: z.string().trim().min(10, "Descreva o problema relatado.").max(4000),
+  urgencia: z.enum(Urgency),
+  cep: z.string().trim().max(12).optional().default(""),
+  logradouro: z.string().trim().max(160).optional().default(""),
+  numero: z.string().trim().max(20).optional().default(""),
+  complemento: z.string().trim().max(80).optional().default(""),
+  bairro: z.string().trim().max(120).optional().default(""),
+  cidade: z.string().trim().max(120).optional().default(""),
+  uf: z.string().trim().max(2).optional().default(""),
+  disponibilidade: z.string().trim().max(300).optional().default(""),
+  notaInterna: textoOpcional,
+});
+
+/**
+ * Abre o chamado a partir do painel — o atendimento por telefone.
+ *
+ * Até aqui, o único `serviceRequest.create` do sistema era alimentado pelos
+ * formulários do site: o dentista ligava e a JB não tinha onde registrar. O
+ * chamado nasce igual ao do site (mesmo `abrirChamado`, mesmo número, mesma
+ * linha do tempo) — a diferença é quem digita.
+ *
+ * O contato é recalculado no servidor a partir do cliente escolhido. O que veio
+ * no formulário só vale quando não há cliente: nome e e-mail de contato são
+ * colunas obrigatórias do `ServiceRequest`, e deixá-las a cargo do que o
+ * navegador mandou é convite para chamado órfão.
+ *
+ * Marca, modelo e série são copiados do equipamento quando ele vem do
+ * prontuário. É redundância de propósito: o chamado precisa continuar legível
+ * daqui a dois anos, mesmo que o equipamento seja transferido ou desativado.
+ */
+export async function abrirChamadoNoPainel(
+  _anterior: EstadoAcao,
+  formData: FormData,
+): Promise<EstadoAcao> {
+  const usuario = await exigirEdicao("assistencia");
+  const dados = esquemaNovoChamado.safeParse(comoObjeto(formData));
+  if (!dados.success) return problemaZod(dados.error);
+
+  const d = dados.data;
+
+  let contatoNome = d.contatoNome;
+  let contatoEmail = d.contatoEmail.toLowerCase();
+  let contatoTelefone = somenteDigitos(d.contatoTelefone);
+  let equipmentId: string | null = null;
+  let locationId: string | null = d.unidadeId ?? null;
+  let marca = d.marca;
+  let modelo = d.modelo;
+  let serie = d.serie;
+  let categoriaId: string | null = d.categoriaId ?? null;
+
+  if (d.customerId) {
+    const cliente = await prisma.customer.findUnique({
+      where: { id: d.customerId },
+      select: { id: true, name: true, companyName: true, email: true, phone: true },
+    });
+    if (!cliente) return { erro: "Cliente não encontrado.", campo: "customerId" };
+
+    contatoNome = contatoNome || cliente.companyName || cliente.name;
+    contatoEmail = contatoEmail || cliente.email;
+    contatoTelefone = contatoTelefone || somenteDigitos(cliente.phone);
+
+    if (d.equipamentoId) {
+      // o equipamento precisa ser deste cliente: id em campo escondido não é prova
+      const equipamento = await prisma.equipment.findFirst({
+        where: { id: d.equipamentoId, customerId: cliente.id },
+        select: {
+          id: true,
+          brandName: true,
+          modelName: true,
+          serialNumber: true,
+          categoryId: true,
+          locationId: true,
+        },
+      });
+      if (!equipamento) {
+        return {
+          erro: "Este equipamento não está no prontuário do cliente escolhido.",
+          campo: "equipamentoId",
+        };
+      }
+      equipmentId = equipamento.id;
+      marca = marca || equipamento.brandName;
+      modelo = modelo || equipamento.modelName;
+      serie = serie || equipamento.serialNumber;
+      categoriaId = categoriaId ?? equipamento.categoryId;
+      locationId = locationId ?? equipamento.locationId;
+    }
+
+    if (locationId) {
+      const unidade = await prisma.customerLocation.findFirst({
+        where: { id: locationId, customerId: cliente.id },
+        select: { id: true },
+      });
+      if (!unidade) {
+        return { erro: "Esta unidade não é do cliente escolhido.", campo: "unidadeId" };
+      }
+    }
+  } else {
+    // chamado avulso: quem liga pode ainda não ter cadastro
+    if (contatoNome.length < 2) {
+      return { erro: "Informe o nome de quem está pedindo.", campo: "contatoNome" };
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contatoEmail)) {
+      return { erro: "Informe um e-mail válido para retorno.", campo: "contatoEmail" };
+    }
+    locationId = null;
+  }
+
+  if (!equipmentId && !marca && !modelo && !d.tipoProblema && !categoriaId) {
+    return {
+      erro: "Diga qual é o equipamento: escolha um do prontuário ou descreva marca e modelo.",
+      campo: "marca",
+    };
+  }
+
+  const uf = d.uf.toUpperCase();
+  const cep = somenteDigitos(d.cep);
+  if (cep && cep.length !== 8) {
+    return { erro: "CEP incompleto — são 8 dígitos.", campo: "cep" };
+  }
+
+  let destino = "";
+  try {
+    const chamado = await abrirChamado({
+      customerId: d.customerId ?? null,
+      equipmentId,
+      locationId,
+      contato: { nome: contatoNome, email: contatoEmail, telefone: contatoTelefone },
+      equipamento: { categoryId: categoriaId, marca, modelo, serie },
+      problema: {
+        tipo: d.tipoProblema,
+        descricao: d.descricao,
+        urgencia: d.urgencia,
+      },
+      endereco: {
+        cep,
+        logradouro: d.logradouro,
+        numero: d.numero,
+        complemento: d.complemento,
+        bairro: d.bairro,
+        cidade: d.cidade,
+        uf,
+      },
+      disponibilidade: d.disponibilidade,
+      notaInterna: [
+        `Aberto no painel por ${usuario.name}.`,
+        d.notaInterna,
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    });
+
+    await registrarAuditoria({
+      userId: usuario.id,
+      acao: "criar",
+      entidade: "ServiceRequest",
+      entidadeId: chamado.id,
+      resumo: `Chamado ${chamado.number} aberto pelo painel para ${contatoNome}`,
+    });
+
+    revalidarChamado(chamado.id);
+    revalidar(["/admin/clientes", "/admin/equipamentos"]);
+    destino = `/admin/assistencia/${chamado.id}`;
+  } catch (erro) {
+    return mensagemDeErro(erro, "Não foi possível abrir o chamado.");
+  }
+
+  redirect(destino);
+}
+
 const esquemaAtribuir = z.object({
   chamadoId: idObrigatorio,
   tecnicoId: idOpcional,
@@ -285,6 +475,149 @@ export async function agendarVisitaDoChamado(
     return { ok: true, mensagem: `Visita marcada para ${formatarDataHora(inicio)}.` };
   } catch (erro) {
     return mensagemDeErro(erro, "Não foi possível agendar a visita.");
+  }
+}
+
+const esquemaRemarcar = z.object({
+  agendamentoId: idObrigatorio,
+  /** `startsAt` que a tela viu. É a guarda contra dois atendentes remarcando junto. */
+  quandoAtual: z.string().trim().min(1, "Agendamento sem data de referência."),
+  tecnicoId: idOpcional,
+  inicio: z.string().trim().min(1, "Informe a nova data e hora."),
+  fim: z.string().trim().optional().default(""),
+  motivo: textoOpcional,
+});
+
+/**
+ * Remarca a visita MOVENDO o agendamento que já existe.
+ *
+ * Antes desta ação, remarcar era abrir a tela de agendamento de novo: nascia um
+ * segundo `ServiceAppointment` e o primeiro ficava "agendado" para sempre. A
+ * agenda do técnico mostrava duas visitas no mesmo chamado, uma delas num dia
+ * que ninguém mais esperava.
+ *
+ * A guarda de concorrência está na condição do UPDATE, não em JavaScript: o
+ * `updateMany` só acerta a linha se ela ainda estiver aberta E ainda estiver na
+ * data que a tela mostrou. Se outra pessoa moveu a visita nesse meio-tempo,
+ * `count` volta zero e ninguém sobrescreve o combinado do outro.
+ */
+export async function remarcarVisitaDoChamado(
+  _anterior: EstadoAcao,
+  formData: FormData,
+): Promise<EstadoAcao> {
+  const usuario = await exigirEdicao("assistencia");
+  const dados = esquemaRemarcar.safeParse(comoObjeto(formData));
+  if (!dados.success) return problemaZod(dados.error);
+
+  const inicio = dataSP(dados.data.inicio);
+  if (!inicio) return { erro: "Data ou hora inválida.", campo: "inicio" };
+
+  const fim = dataSP(dados.data.fim);
+  if (dados.data.fim && !fim) return { erro: "Hora de término inválida.", campo: "fim" };
+  if (fim && fim <= inicio) {
+    return { erro: "O término precisa ser depois do início.", campo: "fim" };
+  }
+
+  const quandoAtual = new Date(dados.data.quandoAtual);
+  if (Number.isNaN(quandoAtual.getTime())) {
+    return { erro: "Não foi possível identificar a visita. Recarregue a página." };
+  }
+
+  try {
+    const resultado = await prisma.$transaction(async (tx) => {
+      const agendamento = await tx.serviceAppointment.findUnique({
+        where: { id: dados.data.agendamentoId },
+        select: {
+          id: true,
+          startsAt: true,
+          status: true,
+          request: { select: { id: true, number: true, status: true, customerId: true } },
+        },
+      });
+      if (!agendamento) return { falha: "Visita não encontrada." as const };
+      if (agendamento.status === "concluido") {
+        return { falha: "Esta visita já foi concluída e não pode ser remarcada." as const };
+      }
+      if (agendamento.status === "cancelado") {
+        return {
+          falha:
+            "Esta visita está cancelada. Agende uma nova visita em vez de remarcar." as const,
+        };
+      }
+      if (agendamento.request?.status === "cancelado") {
+        return { falha: "O chamado foi cancelado e não recebe visita." as const };
+      }
+
+      const movidas = await tx.serviceAppointment.updateMany({
+        where: {
+          id: agendamento.id,
+          startsAt: quandoAtual,
+          status: { in: ["agendado", "em_andamento"] },
+        },
+        data: {
+          startsAt: inicio,
+          endsAt: fim,
+          status: "agendado",
+          ...(dados.data.tecnicoId === undefined
+            ? {}
+            : { technicianId: dados.data.tecnicoId }),
+        },
+      });
+
+      if (movidas.count === 0) {
+        return {
+          falha:
+            "Alguém remarcou esta visita enquanto a tela estava aberta. Recarregue e confira a nova data." as const,
+        };
+      }
+
+      const anterior = formatarDataHora(agendamento.startsAt);
+      const nova = formatarDataHora(inicio);
+      const motivo = dados.data.motivo.trim();
+
+      if (agendamento.request) {
+        await tx.serviceRequestEvent.create({
+          data: {
+            requestId: agendamento.request.id,
+            status: "visita_agendada",
+            title: "Visita remarcada",
+            message: `A visita passou de ${anterior} para ${nova}.${motivo ? ` ${motivo}` : ""}`,
+            visibleToCustomer: true,
+            userId: usuario.id,
+          },
+        });
+
+        if (agendamento.request.customerId) {
+          await tx.notification.create({
+            data: {
+              customerId: agendamento.request.customerId,
+              kind: "visita_remarcada",
+              title: `Visita do chamado ${agendamento.request.number} remarcada`,
+              body: `Nova data: ${nova}.`,
+              href: `/minha-jb/assistencia/${agendamento.request.id}`,
+            },
+          });
+        }
+      }
+
+      return { chamadoId: agendamento.request?.id ?? null, anterior, nova };
+    });
+
+    if ("falha" in resultado) return { erro: resultado.falha };
+
+    await registrarAuditoria({
+      userId: usuario.id,
+      acao: "editar",
+      entidade: "ServiceAppointment",
+      entidadeId: dados.data.agendamentoId,
+      resumo: `Visita remarcada de ${resultado.anterior} para ${resultado.nova}`,
+    });
+
+    revalidar(["/admin/agenda", "/admin/assistencia"]);
+    if (resultado.chamadoId) revalidarChamado(resultado.chamadoId);
+    return { ok: true, mensagem: `Visita remarcada para ${resultado.nova}.` };
+  } catch (erro) {
+    return mensagemDeErro(erro, "Não foi possível remarcar a visita.");
   }
 }
 
@@ -1260,6 +1593,307 @@ export async function criarContratoDeManutencao(
   redirect(destino);
 }
 
+const esquemaEditarContrato = z.object({
+  contratoId: idObrigatorio,
+  /** `updatedAt` que a tela leu. Guarda de concorrência na condição do UPDATE. */
+  versao: z.string().trim().min(1, "Recarregue a página antes de salvar."),
+  planoId: idOpcional,
+  equipamentoIds: z.array(z.string().trim().min(1)).min(1, "Escolha ao menos um equipamento."),
+  inicio: z.string().trim().optional().default(""),
+  fim: z.string().trim().optional().default(""),
+  precoCents: centavosDoFormulario,
+  intervaloMeses: z.string().trim().optional().default(""),
+  notas: textoOpcional,
+});
+
+/** Linha que `criarContratoDeManutencao` grava nas observações. */
+const MARCA_INTERVALO = "Intervalo combinado entre visitas:";
+
+/**
+ * Lê a periodicidade combinada de volta das observações.
+ *
+ * `MaintenanceContract` não tem coluna de periodicidade — o schema está
+ * congelado e a informação mora no texto desde a criação. Reler daqui é o que
+ * permite dizer se a periodicidade REALMENTE mudou: sem isso, toda edição
+ * pareceria mudança e a agenda seria refeita à toa.
+ */
+function intervaloDasObservacoes(notas: string): number | null {
+  const linha = notas
+    .split("\n")
+    .find((texto) => texto.trim().startsWith(MARCA_INTERVALO));
+  if (!linha) return null;
+  const numero = Number(linha.replace(MARCA_INTERVALO, "").replace(/\D/g, ""));
+  return Number.isInteger(numero) && numero > 0 ? numero : null;
+}
+
+/**
+ * Edita o contrato: vigência, valor, plano e equipamentos cobertos.
+ *
+ * O contrato era gravado uma vez e ficava assim para sempre — renovar significava
+ * criar outro e deixar o antigo pendurado. Aqui ele muda de verdade, e a agenda
+ * muda junto.
+ *
+ * A regra da agenda tem uma linha que não se atravessa: visita CONCLUÍDA é
+ * histórico do equipamento e não é tocada por nada. As visitas ainda só
+ * "previstas" são projeção nossa e são refeitas do zero quando a vigência, o
+ * plano ou a periodicidade mudam. Já as "agendadas" ficam: elas têm dia
+ * combinado com o cliente, e apagar um compromisso marcado sem avisar ninguém é
+ * o tipo de eficiência que faz o técnico e o dentista se desencontrarem. Quando
+ * uma delas cai fora da nova vigência, a mensagem diz quantas são.
+ *
+ * Equipamento retirado da cobertura tem as visitas em aberto CANCELADAS, não
+ * apagadas: o contrato precisa continuar contando a própria história.
+ */
+export async function editarContratoDeManutencao(
+  _anterior: EstadoAcao,
+  formData: FormData,
+): Promise<EstadoAcao> {
+  const usuario = await exigirEdicao("manutencao");
+  const dados = esquemaEditarContrato.safeParse(
+    comoObjeto(formData, ["equipamentoIds"]),
+  );
+  if (!dados.success) return problemaZod(dados.error);
+
+  const versao = new Date(dados.data.versao);
+  if (Number.isNaN(versao.getTime())) {
+    return { erro: "Recarregue a página antes de salvar." };
+  }
+
+  const inicio = dataSP(dados.data.inicio);
+  if (dados.data.inicio && !inicio) {
+    return { erro: "Data de início inválida.", campo: "inicio" };
+  }
+  const fim = dataSP(dados.data.fim);
+  if (dados.data.fim && !fim) return { erro: "Data de término inválida.", campo: "fim" };
+  if (inicio && fim && fim <= inicio) {
+    return { erro: "O término precisa ser depois do início.", campo: "fim" };
+  }
+
+  const intervalo = dados.data.intervaloMeses.trim()
+    ? Number(dados.data.intervaloMeses)
+    : undefined;
+  if (intervalo !== undefined && (!Number.isInteger(intervalo) || intervalo < 1 || intervalo > 60)) {
+    return { erro: "Intervalo entre visitas de 1 a 60 meses.", campo: "intervaloMeses" };
+  }
+
+  const contrato = await prisma.maintenanceContract.findUnique({
+    where: { id: dados.data.contratoId },
+    select: {
+      id: true,
+      number: true,
+      customerId: true,
+      planId: true,
+      startsAt: true,
+      endsAt: true,
+      priceCents: true,
+      notes: true,
+      items: { select: { equipmentId: true } },
+    },
+  });
+  if (!contrato) return { erro: "Contrato não encontrado." };
+
+  const equipamentos = await prisma.equipment.findMany({
+    where: { id: { in: dados.data.equipamentoIds }, customerId: contrato.customerId },
+    select: { id: true },
+  });
+  if (equipamentos.length !== dados.data.equipamentoIds.length) {
+    return {
+      erro: "Algum equipamento marcado não é deste cliente. Recarregue a página.",
+      campo: "equipamentoIds",
+    };
+  }
+
+  if (dados.data.planoId) {
+    const plano = await prisma.maintenancePlan.findUnique({
+      where: { id: dados.data.planoId },
+      select: { id: true },
+    });
+    if (!plano) return { erro: "Plano não encontrado.", campo: "planoId" };
+  }
+
+  /*
+   * A periodicidade não é coluna do contrato — é parâmetro da geração. Continua
+   * anotada nas observações para quem gerar visitas depois saber qual repetir;
+   * a linha antiga sai antes para não empilhar uma por edição.
+   */
+  const notasLimpas = dados.data.notas
+    .split("\n")
+    .filter((linha) => !linha.trim().startsWith(MARCA_INTERVALO))
+    .join("\n")
+    .trim();
+  const notas = [
+    notasLimpas,
+    intervalo ? `${MARCA_INTERVALO} ${intervalo} mês(es).` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const novos = new Set(equipamentos.map((e) => e.id));
+  const atuais = new Set(contrato.items.map((item) => item.equipmentId));
+  const removidos = [...atuais].filter((id) => !novos.has(id));
+  const acrescentados = [...novos].filter((id) => !atuais.has(id));
+
+  const mesmaData = (a: Date | null, b: Date | null) =>
+    (a?.getTime() ?? null) === (b?.getTime() ?? null);
+
+  const intervaloAnterior = intervaloDasObservacoes(contrato.notes);
+
+  const mudouVigencia =
+    !mesmaData(contrato.startsAt, inicio) ||
+    !mesmaData(contrato.endsAt, fim) ||
+    (contrato.planId ?? null) !== (dados.data.planoId ?? null) ||
+    (intervalo ?? null) !== intervaloAnterior;
+
+  /*
+   * `gerarVisitasDoContrato` precisa de um início e de um fim (do contrato ou
+   * do plano) para saber até onde ir. Sem isso, apagar as previstas esvaziaria
+   * a agenda e a reconstrução falharia logo em seguida — o contrato ficaria
+   * sem visita nenhuma por causa de um campo em branco. Então: só se refaz o
+   * que se sabe refazer, e a mensagem diz que a agenda ficou como estava.
+   */
+  const podeRegerar = Boolean(inicio) && (Boolean(fim) || Boolean(dados.data.planoId));
+  const refazerPrevistas = mudouVigencia && podeRegerar;
+  const regenerar = podeRegerar && (mudouVigencia || acrescentados.length > 0);
+
+  try {
+    const resultado = await prisma.$transaction(async (tx) => {
+      const salvos = await tx.maintenanceContract.updateMany({
+        where: { id: contrato.id, updatedAt: versao },
+        data: {
+          planId: dados.data.planoId ?? null,
+          startsAt: inicio,
+          endsAt: fim,
+          priceCents: dados.data.precoCents,
+          notes: notas,
+        },
+      });
+      if (salvos.count === 0) {
+        return {
+          falha:
+            "Este contrato foi alterado por outra pessoa enquanto a tela estava aberta. Recarregue e refaça a mudança." as const,
+        };
+      }
+
+      if (removidos.length > 0) {
+        await tx.maintenanceContractItem.deleteMany({
+          where: { contractId: contrato.id, equipmentId: { in: removidos } },
+        });
+        // visita de equipamento descoberto é cancelada, nunca apagada
+        await tx.maintenanceVisit.updateMany({
+          where: {
+            contractId: contrato.id,
+            equipmentId: { in: removidos },
+            status: { in: ["prevista", "agendada"] },
+          },
+          data: { status: "cancelada" },
+        });
+      }
+
+      if (acrescentados.length > 0) {
+        await tx.maintenanceContractItem.createMany({
+          data: acrescentados.map((equipmentId) => ({
+            contractId: contrato.id,
+            equipmentId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      let apagadas = 0;
+      if (refazerPrevistas) {
+        // só as "previstas": projeção nossa, sem dia combinado com ninguém
+        const limpas = await tx.maintenanceVisit.deleteMany({
+          where: { contractId: contrato.id, status: "prevista" },
+        });
+        apagadas = limpas.count;
+      }
+
+      const foraDaVigencia = fim
+        ? await tx.maintenanceVisit.count({
+            where: {
+              contractId: contrato.id,
+              status: "agendada",
+              OR: [{ dueAt: { gt: fim } }, { scheduledAt: { gt: fim } }],
+            },
+          })
+        : 0;
+
+      return { apagadas, foraDaVigencia };
+    });
+
+    if ("falha" in resultado) return { erro: resultado.falha };
+
+    let geradas = 0;
+    let semPeriodicidade: string[] = [];
+    let avisoGeracao = "";
+
+    if (regenerar) {
+      try {
+        const gerado = await gerarVisitasDoContrato(contrato.id, {
+          intervaloMeses: intervalo,
+        });
+        geradas = gerado.criadas;
+        semPeriodicidade = gerado.semPeriodicidade;
+      } catch (erro) {
+        /*
+         * O contrato já está salvo; só a agenda não pôde ser refeita (falta de
+         * início ou de fim da vigência, por exemplo). Dizer isso em voz alta é
+         * melhor do que desfazer a edição que a pessoa acabou de conferir.
+         */
+        avisoGeracao =
+          erro instanceof Error && NOMES_DE_ERRO.has(erro.name)
+            ? ` Contrato salvo, mas as visitas não foram geradas: ${erro.message}`
+            : " Contrato salvo, mas as visitas não puderam ser geradas.";
+      }
+    }
+
+    await registrarAuditoria({
+      userId: usuario.id,
+      acao: "editar",
+      entidade: "MaintenanceContract",
+      entidadeId: contrato.id,
+      resumo: `Contrato ${contrato.number} · ${formatarData(inicio)} a ${formatarData(fim)} · ${formatarPreco(dados.data.precoCents)} · ${equipamentos.length} equipamento(s) coberto(s)${
+        removidos.length > 0 ? `, ${removidos.length} retirado(s)` : ""
+      }${acrescentados.length > 0 ? `, ${acrescentados.length} incluído(s)` : ""}`,
+    });
+
+    revalidar([
+      "/admin/manutencao",
+      "/admin/manutencao/contratos",
+      `/admin/manutencao/contratos/${contrato.id}`,
+      "/admin/agenda",
+      "/minha-jb/manutencoes",
+    ]);
+
+    const partes = ["Contrato atualizado."];
+    if (regenerar && !avisoGeracao) {
+      partes.push(
+        resultado.apagadas > 0
+          ? `${resultado.apagadas} visita(s) prevista(s) refeita(s), ${geradas} gerada(s).`
+          : `${geradas} visita(s) prevista(s) gerada(s).`,
+      );
+    }
+    if (avisoGeracao) partes.push(avisoGeracao.trim());
+    if (mudouVigencia && !podeRegerar) {
+      partes.push(
+        "A agenda ficou como estava: informe início e fim da vigência (ou escolha um plano) para as visitas serem refeitas.",
+      );
+    }
+    if (semPeriodicidade.length > 0) {
+      partes.push(`Sem periodicidade definida: ${semPeriodicidade.join(", ")}.`);
+    }
+    if (resultado.foraDaVigencia > 0) {
+      partes.push(
+        `${resultado.foraDaVigencia} visita(s) já marcada(s) ficaram fora da nova vigência — confira na agenda.`,
+      );
+    }
+
+    return { ok: true, mensagem: partes.join(" ") };
+  } catch (erro) {
+    return mensagemDeErro(erro, "Não foi possível salvar o contrato.");
+  }
+}
+
 const esquemaStatusContrato = z.object({
   contratoId: idObrigatorio,
   status: z.enum(ContractStatus),
@@ -1877,7 +2511,7 @@ export async function salvarTecnico(
   _anterior: EstadoAcao,
   formData: FormData,
 ): Promise<EstadoAcao> {
-  const usuario = await exigirEdicao("manutencao");
+  const usuario = await exigirEdicao("tecnicos");
   const dados = esquemaTecnico.safeParse(comoObjeto(formData));
   if (!dados.success) return problemaZod(dados.error);
 
@@ -1959,7 +2593,7 @@ export async function alternarTecnicoAtivo(
   _anterior: EstadoAcao,
   formData: FormData,
 ): Promise<EstadoAcao> {
-  const usuario = await exigirEdicao("manutencao");
+  const usuario = await exigirEdicao("tecnicos");
   const dados = esquemaAtivarTecnico.safeParse(comoObjeto(formData));
   if (!dados.success) return problemaZod(dados.error);
 
@@ -2047,8 +2681,25 @@ const esquemaStatusAgendamento = z.object({
   agendamentoId: idObrigatorio,
   chamadoId: idOpcional,
   status: z.enum(["agendado", "em_andamento", "concluido", "cancelado"]),
+  motivo: textoOpcional,
 });
 
+/**
+ * Move a visita entre agendada, em andamento, concluída e cancelada.
+ *
+ * Cancelar uma visita não é só trocar uma palavra na tabela: o cliente foi
+ * avisado da data e precisa saber que ela caiu. Por isso o cancelamento e a
+ * conclusão gravam evento no chamado e aviso na Minha JB, na mesma transação
+ * do próprio status — evento sem status é mentira, status sem evento é buraco
+ * na linha do tempo.
+ *
+ * Cancelada a última visita aberta, o chamado não pode continuar dizendo
+ * "visita agendada". Ele volta para triagem, que é onde alguém precisa
+ * remarcá-lo. Isso roda depois da transação, de propósito: `mudarStatusChamado`
+ * abre a transação dele, e aninhar as duas colocaria as mesmas linhas sob dois
+ * bloqueios. O pior caso é um chamado com o status antigo — visível na tela e
+ * corrigível num clique —, nunca um impasse no banco.
+ */
 export async function mudarStatusDoAgendamento(
   _anterior: EstadoAcao,
   formData: FormData,
@@ -2057,24 +2708,122 @@ export async function mudarStatusDoAgendamento(
   const dados = esquemaStatusAgendamento.safeParse(comoObjeto(formData));
   if (!dados.success) return problemaZod(dados.error);
 
+  const { agendamentoId, status } = dados.data;
+  const motivo = dados.data.motivo.trim();
+
+  const TITULO: Record<typeof status, string> = {
+    agendado: "Visita reaberta",
+    em_andamento: "Técnico a caminho",
+    concluido: "Visita concluída",
+    cancelado: "Visita cancelada",
+  };
+
   try {
-    const agendamento = await prisma.serviceAppointment.update({
-      where: { id: dados.data.agendamentoId },
-      data: { status: dados.data.status },
-      select: { id: true, requestId: true },
+    const resultado = await prisma.$transaction(async (tx) => {
+      const agendamento = await tx.serviceAppointment.findUnique({
+        where: { id: agendamentoId },
+        select: {
+          id: true,
+          status: true,
+          startsAt: true,
+          request: { select: { id: true, number: true, status: true, customerId: true } },
+        },
+      });
+      if (!agendamento) return { falha: "Visita não encontrada." as const };
+      if (agendamento.status === status) {
+        return { falha: `A visita já está como "${status}".` as const };
+      }
+
+      // guarda na condição do UPDATE: quem mudou primeiro é quem vale
+      const alteradas = await tx.serviceAppointment.updateMany({
+        where: { id: agendamentoId, status: agendamento.status },
+        data: { status },
+      });
+      if (alteradas.count === 0) {
+        return {
+          falha:
+            "Alguém mudou esta visita enquanto a tela estava aberta. Recarregue a página." as const,
+        };
+      }
+
+      let chamadoParaTriagem = false;
+
+      if (agendamento.request) {
+        await tx.serviceRequestEvent.create({
+          data: {
+            requestId: agendamento.request.id,
+            title: TITULO[status],
+            message:
+              status === "cancelado"
+                ? `A visita de ${formatarDataHora(agendamento.startsAt)} foi cancelada.${motivo ? ` ${motivo}` : ""}`
+                : motivo,
+            // a mudança de escala interna não interessa ao cliente; o
+            // cancelamento e a conclusão, sim
+            visibleToCustomer: status === "cancelado" || status === "concluido",
+            userId: usuario.id,
+          },
+        });
+
+        if (
+          agendamento.request.customerId &&
+          (status === "cancelado" || status === "concluido")
+        ) {
+          await tx.notification.create({
+            data: {
+              customerId: agendamento.request.customerId,
+              kind: status === "cancelado" ? "visita_cancelada" : "visita_concluida",
+              title: `Chamado ${agendamento.request.number}: ${TITULO[status].toLowerCase()}`,
+              body:
+                status === "cancelado"
+                  ? "Entramos em contato para combinar uma nova data."
+                  : "Obrigado por receber nossa equipe.",
+              href: `/minha-jb/assistencia/${agendamento.request.id}`,
+            },
+          });
+        }
+
+        if (status === "cancelado") {
+          const aindaAbertas = await tx.serviceAppointment.count({
+            where: {
+              requestId: agendamento.request.id,
+              status: { in: ["agendado", "em_andamento"] },
+            },
+          });
+          chamadoParaTriagem =
+            aindaAbertas === 0 &&
+            (agendamento.request.status === "visita_agendada" ||
+              agendamento.request.status === "tecnico_a_caminho");
+        }
+      }
+
+      return {
+        chamadoId: agendamento.request?.id ?? null,
+        anterior: agendamento.status,
+        chamadoParaTriagem,
+      };
     });
+
+    if ("falha" in resultado) return { erro: resultado.falha };
+
+    if (resultado.chamadoParaTriagem && resultado.chamadoId) {
+      await mudarStatusChamado(resultado.chamadoId, "triagem", {
+        userId: usuario.id,
+        titulo: "Aguardando nova data",
+        nota: "A visita foi cancelada e ainda não há outra marcada.",
+      });
+    }
 
     await registrarAuditoria({
       userId: usuario.id,
       acao: "status",
       entidade: "ServiceAppointment",
-      entidadeId: agendamento.id,
-      resumo: `Visita: ${dados.data.status}`,
+      entidadeId: agendamentoId,
+      resumo: `Visita: ${resultado.anterior} → ${status}`,
     });
 
     revalidar(["/admin/agenda", "/admin/assistencia"]);
-    if (agendamento.requestId) revalidarChamado(agendamento.requestId);
-    return { ok: true, mensagem: "Visita atualizada." };
+    if (resultado.chamadoId) revalidarChamado(resultado.chamadoId);
+    return { ok: true, mensagem: `${TITULO[status]}.` };
   } catch (erro) {
     return mensagemDeErro(erro, "Não foi possível atualizar a visita.");
   }

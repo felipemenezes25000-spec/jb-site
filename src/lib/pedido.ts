@@ -4,6 +4,7 @@ import type { OrderStatus, Prisma, ShippingKind } from "@prisma/client";
 
 import { proximoCodigo } from "@/lib/codigos";
 import { descontoDoCupom, linhaElegivelAoCupom, precoDoAdicional } from "@/lib/carrinho";
+import { enfileirar } from "@/lib/notificacoes";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -465,6 +466,30 @@ export async function confirmarPagamento(pedidoId: string) {
         href: `/minha-jb/pedidos/${pedido.number}`,
       },
     });
+  }
+
+  /*
+   * Aviso por e-mail do pagamento aprovado.
+   *
+   * Vale para quem comprou como convidado também, por isso sai de
+   * `buyerEmail` e não da conta: o aviso de dentro do site, logo acima, só
+   * alcança quem tem cadastro.
+   *
+   * Só chega aqui quem passou pela porta atômica do começo da função, então
+   * o webhook repetido do provedor não vira segundo e-mail. A idempotência
+   * da fila é a segunda linha de defesa, não a primeira.
+   */
+  const naFila = await enfileirar({
+    canal: "email",
+    para: pedido.buyerEmail,
+    assunto: `Pagamento aprovado — pedido ${pedido.number}`,
+    corpo: "",
+    refTipo: "pedido",
+    refId: pedido.id,
+    template: "pagamento_aprovado",
+  });
+  if (!naFila.ok) {
+    console.error("[pagamento] aviso não entrou na fila:", naFila.motivo);
   }
 }
 

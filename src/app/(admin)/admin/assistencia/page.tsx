@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { Prisma, ServiceRequestStatus, Urgency } from "@prisma/client";
-import { CalendarDays, Stethoscope } from "lucide-react";
+import { CalendarDays, Plus, Stethoscope } from "lucide-react";
 
 import { FiltrosLista } from "@/components/admin/filtros-lista";
 import { CabecalhoPagina, Contador } from "@/components/admin/servico/cabecalho";
@@ -338,10 +338,19 @@ export default async function PaginaChamados({
         titulo="Chamados de assistência"
         descricao="Equipamento parado primeiro, e dentro de cada urgência o que espera há mais tempo."
         acoes={
-          <LinkBotao href="/admin/agenda" variante="secundario" tamanho="md">
-            <CalendarDays className="size-4" aria-hidden />
-            Ver agenda
-          </LinkBotao>
+          <>
+            <LinkBotao href="/admin/agenda" variante="secundario" tamanho="md">
+              <CalendarDays className="size-4" aria-hidden />
+              Ver agenda
+            </LinkBotao>
+            {/* A abertura de chamado pelo painel existe desde sempre, mas só era
+                alcançável pela ficha de unidades do cliente. Quem atende o telefone
+                começa por esta lista. */}
+            <LinkBotao href="/admin/assistencia/novo" tamanho="md">
+              <Plus className="size-4" aria-hidden />
+              Abrir chamado
+            </LinkBotao>
+          </>
         }
       />
 

@@ -11,11 +11,18 @@ import {
   Pencil,
   QrCode,
   Store,
+  TriangleAlert,
   Truck,
   UserRound,
 } from "lucide-react";
 
-import { finalizarCompra, type EstadoCheckout } from "@/app/acoes/checkout";
+import { consultarFrete, finalizarCompra, type EstadoCheckout } from "@/app/acoes/checkout";
+import {
+  freteQueSoma,
+  publicarFrete,
+  textoDoPrazo,
+  FRETE_VAZIO,
+} from "@/components/loja/checkout-resumo";
 import { PagamentoCartao, type DadosCartao } from "@/components/loja/pagamento-cartao";
 import { ResumoPix } from "@/components/loja/pagamento-pix";
 import { Aviso } from "@/components/ui/aviso";
@@ -25,6 +32,7 @@ import { Cartao } from "@/components/ui/data";
 import { Area, Campo, Marcador, Opcoes, Selecao } from "@/components/ui/form";
 import { Passos } from "@/components/ui/passos";
 import { documentoValido, formatarPreco, somenteDigitos } from "@/lib/format";
+import type { FreteExibido } from "@/lib/frete";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -72,6 +80,14 @@ const ETAPAS = [
 ];
 
 const ULTIMA = ETAPAS.length - 1;
+
+/** Retirar na JB não passa por tabela de frete: é sempre zero. */
+const FRETE_RETIRADA: FreteExibido = {
+  rotulo: "Retirada na JB",
+  valorCents: 0,
+  prazoDias: null,
+  orcadoDepois: false,
+};
 
 /** Para onde levar a pessoa quando o servidor recusa um campo. */
 const ETAPA_DO_CAMPO: Record<string, number> = {
@@ -152,6 +168,46 @@ function Secao({
       ) : null}
       <div className="mt-6 space-y-5">{children}</div>
     </section>
+  );
+}
+
+/**
+ * Caixa do resultado do frete.
+ *
+ * Repete a linguagem visual do `Aviso` de propósito, sem o `role` dele: o
+ * bloco inteiro vive dentro de uma região `aria-live`, e duas regiões
+ * aninhadas fariam o leitor de tela anunciar o mesmo valor duas vezes.
+ * O ícone acompanha a cor — quem não distingue matiz continua entendendo.
+ */
+function CaixaFrete({
+  tom,
+  titulo,
+  children,
+}: {
+  tom: "neutro" | "ok" | "atencao";
+  titulo: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  const Icone = tom === "atencao" ? TriangleAlert : Truck;
+  const caixa =
+    tom === "ok"
+      ? "bg-ok-50 ring-ok-500/20"
+      : tom === "atencao"
+        ? "bg-warn-50 ring-warn-500/25"
+        : "bg-graf-50 ring-graf-200";
+  const cores =
+    tom === "ok" ? "text-ok-700" : tom === "atencao" ? "text-warn-700" : "text-graf-500";
+
+  return (
+    <div className={cn("flex items-start gap-3 rounded-xl p-4 ring-1 ring-inset", caixa)}>
+      <Icone className={cn("mt-0.5 size-5 shrink-0", cores)} aria-hidden />
+      <div className="min-w-0 flex-1 text-sm leading-relaxed text-graf-700">
+        <p className={cn("font-bold leading-snug", tom === "neutro" ? "text-graf-900" : cores)}>
+          {titulo}
+        </p>
+        {children ? <div className="mt-1">{children}</div> : null}
+      </div>
+    </div>
   );
 }
 
@@ -259,6 +315,72 @@ export function Checkout({
   const [observacao, setObservacao] = useState("");
 
   const precisaTokenizar = metodo === "cartao" && !simulado;
+
+  /* ------------------------------------------------------------- frete */
+
+  const [freteEntrega, setFreteEntrega] = useState<FreteExibido | null>(null);
+  const [freteErro, setFreteErro] = useState("");
+  const [freteCarregando, setFreteCarregando] = useState(false);
+  const digitosCep = somenteDigitos(cep);
+
+  /**
+   * Assim que o CEP fecha oito dígitos, o servidor diz quanto custa.
+   *
+   * Nenhum valor é decidido aqui: a ação lê a tabela de /admin/frete e o
+   * carrinho do banco. O que chega é para mostrar — `finalizarCompra` refaz a
+   * mesma conta antes de cobrar.
+   *
+   * A espera curta antes de perguntar existe porque `CampoCep` avisa a cada
+   * tecla: sem ela, colar um CEP dispararia uma consulta por dígito.
+   */
+  useEffect(() => {
+    if (entrega !== "entrega" || digitosCep.length !== 8) {
+      setFreteEntrega(null);
+      setFreteErro("");
+      setFreteCarregando(false);
+      return;
+    }
+
+    let vivo = true;
+    setFreteCarregando(true);
+
+    const temporizador = window.setTimeout(async () => {
+      try {
+        const resposta = await consultarFrete(digitosCep);
+        // resposta de um CEP que a pessoa já apagou não pode sobrescrever a atual
+        if (!vivo) return;
+        setFreteEntrega(resposta.frete ?? null);
+        setFreteErro(resposta.erro ?? "");
+      } catch {
+        if (!vivo) return;
+        setFreteEntrega(null);
+        setFreteErro(
+          "Não foi possível calcular o frete agora. Você pode seguir: a JB confere o valor antes de despachar.",
+        );
+      } finally {
+        if (vivo) setFreteCarregando(false);
+      }
+    }, 400);
+
+    return () => {
+      vivo = false;
+      window.clearTimeout(temporizador);
+    };
+  }, [entrega, digitosCep]);
+
+  const frete = entrega === "retirada" ? FRETE_RETIRADA : freteEntrega;
+  const freteCents = freteQueSoma(frete);
+  const totalComFreteCents = totalCents + freteCents;
+  const prazoDoFrete = frete ? textoDoPrazo(frete.prazoDias) : "";
+
+  // o resumo do pedido é irmão deste formulário na página, não filho: o valor
+  // chega lá pela loja externa exposta por checkout-resumo
+  useEffect(() => {
+    publicarFrete({ frete, carregando: entrega === "entrega" && freteCarregando });
+  }, [frete, freteCarregando, entrega]);
+
+  // sair do checkout não pode deixar o frete anterior guardado no módulo
+  useEffect(() => () => publicarFrete(FRETE_VAZIO), []);
 
   /* ------------------------------------------------- erro vindo do servidor */
 
@@ -382,9 +504,6 @@ export function Checkout({
     setCidade((atual) => endereco.cidade || atual);
     setUf((atual) => endereco.uf || atual);
   }
-
-  const parcelaEscolhida =
-    parcelas.find((p) => p.numero === numeroParcelas) ?? parcelas[0] ?? null;
 
   return (
     <form
@@ -582,7 +701,7 @@ export function Checkout({
         <Secao
           visivel={etapa === 2}
           titulo="Entrega"
-          descricao="Equipamento odontológico costuma exigir frete dedicado — por isso o valor é combinado depois, com o endereço na mão."
+          descricao="O frete sai da tabela da JB pelo seu CEP. Equipamento que não se encaixa em nenhuma faixa é orçado depois — e a tela avisa quando for o caso."
         >
           {retiradaDisponivel ? (
             <Opcoes
@@ -591,7 +710,7 @@ export function Checkout({
               valor={entrega}
               opcoes={[
                 { valor: "retirada", rotulo: "Retirar na JB", descricao: "Sem custo de frete" },
-                { valor: "entrega", rotulo: "Receber no endereço", descricao: "Frete combinado depois" },
+                { valor: "entrega", rotulo: "Receber no endereço", descricao: "Frete pelo CEP" },
               ]}
               aoMudar={(valor) => setEntrega(valor)}
             />
@@ -687,6 +806,51 @@ export function Checkout({
                 onChange={(evento) => setReferencia(evento.currentTarget.value)}
                 ajuda="Ajuda o motorista a achar a clínica. Opcional."
               />
+
+              {/*
+                O resultado do frete é anunciado sozinho: quem usa leitor de
+                tela digita o CEP e continua no campo seguinte, e sem
+                `aria-live` o valor apareceria em silêncio.
+              */}
+              <div aria-live="polite" aria-atomic="true">
+                {digitosCep.length !== 8 ? (
+                  <CaixaFrete tom="neutro" titulo="Informe o CEP para calcular o frete">
+                    Com o CEP completo, mostramos aqui o valor da entrega e o prazo.
+                  </CaixaFrete>
+                ) : freteCarregando ? (
+                  <CaixaFrete tom="neutro" titulo="Calculando o frete…">
+                    Buscando a faixa de entrega deste CEP.
+                  </CaixaFrete>
+                ) : freteErro ? (
+                  <CaixaFrete tom="atencao" titulo="Frete não calculado">
+                    {freteErro}
+                  </CaixaFrete>
+                ) : freteEntrega?.orcadoDepois ? (
+                  <CaixaFrete tom="atencao" titulo="O frete deste endereço será orçado depois">
+                    Este CEP está fora das faixas de entrega cadastradas. O valor{" "}
+                    <strong className="font-semibold">não entra no total agora</strong>: a JB
+                    confere as dimensões do equipamento, calcula o frete e combina com você antes
+                    de despachar.
+                  </CaixaFrete>
+                ) : freteEntrega ? (
+                  <CaixaFrete
+                    tom="ok"
+                    titulo={
+                      freteEntrega.valorCents === 0
+                        ? "Frete grátis para este CEP"
+                        : `Frete de ${formatarPreco(freteEntrega.valorCents)}`
+                    }
+                  >
+                    <p>
+                      {freteEntrega.rotulo}
+                      {prazoDoFrete ? ` · ${prazoDoFrete}` : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-graf-500">
+                      O valor já está somado no resumo do pedido.
+                    </p>
+                  </CaixaFrete>
+                ) : null}
+              </div>
             </>
           )}
         </Secao>
@@ -695,7 +859,13 @@ export function Checkout({
         <Secao
           visivel={etapa === 3}
           titulo="Pagamento"
-          descricao={`Total do pedido: ${formatarPreco(totalCents)}.`}
+          descricao={
+            frete?.orcadoDepois
+              ? `Total do pedido: ${formatarPreco(totalComFreteCents)} — sem o frete, que será orçado à parte.`
+              : `Total do pedido: ${formatarPreco(totalComFreteCents)}${
+                  freteCents > 0 ? ` (frete: ${formatarPreco(freteCents)})` : ""
+                }.`
+          }
         >
           {metodos.length === 0 ? (
             <Aviso tom="erro" titulo="Pagamento indisponível">
@@ -774,11 +944,20 @@ export function Checkout({
                   onChange={(evento) => setNumeroParcelas(Number(evento.currentTarget.value))}
                   ajuda="Sem juros. O limite vem das configurações da loja."
                 >
+                  {/*
+                    O NÚMERO de parcelas vem do servidor (teto da loja sobre o
+                    total dos itens); o VALOR de cada uma é recalculado aqui
+                    porque o frete entrou depois. O teto continua valendo: com
+                    um total maior, o servidor nunca permite menos parcelas do
+                    que já ofereceu.
+                  */}
                   {parcelas.map((p) => (
                     <option key={p.numero} value={p.numero}>
                       {p.numero === 1
-                        ? `À vista — ${formatarPreco(totalCents)}`
-                        : `${p.numero}× de ${formatarPreco(p.valorCents)} sem juros`}
+                        ? `À vista — ${formatarPreco(totalComFreteCents)}`
+                        : `${p.numero}× de ${formatarPreco(
+                            Math.floor(totalComFreteCents / p.numero),
+                          )} sem juros`}
                     </option>
                   ))}
                 </Selecao>
@@ -791,7 +970,7 @@ export function Checkout({
                 provedorNome={provedorNome}
                 chavePublica={chavePublicaCartao}
                 documento={documento}
-                valorCents={totalCents}
+                valorCents={totalComFreteCents}
                 parcelas={numeroParcelas}
                 token={cartao.token}
                 bandeira={cartao.bandeira}
@@ -843,6 +1022,25 @@ export function Checkout({
                       {bairro} · {cidade}
                       {uf ? `/${uf}` : ""} · CEP {cep || "—"}
                     </span>
+                    <br />
+                    {freteEntrega?.orcadoDepois ? (
+                      <span className="font-semibold text-warn-700">
+                        Frete a combinar — orçado depois, fora deste total
+                      </span>
+                    ) : freteEntrega ? (
+                      <span className="font-semibold text-graf-900">
+                        {freteEntrega.valorCents === 0
+                          ? "Frete grátis"
+                          : `Frete ${formatarPreco(freteEntrega.valorCents)}`}
+                        {prazoDoFrete ? (
+                          <span className="font-normal text-graf-500"> · {prazoDoFrete}</span>
+                        ) : null}
+                      </span>
+                    ) : (
+                      <span className="font-semibold text-warn-700">
+                        Frete ainda não calculado — informe o CEP na etapa de entrega
+                      </span>
+                    )}
                   </span>
                 </span>
               )}
@@ -856,10 +1054,12 @@ export function Checkout({
                   <CreditCard className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 )}
                 {metodo === "pix"
-                  ? `Pix — ${formatarPreco(totalCents)}`
-                  : parcelaEscolhida && numeroParcelas > 1
-                    ? `Cartão em ${numeroParcelas}× de ${formatarPreco(parcelaEscolhida.valorCents)}`
-                    : `Cartão à vista — ${formatarPreco(totalCents)}`}
+                  ? `Pix — ${formatarPreco(totalComFreteCents)}`
+                  : numeroParcelas > 1
+                    ? `Cartão em ${numeroParcelas}× de ${formatarPreco(
+                        Math.floor(totalComFreteCents / numeroParcelas),
+                      )}`
+                    : `Cartão à vista — ${formatarPreco(totalComFreteCents)}`}
               </span>
             </BlocoRevisao>
           </div>
@@ -874,10 +1074,20 @@ export function Checkout({
             ajuda="Horário melhor para entrega, acesso à clínica, o que mais ajudar. Opcional."
           />
 
-          {entrega === "entrega" ? (
-            <Aviso tom="info" titulo="Frete combinado depois">
-              O valor do frete não entra neste total. A JB confere as dimensões do equipamento e
-              o endereço, e entra em contato com o valor antes de despachar.
+          {entrega === "entrega" && (!freteEntrega || freteEntrega.orcadoDepois) ? (
+            <Aviso tom="atencao" titulo="Frete combinado depois">
+              O valor do frete <strong className="font-semibold">não entra neste total</strong>. A
+              JB confere as dimensões do equipamento e o endereço, e entra em contato com o valor
+              antes de despachar.
+            </Aviso>
+          ) : null}
+
+          {entrega === "entrega" && freteEntrega && !freteEntrega.orcadoDepois ? (
+            <Aviso tom="info" titulo="Frete incluído no total">
+              {freteEntrega.valorCents === 0
+                ? "A entrega neste CEP é grátis."
+                : `O frete de ${formatarPreco(freteEntrega.valorCents)} já está somado ao total.`}
+              {prazoDoFrete ? ` Prazo de entrega: ${prazoDoFrete} após a confirmação do pagamento.` : ""}
             </Aviso>
           ) : null}
         </Secao>
@@ -922,7 +1132,7 @@ export function Checkout({
               className="ml-auto"
             >
               <Lock className="size-4" aria-hidden />
-              {enviando ? "Fechando o pedido…" : `Finalizar — ${formatarPreco(totalCents)}`}
+              {enviando ? "Fechando o pedido…" : `Finalizar — ${formatarPreco(totalComFreteCents)}`}
             </Botao>
           )}
         </div>
@@ -931,7 +1141,8 @@ export function Checkout({
       <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-graf-500">
         <Truck className="mt-0.5 size-3.5 shrink-0" aria-hidden />
         Ao finalizar, a JB reserva o equipamento no estoque e confirma o prazo por telefone ou
-        WhatsApp. Os valores são recalculados no servidor no momento do fechamento.
+        WhatsApp. Todos os valores — frete inclusive — são recalculados no servidor no momento do
+        fechamento.
       </p>
     </form>
   );

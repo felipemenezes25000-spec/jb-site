@@ -49,7 +49,7 @@ export default async function PaginaAgenda({
 }: {
   searchParams: Promise<Busca>;
 }) {
-  await exigirArea("assistencia");
+  await exigirArea("agenda");
   const busca = await searchParams;
 
   const hoje = chaveDoDia(new Date());

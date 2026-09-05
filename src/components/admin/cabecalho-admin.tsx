@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import {
+  CircleUser,
   ExternalLink,
   LogOut,
   Menu,
@@ -176,7 +177,18 @@ export function CabecalhoAdmin({
             Ver site
           </Link>
 
-          <div className="hidden items-center gap-2.5 rounded-lg px-2 py-1 sm:flex">
+          {/* Identidade de quem está logado é também a porta da própria conta:
+              é onde a pessoa procura para trocar a senha. No telefone, onde o
+              bloco com nome não cabe, sobra o botão redondo ao lado. */}
+          <Link
+            href="/admin/conta"
+            title="Minha conta"
+            className={cn(
+              "hidden items-center gap-2.5 rounded-lg px-2 py-1 transition-colors sm:flex",
+              "hover:bg-graf-100",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+            )}
+          >
             <span
               aria-hidden
               className="flex size-9 shrink-0 items-center justify-center rounded-full bg-jb-50 text-xs font-bold text-jb-700 ring-1 ring-inset ring-jb-500/20"
@@ -189,7 +201,21 @@ export function CabecalhoAdmin({
                 {papel}
               </span>
             </span>
-          </div>
+            <span className="sr-only">— abrir minha conta</span>
+          </Link>
+
+          <Link
+            href="/admin/conta"
+            aria-label="Minha conta"
+            title="Minha conta"
+            className={cn(
+              "inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-graf-700 transition-colors sm:hidden",
+              "hover:bg-graf-100 hover:text-jb-700",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+            )}
+          >
+            <CircleUser className="size-5" aria-hidden />
+          </Link>
 
           <form action={sairStaff}>
             <BotaoSair />

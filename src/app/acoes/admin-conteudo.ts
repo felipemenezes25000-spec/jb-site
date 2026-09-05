@@ -1245,7 +1245,7 @@ export async function responderTicket(
   _anterior: EstadoConteudo,
   form: FormData,
 ): Promise<EstadoConteudo> {
-  const usuario = await exigirEdicao("clientes");
+  const usuario = await exigirEdicao("suporte");
   const id = texto(form, "id").trim();
 
   const dados = esquemaResposta.safeParse({
@@ -1305,7 +1305,7 @@ export async function mudarStatusTicket(
   _anterior: EstadoConteudo,
   form: FormData,
 ): Promise<EstadoConteudo> {
-  const usuario = await exigirEdicao("clientes");
+  const usuario = await exigirEdicao("suporte");
   const id = texto(form, "id").trim();
   const bruto = texto(form, "status");
 

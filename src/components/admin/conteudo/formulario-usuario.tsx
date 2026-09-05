@@ -12,6 +12,7 @@ import {
 } from "@/components/admin/conteudo/formulario-base";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao } from "@/components/ui/button";
+import { BotaoConfirmar } from "@/components/ui/confirmar";
 import { BotaoCopiar } from "@/components/ui/copiar";
 import { Campo, Marcador, Selecao } from "@/components/ui/form";
 import { CampoTelefone } from "@/components/ui/campos-br";
@@ -178,17 +179,38 @@ export function FormularioUsuario({
   );
 }
 
-export function BotaoNovaSenha({ acao, id }: { acao: AcaoDeFormulario; id: string }) {
+/**
+ * Gera uma senha temporária para outra pessoa da equipe.
+ *
+ * Pergunta antes de fazer. A senha anterior para de funcionar no mesmo
+ * instante: um clique errado aqui derruba o acesso de quem está no meio do
+ * expediente, e não existe desfazer — a senha nova é a única que passa a valer.
+ */
+export function BotaoNovaSenha({
+  acao,
+  id,
+  nome,
+}: {
+  acao: AcaoDeFormulario;
+  id: string;
+  /** Aparece na pergunta, para não trocar a senha da pessoa errada. */
+  nome?: string;
+}) {
   const [estado, executar, pendente] = useActionState(acao, VAZIO);
 
   return (
     <div className="space-y-3">
       <form action={executar}>
         <input type="hidden" name="id" value={id} />
-        <Botao type="submit" variante="secundario" carregando={pendente}>
-          <KeyRound className="size-4" aria-hidden />
-          Gerar nova senha temporária
-        </Botao>
+        <BotaoConfirmar
+          variante="secundario"
+          carregando={pendente}
+          icone={<KeyRound className="size-4" aria-hidden />}
+          rotulo="Gerar nova senha temporária"
+          pergunta={nome ? `Gerar nova senha para ${nome}?` : "Gerar uma nova senha temporária?"}
+          detalhe="A senha atual desta pessoa deixa de funcionar imediatamente. Ela vai precisar da senha nova para entrar, e a temporária aparece nesta tela uma única vez."
+          rotuloConfirmar="Gerar nova senha"
+        />
       </form>
 
       {estado.senha ? (

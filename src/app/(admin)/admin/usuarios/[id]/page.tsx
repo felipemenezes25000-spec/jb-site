@@ -107,10 +107,11 @@ export default async function PaginaEditarUsuario({
             descricao="O painel não consegue mostrar a senha atual — ela é guardada só como hash."
           />
           <div className="px-5 py-4">
-            <BotaoNovaSenha acao={gerarSenhaTemporaria} id={pessoa.id} />
+            <BotaoNovaSenha acao={gerarSenhaTemporaria} id={pessoa.id} nome={pessoa.name} />
             <p className="mt-4 text-xs leading-relaxed text-graf-500">
               Gerar uma nova senha invalida a anterior na hora. A pessoa entra com a temporária e
-              deve trocá-la no primeiro acesso.
+              troca a senha em Minha conta (/admin/conta) — o painel não obriga a troca no
+              primeiro acesso.
             </p>
           </div>
         </Cartao>

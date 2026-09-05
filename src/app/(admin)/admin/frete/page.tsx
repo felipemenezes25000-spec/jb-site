@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 /**
  * Perfis de frete e faixas de CEP.
  *
- * A guarda usa a área "configuracoes" porque é lá que a descrição do próprio
- * mapa de permissões coloca o frete — junto de pagamento e dados da empresa.
- * Na prática, isso restringe a tela a administradores.
+ * A guarda usa a área própria "frete": quem responde pelo prazo e pelo valor
+ * da entrega é quem vende, então administrador, gestor e comercial editam.
+ * Chave de provedor e dados fiscais seguem em Configurações, só do administrador.
  */
 
 /** Centavos no formato do campo de texto do formulário. */
@@ -29,7 +29,7 @@ function paraCampo(centavos: number | null | undefined) {
 }
 
 export default async function FretePage() {
-  const usuario = await exigirArea("configuracoes");
+  const usuario = await exigirArea("frete");
 
   const [perfis, semPerfil, ajustes] = await Promise.all([
     prisma.shippingProfile.findMany({
@@ -95,7 +95,7 @@ export default async function FretePage() {
       </Indicadores>
 
       <GestorFrete
-        podeEditar={podeEditar(usuario, "configuracoes")}
+        podeEditar={podeEditar(usuario, "frete")}
         tipos={(
           [
             "retirada",

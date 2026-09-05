@@ -24,6 +24,11 @@ import { Area, Campo, Marcador } from "@/components/ui/form";
    proposta enviada ganha decisão e anotação; convertida em pedido não tem mais
    ação nenhuma, porque mexer nela mexeria numa venda já registrada.
 
+   O cartão de envio serve os dois casos e diz qual deles é: em rascunho ele
+   publica a proposta; em proposta já enviada ele REENVIA o mesmo e-mail, sem
+   mexer em status, validade ou versão. Chamar os dois de "Enviar orçamento"
+   escondia de quem atende que o cliente já tinha recebido aquilo uma vez.
+
    "Aprovar" não é um botão separado de "converter": no orçamento comercial a
    aprovação já gera o pedido, com os valores negociados e a baixa de estoque,
    dentro da mesma transação.
@@ -42,6 +47,8 @@ export type SituacaoOrcamento = {
     | "recusado"
     | "expirado"
     | "convertido";
+  /** Já saiu para o cliente ao menos uma vez: o botão vira reenvio. */
+  jaEnviada: boolean;
   comercial: boolean;
   totalFormatado: string;
   temItens: boolean;
@@ -86,6 +93,7 @@ export function AcoesOrcamento({ situacao }: { situacao: SituacaoOrcamento }) {
     situacao.status === "recusado" ||
     situacao.status === "convertido";
   const podeEnviar = !decidida;
+  const reenvio = podeEnviar && situacao.jaEnviada;
   const podeDecidir = situacao.status === "enviado" || situacao.status === "em_duvida";
 
   return (
@@ -94,43 +102,59 @@ export function AcoesOrcamento({ situacao }: { situacao: SituacaoOrcamento }) {
       {podeEnviar ? (
         <Cartao>
           <CabecalhoCartao
-            titulo="Enviar ao cliente"
+            titulo={reenvio ? "Reenviar ao cliente" : "Enviar ao cliente"}
             descricao={
               situacao.emailDoContato
-                ? `Vai para ${situacao.emailDoContato} e para a Minha JB.`
-                : "Sem e-mail de contato, a proposta só é publicada na Minha JB."
+                ? reenvio
+                  ? `O cliente já recebeu esta proposta. O e-mail vai de novo para ${situacao.emailDoContato}, sem mudar status nem validade.`
+                  : `Vai para ${situacao.emailDoContato} e para a Minha JB.`
+                : reenvio
+                  ? "Esta proposta não tem e-mail de contato. Ela continua na Minha JB do cliente; para reenviar por e-mail, preencha o contato acima."
+                  : "Sem e-mail de contato, a proposta só é publicada na Minha JB."
             }
           />
           <form action={enviar} className="space-y-3 p-5">
             <input type="hidden" name="quoteId" value={situacao.quoteId} />
 
-            <Campo
-              rotulo="Validade em dias"
-              name="validadeDias"
-              inputMode="numeric"
-              placeholder="7"
-              ajuda="Ignorado quando a proposta já tem data de validade."
-            />
+            {reenvio ? null : (
+              <Campo
+                rotulo="Validade em dias"
+                name="validadeDias"
+                inputMode="numeric"
+                placeholder="7"
+                ajuda="Ignorado quando a proposta já tem data de validade."
+              />
+            )}
 
             <Area
-              rotulo="Recado no histórico"
+              rotulo={reenvio ? "Recado para o cliente" : "Recado no histórico"}
               name="mensagem"
               rows={2}
               maxLength={600}
-              ajuda="Opcional. Substitui o texto automático do evento de envio."
+              ajuda={
+                reenvio
+                  ? "Opcional. Entra no corpo do e-mail de reenvio."
+                  : "Opcional. Substitui o texto automático do evento de envio."
+              }
             />
 
             <Retorno estado={estadoEnvio} />
 
-            {situacao.temItens ? (
-              <Enviar>
-                <Send className="size-4" aria-hidden />
-                Enviar orçamento
-              </Enviar>
-            ) : (
+            {!situacao.temItens ? (
               <p className="text-sm text-graf-600">
                 Inclua ao menos um item antes de enviar a proposta.
               </p>
+            ) : reenvio && !situacao.emailDoContato ? (
+              // reenvio sem destinatário não tem o que fazer: o servidor recusaria
+              <p className="text-sm text-graf-600">
+                Sem e-mail de contato não há para onde reenviar. Cadastre o e-mail do
+                cliente na proposta e o botão volta.
+              </p>
+            ) : (
+              <Enviar>
+                <Send className="size-4" aria-hidden />
+                {reenvio ? "Reenviar ao cliente" : "Enviar orçamento"}
+              </Enviar>
             )}
           </form>
         </Cartao>

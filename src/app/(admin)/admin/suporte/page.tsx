@@ -49,7 +49,7 @@ export default async function PaginaSuporte({
     pagina?: string;
   }>;
 }) {
-  await exigirArea("clientes");
+  await exigirArea("suporte");
   const parametros = await searchParams;
   const numeroDaPagina = Math.max(1, Number(parametros.pagina) || 1);
 

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { formatarTelefone, somenteDigitos } from "@/lib/format";
+import { LIMITE_CONTATO, checarFormulario, mensagemDeEspera } from "@/lib/limite";
 import { enfileirar } from "@/lib/notificacoes";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
@@ -30,10 +31,12 @@ import { ipDoPedido } from "@/lib/seguranca";
 
 export type EstadoContato = { erro?: string; campo?: string; ok?: string };
 
-/** Janela e tetos do freio por origem. Vale para o par IP + e-mail. */
-const JANELA_MINUTOS = 10;
-const MAX_POR_IP = 3;
-const MAX_POR_EMAIL = 2;
+/**
+ * Janela e tetos vêm de `LIMITE_CONTATO`, em `@/lib/limite`. Ficavam aqui, em
+ * três constantes só deste arquivo; agora existe um lugar só para todos os
+ * formulários públicos, e as duas camadas de freio deste arquivo (memória e
+ * banco) leem os mesmos números.
+ */
 
 const MENSAGEM_DE_SUCESSO =
   "Mensagem recebida. A equipe da JB responde no horário de atendimento.";
@@ -71,17 +74,25 @@ async function origem() {
  * Freio por origem, medido na própria tabela de leads — vale para todas as
  * instâncias do servidor, coisa que um contador em memória não conseguiria
  * garantir em ambiente serverless.
+ *
+ * Continua sendo a barreira que vale. O freio de `@/lib/limite`, logo antes,
+ * é só o porteiro barato: responde sem ir ao banco e conta por instância do
+ * processo. Os dois usam a mesma janela e os mesmos tetos.
  */
-async function excedeuOLimite(ip: string, email: string) {
-  const desde = new Date(Date.now() - JANELA_MINUTOS * 60_000);
+async function excedeuNoBanco(ip: string, email: string) {
+  const desdeIp = new Date(Date.now() - LIMITE_CONTATO.porIp.janelaMs);
+  const desdeEmail = new Date(Date.now() - LIMITE_CONTATO.porEmail.janelaMs);
 
   const [porIp, porEmail] = await Promise.all([
-    ip ? prisma.lead.count({ where: { ip, createdAt: { gte: desde } } }) : Promise.resolve(0),
-    prisma.lead.count({ where: { email, createdAt: { gte: desde } } }),
+    ip ? prisma.lead.count({ where: { ip, createdAt: { gte: desdeIp } } }) : Promise.resolve(0),
+    prisma.lead.count({ where: { email, createdAt: { gte: desdeEmail } } }),
   ]);
 
-  return porIp >= MAX_POR_IP || porEmail >= MAX_POR_EMAIL;
+  return porIp >= LIMITE_CONTATO.porIp.limite || porEmail >= LIMITE_CONTATO.porEmail.limite;
 }
+
+const MENSAGEM_DE_LIMITE =
+  "Já recebemos suas mensagens nos últimos minutos. Se for urgente, ligue para a JB ou chame no WhatsApp.";
 
 export async function enviarContato(
   _anterior: EstadoContato,
@@ -113,12 +124,16 @@ export async function enviarContato(
   const email = dados.data.email.toLowerCase();
   const { ip, userAgent } = await origem();
 
+  // Porteiro em memória: vale por instância do processo (ver o cabeçalho de
+  // `@/lib/limite`), e por isso não substitui a contagem no banco logo abaixo.
+  const freio = checarFormulario("/contato", { ip, email }, LIMITE_CONTATO);
+  if (!freio.ok) {
+    return { erro: `${MENSAGEM_DE_LIMITE} ${mensagemDeEspera(freio.esperaMs)}` };
+  }
+
   try {
-    if (await excedeuOLimite(ip, email)) {
-      return {
-        erro:
-          "Já recebemos suas mensagens nos últimos minutos. Se for urgente, ligue para a JB ou chame no WhatsApp.",
-      };
+    if (await excedeuNoBanco(ip, email)) {
+      return { erro: MENSAGEM_DE_LIMITE };
     }
 
     const lead = await prisma.lead.create({

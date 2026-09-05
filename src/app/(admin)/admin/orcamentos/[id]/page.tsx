@@ -395,6 +395,7 @@ export default async function OrcamentoPage({ params }: Props) {
                 quoteId: orcamento.id,
                 numero: orcamento.number,
                 status: orcamento.status,
+                jaEnviada: orcamento.sentAt !== null,
                 comercial: orcamento.kind === "comercial",
                 totalFormatado: formatarPreco(orcamento.totalCents),
                 temItens: orcamento.items.length > 0,

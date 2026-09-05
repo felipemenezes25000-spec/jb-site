@@ -43,6 +43,9 @@ next-env.d.ts
 # local
 .env
 
+# arquivos privados servidos por rota autenticada (@/lib/upload, storage local)
+/.arquivos/
+
 /public/uploads/*
 !/public/uploads/.gitkeep
 prisma/*.db

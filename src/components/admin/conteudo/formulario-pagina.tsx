@@ -63,6 +63,16 @@ export function FormularioPagina({
   const [slug, setSlug] = useState(pagina?.slug ?? "");
   const [slugManual, setSlugManual] = useState(Boolean(pagina));
   const [descricaoSeo, setDescricaoSeo] = useState(pagina?.seoDescription ?? "");
+  /**
+   * Controlado, não `defaultValue`.
+   *
+   * O editor rico monta com `immediatelyRender: false` — obrigatório no App
+   * Router — e essa montagem re-renderiza o formulário. Campo não-controlado
+   * volta ao `defaultValue` quando isso acontece, e quem estava digitando a
+   * chamada perde o que escreveu (ou pior: fica com metade do texto novo
+   * grudado no antigo, que foi o que chegou ao banco durante os testes).
+   */
+  const [chamada, setChamada] = useState(pagina?.lead ?? "");
 
   function aoMudarTitulo(valor: string) {
     setTitulo(valor);
@@ -104,7 +114,8 @@ export function FormularioPagina({
               name="lead"
               rows={3}
               maxLength={400}
-              defaultValue={pagina?.lead ?? ""}
+              value={chamada}
+              onChange={(evento) => setChamada(evento.target.value)}
               erro={erroDoCampo(estado, "lead")}
               ajuda="Uma ou duas frases de abertura, em destaque antes do texto."
             />

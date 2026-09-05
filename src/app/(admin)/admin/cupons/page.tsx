@@ -18,13 +18,12 @@ export const metadata: Metadata = {
 /**
  * Cupons de desconto.
  *
- * A área usada na guarda é "produtos": cupom é precificação, então segue a mesma
- * regra do catálogo — administrador e gestor editam, comercial consulta. Quando
- * `@/lib/permissoes` ganhar uma área própria para promoções, é só trocar a
- * constante aqui e nas ações.
+ * A guarda usa a área própria "cupons": desconto é decisão comercial, então
+ * administrador, gestor e comercial editam — diferente do catálogo, em que o
+ * comercial só consulta.
  */
 export default async function CupomPage() {
-  const usuario = await exigirArea("produtos");
+  const usuario = await exigirArea("cupons");
 
   const [cupons, categorias, produtos] = await Promise.all([
     prisma.coupon.findMany({
@@ -70,7 +69,7 @@ export default async function CupomPage() {
         }
       />
 
-      {!podeEditar(usuario, "produtos") ? (
+      {!podeEditar(usuario, "cupons") ? (
         <Aviso tom="info" titulo="Somente leitura">
           Seu papel abre esta área para consulta. Criar e editar cupons é permissão de gestor ou
           administrador.
@@ -104,7 +103,7 @@ export default async function CupomPage() {
       </Indicadores>
 
       <GestorCupons
-        podeEditar={podeEditar(usuario, "produtos")}
+        podeEditar={podeEditar(usuario, "cupons")}
         podeExcluir={PODE.excluirRegistros(usuario)}
         categorias={categorias.map((categoria) => ({
           id: categoria.id,

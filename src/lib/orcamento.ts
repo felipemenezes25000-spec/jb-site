@@ -6,8 +6,10 @@ import type { PassoLinha } from "@/components/ui/data";
 import { ROTULO_CHAMADO } from "@/lib/assistencia";
 import { proximoCodigo } from "@/lib/codigos";
 import { formatarData, formatarDataHora, formatarPreco } from "@/lib/format";
+import { type ResultadoMensagem, enfileirar } from "@/lib/notificacoes";
 import { ErroDeEstoque } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
+import { urlAbsoluta } from "@/lib/seo";
 
 /**
  * Regras do orçamento (Quote).
@@ -317,6 +319,117 @@ export async function enviarOrcamento(
 
     return enviado;
   });
+}
+
+/* -------------------------------------------------------------------- reenvio */
+
+/** Título fixo do evento de reenvio: é por ele que as tentativas são contadas. */
+const TITULO_REENVIO = "Orçamento reenviado";
+
+export type ResultadoReenvio = {
+  numero: string;
+  destino: string;
+  /** 1 no primeiro reenvio, 2 no segundo… Entra na chave de deduplicação. */
+  tentativa: number;
+  mensagem: ResultadoMensagem;
+};
+
+/**
+ * Reenvia ao cliente uma proposta que já foi enviada.
+ *
+ * Por que não é só chamar `enviarOrcamento` de novo: aquele caminho publica a
+ * proposta e enfileira a mensagem com a chave
+ * `email|orcamento_enviado|orcamento|<id>:v<versão>`. A chave é o que impede
+ * que salvar duas vezes vire dois e-mails — mas, no reenvio, é justamente ela
+ * que faz nada acontecer: a fila devolve `jaExistia`, nenhuma mensagem nova é
+ * criada e a tela ainda assim diz que enviou. Reenviar a mesma versão ficava
+ * sendo um botão que não faz nada.
+ *
+ * A saída é variar a chave por TENTATIVA, e não pelo relógio:
+ * `<id>:v<versão>:r<n>`, onde `n` é quantos reenvios já estão registrados no
+ * histórico mais um. Com `Date.now()` a chave seria sempre nova e a
+ * deduplicação morreria — dois cliques no mesmo botão virariam dois e-mails.
+ * Com o contador, o duplo clique cai na mesma chave (nenhum evento novo entrou
+ * no meio) e colapsa, enquanto o reenvio de verdade, feito depois, ganha a sua.
+ *
+ * `sentAt` não é mexido de propósito: ele marca quando a proposta foi
+ * publicada, e é essa data que a linha do tempo mostra ao cliente. O reenvio
+ * fica registrado no histórico, com a sua própria data.
+ */
+export async function reenviarOrcamento(
+  quoteId: string,
+  opcoes: { userId?: string | null; mensagem?: string } = {},
+): Promise<ResultadoReenvio> {
+  const orcamento = await prisma.quote.findUnique({
+    where: { id: quoteId },
+    select: {
+      id: true,
+      number: true,
+      version: true,
+      status: true,
+      sentAt: true,
+      totalCents: true,
+      validUntil: true,
+      contactName: true,
+      contactEmail: true,
+    },
+  });
+  if (!orcamento) throw new ErroDeOrcamento("Orçamento não encontrado.");
+  if (!orcamento.sentAt) {
+    throw new ErroDeOrcamento("Esta proposta ainda não foi enviada ao cliente.");
+  }
+  if (orcamento.status === "convertido") {
+    throw new ErroDeOrcamento("Este orçamento já virou pedido.");
+  }
+
+  const destino = orcamento.contactEmail.trim();
+  if (!destino) {
+    throw new ErroDeOrcamento("Este orçamento não tem e-mail de contato para reenviar.");
+  }
+
+  const tentativa =
+    (await prisma.quoteEvent.count({ where: { quoteId, title: TITULO_REENVIO } })) + 1;
+
+  const mensagem = await enfileirar({
+    canal: "email",
+    para: destino,
+    assunto: `Orçamento ${orcamento.number} — JB Soluções Odontológicas`,
+    corpo: [
+      `Olá, ${orcamento.contactName || "tudo bem"}?`,
+      "",
+      `Reenviamos o orçamento ${orcamento.number}, no valor de ${formatarPreco(orcamento.totalCents)}.`,
+      orcamento.validUntil ? `A proposta vale até ${formatarData(orcamento.validUntil)}.` : "",
+      opcoes.mensagem ?? "",
+      "",
+      `Para ver os itens e aprovar: ${urlAbsoluta(`/minha-jb/orcamentos/${orcamento.id}`)}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    refTipo: "orcamento",
+    refId: orcamento.id,
+    template: "orcamento_enviado",
+    dedupeKey: `email|orcamento_enviado|orcamento|${orcamento.id}:v${orcamento.version}:r${tentativa}`,
+  });
+
+  // O evento é gravado sempre, dizendo o que de fato aconteceu — inclusive
+  // quando a fila recusou. Histórico que só registra sucesso esconde o
+  // problema justamente de quem precisaria vê-lo.
+  await prisma.quoteEvent.create({
+    data: {
+      quoteId,
+      title: TITULO_REENVIO,
+      message: mensagem.ok
+        ? `Reenviado para ${destino}.${
+            mensagem.jaExistia ? " A mensagem já estava na fila e não foi duplicada." : ""
+          }`
+        : `Não foi possível recolocar o e-mail na fila: ${mensagem.motivo}`,
+      // recusa da fila é assunto interno; reenvio que deu certo o cliente pode ver
+      visibleToCustomer: mensagem.ok,
+      userId: opcoes.userId ?? null,
+    },
+  });
+
+  return { numero: orcamento.number, destino, tentativa, mensagem };
 }
 
 /**

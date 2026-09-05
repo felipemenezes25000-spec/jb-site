@@ -4,6 +4,7 @@ import type { ContractStatus, Prisma, VisitStatus } from "@prisma/client";
 
 import { proximoCodigo } from "@/lib/codigos";
 import { formatarData } from "@/lib/format";
+import { enfileirar } from "@/lib/notificacoes";
 import { abrirOS } from "@/lib/os";
 import { prisma } from "@/lib/prisma";
 
@@ -278,7 +279,16 @@ export async function agendarVisitaDeManutencao(
       technicianId: entrada.tecnicoId ?? null,
       ...(entrada.notas === undefined ? {} : { notes: entrada.notas }),
     },
-    include: { equipment: { select: { customerId: true, name: true } } },
+    include: {
+      equipment: {
+        select: {
+          customerId: true,
+          name: true,
+          // o e-mail é para o aviso de fora do site; o de dentro usa só o id
+          customer: { select: { email: true } },
+        },
+      },
+    },
   });
 
   await prisma.notification.create({
@@ -290,6 +300,28 @@ export async function agendarVisitaDeManutencao(
       href: "/minha-jb/manutencoes",
     },
   });
+
+  /*
+   * Aviso por e-mail.
+   *
+   * A data entra no `refId` (`<id>:<instante>`) porque remarcar É um fato
+   * novo: sem ela a chave de deduplicação seria a mesma e o cliente ficaria
+   * esperando o técnico no dia antigo. Salvar de novo a MESMA data continua
+   * caindo na chave existente e não manda segundo e-mail. O modelo corta o
+   * sufixo para achar a visita.
+   */
+  const naFila = await enfileirar({
+    canal: "email",
+    para: visita.equipment.customer.email,
+    assunto: `Visita de manutenção agendada para ${formatarData(entrada.quando)}`,
+    corpo: "",
+    refTipo: "visita",
+    refId: `${visita.id}:${entrada.quando.getTime()}`,
+    template: "visita_agendada",
+  });
+  if (!naFila.ok) {
+    console.error("[manutencao] aviso de visita não entrou na fila:", naFila.motivo);
+  }
 
   return visita;
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  Building2,
   CalendarClock,
   FileText,
   MapPin,
@@ -143,10 +144,22 @@ export default async function ClientePage({ params }: Props) {
           _count: { select: { items: true, visits: true } },
         },
       },
+      // as unidades são o endereço para onde o técnico sai; a ficha mostra
+      // quais existem e o cadastro fica na tela própria
+      locations: {
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          address: { select: { city: true, state: true, district: true } },
+          _count: { select: { equipments: true } },
+        },
+      },
       documents: {
         orderBy: { createdAt: "desc" },
         take: LIMITE,
-        select: { id: true, title: true, kind: true, storageKey: true, createdAt: true },
+        // sem `storageKey`: o endereço do arquivo não precisa chegar à tela
+        select: { id: true, title: true, kind: true, createdAt: true },
       },
       _count: {
         select: {
@@ -562,10 +575,10 @@ export default async function ClientePage({ params }: Props) {
                 <ul className="divide-y divide-graf-200 rounded-lg border border-graf-200">
                   {cliente.documents.map((documento) => (
                     <li key={documento.id} className="px-4 py-3">
+                      {/* nunca o `storageKey`: o arquivo é privado e só sai pela
+                          rota, que confere a sessão antes de ler os bytes */}
                       <a
-                        href={documento.storageKey}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={`/admin/documentos/${documento.id}/baixar`}
                         className="inline-flex min-h-11 items-center gap-2 font-medium text-graf-900 transition-colors hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                       >
                         <FileText className="size-4 shrink-0 text-graf-500" aria-hidden />
@@ -606,6 +619,50 @@ export default async function ClientePage({ params }: Props) {
                   {cliente.lastLoginAt ? formatarDataHora(cliente.lastLoginAt) : "Nunca entrou"}
                 </Dado>
               </ListaDeDados>
+            </div>
+          </Cartao>
+
+          <Cartao>
+            <CabecalhoCartao
+              titulo="Unidades"
+              descricao={`${plural(cliente.locations.length, "clínica cadastrada", "clínicas cadastradas")}. É para elas que o equipamento aponta.`}
+              acao={
+                <LinkBotao
+                  href={`/admin/clientes/${cliente.id}/unidades`}
+                  variante="secundario"
+                  tamanho="sm"
+                >
+                  Gerenciar
+                </LinkBotao>
+              }
+            />
+            <div className="p-5">
+              {cliente.locations.length === 0 ? (
+                <Vazio
+                  icone={Building2}
+                  titulo="Nenhuma unidade"
+                  descricao="Sem unidade, o equipamento fica sem lugar e a visita sai para o endereço de cobrança."
+                />
+              ) : (
+                <ul className="space-y-2">
+                  {cliente.locations.map((unidade) => (
+                    <li
+                      key={unidade.id}
+                      className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-graf-200 p-3"
+                    >
+                      <span className="text-sm font-semibold text-graf-900">{unidade.name}</span>
+                      <span className="text-xs text-graf-500">
+                        {unidade.address
+                          ? `${[unidade.address.district, `${unidade.address.city}/${unidade.address.state}`]
+                              .filter(Boolean)
+                              .join(" · ")} · `
+                          : "Sem endereço · "}
+                        {plural(unidade._count.equipments, "equipamento", "equipamentos")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </Cartao>
 

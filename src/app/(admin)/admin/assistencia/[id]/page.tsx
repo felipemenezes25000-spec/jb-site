@@ -16,7 +16,6 @@ import {
 
 import { CabecalhoPagina, Dado, Dados } from "@/components/admin/servico/cabecalho";
 import {
-  EtiquetaAgendamento,
   EtiquetaChamado,
   EtiquetaOS,
   EtiquetaOrcamento,
@@ -27,6 +26,7 @@ import { Oculto } from "@/components/admin/servico/formulario";
 import { ItensDoOrcamento } from "@/components/admin/servico/itens-orcamento";
 import { MensagemDoChamado } from "@/components/admin/servico/mensagem-chamado";
 import { PainelAcao } from "@/components/admin/servico/painel-acao";
+import { VisitasDoChamado } from "@/components/admin/servico/visitas-do-chamado";
 import { LinkBotao } from "@/components/ui/button";
 import { CabecalhoCartao, Cartao, LinhaDoTempo, Vazio } from "@/components/ui/data";
 import { Marcador } from "@/components/ui/form";
@@ -670,37 +670,13 @@ export default async function PaginaChamado({
           </Cartao>
 
           {/* --------------------------------------------------- visitas */}
-          <Cartao>
-            <CabecalhoCartao titulo="Visitas" descricao="Agendamentos deste chamado" />
-            <div className="px-5 py-5">
-              {chamado.appointments.length === 0 ? (
-                <p className="text-sm text-graf-500">Nenhuma visita agendada.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {chamado.appointments.map((visita) => (
-                    <li key={visita.id} className="rounded-lg border border-graf-200 p-3">
-                      <p className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-graf-900">
-                          {formatarDataHora(visita.startsAt)}
-                        </span>
-                        <EtiquetaAgendamento status={visita.status} />
-                      </p>
-                      <p className="mt-1 text-sm text-graf-600">{visita.title}</p>
-                      <p className="mt-1 text-xs text-graf-500">
-                        {visita.technician?.user.name ?? "Sem técnico definido"}
-                        {visita.addressSummary ? ` · ${visita.addressSummary}` : ""}
-                      </p>
-                      {visita.notes ? (
-                        <p className="mt-1 whitespace-pre-line text-xs text-graf-500">
-                          {visita.notes}
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </Cartao>
+          {/* Lista com os gestos ao lado de cada linha: remarcar MOVE o
+              agendamento existente em vez de criar um segundo. */}
+          <VisitasDoChamado
+            visitas={chamado.appointments}
+            tecnicos={tecnicos.map((tecnico) => ({ id: tecnico.id, nome: tecnico.user.name }))}
+            editar={editar}
+          />
 
           {/* -------------------------------------------------------- OS */}
           <Cartao>

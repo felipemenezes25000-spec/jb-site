@@ -45,8 +45,8 @@ type CargaDoTecnico = {
 };
 
 export default async function PaginaTecnicos() {
-  const usuario = await exigirArea("manutencao");
-  const editar = podeEditar(usuario, "manutencao");
+  const usuario = await exigirArea("tecnicos");
+  const editar = podeEditar(usuario, "tecnicos");
 
   const [tecnicos, semVinculo] = await Promise.all([
     prisma.technician.findMany({

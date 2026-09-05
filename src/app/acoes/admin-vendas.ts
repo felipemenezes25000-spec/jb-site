@@ -30,6 +30,7 @@ import {
   criarOrcamento,
   enviarOrcamento,
   recusarOrcamento,
+  reenviarOrcamento,
   substituirItens,
 } from "@/lib/orcamento";
 import { provedorPagamento } from "@/lib/pagamento";
@@ -64,11 +65,16 @@ import { ErroDeUpload, enviarArquivo, removerArquivo } from "@/lib/upload";
  *    funções de domínio (`@/lib/pedido`, `@/lib/orcamento`) não revalidam nada
  *    de propósito: quem chama é que sabe quais telas dependem do dado.
  *
- * MAPA DE ÁREAS — `@/lib/permissoes` está congelado nesta rodada e não tem
- * entrada própria para pagamentos, cupons e frete. A ligação usada aqui é:
- *   · pagamentos → área "pedidos"        (é a mesma operação de venda)
- *   · cupons     → área "produtos"       (é precificação: admin/gestor editam)
- *   · frete      → área "configuracoes"  (a própria descrição da área cita frete)
+ * MAPA DE ÁREAS — cada ação usa a MESMA área da tela de onde ela é disparada,
+ * porque guarda de ação que não bate com guarda de tela produz um dos dois
+ * defeitos: ou a tela abre para escrita e o salvar recusa, ou a tela fecha e a
+ * ação continua aberta a quem mandar o POST na mão. As áreas em uso aqui:
+ *   · pedidos    → /admin/pedidos
+ *   · pagamentos → /admin/pagamentos (confirmar, reconsultar e estornar)
+ *   · clientes   → /admin/clientes
+ *   · orcamentos → /admin/orcamentos
+ *   · cupons     → /admin/cupons
+ *   · frete      → /admin/frete
  */
 
 export type EstadoVendas = { erro?: string; campo?: string; ok?: string };
@@ -96,6 +102,21 @@ function marcado(formData: FormData, nome: string) {
 function centavos(formData: FormData, nome: string) {
   const bruto = texto(formData, nome);
   return bruto ? Math.max(0, paraCentavos(bruto)) : 0;
+}
+
+/**
+ * Centavos que já chegam inteiros do formulário.
+ *
+ * `CampoMoeda` do kit manda os centavos crus no campo escondido ("150000"),
+ * não o texto formatado. Passar isso por `paraCentavos` multiplicaria por cem.
+ * O sinal é preservado de propósito: valor negativo tem de chegar na validação
+ * para ser recusado com nome, em vez de virar zero no caminho.
+ */
+function centavosInteiros(formData: FormData, nome: string) {
+  const bruto = texto(formData, nome);
+  if (!bruto) return 0;
+  const numero = Number(bruto);
+  return Number.isSafeInteger(numero) ? numero : 0;
 }
 
 function inteiroOuNulo(bruto: string): number | null {
@@ -238,21 +259,49 @@ export async function mudarStatusPedido(
 const esquemaPagamentoManual = z.object({
   pedidoId: z.string().min(1, "Pedido não informado."),
   metodo: z.enum(PaymentMethod),
+  valorCents: z
+    .number()
+    .int("Informe o valor em reais e centavos.")
+    .positive("Informe o valor recebido — tem de ser maior que zero."),
   observacao: z.string().trim().max(400).default(""),
 });
+
+/** Recusa esperada do registro de pagamento: vira mensagem de tela, não log. */
+class ErroDePagamento extends Error {
+  constructor(
+    message: string,
+    readonly campo?: string,
+  ) {
+    super(message);
+    this.name = "ErroDePagamento";
+  }
+}
 
 /**
  * Registra um pagamento recebido fora do checkout (transferência, dinheiro,
  * maquininha da loja) e dispara o que depende dele.
  *
- * O valor cobrado é o total do pedido lido do banco — o formulário não manda
- * valor. Assim ninguém "confirma" R$ 1,00 de um pedido de R$ 10.000.
+ * VALOR PARCIAL É O CASO NORMAL. Equipamento odontológico sai com sinal: o
+ * formulário manda quanto entrou agora, e o pedido só é carimbado como pago
+ * quando a soma dos `Payment` aprovados alcança o total. Confirmar cedo demais
+ * não é um erro de tela — `confirmarPagamento` cria os equipamentos no
+ * prontuário do cliente e avisa a pessoa, e isso não tem botão de desfazer.
+ *
+ * O que o formulário manda é intenção: o total e a soma já recebida saem do
+ * banco. Ninguém registra mais do que falta, e ninguém registra zero.
+ *
+ * CONCORRÊNCIA — dois lançamentos ao mesmo tempo no mesmo pedido não podem
+ * somar mais que o total. A trava é o UPDATE condicional no pedido, feito como
+ * primeiro comando da transação: o Postgres bloqueia a linha até o commit, e a
+ * segunda transação só lê a soma depois que a primeira gravou (em READ
+ * COMMITTED cada comando enxerga um retrato novo). Ler a soma antes da trava,
+ * ou decidir em JavaScript com dado lido fora, deixaria a janela aberta.
  */
 export async function confirmarPagamentoManual(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("pedidos");
+  const usuario = await exigirEdicao("pagamentos");
   if (!PODE.confirmarPagamentoManual(usuario)) {
     return { erro: "Só gestores e administradores confirmam pagamento manual." };
   }
@@ -260,9 +309,12 @@ export async function confirmarPagamentoManual(
   const dados = esquemaPagamentoManual.safeParse({
     pedidoId: formData.get("pedidoId"),
     metodo: formData.get("metodo"),
+    valorCents: centavosInteiros(formData, "valorCents"),
     observacao: formData.get("observacao") ?? "",
   });
   if (!dados.success) return primeiroProblema(dados.error);
+
+  const valorCents = dados.data.valorCents;
 
   const pedido = await prisma.order.findUnique({
     where: { id: dados.data.pedidoId },
@@ -272,62 +324,151 @@ export async function confirmarPagamentoManual(
   if (pedido.status === "cancelado") return { erro: "Pedido cancelado não recebe pagamento." };
   if (pedido.paidAt) return { erro: "Este pedido já consta como pago." };
 
+  let conta: { pagoCents: number; saldoCents: number; quitado: boolean };
+
   try {
-    const pagamento = await prisma.payment.create({
-      data: {
-        orderId: pedido.id,
-        provider: "manual",
-        method: dados.data.metodo,
-        status: "aprovado",
-        amountCents: pedido.totalCents,
-        approvedAt: new Date(),
-      },
-      select: { id: true },
-    });
-
-    await prisma.paymentEvent.create({
-      data: {
-        paymentId: pagamento.id,
-        eventKey: `manual:${pagamento.id}`,
-        kind: "confirmacao_manual",
-        payload: {
-          registradoPor: usuario.name,
-          userId: usuario.id,
-          metodo: dados.data.metodo,
-          valorCents: pedido.totalCents,
-          observacao: dados.data.observacao,
+    conta = await prisma.$transaction(async (tx) => {
+      /**
+       * Trava e guarda no mesmo comando. As condições repetem as de
+       * `confirmarPagamento` de propósito: pedido já pago, cancelado ou
+       * reembolsado não recebe lançamento novo, e quem não conseguiu atualizar
+       * a linha não segue adiante.
+       */
+      const liberado = await tx.order.updateMany({
+        where: {
+          id: pedido.id,
+          paidAt: null,
+          status: { notIn: ["cancelado", "reembolsado"] },
         },
-      },
-    });
+        data: { updatedAt: new Date() },
+      });
+      if (liberado.count === 0) {
+        throw new ErroDePagamento(
+          "Este pedido não aceita mais lançamento — ele já foi quitado ou encerrado. Atualize a tela.",
+        );
+      }
 
-    await confirmarPagamento(pedido.id);
+      // dentro da trava: enxerga o que a transação vizinha acabou de gravar
+      const somado = await tx.payment.aggregate({
+        where: { orderId: pedido.id, status: "aprovado" },
+        _sum: { amountCents: true },
+      });
+      const pagoAntesCents = somado._sum.amountCents ?? 0;
+      const saldoCents = pedido.totalCents - pagoAntesCents;
 
-    if (dados.data.observacao) {
-      await prisma.orderStatusEvent.create({
+      if (saldoCents <= 0) {
+        throw new ErroDePagamento(
+          "Os pagamentos aprovados já cobrem o total deste pedido.",
+          "valorCents",
+        );
+      }
+      if (valorCents > saldoCents) {
+        throw new ErroDePagamento(
+          `Só faltam ${formatarPreco(saldoCents)} neste pedido. Registre no máximo esse valor.`,
+          "valorCents",
+        );
+      }
+
+      const pagoCents = pagoAntesCents + valorCents;
+      const quitado = pagoCents >= pedido.totalCents;
+
+      const pagamento = await tx.payment.create({
         data: {
           orderId: pedido.id,
-          status: "pago",
-          note: dados.data.observacao,
+          provider: "manual",
+          method: dados.data.metodo,
+          status: "aprovado",
+          amountCents: valorCents,
+          approvedAt: new Date(),
+        },
+        select: { id: true },
+      });
+
+      await tx.paymentEvent.create({
+        data: {
+          paymentId: pagamento.id,
+          eventKey: `manual:${pagamento.id}`,
+          kind: "confirmacao_manual",
+          payload: {
+            registradoPor: usuario.name,
+            userId: usuario.id,
+            metodo: dados.data.metodo,
+            valorCents,
+            pagoAntesCents,
+            totalCents: pedido.totalCents,
+            quitou: quitado,
+            observacao: dados.data.observacao,
+          },
+        },
+      });
+
+      /**
+       * O lançamento vira linha do histórico com o status atual do pedido —
+       * não com "pago". Quando quita, quem escreve o evento "pago" é
+       * `confirmarPagamento`, depois do commit.
+       */
+      await tx.orderStatusEvent.create({
+        data: {
+          orderId: pedido.id,
+          status: pedido.status,
+          note: [
+            quitado
+              ? `Recebido ${formatarPreco(valorCents)} por ${dados.data.metodo} fora do site — quita o pedido.`
+              : `Recebido ${formatarPreco(valorCents)} por ${dados.data.metodo} fora do site. Pago até aqui: ${formatarPreco(pagoCents)} de ${formatarPreco(pedido.totalCents)}; faltam ${formatarPreco(pedido.totalCents - pagoCents)}.`,
+            dados.data.observacao,
+          ]
+            .filter(Boolean)
+            .join(" "),
           visibleToCustomer: false,
           userId: usuario.id,
         },
       });
-    }
 
-    await registrarAuditoria({
-      userId: usuario.id,
-      acao: "pagamento",
-      entidade: "pedido",
-      entidadeId: pedido.id,
-      resumo: `Pedido ${pedido.number} — ${formatarPreco(pedido.totalCents)} por ${dados.data.metodo}`,
+      return { pagoCents, saldoCents: pedido.totalCents - pagoCents, quitado };
     });
   } catch (erro) {
+    if (erro instanceof ErroDePagamento) return { erro: erro.message, campo: erro.campo };
     return mensagemDeErro(erro, "Não foi possível registrar o pagamento.");
+  }
+
+  await registrarAuditoria({
+    userId: usuario.id,
+    acao: "pagamento",
+    entidade: "pedido",
+    entidadeId: pedido.id,
+    resumo: conta.quitado
+      ? `Pedido ${pedido.number} — ${formatarPreco(valorCents)} por ${dados.data.metodo}, quitando o total`
+      : `Pedido ${pedido.number} — ${formatarPreco(valorCents)} por ${dados.data.metodo}; saldo de ${formatarPreco(conta.saldoCents)}`,
+  });
+
+  /**
+   * Fora da transação de propósito: `confirmarPagamento` abre a sua própria
+   * porta atômica no mesmo pedido e, chamada de dentro daqui, ficaria esperando
+   * a trava que esta transação segura. O lançamento já está gravado; se a
+   * confirmação falhar, o dinheiro continua registrado e a tela diz o que
+   * sobrou para fazer.
+   */
+  if (conta.quitado) {
+    try {
+      await confirmarPagamento(pedido.id);
+    } catch (erro) {
+      revalidarPedido(pedido.id);
+      revalidatePath("/admin/pagamentos");
+      return mensagemDeErro(
+        erro,
+        `Pagamento de ${formatarPreco(valorCents)} registrado, mas o pedido não pôde ser marcado como pago. Tente confirmar o status pelo bloco de andamento.`,
+      );
+    }
   }
 
   revalidarPedido(pedido.id);
   revalidatePath("/admin/pagamentos");
-  return { ok: "Pagamento confirmado." };
+
+  return {
+    ok: conta.quitado
+      ? "Pagamento confirmado. O pedido está quitado."
+      : `Pagamento parcial de ${formatarPreco(valorCents)} registrado. Falta receber ${formatarPreco(conta.saldoCents)} — o pedido segue em aberto.`,
+  };
 }
 
 const esquemaCancelamento = z.object({
@@ -676,7 +817,7 @@ export async function reconsultarPagamento(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("pedidos");
+  const usuario = await exigirEdicao("pagamentos");
 
   const pagamentoId = texto(formData, "pagamentoId");
   if (!pagamentoId) return { erro: "Pagamento não informado." };
@@ -766,7 +907,7 @@ export async function estornarPagamento(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("pedidos");
+  const usuario = await exigirEdicao("pagamentos");
   if (!PODE.confirmarPagamentoManual(usuario)) {
     return { erro: "Só gestores e administradores estornam pagamento." };
   }
@@ -1177,12 +1318,22 @@ export async function salvarOrcamentoAdmin(
 }
 
 /**
- * Envia a proposta ao cliente.
+ * Envia — ou reenvia — a proposta ao cliente.
  *
- * Além do que `enviarOrcamento` já faz (status, validade, evento e aviso na
- * área do cliente), aqui a mensagem entra na fila de saída com chave de
- * deduplicação por versão: reenviar a mesma versão não gera dois e-mails, mas
- * uma revisão nova gera.
+ * O mesmo botão cobre os dois casos, porque para quem atende é o mesmo gesto:
+ * "manda isso para o cliente". Quem separa os dois é o `sentAt` da proposta.
+ *
+ * PRIMEIRO ENVIO: `enviarOrcamento` publica (status, validade, evento e aviso
+ * na área do cliente) e a mensagem entra na fila com chave de deduplicação por
+ * versão — clicar duas vezes na mesma versão não gera dois e-mails, uma revisão
+ * nova gera.
+ *
+ * REENVIO: justamente por causa dessa chave, repetir o bloco de `enfileirar`
+ * numa proposta já enviada não colocaria nada na fila — a fila responderia
+ * "já existe" e o cliente continuaria sem receber. Por isso o reenvio vai por
+ * `reenviarOrcamento`, que numera a tentativa (`:r1`, `:r2`…), monta o texto de
+ * reenvio e grava o evento no histórico da proposta. Ele NÃO republica: status,
+ * validade e versão ficam como estão, que é o que "reenviar" quer dizer.
  */
 export async function enviarOrcamentoAdmin(
   _anterior: EstadoVendas,
@@ -1194,16 +1345,62 @@ export async function enviarOrcamentoAdmin(
   if (!quoteId) return { erro: "Orçamento não informado." };
 
   const validadeDias = inteiroOuNulo(texto(formData, "validadeDias"));
+  const mensagemLivre = texto(formData, "mensagem") || undefined;
+
+  const anterior = await prisma.quote.findUnique({
+    where: { id: quoteId },
+    select: { sentAt: true },
+  });
+  if (!anterior) return { erro: "Orçamento não encontrado." };
+
+  /* ------------------------------------------------------------- reenvio */
+
+  if (anterior.sentAt) {
+    try {
+      const reenvio = await reenviarOrcamento(quoteId, {
+        userId: usuario.id,
+        mensagem: mensagemLivre,
+      });
+
+      await registrarAuditoria({
+        userId: usuario.id,
+        acao: "enviar",
+        entidade: "orcamento",
+        entidadeId: quoteId,
+        resumo: reenvio.mensagem.ok
+          ? `Orçamento ${reenvio.numero} reenviado para ${reenvio.destino} (tentativa ${reenvio.tentativa})`
+          : `Orçamento ${reenvio.numero}: reenvio não entrou na fila: ${reenvio.mensagem.motivo}`,
+      });
+
+      revalidarOrcamento(quoteId);
+
+      if (!reenvio.mensagem.ok) {
+        return { erro: `O reenvio não entrou na fila: ${reenvio.mensagem.motivo}` };
+      }
+      // `jaExistia` aqui significa que a tentativa anterior ainda não saiu da
+      // fila. Dizer "reenviado" nesse caso seria mentira: nada novo foi criado.
+      return {
+        ok: reenvio.mensagem.jaExistia
+          ? "Este reenvio já estava na fila e ainda não saiu. Nada foi duplicado."
+          : `Orçamento reenviado para ${reenvio.destino}.`,
+      };
+    } catch (erro) {
+      return mensagemDeErro(erro, "Não foi possível reenviar o orçamento.");
+    }
+  }
+
+  /* ------------------------------------------------------- primeiro envio */
 
   try {
     const enviado = await enviarOrcamento(quoteId, {
       userId: usuario.id,
       validadeDias: validadeDias ?? undefined,
-      mensagem: texto(formData, "mensagem") || undefined,
+      mensagem: mensagemLivre,
     });
 
     const destino = enviado.contactEmail.trim();
     const link = `${SITE_URL}/minha-jb/orcamentos/${enviado.id}`;
+    let jaEstavaNaFila = false;
 
     if (destino) {
       const resultado = await enfileirar({
@@ -1240,6 +1437,8 @@ export async function enviarOrcamentoAdmin(
           erro: `Orçamento publicado para o cliente, mas o e-mail não entrou na fila: ${resultado.motivo}`,
         };
       }
+
+      jaEstavaNaFila = resultado.jaExistia;
     }
 
     await registrarAuditoria({
@@ -1253,10 +1452,17 @@ export async function enviarOrcamentoAdmin(
     });
 
     revalidarOrcamento(quoteId);
+    if (!destino) {
+      return {
+        ok: "Orçamento publicado. Sem e-mail de contato, avise o cliente por outro canal.",
+      };
+    }
+    // a tela não pode dizer "mensagem na fila" quando a fila apenas reconheceu
+    // uma mensagem que já estava lá — quem lê precisa saber que nada foi criado
     return {
-      ok: destino
-        ? "Orçamento enviado e mensagem na fila."
-        : "Orçamento publicado. Sem e-mail de contato, avise o cliente por outro canal.",
+      ok: jaEstavaNaFila
+        ? "Orçamento publicado. O e-mail desta versão já estava na fila e não foi duplicado."
+        : "Orçamento enviado e mensagem na fila.",
     };
   } catch (erro) {
     return mensagemDeErro(erro, "Não foi possível enviar o orçamento.");
@@ -1457,7 +1663,7 @@ export async function salvarCupom(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("produtos");
+  const usuario = await exigirEdicao("cupons");
 
   const dados = esquemaCupom.safeParse({
     cupomId: formData.get("cupomId") ?? "",
@@ -1566,7 +1772,7 @@ export async function alternarCupom(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("produtos");
+  const usuario = await exigirEdicao("cupons");
 
   const cupomId = texto(formData, "cupomId");
   if (!cupomId) return { erro: "Cupom não informado." };
@@ -1596,7 +1802,7 @@ export async function excluirCupom(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("produtos");
+  const usuario = await exigirEdicao("cupons");
   if (!PODE.excluirRegistros(usuario)) {
     return { erro: "Só administradores excluem cupons." };
   }
@@ -1650,7 +1856,7 @@ export async function salvarPerfilFrete(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("configuracoes");
+  const usuario = await exigirEdicao("frete");
 
   const dados = esquemaPerfil.safeParse({
     perfilId: formData.get("perfilId") ?? "",
@@ -1715,7 +1921,7 @@ export async function excluirPerfilFrete(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("configuracoes");
+  const usuario = await exigirEdicao("frete");
 
   const perfilId = texto(formData, "perfilId");
   if (!perfilId) return { erro: "Perfil não informado." };
@@ -1766,7 +1972,7 @@ export async function salvarZonaFrete(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("configuracoes");
+  const usuario = await exigirEdicao("frete");
 
   const dados = esquemaZona.safeParse({
     zonaId: formData.get("zonaId") ?? "",
@@ -1832,7 +2038,7 @@ export async function excluirZonaFrete(
   _anterior: EstadoVendas,
   formData: FormData,
 ): Promise<EstadoVendas> {
-  const usuario = await exigirEdicao("configuracoes");
+  const usuario = await exigirEdicao("frete");
 
   const zonaId = texto(formData, "zonaId");
   if (!zonaId) return { erro: "Faixa não informada." };
