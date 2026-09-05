@@ -69,7 +69,7 @@ export function CardProduto({
             alt={produto.imageAlt || produto.name}
             fill
             priority={prioridade}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 22vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className={cn(
               "object-contain p-5 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.045] sm:p-6",
               semEstoque && "opacity-55 grayscale",
@@ -158,7 +158,7 @@ export function GradeProdutos({
   className?: string;
 }) {
   return (
-    <ul className={cn("grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4", className)}>
+    <ul className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4", className)}>
       {produtos.map((produto, i) => (
         <li key={produto.slug} className="flex min-w-0">
           <CardProduto produto={produto} prioridade={i < 4} className="w-full" />
