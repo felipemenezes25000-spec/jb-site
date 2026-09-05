@@ -76,20 +76,18 @@ export async function solicitarAssistencia(_anterior: EstadoCliente, formData: F
   }
 
   if (false) {
-    await prisma.$transaction(async (tx) => {
-      const numero = await proximoCodigo("chamado", tx);
-      return tx.serviceRequest.create({
-        data: {
-          number: numero,
-          contactName: dados.data.nome,
-          contactEmail: dados.data.email.toLowerCase(),
-          description: dados.data.descricao,
-        },
-        select: { number: true },
-      });
+    const numero = await proximoCodigo("chamado");
+    await prisma.serviceRequest.create({
+      data: {
+        number: numero,
+        contactName: dados.data.nome,
+        contactEmail: dados.data.email.toLowerCase(),
+        description: dados.data.descricao,
+      },
+      select: { number: true },
     });
   }
 
   void sessao; void equipamentoId; void categoriaId;
-  return { erro: "Diagnóstico temporário dos campos mínimos do chamado." };
+  return { erro: "Diagnóstico temporário da criação direta do chamado." };
 }
