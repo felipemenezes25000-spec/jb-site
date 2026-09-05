@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PackageSearch } from "lucide-react";
+import { PackageSearch, SlidersHorizontal } from "lucide-react";
 
 import { GradeProdutos } from "@/components/loja/card-produto";
 import { FiltrosCatalogo, type GruposFiltro } from "@/components/loja/filtros-catalogo";
@@ -24,7 +24,6 @@ function lista(valor: string | string[] | undefined): string[] {
   return texto.split(",").filter(Boolean);
 }
 
-/** Monta os grupos de filtro a partir do que existe publicado no catálogo. */
 async function montarGrupos(): Promise<GruposFiltro> {
   const [categorias, marcas, condicoes, voltagens, faixa] = await Promise.all([
     prisma.category.findMany({
@@ -134,74 +133,89 @@ export async function Vitrine({
   );
 
   return (
-    <div className="container-jb py-8 lg:py-12">
-      <Trilha itens={trilha} className="mb-5" />
+    <>
+      <section className="border-b border-graf-200 bg-graf-50/70">
+        <div className="container-jb py-8 lg:py-12">
+          <Trilha itens={trilha} className="mb-5" />
+          <div className="max-w-4xl">
+            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-jb-600">Catálogo JB</p>
+            <h1 className="mt-3 text-display leading-[1.04]">{titulo}</h1>
+            {descricao ? (
+              <p className="mt-4 max-w-3xl text-base leading-7 text-graf-600 lg:text-lg">{descricao}</p>
+            ) : null}
+            <p className="mt-5 text-sm font-semibold text-graf-500">
+              {total === 1 ? "1 equipamento encontrado" : `${total} equipamentos encontrados`}
+            </p>
+          </div>
+        </div>
+      </section>
 
-      <header className="mb-8 max-w-2xl">
-        <h1 className="text-display leading-tight">{titulo}</h1>
-        {descricao ? (
-          <p className="mt-3 text-base leading-relaxed text-graf-600">{descricao}</p>
-        ) : null}
-      </header>
+      <div className="container-jb py-8 lg:py-12">
+        <div className="grid gap-8 lg:grid-cols-[18rem_1fr] lg:gap-10 xl:gap-12">
+          <aside className="lg:order-first">
+            <div className="sticky top-32 overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
+              <div className="flex items-center gap-2.5 border-b border-graf-200 px-5 py-4">
+                <SlidersHorizontal className="size-4.5 text-jb-600" aria-hidden />
+                <p className="text-sm font-extrabold text-graf-950">Filtrar catálogo</p>
+              </div>
+              <div className="p-4">
+                <FiltrosCatalogo
+                  grupos={grupos}
+                  total={total}
+                  travarCategoria={travarCategoria}
+                  travarCondicao={travarCondicao}
+                />
+              </div>
+            </div>
+          </aside>
 
-      <div className="grid gap-10 lg:grid-cols-[16rem_1fr] lg:gap-12">
-        <aside className="lg:order-first">
-          <FiltrosCatalogo
-            grupos={grupos}
-            total={total}
-            travarCategoria={travarCategoria}
-            travarCondicao={travarCondicao}
-          />
-        </aside>
+          <div className="min-w-0">
+            {produtos.length === 0 ? (
+              <Vazio
+                icone={PackageSearch}
+                titulo="Nenhum item com esses filtros"
+                descricao="Tente remover algum filtro ou fale com a equipe — vários equipamentos e peças também podem ser atendidos sob orçamento."
+                acao={
+                  <div className="flex flex-wrap justify-center gap-3">
+                    <LinkBotao href="/loja" variante="secundario">Limpar filtros</LinkBotao>
+                    <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
+                  </div>
+                }
+              />
+            ) : (
+              <>
+                <GradeProdutos produtos={produtos} className="sm:grid-cols-2 xl:grid-cols-3" />
 
-        <div className="min-w-0">
-          {produtos.length === 0 ? (
-            <Vazio
-              icone={PackageSearch}
-              titulo="Nenhum item com esses filtros"
-              descricao="Tente remover algum filtro ou fale com a equipe — muita coisa é atendida sob orçamento."
-              acao={
-                <div className="flex flex-wrap justify-center gap-3">
-                  <LinkBotao href="/loja" variante="secundario">
-                    Limpar filtros
-                  </LinkBotao>
-                  <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
-                </div>
-              }
-            />
-          ) : (
-            <>
-              <GradeProdutos produtos={produtos} className="lg:grid-cols-3" />
-
-              {paginas > 1 ? (
-                <nav aria-label="Paginação" className="mt-10 flex justify-center gap-1.5">
-                  {Array.from({ length: paginas }, (_, i) => i + 1).map((n) => {
-                    const params = new URLSearchParams(consulta);
-                    if (n > 1) params.set("pagina", String(n));
-                    const atual = n === pagina;
-                    return (
-                      <Link
-                        key={n}
-                        href={`?${params.toString()}`}
-                        aria-current={atual ? "page" : undefined}
-                        scroll={false}
-                        className={cn(
-                          "flex size-10 items-center justify-center rounded-lg border text-sm font-semibold transition-colors",
-                          atual
-                            ? "border-jb-500 bg-jb-500 text-white"
-                            : "border-graf-300 bg-white text-graf-700 hover:border-graf-400",
-                        )}
-                      >
-                        {n}
-                      </Link>
-                    );
-                  })}
-                </nav>
-              ) : null}
-            </>
-          )}
+                {paginas > 1 ? (
+                  <nav aria-label="Paginação" className="mt-12 flex flex-wrap justify-center gap-2">
+                    {Array.from({ length: paginas }, (_, i) => i + 1).map((n) => {
+                      const params = new URLSearchParams(consulta);
+                      if (n > 1) params.set("pagina", String(n));
+                      const atual = n === pagina;
+                      return (
+                        <Link
+                          key={n}
+                          href={`?${params.toString()}`}
+                          aria-current={atual ? "page" : undefined}
+                          scroll={false}
+                          className={cn(
+                            "flex size-11 items-center justify-center rounded-xl border text-sm font-extrabold transition-colors",
+                            atual
+                              ? "border-jb-600 bg-jb-600 text-white"
+                              : "border-graf-300 bg-white text-graf-700 hover:border-graf-400 hover:bg-graf-50",
+                          )}
+                        >
+                          {n}
+                        </Link>
+                      );
+                    })}
+                  </nav>
+                ) : null}
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
