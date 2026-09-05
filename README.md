@@ -90,6 +90,12 @@ Para remover só o que os seeds de demonstração criaram, sem tocar em dado rea
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:seed` | carga base |
 | `pnpm db:demo` · `pnpm db:demo:operacao` · `pnpm db:demo:limpar` | dados de demonstração |
+| `pnpm test:unit` | 192 testes unitários (Vitest) |
+| `pnpm e2e` | 48 testes de ponta a ponta (Playwright) |
+| `pnpm test` | os dois acima, em sequência |
+| `pnpm responsivo` | mede o layout em 6 larguras × 33 rotas num navegador de verdade |
+| `pnpm a11y` | roda o axe-core (WCAG 2.1 A e AA) em 34 rotas, mais 3 medições próprias |
+| `pnpm prova:atomicidade` | prova, com concorrência real contra o Postgres, que pagamento, estoque e cupom não duplicam |
 | `pnpm tour` | percorre todas as rotas num navegador e fotografa (ver "Testes") |
 
 ---
@@ -383,19 +389,50 @@ O passo a passo está em [`docs/operacao.md`](docs/operacao.md).
 
 ## Testes
 
-Não há suíte de testes unitários. A verificação é de ponta a ponta, com
-Playwright, contra a aplicação rodando de verdade.
+Cinco camadas, e cada uma responde a uma pergunta diferente. Nenhuma delas
+substitui a outra.
+
+| Camada | Pergunta que responde | Como roda |
+|---|---|---|
+| `pnpm test:unit` | a regra de negócio está certa? | 192 testes, em memória, sem banco |
+| `pnpm e2e` | o fluxo funciona de ponta a ponta? | 48 testes, navegador real, banco real |
+| `pnpm prova:atomicidade` | duas pessoas ao mesmo tempo quebram? | concorrência real contra o Postgres |
+| `pnpm responsivo` | o layout aguenta a tela do cliente? | 6 larguras × 33 rotas, medido no navegador |
+| `pnpm a11y` | dá para usar sem enxergar, sem mouse? | axe-core WCAG 2.1 A/AA em 34 rotas |
+
+As três últimas saem com código 1 quando acham problema, então servem de
+portão. Todas medem no navegador de verdade em vez de inspecionar o código:
+transbordo, contraste e alvo de toque dependem de fonte carregada, imagem
+carregada e quebra de linha — nada disso dá para saber lendo o JSX.
 
 ```bash
 # 1. suba o site e carregue os dados de demonstração
 pnpm db:seed && pnpm db:demo && pnpm db:demo:operacao
-pnpm dev
+pnpm dev --port 3400
 
-# 2. em outro terminal — percorre TODAS as rotas (públicas, /minha-jb e /admin),
+# 2. em outro terminal
+pnpm test:unit
+E2E_BASE_URL=http://localhost:3400 pnpm e2e
+BASE_URL=http://localhost:3400 pnpm responsivo
+BASE_URL=http://localhost:3400 pnpm a11y
+
+# 3. o teste de fumaça: percorre TODAS as rotas (públicas, /minha-jb e /admin),
 #    entrando com o cliente e com a equipe de demonstração, e reporta status
 #    HTTP, erro de console, exceção de página, requisição falha e link quebrado
 pnpm tour
 ```
+
+Um detalhe que custa tempo se for descoberto na hora errada: o `pnpm e2e` sobe
+o próprio `next dev` na porta 3210, e o Next 16 recusa um segundo servidor de
+desenvolvimento no mesmo diretório. Se você já tem um rodando, aponte a suíte
+para ele com `E2E_BASE_URL` em vez de deixar os dois brigarem — sem isso a
+suíte demora minutos e falha por tempo esgotado, sem dizer o porquê.
+
+O `pnpm a11y` mede três coisas que o axe-core não cobre: se o anel de foco
+realmente aparece (o axe só olha se o `outline` foi zerado, não se algo o
+substituiu), se o alvo de toque tem 44px **contando o rótulo** que comanda o
+campo, e se algum `aria-labelledby`/`aria-controls` aponta para um id que não
+existe na página.
 
 `pnpm tour` (= `node scripts/tour.mjs`) grava as fotos em `.shots/tour`, no
 desktop e no celular, e aceita `--so=publico|conta|admin`, `--sem-fotos` e
