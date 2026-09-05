@@ -6,7 +6,7 @@ import {
   CabecalhoPagina,
   Dado,
   Dados,
-  SUBNAV_SERVICO,
+  subnavServico,
   SubNavegacao,
 } from "@/components/admin/servico/cabecalho";
 import { AreaAcao, CampoAcao, MoedaAcao } from "@/components/admin/servico/campos";
@@ -162,7 +162,7 @@ export default async function PaginaPlanos() {
         }
       />
 
-      <SubNavegacao itens={SUBNAV_SERVICO} atual="/admin/manutencao/planos" />
+      <SubNavegacao itens={subnavServico(usuario)} atual="/admin/manutencao/planos" />
 
       {planos.length === 0 ? (
         <Vazio

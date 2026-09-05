@@ -11,12 +11,21 @@ import { fixtures } from "./fixtures";
  * erro de arredondamento — por isso tudo é convertido para inteiro antes.
  */
 
-/** Lê o valor de uma linha do resumo do carrinho (Subtotal, Total…). */
+/**
+ * Lê o valor de uma linha do resumo do carrinho (Subtotal, Total…).
+ *
+ * O rótulo é procurado pelo texto que o próprio elemento escreve — "Subtotal"
+ * vem acompanhado da contagem de unidades num `<span>` irmão, então casar o
+ * conteúdo inteiro do `<dt>` deixaria de funcionar a cada mudança de copy.
+ */
 async function valorDoResumo(
   page: import("@playwright/test").Page,
   rotulo: string,
 ): Promise<number> {
-  const linha = page.getByRole("main").getByText(rotulo, { exact: true }).first();
+  const linha = page
+    .getByRole("main")
+    .locator(`xpath=.//*[normalize-space(text())=${JSON.stringify(rotulo)}]`)
+    .first();
   const container = linha.locator("xpath=..");
   const texto = await container.innerText();
   const achado = texto.match(/R\$\s*[\d.]+,\d{2}/);

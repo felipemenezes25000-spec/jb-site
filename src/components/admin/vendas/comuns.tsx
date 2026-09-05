@@ -186,8 +186,11 @@ export function CabecalhoPagina({
   acoes?: React.ReactNode;
   className?: string;
 }) {
+  // `<header>` e não `<div>`: é o mesmo elemento que os cabeçalhos das áreas
+  // de conteúdo e de serviço usam, e é o que dá a região de cabeçalho para
+  // quem navega por marcos no leitor de tela.
   return (
-    <div
+    <header
       className={cn(
         "flex flex-wrap items-start justify-between gap-x-6 gap-y-3 print:hidden",
         className,
@@ -198,7 +201,7 @@ export function CabecalhoPagina({
         {apoio ? <div className="mt-1 text-sm text-graf-500">{apoio}</div> : null}
       </div>
       {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
-    </div>
+    </header>
   );
 }
 

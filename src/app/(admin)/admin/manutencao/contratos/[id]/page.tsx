@@ -314,7 +314,7 @@ export default async function PaginaContrato({
                                 name="equipamentoIds"
                                 value={equipamento.id}
                                 defaultChecked={cobertos.has(equipamento.id)}
-                                className="mt-0.5 size-[18px] shrink-0 rounded border-graf-300 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
+                                className="mt-0.5 size-[18px] shrink-0 rounded border-graf-450 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
                               />
                               <span className="min-w-0">
                                 <span className="block text-sm font-medium text-graf-900">

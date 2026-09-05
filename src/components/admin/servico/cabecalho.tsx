@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { Trilha, type Migalha } from "@/components/ui/data";
+import type { StaffUser } from "@/lib/auth";
+import { podeVer, type AreaAdmin } from "@/lib/permissoes";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -88,7 +90,9 @@ export function SubNavegacao({
                 {typeof item.contador === "number" ? (
                   <span
                     className={cn(
-                      "tabular inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-bold",
+                      // text-xs (12px) em vez de 11px: contador é informação, e 1px aqui não
+                      // muda o desenho da pílula mas tira o texto do limite do legível
+                      "tabular inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold",
                       ativo ? "bg-jb-100 text-jb-700" : "bg-graf-100 text-graf-600",
                     )}
                   >
@@ -105,20 +109,36 @@ export function SubNavegacao({
 }
 
 /**
- * Seções do serviço em campo.
+ * Seções do serviço em campo, cada uma amarrada à área que a protege.
  *
- * Agenda e Técnicos moram aqui porque o menu lateral do painel é montado a
- * partir de `AREAS` (`@/lib/permissoes`), que não conhece essas duas rotas.
- * Sem esta barra elas existiriam sem porta de entrada. Quando as áreas forem
- * cadastradas lá, esta lista pode encolher de volta para manutenção.
+ * A barra atravessa cinco telas que o menu lateral mostra separadas (Agenda,
+ * Manutenção e Técnicos são áreas distintas em `@/lib/permissoes`), e nem todo
+ * papel abre as cinco: o técnico opera manutenção e agenda, mas o cadastro da
+ * equipe é de administrador e gestor. Por isso a lista é filtrada por
+ * `podeVer` antes de virar tela — mostrar uma aba que só devolve
+ * "sem permissão" é levar a pessoa a um beco.
  */
-export const SUBNAV_SERVICO: ItemSubNav[] = [
-  { rotulo: "Visitas", href: "/admin/manutencao" },
-  { rotulo: "Contratos", href: "/admin/manutencao/contratos" },
-  { rotulo: "Planos", href: "/admin/manutencao/planos" },
-  { rotulo: "Agenda", href: "/admin/agenda" },
-  { rotulo: "Técnicos", href: "/admin/tecnicos" },
+const SECOES_SERVICO: (ItemSubNav & { area: AreaAdmin })[] = [
+  { rotulo: "Visitas", href: "/admin/manutencao", area: "manutencao" },
+  { rotulo: "Contratos", href: "/admin/manutencao/contratos", area: "manutencao" },
+  { rotulo: "Planos", href: "/admin/manutencao/planos", area: "manutencao" },
+  { rotulo: "Agenda", href: "/admin/agenda", area: "agenda" },
+  { rotulo: "Técnicos", href: "/admin/tecnicos", area: "tecnicos" },
 ];
+
+/**
+ * Abas da área de serviço que este usuário realmente abre.
+ *
+ * Chamar do componente de servidor da página, que já tem o usuário devolvido
+ * por `exigirArea`. Isto é conveniência de navegação, não autorização: quem
+ * decide é a guarda de cada página.
+ */
+export function subnavServico(usuario: StaffUser | null): ItemSubNav[] {
+  return SECOES_SERVICO.filter((secao) => podeVer(usuario, secao.area)).map((secao) => ({
+    rotulo: secao.rotulo,
+    href: secao.href,
+  }));
+}
 
 /** Lista rótulo/valor. Duas colunas a partir de sm, empilhada no celular. */
 export function Dados({

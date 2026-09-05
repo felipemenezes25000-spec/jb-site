@@ -32,7 +32,8 @@ export default async function CadastroPage({ searchParams }: { searchParams: Bus
 
   return (
     <MolduraAutenticacao
-      titulo="Criar conta na JB"
+      etapa="Área da Clínica"
+      titulo="Criar sua conta"
       subtitulo="Uma conta guarda seus pedidos, as garantias dos equipamentos e o histórico de cada chamado de assistência."
       rodape={
         <p>
@@ -41,7 +42,7 @@ export default async function CadastroPage({ searchParams }: { searchParams: Bus
             href={destino ? `/entrar?destino=${encodeURIComponent(destino)}` : "/entrar"}
             className="font-semibold text-jb-700 underline-offset-4 hover:underline"
           >
-            Entrar na Minha JB
+            Entrar na sua conta
           </Link>
         </p>
       }

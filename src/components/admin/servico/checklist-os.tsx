@@ -73,7 +73,7 @@ export function ChecklistDaOS({
                         defaultChecked={item.done}
                         disabled={!podeEditar}
                         onChange={(evento) => evento.currentTarget.form?.requestSubmit()}
-                        className="size-[18px] shrink-0 rounded border-graf-300 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
+                        className="size-[18px] shrink-0 rounded border-graf-450 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
                       />
                       <span
                         className={cn(
@@ -100,8 +100,8 @@ export function ChecklistDaOS({
                         evento.currentTarget.form?.requestSubmit();
                       }}
                       className={cn(
-                        "h-11 w-full rounded-lg border border-graf-300 bg-white px-3 text-sm text-graf-900 sm:w-56",
-                        "placeholder:text-graf-500 hover:border-graf-400",
+                        "h-11 w-full rounded-lg border border-graf-450 bg-white px-3 text-sm text-graf-900 sm:w-56",
+                        "placeholder:text-graf-500 hover:border-graf-500",
                         "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
                         "disabled:bg-graf-50 disabled:text-graf-500",
                       )}

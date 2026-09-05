@@ -1,60 +1,109 @@
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  BadgeCheck,
-  FileText,
-  MessageCircle,
-  ShieldCheck,
-  Truck,
-  Wrench,
-} from "lucide-react";
 
 import { CaixaCompra, type AddonProduto } from "@/components/loja/caixa-compra";
-import { GaleriaProduto } from "@/components/loja/galeria-produto";
+import { GaleriaProduto, type FotoProduto } from "@/components/loja/galeria-produto";
 import { GradeProdutos } from "@/components/loja/card-produto";
-import { CONDICAO } from "@/components/loja/card-produto";
-import { LinkBotao } from "@/components/ui/button";
-import { Cartao, Etiqueta, Trilha, TituloSecao } from "@/components/ui/data";
-import { paraCard, SELECAO_CARD } from "@/lib/catalogo";
-import { formatarPreco, whatsappHref } from "@/lib/format";
+import { AjudaDaEquipe } from "@/components/loja/produto/ajuda-da-equipe";
+import { AssistenciaRelacionada } from "@/components/loja/produto/assistencia-relacionada";
+import { definicaoDaCondicao } from "@/components/loja/produto/condicao";
+import { CondicoesDeCompra } from "@/components/loja/produto/condicoes-de-compra";
+import {
+  agruparEspecificacoes,
+  Documentacao,
+  FichaTecnica,
+  MedidasEPeso,
+  Regulatorio,
+} from "@/components/loja/produto/especificacoes";
+import { ForaDeLinha, SemEstoque } from "@/components/loja/produto/estados";
+import { IdentidadeProduto } from "@/components/loja/produto/identidade";
+import { MotivosJB } from "@/components/loja/produto/motivos-jb";
+import { PerguntasDoProduto } from "@/components/loja/produto/perguntas";
+import {
+  ServicosDoProduto,
+  type ServicoDoProduto,
+} from "@/components/loja/produto/servicos-do-produto";
+import { UnidadeFisica } from "@/components/loja/produto/unidade-fisica";
+import { Trilha, TituloSecao } from "@/components/ui/data";
+import { EsqueletoCartaoProduto } from "@/components/ui/esqueletos";
+import { Secao } from "@/components/ui/secao";
 import { sanitizarHtml } from "@/components/admin/conteudo/html-seguro";
-import { JsonLd, type DadosJsonLd } from "@/lib/seo";
+import { paraCard, SELECAO_CARD } from "@/lib/catalogo";
+import { paraCentavos, whatsappHref } from "@/lib/format";
+import {
+  faqJsonLd,
+  JsonLd,
+  metadataDePagina,
+  produtoJsonLd,
+  textoLimpo,
+  trilhaJsonLd,
+  type DadosJsonLd,
+} from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
-import { getSettings } from "@/lib/settings";
+import { getSettings, ligado } from "@/lib/settings";
+import { cn } from "@/lib/utils";
+
+/**
+ * Página de um equipamento.
+ *
+ * A tela é montada em faixas: identidade em largura inteira, depois galeria e
+ * caixa de compra, e então os blocos que sustentam uma compra de cinco dígitos
+ * — por que na JB, a unidade física quando existe, descrição, ficha técnica,
+ * documentação, serviços da equipe, dúvidas, equipamentos relacionados e a
+ * assistência que continua depois da entrega.
+ *
+ * A regra que atravessa o arquivo inteiro: campo vazio não vira linha. Não há
+ * prazo, frete, certificação, nota nem depoimento que não esteja no banco.
+ */
 
 type Props = { params: Promise<{ slug: string }> };
 
-const RESULTADO_CHECK: Record<string, { rotulo: string; tom: "ok" | "alerta" | "neutro" }> = {
-  verificado: { rotulo: "Verificado", tom: "ok" },
-  substituido: { rotulo: "Substituído", tom: "alerta" },
-  reparado: { rotulo: "Reparado", tom: "alerta" },
-  nao_aplicavel: { rotulo: "Não se aplica", tom: "neutro" },
-};
+/**
+ * O cartão de um relacionado precisa de `id` e `status` além do que a vitrine
+ * usa: `id` para não repetir o mesmo item no complemento automático, `status`
+ * porque uma relação cadastrada pode apontar para algo despublicado.
+ */
+const SELECAO_RELACIONADO = {
+  ...SELECAO_CARD,
+  id: true,
+  status: true,
+} satisfies Prisma.ProductSelect;
+
+type LinhaRelacionada = Prisma.ProductGetPayload<{ select: typeof SELECAO_RELACIONADO }>;
 
 async function carregar(slug: string) {
   return prisma.product.findUnique({
     where: { slug },
     include: {
-      brand: true,
+      brand: { include: { logo: true } },
       category: true,
       media: { orderBy: { order: "asc" }, include: { media: true } },
       specs: { orderBy: { order: "asc" } },
-      documents: true,
+      documents: { orderBy: { createdAt: "asc" } },
       faqs: { where: { published: true }, orderBy: { order: "asc" } },
-      addons: {
-        orderBy: { order: "asc" },
-        include: { service: true },
-      },
+      addons: { orderBy: { order: "asc" }, include: { service: true } },
+      /**
+       * Duas unidades, não uma: com mais de uma no estoque, mostrar "o número
+       * de série" seria mostrar o de outra peça. `status` ordena pela ordem do
+       * enum, então a disponível vem primeiro.
+       */
       units: {
-        where: { status: "disponivel" },
-        take: 1,
+        orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+        take: 2,
         include: {
           checklist: { orderBy: { order: "asc" } },
           media: { orderBy: { order: "asc" }, include: { media: true } },
         },
       },
       shippingProfile: true,
+      relatedFrom: {
+        orderBy: { order: "asc" },
+        take: 8,
+        include: { target: { select: SELECAO_RELACIONADO } },
+      },
     },
   });
 }
@@ -62,21 +111,30 @@ async function carregar(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const produto = await carregar(slug);
-  if (!produto) return {};
+  if (!produto) {
+    return metadataDePagina({
+      titulo: "Equipamento não encontrado",
+      caminho: `/loja/${slug}`,
+      noIndex: true,
+    });
+  }
 
-  const imagem = produto.media[0]?.media.url;
-  return {
-    title: produto.seoTitle ?? produto.name,
-    description: produto.seoDescription ?? (produto.shortDescription || undefined),
-    alternates: { canonical: `/loja/${produto.slug}` },
-    openGraph: {
-      title: produto.name,
-      description: produto.shortDescription || undefined,
-      images: imagem ? [imagem] : undefined,
-    },
-    // produto fora do ar não deve ser indexado
-    robots: produto.status === "active" ? undefined : { index: false, follow: true },
-  };
+  const base = metadataDePagina({
+    titulo: produto.seoTitle?.trim() || produto.name,
+    descricao: produto.seoDescription?.trim() || produto.shortDescription || produto.description,
+    caminho: `/loja/${produto.slug}`,
+    imagem: produto.media[0]?.media.url ?? null,
+  });
+
+  if (produto.status === "active") return base;
+
+  /**
+   * Fora de linha sai do índice, mas os links continuam valendo: a página só
+   * existe para levar quem chegou até um substituto. `noIndex` do construtor
+   * padrão desligaria o `follow` junto, e aí o buscador ignoraria justamente
+   * os equipamentos indicados no lugar deste.
+   */
+  return { ...base, robots: { index: false, follow: true } };
 }
 
 export default async function ProdutoPage({ params }: Props) {
@@ -85,149 +143,215 @@ export default async function ProdutoPage({ params }: Props) {
 
   if (!produto || produto.status === "draft") notFound();
 
-  const relacionados = await prisma.product.findMany({
-    where: {
-      status: "active",
-      id: { not: produto.id },
-      OR: [{ categoryId: produto.categoryId }, { brandId: produto.brandId }],
-    },
-    orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
-    take: 4,
-    select: SELECAO_CARD,
+  const caminho = `/loja/${produto.slug}`;
+
+  /**
+   * `archived` é produto que saiu de linha. A página continua de pé porque o
+   * link pode estar salvo ou indexado — devolver 404 para quem tem o
+   * equipamento é pior que explicar. O que não pode é continuar vendendo.
+   */
+  const arquivado = produto.status === "archived";
+  const semEstoque = produto.trackInventory && produto.stock <= 0;
+
+  /* ------------------------------------------------------ unidade física */
+
+  // Só existe "a unidade" quando há uma única peça identificada. Com duas ou
+  // mais no estoque, o número de série na tela seria o de outra peça.
+  const unidade =
+    produto.units.length === 1 && (produto.unique || produto.stock <= 1)
+      ? produto.units[0]
+      : undefined;
+
+  const checklist =
+    unidade?.checklist.map((item) => ({
+      id: item.id,
+      rotulo: item.label,
+      resultado: item.result,
+      nota: item.note,
+    })) ?? [];
+
+  const definicao = definicaoDaCondicao(produto.condition, {
+    itensDeChecklist: checklist.length,
+    temNotasDeEstado: Boolean(unidade?.conditionNotes.trim()),
   });
 
-  const unidade = produto.units[0];
-  const fotos = [
-    ...produto.media.map((m) => ({ url: m.media.url, alt: m.alt || m.media.alt })),
-    ...(unidade?.media.map((m) => ({ url: m.media.url, alt: m.media.alt })) ?? []),
+  /* ---------------------------------------------------------------- fotos */
+
+  const fotos: FotoProduto[] = [
+    ...produto.media.map((m) => ({
+      url: m.media.url,
+      alt: m.alt || m.media.alt || produto.name,
+    })),
+    ...(unidade?.media.map((m) => ({
+      url: m.media.url,
+      alt: m.media.alt || `${produto.name} — unidade à venda`,
+      daUnidade: true,
+    })) ?? []),
   ];
+
+  /* -------------------------------------------------------------- compra */
 
   const addons: AddonProduto[] = produto.addons.map((a) => ({
     serviceId: a.serviceId,
     nome: a.service.name,
     descricao: a.service.description,
+    // O produto sobrescreve o preço do serviço; sem sobrescrita vale o padrão.
     precoCents: a.priceCents ?? a.service.priceCents,
     obrigatorio: a.required,
   }));
 
-  const condicao = CONDICAO[produto.condition];
-  const revisado = produto.condition === "seminovo" || produto.condition === "recondicionado";
-  const semEstoque = produto.trackInventory && produto.stock <= 0;
-  /**
-   * `archived` é produto que saiu de linha. A página continua de pé porque o
-   * link pode estar salvo ou indexado — devolver 404 para quem tinha o
-   * equipamento é pior que explicar. O que não pode é continuar vendendo:
-   * antes, só `draft` era barrado e o botão de comprar seguia ativo.
-   */
-  const arquivado = produto.status === "archived";
+  const servicos: ServicoDoProduto[] = produto.addons.map((a) => ({
+    serviceId: a.serviceId,
+    slug: a.service.slug,
+    nome: a.service.name,
+    descricao: a.service.description,
+    tipo: a.service.kind,
+    precoCents: a.priceCents ?? a.service.priceCents,
+    obrigatorio: a.required,
+  }));
 
-  const dadosEstruturados: DadosJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: produto.name,
+  // O mesmo teto do checkout: prometer 12× aqui e oferecer 6× lá seria mentira
+  // de vitrine. Os dois leem a configuração da loja.
+  const maxParcelas = Math.min(12, Math.max(1, Number(s.parcelas_max) || 1));
+  const minParcelaCents = paraCentavos(s.parcela_minima);
+
+  const hrefOrcamento = `/orcamento?tipo=compra&item=${encodeURIComponent(produto.name)}`;
+  const hrefWhatsapp = s.whatsapp
+    ? whatsappHref(
+        s.whatsapp,
+        `Olá! Tenho uma dúvida sobre o equipamento ${produto.name} (SKU ${produto.sku}).`,
+      )
+    : "";
+
+  const garantiaMeses = unidade?.warrantyMonths ?? produto.warrantyMonths ?? null;
+
+  /* ------------------------------------------------------------- detalhes */
+
+  const grupos = agruparEspecificacoes(produto.specs);
+  const documentos = produto.documents.map((documento) => ({
+    id: documento.id,
+    titulo: documento.title,
+    url: documento.url,
+    tipo: documento.kind,
+  }));
+
+  const temMedidas = Boolean(
+    produto.widthMm || produto.heightMm || produto.depthMm || produto.weightGrams,
+  );
+  const temRegulatorio = Boolean(
+    produto.anvisaCode || produto.manufacturer || produto.regulatoryHolder || produto.regulatoryNote,
+  );
+  const descricao = produto.description.trim();
+  // `<p></p>` vindo do editor tem comprimento, mas não tem conteúdo: sem tirar
+  // a marcação, a página abriria um título "Sobre este equipamento" vazio.
+  const temDescricao = textoLimpo(descricao, 4000).length > 0;
+  const temFicha = grupos.length > 0 || temMedidas || temRegulatorio;
+  const temColunaDeApoio = temFicha || documentos.length > 0;
+
+  /* ---------------------------------------------------------------- trilha */
+
+  const trilha = [
+    { rotulo: "Início", href: "/" },
+    { rotulo: "Equipamentos", href: "/loja" },
+    ...(produto.category
+      ? [{ rotulo: produto.category.name, href: `/categoria/${produto.category.slug}` }]
+      : []),
+    { rotulo: produto.name },
+  ];
+
+  /* ------------------------------------------------------ dados estruturados */
+
+  const dadosDoProduto: DadosJsonLd = produtoJsonLd({
+    nome: produto.name,
+    caminho,
     sku: produto.sku,
-    description: produto.shortDescription || undefined,
-    image: fotos.map((f) => f.url),
-    brand: produto.brand ? { "@type": "Brand", name: produto.brand.name } : undefined,
-    offers:
-      produto.allowDirectPurchase && produto.priceCents > 0
-        ? {
-            "@type": "Offer",
-            priceCurrency: "BRL",
-            price: (produto.priceCents / 100).toFixed(2),
-            availability: arquivado
-              ? "https://schema.org/Discontinued"
-              : semEstoque
-                ? "https://schema.org/OutOfStock"
-                : "https://schema.org/InStock",
-            itemCondition:
-              produto.condition === "novo"
-                ? "https://schema.org/NewCondition"
-                : "https://schema.org/UsedCondition",
-          }
-        : undefined,
-  };
+    modelo: produto.model,
+    descricao: produto.shortDescription || descricao,
+    imagens: fotos.map((foto) => foto.url),
+    marca: produto.brand?.name,
+    fabricante: produto.manufacturer,
+    condicao: produto.condition,
+    precoCents: produto.priceCents,
+    aVenda: produto.allowDirectPurchase,
+    disponivel: !semEstoque,
+    garantiaMeses,
+    vendedor: s.empresa_nome,
+  });
+
+  // Fora de linha é diferente de "sem estoque": o buscador precisa ler
+  // Discontinued. O construtor genérico não conhece esse estado, então a oferta
+  // é ajustada aqui — sem reescrever o resto do objeto na mão.
+  if (arquivado) {
+    const oferta = dadosDoProduto.offers;
+    if (oferta && typeof oferta === "object" && !Array.isArray(oferta)) {
+      dadosDoProduto.offers = {
+        ...oferta,
+        availability: "https://schema.org/Discontinued",
+      };
+    }
+  }
+
+  const estruturados: DadosJsonLd[] = [trilhaJsonLd(trilha), dadosDoProduto];
+  if (produto.faqs.length > 0) {
+    estruturados.push(
+      faqJsonLd(produto.faqs.map((faq) => ({ pergunta: faq.question, resposta: faq.answer }))),
+    );
+  }
 
   return (
     <>
-      {/* dados do próprio catálogo; nada de avaliação ou nota fictícia.
-          JsonLd escapa "<" — nome de produto com "</script>" fecharia a tag. */}
-      <JsonLd dados={dadosEstruturados} />
+      {/* Tudo do próprio catálogo — nada de nota ou avaliação inventada.
+          JsonLd escapa "<": nome de produto com "</script>" fecharia a tag. */}
+      <JsonLd dados={estruturados} />
 
-      <div className="container-jb py-6 lg:py-10">
-        <Trilha
-          itens={[
-            { rotulo: "Início", href: "/" },
-            { rotulo: "Equipamentos", href: "/loja" },
-            ...(produto.category
-              ? [{ rotulo: produto.category.name, href: `/categoria/${produto.category.slug}` }]
-              : []),
-            { rotulo: produto.name },
-          ]}
-          className="mb-6"
+      {/* ======================================================= IDENTIDADE */}
+      {/* `espaco="nenhum"` de propósito: o respiro é escrito aqui inteiro, para
+          o `pb` não disputar com o `md:py` do preset e perder no desktop. */}
+      <Secao como="div" espaco="nenhum" className="pt-6 pb-14 lg:pt-8 lg:pb-20">
+        <Trilha itens={trilha} className="mb-6 lg:mb-8" />
+
+        <IdentidadeProduto
+          nome={produto.name}
+          modelo={produto.model}
+          sku={produto.sku}
+          numeroDeSerie={unidade?.serialNumber ?? null}
+          condicao={produto.condition}
+          definicaoDaCondicao={definicao}
+          marca={
+            produto.brand
+              ? {
+                  nome: produto.brand.name,
+                  slug: produto.brand.slug,
+                  logo: produto.brand.logo
+                    ? {
+                        url: produto.brand.logo.url,
+                        alt: produto.brand.logo.alt || produto.brand.name,
+                        largura: produto.brand.logo.width,
+                        altura: produto.brand.logo.height,
+                      }
+                    : null,
+                }
+              : null
+          }
+          categoria={
+            produto.category
+              ? { nome: produto.category.name, slug: produto.category.slug }
+              : null
+          }
+          resumo={produto.shortDescription}
         />
 
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
-          <div>
+        <div className="mt-10 grid gap-8 lg:mt-12 lg:grid-cols-12 lg:gap-12">
+          <div className="min-w-0 lg:col-span-7">
             <GaleriaProduto fotos={fotos} nome={produto.name} />
           </div>
 
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-              {produto.brand ? (
-                <Link
-                  href={`/marcas/${produto.brand.slug}`}
-                  className="text-sm font-semibold text-graf-600 hover:text-jb-700"
-                >
-                  {produto.brand.name}
-                </Link>
-              ) : null}
-            </div>
-
-            <h1 className="mt-3 text-title leading-tight">{produto.name}</h1>
-
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-graf-500">
-              {produto.model ? <span>Modelo: {produto.model}</span> : null}
-              <span className="label-mono">SKU {produto.sku}</span>
-            </div>
-
-            {produto.shortDescription ? (
-              <p className="mt-4 text-base leading-relaxed text-graf-600">
-                {produto.shortDescription}
-              </p>
-            ) : null}
-
-            <div className="mt-6">
-              {arquivado ? (
-                <Cartao className="p-5">
-                  <p className="text-lg font-bold text-graf-900">
-                    Não vendemos mais este equipamento
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-graf-600">
-                    Ele saiu da nossa linha. A equipe indica um substituto equivalente — veja as
-                    sugestões abaixo ou fale com a gente.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <LinkBotao href="/loja" variante="primario" tamanho="sm">
-                      Ver equipamentos
-                    </LinkBotao>
-                    <LinkBotao
-                      href={whatsappHref(
-                        s.whatsapp,
-                        `Olá! Vi o ${produto.name} no site e gostaria de saber se há um substituto.`,
-                      )}
-                      variante="secundario"
-                      tamanho="sm"
-                    >
-                      Falar com a JB
-                    </LinkBotao>
-                  </div>
-                </Cartao>
-              ) : (
-                <CaixaCompra
+          <div className="min-w-0 space-y-5 lg:col-span-5">
+            {arquivado ? (
+              <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
+            ) : (
+              <CaixaCompra
                 produtoId={produto.id}
-                nome={produto.name}
                 precoCents={produto.priceCents}
                 compareAtCents={produto.compareAtCents}
                 permiteCompra={produto.allowDirectPurchase}
@@ -236,295 +360,278 @@ export default async function ProdutoPage({ params }: Props) {
                 controlaEstoque={produto.trackInventory}
                 unico={produto.unique}
                 addons={addons}
+                hrefOrcamento={hrefOrcamento}
+                maxParcelas={maxParcelas}
+                minParcelaCents={minParcelaCents}
+              />
+            )}
+
+            {!arquivado && semEstoque ? (
+              <SemEstoque
+                unico={produto.unique}
+                hrefAlternativas={
+                  produto.condition === "novo"
+                    ? "/loja"
+                    : produto.condition === "seminovo"
+                      ? "/seminovos"
+                      : produto.condition === "recondicionado"
+                        ? "/recondicionados"
+                        : "/usados"
+                }
+              />
+            ) : null}
+
+            <CondicoesDeCompra
+              garantiaMeses={garantiaMeses}
+              garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
+              frete={
+                produto.shippingProfile
+                  ? {
+                      nome: produto.shippingProfile.name,
+                      tipo: produto.shippingProfile.kind,
+                      descricao: produto.shippingProfile.description,
+                      gratisAcimaCents: produto.shippingProfile.freeAboveCents,
+                    }
+                  : null
+              }
+              retirada={
+                ligado(s.retirada_disponivel)
+                  ? s.retirada_instrucoes.trim() || null
+                  : null
+              }
+              voltagem={produto.voltage}
+            />
+
+            <AjudaDaEquipe
+              nomeDoProduto={produto.name}
+              sku={produto.sku}
+              telefone={s.telefone}
+              whatsapp={s.whatsapp}
+              email={s.email}
+              horario={s.horario}
+            />
+          </div>
+        </div>
+      </Secao>
+
+      {/* ================================================ POR QUE NA JB */}
+      {arquivado ? null : (
+        <MotivosJB
+          desde={s.empresa_desde}
+          cidade={s.endereco_cidade}
+          uf={s.endereco_uf}
+          garantiaMeses={garantiaMeses}
+          temServicos={servicos.length > 0}
+        />
+      )}
+
+      {/* ==================================================== UNIDADE FÍSICA */}
+      {unidade ? (
+        <Secao espaco="lg" separador>
+          <UnidadeFisica
+            condicao={produto.condition}
+            numeroDeSerie={unidade.serialNumber}
+            anoDeFabricacao={unidade.manufactureYear}
+            horasDeUso={unidade.usageHours}
+            ciclos={unidade.usageCycles}
+            garantiaMeses={unidade.warrantyMonths}
+            notasDeEstado={unidade.conditionNotes}
+            notasDeInspecao={unidade.inspectionNotes}
+            checklist={checklist}
+            vendida={unidade.status === "vendido"}
+          />
+        </Secao>
+      ) : null}
+
+      {/* ========================================= DESCRIÇÃO E FICHA TÉCNICA */}
+      {temDescricao || temColunaDeApoio ? (
+        <Secao espaco="lg" separador>
+          <div
+            className={cn(
+              "grid gap-12 lg:gap-16",
+              temDescricao && temColunaDeApoio && "lg:grid-cols-12",
+            )}
+          >
+            {temDescricao ? (
+              <div className={temColunaDeApoio ? "min-w-0 lg:col-span-7" : "max-w-3xl"}>
+                <TituloSecao como="h2" tamanho="titulo" titulo="Sobre este equipamento" />
+                <div
+                  /* `max-w-full` na imagem do editor: conteúdo migrado do site
+                     antigo traz `width` fixo, que estouraria a coluna no
+                     celular e daria rolagem horizontal na página. */
+                  className="prose-jb mt-5 [&_img]:h-auto [&_img]:max-w-full"
+                  /* Saneado na exibição além da gravação: descrição migrada do
+                     site antigo nunca passou pela lista branca, e esta é a
+                     única página pública que renderiza HTML de editor. */
+                  dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.description) }}
                 />
-              )}
-            </div>
+              </div>
+            ) : null}
 
-            {/* Garantia, entrega e assistência — só o que está cadastrado */}
-            <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-              {produto.warrantyMonths ? (
-                <li className="flex gap-3 rounded-lg border border-graf-200 p-3.5">
-                  <ShieldCheck className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
-                  <span>
-                    <span className="block text-sm font-semibold text-graf-900">
-                      Garantia de {produto.warrantyMonths} meses
-                    </span>
-                    <span className="text-xs text-graf-500">Conforme cadastro do equipamento</span>
-                  </span>
-                </li>
-              ) : null}
+            {temColunaDeApoio ? (
+              <div className={temDescricao ? "min-w-0 lg:col-span-5" : "max-w-3xl"}>
+                {temFicha ? (
+                  <>
+                    <TituloSecao
+                      como="h2"
+                      tamanho="titulo"
+                      titulo="Ficha técnica"
+                      className="mb-5"
+                    />
+                    <div className="space-y-4">
+                      <FichaTecnica grupos={grupos} />
+                      <MedidasEPeso
+                        larguraMm={produto.widthMm}
+                        alturaMm={produto.heightMm}
+                        profundidadeMm={produto.depthMm}
+                        pesoG={produto.weightGrams}
+                      />
+                      <Regulatorio
+                        codigoAnvisa={produto.anvisaCode}
+                        fabricante={produto.manufacturer}
+                        detentor={produto.regulatoryHolder}
+                        observacao={produto.regulatoryNote}
+                      />
+                    </div>
+                  </>
+                ) : null}
 
-              {produto.shippingProfile ? (
-                <li className="flex gap-3 rounded-lg border border-graf-200 p-3.5">
-                  <Truck className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
-                  <span>
-                    <span className="block text-sm font-semibold text-graf-900">
-                      {produto.shippingProfile.kind === "sob_orcamento"
-                        ? "Frete calculado após análise"
-                        : produto.shippingProfile.name}
-                    </span>
-                    <span className="text-xs text-graf-500">
-                      {produto.shippingProfile.description}
-                    </span>
-                  </span>
-                </li>
-              ) : null}
-
-              <li className="flex gap-3 rounded-lg border border-graf-200 p-3.5">
-                <Wrench className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
-                <span>
-                  <span className="block text-sm font-semibold text-graf-900">
-                    Assistência própria
-                  </span>
-                  <span className="text-xs text-graf-500">
-                    A mesma equipe que vende dá manutenção
-                  </span>
-                </span>
-              </li>
-
-              {produto.voltage ? (
-                <li className="flex gap-3 rounded-lg border border-graf-200 p-3.5">
-                  <BadgeCheck className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
-                  <span>
-                    <span className="block text-sm font-semibold text-graf-900">
-                      {produto.voltage === "bivolt" ? "Bivolt" : `${produto.voltage} V`}
-                    </span>
-                    <span className="text-xs text-graf-500">Confira a rede da sua clínica</span>
-                  </span>
-                </li>
-              ) : null}
-            </ul>
-
-            {s.whatsapp ? (
-              <div className="mt-5 rounded-xl border border-graf-200 bg-graf-50 p-4">
-                <p className="text-sm font-bold text-graf-900">
-                  Tem alguma dúvida sobre este equipamento?
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <a
-                    href={whatsappHref(
-                      s.whatsapp,
-                      `Olá! Tenho uma dúvida sobre: ${produto.name} (${produto.sku}).`,
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center gap-2 rounded-lg border border-graf-300 bg-white px-4 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400"
-                  >
-                    <MessageCircle className="size-4" aria-hidden />
-                    Falar no WhatsApp
-                  </a>
-                  <Link
-                    href={`/contato?assunto=${encodeURIComponent(produto.name)}`}
-                    className="inline-flex h-10 items-center gap-2 rounded-lg border border-graf-300 bg-white px-4 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400"
-                  >
-                    Enviar pergunta
-                  </Link>
-                </div>
+                {documentos.length > 0 ? (
+                  <div className={temFicha ? "mt-8" : undefined}>
+                    <Documentacao documentos={documentos} />
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>
+        </Secao>
+      ) : null}
+
+      {/* ================================================== SERVIÇOS DA JB */}
+      {servicos.length > 0 && !arquivado ? (
+        <Secao fundo="clara" espaco="lg" separador>
+          <TituloSecao
+            sobretitulo="Equipe técnica JB"
+            titulo="O que a JB faz neste equipamento"
+            descricao="Cada serviço é executado pela equipe da própria JB e entra no mesmo pedido do equipamento — é só marcar antes de adicionar ao carrinho."
+          />
+          <div className="mt-8 lg:mt-10">
+            <ServicosDoProduto servicos={servicos} />
+          </div>
+        </Secao>
+      ) : null}
+
+      {/* ============================================================= FAQ */}
+      {produto.faqs.length > 0 ? (
+        <Secao espaco="lg" largura="estreita" separador>
+          <TituloSecao como="h2" titulo="Dúvidas sobre este equipamento" />
+          <div className="mt-8">
+            <PerguntasDoProduto
+              perguntas={produto.faqs.map((faq) => ({
+                id: faq.id,
+                pergunta: faq.question,
+                resposta: faq.answer,
+              }))}
+            />
+          </div>
+        </Secao>
+      ) : null}
+
+      {/* ==================================================== RELACIONADOS */}
+      <Secao fundo="clara" espaco="lg" separador>
+        {/* Título neutro de propósito: a lista mistura relação cadastrada com
+            complemento por categoria e marca. Chamar tudo de "substituto"
+            afirmaria uma equivalência técnica que ninguém registrou. */}
+        <TituloSecao como="h2" titulo="Equipamentos relacionados" />
+        <div className="mt-8 lg:mt-10">
+          <Suspense fallback={<EsqueletoRelacionados />}>
+            <Relacionados
+              produtoId={produto.id}
+              categoriaId={produto.categoryId}
+              marcaId={produto.brandId}
+              escolhidos={produto.relatedFrom
+                .map((relacao) => relacao.target)
+                .filter((alvo) => alvo.status === "active")}
+            />
+          </Suspense>
         </div>
+      </Secao>
 
-        {/* ============================================ REVISADO PELA JB */}
-        {revisado && unidade ? (
-          <section className="mt-14">
-            <Cartao className="overflow-hidden">
-              <div className="border-b border-graf-200 bg-jb-50/50 px-6 py-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-jb-500 text-white">
-                    <BadgeCheck className="size-5" aria-hidden />
-                  </span>
-                  <div>
-                    <h2 className="text-base font-bold text-graf-950">Revisado pela JB</h2>
-                    <p className="text-sm text-graf-600">
-                      O que foi inspecionado nesta unidade específica.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-6 p-6 lg:grid-cols-[1.2fr_1fr]">
-                <div>
-                  <ul className="divide-y divide-graf-100">
-                    {unidade.checklist.map((item) => {
-                      const resultado = RESULTADO_CHECK[item.result] ?? RESULTADO_CHECK.verificado;
-                      return (
-                        <li
-                          key={item.id}
-                          className="flex flex-wrap items-center justify-between gap-3 py-3"
-                        >
-                          <span className="text-sm text-graf-800">{item.label}</span>
-                          <Etiqueta tom={resultado.tom}>{resultado.rotulo}</Etiqueta>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-
-                <dl className="space-y-3 rounded-lg bg-graf-50 p-5 text-sm">
-                  {unidade.manufactureYear ? (
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-graf-500">Ano de fabricação</dt>
-                      <dd className="font-semibold text-graf-900">{unidade.manufactureYear}</dd>
-                    </div>
-                  ) : null}
-                  {unidade.usageCycles ? (
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-graf-500">Ciclos registrados</dt>
-                      <dd className="font-semibold tabular text-graf-900">
-                        {unidade.usageCycles.toLocaleString("pt-BR")}
-                      </dd>
-                    </div>
-                  ) : null}
-                  {unidade.warrantyMonths ? (
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-graf-500">Garantia da unidade</dt>
-                      <dd className="font-semibold text-graf-900">
-                        {unidade.warrantyMonths} meses
-                      </dd>
-                    </div>
-                  ) : null}
-                  {unidade.conditionNotes ? (
-                    <div>
-                      <dt className="text-graf-500">Estado de conservação</dt>
-                      <dd className="mt-1 leading-relaxed text-graf-700">
-                        {unidade.conditionNotes}
-                      </dd>
-                    </div>
-                  ) : null}
-                </dl>
-              </div>
-            </Cartao>
-          </section>
-        ) : null}
-
-        {/* ==================================== DESCRIÇÃO E FICHA TÉCNICA */}
-        <section className="mt-14 grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-14">
-          {produto.description ? (
-            <div>
-              <h2 className="text-lg font-bold text-graf-950">Sobre este equipamento</h2>
-              <div
-                className="prose-jb mt-4"
-                // Saneado na exibição além da gravação: descrição de produto
-                // migrada do site antigo nunca passou pela lista branca, e
-                // esta é a única página pública que renderiza HTML de editor.
-                dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.description) }}
-              />
-            </div>
-          ) : null}
-
-          {produto.specs.length > 0 ? (
-            <div>
-              <h2 className="text-lg font-bold text-graf-950">Ficha técnica</h2>
-              <dl className="mt-4 divide-y divide-graf-200 rounded-xl border border-graf-200">
-                {produto.specs.map((spec) => (
-                  <div key={spec.id} className="flex flex-wrap justify-between gap-3 px-4 py-3">
-                    <dt className="text-sm text-graf-500">{spec.label}</dt>
-                    <dd className="text-sm font-semibold text-graf-900">{spec.value}</dd>
-                  </div>
-                ))}
-              </dl>
-
-              {produto.anvisaCode || produto.manufacturer || produto.regulatoryNote ? (
-                <div className="mt-5 rounded-xl border border-graf-200 p-4">
-                  <h3 className="text-sm font-bold text-graf-900">Informações regulatórias</h3>
-                  <dl className="mt-2.5 space-y-1.5 text-sm">
-                    {produto.anvisaCode ? (
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-graf-500">Registro/notificação</dt>
-                        <dd className="label-mono text-graf-800">{produto.anvisaCode}</dd>
-                      </div>
-                    ) : null}
-                    {produto.manufacturer ? (
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-graf-500">Fabricante</dt>
-                        <dd className="text-graf-800">{produto.manufacturer}</dd>
-                      </div>
-                    ) : null}
-                  </dl>
-                  {produto.regulatoryNote ? (
-                    <p className="mt-2 text-xs leading-relaxed text-graf-500">
-                      {produto.regulatoryNote}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {produto.documents.length > 0 ? (
-                <ul className="mt-5 space-y-2">
-                  {produto.documents.map((doc) => (
-                    <li key={doc.id}>
-                      <a
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2.5 rounded-lg border border-graf-200 px-4 py-3 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400"
-                      >
-                        <FileText className="size-4 text-graf-500" aria-hidden />
-                        {doc.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
-
-        {/* ==================================================== FAQ do item */}
-        {produto.faqs.length > 0 ? (
-          <section className="mt-14">
-            <h2 className="text-lg font-bold text-graf-950">Dúvidas sobre este equipamento</h2>
-            <ul className="mt-4 space-y-3">
-              {produto.faqs.map((faq) => (
-                <li key={faq.id}>
-                  <details className="group rounded-xl border border-graf-200 bg-white">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 text-sm font-bold text-graf-900">
-                      {faq.question}
-                      <span aria-hidden className="text-graf-500 group-open:rotate-45">
-                        +
-                      </span>
-                    </summary>
-                    <div className="border-t border-graf-100 px-4 py-3 text-sm leading-relaxed text-graf-600">
-                      {faq.answer}
-                    </div>
-                  </details>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {/* ==================================================== RELACIONADOS */}
-        {relacionados.length > 0 ? (
-          <section className="mt-16">
-            <TituloSecao titulo="Quem viu este, também olhou" className="mb-6" />
-            <GradeProdutos produtos={relacionados.map(paraCard)} />
-          </section>
-        ) : null}
-
-        {semEstoque ? (
-          <section className="mt-12">
-            <Cartao className="p-6 text-center">
-              <p className="text-base font-bold text-graf-900">
-                {produto.unique ? "Esta unidade já foi vendida." : "Item indisponível no momento."}
-              </p>
-              <p className="mx-auto mt-2 max-w-md text-sm text-graf-600">
-                A JB recebe equipamentos com frequência. Veja o que está disponível agora ou
-                peça um orçamento — conseguimos atender boa parte sob consulta.
-              </p>
-              <div className="mt-5 flex flex-wrap justify-center gap-3">
-                <LinkBotao href={produto.condition === "seminovo" ? "/seminovos" : "/loja"}>
-                  Ver outros equipamentos
-                </LinkBotao>
-                <LinkBotao href="/orcamento" variante="secundario">
-                  Pedir orçamento
-                </LinkBotao>
-              </div>
-            </Cartao>
-          </section>
-        ) : null}
-      </div>
+      {/* ==================================================== ASSISTÊNCIA */}
+      <AssistenciaRelacionada desde={s.empresa_desde} cidade={s.endereco_cidade} />
     </>
+  );
+}
+
+/* ==========================================================================
+   Relacionados
+
+   As relações cadastradas à mão vêm primeiro — foi a JB que disse que um
+   equipamento substitui o outro. Só o que faltar para fechar quatro cartões é
+   completado por categoria e marca.
+   ========================================================================== */
+
+async function Relacionados({
+  produtoId,
+  categoriaId,
+  marcaId,
+  escolhidos,
+}: {
+  produtoId: string;
+  categoriaId: string | null;
+  marcaId: string | null;
+  escolhidos: LinhaRelacionada[];
+}) {
+  const manuais = escolhidos.slice(0, 4);
+  const faltam = 4 - manuais.length;
+
+  const complemento =
+    faltam > 0 && (categoriaId || marcaId)
+      ? await prisma.product.findMany({
+          where: {
+            status: "active",
+            id: { notIn: [produtoId, ...manuais.map((item) => item.id)] },
+            OR: [
+              ...(categoriaId ? [{ categoryId: categoriaId }] : []),
+              ...(marcaId ? [{ brandId: marcaId }] : []),
+            ],
+          },
+          orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+          take: faltam,
+          select: SELECAO_CARD,
+        })
+      : [];
+
+  const produtos = [...manuais.map(paraCard), ...complemento.map(paraCard)];
+
+  if (produtos.length === 0) {
+    return (
+      <p className="text-base leading-relaxed text-graf-600">
+        Ainda não há outro equipamento parecido publicado.{" "}
+        <Link
+          href="/loja"
+          className="foco-jb font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
+        >
+          Ver o catálogo completo
+        </Link>
+        .
+      </p>
+    );
+  }
+
+  return <GradeProdutos produtos={produtos} />;
+}
+
+function EsqueletoRelacionados() {
+  return (
+    <div
+      role="status"
+      aria-label="Carregando equipamentos relacionados"
+      className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4"
+    >
+      {Array.from({ length: 4 }).map((_, indice) => (
+        <EsqueletoCartaoProduto key={indice} />
+      ))}
+    </div>
   );
 }

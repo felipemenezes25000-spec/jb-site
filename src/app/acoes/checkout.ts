@@ -276,7 +276,7 @@ export async function finalizarCompra(
        *
        * Digitar um e-mail não prova ser dono dele. Se alguém erra uma letra e
        * cai no e-mail de outro cliente da JB, o nome, o endereço e os itens
-       * dessa compra apareceriam no "Minha JB" de um estranho. Vínculo com
+       * dessa compra apareceriam no "Área da Clínica" de um estranho. Vínculo com
        * conta exige sessão; quem compra como convidado acompanha o pedido pelo
        * cookie assinado, que é o mesmo caminho de sempre.
        */

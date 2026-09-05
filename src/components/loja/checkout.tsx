@@ -72,11 +72,11 @@ const UFS = [
 ];
 
 const ETAPAS = [
-  { rotulo: "Identificação", descricao: "Como falamos com você" },
+  { rotulo: "Identificação", descricao: "Onde você recebe o pedido" },
   { rotulo: "Dados", descricao: "Nome, contato e documento" },
   { rotulo: "Entrega", descricao: "Retirada ou entrega" },
   { rotulo: "Pagamento", descricao: "Pix ou cartão" },
-  { rotulo: "Revisão", descricao: "Confira e finalize" },
+  { rotulo: "Revisão", descricao: "Confira e confirme" },
 ];
 
 const ULTIMA = ETAPAS.length - 1;
@@ -134,14 +134,17 @@ function usarFocoNaEtapa(
   ativo: boolean,
   raiz: React.RefObject<HTMLElement | null>,
 ) {
-  const primeira = useRef(true);
+  /* Guarda pela etapa, não por um "é a primeira vez": o efeito pode rodar
+     duas vezes na montagem, e com a marca booleana a segunda passada focava a
+     etapa 1 assim que a página abria — o cliente encontrava o bloco inteiro
+     contornado em vermelho sem ter tocado em nada. Comparar com a etapa
+     anterior só dispara o foco quando a etapa realmente muda. */
+  const etapaAnterior = useRef(etapa);
 
   useEffect(() => {
     if (!ativo) return;
-    if (primeira.current) {
-      primeira.current = false;
-      return;
-    }
+    if (etapaAnterior.current === etapa) return;
+    etapaAnterior.current = etapa;
     const secao = raiz.current?.querySelector<HTMLElement>("section:not([hidden])");
     if (!secao) return;
     secao.tabIndex = -1;
@@ -149,7 +152,13 @@ function usarFocoNaEtapa(
   }, [etapa, ativo, raiz]);
 }
 
-function Secao({
+/**
+ * Uma etapa do formulário.
+ *
+ * Continua montada quando está escondida — é assim que voltar uma etapa não
+ * perde o que já foi digitado e o formulário chega inteiro ao servidor.
+ */
+function EtapaCheckout({
   visivel,
   titulo,
   descricao,
@@ -157,16 +166,16 @@ function Secao({
 }: {
   visivel: boolean;
   titulo: string;
-  descricao?: string;
+  descricao?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <section hidden={!visivel} className={cn(!visivel && "hidden")} aria-label={titulo}>
-      <h2 className="text-xl font-bold text-graf-950">{titulo}</h2>
+      <h2 className="text-title texto-forte">{titulo}</h2>
       {descricao ? (
-        <p className="mt-1 text-sm leading-relaxed text-graf-600">{descricao}</p>
+        <p className="mt-2 text-base leading-relaxed text-graf-600">{descricao}</p>
       ) : null}
-      <div className="mt-6 space-y-5">{children}</div>
+      <div className="mt-7 space-y-6">{children}</div>
     </section>
   );
 }
@@ -213,28 +222,35 @@ function CaixaFrete({
 
 function BlocoRevisao({
   titulo,
+  icone: Icone,
   aoEditar,
   children,
 }: {
   titulo: string;
+  icone: React.ComponentType<{ className?: string }>;
   aoEditar: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-graf-200 p-4">
+    <div className="rounded-xl border border-graf-200 bg-white p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="text-sm font-bold text-graf-900">{titulo}</h3>
+        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-graf-500">
+          <Icone className="size-4 shrink-0 text-graf-400" aria-hidden />
+          {titulo}
+        </h3>
         <button
           type="button"
           onClick={aoEditar}
-          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-graf-600 transition-colors hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+          className="-my-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
         >
           <Pencil className="size-3.5" aria-hidden />
           Editar
           <span className="sr-only"> {titulo.toLowerCase()}</span>
         </button>
       </div>
-      <div className="mt-1 text-sm leading-relaxed text-graf-700">{children}</div>
+      <div className="mt-3 space-y-1 text-[0.9375rem] leading-relaxed text-graf-800">
+        {children}
+      </div>
     </div>
   );
 }
@@ -528,7 +544,7 @@ export function Checkout({
     >
       <div ref={refTopo} className="scroll-mt-24" />
 
-      <Passos passos={ETAPAS} atual={etapa} rotulo="Etapas do pedido" className="mb-6" />
+      <Passos passos={ETAPAS} atual={etapa} rotulo="Etapas do pedido" className="mb-7" />
 
       {estado.erro ? (
         <Aviso tom="erro" titulo="Não deu para fechar o pedido" className="mb-6">
@@ -552,15 +568,15 @@ export function Checkout({
         </div>
       ) : null}
 
-      <Cartao className="p-5 sm:p-6">
+      <Cartao className="p-5 sm:p-7 lg:p-8">
         {/* ------------------------------------------------ 0. identificação */}
-        <Secao
+        <EtapaCheckout
           visivel={etapa === 0}
           titulo="Identificação"
-          descricao="É para onde vai a confirmação do pedido e o acompanhamento."
+          descricao="É por aqui que a JB fala com você sobre este pedido."
         >
           {logado ? (
-            <div className="flex items-start gap-3 rounded-xl bg-graf-50 p-4">
+            <div className="flex items-start gap-3 rounded-xl border border-graf-200 bg-graf-50 p-4">
               <UserRound className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
               <p className="text-sm leading-relaxed text-graf-700">
                 Você está na sua conta
@@ -571,19 +587,20 @@ export function Checkout({
                 ) : null}
                 . O pedido fica salvo em{" "}
                 <Link href="/minha-jb/pedidos" className="font-semibold text-jb-700 underline">
-                  Minha JB
+                  Área da Clínica
                 </Link>
                 .
               </p>
             </div>
           ) : (
-            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-graf-50 p-4">
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-graf-200 bg-graf-50 p-4">
               <p className="min-w-0 flex-1 text-sm leading-relaxed text-graf-700">
-                Já é cliente da JB? Entrar traz seus dados e endereços preenchidos.
+                <span className="font-semibold text-graf-900">Já é cliente da JB?</span> Entrar
+                preenche seus dados e endereços automaticamente.
               </p>
               <Link
                 href="/entrar?voltar=%2Fcheckout"
-                className="inline-flex min-h-11 items-center rounded-lg border border-graf-300 bg-white px-4 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                className="inline-flex min-h-11 items-center rounded-lg border border-graf-300 bg-white px-4 text-sm font-semibold text-graf-800 shadow-xs transition-colors hover:border-graf-400 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
                 Entrar na conta
               </Link>
@@ -599,7 +616,7 @@ export function Checkout({
             required
             value={email}
             onChange={(evento) => setEmail(evento.currentTarget.value)}
-            ajuda="Enviamos aqui a confirmação e o link de acompanhamento."
+            ajuda="Enviamos aqui a confirmação da compra e o link de acompanhamento do pedido."
           />
 
           {logado ? null : (
@@ -627,8 +644,9 @@ export function Checkout({
                   />
                   <button
                     type="button"
+                    aria-pressed={mostrarSenha}
                     onClick={() => setMostrarSenha((v) => !v)}
-                    className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-graf-600 transition-colors hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                   >
                     {mostrarSenha ? "Esconder senha" : "Mostrar senha"}
                   </button>
@@ -636,10 +654,10 @@ export function Checkout({
               ) : null}
             </div>
           )}
-        </Secao>
+        </EtapaCheckout>
 
         {/* ------------------------------------------- 1. dados do comprador */}
-        <Secao
+        <EtapaCheckout
           visivel={etapa === 1}
           titulo="Dados do comprador"
           descricao="O documento vai na nota fiscal, então precisa ser o de quem compra."
@@ -695,13 +713,13 @@ export function Checkout({
           ) : (
             <input type="hidden" name="razaoSocial" value="" />
           )}
-        </Secao>
+        </EtapaCheckout>
 
         {/* ------------------------------------------------------ 2. entrega */}
-        <Secao
+        <EtapaCheckout
           visivel={etapa === 2}
           titulo="Entrega"
-          descricao="O frete sai da tabela da JB pelo seu CEP. Equipamento que não se encaixa em nenhuma faixa é orçado depois — e a tela avisa quando for o caso."
+          descricao="Informe o CEP e o valor da entrega aparece na hora. Equipamento grande demais para a tabela é orçado à parte — você recebe o valor antes de qualquer despacho."
         >
           {retiradaDisponivel ? (
             <Opcoes
@@ -719,13 +737,15 @@ export function Checkout({
           )}
 
           {entrega === "retirada" ? (
-            <div className="flex items-start gap-3 rounded-xl bg-graf-50 p-4">
+            <div className="flex items-start gap-3 rounded-xl border border-graf-200 bg-graf-50 p-4">
               <Store className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
               <div className="min-w-0 text-sm leading-relaxed text-graf-700">
-                <p className="font-semibold text-graf-900">Retirada na JB</p>
-                <p className="mt-1">{enderecoJb}</p>
-                {horarioJb ? <p className="mt-1 text-graf-500">{horarioJb}</p> : null}
-                {instrucoesRetirada ? <p className="mt-2">{instrucoesRetirada}</p> : null}
+                <p className="text-base font-bold text-graf-950">Retirada na JB</p>
+                <p className="mt-1.5">{enderecoJb}</p>
+                {horarioJb ? <p className="mt-1">{horarioJb}</p> : null}
+                {instrucoesRetirada ? (
+                  <p className="mt-2.5 text-graf-600">{instrucoesRetirada}</p>
+                ) : null}
               </div>
             </div>
           ) : (
@@ -826,8 +846,8 @@ export function Checkout({
                     {freteErro}
                   </CaixaFrete>
                 ) : freteEntrega?.orcadoDepois ? (
-                  <CaixaFrete tom="atencao" titulo="O frete deste endereço será orçado depois">
-                    Este CEP está fora das faixas de entrega cadastradas. O valor{" "}
+                  <CaixaFrete tom="atencao" titulo="O frete deste endereço será orçado à parte">
+                    Este CEP está fora das faixas de entrega da tabela. O valor{" "}
                     <strong className="font-semibold">não entra no total agora</strong>: a JB
                     confere as dimensões do equipamento, calcula o frete e combina com você antes
                     de despachar.
@@ -837,7 +857,7 @@ export function Checkout({
                     tom="ok"
                     titulo={
                       freteEntrega.valorCents === 0
-                        ? "Frete grátis para este CEP"
+                        ? "Entrega sem custo para este CEP"
                         : `Frete de ${formatarPreco(freteEntrega.valorCents)}`
                     }
                   >
@@ -853,28 +873,40 @@ export function Checkout({
               </div>
             </>
           )}
-        </Secao>
+        </EtapaCheckout>
 
         {/* ---------------------------------------------------- 3. pagamento */}
-        <Secao
+        <EtapaCheckout
           visivel={etapa === 3}
           titulo="Pagamento"
-          descricao={
-            frete?.orcadoDepois
-              ? `Total do pedido: ${formatarPreco(totalComFreteCents)} — sem o frete, que será orçado à parte.`
-              : `Total do pedido: ${formatarPreco(totalComFreteCents)}${
-                  freteCents > 0 ? ` (frete: ${formatarPreco(freteCents)})` : ""
-                }.`
-          }
+          descricao="Escolha como quer pagar. A cobrança só é aberta depois que você confirmar o pedido na última etapa."
         >
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 rounded-xl border border-graf-200 bg-graf-50 px-4 py-3.5">
+            <span className="text-sm font-semibold text-graf-700">Total do pedido</span>
+            <span className="text-xl font-extrabold tabular tracking-tight text-graf-950">
+              {formatarPreco(totalComFreteCents)}
+            </span>
+            <span className="w-full text-xs leading-relaxed text-graf-500">
+              {entrega === "retirada"
+                ? "Retirada na JB, sem custo de frete."
+                : frete?.orcadoDepois
+                  ? "O frete deste endereço ainda será orçado e não está incluído."
+                  : !frete
+                    ? "O frete entra neste total assim que você informar o CEP na etapa de entrega."
+                    : freteCents > 0
+                      ? `Inclui ${formatarPreco(freteCents)} de frete.`
+                      : "A entrega neste CEP é sem custo."}
+            </span>
+          </div>
+
           {metodos.length === 0 ? (
             <Aviso tom="erro" titulo="Pagamento indisponível">
-              Nenhuma forma de pagamento está configurada neste momento. Fale com a JB para
-              concluir o pedido por outro caminho.
+              Não há forma de pagamento disponível neste momento. Fale com a JB pelo WhatsApp ou
+              telefone e concluímos o pedido com você.
             </Aviso>
           ) : (
             <fieldset>
-              <legend className="mb-2 text-sm font-semibold text-graf-800">
+              <legend className="mb-2.5 text-sm font-semibold text-graf-800">
                 Forma de pagamento
               </legend>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -885,11 +917,12 @@ export function Checkout({
                     <label
                       key={opcao}
                       className={cn(
-                        "flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors",
+                        "flex cursor-pointer items-start gap-3 rounded-xl border p-4 shadow-xs",
+                        "transition-[border-color,background-color,box-shadow] duration-150",
                         "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-jb-500",
                         ativo
-                          ? "border-jb-500 bg-jb-50"
-                          : "border-graf-300 bg-white hover:border-graf-400",
+                          ? "border-jb-500 bg-jb-50 ring-1 ring-inset ring-jb-500/25"
+                          : "border-graf-300 bg-white hover:border-graf-400 hover:bg-graf-50",
                       )}
                     >
                       <input
@@ -905,23 +938,26 @@ export function Checkout({
                         className="sr-only"
                       />
                       <Icone
-                        className={cn("mt-0.5 size-5 shrink-0", ativo ? "text-jb-600" : "text-graf-500")}
+                        className={cn(
+                          "mt-0.5 size-5 shrink-0",
+                          ativo ? "text-jb-600" : "text-graf-500",
+                        )}
                         aria-hidden
                       />
                       <span className="min-w-0">
                         <span
                           className={cn(
-                            "block text-sm font-bold",
+                            "block text-base font-bold",
                             ativo ? "text-jb-800" : "text-graf-900",
                           )}
                         >
                           {opcao === "pix" ? "Pix" : "Cartão de crédito"}
                         </span>
-                        <span className="mt-0.5 block text-xs leading-snug text-graf-500">
+                        <span className="mt-1 block text-sm leading-snug text-graf-600">
                           {opcao === "pix"
-                            ? "Aprovação em minutos, sem taxa"
+                            ? "Pague à vista pelo app do banco"
                             : parcelas.length > 1
-                              ? `Em até ${parcelas.length}× sem juros`
+                              ? `À vista ou em até ${parcelas.length}× sem juros`
                               : "À vista"}
                         </span>
                       </span>
@@ -932,7 +968,9 @@ export function Checkout({
             </fieldset>
           )}
 
-          {metodo === "pix" && metodos.includes("pix") ? <ResumoPix /> : null}
+          {metodo === "pix" && metodos.includes("pix") ? (
+            <ResumoPix simulado={simulado} />
+          ) : null}
 
           {metodo === "cartao" && metodos.includes("cartao") ? (
             <>
@@ -942,7 +980,7 @@ export function Checkout({
                   name="parcelas"
                   value={String(numeroParcelas)}
                   onChange={(evento) => setNumeroParcelas(Number(evento.currentTarget.value))}
-                  ajuda="Sem juros. O limite vem das configurações da loja."
+                  ajuda="Parcelamento sem juros no cartão de crédito."
                 >
                   {/*
                     O NÚMERO de parcelas vem do servidor (teto da loja sobre o
@@ -980,88 +1018,131 @@ export function Checkout({
           ) : (
             <input type="hidden" name="parcelas" value="1" />
           )}
-        </Secao>
+        </EtapaCheckout>
 
         {/* ------------------------------------------------------ 4. revisão */}
-        <Secao
+        <EtapaCheckout
           visivel={etapa === ULTIMA}
           titulo="Revisão"
-          descricao="Confira os dados. Nada é cobrado antes de você confirmar."
+          descricao="Confira os dados antes de confirmar. Depois disso a JB reserva o equipamento e abre a cobrança."
         >
+          {/* campo vazio não vira traço repetido: some, e o botão Editar leva
+              de volta ao lugar onde ele é preenchido */}
           <div className="space-y-3">
-            <BlocoRevisao titulo="Identificação" aoEditar={() => irPara(0)}>
-              {email || "—"}
-              {criarConta ? " · conta será criada" : null}
-            </BlocoRevisao>
-
-            <BlocoRevisao titulo="Comprador" aoEditar={() => irPara(1)}>
-              <p>{nome || "—"}</p>
-              <p className="text-graf-500">
-                {telefone || "—"} · {tipoPessoa === "fisica" ? "CPF" : "CNPJ"}{" "}
-                {documento || "—"}
-              </p>
-              {tipoPessoa === "juridica" && razaoSocial ? (
-                <p className="text-graf-500">{razaoSocial}</p>
+            <BlocoRevisao titulo="Identificação" icone={UserRound} aoEditar={() => irPara(0)}>
+              {email ? <p className="break-words font-semibold">{email}</p> : null}
+              {criarConta ? (
+                <p className="text-graf-600">Sua conta na JB será criada com este e-mail.</p>
               ) : null}
             </BlocoRevisao>
 
-            <BlocoRevisao titulo="Entrega" aoEditar={() => irPara(2)}>
+            <BlocoRevisao titulo="Comprador" icone={UserRound} aoEditar={() => irPara(1)}>
+              {nome ? <p className="font-semibold">{nome}</p> : null}
+              {tipoPessoa === "juridica" && razaoSocial ? <p>{razaoSocial}</p> : null}
+              {telefone ? <p className="text-graf-600">{telefone}</p> : null}
+              {documento ? (
+                <p className="text-graf-600">
+                  {tipoPessoa === "fisica" ? "CPF" : "CNPJ"} {documento}
+                </p>
+              ) : null}
+            </BlocoRevisao>
+
+            <BlocoRevisao
+              titulo="Entrega"
+              icone={entrega === "retirada" ? Store : MapPin}
+              aoEditar={() => irPara(2)}
+            >
               {entrega === "retirada" ? (
-                <span className="flex items-start gap-2">
-                  <Store className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
-                  Retirada na JB — {enderecoJb}
-                </span>
+                <>
+                  <p className="font-semibold">Retirada na JB</p>
+                  <p className="text-graf-600">{enderecoJb}</p>
+                  {horarioJb ? <p className="text-graf-600">{horarioJb}</p> : null}
+                </>
               ) : (
-                <span className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
-                  <span>
-                    {logradouro || "—"}, {numero || "s/n"}
-                    {complemento ? ` — ${complemento}` : ""}
-                    <br />
-                    <span className="text-graf-500">
-                      {bairro} · {cidade}
-                      {uf ? `/${uf}` : ""} · CEP {cep || "—"}
-                    </span>
-                    <br />
-                    {freteEntrega?.orcadoDepois ? (
-                      <span className="font-semibold text-warn-700">
-                        Frete a combinar — orçado depois, fora deste total
-                      </span>
-                    ) : freteEntrega ? (
-                      <span className="font-semibold text-graf-900">
-                        {freteEntrega.valorCents === 0
-                          ? "Frete grátis"
-                          : `Frete ${formatarPreco(freteEntrega.valorCents)}`}
-                        {prazoDoFrete ? (
-                          <span className="font-normal text-graf-500"> · {prazoDoFrete}</span>
-                        ) : null}
-                      </span>
-                    ) : (
-                      <span className="font-semibold text-warn-700">
-                        Frete ainda não calculado — informe o CEP na etapa de entrega
-                      </span>
-                    )}
-                  </span>
-                </span>
+                <>
+                  {logradouro ? (
+                    <p className="font-semibold">
+                      {logradouro}
+                      {numero ? `, ${numero}` : ""}
+                      {complemento ? ` — ${complemento}` : ""}
+                    </p>
+                  ) : null}
+                  {bairro || cidade || uf ? (
+                    <p className="text-graf-600">
+                      {[bairro, cidade && uf ? `${cidade}/${uf}` : cidade].filter(Boolean).join(" · ")}
+                    </p>
+                  ) : null}
+                  {cep ? <p className="text-graf-600">CEP {cep}</p> : null}
+                  {referencia ? (
+                    <p className="text-graf-600">Referência: {referencia}</p>
+                  ) : null}
+
+                  {freteEntrega?.orcadoDepois ? (
+                    <p className="pt-1 font-semibold text-warn-700">
+                      Frete a combinar — orçado à parte, fora deste total
+                    </p>
+                  ) : freteEntrega ? (
+                    <p className="pt-1 font-semibold text-graf-900">
+                      {freteEntrega.valorCents === 0
+                        ? "Entrega sem custo"
+                        : `Frete ${formatarPreco(freteEntrega.valorCents)}`}
+                      {prazoDoFrete ? (
+                        <span className="font-normal text-graf-600"> · {prazoDoFrete}</span>
+                      ) : null}
+                    </p>
+                  ) : (
+                    <p className="pt-1 font-semibold text-warn-700">
+                      Frete ainda não calculado — informe o CEP na etapa de entrega
+                    </p>
+                  )}
+                </>
               )}
             </BlocoRevisao>
 
-            <BlocoRevisao titulo="Pagamento" aoEditar={() => irPara(3)}>
-              <span className="flex items-start gap-2">
-                {metodo === "pix" ? (
-                  <QrCode className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
-                ) : (
-                  <CreditCard className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
-                )}
+            <BlocoRevisao
+              titulo="Pagamento"
+              icone={metodo === "pix" ? QrCode : CreditCard}
+              aoEditar={() => irPara(3)}
+            >
+              <p className="font-semibold">
                 {metodo === "pix"
-                  ? `Pix — ${formatarPreco(totalComFreteCents)}`
+                  ? "Pix à vista"
                   : numeroParcelas > 1
-                    ? `Cartão em ${numeroParcelas}× de ${formatarPreco(
+                    ? `Cartão de crédito em ${numeroParcelas}× de ${formatarPreco(
                         Math.floor(totalComFreteCents / numeroParcelas),
-                      )}`
-                    : `Cartão à vista — ${formatarPreco(totalComFreteCents)}`}
-              </span>
+                      )} sem juros`
+                    : "Cartão de crédito à vista"}
+              </p>
+              <p className="text-graf-600">
+                {metodo === "pix"
+                  ? "O código aparece na página do pedido logo depois da confirmação."
+                  : "A cobrança é feita quando você confirma o pedido."}
+              </p>
             </BlocoRevisao>
+          </div>
+
+          <div className="rounded-xl bg-graf-950 px-5 py-4 text-white">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+              <span className="text-base font-bold">Total a pagar</span>
+              <span className="text-2xl font-extrabold tabular tracking-tight">
+                {formatarPreco(totalComFreteCents)}
+              </span>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-graf-300">
+              {entrega === "retirada"
+                ? "Retirada na JB, sem custo de frete."
+                : freteEntrega && !freteEntrega.orcadoDepois
+                  ? `${
+                      freteEntrega.valorCents === 0
+                        ? "Entrega sem custo neste CEP."
+                        : `Inclui ${formatarPreco(freteEntrega.valorCents)} de frete.`
+                    }${
+                      prazoDoFrete
+                        ? ` Prazo de ${prazoDoFrete} após a confirmação do pagamento.`
+                        : ""
+                    }`
+                  : "O frete não está incluído — veja o aviso abaixo."}
+            </p>
           </div>
 
           <Area
@@ -1075,25 +1156,17 @@ export function Checkout({
           />
 
           {entrega === "entrega" && (!freteEntrega || freteEntrega.orcadoDepois) ? (
-            <Aviso tom="atencao" titulo="Frete combinado depois">
+            <Aviso tom="atencao" titulo="O frete será combinado depois">
               O valor do frete <strong className="font-semibold">não entra neste total</strong>. A
               JB confere as dimensões do equipamento e o endereço, e entra em contato com o valor
-              antes de despachar.
+              antes de despachar. Você aprova antes de qualquer cobrança extra.
             </Aviso>
           ) : null}
 
-          {entrega === "entrega" && freteEntrega && !freteEntrega.orcadoDepois ? (
-            <Aviso tom="info" titulo="Frete incluído no total">
-              {freteEntrega.valorCents === 0
-                ? "A entrega neste CEP é grátis."
-                : `O frete de ${formatarPreco(freteEntrega.valorCents)} já está somado ao total.`}
-              {prazoDoFrete ? ` Prazo de entrega: ${prazoDoFrete} após a confirmação do pagamento.` : ""}
-            </Aviso>
-          ) : null}
-        </Secao>
+        </EtapaCheckout>
 
         {/* ------------------------------------------------------ navegação */}
-        <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-graf-200 pt-6">
+        <div className="mt-9 flex flex-wrap items-center gap-3 border-t border-graf-200 pt-6">
           {etapa > 0 ? (
             <Botao type="button" variante="secundario" onClick={voltar} disabled={enviando}>
               <ArrowLeft className="size-4" aria-hidden />
@@ -1132,17 +1205,18 @@ export function Checkout({
               className="ml-auto"
             >
               <Lock className="size-4" aria-hidden />
-              {enviando ? "Fechando o pedido…" : `Finalizar — ${formatarPreco(totalComFreteCents)}`}
+              {enviando
+                ? "Confirmando o pedido…"
+                : `Confirmar pedido — ${formatarPreco(totalComFreteCents)}`}
             </Botao>
           )}
         </div>
       </Cartao>
 
-      <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-graf-500">
-        <Truck className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-        Ao finalizar, a JB reserva o equipamento no estoque e confirma o prazo por telefone ou
-        WhatsApp. Todos os valores — frete inclusive — são recalculados no servidor no momento do
-        fechamento.
+      <p className="mt-5 flex items-start gap-2.5 text-sm leading-relaxed text-graf-600">
+        <Truck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+        Ao confirmar, a JB reserva o equipamento e entra em contato por telefone ou WhatsApp para
+        acertar o prazo de entrega e a instalação.
       </p>
     </form>
   );

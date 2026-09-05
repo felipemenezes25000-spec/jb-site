@@ -278,7 +278,7 @@ export function EditorRico({
       <div
         className={cn(
           "overflow-hidden rounded-lg border bg-white shadow-xs transition-colors",
-          erro ? "border-jb-500" : "border-graf-300 focus-within:border-jb-500",
+          erro ? "border-jb-500" : "border-graf-450 focus-within:border-jb-500",
         )}
       >
         <div

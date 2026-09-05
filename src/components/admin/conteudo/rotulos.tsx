@@ -125,7 +125,7 @@ export const SECOES: Record<TipoSecao, { rotulo: string; descricao: string }> = 
     descricao: "Passo a passo do atendimento, da solicitação à entrega",
   },
   minha_jb: {
-    rotulo: "Minha JB",
+    rotulo: "Área da Clínica",
     descricao: "Convite para a área do cliente e o prontuário do equipamento",
   },
   planos: {

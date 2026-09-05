@@ -75,7 +75,7 @@ function postar(
       try {
         dadosResposta = JSON.parse(requisicao.responseText) as Resposta;
       } catch {
-        rejeitar(new Error("O servidor respondeu em um formato inesperado."));
+        rejeitar(new Error("Não conseguimos confirmar o envio. Tente de novo."));
         return;
       }
       if (dadosResposta.erro) {
@@ -83,7 +83,7 @@ function postar(
         return;
       }
       if (!dadosResposta.media?.id) {
-        rejeitar(new Error("O servidor não devolveu a referência do arquivo."));
+        rejeitar(new Error("O arquivo não chegou inteiro. Envie de novo."));
         return;
       }
       resolver({
@@ -93,7 +93,7 @@ function postar(
     });
 
     requisicao.addEventListener("error", () =>
-      rejeitar(new Error("Falha de conexão ao enviar o arquivo.")),
+      rejeitar(new Error("A conexão caiu durante o envio. Tente de novo.")),
     );
     requisicao.addEventListener("abort", () => rejeitar(new Error("Envio cancelado.")));
 

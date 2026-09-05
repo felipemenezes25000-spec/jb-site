@@ -140,11 +140,25 @@ export function Vazio({
   );
 }
 
-export function Esqueleto({ className }: { className?: string }) {
+/**
+ * Bloco de carregamento.
+ *
+ * Peça solta: dê a altura e a largura do que vai entrar no lugar. Para
+ * espelhar uma tela inteira — grade de produto, tabela, painel de métricas —
+ * use os esqueletos prontos em `@/components/ui/esqueletos`.
+ */
+export function Esqueleto({
+  className,
+  circular,
+}: {
+  className?: string;
+  /** Avatar, ícone, selo redondo. */
+  circular?: boolean;
+}) {
   return (
     <div
       aria-hidden
-      className={cn("animate-pulse rounded-lg bg-graf-200/70", className)}
+      className={cn("esqueleto", circular ? "rounded-full" : "rounded-lg", className)}
     />
   );
 }
@@ -164,14 +178,22 @@ export function Trilha({ itens, className }: { itens: Migalha[]; className?: str
           return (
             <li key={`${item.rotulo}-${i}`} className="flex items-center gap-1">
               {i > 0 ? (
-                <ChevronRight className="size-3.5 shrink-0 text-graf-300" aria-hidden />
+                <ChevronRight className="size-3.5 shrink-0 text-graf-400" aria-hidden />
               ) : null}
               {item.href && !ultimo ? (
-                <Link href={item.href} className="transition-colors hover:text-jb-700">
+                <Link
+                  href={item.href}
+                  /* 44px de altura: no celular a trilha é o caminho de volta e
+                     precisa ser tocável, não só legível. */
+                  className="inline-flex min-h-11 items-center rounded-sm transition-colors hover:text-jb-700"
+                >
                   {item.rotulo}
                 </Link>
               ) : (
-                <span className={ultimo ? "font-medium text-graf-800" : undefined} aria-current={ultimo ? "page" : undefined}>
+                <span
+                  className={ultimo ? "font-medium text-graf-800" : undefined}
+                  aria-current={ultimo ? "page" : undefined}
+                >
                   {item.rotulo}
                 </span>
               )}
@@ -185,7 +207,19 @@ export function Trilha({ itens, className }: { itens: Migalha[]; className?: str
 
 /* ============================================================================
    Cabeçalho de seção da página pública
+
+   O degrau completo: sobretítulo curto em caixa alta, título na escala de
+   seção (36–44px no desktop) e uma linha de apoio. Em faixa grafite basta
+   envolver com `.on-dark` — as cores se invertem sozinhas.
    ============================================================================ */
+
+export type TamanhoTitulo = "secao" | "titulo" | "display";
+
+const TAMANHO_TITULO: Record<TamanhoTitulo, string> = {
+  secao: "text-section",
+  titulo: "text-title",
+  display: "text-display",
+};
 
 export function TituloSecao({
   sobretitulo,
@@ -193,6 +227,8 @@ export function TituloSecao({
   descricao,
   acao,
   centralizado,
+  tamanho = "secao",
+  como = "h2",
   className,
 }: {
   sobretitulo?: string;
@@ -200,28 +236,32 @@ export function TituloSecao({
   descricao?: React.ReactNode;
   acao?: React.ReactNode;
   centralizado?: boolean;
+  /** Escala do título. O padrão é a de seção; use `titulo` em blocos internos. */
+  tamanho?: TamanhoTitulo;
+  /** Nível do heading — a ordem da página manda, não o tamanho. */
+  como?: "h1" | "h2" | "h3";
   className?: string;
 }) {
+  const Heading = como;
+
   return (
     <div
       className={cn(
-        "flex flex-wrap items-end justify-between gap-x-8 gap-y-4",
+        "flex flex-wrap items-end justify-between gap-x-8 gap-y-5",
         centralizado && "flex-col items-center text-center",
         className,
       )}
     >
-      <div className={cn("max-w-2xl", centralizado && "mx-auto")}>
-        {sobretitulo ? (
-          <p className="mb-2 text-sm font-bold uppercase tracking-wider text-jb-600">
-            {sobretitulo}
-          </p>
-        ) : null}
-        <h2 className="text-title leading-tight">{titulo}</h2>
+      {/* `min-w-0`: sem ele o item de flex tem largura mínima igual ao seu
+          conteúdo, e um título com palavra longa alarga a seção inteira. */}
+      <div className={cn("min-w-0 max-w-2xl", centralizado && "mx-auto")}>
+        {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
+        <Heading className={cn(TAMANHO_TITULO[tamanho], "texto-forte")}>{titulo}</Heading>
         {descricao ? (
-          <p className="mt-3 text-base leading-relaxed text-graf-600">{descricao}</p>
+          <p className="texto-guia texto-suave mt-4 max-w-prose">{descricao}</p>
         ) : null}
       </div>
-      {acao}
+      {acao ? <div className="min-w-0 max-w-full shrink-0">{acao}</div> : null}
     </div>
   );
 }
@@ -249,14 +289,18 @@ export function LinhaDoTempo({ passos }: { passos: PassoLinha[] }) {
     <ol className="relative">
       {passos.map((passo, i) => {
         const ultimo = i === passos.length - 1;
+        /* Os tons escuros (700 / 600) e não os 500: o marcador carrega um
+           glifo branco, e branco sobre ok-500 dá 2,54:1 e sobre graf-400 dá
+           2,61:1 — abaixo do 3:1 que a WCAG 1.4.11 pede para elemento gráfico
+           que comunica estado. ok-700 dá 5,48:1 e graf-600, 5,61:1. */
         const cor =
           passo.estado === "concluido"
-            ? "bg-ok-500 text-white"
+            ? "bg-ok-700 text-white"
             : passo.estado === "atual"
               ? "bg-jb-500 text-white ring-4 ring-jb-500/15"
               : passo.estado === "cancelado"
-                ? "bg-graf-400 text-white"
-                : "bg-white text-graf-300 ring-1 ring-inset ring-graf-300";
+                ? "bg-graf-600 text-white"
+                : "bg-white text-graf-500 ring-1 ring-inset ring-graf-450";
 
         return (
           <li key={`${passo.titulo}-${i}`} className="relative flex gap-4 pb-6 last:pb-0">
@@ -265,7 +309,7 @@ export function LinhaDoTempo({ passos }: { passos: PassoLinha[] }) {
                 aria-hidden
                 className={cn(
                   "absolute left-[11px] top-6 h-[calc(100%-1rem)] w-0.5",
-                  passo.estado === "concluido" ? "bg-ok-500/40" : "bg-graf-200",
+                  passo.estado === "concluido" ? "bg-ok-700/40" : "bg-graf-200",
                 )}
               />
             ) : null}

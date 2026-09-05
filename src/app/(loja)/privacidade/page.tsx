@@ -104,7 +104,7 @@ export default async function PrivacidadePage() {
               atendimento, ordens de serviço, orçamentos e laudos.
             </li>
             <li>
-              <strong>Equipamentos:</strong> o que você cadastra na Minha JB para
+              <strong>Equipamentos:</strong> o que você cadastra na Área da Clínica para
               acompanhar garantia, manutenções e documentos.
             </li>
             <li>
@@ -165,7 +165,7 @@ export default async function PrivacidadePage() {
           <p>Este site usa cookies estritamente necessários ao funcionamento:</p>
           <ul>
             <li>
-              <code>jb_cliente</code> — mantém você conectado na Minha JB;
+              <code>jb_cliente</code> — mantém você conectado na Área da Clínica;
             </li>
             <li>
               <code>jb_carrinho</code> — guarda o carrinho de quem ainda não entrou na
@@ -258,7 +258,7 @@ export default async function PrivacidadePage() {
           </ul>
           <p>
             Boa parte disso está na própria{" "}
-            <Link href="/minha-jb/perfil">Minha JB</Link>, onde você consulta e corrige
+            <Link href="/minha-jb/perfil">Área da Clínica</Link>, onde você consulta e corrige
             cadastro, endereços e histórico. Os demais pedidos podem ser feitos
             {s.email ? (
               <>
@@ -312,7 +312,7 @@ export default async function PrivacidadePage() {
         <p>
           Esta política pode mudar para acompanhar a lei ou o próprio serviço. A data de
           atualização aparece no topo da página; mudanças relevantes são comunicadas pelos
-          canais de atendimento ou dentro da Minha JB.
+          canais de atendimento ou dentro da Área da Clínica.
         </p>
       ),
     },
@@ -347,7 +347,7 @@ export default async function PrivacidadePage() {
           </div>
         }
       >
-        {temCms ? <CorpoCms html={pagina?.body ?? ""} /> : <CorpoLegal secoes={secoes} />}
+        {temCms ? <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" /> : <CorpoLegal secoes={secoes} />}
 
         <NotaDeRevisao>
           Ao usar este site você também concorda com os{" "}

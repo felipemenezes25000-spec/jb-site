@@ -53,8 +53,8 @@ export function CalculadoraParada({ className }: { className?: string }) {
         <div>
           <h3 className="text-lg font-bold text-graf-950">Os números são seus</h3>
           <p className="mt-1 text-sm leading-relaxed text-graf-600">
-            Preencha com a realidade da sua clínica. Nada aqui é enviado para a JB — a
-            conta acontece no seu navegador.
+            Preencha com a realidade da sua clínica. Nada aqui é enviado para a JB: o
+            resultado é seu, e some quando você fecha a página.
           </p>
 
           <div className="mt-6 grid gap-5">

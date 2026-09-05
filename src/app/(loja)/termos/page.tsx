@@ -185,7 +185,7 @@ export default async function TermosPage() {
         <>
           <p>
             Chamados abertos no site geram registro com número próprio e acompanhamento na
-            Minha JB. Nenhuma peça é substituída sem aprovação prévia do orçamento pelo
+            Área da Clínica. Nenhuma peça é substituída sem aprovação prévia do orçamento pelo
             cliente.
           </p>
           <p>
@@ -291,7 +291,7 @@ export default async function TermosPage() {
           </div>
         }
       >
-        {temCms ? <CorpoCms html={pagina?.body ?? ""} /> : <CorpoLegal secoes={secoes} />}
+        {temCms ? <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" /> : <CorpoLegal secoes={secoes} />}
 
         <NotaDeRevisao>
           Estes termos convivem com a{" "}

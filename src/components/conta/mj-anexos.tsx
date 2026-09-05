@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { FileText, ImagePlus, Trash2, TriangleAlert } from "lucide-react";
 
+import { plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /**
@@ -76,21 +77,25 @@ function enviar(
       try {
         dados = JSON.parse(requisicao.responseText) as Resposta;
       } catch {
-        rejeitar(new Error("O servidor respondeu em um formato inesperado."));
+        // o motivo técnico interessa a quem mantém o site, não a quem envia a
+        // foto da autoclave: para o cliente vale o que ele pode fazer agora
+        rejeitar(new Error("Não foi possível concluir o envio. Tente de novo."));
         return;
       }
       if (requisicao.status < 200 || requisicao.status >= 300 || dados.erro) {
-        rejeitar(new Error(dados.erro ?? `Falha no envio (erro ${requisicao.status}).`));
+        rejeitar(
+          new Error(dados.erro ?? "Não foi possível enviar este arquivo. Tente de novo."),
+        );
         return;
       }
       if (!dados.media?.id || !dados.media.url) {
-        rejeitar(new Error("O servidor não devolveu o arquivo salvo."));
+        rejeitar(new Error("O envio não foi concluído. Tente de novo."));
         return;
       }
       resolver({ id: dados.media.id, url: dados.media.url });
     });
     requisicao.addEventListener("error", () =>
-      rejeitar(new Error("Sem conexão com o servidor.")),
+      rejeitar(new Error("Sem conexão. Confira a internet e tente de novo.")),
     );
     requisicao.send(corpo);
   });
@@ -279,7 +284,7 @@ export function Anexos({
         {enviando
           ? "Enviando arquivos."
           : prontos.length > 0
-            ? `${prontos.length} arquivo(s) prontos para envio.`
+            ? `${plural(prontos.length, "arquivo pronto", "arquivos prontos")} para envio.`
             : ""}
       </p>
 

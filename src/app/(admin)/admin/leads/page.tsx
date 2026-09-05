@@ -42,7 +42,9 @@ export default async function PaginaLeads({
   }>;
 }) {
   const usuario = await exigirArea("leads");
-  const verSuporte = podeVer(usuario, "clientes");
+  // O atalho é conferido contra a área que ele abre — "suporte" —, não contra
+  // uma área vizinha. Papel que não abre a fila de tickets não vê o botão.
+  const verSuporte = podeVer(usuario, "suporte");
   const parametros = await searchParams;
   const numeroDaPagina = Math.max(1, Number(parametros.pagina) || 1);
 
@@ -145,9 +147,9 @@ export default async function PaginaLeads({
         }
         acoes={
           <>
-            {/* O menu lateral não tem entrada para Suporte (src/lib/permissoes.ts
-                está congelado nesta rodada), então a fila de tickets é alcançada
-                a partir daqui, que é a outra tela de relacionamento. */}
+            {/* Suporte já tem entrada no menu lateral; o atalho segue aqui
+                porque lead e ticket são a mesma conversa em dois momentos, e
+                quem tria uma fila costuma tomar a outra na sequência. */}
             {verSuporte ? (
               <LinkBotao href="/admin/suporte" variante="texto" tamanho="sm">
                 <LifeBuoy className="size-4" aria-hidden />

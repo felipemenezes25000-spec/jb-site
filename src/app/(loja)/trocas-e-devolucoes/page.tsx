@@ -181,7 +181,7 @@ export default async function TrocasPage() {
       conteudo: (
         <>
           <p>
-            O caminho mais rápido é pela <Link href="/minha-jb/pedidos">Minha JB</Link>,
+            O caminho mais rápido é pela <Link href="/minha-jb/pedidos">Área da Clínica</Link>,
             abrindo a solicitação a partir do próprio pedido — assim o histórico já vai
             junto. Também dá para pedir pelo{" "}
             <Link href="/contato">formulário de contato</Link>
@@ -242,7 +242,7 @@ export default async function TrocasPage() {
           </div>
         }
       >
-        {temCms ? <CorpoCms html={pagina?.body ?? ""} /> : <CorpoLegal secoes={secoes} />}
+        {temCms ? <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" /> : <CorpoLegal secoes={secoes} />}
 
         <NotaDeRevisao>
           Esta página descreve as condições de compra neste site e reproduz direitos

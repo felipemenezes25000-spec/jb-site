@@ -8,6 +8,10 @@ import { Cartao } from "@/components/ui/data";
    As duas metades ficam separadas de propósito — o índice mora na coluna
    lateral da moldura e o corpo na coluna principal, mas ambos leem a mesma
    lista, então nunca saem de sincronia.
+
+   Documento é para ser lido, não folheado: a numeração fica discreta na
+   lateral do título e o texto corre em `.prose-jb`, que já resolve a medida
+   de linha e o respiro entre parágrafos.
    ============================================================================ */
 
 export type SecaoLegal = {
@@ -35,9 +39,9 @@ export function IndiceLegal({
             <li key={secao.id}>
               <a
                 href={`#${secao.id}`}
-                className="-mx-2 flex min-h-11 items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-graf-600 transition-colors hover:bg-graf-50 hover:text-jb-700"
+                className="-mx-2 flex min-h-11 items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-graf-600 transition-colors hover:bg-graf-50 hover:text-jb-700"
               >
-                <span className="label-mono w-5 shrink-0 text-graf-500">
+                <span className="label-mono w-5 shrink-0 text-graf-500" aria-hidden>
                   {String(indice + 1).padStart(2, "0")}
                 </span>
                 <span className="min-w-0">{secao.titulo}</span>
@@ -52,16 +56,16 @@ export function IndiceLegal({
 
 export function CorpoLegal({ secoes }: { secoes: SecaoLegal[] }) {
   return (
-    <div className="space-y-10">
+    /* Documento é texto corrido: a coluna para em ~48rem para a linha não
+       passar de 75 caracteres, mesmo quando o container tem 1440px. */
+    <div className="max-w-3xl space-y-12">
       {secoes.map((secao, indice) => (
-        <section key={secao.id} id={secao.id} className="scroll-mt-24">
-          <h2 className="flex items-baseline gap-3 text-xl font-bold text-graf-950">
-            <span className="label-mono shrink-0 text-jb-500" aria-hidden>
-              {String(indice + 1).padStart(2, "0")}
-            </span>
-            <span>{secao.titulo}</span>
-          </h2>
-          <div className="prose-jb mt-3 max-w-none">{secao.conteudo}</div>
+        <section key={secao.id} id={secao.id} className="scroll-mt-28">
+          <p className="label-mono text-jb-600" aria-hidden>
+            {String(indice + 1).padStart(2, "0")}
+          </p>
+          <h2 className="text-title texto-forte mt-1.5">{secao.titulo}</h2>
+          <div className="prose-jb mt-4 max-w-none">{secao.conteudo}</div>
         </section>
       ))}
     </div>
@@ -74,7 +78,7 @@ export function CorpoLegal({ secoes }: { secoes: SecaoLegal[] }) {
  */
 export function NotaDeRevisao({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-10 border-t border-graf-200 pt-6 text-sm leading-relaxed text-graf-500">
+    <p className="mt-12 border-t border-graf-200 pt-6 text-sm leading-relaxed text-graf-500">
       {children}
     </p>
   );

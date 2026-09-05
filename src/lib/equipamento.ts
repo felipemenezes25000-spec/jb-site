@@ -157,7 +157,7 @@ export async function cadastrarEquipamento(entrada: EntradaEquipamento) {
         description:
           entrada.origem === "cadastro_tecnico"
             ? "Registrado pela equipe técnica da JB."
-            : "Registrado pelo cliente na área Minha JB.",
+            : "Registrado pelo cliente na área Área da Clínica.",
       },
     });
 

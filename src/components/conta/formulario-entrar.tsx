@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 
@@ -21,18 +21,22 @@ export function FormularioEntrar({
 }) {
   const [estado, acao, enviando] = useActionState<EstadoConta, FormData>(entrarCliente, {});
   const [verSenha, setVerSenha] = useState(false);
+  const formulario = useRef<HTMLFormElement>(null);
 
   const erroDe = (campo: string) => (estado.campo === campo ? estado.erro : undefined);
   const erroGeral = estado.erro && !estado.campo ? estado.erro : null;
 
-  return (
-    <form action={acao} noValidate className="space-y-5">
-      <input type="hidden" name="destino" value={destino} />
+  /* Erro de campo leva o cursor até ele: quem usa teclado ou leitor de tela
+     ouve o rótulo, o estado inválido e a mensagem de uma vez só. */
+  useEffect(() => {
+    if (!estado.campo) return;
+    const alvo = formulario.current?.elements.namedItem(estado.campo);
+    if (alvo instanceof HTMLElement) alvo.focus();
+  }, [estado]);
 
-      {/* erro de campo não fica em região viva; aqui ele é anunciado uma vez */}
-      <p aria-live="polite" className="sr-only">
-        {estado.campo ? estado.erro : ""}
-      </p>
+  return (
+    <form ref={formulario} action={acao} noValidate className="space-y-5">
+      <input type="hidden" name="destino" value={destino} />
 
       {erroGeral ? (
         <p
@@ -58,30 +62,35 @@ export function FormularioEntrar({
       />
 
       <div>
-        <Campo
-          rotulo="Senha"
-          name="senha"
-          type={verSenha ? "text" : "password"}
-          autoComplete="current-password"
-          required
-          erro={erroDe("senha")}
-        />
-
-        <div className="mt-1 flex flex-wrap items-center justify-between gap-x-4">
+        {/* O botão de ver a senha fica dentro da caixa. 26px é a altura exata
+            do rótulo de `Campo` (linha de 20px + 6px de margem), então os 44px
+            do botão cobrem exatamente os 44px do campo. */}
+        <div className="relative [&_input]:pr-12">
+          <Campo
+            rotulo="Senha"
+            name="senha"
+            type={verSenha ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            erro={erroDe("senha")}
+          />
           <button
             type="button"
             onClick={() => setVerSenha((v) => !v)}
             aria-pressed={verSenha}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-1 text-sm font-medium text-graf-600 transition-colors hover:text-jb-700"
+            aria-label="Mostrar senha"
+            title={verSenha ? "Ocultar senha" : "Mostrar senha"}
+            className="absolute right-1 top-[26px] flex size-11 items-center justify-center rounded-lg text-graf-500 transition-colors hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
             {verSenha ? (
               <EyeOff className="size-4" aria-hidden />
             ) : (
               <Eye className="size-4" aria-hidden />
             )}
-            {verSenha ? "Ocultar senha" : "Mostrar senha"}
           </button>
+        </div>
 
+        <div className="mt-2 flex justify-end">
           <Link
             href="/recuperar-senha"
             className="inline-flex min-h-11 items-center rounded-md px-1 text-sm font-semibold text-jb-700 underline-offset-4 hover:underline"

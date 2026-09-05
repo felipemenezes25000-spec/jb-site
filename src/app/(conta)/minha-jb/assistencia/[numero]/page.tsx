@@ -13,6 +13,7 @@ import {
   Wrench,
 } from "lucide-react";
 
+import { Fala, ehFalaDaClinica } from "@/components/conta/mj-conversa";
 import { ResponderChamado } from "@/components/conta/mj-responder-chamado";
 import { Topo } from "@/components/conta/mj-topo";
 import { LinkBotao } from "@/components/ui/button";
@@ -78,7 +79,15 @@ export default async function ChamadoPage({ params }: { params: Params }) {
       events: {
         where: { visibleToCustomer: true },
         orderBy: { createdAt: "asc" },
-        select: { id: true, title: true, message: true, status: true, createdAt: true },
+        select: {
+          id: true,
+          title: true,
+          message: true,
+          status: true,
+          createdAt: true,
+          // é o que separa a fala da clínica da fala da equipe na conversa
+          userId: true,
+        },
       },
       media: {
         orderBy: { order: "asc" },
@@ -204,49 +213,32 @@ export default async function ChamadoPage({ params }: { params: Params }) {
           <Cartao>
             <CabecalhoCartao
               titulo="Conversa"
-              descricao="Tudo que a equipe registrou e tudo que você respondeu."
+              descricao="Tudo que a equipe registrou e tudo que você respondeu, na ordem em que aconteceu."
             />
-            <div className="p-5">
-              <div className="rounded-lg bg-graf-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-graf-500">
-                  O que você relatou
-                </p>
-                <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-graf-800">
-                  {chamado.description}
-                </p>
-                {chamado.problemKind ? (
-                  <p className="mt-2 text-xs text-graf-500">
-                    Resumo: {chamado.problemKind}
-                  </p>
-                ) : null}
-              </div>
+            <ol className="space-y-4 p-5">
+              <Fala
+                autor="voce"
+                titulo="Abertura do chamado"
+                quando={chamado.createdAt}
+                corpo={chamado.description}
+                complemento={chamado.problemKind ? `Tipo: ${chamado.problemKind}` : undefined}
+              />
 
-              {chamado.events.length > 0 ? (
-                <ul className="mt-5 space-y-4">
-                  {chamado.events.map((evento) => (
-                    <li
-                      key={evento.id}
-                      className="rounded-lg border border-graf-200 p-4"
-                    >
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <p className="text-sm font-bold text-graf-950">{evento.title}</p>
-                        {evento.status ? (
-                          <Etiqueta tom="neutro">{ROTULO_CHAMADO[evento.status]}</Etiqueta>
-                        ) : null}
-                      </div>
-                      {evento.message ? (
-                        <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-graf-700">
-                          {evento.message}
-                        </p>
-                      ) : null}
-                      <p className="mt-1.5 text-xs text-graf-500">
-                        {formatarDataHora(evento.createdAt)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
+              {chamado.events.map((evento) => (
+                <Fala
+                  key={evento.id}
+                  autor={ehFalaDaClinica(evento) ? "voce" : "jb"}
+                  titulo={evento.title}
+                  quando={evento.createdAt}
+                  corpo={evento.message}
+                  etiqueta={
+                    evento.status ? (
+                      <Etiqueta tom="neutro">{ROTULO_CHAMADO[evento.status]}</Etiqueta>
+                    ) : null
+                  }
+                />
+              ))}
+            </ol>
           </Cartao>
 
           {fotos.length > 0 || arquivos.length > 0 ? (

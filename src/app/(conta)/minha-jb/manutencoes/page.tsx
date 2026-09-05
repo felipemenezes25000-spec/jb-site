@@ -3,13 +3,19 @@ import Link from "next/link";
 import type { VisitStatus } from "@prisma/client";
 import { CalendarCheck, CalendarClock, ShieldCheck, Wrench } from "lucide-react";
 
+import { Destaques, type Destaque } from "@/components/conta/mj-destaques";
 import { Topo } from "@/components/conta/mj-topo";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao, Etiqueta, Vazio } from "@/components/ui/data";
 import { Tabela, type Coluna } from "@/components/ui/tabela";
 import { exigirCliente } from "@/lib/auth-cliente";
 import { distanciaEmDias, formatarData, formatarPreco, plural } from "@/lib/format";
-import { ROTULO_CONTRATO, ROTULO_VISITA, proximasVisitas } from "@/lib/manutencao";
+import {
+  ROTULO_CONTRATO,
+  ROTULO_VISITA,
+  STATUS_VISITA_ABERTOS,
+  proximasVisitas,
+} from "@/lib/manutencao";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -39,7 +45,10 @@ export default async function ManutencoesPage() {
   const cliente = await exigirCliente("/minha-jb/manutencoes");
   const agora = new Date();
 
-  const [contratos, previstas, concluidas] = await Promise.all([
+  const em30Dias = new Date(agora.getTime() + 30 * 86_400_000);
+
+  const [contratos, previstas, concluidas, vencidas, proximoMes, totalConcluidas] =
+    await Promise.all([
     prisma.maintenanceContract.findMany({
       where: { customerId: cliente.id, status: { not: "rascunho" } },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
@@ -69,11 +78,27 @@ export default async function ManutencoesPage() {
         status: true,
         dueAt: true,
         doneAt: true,
-        notes: true,
         equipment: { select: { id: true, name: true } },
         contract: { select: { number: true } },
         technician: { select: { user: { select: { name: true } } } },
       },
+    }),
+    prisma.maintenanceVisit.count({
+      where: {
+        status: { in: STATUS_VISITA_ABERTOS },
+        dueAt: { lt: agora },
+        equipment: { customerId: cliente.id },
+      },
+    }),
+    prisma.maintenanceVisit.count({
+      where: {
+        status: { in: STATUS_VISITA_ABERTOS },
+        dueAt: { gte: agora, lte: em30Dias },
+        equipment: { customerId: cliente.id },
+      },
+    }),
+    prisma.maintenanceVisit.count({
+      where: { status: "concluida", equipment: { customerId: cliente.id } },
     }),
   ]);
 
@@ -141,6 +166,53 @@ export default async function ManutencoesPage() {
   const semNada =
     contratos.length === 0 && previstas.length === 0 && concluidas.length === 0;
 
+  const contratosAtivos = contratos.filter((contrato) => contrato.status === "ativo").length;
+
+  /*
+   * A faixa responde de relance a pergunta que traz o cliente aqui: "estou em
+   * dia?". Vencida em vermelho, próxima em azul, feito em cinza — e cada número
+   * é contagem de verdade do banco, não estimativa.
+   */
+  const destaques: Destaque[] = [
+    {
+      rotulo: "Preventivas vencidas",
+      valor: vencidas,
+      detalhe:
+        vencidas > 0
+          ? "Passou da data prevista. Vale remarcar."
+          : "Nenhuma visita atrasada.",
+      icone: vencidas > 0 ? CalendarClock : ShieldCheck,
+      tom: vencidas > 0 ? "alerta" : "ok",
+    },
+    {
+      rotulo: "Próximos 30 dias",
+      valor: proximoMes,
+      detalhe:
+        proximoMes > 0
+          ? "Visitas previstas para o próximo mês."
+          : "Nada previsto para o próximo mês.",
+      icone: CalendarClock,
+      tom: proximoMes > 0 ? "info" : "neutro",
+    },
+    {
+      rotulo: "Visitas concluídas",
+      valor: totalConcluidas,
+      detalhe: "Registradas no histórico da clínica.",
+      icone: CalendarCheck,
+      tom: "neutro",
+    },
+    {
+      rotulo: "Contratos ativos",
+      valor: contratosAtivos,
+      detalhe:
+        contratosAtivos > 0
+          ? "Cobertura vigente com a JB."
+          : "As visitas abaixo são avulsas.",
+      icone: Wrench,
+      tom: contratosAtivos > 0 ? "ok" : "neutro",
+    },
+  ];
+
   return (
     <div>
       <Topo
@@ -164,6 +236,8 @@ export default async function ManutencoesPage() {
         />
       ) : (
         <div className="space-y-8">
+          <Destaques itens={destaques} />
+
           {/* -------------------------------------------------- contratos */}
           <section aria-labelledby="contratos">
             <h2 id="contratos" className="mb-3 text-base font-bold text-graf-950">
@@ -238,7 +312,7 @@ export default async function ManutencoesPage() {
                               <li key={item.equipment.id}>
                                 <Link
                                   href={`/minha-jb/equipamentos/${item.equipment.id}`}
-                                  className="inline-flex min-h-9 items-center rounded-lg bg-graf-100 px-3 text-xs font-semibold text-graf-700 transition-colors hover:bg-graf-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                                  className="inline-flex min-h-9 items-center rounded-lg bg-graf-100 px-3 text-xs font-semibold text-graf-700 transition-colors hover:bg-graf-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 pointer-coarse:min-h-11"
                                 >
                                   {item.equipment.name}
                                 </Link>
@@ -264,11 +338,14 @@ export default async function ManutencoesPage() {
                           </ul>
                         ) : null}
 
-                        {contrato.notes ? (
-                          <p className="border-t border-graf-100 pt-3 leading-relaxed text-graf-600">
-                            {contrato.notes}
-                          </p>
-                        ) : null}
+                        {/* `MaintenanceContract.notes` é campo de operação, sem
+                            marca de visibilidade no schema — é onde a equipe
+                            anota o combinado interno do contrato. Vinha parar na
+                            tela do cliente literalmente como estava escrito. A
+                            regra desta área vale aqui também: nota sem sinal de
+                            visibilidade não vai para o cliente. O que ele
+                            precisa ver do contrato — vigência, valor, cobertura
+                            e benefícios do plano — está logo acima. */}
                       </div>
                     </Cartao>
                   </li>

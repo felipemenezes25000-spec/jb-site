@@ -82,6 +82,8 @@ function CabecalhoOrdenavel({
       scroll={false}
       className={cn(
         "-mx-2 inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 py-1.5 transition-colors",
+        // no tablet a tabela também é tocada: 36px vira 44px
+        "pointer-coarse:min-h-11",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
         ativo ? "text-graf-900" : "text-graf-500 hover:text-graf-800",
       )}
@@ -145,7 +147,11 @@ export function Tabela<T>({
   return (
     <div className={className}>
       {/* ---------------------------------------------------- desktop */}
-      <div className="hidden overflow-x-auto rounded-xl border border-graf-200 bg-white shadow-card md:block">
+      {/* `max-w-full` e `min-w-0` garantem que a caixa role em vez de empurrar a
+          página: sem eles, a tabela larga esticava o documento e o painel
+          inteiro ganhava rolagem horizontal a partir de 1024px, onde a barra
+          lateral fixa entra e o espaço útil encolhe. */}
+      <div className="hidden min-w-0 max-w-full overflow-x-auto rounded-xl border border-graf-200 bg-white shadow-card md:block">
         <table className="w-full border-collapse text-sm">
           {legenda ? <caption className="sr-only">{legenda}</caption> : null}
           <thead>
@@ -229,7 +235,7 @@ export function Tabela<T>({
                   ))}
                   {href ? (
                     <td className={cn("px-4 text-right", paddingY)}>
-                      <ChevronRight className="ml-auto size-4 text-graf-300" aria-hidden />
+                      <ChevronRight className="ml-auto size-4 text-graf-400" aria-hidden />
                     </td>
                   ) : null}
                 </tr>
@@ -275,7 +281,7 @@ export function Tabela<T>({
                     )}
                   </p>
                   {href ? (
-                    <ChevronRight className="mt-0.5 size-4 shrink-0 text-graf-300" aria-hidden />
+                    <ChevronRight className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
                   ) : null}
                 </div>
               ) : null}

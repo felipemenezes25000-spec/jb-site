@@ -5,18 +5,28 @@ import { fixtures } from "./fixtures";
 /**
  * Catálogo.
  *
- * O que está sob teste é o contrato "filtro mora na URL": marcar uma condição
- * precisa aparecer na barra de endereço, sobreviver a um recarregamento e
- * voltar ao estado anterior no botão "voltar". Sem isso o resultado deixa de
- * ser compartilhável e o Next perde a renderização no servidor.
+ * O que está sob teste é o contrato "filtro mora na URL": escolher uma
+ * condição precisa aparecer na barra de endereço, sobreviver a um
+ * recarregamento e voltar ao estado anterior no botão "voltar". Sem isso o
+ * resultado deixa de ser compartilhável e o Next perde a renderização no
+ * servidor.
+ *
+ * Cada opção de filtro é um link de verdade — endereço próprio, funciona sem
+ * script e anuncia o que faz ("Filtrar por Condição: Novo" enquanto está
+ * desligada, "Remover filtro Condição: Novo" depois de ligada). É por esse
+ * nome acessível que o teste localiza as opções, e é ele que diz se o filtro
+ * está aplicado.
  */
+
+/** O contador do topo da lista, que muda de texto quando há filtro. */
+const CONTADOR = /\d+\s+(item|itens)\s+(encontrados?|encontrado|nesta lista)/;
 
 test.describe("Catálogo", () => {
   test("lista equipamentos com preço e link para o produto", async ({ page }) => {
     await page.goto("/loja");
 
     await expect(page.getByRole("heading", { name: "Equipamentos odontológicos" })).toBeVisible();
-    await expect(page.getByText(/itens? encontrados?/)).toBeVisible();
+    await expect(page.getByText(CONTADOR)).toBeVisible();
 
     const { produto } = fixtures();
     const link = page.getByRole("link", { name: produto.nome }).first();
@@ -33,20 +43,25 @@ test.describe("Catálogo", () => {
 
     await page.goto("/loja");
 
-    const contador = page.getByText(/itens? encontrados?/);
+    const contador = page.getByText(CONTADOR);
     await expect(contador).toBeVisible();
     const totalSemFiltro = Number((await contador.innerText()).match(/\d+/)?.[0] ?? 0);
     expect(totalSemFiltro).toBeGreaterThan(0);
 
     // pega a primeira condição oferecida pela própria página, em vez de
-    // fixar um rótulo que o catálogo pode não ter
-    const caixas = page.getByRole("checkbox");
-    const escolhida = caixas.nth(0);
-    const rotulo = (await escolhida.evaluate((el) => el.closest("label")?.textContent ?? "")).trim();
-    expect(rotulo, "o painel de filtros precisa oferecer alguma opção").not.toBe("");
+    // fixar um rótulo que o catálogo pode não ter. A busca fica dentro do
+    // painel: a fileira de fichas de filtro aplicado repete o mesmo nome
+    // acessível, e é o painel que representa o estado de cada opção.
+    const painel = page.getByRole("complementary", { name: "Filtros do catálogo" });
+    const opcoes = painel.getByRole("link", { name: /^Filtrar por Condição: / });
+    await expect(opcoes.first()).toBeVisible();
+    const escolhida = opcoes.first();
+    const rotulo = (await escolhida.getAttribute("aria-label"))?.replace(
+      "Filtrar por Condição: ",
+      "",
+    );
+    expect(rotulo, "o painel de filtros precisa oferecer alguma condição").toBeTruthy();
 
-    // `check()` não serve aqui: a caixa é controlada pela URL, então o estado
-    // só muda depois que o Next termina a navegação. Clicamos e esperamos a URL.
     await escolhida.click();
 
     await page.waitForURL(/\?.+=.+/);
@@ -54,7 +69,10 @@ test.describe("Catálogo", () => {
     const chaves = [...url.searchParams.keys()];
     expect(chaves.length, `a URL deveria carregar o filtro: ${url.search}`).toBeGreaterThan(0);
 
-    await expect(escolhida).toBeChecked();
+    // ligada, a mesma opção passa a oferecer a remoção
+    await expect(
+      painel.getByRole("link", { name: `Remover filtro Condição: ${rotulo}` }),
+    ).toBeVisible();
 
     const totalFiltrado = Number((await contador.innerText()).match(/\d+/)?.[0] ?? 0);
     expect(totalFiltrado).toBeGreaterThan(0);
@@ -68,27 +86,28 @@ test.describe("Catálogo", () => {
 
     await page.goto(`/loja?condicao=${condicao}`);
 
-    const contador = page.getByText(/itens? encontrados?/);
+    const contador = page.getByText(CONTADOR);
     await expect(contador).toBeVisible();
 
-    // o filtro veio da URL: a caixa correspondente precisa estar marcada
-    const marcadas = page.getByRole("checkbox", { checked: true });
-    await expect(marcadas).toHaveCount(1);
+    // o filtro veio da URL: a opção correspondente precisa estar ligada
+    const painel = page.getByRole("complementary", { name: "Filtros do catálogo" });
+    const ligadas = painel.getByRole("link", { name: /^Remover filtro / });
+    await expect(ligadas).toHaveCount(1);
 
-    // e a etiqueta de filtro ativo precisa oferecer a remoção
-    const limpar = page.getByRole("button", { name: "limpar tudo" });
+    // e a barra de filtros aplicados precisa oferecer a limpeza
+    const limpar = page.getByRole("link", { name: "Limpar tudo" }).first();
     await expect(limpar).toBeVisible();
 
     await page.reload();
-    await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(1);
+    await expect(ligadas).toHaveCount(1);
 
     await limpar.click();
     await page.waitForURL((url) => !url.searchParams.has("condicao"));
-    await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(0);
+    await expect(ligadas).toHaveCount(0);
 
     await page.goBack();
     await page.waitForURL(/condicao=/);
-    await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(1);
+    await expect(ligadas).toHaveCount(1);
   });
 
   test("filtro sem resultado mostra o estado vazio com saída útil", async ({ page }) => {
@@ -105,7 +124,7 @@ test.describe("Catálogo", () => {
   test("a ordenação por menor preço também vai para a URL", async ({ page }) => {
     await page.goto("/loja");
 
-    await page.getByLabel("Ordenar por").selectOption("menor-preco");
+    await page.getByLabel("Ordenar resultados").selectOption("menor-preco");
     await page.waitForURL(/ordem=menor-preco/);
 
     expect(new URL(page.url()).searchParams.get("ordem")).toBe("menor-preco");

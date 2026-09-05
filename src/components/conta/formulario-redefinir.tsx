@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 
 import { redefinirSenha, type EstadoConta } from "@/app/acoes/conta";
@@ -11,38 +11,115 @@ import { Campo } from "@/components/ui/form";
  * Troca da senha a partir do link recebido por e-mail.
  *
  * O token só é conferido no servidor, e é consumido de uma vez: link usado ou
- * vencido devolve a mesma mensagem e a oferta de pedir outro.
+ * vencido devolve a mesma mensagem. Quando isso acontece os campos saem da
+ * tela — insistir numa senha nova que não tem como ser salva só faria a pessoa
+ * digitar duas vezes à toa.
  */
+
+/**
+ * Campo de senha com o botão de mostrar/ocultar dentro da caixa.
+ *
+ * O botão é sobreposto ao input: 26px é a altura exata do rótulo de `Campo`
+ * (linha de 20px + 6px de margem), então os 44px do botão cobrem exatamente os
+ * 44px da caixa, sem depender de o texto de erro ou de ajuda aparecer embaixo.
+ */
+function CampoSenha({
+  rotulo,
+  rotuloBotao,
+  name,
+  ajuda,
+  erro,
+  valor,
+  aoMudar,
+  autoFocus,
+}: {
+  rotulo: string;
+  /** os dois botões ficam na mesma tela: cada um precisa de nome próprio */
+  rotuloBotao: string;
+  name: string;
+  ajuda?: string;
+  erro?: string;
+  valor: string;
+  aoMudar: (v: string) => void;
+  autoFocus?: boolean;
+}) {
+  const [visivel, setVisivel] = useState(false);
+
+  return (
+    <div className="relative [&_input]:pr-12">
+      <Campo
+        rotulo={rotulo}
+        name={name}
+        type={visivel ? "text" : "password"}
+        autoComplete="new-password"
+        required
+        minLength={8}
+        autoFocus={autoFocus}
+        value={valor}
+        onChange={(evento) => aoMudar(evento.target.value)}
+        ajuda={ajuda}
+        erro={erro}
+      />
+      <button
+        type="button"
+        onClick={() => setVisivel((v) => !v)}
+        aria-pressed={visivel}
+        aria-label={rotuloBotao}
+        title={rotuloBotao}
+        className="absolute right-1 top-[26px] flex size-11 items-center justify-center rounded-lg text-graf-500 transition-colors hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+      >
+        {visivel ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+      </button>
+    </div>
+  );
+}
+
 export function FormularioRedefinir({ token }: { token: string }) {
   const [estado, acao, enviando] = useActionState<EstadoConta, FormData>(redefinirSenha, {});
-  const [verSenha, setVerSenha] = useState(false);
+  const [senha, setSenha] = useState("");
+  const [confirmacao, setConfirmacao] = useState("");
+  const formulario = useRef<HTMLFormElement>(null);
+  const avisoDoToken = useRef<HTMLDivElement>(null);
 
   const erroDe = (campo: string) => (estado.campo === campo ? estado.erro : undefined);
   const erroDoToken = erroDe("token");
   const erroGeral = estado.erro && !estado.campo ? estado.erro : null;
 
+  useEffect(() => {
+    if (erroDoToken) {
+      avisoDoToken.current?.focus();
+      return;
+    }
+    if (!estado.campo) return;
+    const alvo = formulario.current?.elements.namedItem(estado.campo);
+    if (alvo instanceof HTMLElement) alvo.focus();
+  }, [estado, erroDoToken]);
+
+  if (erroDoToken) {
+    return (
+      <div
+        ref={avisoDoToken}
+        tabIndex={-1}
+        className="rounded-xl border border-jb-200 bg-jb-50 p-6 outline-none"
+      >
+        <p className="flex items-start gap-2.5 font-semibold text-jb-800">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>{erroDoToken}</span>
+        </p>
+        <p className="mt-2 pl-[26px] text-sm leading-relaxed text-graf-700">
+          Cada link serve uma vez só e vale por 1 hora. Peça outro para continuar — sua senha atual
+          não mudou.
+        </p>
+        <LinkBotao href="/recuperar-senha" variante="secundario" className="mt-5">
+          Pedir um novo link
+        </LinkBotao>
+      </div>
+    );
+  }
+
   return (
-    <form action={acao} noValidate className="space-y-5">
+    <form ref={formulario} action={acao} noValidate className="space-y-5">
       <input type="hidden" name="token" value={token} />
-
-      <p aria-live="polite" className="sr-only">
-        {estado.campo && estado.campo !== "token" ? estado.erro : ""}
-      </p>
-
-      {erroDoToken ? (
-        <div
-          role="alert"
-          className="rounded-xl border border-jb-200 bg-jb-50 p-5 text-sm leading-relaxed text-jb-800"
-        >
-          <p className="flex items-start gap-2.5 font-semibold">
-            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
-            <span>{erroDoToken}</span>
-          </p>
-          <LinkBotao href="/recuperar-senha" variante="secundario" tamanho="sm" className="mt-4">
-            Pedir um novo link
-          </LinkBotao>
-        </div>
-      ) : null}
 
       {erroGeral ? (
         <p
@@ -54,37 +131,28 @@ export function FormularioRedefinir({ token }: { token: string }) {
         </p>
       ) : null}
 
-      <Campo
+      <CampoSenha
         rotulo="Nova senha"
+        rotuloBotao="Mostrar a nova senha"
         name="senha"
-        type={verSenha ? "text" : "password"}
-        autoComplete="new-password"
-        required
-        minLength={8}
+        valor={senha}
+        aoMudar={setSenha}
         autoFocus
-        ajuda="Mínimo de 8 caracteres."
+        ajuda={senha.length >= 8 ? "Tamanho suficiente." : "Mínimo de 8 caracteres."}
         erro={erroDe("senha")}
       />
 
-      <Campo
+      <CampoSenha
         rotulo="Repita a nova senha"
+        rotuloBotao="Mostrar a nova senha repetida"
         name="confirmacao"
-        type={verSenha ? "text" : "password"}
-        autoComplete="new-password"
-        required
-        minLength={8}
+        valor={confirmacao}
+        aoMudar={setConfirmacao}
+        // só o estado positivo: cobrar "não confere" enquanto a pessoa ainda
+        // digita a segunda senha é ruído, e o servidor confere de novo
+        ajuda={confirmacao.length > 0 && confirmacao === senha ? "As senhas conferem." : undefined}
         erro={erroDe("confirmacao")}
       />
-
-      <button
-        type="button"
-        onClick={() => setVerSenha((v) => !v)}
-        aria-pressed={verSenha}
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-1 text-sm font-medium text-graf-600 transition-colors hover:text-jb-700"
-      >
-        {verSenha ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
-        {verSenha ? "Ocultar senhas" : "Mostrar senhas"}
-      </button>
 
       <Botao type="submit" tamanho="lg" larguraTotal carregando={enviando}>
         {enviando ? "Salvando…" : "Salvar nova senha e entrar"}

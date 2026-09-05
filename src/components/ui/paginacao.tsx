@@ -112,7 +112,7 @@ export function Paginacao({
             ) : (
               <span
                 aria-disabled="true"
-                className={cn(BASE_ITEM, "cursor-not-allowed text-graf-300")}
+                className={cn(BASE_ITEM, "cursor-not-allowed text-graf-500/55")}
               >
                 <ChevronLeft className="size-4" aria-hidden />
                 <span className="hidden sm:inline">Anterior</span>
@@ -173,7 +173,7 @@ export function Paginacao({
             ) : (
               <span
                 aria-disabled="true"
-                className={cn(BASE_ITEM, "cursor-not-allowed text-graf-300")}
+                className={cn(BASE_ITEM, "cursor-not-allowed text-graf-500/55")}
               >
                 <span className="hidden sm:inline">Próxima</span>
                 <ChevronRight className="size-4" aria-hidden />

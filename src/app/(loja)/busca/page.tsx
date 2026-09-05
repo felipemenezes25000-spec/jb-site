@@ -13,13 +13,19 @@ export default async function BuscaPage({
   searchParams: Promise<ParametrosVitrine>;
 }) {
   const parametros = await searchParams;
-  const termo = typeof parametros.q === "string" ? parametros.q : "";
+  const bruto = parametros.q;
+  const termo = (Array.isArray(bruto) ? bruto[0] : bruto)?.trim() ?? "";
 
   return (
     <Vitrine
-      titulo={termo ? `Resultados para “${termo}”` : "Busca"}
-      descricao={termo ? undefined : "Digite o que procura na busca do topo."}
+      titulo={termo ? `Resultados para “${termo}”` : "Buscar no catálogo"}
+      descricao={
+        termo
+          ? undefined
+          : "Procure pelo nome do equipamento, pela marca, pelo modelo ou pela peça. Se não encontrar, a equipe atende sob orçamento."
+      }
       trilha={[{ rotulo: "Início", href: "/" }, { rotulo: "Busca" }]}
+      caminho="/busca"
       parametros={parametros}
     />
   );

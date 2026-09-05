@@ -23,7 +23,9 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:relatorio": "playwright show-report tests/.relatorio",
-    "prova:atomicidade": "tsx --conditions=react-server scripts/prova-atomicidade.ts"
+    "prova:atomicidade": "tsx --conditions=react-server scripts/prova-atomicidade.ts",
+    "responsivo": "node scripts/responsivo.mjs",
+    "a11y": "node scripts/acessibilidade.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -59,6 +61,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "axe-core": "^4.13.0",
     "playwright": "^1.62.1",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",

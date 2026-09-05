@@ -31,8 +31,17 @@
   --color-graf-200: #dddfe2;
   --color-graf-300: #c2c6cb;
   --color-graf-400: #9ba1a8;
+  /* Borda de controle. A WCAG 1.4.11 pede 3:1 para o contorno que identifica
+     um componente, e a caixa de um campo de texto é o único sinal de que ali
+     se digita. graf-300 dá 1,72:1 sobre branco e graf-400 dá 2,61:1 — os dois
+     reprovam. Este degrau dá 3,39:1 sobre branco e 3,19:1 sobre graf-50, e
+     continua leve o bastante para não pesar o formulário.
+     Use em campo, seletor, área de texto, marcador e opção; para divisor e
+     moldura decorativa, graf-200 e graf-300 seguem valendo. */
+  --color-graf-450: #868c94;
   /* 4,5:1 sobre branco, graf-50 e graf-100 — este é o cinza do texto
-     secundário e precisa cumprir AA. O antigo #7a818a dava 3,94:1. */
+     secundário e precisa cumprir AA. O antigo #7a818a dava 3,94:1.
+     graf-400 é só borda, ícone decorativo e divisor: nunca texto. */
   --color-graf-500: #666d76;
   --color-graf-600: #636870;
   --color-graf-700: #51565c;
@@ -72,9 +81,41 @@
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --text-hero: clamp(2.25rem, 5vw, 3.75rem);
-  --text-display: clamp(1.875rem, 3.4vw, 2.75rem);
-  --text-title: clamp(1.375rem, 2.2vw, 1.875rem);
+  /* ==========================================================================
+     Escala tipográfica
+
+     Quatro degraus grandes, cada um com altura de linha e espaçamento de letra
+     embutidos — pedir `text-hero` já entrega o título inteiro afinado.
+
+     A redução no celular é proporcional, nunca "encolhe para caber":
+       hero    40px em 360px  →  68px a partir de 1280px
+       display 32px em 360px  →  48px a partir de 1440px
+       section 31px em 360px  →  44px a partir de 1440px  (36px em 768px)
+       title   22px em 360px  →  30px a partir de 1440px
+
+     Corpo de texto fica na escala nativa do Tailwind: `text-base` (16px) para
+     texto corrido e `text-lg` (18px) ou a utilidade `texto-guia` (17→19px)
+     para o parágrafo de abertura de seção.
+     ========================================================================== */
+  --text-hero: clamp(2.5rem, 1.815rem + 3.04vw, 4.25rem);
+  --text-hero--line-height: 1.03;
+  --text-hero--letter-spacing: -0.032em;
+  --text-hero--font-weight: 800;
+
+  --text-display: clamp(2rem, 1.65rem + 1.56vw, 3rem);
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.028em;
+  --text-display--font-weight: 800;
+
+  --text-section: clamp(1.75rem, 1.68rem + 1.19vw, 2.75rem);
+  --text-section--line-height: 1.14;
+  --text-section--letter-spacing: -0.024em;
+  --text-section--font-weight: 700;
+
+  --text-title: clamp(1.375rem, 1.2rem + 0.78vw, 1.875rem);
+  --text-title--line-height: 1.22;
+  --text-title--letter-spacing: -0.018em;
+  --text-title--font-weight: 700;
 }
 
 /* ============================================================================
@@ -98,6 +139,19 @@
     font-synthesis-weight: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+
+    /* Rede de proteção da plataforma inteira contra rolagem horizontal.
+
+       Boa parte do que a tela mostra é texto digitado por gente: e-mail de
+       cliente, nome de clínica, número de série, endereço, título de
+       documento. Uma palavra sem espaço mais larga que a coluna — um e-mail
+       longo numa ficha de 240px, por exemplo — vira largura mínima
+       intransponível e empurra a página inteira para fora da tela em 360px.
+
+       `break-word` não altera nada em texto normal: só quebra a palavra que,
+       sozinha, não caberia de jeito nenhum. É herdado, então vale para toda a
+       loja, a assistência, a área da clínica e o painel. */
+    overflow-wrap: break-word;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -122,9 +176,14 @@
     border-radius: var(--radius-xs);
   }
 
-  /* O anel de foco padrão do navegador some em fundo escuro */
+  /* Faixa grafite: o que a marcação já resolve sozinha. O anel de foco
+     padrão some em fundo escuro, e o preto dos títulos idem. */
   .on-dark :focus-visible {
     outline-color: #fff;
+  }
+
+  .on-dark :is(h1, h2, h3, h4, h5, h6) {
+    color: #fff;
   }
 
   input,
@@ -142,6 +201,14 @@
   }
   input[type="number"] {
     -moz-appearance: textfield;
+  }
+
+  /* Marcador do <details> — o ícone é desenhado pelo componente */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary {
+    list-style: none;
   }
 }
 
@@ -163,16 +230,77 @@
    Utilitários do sistema
    ============================================================================ */
 
+/* Largura de leitura da plataforma inteira.
+
+   1440px de caixa com 40px de respiro no desktop — conteúdo comercial de
+   equipamento caro precisa de área, não de uma coluna estreita no meio da
+   tela. No celular o respiro cai para 16–20px, que é o que sobra sem espremer
+   o texto contra a borda. */
 @utility container-jb {
   margin-inline: auto;
   width: 100%;
-  max-width: 80rem;
+  max-width: 90rem;
   padding-inline: 1rem;
+  @media (width >= 25rem) {
+    padding-inline: 1.25rem;
+  }
   @media (width >= 40rem) {
-    padding-inline: 1.5rem;
+    padding-inline: 1.75rem;
   }
   @media (width >= 64rem) {
-    padding-inline: 2rem;
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Mesma família, coluna mais curta — formulário longo, artigo, política,
+   checkout: texto corrido não deve passar de ~75 caracteres por linha. */
+@utility container-estreito {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 56rem;
+  padding-inline: 1rem;
+  @media (width >= 25rem) {
+    padding-inline: 1.25rem;
+  }
+  @media (width >= 40rem) {
+    padding-inline: 1.75rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Parágrafo de abertura — 17px no celular, 19px no desktop. */
+@utility texto-guia {
+  font-size: clamp(1.0625rem, 1.02rem + 0.2vw, 1.1875rem);
+  line-height: 1.65;
+}
+
+/* Texto secundário que continua legível quando a faixa é grafite.
+   Em fundo claro é graf-500 (4,5:1); dentro de `.on-dark` vira graf-300. */
+@utility texto-suave {
+  color: var(--color-graf-500);
+  .on-dark & {
+    color: var(--color-graf-300);
+  }
+}
+
+/* Texto de maior peso visual, mesma lógica de inversão. */
+@utility texto-forte {
+  color: var(--color-graf-950);
+  .on-dark & {
+    color: #fff;
+  }
+}
+
+/* Anel de foco da marca, para quem monta um controle do zero. */
+@utility foco-jb {
+  &:focus-visible {
+    outline: 2px solid var(--color-jb-500);
+    outline-offset: 2px;
+  }
+  .on-dark &:focus-visible {
+    outline-color: #fff;
   }
 }
 
@@ -182,6 +310,18 @@
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
+}
+
+/* Sobretítulo de seção — o degrau acima do título, em caixa alta curta. */
+@utility sobretitulo {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-jb-600);
+  .on-dark & {
+    color: var(--color-jb-300);
+  }
 }
 
 @utility tabular {
@@ -216,6 +356,45 @@
   background-image: radial-gradient(circle at 1px 1px, var(--color-graf-300) 1px, transparent 0);
   background-size: 28px 28px;
 }
+.on-dark .field-orbit,
+.field-orbit.on-dark {
+  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.12) 1px, transparent 0);
+}
+
+/* Bloco de carregamento. O brilho atravessa a peça uma vez a cada ciclo e
+   some inteiro quando o sistema pede menos movimento. */
+@keyframes jb-esqueleto {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Sem raio próprio de propósito: quem usa informa `rounded-*` conforme a peça
+   que está sendo esperada, e nada disputa a especificidade. */
+@utility esqueleto {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-graf-100);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.7),
+      transparent
+    );
+    animation: jb-esqueleto 1.6s infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto::after {
+    display: none;
+  }
+}
 
 /* ============================================================================
    Conteúdo vindo do editor
@@ -223,6 +402,7 @@
 
 .prose-jb {
   color: var(--color-graf-700);
+  font-size: clamp(1rem, 0.98rem + 0.1vw, 1.0625rem);
   line-height: 1.7;
 }
 .prose-jb > * + * {

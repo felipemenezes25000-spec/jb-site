@@ -82,14 +82,16 @@ export function FormularioClienteNovo() {
               required
               maxLength={160}
               autoComplete="off"
-              ajuda="É a chave do cadastro e o login da Minha JB."
+              ajuda="É a chave do cadastro e o login da Área da Clínica."
               erro={erroDe("email")}
             />
             {estado.clienteExistente ? (
               <p className="mt-1.5 text-sm">
                 <Link
                   href={`/admin/clientes/${estado.clienteExistente.id}`}
-                  className="font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  /* alvo de toque: é o caminho para a ficha que já existe, e
+                     tinha 19px de altura — errar aqui é recomeçar o cadastro */
+                  className="inline-flex items-center font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 pointer-coarse:min-h-11 pointer-coarse:py-2"
                 >
                   Abrir a ficha de {estado.clienteExistente.nome}
                 </Link>

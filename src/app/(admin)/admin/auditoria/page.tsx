@@ -11,7 +11,7 @@ import { Esqueleto, Etiqueta, Vazio, type Tom } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
 import { ACOES, listarAuditoria, rotuloAcao } from "@/lib/auditoria";
 import { formatarDataHora, plural } from "@/lib/format";
-import { ROTULO_PAPEL, exigirArea } from "@/lib/permissoes";
+import { ROTULO_PAPEL, exigirArea, podeVer, type AreaAdmin } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -39,22 +39,33 @@ const TOM_DA_ACAO: Record<string, Tom | undefined> = {
   sair: "neutro",
 };
 
-/** Para onde a linha aponta, quando o registro tem tela própria. */
-const ROTA_DA_ENTIDADE: Record<string, ((id: string) => string) | undefined> = {
-  pagina: (id) => `/admin/conteudo/paginas/${id}`,
-  secao_home: (id) => `/admin/conteudo/home/${id}`,
-  slide: (id) => `/admin/conteudo/slides/${id}`,
-  faq: (id) => `/admin/conteudo/faq/${id}`,
-  lead: (id) => `/admin/leads/${id}`,
-  ticket: (id) => `/admin/suporte/${id}`,
-  usuario: (id) => `/admin/usuarios/${id}`,
-  User: (id) => `/admin/usuarios/${id}`,
-  cliente: (id) => `/admin/clientes/${id}`,
-  pedido: (id) => `/admin/pedidos/${id}`,
-  produto: (id) => `/admin/produtos/${id}`,
-  chamado: (id) => `/admin/assistencia/${id}`,
-  ordem_servico: (id) => `/admin/os/${id}`,
-  orcamento: (id) => `/admin/orcamentos/${id}`,
+/**
+ * Para onde a linha aponta, quando o registro tem tela própria — e sob qual
+ * área essa tela vive.
+ *
+ * A área importa porque a auditoria é mais aberta que várias das telas que ela
+ * cita: gestor lê a trilha inteira, mas não abre Usuários, que é só do
+ * administrador. Sem esta conferência, "Abrir registro" levaria o gestor
+ * direto para o aviso de sem permissão. Link que não abre não é link.
+ */
+const ROTA_DA_ENTIDADE: Record<
+  string,
+  { area: AreaAdmin; href: (id: string) => string } | undefined
+> = {
+  pagina: { area: "conteudo", href: (id) => `/admin/conteudo/paginas/${id}` },
+  secao_home: { area: "conteudo", href: (id) => `/admin/conteudo/home/${id}` },
+  slide: { area: "conteudo", href: (id) => `/admin/conteudo/slides/${id}` },
+  faq: { area: "conteudo", href: (id) => `/admin/conteudo/faq/${id}` },
+  lead: { area: "leads", href: (id) => `/admin/leads/${id}` },
+  ticket: { area: "suporte", href: (id) => `/admin/suporte/${id}` },
+  usuario: { area: "usuarios", href: (id) => `/admin/usuarios/${id}` },
+  User: { area: "usuarios", href: (id) => `/admin/usuarios/${id}` },
+  cliente: { area: "clientes", href: (id) => `/admin/clientes/${id}` },
+  pedido: { area: "pedidos", href: (id) => `/admin/pedidos/${id}` },
+  produto: { area: "produtos", href: (id) => `/admin/produtos/${id}` },
+  chamado: { area: "assistencia", href: (id) => `/admin/assistencia/${id}` },
+  ordem_servico: { area: "os", href: (id) => `/admin/os/${id}` },
+  orcamento: { area: "orcamentos", href: (id) => `/admin/orcamentos/${id}` },
 };
 
 /**
@@ -86,7 +97,7 @@ export default async function PaginaAuditoria({
     pagina?: string;
   }>;
 }) {
-  await exigirArea("auditoria");
+  const usuario = await exigirArea("auditoria");
   const parametros = await searchParams;
   const numeroDaPagina = Math.max(1, Number(parametros.pagina) || 1);
 
@@ -176,7 +187,10 @@ export default async function PaginaAuditoria({
           {registros.map((registro) => {
             const resumo = lerResumo(registro.summary);
             const rota = ROTA_DA_ENTIDADE[registro.entity];
-            const href = rota && registro.entityId ? rota(registro.entityId) : null;
+            const href =
+              rota && registro.entityId && podeVer(usuario, rota.area)
+                ? rota.href(registro.entityId)
+                : null;
 
             return (
               <li

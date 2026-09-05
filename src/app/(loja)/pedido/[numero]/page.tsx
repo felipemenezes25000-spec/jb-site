@@ -7,8 +7,10 @@ import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import type { OrderStatus } from "@prisma/client";
 import {
+  FlaskConical,
   ImageOff,
   Lock,
+  Mail,
   MapPin,
   MessageCircle,
   Package,
@@ -299,7 +301,7 @@ function metodosDeRetentativa(simulado: boolean) {
     // checkout — esta página nunca pede dado de cartão. Na simulação não há
     // tokenização, então reabrir por cartão é honesto.
     if (simulado && disponiveis.includes("cartao")) {
-      lista.push({ valor: "cartao", rotulo: "Cartão (simulação)" });
+      lista.push({ valor: "cartao", rotulo: "Cartão (demonstração)" });
     }
     return lista;
   } catch (erro) {
@@ -365,26 +367,28 @@ export default async function PedidoPage({ params }: Props) {
       <div className="container-jb py-8 lg:py-12">
         {trilha}
         <div className="mx-auto max-w-xl">
-          <h1 className="text-display leading-tight">Acompanhar pedido</h1>
-          <p className="mt-3 text-base leading-relaxed text-graf-600">
-            Para proteger seus dados, confirmamos o e-mail usado na compra antes de mostrar o
-            pedido.
+          <h1 className="text-display texto-forte">Acompanhar pedido</h1>
+          <p className="texto-guia mt-3 text-graf-600">
+            Antes de abrir o pedido, confirmamos o e-mail usado na compra. É o mesmo cuidado que a
+            JB toma no telefone: só falamos do pedido com quem comprou.
           </p>
 
-          <Cartao className="mt-7 p-5 sm:p-6">
+          <Cartao className="mt-8 p-5 sm:p-7">
             <ConfirmarEmailPedido numero={numero} acao={conferirEmailDoPedido} />
           </Cartao>
 
-          <p className="mt-5 flex items-start gap-2 text-sm leading-relaxed text-graf-500">
-            <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-            Tem conta na JB?{" "}
-            <Link
-              href={`/entrar?voltar=${encodeURIComponent(`/pedido/${numero}`)}`}
-              className="font-semibold text-jb-700 underline"
-            >
-              Entre na sua conta
-            </Link>{" "}
-            e veja todos os seus pedidos sem precisar conferir nada.
+          <p className="mt-6 flex flex-wrap items-start gap-x-1.5 gap-y-1 text-sm leading-relaxed text-graf-600">
+            <Lock className="mt-1 size-4 shrink-0 text-graf-400" aria-hidden />
+            <span>
+              Tem conta na JB?{" "}
+              <Link
+                href={`/entrar?voltar=${encodeURIComponent(`/pedido/${numero}`)}`}
+                className="font-semibold text-jb-700 underline decoration-jb-300 underline-offset-2 transition-colors hover:text-jb-800"
+              >
+                Entre na sua conta
+              </Link>{" "}
+              e veja todos os seus pedidos sem precisar conferir nada.
+            </span>
           </p>
         </div>
       </div>
@@ -422,39 +426,67 @@ export default async function PedidoPage({ params }: Props) {
     <div className="container-jb py-8 lg:py-12">
       {trilha}
 
-      <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
+      <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
         <div className="min-w-0">
-          <p className="label-mono uppercase text-graf-500">Pedido</p>
-          <h1 className="text-display leading-tight">{pedido.number}</h1>
-          <p className="mt-1 text-sm text-graf-500">
-            Feito em {formatarDataHora(pedido.placedAt)}
+          <p className="sobretitulo">Pedido</p>
+          <h1 className="text-display texto-forte mt-2">{pedido.number}</h1>
+          <p className="mt-2 text-sm text-graf-500">
+            Recebido em {formatarDataHora(pedido.placedAt)}
           </p>
         </div>
-        <Etiqueta tom={TOM_DO_STATUS[pedido.status]} ponto className="mt-2">
+        <Etiqueta tom={TOM_DO_STATUS[pedido.status]} ponto className="mt-2 px-3 py-1.5 text-sm">
           {ROTULO_STATUS[pedido.status]}
         </Etiqueta>
-      </div>
+      </header>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-10">
+      <p className="texto-guia mt-5 max-w-2xl text-graf-600">
+        {encerrado
+          ? "Este pedido foi encerrado e não aceita novo pagamento. Se quiser retomar a compra, a JB resolve com você pelo telefone ou WhatsApp."
+          : pago
+            ? "Recebemos o seu pagamento. Daqui em diante a JB cuida do equipamento e você acompanha cada etapa por esta página."
+            : "Seu pedido está registrado e reservado. Falta concluir o pagamento — é o que libera a separação do equipamento."}
+      </p>
+
+      {/* o provedor de teste precisa ficar evidente na tela do pedido também:
+          é aqui que alguém olharia para decidir se "pago" quer dizer pago */}
+      {simulado ? (
+        <div className="mt-6 flex items-start gap-3 rounded-xl border border-dashed border-warn-500/50 bg-warn-50 px-4 py-3.5">
+          <FlaskConical className="mt-0.5 size-5 shrink-0 text-warn-700" aria-hidden />
+          <div className="min-w-0 text-sm leading-relaxed text-graf-700">
+            <p className="font-bold text-warn-700">Ambiente de demonstração</p>
+            <p className="mt-1">
+              Este pedido é de demonstração: nenhum valor foi cobrado e nenhum equipamento será
+              despachado. A tela mostra exatamente o que uma compra real mostraria.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-10">
         <div className="min-w-0 space-y-8">
           {/* ------------------------------------------------- pagamento */}
-          <Cartao className="p-5 sm:p-6">
-            <h2 className="text-base font-bold text-graf-950">Pagamento</h2>
+          <Cartao className="p-5 sm:p-7">
+            <h2 className="text-lg font-bold text-graf-950">Pagamento</h2>
 
-            <div className="mt-4">
+            <div className="mt-5">
               {pago ? (
-                <Aviso tom="sucesso" titulo="Pagamento confirmado">
-                  Recebemos a confirmação em {formatarDataHora(pedido.paidAt)}. A JB já está
-                  preparando seu equipamento e avisa a cada mudança de etapa.
+                <Aviso
+                  tom="sucesso"
+                  titulo={simulado ? "Pagamento confirmado (demonstração)" : "Pagamento confirmado"}
+                >
+                  {simulado
+                    ? `A confirmação foi registrada em ${formatarDataHora(pedido.paidAt)} pela demonstração — nenhum valor foi cobrado. Numa compra real, é a partir daqui que a JB começa a preparar o equipamento.`
+                    : `Recebemos a confirmação em ${formatarDataHora(pedido.paidAt)}. A JB já está preparando seu equipamento e avisa a cada mudança de etapa.`}
                 </Aviso>
               ) : encerrado ? (
                 <Aviso tom="atencao" titulo={ROTULO_STATUS[pedido.status]}>
                   Este pedido foi encerrado e não aceita novo pagamento. Se precisar retomar a
-                  compra, fale com a JB.
+                  compra, fale com a JB — o histórico continua aqui.
                 </Aviso>
               ) : !pagamento ? (
-                <Aviso tom="atencao" titulo="Nenhuma cobrança aberta">
-                  Este pedido ainda não tem cobrança. Gere uma abaixo para concluir.
+                <Aviso tom="atencao" titulo="Falta abrir a cobrança">
+                  Seu pedido está registrado, mas ainda não tem cobrança aberta. Gere uma abaixo
+                  para concluir.
                 </Aviso>
               ) : pagamento.method === "pix" && aguardandoProvedor ? (
                 <PagamentoPix
@@ -462,39 +494,41 @@ export default async function PedidoPage({ params }: Props) {
                   copiaECola={pagamento.pixCopyPaste}
                   expiraEm={pagamento.expiresAt ? pagamento.expiresAt.toISOString() : null}
                   valorCents={pagamento.amountCents}
+                  simulado={simulado}
                 />
               ) : pagamento.status === "em_analise" ? (
                 <Aviso tom="info" titulo="Pagamento em análise">
-                  O emissor está conferindo a transação. Costuma levar poucos minutos, e esta
-                  página avisa assim que houver resposta.
+                  O banco emissor está conferindo a transação. Costuma levar poucos minutos, e
+                  esta página avisa assim que houver resposta.
                 </Aviso>
               ) : pagamento.status === "recusado" ? (
                 <Aviso tom="erro" titulo="Pagamento recusado">
                   {pagamento.failReason ||
-                    "O emissor recusou a transação. Nada foi cobrado — dá para tentar de novo."}
+                    "O banco emissor recusou a transação. Nada foi cobrado — você pode tentar de novo abaixo."}
                 </Aviso>
               ) : expirou || pagamento.status === "expirado" ? (
                 <Aviso tom="atencao" titulo="A cobrança expirou">
                   O prazo do código terminou e nada foi cobrado. Gere uma nova cobrança para
-                  concluir o pedido.
+                  concluir o pedido — os itens continuam reservados.
                 </Aviso>
               ) : pagamento.status === "estornado" ? (
                 <Aviso tom="atencao" titulo="Pagamento estornado">
-                  O valor foi devolvido pelo provedor.
+                  O valor foi devolvido. Se tiver dúvida sobre o prazo de retorno no seu banco,
+                  fale com a JB citando o número do pedido.
                 </Aviso>
               ) : (
-                <Aviso tom="info" titulo="Aguardando o provedor">
-                  A cobrança foi aberta e ainda não teve resposta. Esta página se atualiza
-                  sozinha.
+                <Aviso tom="info" titulo="Aguardando a confirmação do pagamento">
+                  A cobrança foi aberta e ainda não houve resposta. Esta página se atualiza
+                  sozinha assim que ela chegar.
                 </Aviso>
               )}
             </div>
 
             {pagamento ? (
-              <dl className="mt-5 grid gap-x-8 gap-y-2 border-t border-graf-200 pt-4 text-sm sm:grid-cols-2">
+              <dl className="mt-6 grid gap-x-8 gap-y-3 border-t border-graf-200 pt-5 text-sm sm:grid-cols-2">
                 <div className="flex justify-between gap-4 sm:block">
-                  <dt className="text-graf-500">Forma</dt>
-                  <dd className="font-semibold text-graf-900">
+                  <dt className="text-graf-500">Forma de pagamento</dt>
+                  <dd className="font-semibold text-graf-900 sm:mt-1">
                     {pagamento.method === "pix"
                       ? "Pix"
                       : pagamento.method === "cartao"
@@ -508,7 +542,7 @@ export default async function PedidoPage({ params }: Props) {
                 </div>
                 <div className="flex justify-between gap-4 sm:block">
                   <dt className="text-graf-500">Valor da cobrança</dt>
-                  <dd className="font-semibold tabular text-graf-900">
+                  <dd className="font-semibold tabular text-graf-900 sm:mt-1">
                     {formatarPreco(pagamento.amountCents)}
                   </dd>
                 </div>
@@ -534,18 +568,21 @@ export default async function PedidoPage({ params }: Props) {
           </Cartao>
 
           {/* --------------------------------------------- linha do tempo */}
-          <Cartao className="p-5 sm:p-6">
-            <h2 className="text-base font-bold text-graf-950">Andamento</h2>
-            <div className="mt-5">
+          <Cartao className="p-5 sm:p-7">
+            <h2 className="text-lg font-bold text-graf-950">Andamento do pedido</h2>
+            <p className="mt-1.5 text-sm leading-relaxed text-graf-600">
+              A JB atualiza esta linha a cada etapa concluída.
+            </p>
+            <div className="mt-6">
               <LinhaDoTempo passos={passos} />
             </div>
           </Cartao>
 
           {/* ----------------------------------------------------- itens */}
-          <Cartao className="p-5 sm:p-6">
-            <h2 className="text-base font-bold text-graf-950">Itens do pedido</h2>
+          <Cartao className="p-5 sm:p-7">
+            <h2 className="text-lg font-bold text-graf-950">Itens do pedido</h2>
 
-            <ul className="mt-4 divide-y divide-graf-200">
+            <ul className="mt-5 divide-y divide-graf-200">
               {pedido.items.map((item) => (
                 <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                   <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-graf-200 bg-graf-50 sm:size-20">
@@ -558,7 +595,7 @@ export default async function PedidoPage({ params }: Props) {
                         className="object-contain p-1.5"
                       />
                     ) : (
-                      <span className="flex size-full items-center justify-center text-graf-300">
+                      <span className="flex size-full items-center justify-center text-graf-400">
                         <ImageOff className="size-5" aria-hidden />
                       </span>
                     )}
@@ -599,7 +636,7 @@ export default async function PedidoPage({ params }: Props) {
               ))}
             </ul>
 
-            <dl className="mt-5 space-y-2.5 border-t border-graf-200 pt-4 text-sm">
+            <dl className="mt-6 space-y-3 border-t border-graf-200 pt-5 text-sm">
               <div className="flex justify-between gap-4">
                 <dt className="text-graf-600">Subtotal</dt>
                 <dd className="font-semibold tabular text-graf-900">
@@ -619,28 +656,32 @@ export default async function PedidoPage({ params }: Props) {
                   </dd>
                 </div>
               ) : null}
-              <div className="flex justify-between gap-4">
+              <div className="flex items-start justify-between gap-4">
                 <dt className="text-graf-600">Frete</dt>
-                <dd className="text-right text-graf-700">
-                  {pedido.shippingCents > 0
-                    ? formatarPreco(pedido.shippingCents)
-                    : (pedido.shippingLabel ?? "A combinar")}
+                <dd className="max-w-52 text-right leading-snug text-graf-700">
+                  {pedido.shippingCents > 0 ? (
+                    <span className="font-semibold tabular text-graf-900">
+                      {formatarPreco(pedido.shippingCents)}
+                    </span>
+                  ) : (
+                    pedido.shippingLabel || "A combinar com a JB"
+                  )}
                 </dd>
               </div>
-              <div className="flex items-baseline justify-between gap-4 border-t border-graf-200 pt-3">
-                <dt className="text-sm font-bold text-graf-900">Total</dt>
-                <dd className="text-xl font-extrabold tabular text-graf-950">
+              <div className="flex items-baseline justify-between gap-4 border-t border-graf-200 pt-4">
+                <dt className="text-base font-bold text-graf-900">Total</dt>
+                <dd className="text-2xl font-extrabold tabular tracking-tight text-graf-950">
                   {formatarPreco(pedido.totalCents)}
                 </dd>
               </div>
             </dl>
 
             {pedido.customerNote ? (
-              <div className="mt-5 rounded-lg bg-graf-50 p-3.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-graf-500">
+              <div className="mt-6 rounded-lg border border-graf-200 bg-graf-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-graf-500">
                   Sua observação
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-graf-700">
+                <p className="mt-1.5 text-sm leading-relaxed text-graf-700">
                   {pedido.customerNote}
                 </p>
               </div>
@@ -649,18 +690,18 @@ export default async function PedidoPage({ params }: Props) {
         </div>
 
         {/* --------------------------------------------------------- lado */}
-        <div className="min-w-0 space-y-6 lg:sticky lg:top-28">
-          <Cartao className="p-5">
+        <div className="min-w-0 space-y-5 lg:sticky lg:top-28">
+          <Cartao className="p-5 sm:p-6">
             <h2 className="flex items-center gap-2 text-base font-bold text-graf-950">
               {pedido.shippingKind === "retirada" ? (
-                <Store className="size-4 text-graf-500" aria-hidden />
+                <Store className="size-[18px] text-graf-500" aria-hidden />
               ) : (
-                <MapPin className="size-4 text-graf-500" aria-hidden />
+                <MapPin className="size-[18px] text-graf-500" aria-hidden />
               )}
-              {pedido.shippingKind === "retirada" ? "Retirada" : "Entrega"}
+              {pedido.shippingKind === "retirada" ? "Retirada na JB" : "Endereço de entrega"}
             </h2>
 
-            <div className="mt-3 text-sm leading-relaxed text-graf-700">
+            <div className="mt-3.5 text-sm leading-relaxed text-graf-700">
               {pedido.shippingKind === "retirada" ? (
                 <>
                   <p className="font-semibold text-graf-900">{s.empresa_nome}</p>
@@ -696,20 +737,25 @@ export default async function PedidoPage({ params }: Props) {
             </div>
           </Cartao>
 
-          <Cartao className="p-5">
+          <Cartao className="p-5 sm:p-6">
             <h2 className="text-base font-bold text-graf-950">Comprador</h2>
-            <div className="mt-3 text-sm leading-relaxed text-graf-700">
+            <div className="mt-3.5 text-sm leading-relaxed text-graf-700">
               <p className="font-semibold text-graf-900">{pedido.buyerName}</p>
               {pedido.companyName ? <p>{pedido.companyName}</p> : null}
-              <p className="mt-1 text-graf-500">{pedido.buyerEmail}</p>
-              {pedido.buyerPhone ? <p className="text-graf-500">{pedido.buyerPhone}</p> : null}
+              <p className="mt-1.5 break-words text-graf-600">{pedido.buyerEmail}</p>
+              {pedido.buyerPhone ? <p className="text-graf-600">{pedido.buyerPhone}</p> : null}
             </div>
+            <p className="mt-4 flex items-start gap-2 border-t border-graf-200 pt-4 text-xs leading-relaxed text-graf-500">
+              <Mail className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+              A confirmação e os avisos deste pedido vão para este e-mail.
+            </p>
           </Cartao>
 
-          <Cartao className="p-5">
+          <Cartao className="p-5 sm:p-6">
             <h2 className="text-base font-bold text-graf-950">Precisa de ajuda?</h2>
             <p className="mt-2 text-sm leading-relaxed text-graf-600">
-              Fale com a JB citando o número {pedido.number}.
+              Fale com a equipe da JB citando o número {pedido.number} — quem atende já abre o
+              pedido na tela.
             </p>
             <div className="mt-4 space-y-2.5">
               {whatsapp ? (
@@ -735,6 +781,11 @@ export default async function PedidoPage({ params }: Props) {
                 Continuar comprando
               </LinkBotao>
             </div>
+            {s.horario ? (
+              <p className="mt-4 text-center text-xs leading-relaxed text-graf-500">
+                {s.horario}
+              </p>
+            ) : null}
           </Cartao>
         </div>
       </div>

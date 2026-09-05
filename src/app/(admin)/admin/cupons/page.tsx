@@ -71,8 +71,8 @@ export default async function CupomPage() {
 
       {!podeEditar(usuario, "cupons") ? (
         <Aviso tom="info" titulo="Somente leitura">
-          Seu papel abre esta área para consulta. Criar e editar cupons é permissão de gestor ou
-          administrador.
+          Seu papel abre esta área para consulta. Para criar, editar ou desativar um cupom, peça
+          o acesso a um administrador.
         </Aviso>
       ) : null}
 

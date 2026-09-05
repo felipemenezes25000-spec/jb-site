@@ -16,6 +16,11 @@ import { prisma } from "@/lib/prisma";
  * São duas camadas de propósito: o layout impede o acesso, o filtro impede a
  * troca de id.
  *
+ * A identidade da conta e o botão de sair moram dentro da navegação, não numa
+ * faixa acima do conteúdo: a área é uma ferramenta de trabalho da clínica, e a
+ * primeira coisa da tela precisa ser o que está acontecendo, não o cabeçalho da
+ * conta.
+ *
  * Os contadores do menu saem de uma leva só de `count` em paralelo. Eles
  * mostram pendência — o que ainda espera alguém —, nunca o total: "12" em
  * Pedidos seria informação inútil para quem só quer saber o que falta.
@@ -59,34 +64,25 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
     "/minha-jb/equipamentos": equipamentos,
   };
 
-  const primeiroNome = cliente.name.trim().split(/\s+/)[0] || "cliente";
-
   return (
-    <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-graf-200 pb-5">
-        <div className="min-w-0">
-          <p className="label-mono text-xs text-jb-600">Minha JB</p>
-          <p className="mt-0.5 truncate text-base font-bold text-graf-950">
-            Olá, {primeiroNome}
-          </p>
-          <p className="truncate text-sm text-graf-500">{cliente.email}</p>
-        </div>
-
-        <form action={sairCliente}>
-          <button
-            type="submit"
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-graf-300 bg-white px-4 text-sm font-semibold text-graf-700 transition-colors hover:border-graf-400 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-          >
-            <LogOut className="size-4" aria-hidden />
-            Sair da conta
-          </button>
-        </form>
-      </div>
-
-      <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
-        <MenuLateral contadores={contadores} className="mb-7 lg:mb-0" />
-        <div className="min-w-0">{children}</div>
-      </div>
+    <div className="lg:grid lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+      <MenuLateral
+        contadores={contadores}
+        identidade={{ nome: cliente.name, email: cliente.email }}
+        className="mb-6 lg:mb-0"
+        sair={
+          <form action={sairCliente}>
+            <button
+              type="submit"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-graf-300 bg-white px-4 text-sm font-semibold text-graf-700 transition-colors hover:border-graf-400 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            >
+              <LogOut className="size-4" aria-hidden />
+              Sair da conta
+            </button>
+          </form>
+        }
+      />
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { Esqueleto } from "@/components/ui/data";
 
 /**
- * Esqueletos das telas da Minha JB.
+ * Esqueletos das telas da Área da Clínica.
  *
  * Cada `loading.tsx` monta o desenho da própria página com estas peças, para
  * que o salto entre o carregando e o conteúdo seja pequeno. Todos são
@@ -63,12 +63,13 @@ export function EsqueletoCartoes({ quantidade = 6 }: { quantidade?: number }) {
 }
 
 /** Detalhe em duas colunas: pedido, chamado, orçamento, prontuário. */
-export function EsqueletoDetalhe() {
+export function EsqueletoDetalhe({ destaques = false }: { destaques?: boolean }) {
   return (
     <div>
       <Aviso />
       <TopoFalso />
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
+      {destaques ? <Esqueleto className="mb-6 h-24 w-full rounded-xl" /> : null}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
         <div className="space-y-4">
           <Esqueleto className="h-64 w-full" />
           <Esqueleto className="h-48 w-full" />
@@ -101,13 +102,18 @@ export function EsqueletoFormulario({ campos = 6 }: { campos?: number }) {
   );
 }
 
-/** Visão geral: painel com vários blocos. */
+/** Visão geral: faixa de números, compromisso e blocos. */
 export function EsqueletoPainel() {
   return (
     <div>
       <Aviso />
       <TopoFalso />
-      <Esqueleto className="mb-6 h-28 w-full" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, indice) => (
+          <Esqueleto key={indice} className="h-40 w-full rounded-xl" />
+        ))}
+      </div>
+      <Esqueleto className="my-6 h-28 w-full rounded-xl" />
       <div className="grid gap-5 lg:grid-cols-2">
         <Esqueleto className="h-64 w-full" />
         <Esqueleto className="h-64 w-full" />

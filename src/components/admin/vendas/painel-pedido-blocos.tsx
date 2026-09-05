@@ -440,7 +440,7 @@ function BlocoInstalacao({
             type="datetime-local"
             required
             aria-invalid={estado.campo === "quando" ? true : undefined}
-            className="h-11 w-full rounded-lg border border-graf-300 bg-white px-3.5 text-graf-900 shadow-xs transition-colors hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+            className="h-11 w-full rounded-lg border border-graf-450 bg-white px-3.5 text-graf-900 shadow-xs transition-colors hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
           />
           {estado.campo === "quando" && estado.erro ? (
             <p className="mt-1.5 text-sm text-jb-700">{estado.erro}</p>

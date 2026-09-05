@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
-import { Vitrine, type ParametrosVitrine } from "@/components/loja/vitrine";
+import {
+  Vitrine,
+  atalhosDeCondicao,
+  type ParametrosVitrine,
+} from "@/components/loja/vitrine";
 
 export const metadata: Metadata = {
   title: "Equipamentos usados",
@@ -13,6 +17,8 @@ export default async function Pagina({
 }: {
   searchParams: Promise<ParametrosVitrine>;
 }) {
+  const [parametros, atalhos] = await Promise.all([searchParams, atalhosDeCondicao("usado")]);
+
   return (
     <Vitrine
       titulo="Equipamentos usados"
@@ -22,8 +28,11 @@ export default async function Pagina({
         { rotulo: "Equipamentos", href: "/loja" },
         { rotulo: "Equipamentos usados" },
       ]}
-      parametros={await searchParams}
+      caminho="/usados"
+      parametros={parametros}
       filtrosFixos={{ condicao: "usado" }}
+      atalhos={atalhos}
+      rotuloAtalhos="Outras condições"
       travarCondicao
     />
   );

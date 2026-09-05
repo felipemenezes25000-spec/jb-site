@@ -110,7 +110,7 @@ export default async function PaginaConteudo() {
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-600">
                     <Icone className="size-5" aria-hidden />
                   </span>
-                  <ChevronRight className="mt-2 size-4 text-graf-300" aria-hidden />
+                  <ChevronRight className="mt-2 size-4 text-graf-400" aria-hidden />
                 </span>
 
                 <span className="mt-4 block text-base font-bold text-graf-950">{area.titulo}</span>

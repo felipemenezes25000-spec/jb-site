@@ -34,7 +34,9 @@ function BotaoSair() {
       type="submit"
       disabled={pending}
       className={cn(
-        "inline-flex h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-graf-700 transition-colors",
+        // `min-w-11`: abaixo de sm só o ícone aparece e o botão ficava com
+        // 40px de largura, 4px abaixo do alvo mínimo de toque
+        "inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-graf-700 transition-colors",
         "hover:bg-graf-100 hover:text-jb-700",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
         "disabled:cursor-not-allowed disabled:opacity-60",
@@ -151,9 +153,10 @@ export function CabecalhoAdmin({
             onChange={(evento) => setTermo(evento.target.value)}
             placeholder="Buscar pedido, cliente, produto, OS…"
             className={cn(
-              "h-10 w-full rounded-lg border border-graf-300 bg-graf-50 pl-9 pr-12 text-sm text-graf-900",
+              /* 44px: a busca é o primeiro controle do painel no celular. */
+              "h-11 w-full rounded-lg border border-graf-450 bg-graf-50 pl-9 pr-12 text-sm text-graf-900",
               "placeholder:text-graf-500",
-              "hover:border-graf-400 focus:border-jb-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/15",
+              "hover:border-graf-500 focus:border-jb-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/15",
             )}
           />
           <kbd

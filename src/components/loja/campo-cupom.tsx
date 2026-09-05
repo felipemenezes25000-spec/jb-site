@@ -10,20 +10,19 @@ import { cn } from "@/lib/utils";
 /**
  * Campo de cupom do carrinho.
  *
- * A ação `aplicarCupom` já existia e funcionava, o resumo já sabia mostrar o
- * desconto e o erro — só não havia por onde digitar o código. Sem este campo,
- * todo cupom cadastrado no painel era inalcançável.
- *
- * Enviar o campo vazio remove o cupom, que é o mesmo contrato da ação.
+ * Enviar o campo vazio remove o cupom, que é o mesmo contrato da ação — por
+ * isso a versão "aplicado" é um formulário com o código em branco, e não um
+ * botão que chama outra coisa.
  */
 export function CampoCupom({ aplicado }: { aplicado: string }) {
   const [estado, acao, enviando] = useActionState(aplicarCupom, {});
 
   if (aplicado) {
     return (
-      <form action={acao} className="mt-4 border-t border-graf-200 pt-4">
+      <form action={acao} className="mt-5 border-t border-graf-200 pt-5">
         <input type="hidden" name="codigo" value="" />
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-ok-50 px-3 py-2.5">
+        <p className="text-sm font-semibold text-graf-800">Cupom aplicado</p>
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg bg-ok-50 px-3.5 py-2.5 ring-1 ring-inset ring-ok-500/20">
           <span className="flex min-w-0 items-center gap-2 text-sm text-ok-700">
             <Tag className="size-4 shrink-0" aria-hidden />
             <span className="label-mono truncate font-semibold">{aplicado}</span>
@@ -32,9 +31,11 @@ export function CampoCupom({ aplicado }: { aplicado: string }) {
             type="submit"
             disabled={enviando}
             className={cn(
-              "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-ok-700",
+              "relative inline-flex size-8 shrink-0 items-center justify-center rounded-md text-ok-700",
               "transition-colors hover:bg-ok-100 disabled:opacity-50",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+              // alvo de toque de 44px sem engordar a linha
+              "after:absolute after:-inset-1.5 after:content-['']",
             )}
             aria-label={`Remover o cupom ${aplicado}`}
           >
@@ -46,11 +47,11 @@ export function CampoCupom({ aplicado }: { aplicado: string }) {
   }
 
   return (
-    <form action={acao} className="mt-4 border-t border-graf-200 pt-4">
+    <form action={acao} className="mt-5 border-t border-graf-200 pt-5">
       <label htmlFor="codigo-cupom" className="block text-sm font-semibold text-graf-800">
-        Cupom de desconto
+        Tem um cupom?
       </label>
-      <div className="mt-1.5 flex gap-2">
+      <div className="mt-2 flex gap-2">
         <input
           id="codigo-cupom"
           name="codigo"
@@ -63,12 +64,14 @@ export function CampoCupom({ aplicado }: { aplicado: string }) {
           aria-invalid={estado.erro ? true : undefined}
           aria-describedby={estado.erro || estado.ok ? "retorno-cupom" : undefined}
           className={cn(
-            "h-11 min-w-0 flex-1 rounded-lg border bg-white px-3 text-sm uppercase text-graf-900",
-            "shadow-xs transition-colors placeholder:normal-case placeholder:text-graf-500",
+            // 16px no celular: abaixo disso o iOS dá zoom ao focar
+            "h-11 min-w-0 flex-1 rounded-lg border bg-white px-3.5 text-base uppercase text-graf-900 sm:text-[0.9375rem]",
+            "shadow-xs transition-[border-color,box-shadow] duration-150",
+            "placeholder:normal-case placeholder:text-graf-500",
             "focus:outline-none focus:ring-4",
             estado.erro
-              ? "border-jb-500 focus:border-jb-600 focus:ring-jb-500/20"
-              : "border-graf-300 hover:border-graf-400 focus:border-jb-500 focus:ring-jb-500/15",
+              ? "border-jb-500 focus:border-jb-600 focus:ring-jb-500/25"
+              : "border-graf-450 hover:border-graf-500 focus:border-jb-500 focus:ring-jb-500/20",
           )}
         />
         <Botao type="submit" variante="secundario" carregando={enviando}>
@@ -82,7 +85,8 @@ export function CampoCupom({ aplicado }: { aplicado: string }) {
         role="status"
         aria-live="polite"
         className={cn(
-          "mt-1.5 text-xs leading-relaxed",
+          "text-xs leading-relaxed",
+          estado.erro || estado.ok ? "mt-2" : "",
           estado.erro ? "text-jb-700" : "text-ok-700",
         )}
       >

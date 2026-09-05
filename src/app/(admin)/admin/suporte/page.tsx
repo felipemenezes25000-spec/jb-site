@@ -16,7 +16,7 @@ import { Esqueleto, Etiqueta } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
 import { Tabela, type Coluna } from "@/components/ui/tabela";
 import { distanciaEmDias, formatarDataHora, plural } from "@/lib/format";
-import { exigirArea } from "@/lib/permissoes";
+import { exigirArea, podeVer } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -49,7 +49,8 @@ export default async function PaginaSuporte({
     pagina?: string;
   }>;
 }) {
-  await exigirArea("suporte");
+  const usuario = await exigirArea("suporte");
+  const verLeads = podeVer(usuario, "leads");
   const parametros = await searchParams;
   const numeroDaPagina = Math.max(1, Number(parametros.pagina) || 1);
 
@@ -171,10 +172,14 @@ export default async function PaginaSuporte({
           )
         }
         acoes={
-          <LinkBotao href="/admin/leads" variante="texto" tamanho="sm">
-            <Inbox className="size-4" aria-hidden />
-            Leads do site
-          </LinkBotao>
+          // Caminho de volta para a outra fila de relacionamento, escondido de
+          // quem não abre a área de leads.
+          verLeads ? (
+            <LinkBotao href="/admin/leads" variante="texto" tamanho="sm">
+              <Inbox className="size-4" aria-hidden />
+              Leads do site
+            </LinkBotao>
+          ) : undefined
         }
       />
 

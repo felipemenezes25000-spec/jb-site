@@ -107,7 +107,7 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
             {linha.imagem ? (
               <Image src={linha.imagem} alt="" fill sizes="56px" className="object-contain p-1" />
             ) : (
-              <span className="flex size-full items-center justify-center text-graf-300">
+              <span className="flex size-full items-center justify-center text-graf-400">
                 <ImageOff className="size-4" aria-hidden />
               </span>
             )}
@@ -152,7 +152,7 @@ function ValorDoFrete({ frete, carregando }: EstadoFrete) {
 
   if (!frete) {
     return (
-      <dd className="text-right text-xs leading-snug text-graf-500">
+      <dd className="max-w-44 text-right text-xs leading-snug text-graf-500">
         informe o CEP na etapa de entrega
       </dd>
     );
@@ -177,7 +177,7 @@ function ValorDoFrete({ frete, carregando }: EstadoFrete) {
             : "text-sm font-semibold tabular text-graf-900"
         }
       >
-        {frete.valorCents === 0 ? "Grátis" : formatarPreco(frete.valorCents)}
+        {frete.valorCents === 0 ? "Sem custo" : formatarPreco(frete.valorCents)}
       </span>
       {prazo ? <span className="block text-xs leading-snug text-graf-500">{prazo}</span> : null}
     </dd>
@@ -223,15 +223,15 @@ function Totais({
         </div>
       </dl>
 
-      <div className="mt-4 flex items-baseline justify-between border-t border-graf-200 pt-4">
-        <span className="text-sm font-bold text-graf-900">Total</span>
+      <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-graf-200 pt-4">
+        <span className="text-base font-bold text-graf-900">Total</span>
         <span className="text-2xl font-extrabold tracking-tight tabular text-graf-950">
           {formatarPreco(total)}
         </span>
       </div>
 
       {frete?.orcadoDepois ? (
-        <p className="mt-2 text-xs leading-relaxed text-graf-600">
+        <p className="mt-2.5 text-xs leading-relaxed text-graf-600">
           O frete não está neste total. A JB confere as dimensões do equipamento e o endereço, e
           combina o valor com você antes de despachar.
         </p>
@@ -255,19 +255,17 @@ export function ResumoCheckout({
   return (
     <>
       {/* ------------------------------------------------------- desktop */}
-      <Cartao className="hidden p-5 lg:sticky lg:top-28 lg:block">
-        <h2 className="text-base font-bold text-graf-950">
-          Resumo do pedido
-          <span className="ml-2 text-sm font-medium text-graf-500">
-            {plural(quantidade, "item", "itens")}
-          </span>
-        </h2>
+      <Cartao className="hidden p-5 sm:p-6 lg:sticky lg:top-28 lg:block">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="text-lg font-bold text-graf-950">Resumo do pedido</h2>
+          <p className="text-sm text-graf-500">{plural(quantidade, "unidade", "unidades")}</p>
+        </div>
 
-        <div className="mt-4 max-h-80 overflow-y-auto pr-1">
+        <div className="mt-5 max-h-80 overflow-y-auto pr-1">
           <Itens linhas={linhas} />
         </div>
 
-        <div className="mt-5 border-t border-graf-200 pt-4">
+        <div className="mt-5 border-t border-graf-200 pt-5">
           <Totais
             subtotalCents={subtotalCents}
             descontoCents={descontoCents}
@@ -278,21 +276,24 @@ export function ResumoCheckout({
 
         <Link
           href="/carrinho"
-          className="mt-4 block text-center text-sm font-semibold text-graf-600 transition-colors hover:text-jb-700"
+          className="mt-5 flex min-h-11 items-center justify-center rounded-lg text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
         >
-          Editar carrinho
+          Voltar e editar o carrinho
         </Link>
       </Cartao>
 
-      {/* -------------------------------------------------------- mobile */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 px-4 py-3 shadow-raised backdrop-blur lg:hidden">
-        <div className="flex items-center justify-between gap-4">
+      {/* --------------------------------------------------------- mobile
+          Barra fixa com o total sempre à vista e uma gaveta com o detalhe.
+          Em 360px, empurrar a lista de itens para cima do formulário só
+          afastaria a pessoa do que ela precisa preencher. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 shadow-raised backdrop-blur lg:hidden">
+        <div className="flex items-center justify-between gap-4 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="min-w-0">
             <p className="text-xs text-graf-500">
-              Total · {plural(quantidade, "item", "itens")}
+              Total · {plural(quantidade, "unidade", "unidades")}
               {frete?.orcadoDepois ? " · frete à parte" : null}
             </p>
-            <p className="text-lg font-extrabold tabular leading-tight text-graf-950">
+            <p className="text-xl font-extrabold tabular leading-tight text-graf-950">
               {formatarPreco(total)}
             </p>
           </div>
@@ -307,7 +308,7 @@ export function ResumoCheckout({
         aberto={gaveta}
         aoFechar={() => setGaveta(false)}
         titulo="Resumo do pedido"
-        descricao={`${plural(quantidade, "item", "itens")} no carrinho`}
+        descricao={`${plural(quantidade, "unidade", "unidades")} no carrinho`}
         tamanho="sm"
         rodape={
           <div className="flex w-full items-center justify-between gap-4">
@@ -324,7 +325,7 @@ export function ResumoCheckout({
         }
       >
         <Itens linhas={linhas} />
-        <div className="mt-5 border-t border-graf-200 pt-4">
+        <div className="mt-5 border-t border-graf-200 pt-5">
           <Totais
             subtotalCents={subtotalCents}
             descontoCents={descontoCents}

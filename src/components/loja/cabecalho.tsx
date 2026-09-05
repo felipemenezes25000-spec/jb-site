@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
+  ArrowRight,
   ChevronDown,
   Clock,
-  Heart,
   Menu,
+  MessageCircle,
   Phone,
   Search,
   ShoppingCart,
@@ -21,9 +22,12 @@ import { Logo } from "@/components/ui/logo";
 import { usarDialogo } from "@/components/ui/usar-dialogo";
 import { classesBotao } from "@/components/ui/button";
 import {
+  ATALHOS_CLIENTE,
   CONDICOES,
   MENU_ASSISTENCIA,
   MENU_PRINCIPAL,
+  rotaAtiva,
+  type ChaveMega,
   type ItemMenu,
 } from "@/lib/navegacao";
 import { telHref, whatsappHref } from "@/lib/format";
@@ -40,6 +44,22 @@ type Props = {
   horario: string;
 };
 
+const MENSAGEM_WHATSAPP = "Olá! Vim pelo site da JB.";
+
+/* ==========================================================================
+   Cabeçalho da loja
+
+   Três acessos disputam o topo e cada um tem um peso diferente:
+   catálogo (a navegação), busca (o atalho de quem já sabe o que quer) e a
+   área da clínica (o cliente que volta). O carrinho e o pedido de assistência
+   são as duas ações — uma comercial, uma técnica.
+
+   O mega menu é um disclosure de verdade: abre no mouse, mas também no
+   clique e no teclado, com `aria-expanded` no gatilho e Esc devolvendo o foco.
+   Link e gatilho são elementos separados de propósito — clicar no rótulo leva
+   ao catálogo, clicar na seta abre o painel.
+   ========================================================================== */
+
 export function Cabecalho({
   categorias,
   itensNoCarrinho,
@@ -50,11 +70,22 @@ export function Cabecalho({
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
+  const reduzido = useReducedMotion();
+
   const [compacto, setCompacto] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
   const [buscaAberta, setBuscaAberta] = useState(false);
-  const [mega, setMega] = useState<null | "catalogo" | "assistencia">(null);
+  const [mega, setMega] = useState<ChaveMega | null>(null);
+
   const fecharTimer = useRef<number | null>(null);
+  const refCabecalho = useRef<HTMLElement>(null);
+  const gatilhosMega = useRef<Partial<Record<ChaveMega, HTMLButtonElement | null>>>({});
+  const botaoBusca = useRef<HTMLButtonElement>(null);
+  const campoBuscaMobile = useRef<HTMLInputElement>(null);
+
+  // identidade estável: `usarDialogo` reage à função, e uma nova a cada
+  // render devolveria o foco ao topo da gaveta a cada rolagem da página
+  const fecharMenu = useCallback(() => setMenuAberto(false), []);
 
   useEffect(() => {
     const aoRolar = () => setCompacto(window.scrollY > 12);
@@ -63,6 +94,7 @@ export function Cabecalho({
     return () => window.removeEventListener("scroll", aoRolar);
   }, []);
 
+  // navegou: nada de painel aberto sobrando por cima da página nova
   useEffect(() => {
     setMenuAberto(false);
     setMega(null);
@@ -70,35 +102,51 @@ export function Cabecalho({
   }, [pathname]);
 
   useEffect(() => {
-    document.body.style.overflow = menuAberto ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [menuAberto]);
+    if (buscaAberta) campoBuscaMobile.current?.focus();
+  }, [buscaAberta]);
 
   useEffect(() => {
-    const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.key !== "Escape") return;
+      // a gaveta tem o próprio Esc, dentro de usarDialogo
+      if (menuAberto) return;
+
+      if (mega) {
+        const gatilho = gatilhosMega.current[mega];
         setMega(null);
-        setMenuAberto(false);
-        setBuscaAberta(false);
+        gatilho?.focus();
+        return;
       }
-    };
+      if (buscaAberta) {
+        setBuscaAberta(false);
+        botaoBusca.current?.focus();
+      }
+    }
     window.addEventListener("keydown", aoTeclar);
     return () => window.removeEventListener("keydown", aoTeclar);
-  }, []);
+  }, [mega, buscaAberta, menuAberto]);
 
-  // pequeno atraso ao sair evita o mega menu piscando ao atravessar o vão
+  /**
+   * Um respiro ao sair evita o painel piscando quando o ponteiro atravessa o
+   * vão entre o rótulo e o painel. Quem abriu pelo teclado não perde o menu
+   * por um passar de mouse: se o foco ainda está no cabeçalho, nada fecha.
+   */
   const agendarFechamento = () => {
     if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
-    fecharTimer.current = window.setTimeout(() => setMega(null), 160);
+    fecharTimer.current = window.setTimeout(() => {
+      if (refCabecalho.current?.contains(document.activeElement)) return;
+      setMega(null);
+    }, 160);
   };
   const cancelarFechamento = () => {
     if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
   };
 
-  const ativo = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  useEffect(() => () => {
+    if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
+  }, []);
+
+  const ativo = (href: string) => rotaAtiva(pathname, href);
 
   function buscar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -108,181 +156,249 @@ export function Cabecalho({
     setBuscaAberta(false);
   }
 
+  // o foco saiu do cabeçalho inteiro: fecha o painel que estava aberto
+  function aoPerderFoco(evento: React.FocusEvent<HTMLElement>) {
+    if (!evento.currentTarget.contains(evento.relatedTarget)) setMega(null);
+  }
+
+  // sessão e saudação são coisas diferentes: um cadastro com o nome em branco
+  // continua logado, só não tem por quem ser chamado
+  const temSessao = clienteNome !== null;
+  const primeiroNome = clienteNome?.trim().split(/\s+/)[0] ?? "";
+  const saudacao = primeiroNome ? `Olá, ${primeiroNome}` : "Área da clínica";
+
+  const temBarraUtilidade = Boolean(horario || telefone || whatsapp);
+  const rotuloCarrinho =
+    itensNoCarrinho === 0
+      ? "Carrinho — nenhum item"
+      : `Carrinho com ${itensNoCarrinho} ${itensNoCarrinho === 1 ? "item" : "itens"}`;
+
   return (
     <>
       <a
         href="#conteudo"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-graf-950 focus:px-4 focus:py-3 focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-graf-950 focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
       >
         Pular para o conteúdo
       </a>
 
-      {/* Barra de utilidade */}
-      <div className="hidden border-b border-graf-200 bg-graf-50 lg:block">
-        <div className="container-jb flex h-9 items-center justify-between text-xs text-graf-600">
-          <p className="flex items-center gap-1.5">
-            <Clock className="size-3.5 text-graf-500" aria-hidden />
-            {horario}
-          </p>
-          <div className="flex items-center gap-5">
-            {telefone ? (
-              <a href={telHref(telefone)} className="flex items-center gap-1.5 hover:text-jb-700">
-                <Phone className="size-3.5 text-graf-500" aria-hidden />
-                {telefone}
-              </a>
-            ) : null}
-            {whatsapp ? (
-              <a
-                href={whatsappHref(whatsapp, "Olá! Vim pelo site da JB.")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 font-semibold text-graf-700 hover:text-jb-700"
-              >
-                <span className="size-1.5 rounded-full bg-ok-500" aria-hidden />
-                WhatsApp {whatsapp}
-              </a>
-            ) : null}
+      {/* ---------------------------------------------- barra de utilidade */}
+      {temBarraUtilidade ? (
+        <div className="hidden border-b border-graf-200 bg-graf-50 lg:block">
+          <div className="container-jb flex h-10 items-center justify-between gap-6 text-xs">
+            {horario ? (
+              <p className="flex items-center gap-2 text-graf-600">
+                <Clock className="size-3.5 shrink-0 text-graf-400" aria-hidden />
+                {horario}
+              </p>
+            ) : (
+              <span />
+            )}
+            <div className="flex items-center gap-6">
+              {telefone ? (
+                <a
+                  href={telHref(telefone)}
+                  /* h-10 (a altura da barra): sem isso o alvo tem só a altura
+                     da linha, 16px, abaixo dos 24px que a WCAG 2.5.8 pede.
+                     Altura fixa e não h-full porque o pai flex não tem altura
+                     própria — a porcentagem cairia em `auto`. O desenho não
+                     muda: o link passa a ocupar a barra que já existia. */
+                  className="flex h-10 items-center gap-2 rounded-xs text-graf-600 transition-colors hover:text-jb-700"
+                >
+                  <Phone className="size-3.5 shrink-0 text-graf-400" aria-hidden />
+                  {telefone}
+                </a>
+              ) : null}
+              {whatsapp ? (
+                <a
+                  href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 items-center gap-2 rounded-xs font-semibold text-graf-700 transition-colors hover:text-jb-700"
+                >
+                  <span className="size-1.5 shrink-0 rounded-full bg-ok-500" aria-hidden />
+                  WhatsApp {whatsapp}
+                </a>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
+      {/* --------------------------------------------------------- cabeçalho */}
       <header
+        ref={refCabecalho}
+        onMouseLeave={agendarFechamento}
+        onBlur={aoPerderFoco}
         className={cn(
           "sticky top-0 z-50 border-b bg-white/95 backdrop-blur transition-shadow duration-200",
           compacto ? "border-graf-200 shadow-card" : "border-graf-200/70",
         )}
-        onMouseLeave={agendarFechamento}
       >
         <div className="container-jb">
           <div
             className={cn(
-              "flex items-center gap-4 transition-[height] duration-200",
+              "flex items-center gap-3 transition-[height] duration-200 sm:gap-5",
               compacto ? "h-16" : "h-20",
             )}
           >
-            <Link href="/" aria-label="JB Soluções Odontológicas — início" className="shrink-0">
+            <Link
+              href="/"
+              aria-label="JB Soluções Odontológicas — início"
+              /* A logo mede 34–42px de altura; o link precisa de 44 para ser
+                 tocável no celular sem que a marca cresça junto. */
+              className="flex min-h-11 shrink-0 items-center rounded-sm"
+            >
               <Logo altura={compacto ? 34 : 42} prioridade />
             </Link>
 
-            {/* Busca — desktop */}
-            <form onSubmit={buscar} role="search" className="hidden min-w-0 flex-1 md:block">
-              <div className="relative mx-auto max-w-xl">
-                <Search
-                  className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-500"
-                  aria-hidden
-                />
-                <input
-                  type="search"
-                  name="q"
-                  placeholder="Busque equipamento, marca, modelo ou peça"
-                  aria-label="Buscar no catálogo"
-                  className="h-11 w-full rounded-lg border border-graf-300 bg-graf-50 pl-10 pr-3 text-sm transition-colors placeholder:text-graf-500 hover:border-graf-400 focus:border-jb-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/15"
-                />
-              </div>
+            {/* Busca — a partir do tablet ela mora no topo, sempre visível */}
+            <form onSubmit={buscar} role="search" className="hidden min-w-0 flex-1 md:flex">
+              <CampoBusca id="busca-cabecalho" />
             </form>
 
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
               <button
+                ref={botaoBusca}
                 type="button"
                 onClick={() => setBuscaAberta((v) => !v)}
-                aria-label="Buscar"
                 aria-expanded={buscaAberta}
                 className="flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 md:hidden"
               >
-                <Search className="size-5" />
+                {buscaAberta ? (
+                  <X className="size-5" aria-hidden />
+                ) : (
+                  <Search className="size-5" aria-hidden />
+                )}
+                <span className="sr-only">{buscaAberta ? "Fechar a busca" : "Buscar"}</span>
               </button>
 
+              {/* Área da clínica — entrada de cliente, não link de rodapé */}
               <Link
-                href="/minha-jb/favoritos"
-                aria-label="Favoritos"
-                className="hidden size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 sm:flex"
+                href={temSessao ? "/minha-jb" : "/entrar"}
+                aria-label={
+                  temSessao
+                    ? "Área da Clínica — área da clínica"
+                    : "Entrar na Área da Clínica — área da clínica"
+                }
+                className={cn(
+                  "flex h-11 items-center gap-2.5 rounded-lg px-2 transition-colors hover:bg-graf-100",
+                  "lg:border lg:border-graf-300 lg:bg-white lg:px-3 lg:shadow-xs",
+                  "lg:hover:border-graf-400 lg:hover:bg-graf-50",
+                )}
               >
-                <Heart className="size-5" />
-              </Link>
-
-              <Link
-                href={clienteNome ? "/minha-jb" : "/entrar"}
-                className="flex h-11 items-center gap-2 rounded-lg px-2.5 text-graf-700 transition-colors hover:bg-graf-100"
-              >
-                <User className="size-5 shrink-0" aria-hidden />
-                <span className="hidden text-left leading-tight lg:block">
-                  <span className="block text-[0.6875rem] text-graf-500">
-                    {clienteNome ? "Olá," : "Entrar em"}
+                <span
+                  aria-hidden
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-graf-100 text-graf-700 lg:bg-jb-50 lg:text-jb-600"
+                >
+                  <User className="size-4" />
+                </span>
+                <span className="hidden max-w-36 text-left leading-tight lg:block">
+                  <span className="block truncate text-xs font-medium text-graf-500">
+                    {saudacao}
                   </span>
-                  <span className="block text-xs font-bold">
-                    {clienteNome ? clienteNome.split(" ")[0] : "Minha JB"}
-                  </span>
+                  <span className="block text-sm font-bold text-graf-900">Área da Clínica</span>
                 </span>
               </Link>
 
               <Link
                 href="/carrinho"
-                aria-label={`Carrinho com ${itensNoCarrinho} ${itensNoCarrinho === 1 ? "item" : "itens"}`}
+                aria-label={rotuloCarrinho}
                 className="relative flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100"
               >
-                <ShoppingCart className="size-5" />
+                <ShoppingCart className="size-5" aria-hidden />
                 {itensNoCarrinho > 0 ? (
-                  <span className="absolute right-1 top-1 flex min-w-4.5 items-center justify-center rounded-full bg-jb-500 px-1 text-[10px] font-bold leading-4.5 text-white">
-                    {itensNoCarrinho > 9 ? "9+" : itensNoCarrinho}
+                  <span
+                    aria-hidden
+                    className="tabular absolute right-0.5 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jb-500 px-1.5 text-[0.6875rem] font-bold leading-none text-white ring-2 ring-white"
+                  >
+                    {itensNoCarrinho > 99 ? "99+" : itensNoCarrinho}
                   </span>
                 ) : null}
               </Link>
 
               <Link
                 href="/assistencia-tecnica/solicitar"
-                className={classesBotao("primario", "sm", "ml-2 hidden xl:inline-flex")}
+                className={classesBotao("primario", "sm", "ml-1.5 hidden lg:inline-flex")}
               >
-                <Wrench className="size-4" aria-hidden />
+                <Wrench className="size-4 shrink-0" aria-hidden />
                 Solicitar assistência
               </Link>
 
               <button
                 type="button"
                 onClick={() => setMenuAberto(true)}
-                aria-label="Abrir menu"
+                aria-haspopup="dialog"
+                aria-expanded={menuAberto}
                 className="flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 lg:hidden"
               >
-                <Menu className="size-5" />
+                <Menu className="size-5" aria-hidden />
+                <span className="sr-only">Abrir o menu</span>
               </button>
             </div>
           </div>
 
-          {/* Navegação — desktop */}
+          {/* ------------------------------------------ navegação — desktop */}
           <nav aria-label="Principal" className="hidden lg:block">
-            <ul className="-mb-px flex items-center gap-1">
+            <ul className="-mb-px flex items-center gap-0.5">
               {MENU_PRINCIPAL.map((item) => {
-                const temMega = Boolean(item.megaMenu);
+                const chave = item.megaMenu;
+                const aberto = chave !== undefined && mega === chave;
                 const estaAtivo = ativo(item.href);
+
                 return (
                   <li
                     key={item.href}
                     onMouseEnter={() => {
                       cancelarFechamento();
-                      setMega(item.megaMenu ?? null);
+                      setMega(chave ?? null);
                     }}
                   >
-                    <Link
-                      href={item.href}
-                      aria-current={estaAtivo ? "page" : undefined}
-                      aria-expanded={temMega ? mega === item.megaMenu : undefined}
+                    <div
                       className={cn(
-                        "flex items-center gap-1 border-b-2 px-3 py-3 text-sm font-semibold transition-colors",
+                        "flex items-center border-b-2 transition-colors",
                         estaAtivo
-                          ? "border-jb-500 text-jb-700"
-                          : "border-transparent text-graf-700 hover:border-graf-300 hover:text-graf-950",
+                          ? "border-jb-500"
+                          : aberto
+                            ? "border-graf-400"
+                            : "border-transparent",
                       )}
                     >
-                      {item.rotulo}
-                      {temMega ? (
-                        <ChevronDown
-                          className={cn(
-                            "size-3.5 text-graf-500 transition-transform",
-                            mega === item.megaMenu && "rotate-180",
-                          )}
-                          aria-hidden
-                        />
+                      <Link
+                        href={item.href}
+                        aria-current={estaAtivo ? "page" : undefined}
+                        className={cn(
+                          "rounded-t-md px-3 py-3.5 text-sm font-semibold transition-colors",
+                          estaAtivo ? "text-jb-700" : "text-graf-700 hover:text-graf-950",
+                        )}
+                      >
+                        {item.rotulo}
+                      </Link>
+
+                      {chave ? (
+                        <button
+                          type="button"
+                          ref={(el) => {
+                            gatilhosMega.current[chave] = el;
+                          }}
+                          aria-expanded={aberto}
+                          aria-label={`${aberto ? "Fechar" : "Abrir"} o menu de ${item.rotulo}`}
+                          onFocus={cancelarFechamento}
+                          onClick={() => setMega(aberto ? null : chave)}
+                          /* 44x44: em 1024px quem navega já está no toque
+                             (tablet deitado), e 28px de largura era chute. */
+                          className="-ml-2 flex size-11 items-center justify-center rounded-t-md text-graf-500 transition-colors hover:text-graf-950"
+                        >
+                          <ChevronDown
+                            className={cn(
+                              "size-4 transition-transform duration-200",
+                              aberto && "rotate-180",
+                            )}
+                            aria-hidden
+                          />
+                        </button>
                       ) : null}
-                    </Link>
+                    </div>
                   </li>
                 );
               })}
@@ -290,22 +406,45 @@ export function Cabecalho({
           </nav>
         </div>
 
-        {/* Mega menu */}
+        {/* ------------------------------------------------- busca — celular */}
+        <AnimatePresence initial={false}>
+          {buscaAberta ? (
+            <motion.div
+              key="busca-celular"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: reduzido ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden border-t border-graf-200 bg-white md:hidden"
+            >
+              <form onSubmit={buscar} role="search" className="container-jb py-3">
+                <CampoBusca id="busca-celular" ref={campoBuscaMobile} />
+              </form>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        {/* ---------------------------------------------------- mega menu */}
         <AnimatePresence>
           {mega ? (
             <motion.div
-              initial={{ opacity: 0, y: -6 }}
+              key="mega"
+              initial={{ opacity: 0, y: reduzido ? 0 : -6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ opacity: 0, y: reduzido ? 0 : -6 }}
+              transition={{ duration: reduzido ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
               onMouseEnter={cancelarFechamento}
-              className="absolute inset-x-0 top-full hidden border-b border-graf-200 bg-white shadow-pop lg:block"
+              /* O cabeçalho é `sticky`, então este painel fica colado abaixo
+                 dele e não acompanha a rolagem da página: sem teto de altura,
+                 num notebook de 1024x600 as duas últimas linhas de categoria
+                 ficavam fora da tela e inalcançáveis. */
+              className="absolute inset-x-0 top-full hidden max-h-[70dvh] overflow-y-auto overscroll-contain border-b border-graf-200 bg-white shadow-pop lg:block"
             >
-              <div className="container-jb py-8">
+              <div className="container-jb py-9">
                 {mega === "catalogo" ? (
                   <MegaCatalogo categorias={categorias} />
                 ) : (
-                  <MegaAssistencia />
+                  <MegaAssistencia telefone={telefone} whatsapp={whatsapp} horario={horario} />
                 )}
               </div>
             </motion.div>
@@ -313,72 +452,109 @@ export function Cabecalho({
         </AnimatePresence>
       </header>
 
-      {/* Busca — mobile */}
-      <AnimatePresence>
-        {buscaAberta ? (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-b border-graf-200 bg-white md:hidden"
-          >
-            <form onSubmit={buscar} role="search" className="container-jb py-3">
-              <div className="relative">
-                <Search
-                  className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-500"
-                  aria-hidden
-                />
-                <input
-                  autoFocus
-                  type="search"
-                  name="q"
-                  placeholder="Buscar equipamento ou peça"
-                  aria-label="Buscar no catálogo"
-                  className="h-11 w-full rounded-lg border border-graf-300 bg-graf-50 pl-10 pr-3 text-sm focus:border-jb-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/15"
-                />
-              </div>
-            </form>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
-      {/* Menu mobile */}
       <MenuMobile
         aberto={menuAberto}
-        aoFechar={() => setMenuAberto(false)}
+        aoFechar={fecharMenu}
         categorias={categorias}
-        clienteNome={clienteNome}
+        temSessao={temSessao}
+        primeiroNome={primeiroNome}
+        telefone={telefone}
         whatsapp={whatsapp}
+        ativo={ativo}
+        reduzido={Boolean(reduzido)}
       />
     </>
   );
 }
 
-/* ------------------------------------------------------------------ mega */
+/* ------------------------------------------------------------------ busca */
+
+/**
+ * Um só campo para o topo e para a gaveta do celular: área de clique larga,
+ * botão de enviar dentro da caixa e o foco marcado em dois sinais (borda e
+ * anel), que é o que sobrevive à rolagem.
+ */
+function CampoBusca({ id, ref }: { id: string; ref?: React.Ref<HTMLInputElement> }) {
+  return (
+    <div className="mx-auto flex h-12 w-full max-w-2xl items-center rounded-lg border border-graf-450 bg-graf-50 transition-colors hover:border-graf-500 focus-within:border-jb-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-jb-500/15">
+      <Search className="ml-4 hidden size-4.5 shrink-0 text-graf-500 lg:block" aria-hidden />
+      <label htmlFor={id} className="sr-only">
+        Buscar no catálogo
+      </label>
+      <input
+        ref={ref}
+        id={id}
+        name="q"
+        type="search"
+        enterKeyHint="search"
+        autoComplete="off"
+        placeholder="Busque equipamento, marca, modelo ou peça"
+        className="h-full min-w-0 flex-1 bg-transparent px-4 text-base text-graf-900 outline-none placeholder:text-graf-500 sm:text-[0.9375rem] lg:pl-3"
+      />
+      <button
+        type="submit"
+        aria-label="Buscar"
+        /* 44px dentro da caixa de 48: o botão de enviar é alvo de toque, não
+           enfeite. Sobram 2px de folga acima e abaixo. */
+        /* `min-w-11` porque abaixo de lg só o ícone aparece, e `px-3` deixava
+           o botão com 42px de largura — 2px abaixo do alvo mínimo de toque. */
+        className="mr-1 flex h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-md bg-graf-900 px-3 text-sm font-semibold text-white transition-colors hover:bg-graf-800 active:bg-graf-950 lg:px-4"
+      >
+        <Search className="size-4.5 lg:hidden" aria-hidden />
+        <span className="hidden lg:inline">Buscar</span>
+      </button>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------- mega menu */
 
 function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
+    <div className="grid gap-10 xl:grid-cols-[1.7fr_1fr]">
       <div>
-        <p className="mb-4 text-xs font-bold uppercase tracking-wider text-graf-500">
-          Categorias
-        </p>
+        <div className="flex items-baseline justify-between gap-6">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-graf-500">Categorias</h2>
+          <Link
+            href="/loja"
+            className="inline-flex items-center gap-1.5 rounded-sm text-sm font-semibold text-jb-700 transition-colors hover:text-jb-800"
+          >
+            Ver o catálogo completo
+            <ArrowRight className="size-3.5" aria-hidden />
+          </Link>
+        </div>
+
         {categorias.length === 0 ? (
-          <p className="text-sm text-graf-500">
-            Nenhuma categoria publicada ainda.
-          </p>
+          <div className="mt-4 rounded-xl border border-dashed border-graf-300 bg-graf-50 p-6">
+            <p className="text-sm text-graf-600">
+              As categorias ainda não foram publicadas. O catálogo continua aberto para
+              navegação.
+            </p>
+            <Link
+              href="/loja"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-sm text-sm font-semibold text-jb-700 hover:text-jb-800"
+            >
+              Ver todos os equipamentos
+              <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          </div>
         ) : (
-          <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-4 grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
             {categorias.map((categoria) => (
               <li key={categoria.slug}>
                 <Link
                   href={`/categoria/${categoria.slug}`}
-                  className="group flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-graf-50"
+                  className="group flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-graf-50"
                 >
-                  <span className="text-sm font-medium text-graf-800 group-hover:text-jb-700">
+                  <span className="text-sm font-medium text-graf-800 transition-colors group-hover:text-jb-700">
                     {categoria.name}
                   </span>
-                  <span className="text-xs tabular text-graf-500">{categoria.count}</span>
+                  {categoria.count > 0 ? (
+                    <span className="tabular shrink-0 text-xs text-graf-500">
+                      {categoria.count}
+                      <span className="sr-only"> equipamentos</span>
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             ))}
@@ -386,70 +562,144 @@ function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
         )}
       </div>
 
-      <div className="lg:border-l lg:border-graf-200 lg:pl-8">
-        <p className="mb-4 text-xs font-bold uppercase tracking-wider text-graf-500">
-          Por condição
-        </p>
-        <ul className="space-y-1">
+      <div className="xl:border-l xl:border-graf-200 xl:pl-10">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-graf-500">Por condição</h2>
+        <ul className="mt-4 grid gap-x-6 sm:grid-cols-2 xl:grid-cols-1">
           {CONDICOES.map((condicao) => (
             <li key={condicao.slug}>
               <Link
                 href={`/${condicao.slug}`}
-                className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-graf-800 transition-colors hover:bg-graf-50 hover:text-jb-700"
+                className="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium text-graf-800 transition-colors hover:bg-graf-50 hover:text-jb-700"
               >
                 {condicao.rotulo}
               </Link>
             </li>
           ))}
         </ul>
-        <Link
-          href="/marcas"
-          className="mt-4 inline-flex items-center gap-1.5 px-3 text-sm font-semibold text-jb-700 hover:text-jb-800"
-        >
-          Ver todas as marcas →
-        </Link>
+
+        <div className="mt-4 flex flex-wrap gap-x-6 border-t border-graf-200 pt-4">
+          <Link
+            href="/marcas"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-3 text-sm font-semibold text-jb-700 transition-colors hover:text-jb-800"
+          >
+            Ver todas as marcas
+            <ArrowRight className="size-3.5" aria-hidden />
+          </Link>
+          <Link
+            href="/pecas-e-acessorios"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-3 text-sm font-semibold text-graf-700 transition-colors hover:text-jb-700"
+          >
+            Peças e acessórios
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 
-function MegaAssistencia() {
+function MegaAssistencia({
+  telefone,
+  whatsapp,
+  horario,
+}: {
+  telefone: string;
+  whatsapp: string;
+  horario: string;
+}) {
+  const temContato = Boolean(telefone || whatsapp);
+
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {MENU_ASSISTENCIA.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="rounded-xl border border-graf-200 p-4 transition-colors hover:border-jb-300 hover:bg-jb-50/40"
-        >
-          <p className="text-sm font-bold text-graf-900">{item.rotulo}</p>
-          {item.descricao ? (
-            <p className="mt-1 text-xs leading-relaxed text-graf-500">{item.descricao}</p>
-          ) : null}
-        </Link>
-      ))}
+    <div className={cn("grid gap-8", temContato && "xl:grid-cols-[2.3fr_1fr]")}>
+      <div>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-graf-500">
+          Assistência e manutenção
+        </h2>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          {MENU_ASSISTENCIA.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className="flex h-full flex-col rounded-xl border border-graf-200 bg-white p-4 transition-[border-color,background-color] hover:border-jb-300 hover:bg-jb-50/50"
+              >
+                <span className="text-sm font-bold text-graf-950">{item.rotulo}</span>
+                {item.descricao ? (
+                  <span className="mt-1 text-xs leading-relaxed text-graf-500">
+                    {item.descricao}
+                  </span>
+                ) : null}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {temContato ? (
+        <div className="on-dark flex flex-col rounded-xl bg-graf-950 p-5">
+          <p className="text-sm font-bold text-white">Prefere falar com um técnico?</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-graf-300">
+            {horario ? `Equipe técnica própria. ${horario}.` : "Equipe técnica própria."}
+          </p>
+          <div className="mt-4 flex flex-col gap-2">
+            {whatsapp ? (
+              <a
+                href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={classesBotao("claro", "sm", "w-full")}
+              >
+                <MessageCircle className="size-4 shrink-0" aria-hidden />
+                WhatsApp {whatsapp}
+              </a>
+            ) : null}
+            {telefone ? (
+              <a
+                href={telHref(telefone)}
+                className={classesBotao("contorno-claro", "sm", "w-full")}
+              >
+                <Phone className="size-4 shrink-0" aria-hidden />
+                {telefone}
+              </a>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-/* ---------------------------------------------------------------- mobile */
+/* ----------------------------------------------------------------- gaveta */
 
 function MenuMobile({
   aberto,
   aoFechar,
   categorias,
-  clienteNome,
+  temSessao,
+  primeiroNome,
+  telefone,
   whatsapp,
+  ativo,
+  reduzido,
 }: {
   aberto: boolean;
   aoFechar: () => void;
   categorias: CategoriaMenu[];
-  clienteNome: string | null;
+  temSessao: boolean;
+  primeiroNome: string;
+  telefone: string;
   whatsapp: string;
+  ativo: (href: string) => boolean;
+  reduzido: boolean;
 }) {
-  const [secao, setSecao] = useState<string | null>(null);
-  // foco preso, Esc e devolução do foco: `role="dialog"` sozinho não faz nada disso
+  const [secao, setSecao] = useState<ChaveMega | null>(null);
+  // foco preso, Esc, devolução do foco e rolagem travada:
+  // `role="dialog"` sozinho não faz nada disso
   const caixa = usarDialogo(aberto, aoFechar);
+
+  useEffect(() => {
+    if (!aberto) setSecao(null);
+  }, [aberto]);
+
+  const alternar = (chave: ChaveMega) => setSecao((atual) => (atual === chave ? null : chave));
 
   return (
     <AnimatePresence>
@@ -459,124 +709,227 @@ function MenuMobile({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: reduzido ? 0 : 0.2 }}
             onClick={aoFechar}
-            className="fixed inset-0 z-60 bg-graf-950/40 lg:hidden"
+            className="fixed inset-0 z-60 bg-graf-950/50 lg:hidden"
             aria-hidden
           />
           <motion.div
             ref={caixa}
             role="dialog"
-            aria-label="Menu"
+            aria-label="Menu de navegação"
             aria-modal="true"
             tabIndex={-1}
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-y-0 right-0 z-70 flex w-[min(22rem,90vw)] flex-col bg-white lg:hidden"
+            initial={{ x: reduzido ? 0 : "100%", opacity: reduzido ? 0 : 1 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: reduzido ? 0 : "100%", opacity: reduzido ? 0 : 1 }}
+            transition={{ type: "tween", duration: reduzido ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-y-0 right-0 z-70 flex w-[min(23rem,92vw)] flex-col bg-white shadow-pop lg:hidden"
           >
-            <div className="flex h-16 shrink-0 items-center justify-between border-b border-graf-200 px-4">
+            <div className="flex h-16 shrink-0 items-center justify-between border-b border-graf-200 pl-5 pr-2">
               <Logo altura={32} />
               <button
                 type="button"
                 onClick={aoFechar}
-                aria-label="Fechar menu"
-                className="flex size-10 items-center justify-center rounded-lg text-graf-700 hover:bg-graf-100"
+                className="flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100"
               >
-                <X className="size-5" />
+                <X className="size-5" aria-hidden />
+                <span className="sr-only">Fechar o menu</span>
               </button>
             </div>
 
-            <nav aria-label="Menu principal" className="flex-1 overflow-y-auto p-4">
-              <ul className="space-y-1">
-                {MENU_PRINCIPAL.map((item) =>
-                  item.megaMenu === "catalogo" ? (
-                    <li key={item.href}>
-                      <button
-                        type="button"
-                        onClick={() => setSecao(secao === "cat" ? null : "cat")}
-                        aria-expanded={secao === "cat"}
-                        className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-base font-semibold text-graf-800 hover:bg-graf-50"
-                      >
-                        {item.rotulo}
-                        <ChevronDown
-                          className={cn(
-                            "size-4 text-graf-500 transition-transform",
-                            secao === "cat" && "rotate-180",
-                          )}
-                          aria-hidden
-                        />
-                      </button>
-                      {secao === "cat" ? (
-                        <ul className="mb-2 ml-3 border-l border-graf-200 pl-3">
-                          <li>
-                            <Link
-                              href="/loja"
-                              className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-jb-700 hover:bg-graf-50"
-                            >
-                              Ver tudo
-                            </Link>
-                          </li>
-                          {categorias.map((categoria) => (
-                            <li key={categoria.slug}>
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              {/* Área da clínica primeiro: é o motivo mais comum de voltar */}
+              <div className="border-b border-graf-200 p-4">
+                <Link
+                  href={temSessao ? "/minha-jb" : "/entrar"}
+                  className="flex items-center gap-3.5 rounded-xl border border-graf-200 bg-graf-50 p-4 transition-colors hover:border-graf-300 hover:bg-graf-100"
+                >
+                  <span
+                    aria-hidden
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-100"
+                  >
+                    <User className="size-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-medium text-graf-500">
+                      Área da clínica
+                    </span>
+                    <span className="block truncate text-base font-bold text-graf-950">
+                      {temSessao
+                        ? primeiroNome
+                          ? `Olá, ${primeiroNome}`
+                          : "Área da Clínica"
+                        : "Entrar na Área da Clínica"}
+                    </span>
+                  </span>
+                  <ArrowRight className="size-4 shrink-0 text-graf-400" aria-hidden />
+                </Link>
+
+                {temSessao ? (
+                  <ul className="mt-2 grid grid-cols-2 gap-1.5">
+                    {ATALHOS_CLIENTE.slice(0, 4).map((atalho) => (
+                      <li key={atalho.href}>
+                        <Link
+                          href={atalho.href}
+                          aria-current={ativo(atalho.href) ? "page" : undefined}
+                          className="flex min-h-11 items-center rounded-lg border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-graf-300 hover:text-jb-700"
+                        >
+                          {atalho.rotulo}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+
+              <nav aria-label="Menu principal" className="p-4">
+                <ul className="space-y-0.5">
+                  {MENU_PRINCIPAL.map((item) => {
+                    const chave = item.megaMenu;
+                    if (!chave) {
+                      return (
+                        <li key={item.href}>
+                          <LinhaMenu item={item} ativo={ativo(item.href)} />
+                        </li>
+                      );
+                    }
+
+                    const expandido = secao === chave;
+                    const painel = `gaveta-${chave}`;
+
+                    return (
+                      <li key={item.href}>
+                        <button
+                          type="button"
+                          onClick={() => alternar(chave)}
+                          aria-expanded={expandido}
+                          aria-controls={painel}
+                          className="flex min-h-13 w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-graf-50"
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-base font-semibold text-graf-900">
+                              {item.rotulo}
+                            </span>
+                            {item.descricao ? (
+                              <span className="mt-0.5 block text-xs text-graf-500">
+                                {item.descricao}
+                              </span>
+                            ) : null}
+                          </span>
+                          <ChevronDown
+                            className={cn(
+                              "size-4.5 shrink-0 text-graf-500 transition-transform duration-200",
+                              expandido && "rotate-180",
+                            )}
+                            aria-hidden
+                          />
+                        </button>
+
+                        <div id={painel} hidden={!expandido}>
+                          <ul className="mb-2 ml-3 border-l border-graf-200 pl-3">
+                            <li>
                               <Link
-                                href={`/categoria/${categoria.slug}`}
-                                className="block rounded-lg px-3 py-2.5 text-sm text-graf-700 hover:bg-graf-50"
+                                href={item.href}
+                                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-jb-700 transition-colors hover:bg-graf-50"
                               >
-                                {categoria.name}
+                                {chave === "catalogo"
+                                  ? "Ver todos os equipamentos"
+                                  : "Ver a assistência técnica"}
                               </Link>
                             </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </li>
-                  ) : (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className="block rounded-lg px-3 py-3 text-base font-semibold text-graf-800 hover:bg-graf-50"
-                      >
-                        {item.rotulo}
-                      </Link>
-                    </li>
-                  ),
-                )}
-              </ul>
 
-              <div className="mt-6 border-t border-graf-200 pt-4">
-                <Link
-                  href={clienteNome ? "/minha-jb" : "/entrar"}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold text-graf-800 hover:bg-graf-50"
-                >
-                  <User className="size-5 text-graf-500" aria-hidden />
-                  {clienteNome ? "Minha JB" : "Entrar ou criar conta"}
-                </Link>
-                <Link
-                  href="/minha-jb/favoritos"
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold text-graf-800 hover:bg-graf-50"
-                >
-                  <Heart className="size-5 text-graf-500" aria-hidden />
-                  Favoritos
-                </Link>
-              </div>
-            </nav>
+                            {chave === "catalogo"
+                              ? categorias.map((categoria) => (
+                                  <li key={categoria.slug}>
+                                    <Link
+                                      href={`/categoria/${categoria.slug}`}
+                                      className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
+                                    >
+                                      {categoria.name}
+                                    </Link>
+                                  </li>
+                                ))
+                              : MENU_ASSISTENCIA.map((sub) => (
+                                  <li key={sub.href}>
+                                    <Link
+                                      href={sub.href}
+                                      className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
+                                    >
+                                      {sub.rotulo}
+                                    </Link>
+                                  </li>
+                                ))}
 
-            <div className="shrink-0 space-y-2 border-t border-graf-200 p-4">
+                            {chave === "catalogo" ? (
+                              <li className="mt-1 border-t border-graf-200 pt-1">
+                                <ul>
+                                  {CONDICOES.map((condicao) => (
+                                    <li key={condicao.slug}>
+                                      <Link
+                                        href={`/${condicao.slug}`}
+                                        className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
+                                      >
+                                        {condicao.rotulo}
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </li>
+                            ) : null}
+                          </ul>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <ul className="mt-4 space-y-0.5 border-t border-graf-200 pt-4">
+                  <li>
+                    <LinhaMenu
+                      item={{ rotulo: "Favoritos", href: "/minha-jb/favoritos" }}
+                      ativo={ativo("/minha-jb/favoritos")}
+                    />
+                  </li>
+                  <li>
+                    <LinhaMenu
+                      item={{ rotulo: "Pedir orçamento", href: "/orcamento" }}
+                      ativo={ativo("/orcamento")}
+                    />
+                  </li>
+                  <li>
+                    <LinhaMenu
+                      item={{ rotulo: "Contato", href: "/contato" }}
+                      ativo={ativo("/contato")}
+                    />
+                  </li>
+                </ul>
+              </nav>
+            </div>
+
+            {/* O que importa fica no alcance do polegar */}
+            <div className="shrink-0 space-y-2 border-t border-graf-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <Link
                 href="/assistencia-tecnica/solicitar"
                 className={classesBotao("primario", "md", "w-full")}
               >
-                <Wrench className="size-4" aria-hidden />
+                <Wrench className="size-4 shrink-0" aria-hidden />
                 Solicitar assistência
               </Link>
               {whatsapp ? (
                 <a
-                  href={whatsappHref(whatsapp, "Olá! Vim pelo site da JB.")}
+                  href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={classesBotao("secundario", "md", "w-full")}
                 >
+                  <MessageCircle className="size-4 shrink-0" aria-hidden />
                   Falar no WhatsApp
+                </a>
+              ) : telefone ? (
+                <a href={telHref(telefone)} className={classesBotao("secundario", "md", "w-full")}>
+                  <Phone className="size-4 shrink-0" aria-hidden />
+                  Ligar para {telefone}
                 </a>
               ) : null}
             </div>
@@ -584,5 +937,27 @@ function MenuMobile({
         </>
       ) : null}
     </AnimatePresence>
+  );
+}
+
+function LinhaMenu({ item, ativo }: { item: ItemMenu; ativo: boolean }) {
+  return (
+    <Link
+      href={item.href}
+      aria-current={ativo ? "page" : undefined}
+      className={cn(
+        "flex min-h-13 flex-col justify-center rounded-lg px-3 py-2.5 transition-colors hover:bg-graf-50",
+        ativo && "bg-jb-50",
+      )}
+    >
+      <span
+        className={cn("text-base font-semibold", ativo ? "text-jb-700" : "text-graf-900")}
+      >
+        {item.rotulo}
+      </span>
+      {item.descricao ? (
+        <span className="mt-0.5 text-xs text-graf-500">{item.descricao}</span>
+      ) : null}
+    </Link>
   );
 }

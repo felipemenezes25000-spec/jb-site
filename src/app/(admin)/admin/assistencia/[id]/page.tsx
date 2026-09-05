@@ -225,7 +225,7 @@ export default async function PaginaChamado({
                   ) : (
                     <>
                       {chamado.contactName}{" "}
-                      <span className="text-xs text-graf-500">(sem conta na Minha JB)</span>
+                      <span className="text-xs text-graf-500">(sem conta na Área da Clínica)</span>
                     </>
                   )}
                 </Dado>

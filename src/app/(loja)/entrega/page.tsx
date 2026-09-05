@@ -121,7 +121,7 @@ export default async function EntregaPage() {
           </p>
           <p>
             O andamento fica registrado na{" "}
-            <Link href="/minha-jb/pedidos">Minha JB</Link>, com a data de cada etapa — do
+            <Link href="/minha-jb/pedidos">Área da Clínica</Link>, com a data de cada etapa — do
             pagamento confirmado até a entrega e, quando contratada, a instalação.
           </p>
         </>
@@ -200,9 +200,9 @@ export default async function EntregaPage() {
       >
         <div className="space-y-12">
           {perfis.length > 0 ? (
-            <section id="formas-de-envio" className="scroll-mt-24">
-              <h2 className="text-xl font-bold text-graf-950">Formas de envio</h2>
-              <p className="mt-2 text-sm leading-relaxed text-graf-600">
+            <section id="formas-de-envio" className="scroll-mt-28">
+              <h2 className="text-title texto-forte">Formas de envio</h2>
+              <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-600">
                 Cada produto usa uma destas condições, indicada na própria página do item.
               </p>
 
@@ -256,8 +256,8 @@ export default async function EntregaPage() {
           ) : null}
 
           {aceitaRetirada ? (
-            <section id="retirada" className="scroll-mt-24">
-              <h2 className="text-xl font-bold text-graf-950">Retirada no local</h2>
+            <section id="retirada" className="scroll-mt-28">
+              <h2 className="text-title texto-forte">Retirada no local</h2>
               <div className="prose-jb mt-3 max-w-none">
                 {s.retirada_instrucoes ? <p>{s.retirada_instrucoes}</p> : null}
                 {endereco ? (
@@ -271,7 +271,7 @@ export default async function EntregaPage() {
             </section>
           ) : null}
 
-          {temCms ? <CorpoCms html={pagina?.body ?? ""} /> : <CorpoLegal secoes={secoes} />}
+          {temCms ? <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" /> : <CorpoLegal secoes={secoes} />}
 
           <NotaDeRevisao>
             As condições desta página valem para as compras feitas neste site e não

@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Filtros das listagens da Minha JB.
+ * Filtros das listagens da Área da Clínica.
  *
  * Tudo mora na URL: as opções são links de verdade e a busca é um `form` com
  * `method="get"`. Nenhum estado no cliente, nenhum `useSearchParams` — a
@@ -104,7 +104,7 @@ export function Filtros({
                 name={busca.nome}
                 defaultValue={parametros[busca.nome] ?? ""}
                 placeholder={busca.placeholder}
-                className="h-11 w-full rounded-lg border border-graf-300 bg-white pl-10 pr-3.5 text-graf-900 shadow-xs transition-colors placeholder:text-graf-500 hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                className="h-11 w-full rounded-lg border border-graf-450 bg-white pl-10 pr-3.5 text-graf-900 shadow-xs transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
               />
             </div>
           </div>

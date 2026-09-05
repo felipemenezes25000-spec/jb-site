@@ -9,7 +9,7 @@ import { LinkBotao } from "@/components/ui/button";
 import { Vazio } from "@/components/ui/data";
 import { exigirCliente } from "@/lib/auth-cliente";
 import { ROTULO_EQUIPAMENTO, equipamentosDoCliente } from "@/lib/equipamento";
-import { somenteDigitos } from "@/lib/format";
+import { plural, somenteDigitos } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Meus equipamentos",
@@ -150,7 +150,7 @@ export default async function EquipamentosPage({ searchParams }: { searchParams:
       ) : (
         <>
           <p className="sr-only" role="status">
-            {lista.length} equipamento(s) na lista.
+            {plural(lista.length, "equipamento na lista", "equipamentos na lista")}.
           </p>
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {lista.map((equipamento) => (

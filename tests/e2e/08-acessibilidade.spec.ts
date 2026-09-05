@@ -47,11 +47,17 @@ async function focado(page: Page): Promise<Focado | null> {
  * Tab até chegar no elemento procurado. Devolve quantos Tabs foram precisos —
  * o limite existe para o teste falhar em vez de girar para sempre quando o
  * elemento nunca recebe foco (armadilha de foco, tabindex -1 indevido…).
+ *
+ * O limite precisa caber uma volta inteira: quando a conferência de foco
+ * borra o elemento, a próxima tabulação recomeça do início do documento, e a
+ * moldura da loja (barra de contato, cabeçalho com busca e menus, rodapé)
+ * responde por dezenas de paradas antes do formulário. Duas voltas continuam
+ * denunciando armadilha de foco.
  */
 async function tabAte(
   page: Page,
   encontrou: (atual: Focado) => boolean,
-  limite = 60,
+  limite = 140,
 ): Promise<Focado> {
   for (let i = 0; i < limite; i++) {
     await page.keyboard.press("Tab");
@@ -161,11 +167,11 @@ test.describe("Acessibilidade do checkout", () => {
     await expect(page.getByRole("heading", { name: "Revisão" })).toBeVisible();
 
     /* ----------------------------------------------- etapa 4: revisão */
-    const finalizar = await tabAte(page, (atual) => atual.texto.startsWith("Finalizar"));
+    const finalizar = await tabAte(page, (atual) => atual.texto.startsWith("Confirmar pedido"));
     expect(finalizar.tipo).toBe("submit");
     expect(await focoDesenhaAlgo(page), "o botão de enviar precisa se destacar").toBe(true);
 
-    await tabAte(page, (atual) => atual.texto.startsWith("Finalizar"));
+    await tabAte(page, (atual) => atual.texto.startsWith("Confirmar pedido"));
     await page.keyboard.press("Enter");
 
     await page.waitForURL(/\/pedido\/[A-Z0-9-]+$/i, { timeout: 60_000 });

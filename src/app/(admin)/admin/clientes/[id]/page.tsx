@@ -562,7 +562,7 @@ export default async function ClientePage({ params }: Props) {
           <Cartao>
             <CabecalhoCartao
               titulo="Documentos"
-              descricao="Notas fiscais, laudos e garantias visíveis ao cliente na Minha JB."
+              descricao="Notas fiscais, laudos e garantias visíveis ao cliente na Área da Clínica."
             />
             <div className="p-5">
               {cliente.documents.length === 0 ? (
@@ -676,7 +676,7 @@ export default async function ClientePage({ params }: Props) {
                 <Vazio
                   icone={MapPin}
                   titulo="Nenhum endereço"
-                  descricao="O cliente cadastra os endereços dele na Minha JB, ao fechar o pedido."
+                  descricao="O cliente cadastra os endereços dele na Área da Clínica, ao fechar o pedido."
                 />
               ) : (
                 <ul className="space-y-4">

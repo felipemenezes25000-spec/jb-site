@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BellRing,
   CalendarClock,
+  ClipboardList,
   FileText,
   LifeBuoy,
   MapPin,
@@ -16,10 +17,17 @@ import { marcarAvisosComoLidos } from "@/app/acoes/minha-jb";
 import { Topo } from "@/components/conta/mj-topo";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao, Etiqueta, Vazio } from "@/components/ui/data";
+import { CartaoMetrica, GradeMetricas } from "@/components/ui/metrica";
 import { ROTULO_CHAMADO, ROTULO_URGENCIA, STATUS_CHAMADO_ABERTOS } from "@/lib/assistencia";
 import { exigirCliente } from "@/lib/auth-cliente";
 import { ROTULO_EQUIPAMENTO } from "@/lib/equipamento";
-import { formatarData, formatarDataHora, formatarPreco, plural } from "@/lib/format";
+import {
+  distanciaEmDias,
+  formatarData,
+  formatarDataHora,
+  formatarPreco,
+  plural,
+} from "@/lib/format";
 import { STATUS_VISITA_ABERTOS } from "@/lib/manutencao";
 import { listarNotificacoes } from "@/lib/notificacoes";
 import { ROTULO_ORCAMENTO, STATUS_ORCAMENTO_ABERTOS } from "@/lib/orcamento";
@@ -27,7 +35,7 @@ import { ROTULO_STATUS } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Minha JB",
+  title: "Área da Clínica",
   description: "Acompanhe pedidos, chamados, equipamentos e manutenções da sua clínica.",
   robots: { index: false, follow: false },
 };
@@ -35,6 +43,9 @@ export const metadata: Metadata = {
 const DIA = 86_400_000;
 
 const EQUIPAMENTOS_EM_ALERTA = ["em_manutencao", "aguardando_peca", "inoperante"] as const;
+
+/** Um pedido sai da contagem de "em andamento" quando não há mais o que acompanhar. */
+const PEDIDOS_ENCERRADOS = ["concluido", "cancelado", "reembolsado"] as const;
 
 type Compromisso = {
   quando: Date;
@@ -114,6 +125,11 @@ export default async function VisaoGeralPage() {
     visitas,
     instalacoes,
     avisos,
+    totalEquipamentos,
+    equipamentosEmAlerta,
+    chamadosAbertos,
+    orcamentosAbertos,
+    pedidosEmAndamento,
   ] = await Promise.all([
     prisma.order.findMany({
       where: { customerId: cliente.id },
@@ -226,6 +242,19 @@ export default async function VisaoGeralPage() {
       },
     }),
     listarNotificacoes({ customerId: cliente.id, apenasNaoLidas: true, limite: 4 }),
+    prisma.equipment.count({ where: { customerId: cliente.id } }),
+    prisma.equipment.count({
+      where: { customerId: cliente.id, status: { in: [...EQUIPAMENTOS_EM_ALERTA] } },
+    }),
+    prisma.serviceRequest.count({
+      where: { customerId: cliente.id, status: { in: STATUS_CHAMADO_ABERTOS } },
+    }),
+    prisma.quote.count({
+      where: { customerId: cliente.id, status: { in: STATUS_ORCAMENTO_ABERTOS } },
+    }),
+    prisma.order.count({
+      where: { customerId: cliente.id, status: { notIn: [...PEDIDOS_ENCERRADOS] } },
+    }),
   ]);
 
   /* ------------------------------------------------ próximo compromisso */
@@ -280,18 +309,27 @@ export default async function VisaoGeralPage() {
 
   const proximo = candidatos.sort((a, b) => a.quando.getTime() - b.quando.getTime())[0];
 
+  const primeiroNome = cliente.name.trim().split(/\s+/)[0] ?? "";
+
   return (
     <div>
       <Topo
         titulo="Visão geral"
-        descricao="O que está em andamento na sua conta: compromissos marcados, pedidos, chamados e o que os seus equipamentos estão pedindo."
+        descricao={
+          primeiroNome
+            ? `Olá, ${primeiroNome}. Este é o retrato da sua clínica agora: o que está agendado, o que espera resposta e o que os equipamentos estão pedindo.`
+            : "O retrato da sua clínica agora: o que está agendado, o que espera resposta e o que os equipamentos estão pedindo."
+        }
       />
 
       {avisos.length > 0 ? (
         <Cartao className="mb-6 border-info-500/25 bg-info-50/60">
           <div className="flex flex-wrap items-start gap-x-4 gap-y-3 p-5">
             <BellRing className="mt-0.5 size-5 shrink-0 text-info-700" aria-hidden />
-            <div className="min-w-0 flex-1">
+            {/* Sem largura mínima, a coluna do texto encolhia até caber ao lado
+                do botão no celular e cada aviso saía quebrado em três palavras
+                por linha. Com ela, o botão desce para a linha de baixo. */}
+            <div className="min-w-[15rem] flex-1">
               <p className="text-sm font-bold text-info-700">
                 {plural(avisos.length, "aviso novo", "avisos novos")}
               </p>
@@ -328,54 +366,131 @@ export default async function VisaoGeralPage() {
         </Cartao>
       ) : null}
 
+      {/* ------------------------------------------------------ números */}
+      <section aria-labelledby="numeros">
+        <h2 id="numeros" className="sr-only">
+          Números da sua conta
+        </h2>
+        <GradeMetricas>
+          <CartaoMetrica
+            rotulo="Equipamentos no prontuário"
+            valor={totalEquipamentos}
+            unidade={totalEquipamentos === 1 ? "equipamento" : "equipamentos"}
+            icone={Stethoscope}
+            tom={equipamentosEmAlerta > 0 ? "atencao" : "marca"}
+            destaque
+            detalhe={
+              totalEquipamentos === 0
+                ? "Cadastre o primeiro para começar o histórico."
+                : equipamentosEmAlerta > 0
+                  ? `${plural(equipamentosEmAlerta, "equipamento", "equipamentos")} fora de operação normal.`
+                  : "Nenhum equipamento em alerta."
+            }
+            href="/minha-jb/equipamentos"
+            hrefRotulo="Ver prontuário"
+          />
+          <CartaoMetrica
+            rotulo="Chamados de assistência"
+            valor={chamadosAbertos}
+            unidade="em aberto"
+            icone={LifeBuoy}
+            tom={chamadosAbertos > 0 ? "info" : "neutro"}
+            detalhe={
+              chamadosAbertos > 0
+                ? "Acompanhe a etapa de cada atendimento."
+                : "Nenhum atendimento em andamento."
+            }
+            href="/minha-jb/assistencia"
+            hrefRotulo="Ver chamados"
+          />
+          <CartaoMetrica
+            rotulo="Orçamentos"
+            valor={orcamentosAbertos}
+            unidade="aguardando"
+            icone={ClipboardList}
+            tom={orcamentosAbertos > 0 ? "atencao" : "neutro"}
+            detalhe={
+              orcamentosAbertos > 0
+                ? "Propostas esperando aprovar ou recusar."
+                : "Nenhuma proposta esperando resposta."
+            }
+            href="/minha-jb/orcamentos"
+            hrefRotulo="Ver orçamentos"
+          />
+          <CartaoMetrica
+            rotulo="Pedidos"
+            valor={pedidosEmAndamento}
+            unidade="em andamento"
+            icone={Package}
+            tom={pedidosEmAndamento > 0 ? "info" : "neutro"}
+            detalhe={
+              pedidosEmAndamento > 0
+                ? "Do pagamento à entrega e à instalação."
+                : "Nenhum pedido em andamento."
+            }
+            href="/minha-jb/pedidos"
+            hrefRotulo="Ver pedidos"
+          />
+        </GradeMetricas>
+      </section>
+
       {/* ------------------------------------------- próximo compromisso */}
-      <Cartao className="mb-6">
-        <div className="flex flex-wrap items-start gap-x-5 gap-y-4 p-5">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-jb-50 text-jb-700">
-            <CalendarClock className="size-5" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="label-mono text-xs text-graf-500">Próximo compromisso</p>
-            {proximo ? (
-              <>
-                <p className="mt-1 text-base font-bold text-graf-950">{proximo.titulo}</p>
-                <p className="mt-0.5 text-sm text-graf-600">{proximo.descricao}</p>
-                <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
-                  <span className="font-semibold text-graf-900">
+      <Cartao className="mt-6 overflow-hidden">
+        {proximo ? (
+          <div className="grid sm:grid-cols-[13.5rem_minmax(0,1fr)]">
+            <div className="flex flex-col justify-center gap-1 border-b border-graf-200 bg-graf-50 p-5 sm:border-b-0 sm:border-r">
+              <p className="label-mono text-xs text-graf-500">Próximo compromisso</p>
+              <p className="tabular text-title font-extrabold leading-none text-graf-950">
+                {formatarData(proximo.quando)}
+              </p>
+              <p className="text-sm font-semibold text-jb-700">
+                {distanciaEmDias(proximo.quando)}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 p-5">
+              <div className="min-w-0">
+                <p className="text-base font-bold text-graf-950">{proximo.titulo}</p>
+                <p className="mt-0.5 text-sm leading-relaxed text-graf-600">
+                  {proximo.descricao}
+                </p>
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-graf-900">
+                    <CalendarClock className="size-4 text-graf-500" aria-hidden />
                     {formatarDataHora(proximo.quando)}
                   </span>
                   <Etiqueta tom={proximo.confirmado ? "ok" : "aguardando"}>
                     {proximo.confirmado ? "Data confirmada" : "Data a combinar"}
                   </Etiqueta>
                 </p>
-              </>
-            ) : (
-              <>
-                <p className="mt-1 text-base font-bold text-graf-950">
-                  Nenhuma visita marcada
-                </p>
-                <p className="mt-0.5 text-sm leading-relaxed text-graf-600">
-                  Quando houver visita técnica, instalação ou preventiva agendada, ela
-                  aparece aqui com data e horário.
-                </p>
-              </>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2.5">
-            {proximo ? (
+              </div>
               <LinkBotao href={proximo.href} variante="secundario" tamanho="sm">
                 Ver detalhes
               </LinkBotao>
-            ) : null}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-4 p-5">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-graf-100 text-graf-600">
+              <CalendarClock className="size-5" aria-hidden />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="label-mono text-xs text-graf-500">Próximo compromisso</p>
+              <p className="mt-1 text-base font-bold text-graf-950">Nenhuma visita marcada</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-graf-600">
+                Quando houver visita técnica, instalação ou preventiva agendada, ela aparece
+                aqui com data e horário.
+              </p>
+            </div>
             <LinkBotao href="/minha-jb/assistencia/novo" tamanho="sm">
               Abrir chamado
             </LinkBotao>
           </div>
-        </div>
+        )}
       </Cartao>
 
       {/* ------------------------------------------------------- blocos */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <Bloco
           titulo="Pedidos recentes"
           href="/minha-jb/pedidos"
@@ -390,7 +505,11 @@ export default async function VisaoGeralPage() {
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <Link
                       href={`/minha-jb/pedidos/${pedido.number}`}
-                      className="text-sm font-bold text-graf-900 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                      /* O número é a porta de entrada do registro e no
+                         celular é tocado, não clicado: o `py` leva a área
+                         tocável a 47px e o `-my` devolve o espaço, então a
+                         lista continua com o mesmo ritmo. */
+                      className="-my-3.5 inline-block py-3.5 text-sm font-bold text-graf-900 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                     >
                       {pedido.number}
                     </Link>
@@ -425,7 +544,7 @@ export default async function VisaoGeralPage() {
                 <li key={chamado.id} className="py-3 first:pt-0 last:pb-0">
                   <Link
                     href={`/minha-jb/assistencia/${chamado.number}`}
-                    className="text-sm font-bold text-graf-900 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    className="-my-3.5 inline-block py-3.5 text-sm font-bold text-graf-900 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                   >
                     {chamado.number}
                   </Link>
@@ -465,7 +584,11 @@ export default async function VisaoGeralPage() {
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <Link
                       href={`/minha-jb/orcamentos/${orcamento.number}`}
-                      className="text-sm font-bold text-graf-900 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                      /* O número é a porta de entrada do registro e no
+                         celular é tocado, não clicado: o `py` leva a área
+                         tocável a 47px e o `-my` devolve o espaço, então a
+                         lista continua com o mesmo ritmo. */
+                      className="-my-3.5 inline-block py-3.5 text-sm font-bold text-graf-900 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                     >
                       {orcamento.number}
                     </Link>
@@ -504,7 +627,7 @@ export default async function VisaoGeralPage() {
                 <li key={equipamento.id} className="py-3 first:pt-0 last:pb-0">
                   <Link
                     href={`/minha-jb/equipamentos/${equipamento.id}`}
-                    className="text-sm font-bold text-graf-900 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    className="-my-3.5 inline-block py-3.5 text-sm font-bold text-graf-900 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                   >
                     {equipamento.name}
                   </Link>
@@ -594,7 +717,7 @@ export default async function VisaoGeralPage() {
         </ul>
       </section>
 
-      {pedidos.length === 0 && chamados.length === 0 && equipamentos.length === 0 ? (
+      {pedidos.length === 0 && chamados.length === 0 && totalEquipamentos === 0 ? (
         <Vazio
           className="mt-8"
           icone={Stethoscope}

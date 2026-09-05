@@ -89,8 +89,11 @@ export function Painel({
     <dialog
       ref={refDialogo}
       aria-modal="true"
-      aria-labelledby={idTitulo}
-      aria-describedby={descricao ? idDescricao : undefined}
+      /* O <dialog> precisa existir fechado para o showModal() funcionar, mas o
+         miolo — o <h2> que dá nome a ele — só monta aberto. Referenciar o id
+         com o diálogo fechado deixava a âncora pendurada. */
+      aria-labelledby={aberto ? idTitulo : undefined}
+      aria-describedby={aberto && descricao ? idDescricao : undefined}
       onCancel={(evento) => {
         // Deixar o navegador fechar sozinho tiraria o estado do pai de sincronia.
         evento.preventDefault();

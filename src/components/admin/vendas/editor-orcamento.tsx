@@ -259,7 +259,7 @@ export function EditorOrcamento({
                   id={`${base}-catalogo`}
                   value=""
                   onChange={(evento) => adicionarDoCatalogo(evento.target.value)}
-                  className="h-11 w-full rounded-lg border border-graf-300 bg-white px-3 pr-8 text-sm text-graf-900 hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                  className="h-11 w-full rounded-lg border border-graf-450 bg-white px-3 pr-8 text-sm text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
                 >
                   <option value="">Escolha um produto…</option>
                   {produtos.map((produto) => (
@@ -297,7 +297,7 @@ export function EditorOrcamento({
                       }
                       maxLength={300}
                       placeholder="Ex.: Cadeira odontológica Gnatus S300, revisada"
-                      className="h-11 w-full rounded-lg border border-graf-300 bg-white px-3.5 text-graf-900 shadow-xs placeholder:text-graf-500 hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                      className="h-11 w-full rounded-lg border border-graf-450 bg-white px-3.5 text-graf-900 shadow-xs placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
                     />
                     <input type="hidden" name="item_produto" value={item.productId} />
                   </div>
@@ -317,7 +317,7 @@ export function EditorOrcamento({
                       onChange={(evento) =>
                         atualizar(item.chave, "quantidade", evento.target.value)
                       }
-                      className="tabular h-11 w-full rounded-lg border border-graf-300 bg-white px-3 text-center text-graf-900 shadow-xs hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                      className="tabular h-11 w-full rounded-lg border border-graf-450 bg-white px-3 text-center text-graf-900 shadow-xs hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
                     />
                   </div>
 
@@ -344,7 +344,7 @@ export function EditorOrcamento({
                           atualizar(item.chave, "valor", evento.target.value)
                         }
                         placeholder="0,00"
-                        className="tabular h-11 w-full rounded-lg border border-graf-300 bg-white pl-10 pr-3 text-right text-graf-900 shadow-xs hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                        className="tabular h-11 w-full rounded-lg border border-graf-450 bg-white pl-10 pr-3 text-right text-graf-900 shadow-xs hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
                       />
                     </div>
                   </div>

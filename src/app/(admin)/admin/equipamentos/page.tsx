@@ -326,7 +326,7 @@ export default async function PaginaEquipamentos({
           icone: MonitorCog,
           titulo: "Nenhum equipamento com esses filtros",
           descricao:
-            "Equipamentos entram aqui por três caminhos: compra na loja, cadastro do cliente na Minha JB e cadastro da equipe técnica.",
+            "Equipamentos entram aqui por três caminhos: compra na loja, cadastro do cliente na Área da Clínica e cadastro da equipe técnica.",
           acao: editar ? (
             <LinkBotao href="/admin/equipamentos/novo" variante="primario" tamanho="sm">
               Cadastrar equipamento

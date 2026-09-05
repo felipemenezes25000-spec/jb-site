@@ -24,7 +24,7 @@ import { prisma } from "@/lib/prisma";
 import { ipDoPedido } from "@/lib/seguranca";
 
 /**
- * Ações da área do cliente (Minha JB).
+ * Ações da área do cliente (Área da Clínica).
  *
  * Três regras valem para o arquivo inteiro:
  *
@@ -742,7 +742,7 @@ export async function editarEquipamento(
           equipmentId: atual.id,
           kind: "nota",
           title: "Ficha atualizada",
-          description: "Dados do equipamento revisados pelo cliente na Minha JB.",
+          description: "Dados do equipamento revisados pelo cliente na Área da Clínica.",
         },
       });
     });
@@ -976,6 +976,10 @@ export async function responderChamado(
       await tx.serviceRequestEvent.create({
         data: {
           requestId: chamado.id,
+          // este título, sem `userId`, é o que a conversa do chamado usa para
+          // creditar a fala ao cliente (TITULO_DA_CLINICA em mj-conversa.tsx).
+          // Mudando aqui, mude lá — senão a mensagem passa a aparecer como se
+          // fosse da equipe.
           title: "Mensagem do cliente",
           message: dados.data.mensagem,
           visibleToCustomer: true,

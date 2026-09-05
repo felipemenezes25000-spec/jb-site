@@ -9,7 +9,7 @@ import { sessaoCliente } from "@/lib/auth-cliente";
 
 export const metadata: Metadata = {
   title: "Entrar",
-  description: "Acesse a Minha JB para acompanhar pedidos, chamados e manutenções.",
+  description: "Acesse a Área da Clínica para acompanhar pedidos, chamados e manutenções.",
   robots: { index: false, follow: false },
 };
 
@@ -35,7 +35,8 @@ export default async function EntrarPage({ searchParams }: { searchParams: Busca
 
   return (
     <MolduraAutenticacao
-      titulo="Entrar na Minha JB"
+      etapa="Área da Clínica"
+      titulo="Entrar na sua conta"
       subtitulo="Acompanhe pedidos, chamados de assistência, orçamentos e o histórico dos seus equipamentos."
       aviso={
         destino ? (
@@ -49,9 +50,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Busca
         <p>
           Ainda não tem conta?{" "}
           <Link
-            href={
-              destino ? `/cadastro?destino=${encodeURIComponent(destino)}` : "/cadastro"
-            }
+            href={destino ? `/cadastro?destino=${encodeURIComponent(destino)}` : "/cadastro"}
             className="font-semibold text-jb-700 underline-offset-4 hover:underline"
           >
             Criar minha conta

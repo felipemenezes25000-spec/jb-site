@@ -322,7 +322,7 @@ export default async function PedidoPage({ params }: Props) {
                 {pedido.personType === "juridica" ? (
                   <Dado rotulo="Razão social">{pedido.companyName}</Dado>
                 ) : null}
-                <Dado rotulo="Conta na Minha JB">
+                <Dado rotulo="Conta na Área da Clínica">
                   {pedido.customer ? (
                     <Link
                       href={`/admin/clientes/${pedido.customer.id}`}
@@ -378,7 +378,9 @@ export default async function PedidoPage({ params }: Props) {
                     ) : (
                       <span
                         aria-hidden
-                        className="flex size-16 shrink-0 items-center justify-center rounded-lg border border-graf-200 bg-graf-50 text-graf-300"
+                        /* graf-500 e não graf-300: em graf-50 o ícone dava
+                           1,61:1 e sumia. Assim o "sem foto" é visível. */
+                        className="flex size-16 shrink-0 items-center justify-center rounded-lg border border-graf-200 bg-graf-50 text-graf-500"
                       >
                         <Package className="size-6" />
                       </span>

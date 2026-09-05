@@ -264,9 +264,13 @@ export default async function PedidoPage({ params }: { params: Params }) {
                           {tarefa.appointment.addressSummary}
                         </p>
                       ) : null}
-                      {tarefa.notes ? (
-                        <p className="mt-1.5 text-sm text-graf-600">{tarefa.notes}</p>
-                      ) : null}
+                      {/* A observação da instalação não entra aqui: o campo
+                          InstallationTask.notes não tem marca de visibilidade
+                          no schema e é onde a equipe anota o que é dela —
+                          acesso ao prédio, elevador, quem recebe. O que se diz
+                          ao cliente vai por "Atualizações da equipe", que
+                          respeita visibleToCustomer. Mesma regra já aplicada à
+                          observação da visita, no chamado. */}
                     </li>
                   );
                 })}

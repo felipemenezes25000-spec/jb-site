@@ -54,7 +54,11 @@ export function CartaoPlano({
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h3 className="text-lg font-bold text-graf-950">{plano.nome}</h3>
+        {/* h2, não h3: em /planos-de-manutencao o cartão vem logo abaixo do h1
+            da página e cada plano é uma seção de primeiro nível. Com h3 o
+            documento pulava de h1 para h3. O tamanho continua vindo da classe,
+            então o desenho não muda. */}
+        <h2 className="text-lg font-bold text-graf-950">{plano.nome}</h2>
         {destaque ? <Etiqueta tom="marca">Mais completo</Etiqueta> : null}
       </div>
 

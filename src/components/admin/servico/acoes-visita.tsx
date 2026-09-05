@@ -54,7 +54,7 @@ export function AcoesDaVisita({
         variante="secundario"
         tamanho={tamanho}
         titulo={`Agendar a preventiva de ${equipamento}`}
-        descricao="O cliente recebe o aviso da data na área Minha JB."
+        descricao="O cliente recebe o aviso da data na área Área da Clínica."
         acao={agendarVisitaPreventiva}
         rotuloConfirmar="Gravar agendamento"
       >

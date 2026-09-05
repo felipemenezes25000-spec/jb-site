@@ -149,7 +149,13 @@ export function BibliotecaDeMidia({
                 )}
               >
                 <MiniaturaMidia midia={midia} tamanho="md" className="border-0" />
-                <span className="mt-2 block truncate text-xs font-semibold text-graf-900">
+                {/* Nome de arquivo longo cabe em duas linhas antes de cortar —
+                    no celular uma linha só mostrava menos da metade. O `title`
+                    entrega o nome inteiro a quem passar o mouse. */}
+                <span
+                  title={midia.filename}
+                  className="line-2 mt-2 block break-all text-xs font-semibold text-graf-900"
+                >
                   {midia.filename}
                 </span>
                 <span className="mt-0.5 flex items-center justify-between gap-2 text-[11px] text-graf-500">

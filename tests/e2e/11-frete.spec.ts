@@ -152,9 +152,13 @@ test.describe("Frete no checkout", () => {
     await expect(page.getByRole("radio", { name: /^Pix/ })).toBeChecked();
     await continuar(page, "Revisão");
 
-    await expect(page.getByText("Frete incluído no total")).toBeVisible();
+    // a etapa de pagamento também escreve a mesma frase no seu resumo de topo;
+    // a que interessa aqui é a última, na faixa "Total a pagar" da revisão
+    await expect(
+      page.getByText(new RegExp(`Inclui .*${emReais(frete.valorCents)} de frete`)).last(),
+    ).toBeVisible();
 
-    const finalizar = page.getByRole("button", { name: /^Finalizar/ });
+    const finalizar = page.getByRole("button", { name: /^Confirmar pedido/ });
     await expect(finalizar).toBeVisible();
     expect(emCentavos((await finalizar.innerText()).split("—")[1] ?? "")).toBe(esperado);
 
@@ -176,7 +180,7 @@ test.describe("Frete no checkout", () => {
     await informarCep(page, frete.cepSemFaixa);
 
     await expect(
-      page.getByText("O frete deste endereço será orçado depois"),
+      page.getByText("O frete deste endereço será orçado à parte"),
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/não entra no total agora/)).toBeVisible();
 
@@ -192,8 +196,8 @@ test.describe("Frete no checkout", () => {
     await continuar(page, "Pagamento");
     await continuar(page, "Revisão");
 
-    await expect(page.getByText("Frete combinado depois")).toBeVisible();
-    const finalizar = page.getByRole("button", { name: /^Finalizar/ });
+    await expect(page.getByText("O frete será combinado depois")).toBeVisible();
+    const finalizar = page.getByRole("button", { name: /^Confirmar pedido/ });
     expect(emCentavos((await finalizar.innerText()).split("—")[1] ?? "")).toBe(frete.precoCents);
   });
 
@@ -205,7 +209,7 @@ test.describe("Frete no checkout", () => {
 
     await informarCep(page, frete.cepSemFaixa);
     await expect(
-      page.getByText("O frete deste endereço será orçado depois"),
+      page.getByText("O frete deste endereço será orçado à parte"),
     ).toBeVisible({ timeout: 30_000 });
 
     await informarCep(page, frete.cepComFaixa);

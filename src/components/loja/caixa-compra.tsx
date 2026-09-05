@@ -2,13 +2,29 @@
 
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { CreditCard, Minus, Plus, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 
 import { adicionarAoCarrinho, type EstadoCarrinho } from "@/app/acoes/carrinho";
 import { Botao, LinkBotao } from "@/components/ui/button";
+import { Aviso } from "@/components/ui/aviso";
 import { Etiqueta } from "@/components/ui/data";
-import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { calcularParcelas, formatarPreco, plural } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+/* ============================================================================
+   Caixa de compra
+
+   O bloco que decide a venda: preço, parcelamento, disponibilidade, serviços
+   que entram junto, quantidade e o botão. Fica grudado ao rolar no desktop,
+   porque a página de um equipamento de dezenas de milhares de reais é longa e
+   ninguém deveria ter de subir de novo para comprar.
+
+   Preço e total aqui são só exibição. Quem soma para valer é o servidor, em
+   `calcularTotais` e em `criarPedido` — este componente reproduz a MESMA
+   regra para que o número da tela bata com o do carrinho, nunca para
+   substituí-la.
+   ============================================================================ */
 
 export type AddonProduto = {
   serviceId: string;
@@ -20,7 +36,6 @@ export type AddonProduto = {
 
 export function CaixaCompra({
   produtoId,
-  nome,
   precoCents,
   compareAtCents,
   permiteCompra,
@@ -29,9 +44,11 @@ export function CaixaCompra({
   controlaEstoque,
   unico,
   addons,
+  hrefOrcamento,
+  maxParcelas,
+  minParcelaCents,
 }: {
   produtoId: string;
-  nome: string;
   precoCents: number;
   compareAtCents: number | null;
   permiteCompra: boolean;
@@ -40,6 +57,12 @@ export function CaixaCompra({
   controlaEstoque: boolean;
   unico: boolean;
   addons: AddonProduto[];
+  /** Já montado no servidor, com o nome do equipamento na proposta. */
+  hrefOrcamento: string;
+  /** Teto de parcelas configurado pela JB — o mesmo que o checkout aplica. */
+  maxParcelas: number;
+  /** Valor mínimo da parcela, também vindo da configuração da loja. */
+  minParcelaCents: number;
 }) {
   const router = useRouter();
   const [quantidade, setQuantidade] = useState(1);
@@ -47,7 +70,7 @@ export function CaixaCompra({
     addons.filter((a) => a.obrigatorio).map((a) => a.serviceId),
   );
 
-  const [, acao, enviando] = useActionState<EstadoCarrinho, FormData>(
+  const [estado, acao, enviando] = useActionState<EstadoCarrinho, FormData>(
     async (anterior, formData) => {
       const resultado = await adicionarAoCarrinho(anterior, formData);
       if (resultado.ok) {
@@ -55,7 +78,6 @@ export function CaixaCompra({
           action: { label: "Ver carrinho", onClick: () => router.push("/carrinho") },
         });
       }
-      if (resultado.erro) toast.error(resultado.erro);
       return resultado;
     },
     {},
@@ -64,49 +86,80 @@ export function CaixaCompra({
   const semEstoque = controlaEstoque && estoque <= 0;
   const maximo = unico ? 1 : controlaEstoque ? Math.max(1, estoque) : 99;
   const soOrcamento = !permiteCompra || precoCents <= 0;
-  const parcelas = soOrcamento ? null : calcularParcelas(precoCents);
+  const parcelas = soOrcamento
+    ? null
+    : calcularParcelas(precoCents, maxParcelas, minParcelaCents);
+
+  // Só é "preço anterior" quando de fato é maior — cadastro com valor igual ou
+  // menor não vira desconto de mentira na tela.
+  const precoAnteriorCents =
+    compareAtCents && compareAtCents > precoCents ? compareAtCents : null;
+  const economiaCents = precoAnteriorCents ? precoAnteriorCents - precoCents : 0;
+  const desconto = precoAnteriorCents
+    ? Math.round((economiaCents / precoAnteriorCents) * 100)
+    : 0;
 
   // O adicional é cobrado por unidade — dois equipamentos são duas instalações.
   // É assim que calcularTotais e criarPedido somam; somar uma vez só aqui
   // mostraria um total menor do que o carrinho cobra na tela seguinte.
+  const selecionados = addons.filter((a) => escolhidos.includes(a.serviceId));
   const totalAddons =
-    addons
-      .filter((a) => escolhidos.includes(a.serviceId))
-      .reduce((soma, a) => soma + (a.precoCents ?? 0), 0) * quantidade;
+    selecionados.reduce((soma, a) => soma + (a.precoCents ?? 0), 0) * quantidade;
   const total = precoCents * quantidade + totalAddons;
+  const mostrarTotal = totalAddons > 0 || quantidade > 1;
+  const servicosComPreco = selecionados.filter((a) => (a.precoCents ?? 0) > 0).length;
 
   return (
-    <div className="rounded-xl border border-graf-200 bg-white p-5 shadow-card lg:p-6">
+    <div className="rounded-xl border border-graf-200 bg-white p-5 shadow-card sm:p-6">
       {soOrcamento ? (
         <div>
-          <p className="text-lg font-bold text-graf-900">Disponível sob orçamento</p>
-          <p className="mt-2 text-sm leading-relaxed text-graf-600">
-            Este item é vendido mediante proposta. Envie sua solicitação e a equipe
-            retorna com preço, prazo e condições.
+          <p className="text-title texto-forte">Disponível sob orçamento</p>
+          <p className="mt-2.5 text-sm leading-relaxed text-graf-600">
+            A equipe da JB confere disponibilidade e condições antes de fechar o preço deste
+            equipamento. Peça a proposta e receba os valores separados por item.
           </p>
         </div>
       ) : (
-        <>
-          {compareAtCents && compareAtCents > precoCents ? (
-            <p className="text-sm text-graf-500 line-through">
-              {formatarPreco(compareAtCents)}
+        <div>
+          {precoAnteriorCents ? (
+            <p className="flex flex-wrap items-center gap-2.5">
+              <span className="text-sm text-graf-500 line-through">
+                {formatarPreco(precoAnteriorCents)}
+              </span>
+              {/* mesmo piso do cartão da vitrine: abaixo de 5% o selo vira
+                  ruído e a diferença já está no valor riscado */}
+              {desconto >= 5 ? <Etiqueta tom="ok">−{desconto}%</Etiqueta> : null}
             </p>
           ) : null}
-          <p className="text-3xl font-extrabold tracking-tight text-graf-950">
+
+          <p className="mt-1 text-3xl font-extrabold tracking-tight tabular text-graf-950 sm:text-4xl">
             {formatarPreco(precoCents)}
           </p>
+
           {parcelas ? (
-            <p className="mt-1 text-sm text-graf-600">
-              em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)} sem juros
+            <p className="mt-2 text-sm text-graf-600">
+              em até{" "}
+              <span className="font-semibold text-graf-800">
+                {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
+              </span>{" "}
+              sem juros no cartão
             </p>
           ) : null}
-          <p className="mt-1 text-sm font-semibold text-ok-700">
-            {formatarPreco(precoCents)} no Pix
+
+          <p className="mt-1.5 flex items-center gap-2 text-sm text-graf-500">
+            <CreditCard className="size-4 shrink-0 text-graf-400" aria-hidden />
+            Pix ou cartão de crédito
           </p>
-        </>
+
+          {economiaCents > 0 ? (
+            <p className="mt-1.5 text-sm font-semibold text-ok-700">
+              Economia de {formatarPreco(economiaCents)}
+            </p>
+          ) : null}
+        </div>
       )}
 
-      <div className="mt-4">
+      <div className="mt-5 border-t border-graf-200 pt-5">
         {semEstoque ? (
           <Etiqueta tom="neutro">{unico ? "Vendido" : "Sem estoque no momento"}</Etiqueta>
         ) : unico ? (
@@ -115,7 +168,7 @@ export function CaixaCompra({
           </Etiqueta>
         ) : controlaEstoque && estoque <= 3 ? (
           <Etiqueta tom="aguardando" ponto>
-            Últimas {estoque} unidades
+            {estoque === 1 ? "Última unidade" : `Últimas ${estoque} unidades`}
           </Etiqueta>
         ) : (
           <Etiqueta tom="ok" ponto>
@@ -125,7 +178,7 @@ export function CaixaCompra({
       </div>
 
       {!soOrcamento && !semEstoque ? (
-        <form action={acao} className="mt-5 space-y-5">
+        <form action={acao} className="mt-5 space-y-6">
           <input type="hidden" name="produtoId" value={produtoId} />
           <input type="hidden" name="quantidade" value={quantidade} />
           {escolhidos.map((id) => (
@@ -134,18 +187,29 @@ export function CaixaCompra({
 
           {addons.length > 0 ? (
             <fieldset>
-              <legend className="mb-2.5 text-sm font-bold text-graf-900">
-                Adicione à compra
+              <legend className="text-sm font-bold text-graf-900">
+                Serviços da equipe JB
               </legend>
+              <p className="mb-3 mt-1 text-xs leading-relaxed text-graf-500">
+                Entram no mesmo pedido e são executados pela equipe técnica.
+              </p>
               <div className="space-y-2">
                 {addons.map((addon) => {
                   const marcado = escolhidos.includes(addon.serviceId);
+                  const precoAddon = addon.precoCents ?? 0;
+
                   return (
                     <label
                       key={addon.serviceId}
-                      className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                        marcado ? "border-jb-300 bg-jb-50/50" : "border-graf-200 hover:border-graf-300"
-                      }`}
+                      className={cn(
+                        "flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3.5",
+                        "transition-[border-color,background-color] duration-150",
+                        "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-jb-500",
+                        "has-[:disabled]:cursor-default",
+                        marcado
+                          ? "border-jb-300 bg-jb-50/60"
+                          : "border-graf-200 hover:border-graf-400",
+                      )}
                     >
                       <input
                         type="checkbox"
@@ -158,22 +222,27 @@ export function CaixaCompra({
                               : [...atuais, addon.serviceId],
                           )
                         }
-                        className="mt-0.5 size-4 shrink-0 rounded border-graf-300 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
+                        className="mt-0.5 size-[18px] shrink-0 rounded border-graf-450 text-jb-500 focus:outline-none disabled:opacity-60"
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="flex flex-wrap items-baseline justify-between gap-x-3">
+                        <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                           <span className="text-sm font-semibold text-graf-900">
                             {addon.nome}
                           </span>
                           <span className="text-sm font-bold text-graf-800">
-                            {addon.precoCents && addon.precoCents > 0
-                              ? `+ ${formatarPreco(addon.precoCents)}`
+                            {precoAddon > 0
+                              ? `+ ${formatarPreco(precoAddon)}`
                               : "sob orçamento"}
                           </span>
                         </span>
                         {addon.descricao ? (
-                          <span className="mt-0.5 block text-xs leading-relaxed text-graf-500">
+                          <span className="mt-1 block text-xs leading-relaxed text-graf-500">
                             {addon.descricao}
+                          </span>
+                        ) : null}
+                        {addon.obrigatorio ? (
+                          <span className="mt-1.5 block text-xs font-semibold text-jb-700">
+                            Incluído obrigatoriamente neste equipamento
                           </span>
                         ) : null}
                       </span>
@@ -185,48 +254,61 @@ export function CaixaCompra({
           ) : null}
 
           {!unico ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-graf-800">Quantidade</span>
-              <div className="flex items-center rounded-lg border border-graf-300">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-graf-800" id="rotulo-quantidade">
+                Quantidade
+              </span>
+              <div className="flex items-center rounded-lg border border-graf-300 bg-white">
                 <button
                   type="button"
                   onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
                   disabled={quantidade <= 1}
                   aria-label="Diminuir quantidade"
-                  className="flex size-10 items-center justify-center text-graf-600 disabled:opacity-40"
+                  className="foco-jb flex size-11 items-center justify-center rounded-l-lg text-graf-700 transition-colors duration-150 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-400 disabled:hover:bg-transparent"
                 >
-                  <Minus className="size-4" />
+                  <Minus className="size-4" aria-hidden />
                 </button>
-                <span
+                <output
                   aria-live="polite"
-                  className="w-10 text-center text-sm font-bold tabular text-graf-900"
+                  aria-labelledby="rotulo-quantidade"
+                  className="w-12 text-center text-base font-bold tabular text-graf-950"
                 >
                   {quantidade}
-                </span>
+                </output>
                 <button
                   type="button"
                   onClick={() => setQuantidade((q) => Math.min(maximo, q + 1))}
                   disabled={quantidade >= maximo}
                   aria-label="Aumentar quantidade"
-                  className="flex size-10 items-center justify-center text-graf-600 disabled:opacity-40"
+                  className="foco-jb flex size-11 items-center justify-center rounded-r-lg text-graf-700 transition-colors duration-150 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-400 disabled:hover:bg-transparent"
                 >
-                  <Plus className="size-4" />
+                  <Plus className="size-4" aria-hidden />
                 </button>
               </div>
             </div>
           ) : null}
 
-          {totalAddons > 0 || quantidade > 1 ? (
-            <div className="flex items-baseline justify-between border-t border-graf-200 pt-4">
-              <span className="text-sm font-semibold text-graf-700">Total</span>
-              <span className="text-xl font-extrabold text-graf-950">
-                {formatarPreco(total)}
-              </span>
+          {mostrarTotal ? (
+            <div className="rounded-lg bg-graf-50 p-4">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="text-sm font-semibold text-graf-700">Total</span>
+                <span className="text-xl font-extrabold tabular text-graf-950">
+                  {formatarPreco(total)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-graf-500">
+                {plural(quantidade, "equipamento", "equipamentos")}
+                {servicosComPreco > 0
+                  ? ` + ${plural(servicosComPreco * quantidade, "serviço", "serviços")}`
+                  : ""}
+              </p>
             </div>
           ) : null}
 
+          {estado.erro ? <Aviso tom="erro">{estado.erro}</Aviso> : null}
+
           <Botao type="submit" tamanho="lg" larguraTotal carregando={enviando}>
-            <ShoppingCart className="size-4.5" aria-hidden />
+            <ShoppingCart className="size-[18px]" aria-hidden />
             Adicionar ao carrinho
           </Botao>
         </form>
@@ -235,12 +317,23 @@ export function CaixaCompra({
       {permiteOrcamento ? (
         <div className={soOrcamento || semEstoque ? "mt-5" : "mt-3"}>
           <LinkBotao
-            href={`/orcamento?produto=${encodeURIComponent(nome)}`}
-            variante={soOrcamento ? "primario" : "secundario"}
+            href={hrefOrcamento}
+            variante={soOrcamento || semEstoque ? "primario" : "secundario"}
             tamanho="lg"
             larguraTotal
           >
             Solicitar orçamento
+          </LinkBotao>
+          <p className="mt-2.5 text-center text-xs leading-relaxed text-graf-500">
+            A proposta chega com equipamento, serviço e deslocamento separados.
+          </p>
+        </div>
+      ) : (soOrcamento || semEstoque) ? (
+        /* Sem compra direta e sem orçamento, a caixa ficaria sem saída
+           nenhuma. O contato é o próximo passo que sempre existe. */
+        <div className="mt-5">
+          <LinkBotao href="/contato" variante="secundario" tamanho="lg" larguraTotal>
+            Falar com a equipe
           </LinkBotao>
         </div>
       ) : null}

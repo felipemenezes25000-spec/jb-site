@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Cabeçalho de página da Minha JB.
+ * Cabeçalho de página da Área da Clínica.
  *
  * Um só desenho para as catorze telas: link de volta acima do título (alvo de
  * toque cheio, não uma seta minúscula), título, uma linha de contexto e as

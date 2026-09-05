@@ -8,7 +8,7 @@ import { FiltrosLista } from "@/components/admin/filtros-lista";
 import {
   CabecalhoPagina,
   Contador,
-  SUBNAV_SERVICO,
+  subnavServico,
   SubNavegacao,
 } from "@/components/admin/servico/cabecalho";
 import { AcoesDaVisita } from "@/components/admin/servico/acoes-visita";
@@ -281,7 +281,7 @@ export default async function PaginaManutencao({
         descricao="Visitas previstas pelos contratos, agendamento e conclusão."
       />
 
-      <SubNavegacao itens={SUBNAV_SERVICO} atual="/admin/manutencao" />
+      <SubNavegacao itens={subnavServico(usuario)} atual="/admin/manutencao" />
 
       <div className="flex flex-wrap gap-2">
         {destaques.map((item) => (
@@ -308,7 +308,9 @@ export default async function PaginaManutencao({
                 key={`${visita.id}-${diasAntes}`}
                 className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3"
               >
-                <span className="min-w-0 flex-1">
+                {/* Largura mínima para o botão de avisar descer no celular em
+                    vez de espremer o nome do equipamento até virar "Au…". */}
+                <span className="min-w-[13rem] flex-1">
                   <Link
                     href={`/admin/manutencao/${visita.id}`}
                     className="block truncate text-sm font-semibold text-graf-900 hover:text-jb-700"

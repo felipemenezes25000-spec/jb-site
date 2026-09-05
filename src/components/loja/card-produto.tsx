@@ -1,10 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ImageOff } from "lucide-react";
+import { ArrowRight, ImageOff } from "lucide-react";
 
 import { Etiqueta } from "@/components/ui/data";
+import { Grade, type ColunasPorTela } from "@/components/ui/grade";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+/* ============================================================================
+   Cartão de produto
+
+   É a peça mais repetida da loja: aparece na home, na vitrine, na busca, na
+   página do produto e nos favoritos. A ordem de leitura é sempre a mesma —
+   imagem, condição, marca, nome, preço, parcelamento, disponibilidade e o
+   convite para abrir o equipamento.
+
+   Nada aqui é inventado: cada linha só existe quando o campo correspondente
+   veio do banco. Sem marca, a linha da marca some; sem estoque controlado,
+   não se afirma disponibilidade.
+   ============================================================================ */
 
 export type ProdutoCard = {
   slug: string;
@@ -22,6 +36,13 @@ export type ProdutoCard = {
   imageAlt: string;
 };
 
+/**
+ * Regras de parcelamento da loja, vindas de `getSettings`. Quem renderiza em
+ * Server Component passa os valores reais; sem isso vale o padrão de
+ * `calcularParcelas`, que é o mesmo do cadastro inicial.
+ */
+export type Parcelamento = { max: number; minimoCents: number };
+
 /** Rótulo e tom de cada condição. Texto sempre presente — nunca só a cor. */
 export const CONDICAO = {
   novo: { rotulo: "Novo", tom: "neutro" as const },
@@ -30,33 +51,65 @@ export const CONDICAO = {
   recondicionado: { rotulo: "Recondicionado JB", tom: "alerta" as const },
 };
 
+/** Uma frase curta sobre a disponibilidade — ou nada, quando não se sabe. */
+function disponibilidade(produto: ProdutoCard) {
+  if (!produto.trackInventory) return null;
+  if (produto.stock <= 0) {
+    return {
+      texto: produto.unique ? "Unidade já vendida" : "Indisponível no momento",
+      classe: "text-graf-500",
+      pontoClasse: "bg-graf-400",
+    };
+  }
+  if (produto.unique) {
+    return { texto: "Unidade única", classe: "text-jb-700", pontoClasse: "bg-jb-500" };
+  }
+  if (produto.stock <= 3) {
+    return {
+      texto: `Últimas ${produto.stock} unidades`,
+      classe: "text-warn-700",
+      pontoClasse: "bg-warn-500",
+    };
+  }
+  return { texto: "Em estoque", classe: "text-ok-700", pontoClasse: "bg-ok-500" };
+}
+
 export function CardProduto({
   produto,
   prioridade,
+  parcelamento,
   className,
 }: {
   produto: ProdutoCard;
+  /** Carrega a imagem sem esperar — só nos primeiros cartões da primeira dobra. */
   prioridade?: boolean;
+  parcelamento?: Parcelamento;
   className?: string;
 }) {
   const semEstoque = produto.trackInventory && produto.stock <= 0;
-  const poucasUnidades =
-    produto.trackInventory && !produto.unique && produto.stock > 0 && produto.stock <= 3;
   const soOrcamento = !produto.allowDirectPurchase || produto.priceCents <= 0;
-  const parcelas = soOrcamento ? null : calcularParcelas(produto.priceCents);
+  const parcelas = soOrcamento
+    ? null
+    : calcularParcelas(produto.priceCents, parcelamento?.max, parcelamento?.minimoCents);
   const condicao = CONDICAO[produto.condition];
+  const estado = disponibilidade(produto);
 
   const desconto =
-    produto.compareAtCents && produto.compareAtCents > produto.priceCents
+    !semEstoque && produto.compareAtCents && produto.compareAtCents > produto.priceCents
       ? Math.round(
           ((produto.compareAtCents - produto.priceCents) / produto.compareAtCents) * 100,
         )
       : 0;
 
+  const chamada = soOrcamento ? "Pedir orçamento" : "Ver detalhes";
+
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border border-graf-200 bg-white transition-[border-color,box-shadow] duration-200 hover:border-graf-300 hover:shadow-raised",
+        "group relative isolate flex flex-col overflow-hidden rounded-xl border border-graf-200 bg-white",
+        "transition-[border-color,box-shadow,transform] duration-200 ease-out-quint",
+        "hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-raised",
+        "has-[a:focus-visible]:border-jb-500 has-[a:focus-visible]:shadow-raised",
         className,
       )}
     >
@@ -67,103 +120,140 @@ export function CardProduto({
             alt={produto.imageAlt || produto.name}
             fill
             priority={prioridade}
-            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 25vw"
+            loading={prioridade ? undefined : "lazy"}
+            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, (max-width: 1280px) 31vw, 22vw"
             className={cn(
-              "object-contain p-5 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]",
-              semEstoque && "opacity-60 grayscale",
+              "object-contain p-4 transition-transform duration-500 ease-out-quint sm:p-5",
+              "group-hover:scale-[1.04]",
+              semEstoque && "opacity-55 grayscale",
             )}
           />
         ) : (
-          <div className="flex size-full items-center justify-center text-graf-300">
+          <div className="flex size-full flex-col items-center justify-center gap-2 text-graf-400">
             <ImageOff className="size-8" aria-hidden />
+            <span className="text-xs text-graf-500">Sem foto</span>
           </div>
         )}
 
-        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+        <div className="absolute inset-x-3 top-3 flex flex-wrap items-start gap-1.5">
           <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-          {desconto >= 5 && !semEstoque ? (
-            <Etiqueta tom="ok">−{desconto}%</Etiqueta>
-          ) : null}
+          {desconto >= 5 ? <Etiqueta tom="ok">−{desconto}%</Etiqueta> : null}
         </div>
 
+        {/* a tarja é o aviso visual; quem usa leitor de tela ouve a linha de
+            disponibilidade logo abaixo, sem repetir a mesma informação */}
         {semEstoque ? (
-          <div className="absolute inset-x-0 bottom-0 bg-graf-900/85 py-2 text-center text-xs font-bold uppercase tracking-wide text-white">
+          <p
+            aria-hidden
+            className="absolute inset-x-0 bottom-0 bg-graf-950/85 py-2 text-center text-xs font-bold uppercase tracking-wide text-white"
+          >
             {produto.unique ? "Vendido" : "Indisponível"}
-          </div>
+          </p>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col gap-1 border-t border-graf-100 p-4 sm:p-5">
         {produto.brandName ? (
-          <p className="text-xs font-semibold uppercase tracking-wide text-graf-500">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
             {produto.brandName}
           </p>
         ) : null}
 
-        <h3 className="mt-1 line-2 text-[0.9375rem] font-bold leading-snug text-graf-900">
-          <Link href={`/loja/${produto.slug}`} className="after:absolute after:inset-0">
+        <h3 className="line-2 text-[0.9375rem] font-bold leading-snug text-graf-950 sm:text-base">
+          <Link
+            href={`/loja/${produto.slug}`}
+            className="rounded-xs after:absolute after:inset-0 after:content-['']"
+          >
             {produto.name}
           </Link>
         </h3>
 
         {produto.model ? (
-          <p className="mt-0.5 text-xs text-graf-500">{produto.model}</p>
+          <p className="truncate text-xs text-graf-500">{produto.model}</p>
         ) : null}
 
         <div className="mt-auto pt-4">
           {soOrcamento ? (
-            <p className="text-sm font-bold text-graf-800">Sob orçamento</p>
+            <>
+              <p className="text-base font-extrabold tracking-tight text-graf-950">
+                Sob orçamento
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed text-graf-500">
+                A equipe responde com preço e prazo.
+              </p>
+            </>
           ) : (
             <>
               {produto.compareAtCents && produto.compareAtCents > produto.priceCents ? (
-                <p className="text-xs text-graf-500 line-through">
+                <p className="tabular text-xs text-graf-500 line-through">
                   {formatarPreco(produto.compareAtCents)}
                 </p>
               ) : null}
-              <p className="text-lg font-extrabold tracking-tight text-graf-950">
+              <p className="tabular text-xl font-extrabold tracking-tight text-graf-950">
                 {formatarPreco(produto.priceCents)}
               </p>
               {parcelas ? (
-                <p className="mt-0.5 text-xs text-graf-500">
+                <p className="tabular mt-0.5 text-xs text-graf-500">
                   em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
                 </p>
               ) : null}
             </>
           )}
 
-          {poucasUnidades ? (
-            <p className="mt-2 text-xs font-semibold text-warn-700">
-              Últimas {produto.stock} unidades
+          {estado ? (
+            <p className={cn("mt-3 flex items-center gap-1.5 text-xs font-semibold", estado.classe)}>
+              <span className={cn("size-1.5 shrink-0 rounded-full", estado.pontoClasse)} aria-hidden />
+              {estado.texto}
             </p>
           ) : null}
-          {produto.unique && !semEstoque ? (
-            <p className="mt-2 text-xs font-semibold text-jb-700">Unidade única</p>
-          ) : null}
+
+          <p
+            aria-hidden
+            className={cn(
+              "mt-4 flex h-10 items-center justify-center gap-1.5 rounded-md border text-sm font-semibold",
+              "transition-colors duration-150",
+              "border-graf-300 text-graf-800",
+              "group-hover:border-jb-500 group-hover:bg-jb-500 group-hover:text-white",
+            )}
+          >
+            {chamada}
+            <ArrowRight className="size-4 shrink-0" />
+          </p>
         </div>
       </div>
     </article>
   );
 }
 
+/** Vitrine de cartões. Uma coluna no celular — equipamento caro pede leitura confortável. */
 export function GradeProdutos({
   produtos,
+  colunas,
+  parcelamento,
   className,
 }: {
   produtos: ProdutoCard[];
+  colunas?: ColunasPorTela;
+  parcelamento?: Parcelamento;
   className?: string;
 }) {
   return (
-    <ul
-      className={cn(
-        "grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4",
-        className,
-      )}
+    <Grade
+      como="ul"
+      espaco="md"
+      colunas={colunas ?? { base: 1, sm: 2, lg: 3, xl: 4 }}
+      className={className}
     >
-      {produtos.map((produto, i) => (
+      {produtos.map((produto, indice) => (
         <li key={produto.slug} className="flex">
-          <CardProduto produto={produto} prioridade={i < 4} className="w-full" />
+          <CardProduto
+            produto={produto}
+            parcelamento={parcelamento}
+            prioridade={indice < 4}
+            className="w-full"
+          />
         </li>
       ))}
-    </ul>
+    </Grade>
   );
 }

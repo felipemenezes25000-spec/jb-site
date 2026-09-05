@@ -11,13 +11,23 @@ import { cn } from "@/lib/utils";
  */
 
 const BASE_CAMPO =
-  "w-full rounded-lg border bg-white text-graf-900 shadow-xs transition-colors " +
+  // 16px no celular de propósito: abaixo disso o iOS dá zoom ao focar o campo.
+  "w-full rounded-lg border bg-white text-base text-graf-900 shadow-xs sm:text-[0.9375rem] " +
+  "transition-[border-color,box-shadow] duration-150 " +
   "placeholder:text-graf-500 " +
   "focus:outline-none focus:ring-4 " +
-  "disabled:cursor-not-allowed disabled:bg-graf-50 disabled:text-graf-500";
+  "disabled:cursor-not-allowed disabled:border-graf-200 disabled:bg-graf-50 disabled:text-graf-500 " +
+  "read-only:bg-graf-50";
 
-const NORMAL = "border-graf-300 hover:border-graf-400 focus:border-jb-500 focus:ring-jb-500/15";
-const COM_ERRO = "border-jb-500 focus:border-jb-600 focus:ring-jb-500/20";
+/* O foco tem dois sinais somados — a borda vira vermelha e o anel abre em
+   volta. Um só não bastava: a borda sozinha some no scroll rápido e o anel
+   sozinho, translúcido, não marca a caixa. */
+/* graf-450 e não graf-300: a caixa é o único sinal de que ali se digita, e a
+   WCAG 1.4.11 pede 3:1 para esse contorno. graf-300 dava 1,72:1 sobre branco;
+   graf-450 dá 3,39:1. O hover sobe para graf-500 (5,23:1) para continuar
+   sendo um degrau perceptível acima do estado de repouso. */
+const NORMAL = "border-graf-450 hover:border-graf-500 focus:border-jb-500 focus:ring-jb-500/20";
+const COM_ERRO = "border-jb-500 focus:border-jb-600 focus:ring-jb-500/25";
 
 function Rotulo({
   htmlFor,
@@ -178,14 +188,25 @@ export function Marcador({
   const id = props.id ?? gerado;
 
   return (
-    <div className={cn("flex items-start gap-3", className)}>
+    /* O alvo de toque de um marcador é o rótulo, não o quadradinho: por isso o
+       rótulo tem 44px de altura mínima. Com o rótulo alto, o quadrado centra
+       no bloco inteiro — alinhá-lo à primeira linha exigiria uma margem fixa
+       que quebra assim que o tamanho do texto muda. */
+    <div className={cn("flex items-center gap-3", className)}>
       <input
         {...props}
         id={id}
         type="checkbox"
-        className="mt-0.5 size-[18px] shrink-0 cursor-pointer rounded border-graf-300 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
+        className={cn(
+          "size-5 shrink-0 cursor-pointer rounded border-graf-450 text-jb-500",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+          "disabled:cursor-not-allowed disabled:opacity-60",
+        )}
       />
-      <label htmlFor={id} className="cursor-pointer text-sm leading-snug text-graf-700">
+      <label
+        htmlFor={id}
+        className="flex min-h-11 cursor-pointer flex-col justify-center text-sm leading-snug text-graf-700"
+      >
         <span className="font-medium text-graf-800">{rotulo}</span>
         {ajuda ? <span className="mt-0.5 block text-xs text-graf-500">{ajuda}</span> : null}
       </label>
@@ -221,11 +242,12 @@ export function Opcoes<T extends string>({
             <label
               key={opcao.valor}
               className={cn(
-                "cursor-pointer rounded-lg border px-4 py-2.5 text-sm transition-colors",
+                "flex min-h-11 cursor-pointer flex-col justify-center rounded-lg border px-4 py-2.5 text-sm",
+                "transition-[border-color,background-color,color] duration-150",
                 "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-jb-500",
                 ativo
-                  ? "border-jb-500 bg-jb-50 font-semibold text-jb-800"
-                  : "border-graf-300 bg-white text-graf-700 hover:border-graf-400",
+                  ? "border-jb-500 bg-jb-50 font-semibold text-jb-800 shadow-xs"
+                  : "border-graf-450 bg-white text-graf-700 hover:border-graf-500 hover:bg-graf-50",
               )}
             >
               <input

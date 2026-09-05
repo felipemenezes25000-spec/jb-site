@@ -59,7 +59,8 @@ export default async function PaginaConfiguracoes() {
         inteiro assim que você salvar. Para mudar textos de página, use{" "}
         <Link
           href="/admin/conteudo"
-          className="font-semibold text-jb-700 underline underline-offset-2"
+          /* alvo de toque no celular: o link tinha 19px de altura */
+          className="inline-flex items-center font-semibold text-jb-700 underline underline-offset-2 pointer-coarse:min-h-11 pointer-coarse:py-2"
         >
           Conteúdo
         </Link>

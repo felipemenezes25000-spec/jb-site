@@ -300,6 +300,15 @@ export default async function preparar() {
      */
     await prisma.lead.deleteMany({ where: { email: { endsWith: "@jbteste.local" } } });
 
+    /*
+     * As marcas e os produtos que a suíte cria ficavam no banco para sempre —
+     * e marca aparece no filtro do catálogo e na página pública de marcas. Uma
+     * semana de execuções e a loja mostraria dezenas de "Marca Teste" para
+     * quem estivesse comprando. Some tudo pelo prefixo, que só a suíte usa.
+     */
+    await prisma.product.deleteMany({ where: { sku: { startsWith: "TESTE-" } } });
+    await prisma.brand.deleteMany({ where: { name: { startsWith: "Marca Teste " } } });
+
     const fixtures: Fixtures = {
       produto: {
         slug: produto.slug,

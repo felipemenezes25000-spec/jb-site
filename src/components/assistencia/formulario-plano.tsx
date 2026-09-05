@@ -8,7 +8,6 @@ import { interesseEmPlano, type EstadoAssistencia } from "@/app/acoes/assistenci
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, LinkBotao } from "@/components/ui/button";
 import { CampoTelefone } from "@/components/ui/campos-br";
-import { Cartao } from "@/components/ui/data";
 import { Area, Campo, Marcador, Selecao } from "@/components/ui/form";
 
 /**
@@ -40,18 +39,17 @@ export function FormularioPlano({
   );
   const [tel, setTel] = useState(cliente?.telefone ?? "");
 
+  /* Já estamos dentro do cartão da página — nada de cartão dentro de cartão. */
   if (estado.ok) {
     return (
-      <Cartao className={className}>
-        <div className="p-8 text-center">
-          <Aviso tom="sucesso" titulo="Interesse registrado">
-            {estado.ok}
-          </Aviso>
-          <LinkBotao href="/manutencao-preventiva" variante="secundario" className="mt-6">
-            Entender a manutenção preventiva
-          </LinkBotao>
-        </div>
-      </Cartao>
+      <div className={className}>
+        <Aviso tom="sucesso" titulo="Interesse registrado">
+          {estado.ok}
+        </Aviso>
+        <LinkBotao href="/manutencao-preventiva" variante="secundario" className="mt-6">
+          Entender a manutenção preventiva
+        </LinkBotao>
+      </div>
     );
   }
 

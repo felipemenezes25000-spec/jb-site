@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { AlertCircle, MailCheck } from "lucide-react";
 
 import { pedirRecuperacao, type EstadoConta } from "@/app/acoes/conta";
-import { Botao, LinkBotao } from "@/components/ui/button";
+import { Botao, LinkBotao, classesBotao } from "@/components/ui/button";
 import { Campo } from "@/components/ui/form";
 
 /**
@@ -13,20 +13,36 @@ import { Campo } from "@/components/ui/form";
  *
  * A resposta é sempre a mesma, exista ou não a conta — por isso a tela de
  * sucesso não afirma que o e-mail foi enviado para aquela pessoa, e sim que
- * ele chega *se* o endereço estiver cadastrado.
+ * ele chega *se* o endereço estiver cadastrado. A mensagem vem inteira do
+ * servidor, para as duas telas nunca contarem histórias diferentes.
  */
 export function FormularioRecuperar({ emailInicial = "" }: { emailInicial?: string }) {
   const [estado, acao, enviando] = useActionState<EstadoConta, FormData>(pedirRecuperacao, {});
+  const formulario = useRef<HTMLFormElement>(null);
+  const confirmacao = useRef<HTMLDivElement>(null);
 
   const erroDe = (campo: string) => (estado.campo === campo ? estado.erro : undefined);
   const erroGeral = estado.erro && !estado.campo ? estado.erro : null;
+
+  /* O formulário some e o aviso entra no lugar dele: sem levar o foco junto,
+     quem usa leitor de tela continuaria ouvindo um campo que não existe mais. */
+  useEffect(() => {
+    if (estado.ok) {
+      confirmacao.current?.focus();
+      return;
+    }
+    if (!estado.campo) return;
+    const alvo = formulario.current?.elements.namedItem(estado.campo);
+    if (alvo instanceof HTMLElement) alvo.focus();
+  }, [estado]);
 
   if (estado.ok) {
     return (
       <div className="space-y-6">
         <div
-          role="status"
-          className="flex gap-3.5 rounded-xl border border-ok-500/25 bg-ok-50 p-5"
+          ref={confirmacao}
+          tabIndex={-1}
+          className="flex gap-3.5 rounded-xl border border-ok-500/25 bg-ok-50 p-5 outline-none"
         >
           <MailCheck className="mt-0.5 size-5 shrink-0 text-ok-700" aria-hidden />
           <div>
@@ -39,20 +55,18 @@ export function FormularioRecuperar({ emailInicial = "" }: { emailInicial?: stri
           <LinkBotao href="/entrar" variante="secundario">
             Voltar para entrar
           </LinkBotao>
-          <LinkBotao href="/recuperar-senha" variante="texto">
+          {/* âncora comum de propósito: recarregar a página é o que devolve o
+              formulário em branco, já que a ação não tem como ser rebobinada */}
+          <a href="/recuperar-senha" className={classesBotao("texto", "md")}>
             Usar outro e-mail
-          </LinkBotao>
+          </a>
         </div>
       </div>
     );
   }
 
   return (
-    <form action={acao} noValidate className="space-y-5">
-      <p aria-live="polite" className="sr-only">
-        {estado.campo ? estado.erro : ""}
-      </p>
-
+    <form ref={formulario} action={acao} noValidate className="space-y-5">
       {erroGeral ? (
         <p
           role="alert"
@@ -73,7 +87,7 @@ export function FormularioRecuperar({ emailInicial = "" }: { emailInicial?: stri
         required
         autoFocus
         placeholder="voce@clinica.com.br"
-        ajuda="Enviamos um link que vale por 1 hora."
+        ajuda="O link de redefinição vale por 1 hora."
         erro={erroDe("email")}
       />
 
@@ -83,7 +97,10 @@ export function FormularioRecuperar({ emailInicial = "" }: { emailInicial?: stri
 
       <p className="text-sm text-graf-600">
         Lembrou a senha?{" "}
-        <Link href="/entrar" className="font-semibold text-jb-700 underline-offset-4 hover:underline">
+        <Link
+          href="/entrar"
+          className="font-semibold text-jb-700 underline-offset-4 hover:underline"
+        >
           Voltar para entrar
         </Link>
       </p>

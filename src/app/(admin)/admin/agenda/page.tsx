@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import {
   CabecalhoPagina,
-  SUBNAV_SERVICO,
+  subnavServico,
   SubNavegacao,
 } from "@/components/admin/servico/cabecalho";
 import {
@@ -49,7 +49,7 @@ export default async function PaginaAgenda({
 }: {
   searchParams: Promise<Busca>;
 }) {
-  await exigirArea("agenda");
+  const usuario = await exigirArea("agenda");
   const busca = await searchParams;
 
   const hoje = chaveDoDia(new Date());
@@ -204,11 +204,14 @@ export default async function PaginaAgenda({
         descricao="Visitas de assistência, manutenções preventivas e instalações no mesmo calendário."
       />
 
-      <SubNavegacao itens={SUBNAV_SERVICO} atual="/admin/agenda" />
+      <SubNavegacao itens={subnavServico(usuario)} atual="/admin/agenda" />
 
       <Cartao className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-1">
+          {/* Sem `flex-wrap` aqui, seta + título de 12rem + seta + "Hoje"
+              somavam 357px numa faixa de 296 em 360px e a página inteira
+              rolava de lado. Agora o "Hoje" desce para a linha de baixo. */}
+          <div className="flex flex-wrap items-center gap-1">
             <Link
               href={parametros({ data: anterior })}
               aria-label={visao === "mes" ? "Mês anterior" : "Semana anterior"}
@@ -245,7 +248,7 @@ export default async function PaginaAgenda({
                   href={parametros({ visao: opcao })}
                   aria-current={visao === opcao ? "true" : undefined}
                   className={cn(
-                    "inline-flex min-h-10 items-center rounded-md px-3.5 text-sm font-semibold transition-colors",
+                    "inline-flex min-h-10 items-center rounded-md px-3.5 text-sm font-semibold transition-colors pointer-coarse:min-h-11",
                     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
                     visao === opcao
                       ? "bg-jb-500 text-white"
@@ -267,7 +270,7 @@ export default async function PaginaAgenda({
                 id="agenda-tecnico"
                 name="tecnico"
                 defaultValue={tecnicoId}
-                className="h-11 rounded-lg border border-graf-300 bg-white px-3 pr-8 text-sm text-graf-900 hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                className="h-11 rounded-lg border border-graf-450 bg-white px-3 pr-8 text-sm text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
               >
                 <option value="">Todos os técnicos</option>
                 {tecnicos.map((tecnico) => (

@@ -121,7 +121,10 @@ export function ArvoreCategorias({
               <IconeCategoria nome={no.icon} className="size-4" />
             </span>
 
-            <span className="min-w-0 flex-1">
+            {/* Sem largura mínima, o nome da categoria dividia 82px com as
+                etiquetas e os botões de ordem em 360px. Agora as etiquetas
+                descem e o nome fica inteiro. */}
+            <span className="min-w-[11rem] flex-1">
               <Link
                 href={`/admin/categorias/${no.id}`}
                 className="block truncate text-sm font-semibold text-graf-900 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"

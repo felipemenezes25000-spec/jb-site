@@ -107,10 +107,10 @@ export function AcoesOrcamento({ situacao }: { situacao: SituacaoOrcamento }) {
               situacao.emailDoContato
                 ? reenvio
                   ? `O cliente já recebeu esta proposta. O e-mail vai de novo para ${situacao.emailDoContato}, sem mudar status nem validade.`
-                  : `Vai para ${situacao.emailDoContato} e para a Minha JB.`
+                  : `Vai para ${situacao.emailDoContato} e para a Área da Clínica.`
                 : reenvio
-                  ? "Esta proposta não tem e-mail de contato. Ela continua na Minha JB do cliente; para reenviar por e-mail, preencha o contato acima."
-                  : "Sem e-mail de contato, a proposta só é publicada na Minha JB."
+                  ? "Esta proposta não tem e-mail de contato. Ela continua na Área da Clínica do cliente; para reenviar por e-mail, preencha o contato acima."
+                  : "Sem e-mail de contato, a proposta só é publicada na Área da Clínica."
             }
           />
           <form action={enviar} className="space-y-3 p-5">

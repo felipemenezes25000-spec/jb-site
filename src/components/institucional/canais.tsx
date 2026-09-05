@@ -1,7 +1,7 @@
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 
 import { Cartao } from "@/components/ui/data";
-import { LinkBotao } from "@/components/ui/button";
+import { LinkBotao, classesBotao } from "@/components/ui/button";
 import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import { enderecoCompleto, type SettingsMap } from "@/lib/settings";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,10 @@ function Linha({
         <span className="block text-xs font-semibold uppercase tracking-wide text-graf-500">
           {rotulo}
         </span>
-        <span className="mt-0.5 block text-[0.9375rem] font-medium leading-snug text-graf-900">
+        {/* E-mail e endereço são palavras longas e sem espaço. Sem quebra
+            forçada, a largura mínima deles empurra a coluna inteira para fora
+            da tela no celular — e corta o texto no cartão do desktop. */}
+        <span className="mt-0.5 block text-[0.9375rem] font-medium leading-snug text-graf-900 [overflow-wrap:anywhere]">
           {valor}
         </span>
       </span>
@@ -147,7 +150,7 @@ export function CaixaDeAjuda({
             href={whatsapp}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-graf-300 bg-white px-3.5 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50"
+            className={classesBotao("secundario", "sm", "w-full")}
           >
             Chamar no WhatsApp
           </a>
@@ -157,16 +160,33 @@ export function CaixaDeAjuda({
   );
 }
 
-/** Faixa horizontal de contato — fecha as páginas institucionais. */
-export function FaixaDeContato({ s }: { s: SettingsMap }) {
+/**
+ * Faixa horizontal de contato — fecha as páginas institucionais.
+ *
+ * Grafite é área estratégica, e o fim de uma página institucional é
+ * exatamente isso: o único ponto da tela em que a conversa é o próximo passo.
+ * Sobre o escuro só entram as variantes `claro` e `contorno-claro`, que são as
+ * que mantêm o anel de foco visível.
+ */
+export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: string }) {
   const whatsapp = whatsappHref(s.whatsapp, `Olá! Vim pelo site da ${s.empresa_nome}.`);
 
   return (
-    <section className="rounded-2xl border border-graf-200 bg-graf-50 px-6 py-8 sm:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-6">
+    <section
+      className={cn(
+        "on-dark relative isolate overflow-hidden rounded-2xl bg-graf-950 px-6 py-9 sm:px-9 sm:py-10",
+        className,
+      )}
+    >
+      <span
+        aria-hidden
+        className="field-orbit pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(60%_80%_at_85%_0%,#000,transparent)]"
+      />
+
+      <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-6">
         <div className="max-w-lg">
-          <h2 className="text-xl font-bold text-graf-950">Fale com a JB</h2>
-          <p className="mt-2 text-sm leading-relaxed text-graf-600">
+          <h2 className="text-title text-white">Fale com a JB</h2>
+          <p className="texto-suave mt-2.5 text-[0.9375rem] leading-relaxed">
             {s.horario
               ? `Atendimento ${s.horario.charAt(0).toLowerCase()}${s.horario.slice(1)}.`
               : "Escolha o canal que for mais rápido para você."}
@@ -174,22 +194,21 @@ export function FaixaDeContato({ s }: { s: SettingsMap }) {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <LinkBotao href="/contato">Enviar mensagem</LinkBotao>
+          <LinkBotao href="/contato" variante="claro">
+            Enviar mensagem
+          </LinkBotao>
           {whatsapp ? (
             <a
               href={whatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-graf-300 bg-white px-5 text-[0.9375rem] font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-white/80"
+              className={classesBotao("contorno-claro", "md")}
             >
               WhatsApp
             </a>
           ) : null}
           {s.telefone ? (
-            <a
-              href={telHref(s.telefone)}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-graf-300 bg-white px-5 text-[0.9375rem] font-semibold text-graf-800 transition-colors hover:border-graf-400"
-            >
+            <a href={telHref(s.telefone)} className={classesBotao("contorno-claro", "md")}>
               {formatarTelefone(s.telefone)}
             </a>
           ) : null}

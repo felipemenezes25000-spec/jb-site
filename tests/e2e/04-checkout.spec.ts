@@ -50,12 +50,13 @@ test.describe("Checkout e pagamento", () => {
       nome: "Pagador de Teste JB",
     });
 
-    const painel = page.getByText("Simulação — não aparece em produção");
+    const painel = page.getByText("Painel de demonstração");
     await expect(painel, "o provedor de teste precisa oferecer a simulação").toBeVisible();
 
-    await page.getByRole("button", { name: "Aprovar pagamento" }).click();
+    await page.getByRole("button", { name: "Simular pagamento aprovado" }).click();
 
-    await expect(page.getByText("Pagamento confirmado", { exact: true })).toBeVisible({ timeout: 30_000 });
+    // fora de produção o título diz, com todas as letras, que nada foi cobrado
+    await expect(page.getByText(/^Pagamento confirmado/).first()).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Pagamento aprovado", { exact: true }).first()).toBeVisible();
 
     // simulação some depois de pago — não há mais desfecho para forçar
@@ -64,7 +65,7 @@ test.describe("Checkout e pagamento", () => {
     // e o estado sobrevive ao recarregamento: quem gravou foi o servidor
     await page.reload();
     await expect(page.getByRole("heading", { name: numero, level: 1 })).toBeVisible();
-    await expect(page.getByText("Pagamento confirmado", { exact: true })).toBeVisible();
+    await expect(page.getByText(/^Pagamento confirmado/).first()).toBeVisible();
   });
 
   test("recusar o pagamento simulado permite gerar nova cobrança", async ({ page }) => {
@@ -74,7 +75,7 @@ test.describe("Checkout e pagamento", () => {
       nome: "Recusado de Teste JB",
     });
 
-    await page.getByRole("button", { name: "Recusar" }).click();
+    await page.getByRole("button", { name: "Simular recusa" }).click();
 
     await expect(page.getByText("Pagamento recusado", { exact: true })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole("button", { name: /Gerar nova cobrança/ })).toBeVisible();

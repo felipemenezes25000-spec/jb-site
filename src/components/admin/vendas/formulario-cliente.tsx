@@ -166,7 +166,7 @@ export function FormularioCliente({ cliente }: { cliente: ClienteEditavel }) {
         <Marcador
           name="ativo"
           rotulo="Conta ativa"
-          ajuda="Desmarcado, o cliente não consegue entrar na Minha JB. O histórico continua aqui."
+          ajuda="Desmarcado, o cliente não consegue entrar na Área da Clínica. O histórico continua aqui."
           defaultChecked={cliente.ativo}
         />
 

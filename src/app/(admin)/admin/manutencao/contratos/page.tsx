@@ -7,7 +7,7 @@ import { FileSignature, Plus } from "lucide-react";
 import { FiltrosLista } from "@/components/admin/filtros-lista";
 import {
   CabecalhoPagina,
-  SUBNAV_SERVICO,
+  subnavServico,
   SubNavegacao,
 } from "@/components/admin/servico/cabecalho";
 import { EtiquetaContrato } from "@/components/admin/servico/etiquetas";
@@ -204,7 +204,7 @@ export default async function PaginaContratos({
         }
       />
 
-      <SubNavegacao itens={SUBNAV_SERVICO} atual="/admin/manutencao/contratos" />
+      <SubNavegacao itens={subnavServico(usuario)} atual="/admin/manutencao/contratos" />
 
       <FiltrosLista
         campos={[

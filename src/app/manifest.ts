@@ -71,8 +71,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
         url: "/assistencia-tecnica/solicitar",
       },
       {
-        name: "Minha JB",
-        short_name: "Minha JB",
+        name: "Área da Clínica",
+        short_name: "Área da Clínica",
         description: "Pedidos, chamados, orçamentos e equipamentos.",
         url: "/minha-jb",
       },

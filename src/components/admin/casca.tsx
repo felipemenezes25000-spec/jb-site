@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
@@ -8,6 +8,7 @@ import { X } from "lucide-react";
 import { CabecalhoAdmin } from "@/components/admin/cabecalho-admin";
 import { MenuAdmin } from "@/components/admin/menu-admin";
 import { Logo, Simbolo } from "@/components/ui/logo";
+import { usarDialogo } from "@/components/ui/usar-dialogo";
 import { cn } from "@/lib/utils";
 import type { GrupoMenu } from "@/lib/permissoes";
 
@@ -19,6 +20,11 @@ import type { GrupoMenu } from "@/lib/permissoes";
  * O estado recolhido do menu fica em localStorage e é lido depois da
  * hidratação, para o HTML do servidor e o do cliente saírem iguais na primeira
  * pintura.
+ *
+ * A gaveta do celular usa `usarDialogo` do kit em vez de um efeito próprio:
+ * foco para dentro ao abrir, Tab preso no conteúdo, Esc, foco devolvido a quem
+ * abriu e fundo sem rolagem. Antes o foco só era movido para o botão de fechar
+ * e o Tab seguinte caía nos links da página atrás da gaveta.
  */
 
 const CHAVE_COLAPSO = "jb:admin:menu-colapsado";
@@ -41,7 +47,9 @@ export function Casca({
   const pathname = usePathname();
   const [colapsado, setColapsado] = useState(false);
   const [gaveta, setGaveta] = useState(false);
-  const fechar = useRef<HTMLButtonElement>(null);
+
+  const fecharGaveta = useCallback(() => setGaveta(false), []);
+  const refGaveta = usarDialogo(gaveta, fecharGaveta);
 
   useEffect(() => {
     try {
@@ -67,25 +75,6 @@ export function Casca({
   useEffect(() => {
     setGaveta(false);
   }, [pathname]);
-
-  // Esc fecha, e o fundo não rola enquanto a gaveta está aberta
-  useEffect(() => {
-    if (!gaveta) return;
-
-    function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === "Escape") setGaveta(false);
-    }
-
-    const anterior = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", aoTeclar);
-    fechar.current?.focus();
-
-    return () => {
-      document.body.style.overflow = anterior;
-      document.removeEventListener("keydown", aoTeclar);
-    };
-  }, [gaveta]);
 
   return (
     <div className="min-h-dvh bg-graf-50">
@@ -142,7 +131,7 @@ export function Casca({
           type="button"
           tabIndex={-1}
           aria-hidden={!gaveta}
-          onClick={() => setGaveta(false)}
+          onClick={fecharGaveta}
           className={cn(
             "absolute inset-0 bg-graf-950/40 transition-opacity duration-200",
             gaveta ? "opacity-100" : "opacity-0",
@@ -152,9 +141,11 @@ export function Casca({
         </button>
 
         <div
+          ref={refGaveta}
           role="dialog"
           aria-modal={gaveta || undefined}
           aria-label="Menu do painel"
+          tabIndex={-1}
           className={cn(
             "absolute inset-y-0 left-0 flex w-[17rem] max-w-[85vw] flex-col bg-white shadow-pop",
             "transition-transform duration-200 ease-out",
@@ -165,9 +156,8 @@ export function Casca({
             <Logo altura={26} />
             <button
               type="button"
-              ref={fechar}
               aria-label="Fechar menu"
-              onClick={() => setGaveta(false)}
+              onClick={fecharGaveta}
               className={cn(
                 "inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-graf-700 transition-colors",
                 "hover:bg-graf-100 hover:text-graf-950",
@@ -179,7 +169,7 @@ export function Casca({
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <MenuAdmin grupos={grupos} aoNavegar={() => setGaveta(false)} />
+            <MenuAdmin grupos={grupos} aoNavegar={fecharGaveta} />
           </div>
 
           <div className="border-t border-graf-200 px-4 py-3">
@@ -205,8 +195,10 @@ export function Casca({
           aoAbrirGaveta={() => setGaveta(true)}
         />
 
-        <main id="conteudo-admin" className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[100rem]">{children}</div>
+        {/* `min-w-0` no eixo do conteúdo: sem ele, um filho largo (tabela,
+            faixa de filtros) cresce em vez de rolar dentro da própria caixa. */}
+        <main id="conteudo-admin" className="min-w-0 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto min-w-0 max-w-[100rem]">{children}</div>
         </main>
       </div>
     </div>

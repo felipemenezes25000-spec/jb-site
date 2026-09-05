@@ -270,7 +270,7 @@ export function Calendario({
                   >
                     {Number(dia.slice(8))}
                   </span>
-                  {ehHoje ? <span className="text-[10px] uppercase">hoje</span> : null}
+                  {ehHoje ? <span className="text-[11px] font-bold uppercase tracking-[0.08em]">hoje</span> : null}
                 </p>
 
                 <ul className="space-y-1">
@@ -376,7 +376,12 @@ function VisitasParaRemarcar({
               key={visita.id}
               className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3"
             >
-              <span className="min-w-0 flex-1">
+              {/* `flex-1` com base zero não dispara a quebra de linha: ele
+                  encolhe até sobrar. Em 360px a coluna do texto ficava com
+                  28px e a visita virava "se…" / "Ch…" ao lado dos dois botões.
+                  Com uma largura mínima, as ações descem para a linha de
+                  baixo e o texto volta a ser legível. */}
+              <span className="min-w-[14rem] flex-1">
                 <Link
                   href={visita.href}
                   className="block truncate text-sm font-semibold text-graf-900 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -434,7 +439,7 @@ function ItemDoDia({
             style={{ backgroundColor: compromisso.corDoTecnico }}
           />
         ) : null}
-        <span className="tabular text-[11px] font-bold">{hora}</span>
+        <span className="tabular text-xs font-bold">{hora}</span>
         <span className="line-2 min-w-0 flex-1 text-xs font-semibold">{compromisso.titulo}</span>
       </span>
 

@@ -157,7 +157,7 @@ export function DocumentosDoPedido({
               required
               accept="application/pdf,image/jpeg,image/png,image/webp"
               aria-describedby="documento-arquivo-ajuda"
-              className="block w-full cursor-pointer rounded-lg border border-graf-300 bg-white text-sm text-graf-700 file:mr-3 file:min-h-11 file:cursor-pointer file:border-0 file:bg-graf-100 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-graf-800 hover:file:bg-graf-200 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+              className="block w-full cursor-pointer rounded-lg border border-graf-450 bg-white text-sm text-graf-700 file:mr-3 file:min-h-11 file:cursor-pointer file:border-0 file:bg-graf-100 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-graf-800 hover:file:bg-graf-200 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
             />
             <p id="documento-arquivo-ajuda" className="mt-1.5 text-xs text-graf-500">
               PDF ou imagem. O conteúdo é conferido no servidor.

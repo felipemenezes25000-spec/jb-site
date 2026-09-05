@@ -9,6 +9,11 @@ import { cn } from "@/lib/utils";
    hierarquia de título, mesma largura de leitura. A coluna lateral é
    opcional e gruda no topo a partir de `lg` — é onde moram o índice dos
    documentos legais e os atalhos de contato.
+
+   O cabeçalho usa a escala do design system: `sobretitulo` no degrau em caixa
+   alta, `text-display` no título e `texto-guia` no resumo. Nada de tamanho
+   escrito à mão aqui — é o que mantém /sobre, /faq e /termos com o mesmo
+   ritmo das páginas da loja e da assistência.
    ============================================================================ */
 
 export function MolduraInstitucional({
@@ -32,35 +37,41 @@ export function MolduraInstitucional({
   children: React.ReactNode;
 }) {
   return (
-    <div className="container-jb py-8 lg:py-12">
-      <Trilha itens={trilha} className="mb-5" />
+    <div className="pb-16 lg:pb-24">
+      {/* -------------------------------------------------------- cabeçalho */}
+      <header className="relative isolate overflow-hidden border-b border-graf-200 bg-surface-muted">
+        <span
+          aria-hidden
+          className="field-orbit pointer-events-none absolute inset-0 -z-10 opacity-40 [mask-image:radial-gradient(65%_70%_at_80%_0%,#000,transparent)]"
+        />
+        <div className="container-jb py-8 lg:py-12">
+          <Trilha itens={trilha} className="mb-6" />
 
-      <header className="max-w-3xl">
-        {sobretitulo ? (
-          <p className="mb-2 text-sm font-bold uppercase tracking-wider text-jb-600">
-            {sobretitulo}
-          </p>
-        ) : null}
-        <h1 className="text-display leading-tight">{titulo}</h1>
-        {resumo ? (
-          <p className="mt-4 text-lg leading-relaxed text-graf-600">{resumo}</p>
-        ) : null}
-        {acoes ? <div className="mt-7 flex flex-wrap gap-3">{acoes}</div> : null}
-        {atualizadoEm ? (
-          <p className="mt-6 text-xs text-graf-500">
-            Atualizado em {formatarData(atualizadoEm)}.
-          </p>
-        ) : null}
+          <div className="max-w-3xl">
+            {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
+            <h1 className="text-display texto-forte">{titulo}</h1>
+            {resumo ? <p className="texto-guia texto-suave mt-5">{resumo}</p> : null}
+            {acoes ? <div className="mt-8 flex flex-wrap gap-3">{acoes}</div> : null}
+            {atualizadoEm ? (
+              <p className="mt-7 text-sm text-graf-500">
+                Atualizado em {formatarData(atualizadoEm)}.
+              </p>
+            ) : null}
+          </div>
+        </div>
       </header>
 
-      {lateral ? (
-        <div className="mt-10 grid gap-10 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-12">
-          <div className="min-w-0">{children}</div>
-          <aside className="lg:sticky lg:top-6 lg:h-max">{lateral}</aside>
-        </div>
-      ) : (
-        <div className="mt-10 lg:mt-12">{children}</div>
-      )}
+      {/* ---------------------------------------------------------- conteúdo */}
+      <div className="container-jb pt-12 lg:pt-16">
+        {lateral ? (
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-14">
+            <div className="min-w-0">{children}</div>
+            <aside className="lg:sticky lg:top-24 lg:h-max">{lateral}</aside>
+          </div>
+        ) : (
+          <div className="max-w-4xl">{children}</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -80,12 +91,14 @@ export function SecaoInstitucional({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn("scroll-mt-24", className)}>
-      <h2 className="text-xl font-bold text-graf-950">{titulo}</h2>
+    <section id={id} className={cn("scroll-mt-28", className)}>
+      <h2 className="text-title texto-forte">{titulo}</h2>
       {descricao ? (
-        <p className="mt-2 text-sm leading-relaxed text-graf-500">{descricao}</p>
+        <p className="texto-suave mt-2.5 max-w-2xl text-[0.9375rem] leading-relaxed">
+          {descricao}
+        </p>
       ) : null}
-      <div className="mt-4">{children}</div>
+      <div className="mt-6">{children}</div>
     </section>
   );
 }
@@ -93,7 +106,7 @@ export function SecaoInstitucional({
 /** Sequência de seções com respiro e divisória entre elas. */
 export function PilhaDeSecoes({ children }: { children: React.ReactNode }) {
   return (
-    <div className="space-y-10 [&>section+section]:border-t [&>section+section]:border-graf-200 [&>section+section]:pt-10">
+    <div className="space-y-12 [&>section+section]:border-t [&>section+section]:border-graf-200 [&>section+section]:pt-12">
       {children}
     </div>
   );

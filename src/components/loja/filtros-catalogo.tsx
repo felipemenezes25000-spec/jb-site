@@ -1,13 +1,31 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useId, useState } from "react";
+import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { Botao, classesBotao } from "@/components/ui/button";
+import { Chip, FiltrosAtivos } from "@/components/ui/chip";
 import { usarDialogo } from "@/components/ui/usar-dialogo";
-import { formatarPreco, paraCentavos } from "@/lib/format";
+import { formatarPreco, formatarValor, paraCentavos } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+/* ============================================================================
+   Filtros do catálogo
+
+   O estado mora na URL — o resultado é compartilhável, volta certo no botão
+   "voltar" do navegador e é renderizado no servidor.
+
+   Cada opção é um link de verdade, não uma caixa que depende de JavaScript:
+   marcar "ALT" leva para a mesma lista com a marca somada, e clicar de novo
+   leva para a lista sem ela. O desenho de caixa de seleção fica por conta do
+   ícone, que é decorativo — quem usa leitor de tela ouve "Filtrar por
+   Marca: ALT" ou "Remover filtro Marca: ALT".
+
+   Nenhum grupo é inventado: as opções vêm do que existe publicado, e grupo
+   sem opção simplesmente não aparece.
+   ============================================================================ */
 
 export type OpcaoFiltro = { valor: string; rotulo: string; quantidade?: number };
 
@@ -19,228 +37,507 @@ export type GruposFiltro = {
   faixaPreco: { minCents: number; maxCents: number };
 };
 
-const ORDENS = [
+export type ParametrosCatalogo = Record<string, string | string[] | undefined>;
+
+/** O que a rota já define sozinha e por isso não vira filtro na barra. */
+export type Travas = {
+  travarCategoria?: boolean;
+  travarCondicao?: boolean;
+  travarMarca?: boolean;
+};
+
+export const ORDENS = [
   { valor: "relevancia", rotulo: "Mais relevantes" },
   { valor: "menor-preco", rotulo: "Menor preço" },
   { valor: "maior-preco", rotulo: "Maior preço" },
   { valor: "novidades", rotulo: "Novidades" },
   { valor: "destaque", rotulo: "Em destaque" },
-];
+] as const;
+
+const CAMPO_DO_FILTRO: Record<string, string> = {
+  categoria: "Categoria",
+  marca: "Marca",
+  condicao: "Condição",
+  voltagem: "Voltagem",
+};
+
+/* --------------------------------------------------------------- endereços */
+
+function paraParams(parametros: ParametrosCatalogo) {
+  const params = new URLSearchParams();
+  for (const [chave, valor] of Object.entries(parametros)) {
+    if (valor === undefined) continue;
+    const texto = Array.isArray(valor) ? valor.join(",") : valor;
+    if (texto) params.set(chave, texto);
+  }
+  return params;
+}
+
+/** Endereço da mesma lista com as mudanças aplicadas. Página sempre volta ao início. */
+function enderecoCom(
+  caminho: string,
+  parametros: ParametrosCatalogo,
+  mudancas: Record<string, string | null>,
+) {
+  const params = paraParams(parametros);
+  for (const [chave, valor] of Object.entries(mudancas)) {
+    if (valor === null || valor === "") params.delete(chave);
+    else params.set(chave, valor);
+  }
+  params.delete("pagina");
+  const consulta = params.toString();
+  return consulta ? `${caminho}?${consulta}` : caminho;
+}
+
+function valoresDe(parametros: ParametrosCatalogo, chave: string): string[] {
+  const bruto = parametros[chave];
+  if (!bruto) return [];
+  const texto = Array.isArray(bruto) ? bruto.join(",") : bruto;
+  return texto.split(",").filter(Boolean);
+}
+
+function textoDe(parametros: ParametrosCatalogo, chave: string): string {
+  const bruto = parametros[chave];
+  if (!bruto) return "";
+  return Array.isArray(bruto) ? (bruto[0] ?? "") : bruto;
+}
+
+/** Soma ou tira um valor de um filtro de vários valores. */
+function alternado(parametros: ParametrosCatalogo, chave: string, valor: string) {
+  const atuais = valoresDe(parametros, chave);
+  const novos = atuais.includes(valor)
+    ? atuais.filter((v) => v !== valor)
+    : [...atuais, valor];
+  return novos.length ? novos.join(",") : null;
+}
 
 /**
- * Filtros do catálogo. O estado mora na URL — assim o resultado é
- * compartilhável, volta certo no botão "voltar" e é renderizado no servidor.
+ * Filtros aplicados, um por valor — é assim que viram fichas removíveis.
+ * Fica dentro deste módulo de propósito: é código de cliente, e chamar daqui
+ * de um Server Component devolveria uma referência, não a função.
  */
-export function FiltrosCatalogo({
+function filtrosAplicados(parametros: ParametrosCatalogo, grupos: GruposFiltro) {
+  const fichas: { chave: string; valor: string | null; campo?: string; rotulo: string }[] = [];
+
+  const fontes: Record<string, OpcaoFiltro[]> = {
+    categoria: grupos.categorias,
+    marca: grupos.marcas,
+    condicao: grupos.condicoes,
+    voltagem: grupos.voltagens,
+  };
+
+  for (const chave of ["categoria", "marca", "condicao", "voltagem"]) {
+    for (const valor of valoresDe(parametros, chave)) {
+      const rotulo = fontes[chave]?.find((o) => o.valor === valor)?.rotulo ?? valor;
+      fichas.push({ chave, valor, campo: CAMPO_DO_FILTRO[chave], rotulo });
+    }
+  }
+
+  const min = textoDe(parametros, "preco_min");
+  if (min) {
+    fichas.push({
+      chave: "preco_min",
+      valor: null,
+      campo: "Preço",
+      rotulo: `a partir de ${formatarPreco(Number(min))}`,
+    });
+  }
+  const max = textoDe(parametros, "preco_max");
+  if (max) {
+    fichas.push({
+      chave: "preco_max",
+      valor: null,
+      campo: "Preço",
+      rotulo: `até ${formatarPreco(Number(max))}`,
+    });
+  }
+  if (textoDe(parametros, "estoque") === "1") {
+    fichas.push({ chave: "estoque", valor: null, rotulo: "Somente em estoque" });
+  }
+
+  return fichas;
+}
+
+/* ------------------------------------------------------------------- peças */
+
+function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <details open className="group border-b border-graf-200 pb-5 last:border-b-0 last:pb-0">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-md py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500">
+        <span className="text-sm font-bold text-graf-950">{titulo}</span>
+        <ChevronDown
+          className="size-4 shrink-0 text-graf-400 transition-transform duration-200 group-open:rotate-180"
+          aria-hidden
+        />
+      </summary>
+      <div className="mt-2">{children}</div>
+    </details>
+  );
+}
+
+function OpcaoLink({
+  campo,
+  opcao,
+  marcado,
+  href,
+}: {
+  campo: string;
+  opcao: OpcaoFiltro;
+  marcado: boolean;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      scroll={false}
+      // combinação de filtros é resultado dinâmico: não vale pré-carregar dezenas
+      prefetch={false}
+      aria-label={`${marcado ? "Remover filtro" : "Filtrar por"} ${campo}: ${opcao.rotulo}`}
+      className={cn(
+        "flex min-h-11 items-center gap-2.5 rounded-lg px-2 text-sm transition-colors",
+        "hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+        marcado && "bg-jb-50/60 hover:bg-jb-50",
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "flex size-[18px] shrink-0 items-center justify-center rounded border transition-colors",
+          marcado
+            ? "border-jb-500 bg-jb-500 text-white"
+            : "border-graf-300 bg-white text-transparent",
+        )}
+      >
+        <Check className="size-3" strokeWidth={3} />
+      </span>
+      <span className={cn("flex-1", marcado ? "font-semibold text-graf-950" : "text-graf-700")}>
+        {opcao.rotulo}
+      </span>
+      {opcao.quantidade !== undefined ? (
+        <span className="tabular text-xs text-graf-500">{opcao.quantidade}</span>
+      ) : null}
+    </Link>
+  );
+}
+
+/** Lista com rolagem própria quando o grupo é longo — a barra não vira uma página. */
+function Lista({ children, muitas }: { children: React.ReactNode; muitas: boolean }) {
+  return (
+    <div
+      className={cn(
+        "-mx-2 space-y-0.5 px-2",
+        muitas && "max-h-72 overflow-y-auto overscroll-contain",
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ================================================================== painel */
+
+export function ConteudoFiltros({
   grupos,
-  total,
+  parametros,
   travarCategoria,
   travarCondicao,
   travarMarca,
 }: {
   grupos: GruposFiltro;
-  total: number;
-  /** quando a própria rota já define o recorte (ex.: /seminovos, /marcas/alt) */
-  travarCategoria?: boolean;
-  travarCondicao?: boolean;
-  travarMarca?: boolean;
-}) {
+  parametros: ParametrosCatalogo;
+} & Travas) {
   const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const [pendente, iniciar] = useTransition();
-  const [aberto, setAberto] = useState(false);
-  // foco preso, Esc e devolução do foco à âncora que abriu a gaveta
-  const fechar = useCallback(() => setAberto(false), []);
-  const gaveta = usarDialogo(aberto, fechar);
-
-  function aplicar(mudancas: Record<string, string | null>) {
-    const novos = new URLSearchParams(params.toString());
-    for (const [chave, valor] of Object.entries(mudancas)) {
-      if (valor === null || valor === "") novos.delete(chave);
-      else novos.set(chave, valor);
-    }
-    novos.delete("pagina");
-    iniciar(() => router.push(`${pathname}?${novos.toString()}`, { scroll: false }));
-  }
-
-  function alternar(chave: string, valor: string) {
-    const atuais = new Set((params.get(chave) ?? "").split(",").filter(Boolean));
-    if (atuais.has(valor)) atuais.delete(valor);
-    else atuais.add(valor);
-    aplicar({ [chave]: [...atuais].join(",") });
-  }
+  const caminho = usePathname();
+  const idMin = useId();
+  const idMax = useId();
 
   const marcado = (chave: string, valor: string) =>
-    (params.get(chave) ?? "").split(",").filter(Boolean).includes(valor);
+    valoresDe(parametros, chave).includes(valor);
 
-  const ativos = ["categoria", "marca", "condicao", "voltagem", "preco_min", "preco_max", "estoque"]
-    .map((chave) => ({ chave, valor: params.get(chave) }))
-    .filter((f) => f.valor);
+  const enderecoOpcao = (chave: string, valor: string) =>
+    enderecoCom(caminho, parametros, { [chave]: alternado(parametros, chave, valor) });
 
-  function limparTudo() {
-    const novos = new URLSearchParams();
-    const busca = params.get("q");
-    if (busca) novos.set("q", busca);
-    iniciar(() => router.push(`${pathname}?${novos.toString()}`, { scroll: false }));
-  }
+  const min = textoDe(parametros, "preco_min");
+  const max = textoDe(parametros, "preco_max");
+  const temFaixa = grupos.faixaPreco.maxCents > grupos.faixaPreco.minCents;
+  const emEstoque = textoDe(parametros, "estoque") === "1";
 
-  const painel = (
-    <div className="space-y-7">
-      {!travarCategoria && grupos.categorias.length > 0 ? (
+  return (
+    <div className="space-y-5">
+      {/* um grupo com uma opção só não filtra nada: ou some, ou engana */}
+      {!travarCategoria && grupos.categorias.length > 1 ? (
         <Grupo titulo="Categoria">
-          {grupos.categorias.map((opcao) => (
-            <Caixa
-              key={opcao.valor}
-              rotulo={opcao.rotulo}
-              quantidade={opcao.quantidade}
-              marcado={marcado("categoria", opcao.valor)}
-              aoMudar={() => alternar("categoria", opcao.valor)}
-            />
-          ))}
+          <Lista muitas={grupos.categorias.length > 8}>
+            {grupos.categorias.map((opcao) => (
+              <OpcaoLink
+                key={opcao.valor}
+                campo="Categoria"
+                opcao={opcao}
+                marcado={marcado("categoria", opcao.valor)}
+                href={enderecoOpcao("categoria", opcao.valor)}
+              />
+            ))}
+          </Lista>
         </Grupo>
       ) : null}
 
-      {!travarCondicao ? (
+      {!travarCondicao && grupos.condicoes.length > 1 ? (
         <Grupo titulo="Condição">
-          {grupos.condicoes.map((opcao) => (
-            <Caixa
-              key={opcao.valor}
-              rotulo={opcao.rotulo}
-              quantidade={opcao.quantidade}
-              marcado={marcado("condicao", opcao.valor)}
-              aoMudar={() => alternar("condicao", opcao.valor)}
-            />
-          ))}
+          <Lista muitas={false}>
+            {grupos.condicoes.map((opcao) => (
+              <OpcaoLink
+                key={opcao.valor}
+                campo="Condição"
+                opcao={opcao}
+                marcado={marcado("condicao", opcao.valor)}
+                href={enderecoOpcao("condicao", opcao.valor)}
+              />
+            ))}
+          </Lista>
         </Grupo>
       ) : null}
 
       {/* em /marcas/[slug] a marca já é o recorte da rota: mostrar o grupo
-          deixava a pessoa marcar outra marca sem efeito nenhum */}
-      {!travarMarca && grupos.marcas.length > 0 ? (
+          deixaria a pessoa marcar outra marca sem efeito nenhum */}
+      {!travarMarca && grupos.marcas.length > 1 ? (
         <Grupo titulo="Marca">
-          {grupos.marcas.map((opcao) => (
-            <Caixa
-              key={opcao.valor}
-              rotulo={opcao.rotulo}
-              quantidade={opcao.quantidade}
-              marcado={marcado("marca", opcao.valor)}
-              aoMudar={() => alternar("marca", opcao.valor)}
-            />
-          ))}
+          <Lista muitas={grupos.marcas.length > 8}>
+            {grupos.marcas.map((opcao) => (
+              <OpcaoLink
+                key={opcao.valor}
+                campo="Marca"
+                opcao={opcao}
+                marcado={marcado("marca", opcao.valor)}
+                href={enderecoOpcao("marca", opcao.valor)}
+              />
+            ))}
+          </Lista>
         </Grupo>
       ) : null}
 
-      {grupos.voltagens.length > 0 ? (
+      {grupos.voltagens.length > 1 ? (
         <Grupo titulo="Voltagem">
-          {grupos.voltagens.map((opcao) => (
-            <Caixa
-              key={opcao.valor}
-              rotulo={opcao.rotulo}
-              marcado={marcado("voltagem", opcao.valor)}
-              aoMudar={() => alternar("voltagem", opcao.valor)}
-            />
-          ))}
+          <Lista muitas={false}>
+            {grupos.voltagens.map((opcao) => (
+              <OpcaoLink
+                key={opcao.valor}
+                campo="Voltagem"
+                opcao={opcao}
+                marcado={marcado("voltagem", opcao.valor)}
+                href={enderecoOpcao("voltagem", opcao.valor)}
+              />
+            ))}
+          </Lista>
         </Grupo>
       ) : null}
 
-      <Grupo titulo="Preço">
-        <form
-          className="flex items-center gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const dados = new FormData(e.currentTarget);
-            const min = String(dados.get("min") ?? "");
-            const max = String(dados.get("max") ?? "");
-            aplicar({
-              preco_min: min ? String(paraCentavos(min)) : null,
-              preco_max: max ? String(paraCentavos(max)) : null,
-            });
-          }}
-        >
-          <input
-            name="min"
-            inputMode="decimal"
-            placeholder="mín."
-            aria-label="Preço mínimo"
-            defaultValue={
-              params.get("preco_min") ? formatarPreco(Number(params.get("preco_min"))).replace("R$ ", "") : ""
-            }
-            className="h-10 w-full min-w-0 rounded-lg border border-graf-300 px-3 text-sm focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
-          />
-          <span className="text-graf-500" aria-hidden>
-            —
-          </span>
-          <input
-            name="max"
-            inputMode="decimal"
-            placeholder="máx."
-            aria-label="Preço máximo"
-            defaultValue={
-              params.get("preco_max") ? formatarPreco(Number(params.get("preco_max"))).replace("R$ ", "") : ""
-            }
-            className="h-10 w-full min-w-0 rounded-lg border border-graf-300 px-3 text-sm focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
-          />
-          <Botao type="submit" variante="secundario" tamanho="sm" className="shrink-0">
-            OK
-          </Botao>
-        </form>
-        <p className="mt-2 text-xs text-graf-500">
-          No catálogo: de {formatarPreco(grupos.faixaPreco.minCents)} a{" "}
-          {formatarPreco(grupos.faixaPreco.maxCents)}
-        </p>
-      </Grupo>
+      {temFaixa ? (
+        <Grupo titulo="Preço">
+          <form
+            onSubmit={(evento) => {
+              evento.preventDefault();
+              const dados = new FormData(evento.currentTarget);
+              const de = String(dados.get("min") ?? "").trim();
+              const ate = String(dados.get("max") ?? "").trim();
+              router.push(
+                enderecoCom(caminho, parametros, {
+                  preco_min: de ? String(paraCentavos(de)) : null,
+                  preco_max: ate ? String(paraCentavos(ate)) : null,
+                }),
+                { scroll: false },
+              );
+            }}
+          >
+            <div className="flex items-end gap-2">
+              <div className="min-w-0 flex-1">
+                <label htmlFor={idMin} className="mb-1 block text-xs font-medium text-graf-600">
+                  De
+                </label>
+                <input
+                  id={idMin}
+                  name="min"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder={formatarValor(grupos.faixaPreco.minCents)}
+                  defaultValue={min ? formatarValor(Number(min)) : ""}
+                  className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <label htmlFor={idMax} className="mb-1 block text-xs font-medium text-graf-600">
+                  Até
+                </label>
+                <input
+                  id={idMax}
+                  name="max"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder={formatarValor(grupos.faixaPreco.maxCents)}
+                  defaultValue={max ? formatarValor(Number(max)) : ""}
+                  className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
+                />
+              </div>
+              <Botao type="submit" variante="secundario" tamanho="md" className="shrink-0 px-4">
+                Aplicar
+                <span className="sr-only"> faixa de preço</span>
+              </Botao>
+            </div>
+            <p className="mt-2 text-xs text-graf-500">
+              Catálogo de {formatarPreco(grupos.faixaPreco.minCents)} a{" "}
+              {formatarPreco(grupos.faixaPreco.maxCents)}.
+            </p>
+          </form>
+        </Grupo>
+      ) : null}
 
       <Grupo titulo="Disponibilidade">
-        <Caixa
-          rotulo="Somente em estoque"
-          marcado={params.get("estoque") === "1"}
-          aoMudar={() => aplicar({ estoque: params.get("estoque") === "1" ? null : "1" })}
-        />
+        <Lista muitas={false}>
+          <OpcaoLink
+            campo="Disponibilidade"
+            opcao={{ valor: "1", rotulo: "Somente em estoque" }}
+            marcado={emEstoque}
+            href={enderecoCom(caminho, parametros, { estoque: emEstoque ? null : "1" })}
+          />
+        </Lista>
       </Grupo>
     </div>
   );
+}
+
+/** Barra lateral do desktop. Acompanha a rolagem sem cobrir a página. */
+export function PainelFiltros({
+  grupos,
+  parametros,
+  className,
+  ...travas
+}: {
+  grupos: GruposFiltro;
+  parametros: ParametrosCatalogo;
+  className?: string;
+} & Travas) {
+  const caminho = usePathname();
+  const aplicados = filtrosAplicados(parametros, grupos);
+  const limpavel = aplicados.length > 0 || Boolean(textoDe(parametros, "q"));
 
   return (
-    <>
-      {/* Barra de resultado e ordenação */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-graf-600" aria-live="polite">
-          {pendente ? (
-            "Atualizando…"
-          ) : (
-            <>
-              <span className="font-semibold text-graf-900">{total}</span>{" "}
-              {total === 1 ? "item encontrado" : "itens encontrados"}
-            </>
-          )}
-        </p>
+    <div className={cn("lg:sticky lg:top-24", className)}>
+      <div className="mb-4 flex items-center justify-between gap-3 border-b border-graf-200 pb-3">
+        <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-graf-950">Filtros</h2>
+        {limpavel ? (
+          <Link
+            href={caminho}
+            scroll={false}
+            className="inline-flex min-h-9 items-center rounded-md px-1.5 text-sm font-semibold text-jb-700 transition-colors hover:bg-jb-50 hover:text-jb-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+          >
+            Limpar tudo
+          </Link>
+        ) : null}
+      </div>
+      <ConteudoFiltros grupos={grupos} parametros={parametros} {...travas} />
+    </div>
+  );
+}
+
+/* ================================================================== barra */
+
+/**
+ * Barra do catálogo: busca dentro do resultado, atalho de filtros no celular,
+ * ordenação e a fileira de filtros aplicados.
+ */
+export function BarraCatalogo({
+  grupos,
+  parametros,
+  className,
+  ...travas
+}: {
+  grupos: GruposFiltro;
+  parametros: ParametrosCatalogo;
+  className?: string;
+} & Travas) {
+  const router = useRouter();
+  const caminho = usePathname();
+  const [aberto, setAberto] = useState(false);
+  const fechar = useCallback(() => setAberto(false), []);
+  const gaveta = usarDialogo(aberto, fechar);
+  const idBusca = useId();
+
+  const busca = textoDe(parametros, "q");
+  const ordem = textoDe(parametros, "ordem") || "relevancia";
+  const aplicados = filtrosAplicados(parametros, grupos);
+  // sem nenhuma consulta: a coleção inteira, do jeito que a rota a define
+  const enderecoLimpo = caminho;
+
+  function buscar(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const dados = new FormData(evento.currentTarget);
+    const termo = String(dados.get("q") ?? "").trim();
+    router.push(enderecoCom(caminho, parametros, { q: termo || null }), { scroll: false });
+  }
+
+  return (
+    <div className={className}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <form role="search" onSubmit={buscar} className="relative min-w-0 flex-1">
+          <label htmlFor={idBusca} className="sr-only">
+            Buscar no catálogo
+          </label>
+          <Search
+            className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-500"
+            aria-hidden
+          />
+          <input
+            id={idBusca}
+            type="search"
+            name="q"
+            defaultValue={busca}
+            key={busca}
+            placeholder="Buscar por nome, modelo ou marca"
+            className="h-11 w-full rounded-lg border border-graf-450 bg-white pl-10 pr-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
+          />
+          {/* aparece ao receber foco: quem usa teclado enxerga o que vai acionar */}
+          <button
+            type="submit"
+            className="sr-only focus:not-sr-only focus:absolute focus:right-1.5 focus:top-1/2 focus:inline-flex focus:h-8 focus:-translate-y-1/2 focus:items-center focus:rounded-md focus:bg-jb-500 focus:px-3 focus:text-xs focus:font-bold focus:text-white"
+          >
+            Buscar
+          </button>
+        </form>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setAberto(true)}
-            className={classesBotao("secundario", "sm", "lg:hidden")}
+            aria-haspopup="dialog"
+            aria-expanded={aberto}
+            className={classesBotao("secundario", "md", "flex-1 sm:flex-none lg:hidden")}
           >
             <SlidersHorizontal className="size-4" aria-hidden />
             Filtros
-            {ativos.length > 0 ? (
-              <span className="ml-1 rounded-full bg-jb-500 px-1.5 text-[11px] font-bold text-white">
-                {ativos.length}
+            {aplicados.length > 0 ? (
+              <span className="tabular ml-1 inline-flex size-5 items-center justify-center rounded-full bg-jb-500 text-[11px] font-bold text-white">
+                {aplicados.length}
               </span>
             ) : null}
           </button>
 
-          <label className="flex items-center gap-2 text-sm text-graf-600">
-            <span className="hidden sm:inline">Ordenar por</span>
+          <label className="flex min-w-0 flex-1 items-center gap-2 text-sm text-graf-600 sm:flex-none">
+            <span className="hidden shrink-0 sm:inline">Ordenar</span>
             <select
-              value={params.get("ordem") ?? "relevancia"}
-              onChange={(e) => aplicar({ ordem: e.target.value })}
-              className="h-10 rounded-lg border border-graf-300 bg-white px-3 pr-8 text-sm focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+              value={ordem}
+              onChange={(evento) =>
+                router.push(
+                  enderecoCom(caminho, parametros, {
+                    ordem: evento.target.value === "relevancia" ? null : evento.target.value,
+                  }),
+                  { scroll: false },
+                )
+              }
+              aria-label="Ordenar resultados"
+              className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base font-medium text-graf-800 transition-colors hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:w-auto sm:text-sm"
             >
-              {ORDENS.map((ordem) => (
-                <option key={ordem.valor} value={ordem.valor}>
-                  {ordem.rotulo}
+              {ORDENS.map((opcao) => (
+                <option key={opcao.valor} value={opcao.valor}>
+                  {opcao.rotulo}
                 </option>
               ))}
             </select>
@@ -248,131 +545,82 @@ export function FiltrosCatalogo({
         </div>
       </div>
 
-      {ativos.length > 0 ? (
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          {ativos.map((filtro) => (
-            <button
-              key={filtro.chave}
-              type="button"
-              onClick={() => aplicar({ [filtro.chave]: null })}
-              className="inline-flex items-center gap-1.5 rounded-full border border-graf-300 bg-white px-3 py-1.5 text-xs font-medium text-graf-700 hover:border-graf-400"
-            >
-              {rotuloFiltro(filtro.chave, filtro.valor!, grupos)}
-              <X className="size-3" aria-hidden />
-            </button>
+      {aplicados.length > 0 || busca ? (
+        <FiltrosAtivos hrefLimpar={enderecoLimpo} className="mt-4">
+          {busca ? (
+            <Chip
+              campo="Busca"
+              rotulo={busca}
+              tom="marca"
+              href={enderecoCom(caminho, parametros, { q: null })}
+            />
+          ) : null}
+          {aplicados.map((ficha) => (
+            <Chip
+              key={`${ficha.chave}-${ficha.valor ?? ficha.rotulo}`}
+              campo={ficha.campo}
+              rotulo={ficha.rotulo}
+              href={enderecoCom(caminho, parametros, {
+                [ficha.chave]: ficha.valor
+                  ? alternado(parametros, ficha.chave, ficha.valor)
+                  : null,
+              })}
+            />
           ))}
-          <button
-            type="button"
-            onClick={limparTudo}
-            className="text-xs font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-800"
-          >
-            limpar tudo
-          </button>
-        </div>
+        </FiltrosAtivos>
       ) : null}
 
-      {/* Painel lateral — desktop */}
-      <div className="hidden lg:block">{painel}</div>
-
-      {/* Painel em gaveta — mobile */}
+      {/* Gaveta de filtros — celular e tablet */}
       {aberto ? (
         <div className="fixed inset-0 z-70 lg:hidden">
           <div
-            className="absolute inset-0 bg-graf-950/40"
-            onClick={() => setAberto(false)}
+            className="absolute inset-0 bg-graf-950/50 backdrop-blur-[1px]"
+            onClick={fechar}
             aria-hidden
           />
           <div
             ref={gaveta}
             role="dialog"
             aria-modal="true"
-            aria-label="Filtros"
+            aria-label="Filtros do catálogo"
             tabIndex={-1}
-            className="absolute inset-y-0 right-0 flex w-[min(22rem,92vw)] flex-col bg-white"
+            className="absolute inset-y-0 right-0 flex w-[min(23rem,92vw)] flex-col bg-white shadow-pop"
           >
-            <div className="flex h-16 shrink-0 items-center justify-between border-b border-graf-200 px-4">
-              <p className="font-bold text-graf-950">Filtros</p>
-              <button
-                type="button"
-                onClick={() => setAberto(false)}
-                aria-label="Fechar filtros"
-                className="flex size-10 items-center justify-center rounded-lg hover:bg-graf-100"
-              >
-                <X className="size-5" />
-              </button>
+            <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-graf-200 px-4">
+              <p className="text-base font-bold text-graf-950">Filtros</p>
+              <div className="flex items-center gap-1">
+                {aplicados.length > 0 ? (
+                  <Link
+                    href={enderecoLimpo}
+                    scroll={false}
+                    className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-jb-700 transition-colors hover:bg-jb-50"
+                  >
+                    Limpar
+                  </Link>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={fechar}
+                  aria-label="Fechar filtros"
+                  className="flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                >
+                  <X className="size-5" aria-hidden />
+                </button>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">{painel}</div>
+
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4">
+              <ConteudoFiltros grupos={grupos} parametros={parametros} {...travas} />
+            </div>
+
             <div className="shrink-0 border-t border-graf-200 p-4">
-              <Botao onClick={() => setAberto(false)} larguraTotal>
-                Ver {total} {total === 1 ? "item" : "itens"}
+              <Botao onClick={fechar} larguraTotal>
+                Ver resultados
               </Botao>
             </div>
           </div>
         </div>
       ) : null}
-    </>
-  );
-}
-
-function rotuloFiltro(chave: string, valor: string, grupos: GruposFiltro) {
-  if (chave === "preco_min") return `a partir de ${formatarPreco(Number(valor))}`;
-  if (chave === "preco_max") return `até ${formatarPreco(Number(valor))}`;
-  if (chave === "estoque") return "em estoque";
-
-  const fonte =
-    chave === "categoria"
-      ? grupos.categorias
-      : chave === "marca"
-        ? grupos.marcas
-        : chave === "condicao"
-          ? grupos.condicoes
-          : grupos.voltagens;
-
-  return valor
-    .split(",")
-    .map((v) => fonte.find((o) => o.valor === v)?.rotulo ?? v)
-    .join(", ");
-}
-
-function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h3 className="mb-3 text-sm font-bold text-graf-900">{titulo}</h3>
-      <div className="space-y-1">{children}</div>
     </div>
-  );
-}
-
-function Caixa({
-  rotulo,
-  quantidade,
-  marcado,
-  aoMudar,
-}: {
-  rotulo: string;
-  quantidade?: number;
-  marcado: boolean;
-  aoMudar: () => void;
-}) {
-  return (
-    <label
-      className={cn(
-        "flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-graf-50",
-        "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-jb-500",
-      )}
-    >
-      <input
-        type="checkbox"
-        checked={marcado}
-        onChange={aoMudar}
-        className="size-4 shrink-0 rounded border-graf-300 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
-      />
-      <span className={cn("flex-1", marcado ? "font-semibold text-graf-900" : "text-graf-700")}>
-        {rotulo}
-      </span>
-      {quantidade !== undefined ? (
-        <span className="text-xs tabular text-graf-500">{quantidade}</span>
-      ) : null}
-    </label>
   );
 }

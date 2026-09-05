@@ -195,7 +195,7 @@ export async function fecharPedidoComPix(
   await continuar(page, "Revisão");
 
   /* 4. revisão */
-  const finalizar = page.getByRole("button", { name: /^Finalizar/ });
+  const finalizar = page.getByRole("button", { name: /^Confirmar pedido/ });
   await expect(finalizar).toBeVisible();
   const totalCents = emCentavos((await finalizar.innerText()).split("—")[1] ?? "");
 

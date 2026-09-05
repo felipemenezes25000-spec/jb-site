@@ -84,7 +84,7 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
               setAlternadas({});
             }}
             placeholder="Buscar por palavra — garantia, orçamento, prazo…"
-            className="h-12 w-full rounded-lg border border-graf-300 bg-white pl-11 pr-4 text-[0.9375rem] shadow-xs transition-colors placeholder:text-graf-500 hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+            className="h-12 w-full rounded-lg border border-graf-450 bg-white pl-11 pr-4 text-[0.9375rem] shadow-xs transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
           />
         </div>
 
@@ -133,11 +133,12 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
         <div className="mt-6 space-y-10">
           {filtrados.map((grupo) => (
             <section key={grupo.chave}>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-graf-500">
-                {grupo.rotulo}
-              </h2>
+              <div className="flex items-center gap-4">
+                <h2 className="shrink-0 text-lg font-bold text-graf-950">{grupo.rotulo}</h2>
+                <span aria-hidden className="h-px flex-1 bg-graf-200" />
+              </div>
 
-              <ul className="mt-3 divide-y divide-graf-200 overflow-hidden rounded-xl border border-graf-200 bg-white">
+              <ul className="mt-4 divide-y divide-graf-200 overflow-hidden rounded-xl border border-graf-200 bg-white">
                 {grupo.perguntas.map((item) => {
                   const aberta = estaAberta(item.id);
                   return (

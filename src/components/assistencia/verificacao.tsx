@@ -112,7 +112,7 @@ export function Verificacao({
               maxLength={5}
               aria-describedby={idImagem}
               aria-invalid={erro ? true : undefined}
-              className="tabular h-11 w-full rounded-lg border border-graf-300 bg-white px-3.5 uppercase tracking-[0.3em] text-graf-900 shadow-xs focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+              className="tabular h-11 w-full rounded-lg border border-graf-450 bg-white px-3.5 uppercase tracking-[0.3em] text-graf-900 shadow-xs focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
             />
             <Erro texto={erro} />
           </div>

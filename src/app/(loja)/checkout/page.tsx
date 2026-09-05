@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { PaymentMethod } from "@prisma/client";
+import { FlaskConical, Headset, ShieldCheck, Truck } from "lucide-react";
 
 import { Checkout, type MetodoCheckout } from "@/components/loja/checkout";
 import { ResumoCheckout } from "@/components/loja/checkout-resumo";
@@ -96,12 +97,48 @@ export default async function CheckoutPage() {
         ]}
         className="mb-5"
       />
-      <h1 className="text-display leading-tight">Fechar pedido</h1>
-      <p className="mt-2 max-w-2xl text-base leading-relaxed text-graf-600">
-        São cinco etapas curtas. Nada é cobrado antes da última.
-      </p>
 
-      <div className="mt-8 grid gap-8 pb-28 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-10 lg:pb-0">
+      <header className="max-w-2xl">
+        <h1 className="text-display texto-forte">Fechar pedido</h1>
+        <p className="texto-guia mt-3 text-graf-600">
+          Cinco etapas curtas. Você confere tudo antes de confirmar, e nada é cobrado até lá.
+        </p>
+      </header>
+
+      <ul className="mt-6 flex flex-wrap gap-x-8 gap-y-2.5 text-sm text-graf-600">
+        <li className="flex items-center gap-2">
+          <Truck className="size-4 shrink-0 text-graf-400" aria-hidden />
+          {ligado(s.retirada_disponivel) ? "Entrega ou retirada na JB" : "Entrega pelo seu CEP"}
+        </li>
+        <li className="flex items-center gap-2">
+          <Headset className="size-4 shrink-0 text-graf-400" aria-hidden />
+          Equipe técnica própria em São Paulo
+        </li>
+        <li className="flex items-center gap-2">
+          <ShieldCheck className="size-4 shrink-0 text-graf-400" aria-hidden />
+          Acompanhamento do pedido do pagamento à entrega
+        </li>
+      </ul>
+
+      {/*
+        O provedor de teste não pode se disfarçar de cobrança real. O aviso
+        aparece antes da primeira etapa e não some — quem está vendo a
+        demonstração precisa saber disso desde o começo.
+      */}
+      {simulado ? (
+        <div className="mt-6 flex items-start gap-3 rounded-xl border border-dashed border-warn-500/50 bg-warn-50 px-4 py-3.5">
+          <FlaskConical className="mt-0.5 size-5 shrink-0 text-warn-700" aria-hidden />
+          <div className="min-w-0 text-sm leading-relaxed text-graf-700">
+            <p className="font-bold text-warn-700">Ambiente de demonstração</p>
+            <p className="mt-1">
+              Você pode percorrer o pedido inteiro, mas o pagamento não é processado de verdade:
+              nenhuma cobrança acontece e nenhum dado de cartão é pedido.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-8 grid gap-8 pb-32 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start lg:gap-10 lg:pb-0">
         <Checkout
           logado={Boolean(sessao)}
           nomeCliente={sessao?.name ?? ""}

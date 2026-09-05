@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Redefinir senha",
   description: "Cadastre uma nova senha para sua conta na JB.",
   robots: { index: false, follow: false },
+  // o endereço desta página carrega o código do e-mail: nenhum link clicado
+  // aqui pode levar esse endereço junto no cabeçalho de origem
+  referrer: "no-referrer",
 };
 
 type Busca = Promise<{ [chave: string]: string | string[] | undefined }>;
@@ -22,13 +25,14 @@ export default async function RedefinirSenhaPage({ searchParams }: { searchParam
   if (!token) {
     return (
       <MolduraAutenticacao
+        etapa="Área da Clínica"
         titulo="Link de redefinição incompleto"
         subtitulo="O endereço aberto não traz o código de verificação. Isso costuma acontecer quando o link do e-mail é copiado pela metade."
       >
         <Vazio
           icone={Link2Off}
           titulo="Não conseguimos identificar o pedido"
-          descricao="Peça um novo link de redefinição: ele chega em instantes e vale por 1 hora."
+          descricao="Peça um novo link de redefinição. Ele serve uma vez só e vale por 1 hora."
           acao={<LinkBotao href="/recuperar-senha">Pedir um novo link</LinkBotao>}
         />
       </MolduraAutenticacao>
@@ -37,12 +41,16 @@ export default async function RedefinirSenhaPage({ searchParams }: { searchParam
 
   return (
     <MolduraAutenticacao
+      etapa="Área da Clínica"
       titulo="Cadastrar nova senha"
-      subtitulo="Escolha uma senha nova. Assim que ela for salva, você já entra na Minha JB e o link deixa de valer."
+      subtitulo="Escolha uma senha nova. Assim que ela for salva, você já entra na Área da Clínica e o link deixa de valer."
       rodape={
         <p>
           Não foi você que pediu?{" "}
-          <Link href="/contato" className="font-semibold text-jb-700 underline-offset-4 hover:underline">
+          <Link
+            href="/contato"
+            className="font-semibold text-jb-700 underline-offset-4 hover:underline"
+          >
             Avise a equipe da JB
           </Link>{" "}
           — sua senha atual continua valendo enquanto o link não for usado.

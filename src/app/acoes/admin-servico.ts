@@ -2165,7 +2165,7 @@ const esquemaLembrete = z.object({
 /**
  * Avisa o cliente da visita e trava o lembrete.
  *
- * O aviso é o da área Minha JB — que é o canal que existe hoje. O registro em
+ * O aviso é o da área Área da Clínica — que é o canal que existe hoje. O registro em
  * `MaintenanceReminder` é o que impede o mesmo lembrete de sair duas vezes.
  */
 export async function enviarLembreteDeVisita(
@@ -2689,7 +2689,7 @@ const esquemaStatusAgendamento = z.object({
  *
  * Cancelar uma visita não é só trocar uma palavra na tabela: o cliente foi
  * avisado da data e precisa saber que ela caiu. Por isso o cancelamento e a
- * conclusão gravam evento no chamado e aviso na Minha JB, na mesma transação
+ * conclusão gravam evento no chamado e aviso na Área da Clínica, na mesma transação
  * do próprio status — evento sem status é mentira, status sem evento é buraco
  * na linha do tempo.
  *

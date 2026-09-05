@@ -1,22 +1,66 @@
+import Image from "next/image";
 import Link from "next/link";
-import { PackageSearch } from "lucide-react";
+import { Suspense } from "react";
+import type { Prisma, ProductCondition } from "@prisma/client";
+import { ArrowRight, PackageSearch, SearchX, TriangleAlert } from "lucide-react";
 
-import { GradeProdutos } from "@/components/loja/card-produto";
-import { FiltrosCatalogo, type GruposFiltro } from "@/components/loja/filtros-catalogo";
+import { GradeProdutos, type Parcelamento } from "@/components/loja/card-produto";
+import {
+  BarraCatalogo,
+  PainelFiltros,
+  type GruposFiltro,
+  type ParametrosCatalogo,
+} from "@/components/loja/filtros-catalogo";
 import { LinkBotao } from "@/components/ui/button";
-import { Trilha, Vazio, type Migalha } from "@/components/ui/data";
-import { buscarProdutos, type FiltrosCatalogo as Filtros, type Ordenacao } from "@/lib/catalogo";
+import { Esqueleto, Trilha, Vazio, type Migalha } from "@/components/ui/data";
+import { EsqueletoGradeProdutos } from "@/components/ui/esqueletos";
+import { Paginacao } from "@/components/ui/paginacao";
+import {
+  buscarProdutos,
+  montarFiltro,
+  PUBLICADO,
+  type FiltrosCatalogo as Filtros,
+  type Ordenacao,
+} from "@/lib/catalogo";
+import { paraCentavos } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
+import { getSettings } from "@/lib/settings";
 
-const CONDICOES_ROTULO: Record<string, string> = {
+/* ============================================================================
+   Vitrine
+
+   A moldura de toda coleção da loja: /loja, categoria, marca, busca e as
+   páginas de condição. Título, atalhos, barra de busca e ordenação, filtros à
+   esquerda no desktop e em gaveta no celular, resultado paginado.
+
+   A lista de produtos vive dentro de um <Suspense> com chave própria: a
+   moldura aparece na hora e, a cada mudança de filtro, o esqueleto ocupa
+   exatamente o lugar dos cartões enquanto o banco responde.
+   ============================================================================ */
+
+const POR_PAGINA = 24;
+
+const CONDICOES_ROTULO: Record<ProductCondition, string> = {
   novo: "Novo",
   seminovo: "Seminovo JB",
   usado: "Usado",
   recondicionado: "Recondicionado JB",
 };
 
-export type ParametrosVitrine = Record<string, string | string[] | undefined>;
+/** Cada condição tem a sua própria coleção na loja. */
+const CONDICOES_ROTA: Record<ProductCondition, string> = {
+  novo: "/novos",
+  seminovo: "/seminovos",
+  usado: "/usados",
+  recondicionado: "/recondicionados",
+};
+
+const ORDEM_CONDICAO: ProductCondition[] = ["novo", "seminovo", "recondicionado", "usado"];
+
+export type ParametrosVitrine = ParametrosCatalogo;
+
+/** Link de coleção mostrado abaixo do título — só com contagem real. */
+export type Atalho = { rotulo: string; href: string; quantidade?: number };
 
 function lista(valor: string | string[] | undefined): string[] {
   if (!valor) return [];
@@ -24,8 +68,103 @@ function lista(valor: string | string[] | undefined): string[] {
   return texto.split(",").filter(Boolean);
 }
 
-/** Monta os grupos de filtro a partir do que existe publicado no catálogo. */
-async function montarGrupos(): Promise<GruposFiltro> {
+function texto(valor: string | string[] | undefined): string | undefined {
+  if (!valor) return undefined;
+  const bruto = Array.isArray(valor) ? valor[0] : valor;
+  return bruto?.trim() ? bruto.trim() : undefined;
+}
+
+/* ============================================================================
+   Atalhos de coleção — nada escrito à mão, tudo vem do catálogo publicado
+   ============================================================================ */
+
+/** As outras condições que existem no catálogo, com quantidade real. */
+export async function atalhosDeCondicao(atual?: ProductCondition): Promise<Atalho[]> {
+  try {
+    const linhas = await prisma.product.groupBy({
+      by: ["condition"],
+      where: PUBLICADO,
+      _count: { _all: true },
+    });
+    const mapa = new Map(linhas.map((linha) => [linha.condition, linha._count._all]));
+
+    return ORDEM_CONDICAO.filter((c) => c !== atual && (mapa.get(c) ?? 0) > 0).map((c) => ({
+      rotulo: CONDICOES_ROTULO[c],
+      href: CONDICOES_ROTA[c],
+      quantidade: mapa.get(c),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Subcategorias publicadas com produto ativo. Sem filhas, devolve lista vazia. */
+export async function atalhosDeSubcategorias(slugPai: string): Promise<Atalho[]> {
+  try {
+    const filhas = await prisma.category.findMany({
+      where: { published: true, parent: { slug: slugPai } },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: {
+        slug: true,
+        name: true,
+        _count: { select: { products: { where: PUBLICADO } } },
+      },
+    });
+
+    return filhas
+      .filter((filha) => filha._count.products > 0)
+      .map((filha) => ({
+        rotulo: filha.name,
+        href: `/categoria/${filha.slug}`,
+        quantidade: filha._count.products,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/** Categorias de primeiro nível com produto ativo — a entrada da loja. */
+export async function atalhosDeCategorias(limite = 10): Promise<Atalho[]> {
+  try {
+    const categorias = await prisma.category.findMany({
+      where: { published: true, parentId: null },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: {
+        slug: true,
+        name: true,
+        _count: { select: { products: { where: PUBLICADO } } },
+      },
+    });
+
+    return categorias
+      .filter((categoria) => categoria._count.products > 0)
+      .slice(0, limite)
+      .map((categoria) => ({
+        rotulo: categoria.name,
+        href: `/categoria/${categoria.slug}`,
+        quantidade: categoria._count.products,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/* ============================================================================
+   Grupos de filtro — recortados pela coleção em que a pessoa está
+
+   Em /seminovos, a contagem ao lado de cada marca é a de seminovos daquela
+   marca. Número que não corresponde ao clique é pior do que número nenhum.
+   ============================================================================ */
+
+const GRUPOS_VAZIOS: GruposFiltro = {
+  categorias: [],
+  marcas: [],
+  condicoes: [],
+  voltagens: [],
+  faixaPreco: { minCents: 0, maxCents: 0 },
+};
+
+async function montarGrupos(base: Prisma.ProductWhereInput): Promise<GruposFiltro> {
   const [categorias, marcas, condicoes, voltagens, faixa] = await Promise.all([
     prisma.category.findMany({
       where: { published: true },
@@ -33,30 +172,31 @@ async function montarGrupos(): Promise<GruposFiltro> {
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: { status: "active" } } } },
+        _count: { select: { products: { where: base } } },
       },
     }),
     prisma.brand.findMany({
       where: { published: true },
-      orderBy: { name: "asc" },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: { status: "active" } } } },
+        _count: { select: { products: { where: base } } },
       },
     }),
     prisma.product.groupBy({
       by: ["condition"],
-      where: { status: "active" },
+      where: base,
       _count: { _all: true },
     }),
     prisma.product.findMany({
-      where: { status: "active", voltage: { not: null } },
+      where: { ...base, voltage: { not: null } },
       distinct: ["voltage"],
+      orderBy: { voltage: "asc" },
       select: { voltage: true },
     }),
     prisma.product.aggregate({
-      where: { status: "active", priceCents: { gt: 0 } },
+      where: { ...base, priceCents: { gt: 0 } },
       _min: { priceCents: true },
       _max: { priceCents: true },
     }),
@@ -64,20 +204,32 @@ async function montarGrupos(): Promise<GruposFiltro> {
 
   return {
     categorias: categorias
-      .filter((c) => c._count.products > 0)
-      .map((c) => ({ valor: c.slug, rotulo: c.name, quantidade: c._count.products })),
+      .filter((categoria) => categoria._count.products > 0)
+      .map((categoria) => ({
+        valor: categoria.slug,
+        rotulo: categoria.name,
+        quantidade: categoria._count.products,
+      })),
     marcas: marcas
-      .filter((m) => m._count.products > 0)
-      .map((m) => ({ valor: m.slug, rotulo: m.name, quantidade: m._count.products })),
-    condicoes: condicoes.map((c) => ({
-      valor: c.condition,
-      rotulo: CONDICOES_ROTULO[c.condition] ?? c.condition,
-      quantidade: c._count._all,
-    })),
+      .filter((marca) => marca._count.products > 0)
+      .map((marca) => ({
+        valor: marca.slug,
+        rotulo: marca.name,
+        quantidade: marca._count.products,
+      })),
+    condicoes: ORDEM_CONDICAO.flatMap((condicao) => {
+      const linha = condicoes.find((c) => c.condition === condicao);
+      if (!linha) return [];
+      return [
+        { valor: condicao, rotulo: CONDICOES_ROTULO[condicao], quantidade: linha._count._all },
+      ];
+    }),
     voltagens: voltagens
-      .map((v) => v.voltage!)
-      .filter(Boolean)
-      .map((v) => ({ valor: v, rotulo: v === "bivolt" ? "Bivolt" : `${v} V` })),
+      .flatMap((linha) => (linha.voltage ? [linha.voltage] : []))
+      .map((voltagem) => ({
+        valor: voltagem,
+        rotulo: voltagem === "bivolt" ? "Bivolt" : `${voltagem} V`,
+      })),
     faixaPreco: {
       minCents: faixa._min.priceCents ?? 0,
       maxCents: faixa._max.priceCents ?? 0,
@@ -85,12 +237,236 @@ async function montarGrupos(): Promise<GruposFiltro> {
   };
 }
 
+/* ============================================================================
+   Estados da lista: carregando, erro, vazio
+   ============================================================================ */
+
+function EsqueletoResultados() {
+  return (
+    <div>
+      <Esqueleto className="h-4 w-40" />
+      <EsqueletoGradeProdutos
+        quantidade={6}
+        className="mt-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+      />
+    </div>
+  );
+}
+
+function ErroCatalogo({ caminho }: { caminho: string }) {
+  return (
+    <div className="rounded-xl border border-jb-200 bg-jb-50/60 px-6 py-14 text-center">
+      <span className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-white text-jb-600 shadow-card">
+        <TriangleAlert className="size-5" aria-hidden />
+      </span>
+      <p className="text-base font-semibold text-graf-900">
+        Não foi possível carregar o catálogo agora
+      </p>
+      <p className="mx-auto mt-1.5 max-w-md text-sm leading-relaxed text-graf-600">
+        A falha é nossa, não sua. Tente de novo em instantes — ou fale com a equipe, que
+        responde com preço e prazo por escrito.
+      </p>
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <LinkBotao href={caminho} variante="secundario">
+          Tentar de novo
+        </LinkBotao>
+        <LinkBotao href="/contato">Falar com a equipe</LinkBotao>
+      </div>
+    </div>
+  );
+}
+
+function SemResultado({
+  busca,
+  temFiltro,
+  caminho,
+  pagina,
+  endereco,
+}: {
+  busca?: string;
+  temFiltro: boolean;
+  caminho: string;
+  pagina: number;
+  /** A mesma lista na primeira página — para quem chegou por um link antigo. */
+  endereco: string;
+}) {
+  // link antigo apontando para uma página que não existe mais
+  if (pagina > 1) {
+    return (
+      <Vazio
+        icone={PackageSearch}
+        titulo="Esta página não tem mais itens"
+        descricao="A lista mudou desde que este endereço foi criado. Volte ao começo para ver o que está disponível agora."
+        acao={<LinkBotao href={endereco}>Voltar ao início da lista</LinkBotao>}
+      />
+    );
+  }
+
+  if (busca) {
+    return (
+      <Vazio
+        icone={SearchX}
+        titulo={`Nada encontrado para “${busca}”`}
+        descricao="Tente o nome do equipamento, a marca ou o modelo. Muita coisa é atendida sob orçamento, mesmo fora do catálogo."
+        acao={
+          <div className="flex flex-wrap justify-center gap-3">
+            <LinkBotao href="/loja" variante="secundario">
+              Ver o catálogo inteiro
+            </LinkBotao>
+            <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
+          </div>
+        }
+      />
+    );
+  }
+
+  if (temFiltro) {
+    return (
+      <Vazio
+        icone={PackageSearch}
+        titulo="Nenhum item com esses filtros"
+        descricao="Tire um filtro para ampliar o resultado. Se você já sabe o modelo que precisa, a equipe monta o orçamento."
+        acao={
+          <div className="flex flex-wrap justify-center gap-3">
+            <LinkBotao href={caminho} variante="secundario">
+              Limpar filtros
+            </LinkBotao>
+            <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
+          </div>
+        }
+      />
+    );
+  }
+
+  return (
+    <Vazio
+      icone={PackageSearch}
+      titulo="Nada publicado aqui ainda"
+      descricao="Esta lista é montada a partir do que está cadastrado no catálogo. Enquanto os itens não entram, a equipe atende por orçamento."
+      acao={
+        <div className="flex flex-wrap justify-center gap-3">
+          <LinkBotao href="/loja" variante="secundario">
+            Ver o catálogo
+          </LinkBotao>
+          <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
+        </div>
+      }
+    />
+  );
+}
+
+/** O convite comercial que fecha toda coleção com resultado. */
+function ChamadaCatalogo() {
+  return (
+    <div className="mt-14 rounded-xl border border-graf-200 bg-surface-muted px-6 py-8 sm:px-8">
+      <div className="flex flex-wrap items-center justify-between gap-6">
+        <div className="max-w-xl">
+          <h2 className="text-title text-graf-950">Não encontrou o que procura?</h2>
+          <p className="mt-2 text-base leading-relaxed text-graf-600">
+            A JB atende além do que está publicado. Diga o equipamento, a marca e o modelo e a
+            equipe responde com preço e prazo.
+          </p>
+        </div>
+        <LinkBotao href="/orcamento" tamanho="lg" className="shrink-0">
+          Pedir orçamento
+          <ArrowRight className="size-4" aria-hidden />
+        </LinkBotao>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+   Resultados — o bloco que muda a cada filtro
+   ============================================================================ */
+
+type Busca = Awaited<ReturnType<typeof buscarProdutos>>;
+type Resposta = { ok: true; dados: Busca } | { ok: false };
+
+async function Resultados({
+  consulta,
+  parcelamento,
+  busca,
+  temFiltro,
+  caminho,
+  endereco,
+  pagina,
+}: {
+  consulta: Promise<Resposta>;
+  parcelamento: Parcelamento;
+  busca?: string;
+  temFiltro: boolean;
+  caminho: string;
+  endereco: string;
+  pagina: number;
+}) {
+  const resposta = await consulta;
+  if (!resposta.ok) return <ErroCatalogo caminho={caminho} />;
+
+  const { dados } = resposta;
+
+  if (dados.produtos.length === 0) {
+    return (
+      <SemResultado
+        busca={busca}
+        temFiltro={temFiltro}
+        caminho={caminho}
+        endereco={endereco}
+        pagina={pagina}
+      />
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-graf-600" aria-live="polite">
+        <span className="tabular font-bold text-graf-950">{dados.total}</span>{" "}
+        {busca || temFiltro
+          ? dados.total === 1
+            ? "item encontrado"
+            : "itens encontrados"
+          : dados.total === 1
+            ? "item nesta lista"
+            : "itens nesta lista"}
+      </p>
+
+      <GradeProdutos
+        produtos={dados.produtos}
+        parcelamento={parcelamento}
+        colunas={{ base: 1, sm: 2, lg: 2, xl: 3 }}
+        className="mt-5"
+      />
+
+      {dados.total > POR_PAGINA ? (
+        <Paginacao
+          pagina={pagina}
+          porPagina={POR_PAGINA}
+          total={dados.total}
+          rotuloSingular="item"
+          rotuloPlural="itens"
+          className="mt-10 border-t border-graf-200 pt-6"
+        />
+      ) : null}
+
+      <ChamadaCatalogo />
+    </div>
+  );
+}
+
+/* ============================================================================
+   Vitrine
+   ============================================================================ */
+
 export async function Vitrine({
   titulo,
   descricao,
   trilha,
+  caminho,
   parametros,
   filtrosFixos,
+  imagem,
+  atalhos,
+  rotuloAtalhos = "Coleções relacionadas",
   travarCategoria,
   travarCondicao,
   travarMarca,
@@ -98,115 +474,152 @@ export async function Vitrine({
   titulo: string;
   descricao?: string;
   trilha: Migalha[];
+  /** Endereço desta coleção, sem query — é o "limpar tudo" da tela. */
+  caminho: string;
   parametros: ParametrosVitrine;
   filtrosFixos?: Filtros;
+  /** Logo da marca ou foto da categoria — só quando existe no cadastro. */
+  imagem?: { url: string; alt: string };
+  atalhos?: Atalho[];
+  rotuloAtalhos?: string;
   travarCategoria?: boolean;
   travarCondicao?: boolean;
   travarMarca?: boolean;
 }) {
-  const pagina = Number(parametros.pagina ?? 1) || 1;
-  const ordem = (parametros.ordem as Ordenacao) ?? "relevancia";
+  const pagina = Math.max(1, Number(texto(parametros.pagina) ?? 1) || 1);
+  const ordem = (texto(parametros.ordem) as Ordenacao | undefined) ?? "relevancia";
+  const busca = texto(parametros.q);
 
   const categorias = lista(parametros.categoria);
   const marcas = lista(parametros.marca);
   const condicoes = lista(parametros.condicao);
+  const voltagens = lista(parametros.voltagem);
+  const precoMin = texto(parametros.preco_min);
+  const precoMax = texto(parametros.preco_max);
+  const emEstoque = texto(parametros.estoque) === "1";
 
   const filtros: Filtros = {
-    busca: typeof parametros.q === "string" ? parametros.q : undefined,
-    // listas inteiras, não só o primeiro item: a barra de filtros marca várias
+    busca,
+    // listas inteiras, não só o primeiro item: a barra marca vários valores
     categoria: filtrosFixos?.categoria ?? (categorias.length ? categorias : undefined),
     marca: filtrosFixos?.marca ?? (marcas.length ? marcas : undefined),
     condicao:
       filtrosFixos?.condicao ??
       (condicoes.length ? (condicoes as Filtros["condicao"]) : undefined),
-    voltagem: (() => {
-      const v = lista(parametros.voltagem);
-      return v.length ? v : undefined;
-    })(),
-    precoMin: parametros.preco_min ? Number(parametros.preco_min) : undefined,
-    precoMax: parametros.preco_max ? Number(parametros.preco_max) : undefined,
-    emEstoque: parametros.estoque === "1",
+    voltagem: voltagens.length ? voltagens : undefined,
+    precoMin: precoMin ? Number(precoMin) : undefined,
+    precoMax: precoMax ? Number(precoMax) : undefined,
+    emEstoque,
   };
 
-  const [{ produtos, total, paginas }, grupos] = await Promise.all([
-    buscarProdutos({ filtros, ordem, pagina, porPagina: 24 }),
-    montarGrupos(),
+  const temFiltro =
+    categorias.length > 0 ||
+    marcas.length > 0 ||
+    condicoes.length > 0 ||
+    voltagens.length > 0 ||
+    Boolean(precoMin) ||
+    Boolean(precoMax) ||
+    emEstoque;
+
+  // a consulta começa antes dos grupos e só é aguardada dentro do Suspense:
+  // a moldura da página aparece de imediato e apenas a lista espera o banco
+  const consulta: Promise<Resposta> = buscarProdutos({
+    filtros,
+    ordem,
+    pagina,
+    porPagina: POR_PAGINA,
+  })
+    .then((dados) => ({ ok: true as const, dados }))
+    .catch(() => ({ ok: false as const }));
+
+  const [grupos, configuracoes] = await Promise.all([
+    montarGrupos(montarFiltro(filtrosFixos ?? {})).catch(() => GRUPOS_VAZIOS),
+    getSettings().catch(() => null),
   ]);
 
-  const consulta = new URLSearchParams(
-    Object.entries(parametros).flatMap(([k, v]) =>
-      v && k !== "pagina" ? [[k, Array.isArray(v) ? v.join(",") : v] as [string, string]] : [],
-    ),
-  );
+  const parcelamento: Parcelamento = {
+    max: Math.max(1, Number(configuracoes?.parcelas_max ?? 12) || 12),
+    minimoCents: paraCentavos(configuracoes?.parcela_minima ?? "50,00") || 5000,
+  };
+
+  const travas = { travarCategoria, travarCondicao, travarMarca };
+  const chave = JSON.stringify({ filtros, ordem, pagina });
+
+  // a mesma lista na primeira página, para quem chegou por um link antigo
+  const enderecoPrimeiraPagina = (() => {
+    const params = new URLSearchParams();
+    for (const [chaveParam, valor] of Object.entries(parametros)) {
+      if (chaveParam === "pagina" || !valor) continue;
+      params.set(chaveParam, Array.isArray(valor) ? valor.join(",") : valor);
+    }
+    const consultaTexto = params.toString();
+    return consultaTexto ? `${caminho}?${consultaTexto}` : caminho;
+  })();
 
   return (
     <div className="container-jb py-8 lg:py-12">
       <Trilha itens={trilha} className="mb-5" />
 
-      <header className="mb-8 max-w-2xl">
-        <h1 className="text-display leading-tight">{titulo}</h1>
-        {descricao ? (
-          <p className="mt-3 text-base leading-relaxed text-graf-600">{descricao}</p>
+      <header className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
+        <div className="max-w-2xl">
+          <h1 className="text-display text-graf-950">{titulo}</h1>
+          {descricao ? <p className="texto-guia mt-4 text-graf-600">{descricao}</p> : null}
+        </div>
+
+        {imagem ? (
+          <div className="flex h-20 w-40 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white p-4 shadow-card">
+            <Image
+              src={imagem.url}
+              alt={imagem.alt}
+              width={160}
+              height={64}
+              className="h-full w-auto object-contain"
+            />
+          </div>
         ) : null}
       </header>
 
-      <div className="grid gap-10 lg:grid-cols-[16rem_1fr] lg:gap-12">
-        <aside className="lg:order-first">
-          <FiltrosCatalogo
-            grupos={grupos}
-            total={total}
-            travarCategoria={travarCategoria}
-            travarCondicao={travarCondicao}
-            travarMarca={travarMarca}
-          />
+      {atalhos && atalhos.length > 0 ? (
+        <nav aria-label={rotuloAtalhos} className="mt-7">
+          <ul className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+            {atalhos.map((atalho) => (
+              <li key={atalho.href} className="shrink-0">
+                <Link
+                  href={atalho.href}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 text-sm font-semibold text-graf-800 shadow-xs transition-colors hover:border-graf-400 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                >
+                  {atalho.rotulo}
+                  {atalho.quantidade !== undefined ? (
+                    <span className="tabular text-xs font-medium text-graf-500">
+                      {atalho.quantidade}
+                    </span>
+                  ) : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : null}
+
+      <div className="mt-8 grid gap-x-12 gap-y-8 lg:mt-10 lg:grid-cols-[17rem_minmax(0,1fr)]">
+        <aside className="hidden lg:block" aria-label="Filtros do catálogo">
+          <PainelFiltros grupos={grupos} parametros={parametros} {...travas} />
         </aside>
 
         <div className="min-w-0">
-          {produtos.length === 0 ? (
-            <Vazio
-              icone={PackageSearch}
-              titulo="Nenhum item com esses filtros"
-              descricao="Tente remover algum filtro ou fale com a equipe — muita coisa é atendida sob orçamento."
-              acao={
-                <div className="flex flex-wrap justify-center gap-3">
-                  <LinkBotao href="/loja" variante="secundario">
-                    Limpar filtros
-                  </LinkBotao>
-                  <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
-                </div>
-              }
-            />
-          ) : (
-            <>
-              <GradeProdutos produtos={produtos} className="lg:grid-cols-3" />
+          <BarraCatalogo grupos={grupos} parametros={parametros} className="mb-6" {...travas} />
 
-              {paginas > 1 ? (
-                <nav aria-label="Paginação" className="mt-10 flex justify-center gap-1.5">
-                  {Array.from({ length: paginas }, (_, i) => i + 1).map((n) => {
-                    const params = new URLSearchParams(consulta);
-                    if (n > 1) params.set("pagina", String(n));
-                    const atual = n === pagina;
-                    return (
-                      <Link
-                        key={n}
-                        href={`?${params.toString()}`}
-                        aria-current={atual ? "page" : undefined}
-                        scroll={false}
-                        className={cn(
-                          "flex size-10 items-center justify-center rounded-lg border text-sm font-semibold transition-colors",
-                          atual
-                            ? "border-jb-500 bg-jb-500 text-white"
-                            : "border-graf-300 bg-white text-graf-700 hover:border-graf-400",
-                        )}
-                      >
-                        {n}
-                      </Link>
-                    );
-                  })}
-                </nav>
-              ) : null}
-            </>
-          )}
+          <Suspense key={chave} fallback={<EsqueletoResultados />}>
+            <Resultados
+              consulta={consulta}
+              parcelamento={parcelamento}
+              busca={busca}
+              temFiltro={temFiltro}
+              caminho={caminho}
+              endereco={enderecoPrimeiraPagina}
+              pagina={pagina}
+            />
+          </Suspense>
         </div>
       </div>
     </div>

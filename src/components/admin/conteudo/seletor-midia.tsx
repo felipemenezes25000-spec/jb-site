@@ -139,8 +139,8 @@ function GradeDaBiblioteca({
           placeholder="Buscar pelo nome do arquivo ou pela descrição"
           aria-label="Buscar na biblioteca"
           className={cn(
-            "h-11 w-full rounded-lg border border-graf-300 bg-white pl-9 pr-3 text-sm text-graf-900",
-            "placeholder:text-graf-500 hover:border-graf-400",
+            "h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-sm text-graf-900",
+            "placeholder:text-graf-500 hover:border-graf-500",
             "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
           )}
         />

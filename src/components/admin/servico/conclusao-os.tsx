@@ -147,7 +147,7 @@ export function ConcluirOS({
             name="encerrarChamado"
             defaultChecked
             rotulo="Encerrar também o chamado de origem"
-            ajuda="O cliente recebe o aviso de conclusão na área Minha JB."
+            ajuda="O cliente recebe o aviso de conclusão na área Área da Clínica."
           />
         ) : null}
       </div>

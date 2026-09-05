@@ -134,7 +134,7 @@ export const PASTAS: Record<
   // As três pastas abaixo guardam material do cliente (foto de chamado, foto de
   // equipamento, foto de OS) e o lugar delas é o armazenamento privado. Hoje o
   // endereço devolvido aqui é usado direto em `<img src>` nas telas do painel e
-  // da Minha JB, que não têm por onde pedir os bytes a uma rota autenticada:
+  // da Área da Clínica, que não têm por onde pedir os bytes a uma rota autenticada:
   // marcá-las como privadas agora deixaria essas telas sem imagem nenhuma. Ficam
   // públicas com nome imprevisível até existir a rota genérica de mídia
   // protegida — está registrado nas pendências desta entrega.

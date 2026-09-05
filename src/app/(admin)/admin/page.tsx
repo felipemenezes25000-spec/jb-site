@@ -156,7 +156,11 @@ function Linha({
           "hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
         )}
       >
-        <span className="min-w-0 flex-1">
+        {/* Com `flex-1` de base zero a coluna do texto encolhe em vez de
+            quebrar a linha: em 360px o pedido virava "JB…" com 24px visíveis
+            ao lado do valor e da etiqueta. A largura mínima empurra valor e
+            etiqueta para a linha de baixo. */}
+        <span className="min-w-[12rem] flex-1">
           <span className="block truncate text-sm font-semibold text-graf-900">{titulo}</span>
           <span className="block truncate text-xs text-graf-500">{detalhe}</span>
         </span>

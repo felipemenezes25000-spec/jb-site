@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { EquipmentStatus } from "@prisma/client";
-import { CalendarClock, ImageOff, LifeBuoy, MapPin, ShieldCheck } from "lucide-react";
+import { CalendarClock, LifeBuoy, MapPin, ShieldCheck } from "lucide-react";
 
 import { Etiqueta, type Tom } from "@/components/ui/data";
 import { ROTULO_EQUIPAMENTO } from "@/lib/equipamento";
@@ -51,10 +51,27 @@ export function CartaoEquipamento({ equipamento }: { equipamento: EquipamentoDoC
 
   const lugar = [equipamento.location?.name, equipamento.room].filter(Boolean).join(" · ");
 
+  const etiquetas = (
+    <>
+      <Etiqueta tom={TOM_STATUS[equipamento.status]}>
+        {ROTULO_EQUIPAMENTO[equipamento.status]}
+      </Etiqueta>
+      {equipamento.chamadosAbertos > 0 ? (
+        <Etiqueta tom="alerta" ponto>
+          {plural(equipamento.chamadosAbertos, "chamado aberto", "chamados abertos")}
+        </Etiqueta>
+      ) : null}
+    </>
+  );
+
   return (
     <article className="relative flex w-full flex-col overflow-hidden rounded-xl border border-graf-200 bg-white shadow-card transition-[box-shadow,border-color] duration-200 hover:border-graf-300 hover:shadow-raised">
-      <div className="relative aspect-4/3 bg-graf-50">
-        {equipamento.imagemUrl ? (
+      {/* A maior parte do prontuário é equipamento que a clínica cadastrou sem
+          foto. Reservar a placa de 4:3 para todos deixava um retângulo cinza
+          com ícone de imagem quebrada ocupando metade do cartão — o estado
+          normal parecia defeito. Sem foto, as etiquetas viram a faixa de topo. */}
+      {equipamento.imagemUrl ? (
+        <div className="relative aspect-4/3 bg-graf-50">
           <Image
             src={equipamento.imagemUrl}
             alt={equipamento.imagemAlt}
@@ -62,22 +79,13 @@ export function CartaoEquipamento({ equipamento }: { equipamento: EquipamentoDoC
             sizes="(max-width: 640px) 90vw, (max-width: 1280px) 45vw, 30vw"
             className="object-cover"
           />
-        ) : (
-          <div className="flex size-full items-center justify-center text-graf-300">
-            <ImageOff className="size-8" aria-hidden />
-          </div>
-        )}
-        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-          <Etiqueta tom={TOM_STATUS[equipamento.status]}>
-            {ROTULO_EQUIPAMENTO[equipamento.status]}
-          </Etiqueta>
-          {equipamento.chamadosAbertos > 0 ? (
-            <Etiqueta tom="alerta" ponto>
-              {plural(equipamento.chamadosAbertos, "chamado aberto", "chamados abertos")}
-            </Etiqueta>
-          ) : null}
+          <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">{etiquetas}</div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5 border-b border-graf-100 bg-graf-50/70 px-4 py-3">
+          {etiquetas}
+        </div>
+      )}
 
       <div className="flex flex-1 flex-col p-4">
         <h3 className="text-[0.9375rem] font-bold leading-snug text-graf-950">

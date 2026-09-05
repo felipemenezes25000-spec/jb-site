@@ -80,10 +80,10 @@ export default async function ContatoPage() {
           <CorpoCms html={pagina?.body ?? ""} />
 
           <div>
-            <h2 className="text-xl font-bold text-graf-950">Envie sua mensagem</h2>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-graf-600">
-              Os campos marcados com asterisco são obrigatórios. Nada é publicado no site:
-              a mensagem vai direto para a equipe da JB.
+            <h2 className="text-title texto-forte">Envie sua mensagem</h2>
+            <p className="mt-2.5 max-w-xl text-[0.9375rem] leading-relaxed text-graf-600">
+              Os campos marcados com asterisco são obrigatórios. A mensagem vai direto para
+              a equipe da JB — nada aparece publicamente no site.
             </p>
             <div className="mt-6">
               <FormularioContato />
@@ -92,12 +92,12 @@ export default async function ContatoPage() {
         </div>
       </MolduraInstitucional>
 
-      <section id="mapa" className="container-jb scroll-mt-24 pb-14 lg:pb-20">
-        <h2 className="flex items-center gap-2 text-xl font-bold text-graf-950">
-          <MapPin className="size-5 text-jb-600" aria-hidden />
+      <section id="mapa" className="container-jb scroll-mt-28 pb-16 lg:pb-24">
+        <h2 className="text-title texto-forte flex items-center gap-2.5">
+          <MapPin className="size-6 shrink-0 text-jb-600" aria-hidden />
           Onde a JB fica
         </h2>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-graf-600">
+        <p className="mt-2.5 max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600">
           {s.horario
             ? `Atendimento presencial ${s.horario.charAt(0).toLowerCase()}${s.horario.slice(1)}.`
             : "Visitas com hora marcada."}{" "}

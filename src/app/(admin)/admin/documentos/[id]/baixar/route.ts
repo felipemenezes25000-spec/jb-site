@@ -6,7 +6,7 @@ import { nomeParaDownload, respostaDeArquivo } from "@/lib/upload";
 /**
  * Download de documento pelo painel.
  *
- * Existe pelo mesmo motivo da rota da Minha JB: nota fiscal, laudo e contrato
+ * Existe pelo mesmo motivo da rota da Área da Clínica: nota fiscal, laudo e contrato
  * ficam em armazenamento privado e não têm endereço que abra no navegador. A
  * equipe precisa do arquivo, então precisa de uma rota que confira quem está
  * pedindo — `exigirArea("clientes")`, a mesma guarda da ficha do cliente, que é

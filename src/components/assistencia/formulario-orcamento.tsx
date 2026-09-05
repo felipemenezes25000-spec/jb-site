@@ -14,7 +14,6 @@ import { pedirOrcamento, type EstadoAssistencia } from "@/app/acoes/assistencia"
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, LinkBotao } from "@/components/ui/button";
 import { CampoTelefone } from "@/components/ui/campos-br";
-import { Cartao } from "@/components/ui/data";
 import { Area, Campo, Marcador, Opcoes, Selecao } from "@/components/ui/form";
 
 /**
@@ -62,27 +61,27 @@ export function FormularioOrcamento({
   const [linhas, setLinhas] = useState<Linha[]>(() => [novaLinha(itemInicial)]);
   const [tel, setTel] = useState(cliente?.telefone ?? "");
 
+  /* O formulário já vive dentro do cartão da página: repetir a moldura aqui
+     produzia cartão dentro de cartão, com borda e respiro em dobro. */
   if (estado.ok) {
     return (
-      <Cartao className={className}>
-        <div className="p-8 text-center">
-          <Aviso tom="sucesso" titulo="Pedido registrado">
-            {estado.ok}
-          </Aviso>
-          <p className="mt-6 text-sm leading-relaxed text-graf-600">
-            Enquanto isso, dá para conhecer o catálogo ou ver como funciona a assistência
-            técnica da JB.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <LinkBotao href="/loja" variante="secundario">
-              Ver equipamentos
-            </LinkBotao>
-            <LinkBotao href="/assistencia-tecnica" variante="secundario">
-              Assistência técnica
-            </LinkBotao>
-          </div>
+      <div className={className}>
+        <Aviso tom="sucesso" titulo="Pedido registrado">
+          {estado.ok}
+        </Aviso>
+        <p className="mt-6 text-[0.9375rem] leading-relaxed text-graf-600">
+          Enquanto a equipe monta a proposta, dá para conhecer o catálogo ou ver como
+          funciona a assistência técnica da JB.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <LinkBotao href="/loja" variante="secundario">
+            Ver equipamentos
+          </LinkBotao>
+          <LinkBotao href="/assistencia-tecnica" variante="secundario">
+            Assistência técnica
+          </LinkBotao>
         </div>
-      </Cartao>
+      </div>
     );
   }
 

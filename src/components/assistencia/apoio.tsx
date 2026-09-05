@@ -1,0 +1,159 @@
+import { MessageCircle, Phone } from "lucide-react";
+
+import { Cartao } from "@/components/ui/data";
+import { telHref, whatsappHref } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+/* ============================================================================
+   Coluna de apoio da assistência
+
+   Abrir chamado, pedir orçamento e ver um serviço têm a mesma anatomia: o
+   formulário ou o conteúdo à esquerda, e à direita uma pilha curta de cartões
+   que respondem "o que eu preciso ter em mãos", "o que acontece depois" e
+   "e se eu quiser falar com alguém".
+
+   Antes cada uma dessas telas desenhava os próprios cartões, com título ora
+   em 14px ora em 15px e a lista de contato repetida quatro vezes. Aqui a
+   forma é uma só — e o telefone e o WhatsApp continuam saindo de
+   `getSettings()`, nunca escritos no código.
+   ============================================================================ */
+
+export function CartaoApoio({
+  titulo,
+  descricao,
+  children,
+  className,
+}: {
+  titulo: string;
+  descricao?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Cartao className={cn("p-5", className)}>
+      <h2 className="text-[0.9375rem] font-bold text-graf-950">{titulo}</h2>
+      {descricao ? (
+        <p className="mt-2 text-sm leading-relaxed text-graf-600">{descricao}</p>
+      ) : null}
+      {children ? <div className="mt-4">{children}</div> : null}
+    </Cartao>
+  );
+}
+
+/** Lista de itens com ícone — "o que deixar por perto", "o que acontece depois". */
+export function ListaDeApoio({
+  itens,
+  numerada,
+  className,
+}: {
+  itens: { icone: React.ComponentType<{ className?: string }>; texto: React.ReactNode }[];
+  /** Vira `<ol>` e anuncia "Passo N" para quem usa leitor de tela. */
+  numerada?: boolean;
+  className?: string;
+}) {
+  const Lista = numerada ? "ol" : "ul";
+
+  return (
+    <Lista className={cn("space-y-4 text-sm", className)}>
+      {itens.map((item, indice) => (
+        <li key={indice} className="flex gap-3">
+          <item.icone className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
+          <span className="leading-relaxed text-graf-600">
+            {numerada ? <span className="sr-only">Passo {indice + 1}: </span> : null}
+            {item.texto}
+          </span>
+        </li>
+      ))}
+    </Lista>
+  );
+}
+
+/**
+ * Telefone e WhatsApp da JB, com alvo de toque de 44px em cada linha.
+ * Canal sem valor configurado no painel simplesmente não aparece.
+ */
+export function CanaisDiretos({
+  telefone,
+  whatsapp,
+  mensagem,
+  className,
+}: {
+  telefone: string;
+  whatsapp: string;
+  /** Texto que abre a conversa no WhatsApp. */
+  mensagem: string;
+  className?: string;
+}) {
+  const link = whatsappHref(whatsapp, mensagem);
+  if (!telefone && !link) return null;
+
+  return (
+    <ul className={cn("space-y-2 text-[0.9375rem]", className)}>
+      {telefone ? (
+        <li>
+          <a
+            href={telHref(telefone)}
+            className="-mx-2 flex min-h-11 items-center gap-3 rounded-lg px-2 font-semibold text-graf-900 transition-colors hover:bg-graf-50 hover:text-jb-700"
+          >
+            <Phone className="size-4.5 shrink-0 text-jb-600" aria-hidden />
+            {telefone}
+          </a>
+        </li>
+      ) : null}
+      {link ? (
+        <li>
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="-mx-2 flex min-h-11 items-center gap-3 rounded-lg px-2 font-semibold text-graf-900 transition-colors hover:bg-graf-50 hover:text-jb-700"
+          >
+            <MessageCircle className="size-4.5 shrink-0 text-jb-600" aria-hidden />
+            {whatsapp}
+          </a>
+        </li>
+      ) : null}
+    </ul>
+  );
+}
+
+/**
+ * Cabeçalho de página da assistência.
+ *
+ * Faixa clara com a malha da marca, título na escala de display e um
+ * parágrafo de abertura. É o que dá a /assistencia-tecnica/solicitar, a
+ * /orcamento e a /servicos a mesma entrada — sem que cada uma invente o
+ * próprio espaçamento.
+ */
+export function CabecalhoAssistencia({
+  trilha,
+  sobretitulo,
+  titulo,
+  resumo,
+  acoes,
+}: {
+  /** Já montada pela página — normalmente o componente `Trilha`. */
+  trilha?: React.ReactNode;
+  sobretitulo?: string;
+  titulo: string;
+  resumo?: React.ReactNode;
+  acoes?: React.ReactNode;
+}) {
+  return (
+    <header className="relative isolate overflow-hidden border-b border-graf-200 bg-surface-muted">
+      <span
+        aria-hidden
+        className="field-orbit pointer-events-none absolute inset-0 -z-10 opacity-40 [mask-image:radial-gradient(65%_70%_at_80%_0%,#000,transparent)]"
+      />
+      <div className="container-jb py-8 lg:py-12">
+        {trilha ? <div className="mb-6">{trilha}</div> : null}
+        <div className="max-w-3xl">
+          {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
+          <h1 className="text-display texto-forte">{titulo}</h1>
+          {resumo ? <p className="texto-guia texto-suave mt-5">{resumo}</p> : null}
+          {acoes ? <div className="mt-8 flex flex-wrap gap-3">{acoes}</div> : null}
+        </div>
+      </div>
+    </header>
+  );
+}

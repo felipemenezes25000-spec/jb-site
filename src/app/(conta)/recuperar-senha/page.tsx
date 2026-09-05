@@ -18,12 +18,16 @@ export default async function RecuperarSenhaPage({ searchParams }: { searchParam
 
   return (
     <MolduraAutenticacao
+      etapa="Área da Clínica"
       titulo="Recuperar o acesso"
       subtitulo="Informe o e-mail da conta. Se ele estiver cadastrado, enviamos um link para você cadastrar uma senha nova."
       rodape={
         <p>
           Não usa mais esse e-mail?{" "}
-          <Link href="/contato" className="font-semibold text-jb-700 underline-offset-4 hover:underline">
+          <Link
+            href="/contato"
+            className="font-semibold text-jb-700 underline-offset-4 hover:underline"
+          >
             Fale com a equipe da JB
           </Link>{" "}
           para atualizar o cadastro.

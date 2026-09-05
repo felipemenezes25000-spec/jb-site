@@ -177,8 +177,8 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                       setTextos((atual) => ({ ...atual, [campo.nome]: evento.target.value }))
                     }
                     className={cn(
-                      "h-11 w-full rounded-lg border border-graf-300 bg-white pl-9 pr-3 text-sm text-graf-900",
-                      "placeholder:text-graf-500 hover:border-graf-400",
+                      "h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-sm text-graf-900",
+                      "placeholder:text-graf-500 hover:border-graf-500",
                       "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
                     )}
                   />
@@ -201,8 +201,8 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                   value={params.get(campo.nome) ?? ""}
                   onChange={(evento) => aplicar({ [campo.nome]: evento.target.value })}
                   className={cn(
-                    "h-11 w-full rounded-lg border border-graf-300 bg-white px-3 pr-8 text-sm text-graf-900",
-                    "hover:border-graf-400",
+                    "h-11 w-full rounded-lg border border-graf-450 bg-white px-3 pr-8 text-sm text-graf-900",
+                    "hover:border-graf-500",
                     "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
                   )}
                 >
@@ -236,17 +236,20 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
           }
 
           return (
+            // No celular os dois campos de data empilham: lado a lado, dois
+            // `input[type=date]` não encolhem abaixo da própria largura mínima
+            // e empurravam a barra para fora da tela em 360px.
             <fieldset key={campo.nome} className="min-w-0">
               <legend className="mb-1 text-xs font-semibold text-graf-600">{campo.rotulo}</legend>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <EntradaData
                   id={`filtro-${campo.nome}-de`}
                   rotuloOculto={`${campo.rotulo} — de`}
                   valor={params.get(`${campo.nome}_de`) ?? ""}
                   aoMudar={(valor) => aplicar({ [`${campo.nome}_de`]: valor })}
-                  className="w-40"
+                  className="w-full min-w-0 sm:w-40"
                 />
-                <span className="text-sm text-graf-500" aria-hidden>
+                <span className="shrink-0 text-sm text-graf-500" aria-hidden>
                   até
                 </span>
                 <EntradaData
@@ -254,7 +257,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                   rotuloOculto={`${campo.rotulo} — até`}
                   valor={params.get(`${campo.nome}_ate`) ?? ""}
                   aoMudar={(valor) => aplicar({ [`${campo.nome}_ate`]: valor })}
-                  className="w-40"
+                  className="w-full min-w-0 sm:w-40"
                 />
               </div>
             </fieldset>
@@ -325,8 +328,8 @@ function EntradaData({
         value={valor}
         onChange={(evento) => aoMudar(evento.target.value)}
         className={cn(
-          "h-11 rounded-lg border border-graf-300 bg-white px-3 text-sm text-graf-900",
-          "hover:border-graf-400",
+          "h-11 rounded-lg border border-graf-450 bg-white px-3 text-sm text-graf-900",
+          "hover:border-graf-500",
           "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
           className ?? "w-full",
         )}

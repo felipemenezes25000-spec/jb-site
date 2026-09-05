@@ -54,7 +54,7 @@ export function MensagemDoChamado({ chamadoId }: { chamadoId: string }) {
                 aoEscolher={() => setVisivel(true)}
                 icone={<Eye className="size-4" aria-hidden />}
                 titulo="Mensagem ao cliente"
-                descricao="Aparece na Minha JB e gera aviso"
+                descricao="Aparece na Área da Clínica e gera aviso"
               />
             </div>
           </fieldset>

@@ -6,7 +6,7 @@ import {
   CabecalhoPagina,
   Dado,
   Dados,
-  SUBNAV_SERVICO,
+  subnavServico,
   SubNavegacao,
 } from "@/components/admin/servico/cabecalho";
 import { AreaAcao, CampoAcao, SelecaoAcao } from "@/components/admin/servico/campos";
@@ -162,7 +162,7 @@ export default async function PaginaTecnicos() {
                   type="checkbox"
                   name="ativo"
                   defaultChecked
-                  className="mt-0.5 size-[18px] shrink-0 rounded border-graf-300 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
+                  className="mt-0.5 size-[18px] shrink-0 rounded border-graf-450 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
                 />
                 <span className="text-sm text-graf-700">
                   <span className="font-medium text-graf-800">Ativo na escala</span>
@@ -176,7 +176,7 @@ export default async function PaginaTecnicos() {
         }
       />
 
-      <SubNavegacao itens={SUBNAV_SERVICO} atual="/admin/tecnicos" />
+      <SubNavegacao itens={subnavServico(usuario)} atual="/admin/tecnicos" />
 
       {tecnicos.length === 0 ? (
         <Vazio
@@ -316,7 +316,7 @@ export default async function PaginaTecnicos() {
                               type="checkbox"
                               name="ativo"
                               defaultChecked={tecnico.active}
-                              className="mt-0.5 size-[18px] shrink-0 rounded border-graf-300 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
+                              className="mt-0.5 size-[18px] shrink-0 rounded border-graf-450 text-jb-500 focus:ring-2 focus:ring-jb-500/30"
                             />
                             <span className="text-sm text-graf-700">
                               <span className="font-medium text-graf-800">Ativo na escala</span>

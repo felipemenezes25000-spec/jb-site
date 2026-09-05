@@ -118,9 +118,9 @@ function tokenDeSimulacao() {
 /** O provedor de teste decide pelo final do valor — então a tela pode adiantar. */
 function desfechoSimulado(valorCents: number) {
   const final = valorCents % 100;
-  if (final === 1) return "Este total termina em ,01: a simulação vai recusar o cartão.";
-  if (final === 2) return "Este total termina em ,02: a simulação vai deixar em análise.";
-  return "Este total não termina em ,01 nem ,02: a simulação vai aprovar o cartão.";
+  if (final === 1) return "Como este total termina em ,01, a demonstração vai recusar o cartão.";
+  if (final === 2) return "Como este total termina em ,02, a demonstração vai deixar em análise.";
+  return "Como este total não termina em ,01 nem ,02, a demonstração vai aprovar o cartão.";
 }
 
 function CartaoSimulado({
@@ -144,9 +144,9 @@ function CartaoSimulado({
 
   return (
     <div className="space-y-4">
-      <Aviso tom="atencao" titulo="Simulação de pagamento">
-        Esta loja está usando o provedor de teste: nenhuma cobrança real acontece e{" "}
-        <strong className="font-semibold">nenhum dado de cartão é pedido</strong>.{" "}
+      <Aviso tom="atencao" titulo="Pagamento em demonstração">
+        Esta loja está em ambiente de demonstração: nenhuma cobrança acontece e{" "}
+        <strong className="font-semibold">nenhum dado de cartão é pedido</strong>, nem de mentira.{" "}
         {desfechoSimulado(valorCents)}
       </Aviso>
 
@@ -157,7 +157,7 @@ function CartaoSimulado({
         onChange={(evento) =>
           refAoMudar.current({ token: tokenDeSimulacao(), bandeira: evento.currentTarget.value })
         }
-        ajuda={`Valor da simulação: ${formatarPreco(valorCents)}.`}
+        ajuda={`Só para a demonstração ficar completa. Valor exibido: ${formatarPreco(valorCents)}.`}
       >
         {BANDEIRAS.map((b) => (
           <option key={b.valor} value={b.valor}>
@@ -253,7 +253,9 @@ function CartaoTokenizado({
         if (!vivo) return;
         console.error("[cartao]", falha);
         setEstado("falhou");
-        setErro("Não foi possível carregar o formulário seguro do provedor.");
+        setErro(
+          "Não conseguimos carregar os campos seguros do cartão. Atualize a página ou escolha o Pix para concluir.",
+        );
       }
     }
 
@@ -306,8 +308,8 @@ function CartaoTokenizado({
   return (
     <div className="space-y-4">
       <Aviso tom="info" titulo="Os dados do cartão não passam pela JB">
-        Número, validade e código de segurança são digitados direto no formulário do provedor
-        de pagamento. Nosso servidor recebe apenas um código de uso único.
+        Número, validade e código de segurança são digitados direto nos campos do serviço de
+        pagamento. A JB recebe apenas uma autorização de uso único — nunca o seu cartão.
       </Aviso>
 
       <div>
@@ -348,9 +350,9 @@ function CartaoTokenizado({
       />
 
       {estado === "carregando" ? (
-        <p className="flex items-center gap-2 text-sm text-graf-500">
+        <p className="flex items-center gap-2 text-sm text-graf-600">
           <Loader2 className="size-4 animate-spin" aria-hidden />
-          Carregando o formulário seguro…
+          Preparando os campos seguros do cartão…
         </p>
       ) : null}
 
@@ -377,16 +379,17 @@ function CartaoTokenizado({
             Cartão validado{bandeira ? ` · ${bandeira}` : ""}
           </Etiqueta>
         ) : (
-          <span className="text-sm text-graf-500">
-            Valide o cartão para liberar a revisão do pedido.
+          <span className="text-sm text-graf-600">
+            Valide o cartão para seguir para a revisão do pedido.
           </span>
         )}
       </div>
 
-      <p className="text-xs leading-relaxed text-graf-500">
+      <p className="text-sm leading-relaxed text-graf-600">
         {parcelas > 1
           ? `Cobrança em ${parcelas}× de ${formatarPreco(Math.floor(valorCents / parcelas))}, sem juros.`
-          : `Cobrança de ${formatarPreco(valorCents)} à vista.`}
+          : `Cobrança de ${formatarPreco(valorCents)} à vista.`}{" "}
+        Nada é debitado antes de você confirmar o pedido.
       </p>
     </div>
   );
@@ -433,11 +436,11 @@ export function PagamentoCartao({
           aoMudar={aoMudar}
         />
       ) : (
-        <Aviso tom="atencao" titulo="Cartão indisponível agora">
-          <span className="flex flex-wrap items-center gap-2">
-            <CreditCard className="size-4 shrink-0" aria-hidden />
-            O provedor de cartão desta loja não está configurado neste ambiente. Escolha o Pix
-            para concluir o pedido.
+        <Aviso tom="atencao" titulo="Cartão indisponível no momento">
+          <span className="flex flex-wrap items-start gap-2">
+            <CreditCard className="mt-0.5 size-4 shrink-0" aria-hidden />
+            Não é possível receber cartão agora. Escolha o Pix para concluir o pedido, ou fale
+            com a JB se preferir combinar outra forma.
           </span>
         </Aviso>
       )}

@@ -89,7 +89,9 @@ export function MapaDaUnidade({
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
+            /* `py-3` no toque: o link tinha 20px de altura, e sair do site por
+               um alvo de 20px no celular é errar e abrir o mapa sem querer. */
+            className="inline-flex items-center font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500 pointer-coarse:min-h-11 pointer-coarse:py-3"
           >
             Abrir no Google Maps
           </a>

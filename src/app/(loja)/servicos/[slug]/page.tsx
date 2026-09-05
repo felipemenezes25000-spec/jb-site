@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowRight,
-  ClipboardCheck,
-  FileCheck2,
-  MessageCircle,
-  Phone,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, ClipboardCheck, FileCheck2, Wrench } from "lucide-react";
 
+import { CanaisDiretos, CartaoApoio } from "@/components/assistencia/apoio";
 import { ROTULO_SERVICO } from "@/components/assistencia/rotulos";
 import { LinkBotao } from "@/components/ui/button";
-import { Cartao, CabecalhoCartao, Etiqueta, Trilha } from "@/components/ui/data";
-import { formatarPreco, telHref, whatsappHref } from "@/lib/format";
+import { Cartao, Etiqueta, Trilha } from "@/components/ui/data";
+import { PassosNumerados } from "@/components/ui/passos";
+import { formatarPreco } from "@/lib/format";
 import { nl2br } from "@/lib/html";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, servicoJsonLd, trilhaJsonLd } from "@/lib/seo";
@@ -96,10 +91,6 @@ export default async function ServicoPage({ params }: Parametros) {
   ];
 
   const temPreco = servico.priceCents !== null && servico.priceCents > 0;
-  const whatsapp = whatsappHref(
-    s.whatsapp,
-    `Olá! Quero saber mais sobre o serviço "${servico.name}".`,
-  );
   const linkOrcamento = `/orcamento?tipo=servico&item=${encodeURIComponent(servico.name)}`;
 
   return (
@@ -124,14 +115,14 @@ export default async function ServicoPage({ params }: Parametros) {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
         <div>
           <Etiqueta tom="neutro">{ROTULO_SERVICO[servico.kind]}</Etiqueta>
-          <h1 className="mt-4 text-display leading-tight">{servico.name}</h1>
+          <h1 className="text-display texto-forte mt-4">{servico.name}</h1>
 
           {servico.description ? (
-            <div className="mt-6 max-w-2xl text-base leading-relaxed text-graf-700">
+            <div className="texto-guia mt-6 max-w-2xl text-graf-700">
               {nl2br(servico.description)}
             </div>
           ) : (
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-graf-600">
+            <p className="texto-guia mt-6 max-w-2xl text-graf-600">
               O escopo deste serviço é definido com você antes da execução. Descreva a
               situação da clínica no pedido de orçamento e a equipe responde com o que está
               incluso.
@@ -139,23 +130,25 @@ export default async function ServicoPage({ params }: Parametros) {
           )}
 
           {/* --------------------------------------------- como é contratado */}
-          <section className="mt-12" aria-labelledby="como-contratar">
-            <h2 id="como-contratar" className="text-title leading-tight">
+          <section className="mt-14" aria-labelledby="como-contratar">
+            <h2 id="como-contratar" className="text-title texto-forte">
               Como este serviço é contratado
             </h2>
 
-            <ol className="mt-6 space-y-5">
-              {[
+            <PassosNumerados
+              className="mt-8"
+              rotulo="Etapas da contratação"
+              passos={[
                 {
                   icone: ClipboardCheck,
                   titulo: "Você descreve a situação",
-                  texto:
+                  descricao:
                     "Equipamento, quantidade e onde fica. Quanto mais concreto, menos idas e vindas depois.",
                 },
                 {
                   icone: FileCheck2,
                   titulo: "A equipe monta o orçamento",
-                  texto: temPreco
+                  descricao: temPreco
                     ? `O preço base publicado (${formatarPreco(
                         servico.priceCents ?? 0,
                       )}) cobre o serviço padrão. O que fugir disso entra no orçamento, item a item.`
@@ -164,28 +157,13 @@ export default async function ServicoPage({ params }: Parametros) {
                 {
                   icone: Wrench,
                   titulo: "Execução com registro",
-                  texto:
+                  descricao:
                     "O serviço vira uma ordem de serviço numerada, e o que foi feito fica no histórico do equipamento.",
                 },
-              ].map((passo, indice) => (
-                <li key={passo.titulo} className="flex gap-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-100">
-                    <passo.icone className="size-5" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-graf-900">
-                      <span className="sr-only">Passo {indice + 1}: </span>
-                      {passo.titulo}
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed text-graf-600">
-                      {passo.texto}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+              ]}
+            />
 
-            <p className="mt-8 rounded-xl bg-graf-50 p-5 text-sm leading-relaxed text-graf-600 ring-1 ring-inset ring-graf-200">
+            <p className="mt-6 rounded-xl bg-graf-50 p-5 text-[0.9375rem] leading-relaxed text-graf-600 ring-1 ring-inset ring-graf-200">
               <strong className="font-semibold text-graf-900">Sobre prazo: </strong>
               a data de execução é combinada no orçamento, depois de a equipe saber o que o
               serviço envolve. Prometer prazo antes de olhar o equipamento é chute, e chute
@@ -196,7 +174,7 @@ export default async function ServicoPage({ params }: Parametros) {
           {/* ------------------------------------------------ outros serviços */}
           {outros.length > 0 ? (
             <section className="mt-14" aria-labelledby="outros-servicos">
-              <h2 id="outros-servicos" className="text-title leading-tight">
+              <h2 id="outros-servicos" className="text-title texto-forte">
                 Outros serviços da JB
               </h2>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -271,31 +249,13 @@ export default async function ServicoPage({ params }: Parametros) {
             </div>
           </Cartao>
 
-          <Cartao>
-            <CabecalhoCartao titulo="Falar com a equipe" descricao={s.horario} />
-            <div className="space-y-3 px-5 py-5 text-sm">
-              {s.telefone ? (
-                <a
-                  href={telHref(s.telefone)}
-                  className="flex min-h-11 items-center gap-3 font-semibold text-graf-900 hover:text-jb-700"
-                >
-                  <Phone className="size-4 shrink-0 text-jb-600" aria-hidden />
-                  {s.telefone}
-                </a>
-              ) : null}
-              {whatsapp ? (
-                <a
-                  href={whatsapp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex min-h-11 items-center gap-3 font-semibold text-graf-900 hover:text-jb-700"
-                >
-                  <MessageCircle className="size-4 shrink-0 text-jb-600" aria-hidden />
-                  {s.whatsapp}
-                </a>
-              ) : null}
-            </div>
-          </Cartao>
+          <CartaoApoio titulo="Falar com a equipe" descricao={s.horario}>
+            <CanaisDiretos
+              telefone={s.telefone}
+              whatsapp={s.whatsapp}
+              mensagem={`Olá! Quero saber mais sobre o serviço "${servico.name}".`}
+            />
+          </CartaoApoio>
         </aside>
       </div>
     </div>

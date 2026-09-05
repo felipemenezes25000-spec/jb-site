@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowRight, CalendarDays, Clock, MapPin, Wrench } from "lucide-react";
+import { ArrowRight, Clock, MapPin } from "lucide-react";
 
 import { FaixaDeContato } from "@/components/institucional/canais";
 import { MolduraInstitucional, SecaoInstitucional } from "@/components/institucional/moldura";
@@ -13,6 +13,7 @@ import {
 } from "@/components/institucional/pagina-cms";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, Etiqueta } from "@/components/ui/data";
+import { Estatistica, Estatisticas } from "@/components/ui/estatistica";
 import { formatarPreco, plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import {
@@ -60,35 +61,46 @@ export default async function SobrePage() {
   const anos = anosDeAtividade(s.empresa_desde);
   const endereco = enderecoCompleto(s);
 
-  const fatos = [
+  /* Prova objetiva, e só o que é verificável: o ano vem da configuração, as
+     contagens vêm do próprio catálogo. Faixa de estatística sem número real
+     não existe — some inteira em vez de virar um "—" repetido. */
+  const numeros = [
     s.empresa_desde
       ? {
-          icone: CalendarDays,
-          rotulo: "Em atividade desde",
+          chave: "desde",
           valor: s.empresa_desde,
-          detalhe: anos ? `${plural(anos, "ano", "anos")} atendendo clínicas` : null,
+          rotulo: "Em atividade desde",
+          detalhe: anos ? `${plural(anos, "ano", "anos")} atendendo clínicas` : undefined,
+          destaque: true,
         }
-      : null,
-    endereco
-      ? {
-          icone: MapPin,
-          rotulo: "Base de operação",
-          valor: [s.endereco_cidade, s.endereco_uf].filter(Boolean).join("/"),
-          detalhe: s.endereco_bairro || null,
-        }
-      : null,
-    s.horario
-      ? { icone: Clock, rotulo: "Atendimento", valor: s.horario, detalhe: null }
       : null,
     servicos.length > 0
       ? {
-          icone: Wrench,
-          rotulo: "Serviços prestados",
+          chave: "servicos",
           valor: String(servicos.length),
+          rotulo: "Serviços no catálogo",
           detalhe: "Instalação, manutenção e suporte",
+          destaque: false,
         }
       : null,
-  ].filter((fato) => fato !== null);
+    marcas > 0
+      ? {
+          chave: "marcas",
+          valor: String(marcas),
+          rotulo: "Marcas publicadas",
+          detalhe: "A assistência atende outras marcas também",
+          destaque: false,
+        }
+      : null,
+  ].filter((numero) => numero !== null);
+
+  /* Onde e quando. Não é número, então não entra na faixa de estatística. */
+  const operacao = [
+    endereco
+      ? { icone: MapPin, rotulo: "Base de operação", valor: endereco }
+      : null,
+    s.horario ? { icone: Clock, rotulo: "Atendimento", valor: s.horario } : null,
+  ].filter((linha) => linha !== null);
 
   return (
     <>
@@ -118,21 +130,39 @@ export default async function SobrePage() {
         }
       >
         <div className="space-y-12">
-          {fatos.length > 0 ? (
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {fatos.map((fato) => (
-                <li key={fato.rotulo}>
-                  <Cartao className="h-full p-5">
-                    <fato.icone className="size-5 text-jb-600" aria-hidden />
-                    <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-graf-500">
-                      {fato.rotulo}
-                    </p>
-                    <p className="mt-1 text-lg font-bold leading-snug text-graf-950">
-                      {fato.valor}
-                    </p>
-                    {fato.detalhe ? (
-                      <p className="mt-1 text-sm leading-snug text-graf-500">{fato.detalhe}</p>
-                    ) : null}
+          {numeros.length > 0 ? (
+            <Estatisticas
+              colunas={numeros.length === 2 ? 2 : 3}
+              className="border-y border-graf-200 py-10"
+            >
+              {numeros.map((numero) => (
+                <Estatistica
+                  key={numero.chave}
+                  valor={numero.valor}
+                  rotulo={numero.rotulo}
+                  detalhe={numero.detalhe}
+                  destaque={numero.destaque}
+                />
+              ))}
+            </Estatisticas>
+          ) : null}
+
+          {operacao.length > 0 ? (
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {operacao.map((linha) => (
+                <li key={linha.rotulo}>
+                  <Cartao className="flex h-full gap-3.5 p-5">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-100">
+                      <linha.icone className="size-5" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-graf-500">
+                        {linha.rotulo}
+                      </p>
+                      <p className="mt-1 text-[0.9375rem] font-semibold leading-snug text-graf-900">
+                        {linha.valor}
+                      </p>
+                    </div>
                   </Cartao>
                 </li>
               ))}
@@ -156,7 +186,7 @@ export default async function SobrePage() {
                 <p>
                   O trabalho cobre o ciclo inteiro do equipamento: venda de novos e
                   seminovos revisados, instalação, manutenção preventiva e corretiva, e o
-                  histórico de cada atendimento registrado na Minha JB.
+                  histórico de cada atendimento registrado na Área da Clínica.
                 </p>
                 {s.horario ? <p>Horário de atendimento: {s.horario}.</p> : null}
               </div>
@@ -205,10 +235,7 @@ export default async function SobrePage() {
               titulo="Marcas no catálogo"
               descricao="A assistência técnica atende equipamentos de outras marcas também — informe marca e modelo ao abrir o chamado."
             >
-              <p className="text-base text-graf-700">
-                {plural(marcas, "marca publicada", "marcas publicadas")} na loja.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3">
                 <LinkBotao href="/marcas" variante="secundario">
                   Ver marcas
                 </LinkBotao>

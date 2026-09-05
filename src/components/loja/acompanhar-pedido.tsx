@@ -62,10 +62,10 @@ export function AtualizarPagamento({
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-graf-200 pt-4">
-      <p className="min-w-0 flex-1 text-xs leading-relaxed text-graf-500" aria-live="polite">
+      <p className="min-w-0 flex-1 text-sm leading-relaxed text-graf-600" aria-live="polite">
         {atualizando
-          ? "Consultando o pagamento…"
-          : "Esta página verifica o pagamento a cada 12 segundos."}
+          ? "Conferindo o pagamento…"
+          : "Estamos conferindo o pagamento por você. Assim que ele for confirmado, esta página muda sozinha."}
       </p>
       <Botao
         type="button"
@@ -217,9 +217,9 @@ export function TentarNovamente({
 /* --------------------------------------------------------- painel de teste */
 
 const DESFECHOS = [
-  { status: "aprovado", rotulo: "Aprovar pagamento", variante: "primario" as const },
-  { status: "recusado", rotulo: "Recusar", variante: "secundario" as const },
-  { status: "expirado", rotulo: "Expirar", variante: "secundario" as const },
+  { status: "aprovado", rotulo: "Simular pagamento aprovado", variante: "primario" as const },
+  { status: "recusado", rotulo: "Simular recusa", variante: "secundario" as const },
+  { status: "expirado", rotulo: "Simular expiração", variante: "secundario" as const },
 ];
 
 /**
@@ -243,26 +243,27 @@ export function PainelSimulacao({ externalId }: { externalId: string }) {
       });
       if (!resposta.ok) {
         const corpo = (await resposta.json().catch(() => null)) as { erro?: string } | null;
-        setErro(corpo?.erro ?? "A simulação não foi aceita.");
+        setErro(corpo?.erro ?? "A demonstração não aceitou este desfecho.");
         return;
       }
       router.refresh();
     } catch {
-      setErro("Não foi possível falar com o servidor.");
+      setErro("Não foi possível concluir a demonstração agora. Tente de novo em instantes.");
     } finally {
       setOcupado("");
     }
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-dashed border-warn-500/40 bg-warn-50 p-4">
-      <p className="flex items-center gap-2 text-sm font-bold text-warn-700">
-        <FlaskConical className="size-4 shrink-0" aria-hidden />
-        Simulação — não aparece em produção
+    <div className="mt-6 rounded-xl border border-dashed border-warn-500/50 bg-warn-50 p-4 sm:p-5">
+      <p className="flex items-center gap-2 text-base font-bold text-warn-700">
+        <FlaskConical className="size-[18px] shrink-0" aria-hidden />
+        Painel de demonstração
       </p>
-      <p className="mt-1 text-sm leading-relaxed text-graf-700">
-        Esta loja está com o provedor de pagamento de teste. Os botões abaixo disparam a mesma
-        rota de webhook que o provedor real chamaria.
+      <p className="mt-1.5 text-sm leading-relaxed text-graf-700">
+        Esta loja está em ambiente de demonstração e nenhum pagamento é processado de verdade.
+        Escolha um desfecho abaixo para ver como o pedido reage — é exatamente o que aconteceria
+        com um pagamento real. Este painel não existe na loja publicada.
       </p>
 
       {erro ? (

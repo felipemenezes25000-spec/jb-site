@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
-import { Vitrine, type ParametrosVitrine } from "@/components/loja/vitrine";
+import {
+  Vitrine,
+  atalhosDeSubcategorias,
+  type ParametrosVitrine,
+} from "@/components/loja/vitrine";
 
 export const metadata: Metadata = {
   title: "Peças e acessórios",
@@ -14,17 +18,25 @@ export default async function Pagina({
 }: {
   searchParams: Promise<ParametrosVitrine>;
 }) {
+  const [parametros, atalhos] = await Promise.all([
+    searchParams,
+    atalhosDeSubcategorias("pecas-e-acessorios"),
+  ]);
+
   return (
     <Vitrine
       titulo="Peças e acessórios"
-      descricao="Reposição e acessórios. Se a peça que você precisa não estiver aqui, peça um orçamento — boa parte é atendida sob consulta."
+      descricao="Reposição e acessórios para os equipamentos que a JB vende e atende. Se a peça que você precisa não estiver aqui, peça um orçamento — boa parte é atendida sob consulta."
       trilha={[
         { rotulo: "Início", href: "/" },
         { rotulo: "Equipamentos", href: "/loja" },
         { rotulo: "Peças e acessórios" },
       ]}
-      parametros={await searchParams}
+      caminho="/pecas-e-acessorios"
+      parametros={parametros}
       filtrosFixos={{ categoria: "pecas-e-acessorios" }}
+      atalhos={atalhos}
+      rotuloAtalhos="Tipos de peça"
       travarCategoria
     />
   );
