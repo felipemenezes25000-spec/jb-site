@@ -1,0 +1,622 @@
+[
+ {
+  "agente": "fund:dominio",
+  "texto": "aprovarOrcamento de kind comercial cria a Order DIRETO (funcao converterEmPedido no proprio arquivo), sem passar por criarPedido: criarPedido parte de um carrinho e recalcula tudo pelo preco de vitrine, o que apagaria o preco negociado da proposta. A baixa de estoque usa o mesmo UPDATE condicional atomico e reaproveita ErroDeEstoque de @/lib/pedido. Como Quote nao guarda endereco, o pedido usa o endereco padrao do cliente; nao havendo, nasce com shippingKind sob_orcamento e rotulo 'Frete a combinar' (nada inventado). Documentado em comentario no arquivo."
+ },
+ {
+  "agente": "fund:dominio",
+  "texto": "Nenhum destes arquivos chama revalidatePath: e camada de dominio, chamada por Server Actions e route handlers. Quem escrever src/app/acoes/*.ts precisa revalidar as rotas afetadas (/minha-jb/assistencia, /minha-jb/equipamentos, /minha-jb/manutencoes, /minha-jb/orcamentos e as telas do admin)."
+ },
+ {
+  "agente": "fund:dominio",
+  "texto": "concluirOS so cria o Document de laudo quando o chamador passa entrada.laudo com storageKey de um arquivo ja gravado no storage privado. Nao existe geracao de PDF no escopo, e criar uma linha de Document apontando para o vazio seria dado falso na tela do cliente."
+ },
+ {
+  "agente": "fund:dominio",
+  "texto": "ServiceRequest nao tem coluna technicianId no schema congelado. atribuirTecnico carimba o tecnico nas ServiceAppointment e WorkOrder abertas do chamado e lanca ErroDeAssistencia quando nao ha nenhuma das duas ('Agende uma visita ou abra uma OS antes de atribuir o tecnico')."
+ },
+ {
+  "agente": "fund:dominio",
+  "texto": "ServiceRequest tambem nao tem locationId. O vinculo com CustomerLocation e resolvido para o snapshot de endereco no momento da abertura (formulario > endereco da unidade > endereco padrao do cliente > vazio)."
+ },
+ {
+  "agente": "fund:dominio",
+  "texto": "MaintenanceContract nao tem coluna de periodicidade. O intervalo entre visitas e derivado do plano (periodMonths / visitsIncluded), ou passado em intervaloMeses, ou tirado de Equipment.maintenanceIntervalDays. Sem nenhuma das tres fontes o equipamento fica fora da geracao e volta em semPeriodicidade para a tela avisar. Como nao fica persistido, uma nova chamada de gerarVisitasDoContrato apos renovar a vigencia precisa receber o mesmo intervaloMeses."
+ },
+ {
+  "agente": "fund:dominio",
+  "texto": "MaintenanceVisit nao tem coluna workOrderId. Em concluirVisita a OS opcional e aberta ANTES da transacao (abrirOS abre transacao propria; aninhar colocaria a linha de Equipment sob dois bloqueios) e fica ligada por EquipmentEvent.workOrderId e pelo numero citado nas notas da visita."
+ },
+ {
+  "agente": "fund:dominio",
+  "texto": "Os avisos gravados sao apenas Notification in-app. Envio real por e-mail/WhatsApp (modelo OutboundMessage com dedupeKey) nao foi implementado: esta fora do escopo destes cinco arquivos. lembretesPendentes/registrarLembrete ja estao prontos para o job que fizer o disparo."
+ },
+ {
+  "agente": "fund:dominio",
+  "texto": "Nao existe eslint instalado no projeto, entao a verificacao foi so pnpm exec tsc --noEmit (exit 0). node_modules/.prisma vive dentro do store do pnpm e o client gerado esta atualizado com o schema."
+ },
+ {
+  "agente": "fund:infra",
+  "texto": "Nao mexi em src/app/api/admin/upload/route.ts. Reaproveitar o helper la nao seria trivial: aquela rota aceita image/gif (fora da lista branca pedida), le metadados com sharp no proprio handler e grava o blob em midia/<nome> mas o arquivo local em /uploads/<nome> sem subpasta. Migrar mudaria o formato aceito e o caminho local, entao deixei a rota antiga intacta e funcionando. A rota nova /api/upload cobre os mesmos casos com pasta logica."
+ },
+ {
+  "agente": "fund:infra",
+  "texto": "OutboundMessage nao tem coluna para assunto nem corpo (o schema so guarda channel, to, template, dedupeKey, status, error). enfileirar() aceita assunto/corpo, usa os dois para montar a chave e devolve o texto pronto a quem chamou, mas quem persiste e o par template + refTipo/refId — o worker futuro rerenderiza dali. Se for preciso guardar o corpo, o schema precisa de duas colunas novas, e ele esta congelado nesta rodada."
+ },
+ {
+  "agente": "fund:infra",
+  "texto": "Notification so tem customerId; nao existe caixa de avisos para User. notificar({userId}) portanto enfileira um e-mail para a pessoa da equipe em vez de gravar aviso no site, e naoLidas({userId}) devolve 0. Se a equipe precisar de campainha no painel, o schema precisa de uma tabela de notificacao para staff."
+ },
+ {
+  "agente": "fund:infra",
+  "texto": "AuditLog nao tem colunas antes/depois/ip. O diff enxuto e o IP sao serializados no campo summary (texto, cortado em 900 caracteres). Um painel que precise do JSON bruto do antes/depois vai exigir colunas novas no schema."
+ },
+ {
+  "agente": "fund:infra",
+  "texto": "robots.ts segue a regra pedida ao pe da letra: so VERCEL_ENV === \"production\" libera indexacao. Num deploy fora da Vercel (VPS/servidor proprio) isso devolve disallow total — ha comentario no arquivo apontando o ponto exato a ajustar se a hospedagem mudar."
+ },
+ {
+  "agente": "fund:infra",
+  "texto": "O limite de taxa de /api/upload e em memoria do processo. Em serverless cada instancia conta o seu, entao ele segura o abuso comum de formulario, nao um ataque distribuido. Um limite real precisaria de tabela ou Redis, que nao existem no schema atual."
+ },
+ {
+  "agente": "fund:infra",
+  "texto": "O sitemap inclui todas as paginas do CMS porque Page nao tem coluna published (so editable). Se surgir a necessidade de rascunho de pagina, sera preciso campo novo no schema e filtro aqui."
+ },
+ {
+  "agente": "fund:infra",
+  "texto": "As rotas institucionais do sitemap saem de RODAPE_LOJA/ASSISTENCIA/INSTITUCIONAL/POLITICAS em @/lib/navegacao. Rotas ainda em construcao por outros agentes ja aparecem no mapa; quando todas existirem, nada precisa ser feito, mas vale uma conferida final antes do deploy."
+ },
+ {
+  "agente": "fund:kit-ui",
+  "texto": "A rota /api/upload citada no escopo NAO existe no repositorio; a unica existente e /api/admin/upload (exige sessao staff, campo do form 'arquivo', responde { media } ou { erro }). EnviarArquivo usa essa como padrao e aceita a prop `endpoint` (e `campoDoArquivo`). Se o publico/cliente precisar enviar anexo sem sessao staff, alguem precisa criar a rota publica e o consumidor passa endpoint=\"/api/upload\". O parser de resposta ja aceita { media: { url } } e { url }."
+ },
+ {
+  "agente": "fund:kit-ui",
+  "texto": "Paginacao e AbasPorUrl usam useSearchParams: quem renderiza precisa envolver em <Suspense>, senao a arvore de cliente ate o boundary mais proximo cai para render no cliente. Registrado tambem no comentario de bloco de cada arquivo."
+ },
+ {
+  "agente": "fund:kit-ui",
+  "texto": "Botao de @/components/ui/button nao declara `ref` no tipo de props (usa React.ButtonHTMLAttributes, que nao inclui ref), entao confirmar.tsx captura o elemento em evento.currentTarget no clique em vez de encaminhar referencia. Se button.tsx um dia expor ref, da para simplificar."
+ },
+ {
+  "agente": "fund:kit-ui",
+  "texto": "O brief menciona o utilitario de texto `text-section`, mas globals.css so define --text-hero, --text-display e --text-title. Nao usei text-section em lugar nenhum."
+ },
+ {
+  "agente": "fund:kit-ui",
+  "texto": "Painel/Confirmar nao tem animacao de entrada e saida: adicionar keyframes exigiria editar globals.css, que esta fora do meu escopo. A transicao ficou instantanea (e sem risco em prefers-reduced-motion)."
+ },
+ {
+  "agente": "fund:kit-ui",
+  "texto": "CampoCep chama https://viacep.com.br direto do navegador. Se o projeto adotar CSP restritiva, o dominio precisa entrar em connect-src, ou a busca deve virar rota interna — a prop buscarEndereco={false} desliga a chamada."
+ },
+ {
+  "agente": "fund:kit-ui",
+  "texto": "Nao rodei next build nem dev conforme instrucao, entao a validacao foi so de tipos (tsc --noEmit). Nao ha teste visual nem de runtime dos componentes."
+ },
+ {
+  "agente": "fund:conta",
+  "texto": "Disparo real do e-mail de redefinição: @/lib/notificacoes não existe e não há provedor de e-mail configurado. pedirRecuperacao grava OutboundMessage (channel email, template senha_reset, dedupeKey derivada do token, status simulado) e, apenas fora de produção, escreve o link em console.error para o fluxo ser testável. Quando o módulo de notificações existir, trocar a função enfileirarEmailDeReset por ele e remover o log de desenvolvimento."
+ },
+ {
+  "agente": "fund:conta",
+  "texto": "exigirCliente (src/lib/auth-cliente.ts, fora do meu escopo) redireciona com ?voltar=; /entrar e /cadastro aceitam tanto voltar quanto destino, mas quem mexer em auth-cliente deve padronizar o nome do parâmetro."
+ },
+ {
+  "agente": "fund:conta",
+  "texto": "menu-lateral.tsx não inclui botão de sair, para não duplicar o que o layout de /minha-jb vai montar. A server action sairCliente já está exportada em @/app/acoes/conta.ts, pronta para <form action={sairCliente}>."
+ },
+ {
+  "agente": "fund:conta",
+  "texto": "Não existe loading.tsx nas rotas de (conta): os arquivos não estavam na lista do escopo. As páginas são leves (só sessão + settings), então o impacto é pequeno, mas vale criar depois."
+ },
+ {
+  "agente": "fund:conta",
+  "texto": "O briefing cita o tamanho de texto text-section, que não existe em globals.css (só text-hero, text-display e text-title). Usei text-title nos títulos das telas."
+ },
+ {
+  "agente": "fund:conta",
+  "texto": "Não há limitador de taxa próprio para pedirRecuperacao — bloqueadoPorTentativas cobre só o login. Vale adicionar junto com a fila de notificações para evitar abuso do envio de link."
+ },
+ {
+  "agente": "fund:conta",
+  "texto": "emailVerifiedAt do Customer continua nulo após o cadastro: confirmação de e-mail não estava no escopo e depende do mesmo módulo de envio."
+ },
+ {
+  "agente": "fund:admin-shell",
+  "texto": "`exigirStaff()` de src/lib/auth.ts redireciona para /admin/login, rota que nao existe (a tela e /admin/entrar). Como auth.ts esta congelado, criei `exigirStaffAdmin()` em src/lib/permissoes.ts com o destino certo e usei esse nos layouts/paginas. Se auth.ts for descongelado, alinhar o destino la e remover a duplicidade."
+ },
+ {
+  "agente": "fund:admin-shell",
+  "texto": "A guarda NAO esta no layout: (admin)/admin/layout.tsx so monta a casca quando ha sessao e devolve `children` cru quando nao ha (senao /admin/entrar entraria em laco de redirecionamento — um layout do App Router nao conhece o pathname). Consequencia: TODA pagina nova dentro de /admin precisa comecar com `await exigirArea(\"<area>\")`. Esta escrito em comentario no proprio layout, mas depende dos outros agentes cumprirem."
+ },
+ {
+  "agente": "fund:admin-shell",
+  "texto": "src/lib/permissoes.ts e modulo de SERVIDOR (importa sessaoStaff, que e server-only). Componentes cliente nao podem importa-lo — o layout ja resolve `menuDoUsuario(user)` e passa os grupos como dados serializaveis. Se algum agente precisar de podeVer no cliente, tera que receber por prop ou pedir a separacao do arquivo em dois."
+ },
+ {
+  "agente": "fund:admin-shell",
+  "texto": "Os links do painel e do menu apontam para rotas que ainda nao existem (/admin/pedidos, /admin/produtos, /admin/estoque, /admin/clientes, /admin/assistencia, /admin/os, /admin/orcamentos, /admin/manutencao, /admin/equipamentos, /admin/conteudo, /admin/leads, /admin/usuarios, /admin/configuracoes, /admin/auditoria e os detalhes /:id). Vao dar 404 ate os outros agentes criarem — inclusive /admin/busca, alvo da busca global do cabecalho, que nao esta no meu escopo."
+ },
+ {
+  "agente": "fund:admin-shell",
+  "texto": "loading.tsx nao estava no escopo, entao os estados de carregamento do painel sao <Suspense> + Esqueleto dentro da propria page.tsx."
+ },
+ {
+  "agente": "fund:admin-shell",
+  "texto": "Permissoes seguem estritamente a regra do escopo, que e mais restrita que `PODE.editarCatalogo` de auth.ts: editor NAO abre Produtos (so Conteudo e Leads) e comercial abre Produtos e Leads apenas em leitura. Se a regra desejada for a de auth.ts, e um ajuste de uma linha em AREAS."
+ },
+ {
+  "agente": "fund:admin-shell",
+  "texto": "Contrato de query string do FiltrosLista, para os agentes das listagens: `busca`/`selecao`/`data` gravam o parametro com o proprio `nome`; `periodo` grava `<nome>_de` e `<nome>_ate` no formato AAAA-MM-DD; toda mudanca apaga `pagina`. A barra ja traz o proprio <Suspense> por causa do useSearchParams."
+ },
+ {
+  "agente": "fund:admin-shell",
+  "texto": "Nao rodei next build nem dev (proibido no escopo). A verificacao foi `pnpm exec tsc --noEmit`, que passou sem erros; a renderizacao real das paginas do painel depende de banco com dados e nao foi exercitada."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "EDITEI src/app/acoes/checkout.ts (permitido no escopo) por cinco erros reais, todos comentados no arquivo. (1) SEGURANCA: abrirCobranca estava EXPORTADA de um arquivo \"use server\" — todo export ali e um endpoint publico, entao qualquer um podia POSTar {pedidoId, metodo} e criar cobranca para pedido alheio; com o provedor de teste, um cartao cujo total nao termina em ,01/,02 volta \"aprovado\" e chamava confirmarPagamento, ou seja, dava para marcar o pedido de outra pessoa como PAGO. Agora ela e interna. Consequencia para o agente do admin: se o painel precisar reabrir cobranca, tera que criar uma acao propria que confere permissao antes — nao da para importar abrirCobranca. (2) chaveSimulacao tambem era export inutil de \"use server\" (endpoint publico que so devolvia bytes aleatorios); removi, junto com o import de crypto que ficou sem uso — crypto voltou a ser usado pelo HMAC do cookie."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "checkout.ts, correcao (3) IDEMPOTENCIA: a chave era `pedido:<id>:<metodo>`, fixa por pedido+metodo. Com provedor real, \"tentar de novo\" depois de uma recusa receberia de volta EXATAMENTE a mesma cobranca recusada, que e o que a idempotencia do adquirente garante. A chave agora carrega o id da tentativa (`...:<pagamentoId>`). (4) O metodo enviado pelo formulario nao era conferido contra provedor.metodos: com Mercado Pago (que so aceita pix e cartao) um POST com metodo=boleto virava pagamento de cartao sem token e morria em \"recusado\". Agora e recusado com erro de campo. (5) parcelas vinha do navegador sem teto: agora e limitado por parcelas_max/parcela_minima e pelo total real, e forcado a 1 fora do cartao."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "checkout.ts, correcao (6) HONESTIDADE: quando o e-mail ja tinha cadastro e a pessoa marcava \"criar conta\", a conta silenciosamente NAO era criada e a tela nao dizia nada. Definir a senha do cadastro existente seria pior — tomada de conta alheia so sabendo o e-mail, expondo o historico de pedidos. Agora a acao recusa pedindo para entrar ou desmarcar. Efeito colateral aceito e documentado: isso revela que aquele e-mail tem cadastro (enumeracao). Optei por revelar em vez de mentir na tela; se a JB preferir o contrario, o ponto e uma unica condicao em finalizarCompra."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "Convidado nao tem sessao para abrir /pedido/<numero> logo depois de comprar. Em vez de jogar o e-mail na URL (vaza em historico, referer e link compartilhado), finalizarCompra grava o cookie httpOnly `jb_pedidos` com os 10 ultimos numeros e uma assinatura HMAC derivada de AUTH_SECRET. A LEITURA desse cookie esta DUPLICADA em src/app/(loja)/pedido/[numero]/page.tsx, com comentario nas duas pontas: nao da para exportar um utilitario compartilhado de um arquivo \"use server\" sem criar endpoint publico, e o escopo nao me deixava criar um src/lib novo. Se alguem descongelar lib/, o certo e mover assinarPedidos/numerosDoCookie/liberarAcompanhamento para um modulo server-only unico. Formato do valor: `numero1.numero2~assinatura`."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "BOLETO ficou de fora da tela de propósito, mesmo o provedor de teste anunciando o metodo. O modelo Payment (schema congelado) so tem pixQrCode/pixCopyPaste — nao ha coluna para linha digitavel nem para o PDF do boleto, entao depois de emitir a pagina do pedido nao teria o que mostrar, e inventar um texto de \"o boleto foi enviado por e-mail\" seria dado falso. A funcao metodosUsaveis() em checkout/page.tsx e o unico ponto a mudar quando existirem as colunas."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "CARTAO REAL nao foi exercitado: nao ha MERCADO_PAGO_ACCESS_TOKEN nem NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY neste ambiente. O caminho tokenizado (SDK v2 + Secure Fields para numero/validade/CVV, getPaymentMethods pelo BIN e createCardToken) esta escrito segundo a documentacao do provedor e passa no typecheck, mas nunca rodou contra a sandbox — precisa de um teste manual antes do go-live. Sem a chave publica, a pagina simplesmente nao oferece cartao (filtro no servidor), e o componente ainda traz um estado honesto de \"cartao indisponivel\" como defesa."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "A variavel NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY e nova e nao esta documentada em lugar nenhum do repositorio (nao mexi em .env.example, fora do escopo). Sem ela, cartao some da vitrine de pagamento em producao."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "RETENTATIVA DE CARTAO na pagina do pedido: /pedido/[numero] nunca pede dado de cartao, entao com provedor real a nova tentativa e oferecida so por Pix (na simulacao, cartao tambem aparece, rotulado). tentarPagamentoNovamente agora exige sessao dona OU o cookie assinado, e responde com mensagem unica \"Pedido nao encontrado\" quando nao ha acesso — antes qualquer um que soubesse o numero podia abrir cobranca no pedido alheio."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "Enquanto um Pix esta pendente e dentro da validade, o botao de gerar nova cobranca fica escondido (aparece so apos expirar, recusar ou nao haver cobranca). E deliberado: duas cobrancas abertas ao mesmo tempo convidam a pagar duas vezes, e nao cancelo a cobranca anterior justamente para honrar o Pix antigo se a pessoa acabou de paga-lo. O efeito e que trocar de Pix para cartao antes do vencimento exige esperar."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "O freio de forca bruta da conferencia de e-mail (8 tentativas / 15 min por numero de pedido) e contagem em memoria do processo, igual ao que /api/upload ja faz. Em serverless cada instancia conta a sua: segura tentativa manual, nao ataque distribuido. Um limite real precisa de tabela ou Redis, que nao existem no schema atual."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "A pagina aceita ?email=<e-mail> como prova de acesso, porque o escopo pedia \"parametro/campo de conferencia\" — util para link vindo de e-mail transacional. E o unico caminho que coloca dado pessoal na URL; o fluxo normal (cookie ou formulario) nao usa. Se a JB preferir, basta remover a terceira condicao de `liberado` em page.tsx."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "QR do Pix: so desenho a imagem quando o provedor devolve data URI (o adapter do Mercado Pago ja monta `data:image/png;base64,...`). O provedor de teste devolve apenas o payload, entao aparece o copia-e-cola com BotaoCopiar e um bloco explicando por que nao ha figura — gerar o QR a partir do texto exigiria dependencia nova, proibida no escopo."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "A pagina /pedido/[numero] chama provedorPagamento() so para saber os metodos de retentativa, dentro de try/catch: em producao mal configurada a fabrica lanca de proposito, e ai a pagina continua abrindo (sem botao de nova cobranca) em vez de dar 500. Ja /checkout deixa a excecao subir — e o comportamento desejado, porque fechar pedido sem provedor configurado nao pode acontecer em silencio."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "/api/pagamento/simular importa o POST do route.ts do webhook para reusar exatamente o mesmo caminho. Funciona e passa no typecheck, mas e um acoplamento entre dois route handlers; se um dia o Next restringir isso, a saida e mover o processamento para um modulo em src/lib (fora do meu escopo) e os dois handlers passarem a chama-lo."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "Nao rodei next build nem next dev (proibido no escopo) e nao ha banco populado aqui: a verificacao foi `pnpm exec tsc --noEmit` (exit 0, projeto inteiro) mais teste em runtime, com node, das duas funcoes puras arriscadas — o par assinar/ler do cookie (incluindo tentativas de forja) e montarLinhaDoTempo nos casos recem-aberto, status fora do fluxo, concluido e cancelado apos pago. A renderizacao real das telas nao foi exercitada."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "Nao existe eslint no projeto; o comentario `eslint-disable-next-line @next/next/no-img-element` em pagamento-pix.tsx e so sinalizacao para quando a regra existir — o <img> e proposital porque next/image nao tem o que otimizar num data URI."
+ },
+ {
+  "agente": "bloco:checkout",
+  "texto": "As telas linkam /minha-jb/pedidos (bloco de identificacao do checkout) e /entrar?voltar=..., rotas de outros agentes. /entrar ja existe; /minha-jb/pedidos ainda nao — vai dar 404 ate a area logada ficar pronta."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "Criei duas rotas que não estavam na lista do escopo porque a alternativa era link para 404: /minha-jb/assistencia/novo (destino do botão \"abrir chamado para este equipamento\" e da ação do estado vazio) e /minha-jb/documentos/[id]/baixar (route handler do download). A rota pública /assistencia-tecnica/solicitar é de outro agente e cobre o mesmo fluxo para quem não tem conta — vale conferir se os dois textos combinam antes do deploy."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "Media não tem coluna de dono no schema congelado, então id de mídia vindo do formulário não prova posse. Escrevi anexosDoFormulario() exigindo três coisas ao mesmo tempo: pasta esperada (chamados/equipamentos), criada nas últimas 6 h e ainda não pendurada em nenhum ServiceRequestMedia/EquipmentMedia. Fecha o caso prático; fechar de vez exige uma coluna uploadedBy/customerId em Media."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "O e-mail não é editável no perfil de propósito: trocar a chave de acesso sem confirmar o endereço novo é o caminho mais curto para perda de conta, e não existe provedor de envio configurado. A tela explica e oferece telefone/WhatsApp reais de @/lib/settings. Quando houver fila de e-mail, dá para fazer o fluxo com confirmação e emitir sessão nova com criarSessaoCliente."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "Document.storageKey aponta para Vercel Blob (público) ou public/uploads (estático). Minha rota /baixar autoriza por sessão + customerId, resolve o caminho com guarda contra travessia e manda Content-Disposition, mas quem já tiver a URL crua do storage continua acessando direto. Storage privado com URL assinada está fora do escopo (mexe em @/lib/upload)."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "Bug fora do meu escopo: passosDoChamado em src/lib/assistencia.ts trata o evento de status \"cancelado\" pelo mapa ETAPA_DO_STATUS (que o manda para \"concluido\") ao datar as etapas — um chamado cancelado aparece com as seis etapas verdes antes do passo \"Chamado cancelado\". Evitei o mesmo problema no meu passosDoPedido ignorando eventos cancelado/reembolsado; a correção lá é uma linha, mas o arquivo é de outro agente."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "Nenhum aviso sai para a equipe quando o cliente responde um chamado, aprova ou recusa um orçamento: as ações gravam o evento no histórico (e as libs gravam Notification do cliente), mas o disparo real por e-mail/WhatsApp depende do worker que consome OutboundMessage, que não existe. notificar()/enfileirar() de @/lib/notificacoes já estão prontos para quando alguém escrever esse worker."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "A tela de equipamentos usa equipamentosDoCliente(), que traz tudo de uma vez — o filtro por situação e a busca por nome/marca/série rodam em memória, sem paginação. Serve com folga para o volume de uma clínica; se aparecer cliente com centenas de equipamentos, o filtro precisa ir para o banco."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "Os contadores do menu cobrem só o que tem pendência (pedidos em aberto, chamados abertos, orçamentos aguardando, visitas previstas e equipamentos fora do operacional). Documentos e Favoritos ficaram sem número porque a etiqueta do menu-lateral (arquivo de outro agente) anuncia \"em aberto\" para leitor de tela, e total de favoritos não é pendência."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "A visão geral lista os avisos não lidos (Notification) com um botão \"marcar como lidos\", mas não há tela dedicada de avisos: MENU_CLIENTE em @/lib/navegacao está congelado e não tem item para ela. Se a caixa de avisos crescer, vale um item novo no menu e uma página própria."
+ },
+ {
+  "agente": "bloco:minha-jb",
+  "texto": "Não rodei next build nem dev (proibido no escopo). A verificação foi tsc --noEmit com um tsconfig restrito aos meus arquivos: zero erros. O tsc do projeto inteiro ainda acusa erros de sintaxe em arquivos que outros agentes estão escrevendo agora (src/app/(admin)/admin/manutencao/[id]/page.tsx e src/app/acoes/admin-servico.ts) — nenhum deles é importado pelas minhas telas."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "Captcha (/api/captcha) foi lido e É usado, mas só na escalada: os primeiros envios de cada IP passam direto e o código da imagem só é exigido a partir do limite brando. Exigir captcha visual de todo mundo barraria quem usa leitor de tela — aquela rota não tem alternativa em áudio — e ninguém pode ficar sem abrir chamado por isso. Está documentado em comentário no topo de acoes/assistencia.ts."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "A função assinar() de src/app/api/captcha/route.ts NÃO foi importada: route.ts é arquivo de rota e o Next valida os exports dele; acoplar uma Server Action a um handler é pior que repetir três linhas de HMAC. assinarCodigo() em acoes/assistencia.ts é idêntica. Se o algoritmo mudar lá, precisa mudar aqui."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "/api/upload exige sessão (staff ou cliente): visitante anônimo recebe 401. Por isso a etapa de fotos só mostra o enviador para quem está logado; sem conta, aparece um Aviso com link para /entrar?destino=/assistencia-tecnica/solicitar (o rascunho em sessionStorage sobrevive ao ida e volta) e a alternativa do WhatsApp. Se a JB quiser anexo de anônimo, alguém precisa liberar a rota."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "Vídeo não é aceito: @/lib/upload só admite JPG/PNG/WebP/AVIF/PDF. A etapa 3 fala isso por escrito e oferece o WhatsApp para vídeo curto, citando o número do chamado depois. Se vídeo virar requisito, mexe em upload.ts e no CSP (media-src)."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "@/components/ui/enviar-arquivo NÃO serve para /api/upload: ele manda só o arquivo no corpo (a rota exige também o campo `pasta`) e devolve URL em input escondido, enquanto ServiceRequestMedia precisa do mediaId. Por isso criei src/components/assistencia/envio-de-fotos.tsx, com a mesma mecânica (arrastar e soltar, prévia revogada, progresso por XHR, erro por arquivo) e outro contrato. Se um dia o kit aceitar campos extras e expor o id, dá para unificar."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "O limite por IP é em memória do processo (mesma limitação da rota de upload): em serverless cada instância conta a sua. Os freios que sobrevivem a reinício são os do banco — ServiceRequest recente pelo mesmo contactEmail (3 em 15 min) e Lead recente pelo mesmo ip (8 em 1 h, usando a coluna Lead.ip). Um limite realmente distribuído exigiria tabela nova ou Redis."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "src/components/assistencia/acesso.tsx (cookie assinado de acesso ao chamado) devia morar em src/lib, mas o escopo só me permite criar páginas, acoes/assistencia.ts e src/components/assistencia/*.tsx. Ele é `server-only` e não exporta componente; ficou fora do arquivo \"use server\" de propósito, senão cada função viraria um endpoint público. Vale mover para src/lib/chamado-publico.ts numa rodada em que isso seja permitido."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "ServiceRequest não tem coluna para \"quando começou\" nem para \"ainda opera\". Em vez de perder a informação, ela entra na descrição em duas linhas fixas (\"Começou: … Ainda opera: …\"), que é o que a triagem lê primeiro. Se virarem campos de verdade no schema, é trocar o trecho `contexto` em abrirChamadoPublico."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "Service não tem campo de escopo (\"o que inclui\") nem de prazo. A página /servicos/[slug] mostra a `description` cadastrada e, no lugar de inventar prazo, explica o processo real (a data fecha no orçamento, depois da avaliação). Se a JB quiser escopo/prazo publicados, precisa de colunas novas."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "MaintenancePlan não tem coluna de periodicidade. O ritmo mostrado em /manutencao-preventiva e no CartaoPlano é derivado de periodMonths / visitsIncluded — exatamente a mesma conta de gerarVisitasDoContrato. Plano sem visitsIncluded simplesmente não aparece na lista de periodicidade, e sem nenhum plano publicado a página diz que o intervalo é definido no diagnóstico."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "Anexos: como Media não tem dono no schema, abrirChamadoPublico só aceita mediaIds quando há sessão de cliente E a mídia é da pasta `chamados` E foi criada nas últimas 6 h. Isso fecha o caso prático; um dono explícito em Media fecharia de vez."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "interesseEmPlano gera Lead + OutboundMessage e NÃO cria contrato nem Quote — o preço depende de quais equipamentos entram na cobertura. pedirOrcamento cria Lead sempre e Quote em rascunho só quando há itens descritos e o tipo não é \"plano\"; os itens entram com valorUnitarioCents 0, para deixar claro no painel que ninguém precificou ainda."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "Não existe loading.tsx nas minhas rotas (não estava no escopo). As páginas de listagem são leves; /chamado/[numero] e /assistencia-tecnica/solicitar são dinâmicas por causa da sessão e se beneficiariam de um esqueleto."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "revalidatePath aponta para /admin/leads, /admin/orcamentos e /admin/assistencia. As duas últimas já existem; /admin/leads pode ainda não ter sido criada por outro agente — revalidar caminho inexistente é inofensivo, mas vale conferir no fim."
+ },
+ {
+  "agente": "bloco:assistencia-publica",
+  "texto": "Não rodei next build nem next dev (proibido no escopo). A verificação foi `pnpm exec tsc --noEmit`, exit 0 e zero erros no projeto inteiro, mais conferência manual de imports não usados. Não houve teste visual nem de runtime das telas — em especial o caminho sem JavaScript do assistente (todas as etapas visíveis + envio direto) merece um olhar no navegador."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "REVISAO JURIDICA OBRIGATORIA antes de producao: /privacidade, /termos e /trocas-e-devolucoes tem texto generico escrito a partir da LGPD e do CDC, com o aviso em comentario de bloco no topo de cada arquivo. Faltam a qualificacao formal do controlador (razao social e CNPJ), o nome e contato do encarregado (DPO), os prazos de retencao por finalidade e a lista nominal dos operadores. Revisado, o texto deve ser gravado na pagina do CMS de mesmo slug — havendo corpo preenchido, ele substitui as secoes do codigo."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "REVALIDACAO: as paginas institucionais nao usam API dinamica, entao sao geradas estaticamente. Quem construir /admin/conteudo precisa chamar revalidatePath para \"/sobre\", \"/estrutura\", \"/entrega\", \"/trocas-e-devolucoes\", \"/privacidade\", \"/termos\", \"/faq\", \"/contato\" e \"/<slug>\" ao salvar um Page, e revalidatePath(\"/faq\") ao salvar uma Faq. Sem isso a edicao no painel nao aparece no site."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "src/components/institucional/contato-de-emergencia.ts repete telefone, WhatsApp e e-mail de SETTING_DEFAULTS. error.tsx e global-error.tsx sao Client Components e nao podem importar @/lib/settings (carrega Prisma), alem de serem exibidos justamente quando o banco pode estar fora. Se o contato da JB mudar de verdade, os dois lugares precisam ser atualizados juntos."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "O formulario de contato NAO usa o /api/captcha que existe no repositorio (legado). A protecao e armadilha (honeypot) + limite por IP e por e-mail contado na tabela Lead. Observacao para quem cuidar do build: src/app/api/captcha/route.ts exporta a funcao `assinar` alem do GET, o que o validador de rotas do Next pode recusar — nao e arquivo do meu escopo, so registro o risco."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "Nenhuma mensagem e enfileirada para o e-mail digitado pelo visitante, so para o endereco interno (pedido_email_copia ou email das settings). Formulario publico que enfileira e-mail para endereco arbitrario vira relay de spam com o dominio da JB. Se a JB quiser confirmacao automatica para quem escreveu, isso precisa vir junto com verificacao de e-mail. O OutboundMessage fica com status pendente ate existir o worker de envio."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "O modelo Page nao tem coluna published (so editable), entao qualquer pagina criada no painel fica publica em /<slug> assim que existe — mesma limitacao ja registrada pelo agente do sitemap. Rascunho de pagina exigiria campo novo no schema, que esta congelado."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "next.config.ts nao declara images.remotePatterns, entao o componente ImagemDoBanco usa next/image so quando a URL do Media comeca com \"/\" e cai para <img> quando e absoluta (Vercel Blob). Se o Blob virar o padrao, vale configurar remotePatterns e simplificar o componente."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "O mapa do Google na pagina de contato carrega de dominio de terceiro e pode registrar dados do visitante — isso esta declarado na politica de privacidade. Se o projeto adotar CSP ou banner de consentimento, o iframe precisa entrar em frame-src e/ou ser carregado so apos o aceite."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "app/not-found.tsx fica na raiz e por isso nao recebe o Cabecalho e o Rodape do grupo (loja) — ele monta a propria marca, busca, atalhos e bloco de telefone. Se quiserem o 404 dentro da casca da loja, seria preciso um (loja)/not-found.tsx, que nao estava na minha lista de arquivos."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "error.tsx e global-error.tsx aceitam `retry` (forma estavel no Next 16.3) e `reset` como props opcionais, caindo em window.location.reload() se nenhuma chegar. Quando o projeto padronizar uma so, da para simplificar as duas telas."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "O utilitario text-section citado no briefing nao existe em globals.css (so text-hero, text-display e text-title). Usei text-display nos H1 e classes de tamanho fixo nos H2."
+ },
+ {
+  "agente": "bloco:institucional",
+  "texto": "Nao rodei next build nem next dev, conforme a instrucao. A verificacao foi pnpm exec tsc --noEmit (exit 0 no projeto inteiro) mais um teste em node do higienizador de HTML sobre o conteudo real de prisma/conteudo-legado.json: script, iframe, handler inline e javascript: sao removidos, 8 divs espacadores vazios saem do texto de \"Empresa\" e o resto da marcacao passa intacto. Nao houve teste visual das paginas."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "/admin/categorias, /admin/marcas e /admin/servicos NAO existem em AREAS de @/lib/permissoes (arquivo fora do meu escopo), entao nao aparecem no menu lateral. Para nao ficarem so por URL decorada, criei a faixa AtalhosCatalogo (Produtos · Categorias · Marcas · Servicos · Estoque) no topo das cinco telas. Quem cuidar de permissoes.ts pode promover as tres a areas proprias; a guarda ja e exigirArea(\"produtos\") em todas elas."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "EnviarArquivo do kit aponta por padrao para /api/admin/upload (exige sessao staff, campo 'arquivo') e eu mantive esse endpoint. A rota mais nova /api/upload exige um campo 'pasta' no multipart, e EnviarArquivo nao tem como enviar campos extras. Consequencia: as fotos de produto e de unidade caem em Media com folder padrao e aceitam GIF. Unificar exige mexer em /api/upload (aceitar pasta padrao) ou em enviar-arquivo.tsx — os dois fora do meu escopo."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "Product nao tem coluna de parcelamento no schema congelado. A aba Precos mostra a previa calculada por calcularParcelas (mesma funcao da loja, entao a tela do admin e a do cliente concordam), mas nao ha como definir um parcelamento diferente por produto sem campo novo."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "Nao existe campo de imagem de Open Graph em Product. A aba Ficha e SEO cobre titulo e descricao com previa e contagem de caracteres; a imagem de compartilhamento continua sendo a foto de capa (primeira ProductMedia). Um og:image proprio exigiria coluna nova."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "Service nao tem coluna de duracao. O formulario aceita a duracao em minutos e o servidor a grava como primeira linha da descricao (\"Duracao estimada: 1h 30min\"), sem duplicar em salvamentos seguidos; o formulario le de volta por expressao regular. Se a duracao precisar virar dado consultavel, precisa de campo no schema."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "InventoryUnit nao mexe em Product.stock. Unidade identificada e saldo da vitrine sao contagens diferentes e somar as duas contaria a mesma peca duas vezes. A tela avisa isso e manda registrar uma entrada na tela de estoque do produto quando a unidade tambem tiver de contar no saldo. Se a regra do negocio for sincronizar automaticamente, e uma decisao a tomar antes de codificar."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "InventoryMovement.userId e um id solto (sem relacao no schema), entao a coluna \"quem\" do historico resolve os nomes numa segunda consulta a User. Movimento sem usuario aparece como \"Sistema\" (e o caso dos gerados pelo fluxo de pedido)."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "Os movimentos de tipo reserva e liberacao_reserva aparecem no historico mas nao sao oferecidos na tela: quem os escreve e @/lib/pedido. A tela de movimentacao cobre entrada, saida, devolucao e ajuste."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "As fotos usam <img> puro em vez de next/image porque as URLs vem do Vercel Blob ou de /uploads e o next.config precisaria de remotePatterns — arquivo fora do meu escopo."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "A busca por texto usa contains + mode insensitive. Funciona bem no volume atual do catalogo; num catalogo muito maior valeria um indice de texto no Postgres, o que exigiria migration (schema congelado)."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "Nao rodei next build nem next dev (proibido no escopo) e nao ha banco com dados aqui, entao a validacao foi pnpm exec tsc --noEmit — limpo nos meus arquivos — mais um teste de runtime dos esquemas zod com tsx e a conferencia do field reference prisma.product.fields.lowStockAlert no client gerado. Renderizacao real das telas nao foi exercitada."
+ },
+ {
+  "agente": "bloco:admin-catalogo",
+  "texto": "No mesmo tsc restam erros de outros agentes, em src/app/(admin)/admin/manutencao/[id]/page.tsx e src/app/acoes/minha-jb.ts. Nao toquei nesses arquivos."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "MAPA DE ÁREAS: `@/lib/permissoes` está congelado e não tem entrada para pagamentos, cupons e frete. Usei pagamentos → área \"pedidos\", cupons → área \"produtos\" (admin/gestor editam, comercial consulta) e frete → área \"configuracoes\" (a descrição dessa área já cita frete; na prática vira admin). Consequência: as três telas NÃO aparecem no menu lateral, que sai de AREAS. Liguei /admin/pagamentos sempre e /admin/cupons e /admin/frete condicionados a podeVer() no cabeçalho de /admin/pedidos. Quando AREAS puder ser editado, basta acrescentar as três entradas e trocar a constante nas guardas."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "\"Converter em pedido\" não é botão separado: `converterEmPedido` é função privada de @/lib/orcamento e a conversão acontece dentro da transação de `aprovarOrcamento`. O painel oferece \"Aprovar e gerar pedido\". Um orçamento comercial que já esteja em `aprovado` SEM orderId (situação que o domínio não produz) não teria como ser convertido pelo painel — precisaria exportar `converterEmPedido`."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Document.storageKey guarda a URL pública devolvida por @/lib/upload (Vercel Blob ou /uploads). O projeto não tem bucket privado nem rota autorizada de download, e criar uma estava fora do escopo. Quando existirem, esse campo deve passar a guardar a chave privada e os links de /admin/pedidos/[id] e da ficha do cliente devem apontar para a rota autorizada."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Link público do orçamento: não existe rota pública com token para proposta. O e-mail enfileirado em `enviarOrcamentoAdmin` aponta para {SITE_URL}/minha-jb/orcamentos/[id], que exige o cliente logado. Contato sem cadastro recebe o link mas não abre — a tela avisa quando não há e-mail de contato, mas não resolve o caso do visitante."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Nada é enviado de fato: `enfileirar` grava OutboundMessage com status `pendente` e o schema não tem colunas de assunto/corpo. Falta o worker que lê `mensagensPendentes` e dispara. A dedupeKey usada inclui a versão do orçamento (`...:v<version>`), então reenviar a mesma versão não duplica, mas uma revisão nova gera mensagem nova."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Endereços do cliente são somente leitura na ficha (o escopo pedia \"ver\"). Criar/editar CustomerAddress e CustomerLocation pelo painel não foi implementado — hoje só o próprio cliente cadastra, pela Minha JB ou no checkout."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Margem do pedido usa `Product.costCents` ATUAL, porque OrderItem não guarda snapshot de custo no schema congelado. A tela diz isso em letra pequena (\"sai do custo cadastrado no produto hoje\") e o bloco só aparece para quem tem PODE.verCustos (gestor+) e quando há custo cadastrado. Um relatório de margem histórica exigiria coluna nova em OrderItem."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Notas internas do cliente ficam no campo único `Customer.notes` (não existe tabela de notas). Cada nota entra como bloco datado e assinado, mais recente no topo, limitado a 20.000 caracteres no total. Não dá para editar ou apagar uma nota isolada."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Impressão: as folhas ficam sob /admin, então herdam a casca do painel. Como globals.css está congelado e um layout filho não remove o layout do pai no App Router, o CSS de impressão fica inline em folha-impressao.tsx e usa a regra clássica `body * { visibility: hidden }` + `#folha-impressao * { visible }`. Está documentado no comentário do arquivo; se a casca um dia ganhar a classe `no-print`, dá para simplificar."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Os selects de cliente e de produto do editor de orçamento carregam até 500 registros ordenados por nome. Passando disso, a lista fica truncada em silêncio — vale trocar por campo de busca com rota de autocompletar quando a base crescer."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Frete: esta tela administra ShippingProfile e ShippingZone, mas quem CASA um CEP com a faixa no checkout não está no meu escopo (não achei essa função em @/lib). Cadastrar as faixas aqui só terá efeito quando o cálculo consumi-las."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "Não criei loading.tsx para /admin/orcamentos/novo nem para as duas rotas de impressão — são páginas leves e o esqueleto de lista/detalhe não descreveria a forma delas."
+ },
+ {
+  "agente": "bloco:admin-vendas",
+  "texto": "`pnpm exec tsc --noEmit` não acusa nenhum erro nos meus arquivos. Existe um erro de sintaxe pré-existente em src/app/acoes/admin-servico.ts (arquivo de outro agente, linhas 1217-1221), que não toquei."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "ACHADO QUE VALE PARA OS OUTROS AGENTES: no Zod 4, um campo `z.union([...z.undefined()])` NAO cobre chave AUSENTE no objeto — ele recusa com 'Invalid input: expected nonoptional, received undefined'. Como checkbox desmarcado some por completo do FormData, todo campo de caixa de selecao precisa de `.optional()` de verdade. Descobri isso rodando os schemas com tsx e corrigi em admin-servico.ts (`marcado` virou `z.string().optional().transform(...)`). Quem tiver o mesmo padrao em outra acao vai quebrar em silencio na primeira caixa desmarcada."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "/admin/agenda e /admin/tecnicos NAO existem em AREAS (src/lib/permissoes.ts, congelado), entao nao aparecem no menu lateral. Criei a barra SUBNAV_SERVICO (components/admin/servico/cabecalho.tsx) ligando Visitas/Contratos/Planos/Agenda/Tecnicos e botoes 'Ver agenda' nos cabecalhos de Chamados e OS, para as duas rotas terem porta de entrada. As guardas sao emprestadas: agenda usa exigirArea('assistencia') e tecnicos usa exigirArea/podeEditar('manutencao'). Quando as duas areas forem cadastradas em AREAS, a barra pode encolher de volta para manutencao."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Tempo gasto na OS: WorkOrder nao tem coluna de horas. Mostro as duas medidas que existem de verdade e sao coisas diferentes — tempo em aberto (openedAt ate closedAt/agora) e horas de mao de obra somadas dos itens kind='servico', em que a quantidade e a hora. Um terceiro numero exigiria coluna nova no schema congelado."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Assinatura do responsavel: e nome + data digitados (acceptedByName/acceptedAt/acceptedIp), nao desenho — a tela e a via impressa dizem 'Recebido por'. Como concluirOS carimba acceptedAt = agora, quando a data informada e outra eu faco um update logo depois da transacao: sao dois writes, nao um. Se concluirOS um dia aceitar a data do aceite, esse segundo update sai."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Laudo -> Document: so e criado quando existe PDF anexado, como a fase anterior deixou. O upload usa /api/upload, que hoje grava em local PUBLICO (Vercel Blob publico ou public/uploads), e Document.storageKey guarda esse endereco — ou seja, quem tiver o link abre o laudo sem passar por autenticacao, apesar de o schema chamar o campo de 'caminho no storage privado'. Deixei o alerta em comentario no topo de conclusao-os.tsx apontando os dois pontos a mudar quando houver storage privado com rota autorizada."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Nao usei o EnviarArquivo do kit: /api/upload exige o campo `pasta` no mesmo POST (o componente do kit so manda o arquivo) e o que as funcoes de dominio esperam e o ID da Media, nao a URL (registrarMidia recebe mediaIds). Escrevi `Anexos` e `AnexoUnico` em components/admin/servico/anexos.tsx, que postam com a pasta e devolvem as ids em inputs escondidos."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Periodicidade do contrato: MaintenanceContract nao tem coluna para isso — o intervalo e parametro da geracao, nao dado do contrato. Quando o usuario informa um intervalo proprio (fugindo do plano), gravo a frase 'Intervalo combinado entre visitas: N mes(es)' nas observacoes do contrato, para quem for gerar visitas depois de renovar a vigencia saber qual repetir. Nao e campo consultavel nem filtravel."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "atribuirTecnico do dominio exige uma visita agendada ou uma OS aberta (ServiceRequest nao tem technicianId). O painel avisa isso no texto de ajuda do campo e, quando nao ha nenhuma das duas, mostra a mensagem do dominio. A coluna 'Tecnico' da fila de chamados e derivada do ultimo agendamento ou da ultima OS, pelo mesmo motivo — e o filtro por tecnico busca por relacao (`appointments.some` OR `workOrders.some`), o que e mais caro que um indice direto."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Links para rotas de outros agentes que ainda nao existem e vao dar 404 ate serem criadas: /admin/clientes/[id], /admin/pedidos/[id], /admin/produtos/[id], /admin/orcamentos e /admin/orcamentos/[id] (esta ultima e o destino do redirect depois de montar a proposta a partir do chamado) e /admin/usuarios."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Selects de cliente sao listas completas com take de 500 (filtros de chamados e equipamentos) ou 1000 (transferencia e cadastro de equipamento). Passando disso, a lista trunca em ordem alfabetica sem avisar. Uma busca assincrona exigiria rota e componente novos, fora do escopo."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Filtro por tecnico na agenda esconde as instalacoes: InstallationTask nao tem technicianId no schema. A tela diz isso em voz alta na linha de contagem, em vez de sumir com os itens em silencio."
+ },
+ {
+  "agente": "bloco:admin-servico",
+  "texto": "Sem eslint instalado no projeto: a verificacao foi `pnpm exec tsc --noEmit` (exit 0, zero erros no repositorio inteiro) mais um teste de runtime com tsx dos schemas zod (enum vindo do @prisma/client, chave ausente de checkbox, campos opcionais, centavos e listas de FormData). Nao rodei next build nem dev, conforme o escopo — nenhuma tela foi exercitada contra banco com dados."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "NAO EXISTE publicar/despublicar de PAGINA: o modelo Page do schema congelado nao tem coluna `published`, so `editable`. Entao nao ha rascunho — pagina cadastrada e pagina no ar. Expus `editable` como 'Permitir edicao por este painel' (trava contra edicao/exclusao de paginas de sistema) e a tela diz isso com todas as letras, em vez de mostrar um botao que nao publicaria nada. Se publicacao de pagina for necessaria, o schema precisa de uma coluna nova."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "NAO EXISTE area 'suporte' em src/lib/permissoes.ts (arquivo congelado), e por isso tambem nao existe entrada no menu lateral para /admin/suporte. As duas telas de suporte usam `exigirArea(\"clientes\")` (admin, gestor, comercial) — ticket e conversa com cliente. Para a fila ficar alcançavel, coloquei link cruzado: /admin/leads mostra 'Tickets de suporte' e /admin/suporte mostra 'Leads do site'. Quando permissoes.ts for descongelado, vale criar a area 'suporte' e trocar as duas guardas."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "Lead nao tem coluna de RESPONSAVEL no schema. A listagem mostra origem (IP e navegador, na ficha), situacao e periodo, mas nao ha como atribuir um atendente — seria campo inventado. As anotacoes internas suprem parcialmente."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "O saneamento de HTML ficou em src/components/admin/conteudo/html-seguro.tsx, e nao dentro do arquivo de acao. Motivo: num modulo \"use server\" todo export vira acao chamavel pelo cliente, entao uma funcao pura nao pode ser exportada de la — e duplicar a lista branca em dois lugares seria pior. O arquivo esta dentro do meu escopo, e a acao importa `sanitizarHtml` dele. Comentario longo no topo explicando."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "@tiptap/extension-image NAO esta instalado e package.json esta congelado, entao escrevi um no de imagem minimo com Node.create() dentro do editor (atributos src/alt/title, exatamente o que a lista branca aceita). Tambem uso `Node`/`mergeAttributes` reexportados por @tiptap/react (que faz `export * from \"@tiptap/core\"`), porque @tiptap/core nao e dependencia direta do projeto."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "O envio de imagens usa /api/admin/upload, nao a rota nova /api/upload. Motivo concreto: /api/upload exige um campo `pasta` no multipart, e o componente EnviarArquivo do kit so envia o arquivo — nao ha prop para campos extras. Consequencia: toda midia enviada pelo painel nasce com folder 'uploads' e aceita tambem GIF (regra da rota antiga). Se alguem acrescentar uma prop de campos extras em EnviarArquivo, basta passar endpoint=\"/api/upload\" e pasta=\"midia\"."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "A tela de auditoria LE o diff do campo `summary` de AuditLog por texto (separa o 'IP x' por ' · ' e as mudancas por ';'), porque AuditLog nao tem colunas antes/depois. Se o formato de `resumirMudancas` em @/lib/auditoria mudar, a leitura em /admin/auditoria precisa acompanhar."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "A exportacao CSV de leads tem teto de 5000 linhas por download (protecao de memoria) e avisa na auditoria quando o teto foi atingido. Separador ';', BOM UTF-8 e prefixo de aspas em celula iniciada por = + - @ (injecao de formula no Excel)."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "Links para /admin/clientes/{id}, /admin/produtos/{id}, /admin/pedidos/{id}, /admin/assistencia/{id}, /admin/os/{id} e /admin/orcamentos/{id} — usados na busca global, no ticket e na conversao de lead — dependem de rotas de outros agentes. Vao dar 404 ate existirem."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "Miniaturas da biblioteca de midia e das galerias usam <img> simples, sem next/image: a biblioteca mistura arquivo local (public/uploads) e remoto (Vercel Blob), e sao imagens internas do painel. PDF na biblioteca aparece com icone de documento em vez de imagem quebrada."
+ },
+ {
+  "agente": "bloco:admin-conteudo",
+  "texto": "Nao rodei next build nem next dev (proibido no escopo). A verificacao foi `pnpm exec tsc --noEmit` (zero erros no projeto inteiro) mais dois testes em runtime com tsx/node: 24 casos do sanitizador de HTML e os esquemas zod (z.enum com tupla readonly, refine de link, z.email). Renderizacao real das telas depende de banco com dados e nao foi exercitada."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "A pagina do produto (src/app/(loja)/loja/[slug]/page.tsx, fora do meu escopo) define openGraph.images no generateMetadata. Metadado explicito tem precedencia sobre a convencao de arquivo, entao a imagem gerada pelo opengraph-image.tsx sera IGNORADA enquanto aquela linha existir. Quem for dono da pagina precisa remover `images` do openGraph (o resto do generateMetadata continua igual) para o cartao novo valer."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "CSP sem nonce, com 'unsafe-inline' no script-src. Motivo documentado em comentario longo no next.config.ts: a propria doc desta versao diz que nonce obriga TODAS as paginas a renderizar dinamicamente, desligando ISR e cache de CDN — preco alto demais para catalogo e pagina de produto, que sao conteudo publico igual para todos. Misturar CSP no proxy com CSP no config tambem esta descartado, porque dois cabecalhos fazem o navegador aplicar a intersecao e quebrar o site sem erro no servidor. Caminho de migracao anotado no arquivo: ligar experimental.sri (hash por integridade) quando sair de experimental, que tira o 'unsafe-inline' sem perder geracao estatica."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "As duas telas de login leem parametros diferentes: /admin/entrar le `de` e /entrar le `destino` (aceitando `voltar`). O proxy manda os dois nomes no redirecionamento da equipe para funcionar hoje. Vale padronizar em `destino` nas tres pontas (auth-cliente.ts, admin/entrar/page.tsx e proxy.ts) numa rodada em que esses arquivos estejam livres."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "A rota /api/pagamento/webhook ainda nao existe no repositorio; o matcher do proxy ja a exclui, entao quem criar nao precisa mexer no proxy. Confirmar so que o caminho final e exatamente esse."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "Nenhum chamador foi ligado ao @/lib/limite ainda — os formularios publicos e route handlers estao no escopo de outros agentes. Onde ja existe LoginAttempt no banco (login de cliente e de equipe) a regra do projeto continua valendo: o banco ganha, porque e compartilhado entre instancias. O limitador em memoria de src/app/api/upload/route.ts poderia migrar para checarLimite, mas aquele arquivo esta fora do meu escopo."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "O limite em memoria nao e compartilhado em serverless: cada instancia conta a sua fatia, entao um limite de 5 pode virar 20 com 4 instancias quentes. Segura abuso comum de formulario, nao ataque distribuido. A interface ArmazenamentoDeLimite e checarLimiteEm ja estao prontas para receber Redis/Upstash sem mudar a forma do resultado."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "O token CSRF e ancorado no cookie de sessao. Para visitante ANONIMO ele e previsivel — e isso e deliberado e esta comentado no arquivo: sem sessao nao ha autoridade para a requisicao forjada carregar. Formulario publico que precisa de freio contra robo deve usar o captcha de /api/captcha mais @/lib/limite. Server Actions do Next ja checam Origin sozinhas; tokenCsrf/validarCsrf sao a segunda tranca e a primeira para route handler de POST. Nenhum formulario foi instrumentado ainda porque os formularios sao de outros agentes."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "next.config.ts le PAYMENT_PROVIDER e NODE_ENV em tempo de BUILD. Trocar o provedor de pagamento no painel da Vercel sem refazer o deploy nao muda o CSP — os dominios do Mercado Pago continuariam de fora e o SDK seria bloqueado. Esta escrito no topo do arquivo."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "A foto no cartao OG so entra quando a midia principal e PNG ou JPEG em URL https absoluta (Vercel Blob). O seed demo grava .webp em caminho relativo (/demo/*.webp), entao hoje todos os cartoes saem na versao so de texto — que esta correta e legivel, conferida em imagem. WebP e AVIF ficaram de fora porque o decodificador do @vercel/og nao garante os dois; se o catalogo de producao usar webp, sera preciso converter no upload ou aceitar o cartao sem foto."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "HSTS vai sem `preload` de proposito: entrar na lista de preload dos navegadores e praticamente irreversivel e vale para todos os subdominios — e decisao da JB, nao do codigo. Basta acrescentar \"; preload\" quando todos os subdominios estiverem em https."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "theme_color do manifesto e o vermelho da marca (#e0141b) enquanto viewport.themeColor do layout raiz e branco. Sao coisas diferentes (barra do app instalado x barra do navegador) e a divergencia e intencional, mas src/app/layout.tsx esta fora do meu escopo — se a JB quiser os dois iguais, o ajuste e la."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "Os atalhos do manifesto apontam para /assistencia-tecnica/solicitar, /minha-jb e /loja, rotas que outros agentes ainda estao construindo. Vale uma conferida antes do deploy para nenhum atalho cair em 404."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "frame-ancestors 'none' e X-Frame-Options DENY impedem o site de ser embutido em qualquer iframe. Se um dia a JB quiser um catalogo embutido em pagina de parceiro, sao essas duas linhas do next.config.ts que precisam abrir — nao mexer nelas sem essa necessidade concreta."
+ },
+ {
+  "agente": "bloco:seguranca-seo",
+  "texto": "Nao rodei next build nem next dev (proibido no escopo) e nao existe eslint no projeto. A verificacao foi pnpm exec tsc --noEmit (sem erros) mais testes de runtime com tsx: CSP nas tres variantes de ambiente, matcher do proxy em 24 caminhos, porteiro em 10 cenarios, limitador de taxa, helpers de seguranca e tres renderizacoes da imagem OG conferidas visualmente. Falta o teste no servidor de verdade: se alguma pagina estourar CSP no navegador, o console do Chrome aponta a diretiva exata e o ajuste e de uma linha no next.config.ts."
+ }
+]

@@ -33,7 +33,13 @@ import {
   substituirItens,
 } from "@/lib/orcamento";
 import { provedorPagamento } from "@/lib/pagamento";
-import { ErroDeEstoque, cancelarPedido, confirmarPagamento, mudarStatus } from "@/lib/pedido";
+import {
+  ErroDeEstoque,
+  cancelarPedido,
+  confirmarPagamento,
+  estornarPedido,
+  mudarStatus,
+} from "@/lib/pedido";
 import { exigirEdicao } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/seo";
@@ -819,7 +825,16 @@ export async function estornarPagamento(
       },
     });
 
-    await mudarStatus(pagamento.orderId, "reembolsado", { nota: motivo, userId: usuario.id });
+    /**
+     * `estornarPedido`, não `mudarStatus`.
+     *
+     * Trocar só o status deixava o estoque baixado e a unidade física presa a
+     * um pedido morto: o equipamento voltava para a loja e sumia da vitrine.
+     * `estornarPedido` devolve o saldo, grava a movimentação de devolução e
+     * libera a InventoryUnit — e só devolve o que ainda não tinha saído da JB.
+     * O estorno vindo do provedor já passava por lá; o do painel, não.
+     */
+    await estornarPedido(pagamento.orderId, motivo, usuario.id);
 
     await registrarAuditoria({
       userId: usuario.id,
