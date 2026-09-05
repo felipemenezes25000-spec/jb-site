@@ -4,7 +4,7 @@ import path from "node:path";
 
 import sharp from "sharp";
 
-import { getSession, logAction } from "@/lib/auth";
+import { registrar, sessaoStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const TIPOS = ["image/jpeg", "image/png", "image/gif", "image/webp"];
@@ -35,7 +35,7 @@ async function guardar(nome: string, bytes: Buffer, mime: string) {
   return `/uploads/${nome}`;
 }
 export async function POST(request: Request) {
-  const user = await getSession();
+  const user = await sessaoStaff();
   if (!user) return Response.json({ erro: "Não autorizado." }, { status: 401 });
 
   const form = await request.formData();
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     },
   });
 
-  await logAction({
+  await registrar({
     userId: user.id,
     action: "create",
     entity: "midia",

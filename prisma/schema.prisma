@@ -1,105 +1,1552 @@
-// CMS da JB Soluções Odontológicas — substitui o MARS v5.3.1
-// Postgres no desenvolvimento e na produção: o banco local (Docker, porta 5433)
-// é o mesmo motor do Postgres da Vercel, para não haver surpresa no deploy.
+// ============================================================================
+// JB Soluções Odontológicas — plataforma
+//
+// Loja + assistência técnica + prontuário de equipamentos + Minha JB + backoffice.
+// Vendedor único: a própria JB. Sem sellers, comissão ou split.
+//
+// Dinheiro sempre em CENTAVOS (Int). Nunca Float.
+// Datas em UTC no banco; a exibição converte para America/Sao_Paulo.
+// ============================================================================
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  // O Neon entrega uma URL com pool (pgbouncer) para a aplicação e uma direta
-  // para as migrações, que precisam de sessão real.
+  provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-/// Usuários do painel. Substitui `usuarios` (que guardava senha em texto plano).
+// ============================================================================
+// EQUIPE INTERNA
+// ============================================================================
+
+enum StaffRole {
+  admin
+  gestor
+  comercial
+  tecnico
+  editor
+}
+
+/// Usuários do backoffice. Nunca representa cliente final.
 model User {
   id           String    @id @default(cuid())
   name         String
   email        String    @unique
   passwordHash String
-  role         String    @default("editor") // "admin" | "editor"
+  role         StaffRole @default(editor)
   active       Boolean   @default(true)
+  phone        String?
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  auditLogs AuditLog[]
+  auditLogs  AuditLog[]
+  technician Technician?
+
+  @@index([role, active])
 }
 
-/// Configurações do site (telefone, endereço, redes). Substitui `configuracoes`.
+/// Técnico de campo. Estende um usuário interno com dados operacionais.
+model Technician {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialties String[] @default([])
+  active      Boolean  @default(true)
+  colorTag    String? // cor na agenda
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments ServiceAppointment[]
+  workOrders   WorkOrder[]
+  visits       MaintenanceVisit[]
+}
+
+// ============================================================================
+// CLIENTES
+// ============================================================================
+
+enum PersonType {
+  fisica
+  juridica
+}
+
+model Customer {
+  id               String     @id @default(cuid())
+  name             String
+  email            String     @unique
+  passwordHash     String? // nulo em pedido de convidado ainda não convertido
+  phone            String     @default("")
+  personType       PersonType @default(fisica)
+  document         String     @default("") // CPF ou CNPJ, só dígitos
+  companyName      String     @default("") // razão social
+  tradeName        String     @default("") // nome fantasia
+  stateRegistry    String     @default("")
+  emailVerifiedAt  DateTime?
+  marketingOptInAt DateTime?
+  active           Boolean    @default(true)
+  lastLoginAt      DateTime?
+  notes            String     @default("") // nota interna, nunca exibida ao cliente
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  addresses       CustomerAddress[]
+  locations       CustomerLocation[]
+  carts           Cart[]
+  orders          Order[]
+  favorites       Favorite[]
+  equipments      Equipment[]
+  serviceRequests ServiceRequest[]
+  quotes          Quote[]
+  documents       Document[]
+  notifications   Notification[]
+  tickets         SupportTicket[]
+  contracts       MaintenanceContract[]
+  resetTokens     PasswordResetToken[]
+  loginAttempts   LoginAttempt[]
+
+  @@index([document])
+  @@index([createdAt])
+}
+
+model CustomerAddress {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label      String   @default("Principal")
+  recipient  String   @default("")
+  zip        String
+  street     String
+  number     String
+  complement String   @default("")
+  district   String
+  city       String
+  state      String
+  reference  String   @default("")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  locations CustomerLocation[]
+
+  @@index([customerId])
+}
+
+/// Clínica/unidade do cliente. Um equipamento vive em uma unidade e sala.
+model CustomerLocation {
+  id         String           @id @default(cuid())
+  customerId String
+  customer   Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name       String
+  addressId  String?
+  address    CustomerAddress? @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  notes      String           @default("")
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  equipments Equipment[]
+
+  @@index([customerId])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
+}
+
+/// Tentativas de login, para travar força bruta sem depender de serviço externo.
+model LoginAttempt {
+  id         String    @id @default(cuid())
+  identifier String // e-mail em minúsculas
+  ip         String    @default("")
+  success    Boolean   @default(false)
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+
+  @@index([identifier, createdAt])
+  @@index([ip, createdAt])
+}
+
+// ============================================================================
+// CATÁLOGO
+// ============================================================================
+
+enum ProductStatus {
+  draft
+  active
+  archived
+}
+
+enum ProductCondition {
+  novo
+  seminovo
+  usado
+  recondicionado
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String   @default("")
+  logoId      String?
+  logo        Media?   @relation("BrandLogo", fields: [logoId], references: [id], onDelete: SetNull)
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([published, order])
+}
+
+model Category {
+  id             String     @id @default(cuid())
+  slug           String     @unique
+  name           String
+  description    String     @default("")
+  parentId       String?
+  parent         Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children       Category[] @relation("CategoryTree")
+  imageId        String?
+  image          Media?     @relation("CategoryImage", fields: [imageId], references: [id], onDelete: SetNull)
+  icon           String? // nome do ícone Lucide
+  order          Int        @default(0)
+  published      Boolean    @default(true)
+  featured       Boolean    @default(false)
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  products        Product[]
+  serviceRequests ServiceRequest[]
+  equipments      Equipment[]
+
+  @@index([published, order])
+  @@index([parentId])
+}
+
+model Product {
+  id               String           @id @default(cuid())
+  slug             String           @unique
+  sku              String           @unique
+  name             String
+  model            String           @default("")
+  shortDescription String           @default("")
+  description      String           @default("") // HTML sanitizado
+  status           ProductStatus    @default(draft)
+  condition        ProductCondition @default(novo)
+  featured         Boolean          @default(false)
+  publishedAt      DateTime?
+
+  brandId    String?
+  brand      Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // preços em centavos
+  priceCents          Int     @default(0)
+  compareAtCents      Int? // preço anterior, para exibir desconto
+  costCents           Int? // custo interno, nunca exposto
+  allowDirectPurchase Boolean @default(true)
+  allowQuoteRequest   Boolean @default(true)
+
+  // estoque
+  trackInventory Boolean @default(true)
+  unique         Boolean @default(false) // seminovo/usado: uma única unidade
+  stock          Int     @default(0)
+  lowStockAlert  Int     @default(1)
+
+  // logística e ficha
+  warrantyMonths    Int?
+  voltage           String? // 110 | 220 | bivolt
+  weightGrams       Int?
+  widthMm           Int?
+  heightMm          Int?
+  depthMm           Int?
+  shippingProfileId String?
+  shippingProfile   ShippingProfile? @relation(fields: [shippingProfileId], references: [id], onDelete: SetNull)
+
+  // regulatório — todos opcionais, nunca inventar
+  anvisaCode       String?
+  manufacturer     String?
+  regulatoryHolder String?
+  regulatoryNote   String?
+
+  seoTitle       String?
+  seoDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  media       ProductMedia[]
+  specs       ProductSpec[]
+  documents   ProductDocument[]
+  addons      ProductAddon[]
+  units       InventoryUnit[]
+  movements   InventoryMovement[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  favorites   Favorite[]
+  quoteItems  QuoteItem[]
+  equipments  Equipment[]
+  relatedFrom ProductRelation[]   @relation("RelationSource")
+  relatedTo   ProductRelation[]   @relation("RelationTarget")
+  faqs        Faq[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId, status])
+  @@index([brandId, status])
+  @@index([condition, status])
+  @@index([featured, status])
+}
+
+model ProductMedia {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  alt       String   @default("")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([productId, mediaId])
+  @@index([productId, order])
+}
+
+model ProductSpec {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  group     String  @default("Ficha técnica")
+  label     String
+  value     String
+  order     Int     @default(0)
+
+  @@index([productId, order])
+}
+
+model ProductDocument {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title     String
+  url       String
+  kind      String   @default("manual")
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model ProductRelation {
+  id       String  @id @default(cuid())
+  sourceId String
+  source   Product @relation("RelationSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetId String
+  target   Product @relation("RelationTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  order    Int     @default(0)
+
+  @@unique([sourceId, targetId])
+}
+
+/// Serviço que pode ser vendido junto de um produto (instalação, preventiva…).
+model ProductAddon {
+  id         String  @id @default(cuid())
+  productId  String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serviceId  String
+  service    Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  priceCents Int? // sobrepõe o preço padrão do serviço quando definido
+  required   Boolean @default(false)
+  order      Int     @default(0)
+
+  @@unique([productId, serviceId])
+}
+
+// ============================================================================
+// ESTOQUE
+// ============================================================================
+
+enum UnitStatus {
+  disponivel
+  reservado
+  vendido
+  indisponivel
+}
+
+/// Unidade física identificável. Obrigatória para seminovo/usado/recondicionado.
+model InventoryUnit {
+  id           String     @id @default(cuid())
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serialNumber String?
+  status       UnitStatus @default(disponivel)
+
+  manufactureYear Int?
+  usageHours      Int?
+  usageCycles     Int?
+  conditionNotes  String @default("")
+  inspectionNotes String @default("")
+  warrantyMonths  Int?
+  acquiredFrom    String @default("")
+
+  orderItemId String?    @unique
+  orderItem   OrderItem? @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  checklist InventoryCheckItem[]
+  media     InventoryUnitMedia[]
+
+  @@index([productId, status])
+  @@index([serialNumber])
+}
+
+/// Item do checklist de revisão do seminovo — o que foi verificado e trocado.
+model InventoryCheckItem {
+  id     String        @id @default(cuid())
+  unitId String
+  unit   InventoryUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  label  String
+  result String        @default("verificado") // verificado | substituido | reparado | nao_aplicavel
+  note   String        @default("")
+  order  Int           @default(0)
+
+  @@index([unitId, order])
+}
+
+model InventoryUnitMedia {
+  id      String        @id @default(cuid())
+  unitId  String
+  unit    InventoryUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  mediaId String
+  media   Media         @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  order   Int           @default(0)
+
+  @@unique([unitId, mediaId])
+}
+
+enum StockMovementKind {
+  entrada
+  saida
+  reserva
+  liberacao_reserva
+  ajuste
+  devolucao
+}
+
+model InventoryMovement {
+  id        String            @id @default(cuid())
+  productId String
+  product   Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  kind      StockMovementKind
+  quantity  Int
+  reason    String            @default("")
+  orderId   String?
+  order     Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  userId    String?
+  createdAt DateTime          @default(now())
+
+  @@index([productId, createdAt])
+}
+
+// ============================================================================
+// SERVIÇOS VENDÁVEIS
+// ============================================================================
+
+enum ServiceKind {
+  instalacao
+  visita_tecnica
+  manutencao_preventiva
+  manutencao_corretiva
+  treinamento
+  retirada_equipamento
+  outro
+}
+
+model Service {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  kind        ServiceKind @default(outro)
+  description String      @default("")
+  priceCents  Int? // nulo = sob orçamento
+  published   Boolean     @default(true)
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  addons     ProductAddon[]
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+  quoteItems QuoteItem[]
+
+  @@index([published, order])
+}
+
+// ============================================================================
+// LOGÍSTICA
+// ============================================================================
+
+enum ShippingKind {
+  retirada
+  entrega_local
+  transportadora
+  sob_orcamento
+  gratis
+  nao_aplicavel
+}
+
+model ShippingProfile {
+  id             String       @id @default(cuid())
+  name           String
+  kind           ShippingKind @default(sob_orcamento)
+  description    String       @default("")
+  freeAboveCents Int?
+  isDefault      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  zones    ShippingZone[]
+  products Product[]
+}
+
+/// Faixa de CEP com preço fixo. Suficiente enquanto não há transportadora real.
+model ShippingZone {
+  id         String          @id @default(cuid())
+  profileId  String
+  profile    ShippingProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name       String
+  zipStart   String
+  zipEnd     String
+  priceCents Int             @default(0)
+  etaDays    Int?
+  order      Int             @default(0)
+
+  @@index([profileId, order])
+}
+
+// ============================================================================
+// CARRINHO E CUPOM
+// ============================================================================
+
+model Cart {
+  id         String    @id @default(cuid())
+  token      String    @unique // cookie do visitante
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  couponId   String?
+  coupon     Coupon?   @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  items CartItem[]
+
+  @@index([customerId])
+  @@index([updatedAt])
+}
+
+model CartItem {
+  id        String     @id @default(cuid())
+  cartId    String
+  cart      Cart       @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product?   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serviceId String?
+  service   Service?   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  /// quando o serviço foi adicionado como add-on de um item de produto
+  parentId  String?
+  parent    CartItem?  @relation("AddonOf", fields: [parentId], references: [id], onDelete: Cascade)
+  addons    CartItem[] @relation("AddonOf")
+  quantity  Int        @default(1)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([cartId])
+}
+
+enum CouponKind {
+  percentual
+  valor_fixo
+}
+
+model Coupon {
+  id                 String     @id @default(cuid())
+  code               String     @unique
+  kind               CouponKind @default(percentual)
+  value              Int // percentual (0-100) ou centavos
+  minSubtotalCents   Int        @default(0)
+  maxUses            Int?
+  maxUsesPerCustomer Int?
+  usedCount          Int        @default(0)
+  startsAt           DateTime?
+  endsAt             DateTime?
+  active             Boolean    @default(true)
+  categoryId         String?
+  productId          String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  carts  Cart[]
+  orders Order[]
+
+  @@index([active, endsAt])
+}
+
+// ============================================================================
+// PEDIDOS
+// ============================================================================
+
+enum OrderStatus {
+  aguardando_pagamento
+  pagamento_em_analise
+  pago
+  separacao
+  revisao_tecnica
+  aguardando_frete
+  pronto_retirada
+  enviado
+  instalacao_agendada
+  entregue
+  concluido
+  cancelado
+  reembolsado
+}
+
+model Order {
+  id     String      @id @default(cuid())
+  number String      @unique // JB-001054
+  status OrderStatus @default(aguardando_pagamento)
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  // snapshot do comprador no momento da compra
+  buyerName     String
+  buyerEmail    String
+  buyerPhone    String     @default("")
+  buyerDocument String     @default("")
+  personType    PersonType @default(fisica)
+  companyName   String     @default("")
+
+  // snapshot do endereço
+  shippingKind   ShippingKind @default(retirada)
+  shippingLabel  String       @default("")
+  shipZip        String       @default("")
+  shipStreet     String       @default("")
+  shipNumber     String       @default("")
+  shipComplement String       @default("")
+  shipDistrict   String       @default("")
+  shipCity       String       @default("")
+  shipState      String       @default("")
+  shipReference  String       @default("")
+
+  subtotalCents Int @default(0)
+  discountCents Int @default(0)
+  shippingCents Int @default(0)
+  totalCents    Int @default(0)
+
+  couponId   String?
+  coupon     Coupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  couponCode String  @default("")
+
+  customerNote String @default("")
+  internalNote String @default("")
+
+  placedAt    DateTime  @default(now())
+  paidAt      DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  closedAt    DateTime?
+  canceledAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items        OrderItem[]
+  events       OrderStatusEvent[]
+  payments     Payment[]
+  movements    InventoryMovement[]
+  equipments   Equipment[]
+  documents    Document[]
+  quote        Quote?
+  installTasks InstallationTask[]
+
+  @@index([customerId, placedAt])
+  @@index([status, placedAt])
+  @@index([buyerEmail])
+}
+
+enum OrderItemKind {
+  produto
+  servico
+}
+
+model OrderItem {
+  id      String        @id @default(cuid())
+  orderId String
+  order   Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind    OrderItemKind @default(produto)
+
+  productId String?
+  product   Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  serviceId String?
+  service   Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  parentId  String?
+  parent    OrderItem?  @relation("OrderAddonOf", fields: [parentId], references: [id], onDelete: Cascade)
+  addons    OrderItem[] @relation("OrderAddonOf")
+
+  // snapshot — o pedido antigo nunca depende do produto atual
+  name           String
+  sku            String            @default("")
+  brandName      String            @default("")
+  modelName      String            @default("")
+  condition      ProductCondition?
+  imageUrl       String            @default("")
+  unitPriceCents Int
+  quantity       Int               @default(1)
+  totalCents     Int
+
+  unit InventoryUnit?
+
+  @@index([orderId])
+}
+
+model OrderStatusEvent {
+  id                String      @id @default(cuid())
+  orderId           String
+  order             Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status            OrderStatus
+  note              String      @default("")
+  visibleToCustomer Boolean     @default(true)
+  userId            String?
+  createdAt         DateTime    @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+/// Tarefa operacional gerada quando o cliente compra instalação.
+model InstallationTask {
+  id          String    @id @default(cuid())
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      String    @default("pendente") // pendente | agendada | concluida | cancelada
+  scheduledAt DateTime?
+  notes       String    @default("")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  appointment ServiceAppointment?
+
+  @@index([status, scheduledAt])
+}
+
+// ============================================================================
+// PAGAMENTOS
+// ============================================================================
+
+enum PaymentMethod {
+  pix
+  cartao
+  boleto
+  manual
+}
+
+enum PaymentStatus {
+  criado
+  pendente
+  em_analise
+  aprovado
+  recusado
+  expirado
+  cancelado
+  estornado
+}
+
+model Payment {
+  id       String        @id @default(cuid())
+  orderId  String
+  order    Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider String        @default("mock")
+  method   PaymentMethod
+  status   PaymentStatus @default(criado)
+
+  amountCents  Int
+  installments Int @default(1)
+
+  externalId   String?   @unique
+  pixQrCode    String?
+  pixCopyPaste String?
+  expiresAt    DateTime?
+
+  /// só os últimos 4 dígitos e a bandeira. Nunca o número completo nem CVV.
+  cardBrand String?
+  cardLast4 String?
+
+  approvedAt DateTime?
+  failReason String    @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events PaymentEvent[]
+
+  @@index([orderId, createdAt])
+  @@index([status])
+}
+
+/// Cada notificação recebida do provider. `eventKey` garante idempotência.
+model PaymentEvent {
+  id        String   @id @default(cuid())
+  paymentId String
+  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  eventKey  String   @unique
+  kind      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([paymentId, createdAt])
+}
+
+// ============================================================================
+// EQUIPAMENTOS DO CLIENTE
+// ============================================================================
+
+enum EquipmentStatus {
+  operacional
+  em_manutencao
+  aguardando_peca
+  inoperante
+  desativado
+}
+
+enum EquipmentOrigin {
+  compra_jb
+  cadastro_cliente
+  cadastro_tecnico
+  atendimento
+}
+
+model Equipment {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  name         String
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brandName    String    @default("")
+  modelName    String    @default("")
+  serialNumber String    @default("")
+  voltage      String?
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  locationId String?
+  location   CustomerLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  room       String            @default("")
+
+  origin                  EquipmentOrigin   @default(cadastro_cliente)
+  status                  EquipmentStatus   @default(operacional)
+  condition               ProductCondition?
+  manufacturedAt          DateTime?
+  purchasedAt             DateTime?
+  installedAt             DateTime?
+  warrantyUntil           DateTime?
+  lastMaintenanceAt       DateTime?
+  nextMaintenanceAt       DateTime?
+  maintenanceIntervalDays Int?
+
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  media           EquipmentMedia[]
+  events          EquipmentEvent[]
+  serviceRequests ServiceRequest[]
+  workOrders      WorkOrder[]
+  visits          MaintenanceVisit[]
+  documents       Document[]
+  contractItems   MaintenanceContractItem[]
+
+  @@index([customerId, status])
+  @@index([nextMaintenanceAt])
+  @@index([serialNumber])
+}
+
+model EquipmentMedia {
+  id          String    @id @default(cuid())
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  mediaId     String
+  media       Media     @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  order       Int       @default(0)
+
+  @@unique([equipmentId, mediaId])
+}
+
+model EquipmentEvent {
+  id          String    @id @default(cuid())
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  kind        String // compra | instalacao | manutencao | assistencia | nota | status
+  title       String
+  description String    @default("")
+  happenedAt  DateTime  @default(now())
+  workOrderId String?
+  createdAt   DateTime  @default(now())
+
+  @@index([equipmentId, happenedAt])
+}
+
+// ============================================================================
+// ASSISTÊNCIA TÉCNICA
+// ============================================================================
+
+enum ServiceRequestStatus {
+  solicitacao_recebida
+  triagem
+  aguardando_cliente
+  visita_agendada
+  tecnico_a_caminho
+  em_diagnostico
+  orcamento_enviado
+  aguardando_aprovacao
+  aprovado
+  aguardando_peca
+  em_manutencao
+  testes
+  concluido
+  cancelado
+}
+
+enum Urgency {
+  baixa
+  normal
+  alta
+  parado
+}
+
+model ServiceRequest {
+  id     String               @id @default(cuid())
+  number String               @unique // AT-001205
+  status ServiceRequestStatus @default(solicitacao_recebida)
+
+  customerId  String?
+  customer    Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  equipmentId String?
+  equipment   Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+
+  // quando o solicitante não tem conta ou o equipamento não está cadastrado
+  contactName  String
+  contactEmail String
+  contactPhone String    @default("")
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brandName    String    @default("")
+  modelName    String    @default("")
+  serialNumber String    @default("")
+
+  problemKind String  @default("")
+  description String
+  urgency     Urgency @default(normal)
+
+  addressZip        String @default("")
+  addressStreet     String @default("")
+  addressNumber     String @default("")
+  addressComplement String @default("")
+  addressDistrict   String @default("")
+  addressCity       String @default("")
+  addressState      String @default("")
+  availability      String @default("")
+
+  internalNote String    @default("")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  closedAt     DateTime?
+
+  media        ServiceRequestMedia[]
+  events       ServiceRequestEvent[]
+  appointments ServiceAppointment[]
+  workOrders   WorkOrder[]
+  quotes       Quote[]
+
+  @@index([customerId, createdAt])
+  @@index([status, createdAt])
+}
+
+model ServiceRequestMedia {
+  id        String         @id @default(cuid())
+  requestId String
+  request   ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     Media          @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  order     Int            @default(0)
+
+  @@unique([requestId, mediaId])
+}
+
+model ServiceRequestEvent {
+  id                String                @id @default(cuid())
+  requestId         String
+  request           ServiceRequest        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  status            ServiceRequestStatus?
+  title             String
+  message           String                @default("")
+  /// nota interna nunca chega ao cliente
+  visibleToCustomer Boolean               @default(true)
+  userId            String?
+  createdAt         DateTime              @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+model ServiceAppointment {
+  id            String            @id @default(cuid())
+  requestId     String?
+  request       ServiceRequest?   @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  installTaskId String?           @unique
+  installTask   InstallationTask? @relation(fields: [installTaskId], references: [id], onDelete: SetNull)
+  technicianId  String?
+  technician    Technician?       @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+
+  title          String
+  startsAt       DateTime
+  endsAt         DateTime?
+  status         String    @default("agendado") // agendado | em_andamento | concluido | cancelado
+  addressSummary String    @default("")
+  notes          String    @default("")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([startsAt])
+  @@index([technicianId, startsAt])
+}
+
+// ============================================================================
+// ORDEM DE SERVIÇO
+// ============================================================================
+
+enum WorkOrderStatus {
+  aberta
+  em_execucao
+  aguardando_peca
+  aguardando_aprovacao
+  concluida
+  cancelada
+}
+
+model WorkOrder {
+  id     String          @id @default(cuid())
+  number String          @unique // OS-001842
+  status WorkOrderStatus @default(aberta)
+
+  requestId    String?
+  request      ServiceRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  equipmentId  String?
+  equipment    Equipment?      @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  technicianId String?
+  technician   Technician?     @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+
+  customerName  String @default("")
+  reportedIssue String @default("")
+  diagnosis     String @default("")
+  workDone      String @default("")
+  finalTest     String @default("")
+  notes         String @default("")
+
+  laborCents          Int  @default(0)
+  travelCents         Int  @default(0)
+  partsCents          Int  @default(0)
+  discountCents       Int  @default(0)
+  totalCents          Int  @default(0)
+  serviceWarrantyDays Int?
+
+  openedAt       DateTime  @default(now())
+  closedAt       DateTime?
+  acceptedAt     DateTime?
+  acceptedByName String    @default("")
+  acceptedIp     String    @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items     WorkOrderItem[]
+  events    WorkOrderEvent[]
+  media     WorkOrderMedia[]
+  checklist WorkOrderCheckItem[]
+  documents Document[]
+
+  @@index([status, openedAt])
+  @@index([equipmentId])
+}
+
+model WorkOrderItem {
+  id             String    @id @default(cuid())
+  workOrderId    String
+  workOrder      WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  kind           String    @default("peca") // peca | servico | deslocamento
+  description    String
+  quantity       Int       @default(1)
+  unitPriceCents Int       @default(0)
+  totalCents     Int       @default(0)
+  order          Int       @default(0)
+
+  @@index([workOrderId, order])
+}
+
+model WorkOrderCheckItem {
+  id          String    @id @default(cuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  label       String
+  done        Boolean   @default(false)
+  note        String    @default("")
+  order       Int       @default(0)
+
+  @@index([workOrderId, order])
+}
+
+model WorkOrderMedia {
+  id          String    @id @default(cuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  mediaId     String
+  media       Media     @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  phase       String    @default("antes") // antes | depois
+  order       Int       @default(0)
+
+  @@unique([workOrderId, mediaId])
+}
+
+model WorkOrderEvent {
+  id                String    @id @default(cuid())
+  workOrderId       String
+  workOrder         WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  title             String
+  message           String    @default("")
+  visibleToCustomer Boolean   @default(true)
+  userId            String?
+  createdAt         DateTime  @default(now())
+
+  @@index([workOrderId, createdAt])
+}
+
+// ============================================================================
+// ORÇAMENTOS
+// ============================================================================
+
+enum QuoteStatus {
+  rascunho
+  enviado
+  em_duvida
+  aprovado
+  recusado
+  expirado
+  convertido
+}
+
+enum QuoteKind {
+  comercial
+  assistencia
+}
+
+model Quote {
+  id      String      @id @default(cuid())
+  number  String      @unique // ORC-002841
+  kind    QuoteKind   @default(comercial)
+  status  QuoteStatus @default(rascunho)
+  version Int         @default(1)
+
+  customerId String?
+  customer   Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  requestId  String?
+  request    ServiceRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  orderId    String?         @unique
+  order      Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  contactName  String @default("")
+  contactEmail String @default("")
+  contactPhone String @default("")
+
+  message      String @default("")
+  conditions   String @default("")
+  internalNote String @default("")
+
+  subtotalCents Int @default(0)
+  discountCents Int @default(0)
+  shippingCents Int @default(0)
+  totalCents    Int @default(0)
+
+  validUntil    DateTime?
+  sentAt        DateTime?
+  decidedAt     DateTime?
+  decidedByName String    @default("")
+  decidedIp     String    @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items  QuoteItem[]
+  events QuoteEvent[]
+
+  @@index([customerId, createdAt])
+  @@index([status, createdAt])
+}
+
+model QuoteItem {
+  id      String @id @default(cuid())
+  quoteId String
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  description    String
+  quantity       Int    @default(1)
+  unitPriceCents Int    @default(0)
+  totalCents     Int    @default(0)
+  order          Int    @default(0)
+
+  @@index([quoteId, order])
+}
+
+model QuoteEvent {
+  id                String   @id @default(cuid())
+  quoteId           String
+  quote             Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  title             String
+  message           String   @default("")
+  visibleToCustomer Boolean  @default(true)
+  userId            String?
+  createdAt         DateTime @default(now())
+
+  @@index([quoteId, createdAt])
+}
+
+// ============================================================================
+// MANUTENÇÃO
+// ============================================================================
+
+model MaintenancePlan {
+  id                   String   @id @default(cuid())
+  slug                 String   @unique
+  name                 String
+  description          String   @default("")
+  /// benefícios cadastrados pelo admin — nunca inventados no código
+  benefits             String[] @default([])
+  priceCents           Int?
+  periodMonths         Int      @default(12)
+  visitsIncluded       Int      @default(0)
+  partsDiscountPercent Int      @default(0)
+  published            Boolean  @default(true)
+  order                Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  contracts MaintenanceContract[]
+}
+
+enum ContractStatus {
+  rascunho
+  ativo
+  suspenso
+  encerrado
+}
+
+model MaintenanceContract {
+  id     String         @id @default(cuid())
+  number String         @unique
+  status ContractStatus @default(rascunho)
+
+  customerId String
+  customer   Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  planId     String?
+  plan       MaintenancePlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  startsAt   DateTime?
+  endsAt     DateTime?
+  priceCents Int       @default(0)
+  notes      String    @default("")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  items  MaintenanceContractItem[]
+  visits MaintenanceVisit[]
+
+  @@index([customerId, status])
+}
+
+model MaintenanceContractItem {
+  id          String              @id @default(cuid())
+  contractId  String
+  contract    MaintenanceContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  equipmentId String
+  equipment   Equipment           @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, equipmentId])
+}
+
+enum VisitStatus {
+  prevista
+  agendada
+  concluida
+  cancelada
+}
+
+model MaintenanceVisit {
+  id           String               @id @default(cuid())
+  contractId   String?
+  contract     MaintenanceContract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  equipmentId  String
+  equipment    Equipment            @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  technicianId String?
+  technician   Technician?          @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+
+  status      VisitStatus @default(prevista)
+  dueAt       DateTime
+  scheduledAt DateTime?
+  doneAt      DateTime?
+  notes       String      @default("")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  reminders MaintenanceReminder[]
+
+  @@index([status, dueAt])
+  @@index([equipmentId, dueAt])
+}
+
+/// Garante que o mesmo lembrete não seja enviado duas vezes.
+model MaintenanceReminder {
+  id         String           @id @default(cuid())
+  visitId    String
+  visit      MaintenanceVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  daysBefore Int
+  sentAt     DateTime         @default(now())
+
+  @@unique([visitId, daysBefore])
+}
+
+// ============================================================================
+// DOCUMENTOS, SUPORTE, NOTIFICAÇÕES
+// ============================================================================
+
+enum DocumentKind {
+  nota_fiscal
+  pedido
+  orcamento
+  ordem_servico
+  laudo
+  certificado
+  manual
+  garantia
+  contrato
+  outro
+}
+
+/// Arquivo privado do cliente. Servido só por rota autorizada, nunca por URL pública.
+model Document {
+  id         String       @id @default(cuid())
+  kind       DocumentKind @default(outro)
+  title      String
+  storageKey String // caminho no storage privado
+  mime       String       @default("application/pdf")
+  size       Int          @default(0)
+
+  customerId  String?
+  customer    Customer?  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderId     String?
+  order       Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  equipmentId String?
+  equipment   Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  workOrderId String?
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([customerId, createdAt])
+}
+
+enum TicketStatus {
+  aberto
+  respondido
+  aguardando_cliente
+  fechado
+}
+
+model SupportTicket {
+  id      String       @id @default(cuid())
+  number  String       @unique
+  subject String
+  status  TicketStatus @default(aberto)
+
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  contactName  String    @default("")
+  contactEmail String    @default("")
+  contactPhone String    @default("")
+  productId    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages SupportMessage[]
+
+  @@index([status, createdAt])
+  @@index([customerId])
+}
+
+model SupportMessage {
+  id                String        @id @default(cuid())
+  ticketId          String
+  ticket            SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  body              String
+  fromStaff         Boolean       @default(false)
+  userId            String?
+  visibleToCustomer Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model Notification {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  kind       String
+  title      String
+  body       String    @default("")
+  href       String?
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId, readAt, createdAt])
+}
+
+/// Registro do que foi enviado por e-mail/WhatsApp, para não duplicar.
+model OutboundMessage {
+  id        String   @id @default(cuid())
+  channel   String // email | whatsapp
+  to        String
+  template  String
+  dedupeKey String   @unique
+  status    String   @default("enviado") // enviado | falhou | simulado
+  error     String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, productId])
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  group     String   @default("geral") // geral | compra | entrega | assistencia | produto
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([group, order])
+}
+
+// ============================================================================
+// CONTEÚDO E SISTEMA — preservados do site anterior
+// ============================================================================
+
 model Setting {
   key       String   @id
   label     String
   value     String   @default("")
-  group     String   @default("geral") // geral | contato | social | seo
-  type      String   @default("text") // text | textarea | url | email | tel | html
+  group     String   @default("geral")
+  type      String   @default("text")
   hint      String?
   order     Int      @default(0)
   updatedAt DateTime @updatedAt
 }
 
-/// Páginas de conteúdo (Empresa, Estrutura...). Substitui `institucional` + `seo`.
 model Page {
   slug           String   @id
   title          String
-  eyebrow        String? // rótulo curto acima do título
-  lead           String? // parágrafo de abertura
-  body           String   @default("") // HTML do editor
-  videoId        String? // id do vídeo no YouTube, como no campo `video` do MARS
+  eyebrow        String?
+  lead           String?
+  body           String   @default("")
+  videoId        String?
   coverId        String?
   cover          Media?   @relation("PageCover", fields: [coverId], references: [id], onDelete: SetNull)
   seoTitle       String?
   seoDescription String?
-  editable       Boolean  @default(true) // false = rota fixa, só edita conteúdo
+  editable       Boolean  @default(true)
   updatedAt      DateTime @updatedAt
 
   gallery PageImage[]
 }
 
 model PageImage {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   pageSlug String
-  page     Page   @relation(fields: [pageSlug], references: [slug], onDelete: Cascade)
+  page     Page    @relation(fields: [pageSlug], references: [slug], onDelete: Cascade)
   mediaId  String
-  media    Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  media    Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
   caption  String?
-  order    Int    @default(0)
+  order    Int     @default(0)
 
   @@index([pageSlug, order])
 }
 
-/// Categorias de solução (Biosegurança, Profilaxia...). Substitui `mp5600_servicos`.
-model ServiceCategory {
-  slug        String   @id
-  name        String
-  description String   @default("") // HTML da lista de equipamentos, como no MARS
-  imageId     String?
-  image       Media?   @relation("CategoryImage", fields: [imageId], references: [id], onDelete: SetNull)
-  order       Int      @default(0)
-  published   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-/// Chamadas da home. Substitui `home`.
-model Highlight {
+/// Seções da home, editáveis e ordenáveis — no lugar de um HTML gigante.
+model HomeSection {
   id        String   @id @default(cuid())
-  title     String
-  subtitle  String?
-  body      String?
-  href      String?
-  target    String   @default("_self")
-  imageId   String?
-  image     Media?   @relation("HighlightImage", fields: [imageId], references: [id], onDelete: SetNull)
+  kind      String // hero | confianca | categorias | destaques | seminovos | assistencia | como_funciona | minha_jb | planos | sobre | faq | cta
+  title     String   @default("")
+  subtitle  String   @default("")
+  body      String   @default("")
+  ctaLabel  String   @default("")
+  ctaHref   String   @default("")
+  mediaId   String?
+  media     Media?   @relation("HomeSectionMedia", fields: [mediaId], references: [id], onDelete: SetNull)
+  config    Json     @default("{}")
   order     Int      @default(0)
   published Boolean  @default(true)
   updatedAt DateTime @updatedAt
+
+  @@index([published, order])
 }
 
-/// Peças do hero. Substitui `area_nobre` (slides), com janela de exibição.
 model Slide {
   id        String    @id @default(cuid())
   title     String
@@ -114,7 +1561,7 @@ model Slide {
   updatedAt DateTime  @updatedAt
 }
 
-/// Cadastros recebidos pelo formulário de contato. Substitui `cadastros`.
+/// Formulário de contato do site. Preservado do site anterior.
 model Lead {
   id        String   @id @default(cuid())
   nome      String
@@ -126,8 +1573,8 @@ model Lead {
   telefone  String   @default("")
   email     String
   obs       String   @default("")
-  news      Boolean  @default(false) // quis receber informações da empresa
-  status    String   @default("novo") // novo | em_andamento | concluido | arquivado
+  news      Boolean  @default(false)
+  status    String   @default("novo")
   notas     String   @default("")
   ip        String   @default("")
   userAgent String   @default("")
@@ -137,7 +1584,6 @@ model Lead {
   @@index([status, createdAt])
 }
 
-/// Biblioteca de mídia. Substitui a pasta solta `images/online`.
 model Media {
   id        String   @id @default(cuid())
   filename  String
@@ -150,23 +1596,38 @@ model Media {
   folder    String   @default("geral")
   createdAt DateTime @default(now())
 
-  pageCovers     Page[]            @relation("PageCover")
+  pageCovers     Page[]                @relation("PageCover")
   pageImages     PageImage[]
-  categoryImages ServiceCategory[] @relation("CategoryImage")
-  highlights     Highlight[]       @relation("HighlightImage")
-  slides         Slide[]           @relation("SlideImage")
+  slides         Slide[]               @relation("SlideImage")
+  homeSections   HomeSection[]         @relation("HomeSectionMedia")
+  brandLogos     Brand[]               @relation("BrandLogo")
+  categoryImages Category[]            @relation("CategoryImage")
+  productMedia   ProductMedia[]
+  unitMedia      InventoryUnitMedia[]
+  equipmentMedia EquipmentMedia[]
+  requestMedia   ServiceRequestMedia[]
+  workOrderMedia WorkOrderMedia[]
+
+  @@index([folder, createdAt])
 }
 
-/// Trilha de auditoria do painel. Substitui `log`.
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action    String // create | update | delete | login | logout
+  action    String
   entity    String
   entityId  String   @default("")
   summary   String   @default("")
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+  @@index([entity, entityId])
+}
+
+/// Sequência dos códigos legíveis (JB-, OS-, ORC-, AT-). Incremento atômico.
+model DocumentSequence {
+  prefix    String   @id
+  current   Int      @default(0)
+  updatedAt DateTime @updatedAt
 }

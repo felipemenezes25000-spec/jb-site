@@ -11,7 +11,10 @@
     "db:push": "prisma db push",
     "db:reset": "prisma migrate reset --force",
     "db:deploy": "prisma migrate deploy",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:demo": "tsx prisma/seed-demo.ts",
+    "db:demo:limpar": "tsx prisma/seed-demo-limpar.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

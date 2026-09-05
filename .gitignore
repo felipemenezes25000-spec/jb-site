@@ -58,3 +58,6 @@ prisma/*.db-journal
 
 # ajudante local para rodar comandos contra o banco de produção
 _prod.sh
+
+# nunca versionar nem manter: aponta para o banco de produção
+.env.local
