@@ -12,6 +12,7 @@ import {
   sessaoCliente,
 } from "@/lib/auth-cliente";
 import { proximoCodigo } from "@/lib/codigos";
+import { documentoValido } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 export type EstadoCliente = { erro?: string };
@@ -71,7 +72,13 @@ export async function cadastrarCliente(
     senha: formData.get("senha"),
   });
 
-  if (!dados.success) return { erro: dados.error.issues[0]?.message ?? "Revise os dados informados." };
+  if (!dados.success) {
+    return { erro: dados.error.issues[0]?.message ?? "Revise os dados informados." };
+  }
+
+  if (dados.data.documento && !documentoValido(dados.data.documento, dados.data.tipo)) {
+    return { erro: dados.data.tipo === "fisica" ? "Informe um CPF válido." : "Informe um CNPJ válido." };
+  }
 
   const email = dados.data.email.toLowerCase();
   if (await prisma.customer.findUnique({ where: { email }, select: { id: true } })) {
@@ -148,13 +155,26 @@ export async function solicitarAssistencia(
     disponibilidade: formData.get("disponibilidade") ?? "",
   });
 
-  if (!dados.success) return { erro: dados.error.issues[0]?.message ?? "Revise os dados do chamado." };
+  if (!dados.success) {
+    return { erro: dados.error.issues[0]?.message ?? "Revise os dados do chamado." };
+  }
 
   const sessao = await sessaoCliente();
-  const equipamentoId = dados.data.equipamentoId || null;
+  const equipamentoId = sessao ? dados.data.equipamentoId || null : null;
+
   if (equipamentoId && sessao) {
-    const pertence = await prisma.equipment.count({ where: { id: equipamentoId, customerId: sessao.id } });
+    const pertence = await prisma.equipment.count({
+      where: { id: equipamentoId, customerId: sessao.id },
+    });
     if (!pertence) return { erro: "O equipamento selecionado não pertence à sua conta." };
+  }
+
+  let categoriaId = dados.data.categoriaId || null;
+  if (categoriaId) {
+    const categoriaExiste = await prisma.category.count({
+      where: { id: categoriaId, published: true },
+    });
+    if (!categoriaExiste) categoriaId = null;
   }
 
   const chamado = await prisma.$transaction(async (tx) => {
@@ -167,7 +187,7 @@ export async function solicitarAssistencia(
         contactName: dados.data.nome,
         contactEmail: dados.data.email.toLowerCase(),
         contactPhone: dados.data.telefone,
-        categoryId: dados.data.categoriaId || null,
+        categoryId,
         brandName: dados.data.marca,
         modelName: dados.data.modelo,
         serialNumber: dados.data.serie,
