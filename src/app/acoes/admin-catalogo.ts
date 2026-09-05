@@ -1257,6 +1257,9 @@ export async function salvarCategoria(
     seoDescription: dados.data.seoDescription || null,
   };
 
+
+  // preenchido dentro do try e usado no redirect, que precisa ficar fora dele
+  let novoId = "";
   try {
     if (id) {
       const antes = await prisma.category.findUnique({
@@ -1298,10 +1301,13 @@ export async function salvarCategoria(
 
     revalidatePath("/admin/categorias");
     revalidarCatalogo();
-    return feito("Categoria criada.");
+    novoId = criada.id;
   } catch (erro) {
     return erroInesperado("salvarCategoria", erro);
   }
+
+  // fora do try: redirect() sinaliza a navegação lançando
+  redirect(`/admin/categorias/${novoId}?salvo=1`);
 }
 
 /** Sobe ou desce a categoria entre as irmãs, trocando a ordem com a vizinha. */
@@ -1485,6 +1491,9 @@ export async function salvarMarca(_anterior: EstadoAcao, formData: FormData): Pr
   };
 
   const id = dados.data.id;
+
+  // preenchido dentro do try e usado no redirect, que precisa ficar fora dele
+  let novoId = "";
   try {
     if (id) {
       const antes = await prisma.brand.findUnique({
@@ -1528,10 +1537,13 @@ export async function salvarMarca(_anterior: EstadoAcao, formData: FormData): Pr
     revalidatePath("/admin/marcas");
     revalidatePath("/marcas");
     revalidarCatalogo();
-    return feito("Marca criada.");
+    novoId = criada.id;
   } catch (erro) {
     return erroInesperado("salvarMarca", erro);
   }
+
+  // fora do try: redirect() sinaliza a navegação lançando
+  redirect(`/admin/marcas/${novoId}?salvo=1`);
 }
 
 export async function excluirMarca(_anterior: EstadoAcao, formData: FormData): Promise<EstadoAcao> {
@@ -1635,6 +1647,9 @@ export async function salvarServico(_anterior: EstadoAcao, formData: FormData): 
   };
 
   const id = dados.data.id;
+
+  // preenchido dentro do try e usado no redirect, que precisa ficar fora dele
+  let novoId = "";
   try {
     if (id) {
       const antes = await prisma.service.findUnique({
@@ -1674,10 +1689,13 @@ export async function salvarServico(_anterior: EstadoAcao, formData: FormData): 
 
     revalidatePath("/admin/servicos");
     revalidarCatalogo();
-    return feito("Serviço criado.");
+    novoId = criado.id;
   } catch (erro) {
     return erroInesperado("salvarServico", erro);
   }
+
+  // fora do try: redirect() sinaliza a navegação lançando
+  redirect(`/admin/servicos/${novoId}?salvo=1`);
 }
 
 export async function excluirServico(

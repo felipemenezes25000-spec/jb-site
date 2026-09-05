@@ -46,6 +46,18 @@ const emProducao = process.env.NODE_ENV === "production";
  */
 const usaMercadoPago = (process.env.PAYMENT_PROVIDER ?? "mock") === "mercadopago";
 
+/**
+ * Deploy de preview na Vercel.
+ *
+ * A barra de feedback do preview (`vercel.live`) é injetada pela plataforma,
+ * não pela aplicação — em produção ela não existe. Sem liberar aqui, cada
+ * página do preview joga um erro de CSP no console e quem for revisar o site
+ * encontra o console cheio de vermelho que não tem nada a ver com a JB.
+ */
+const emPreviewVercel = process.env.VERCEL_ENV === "preview";
+const VERCEL_LIVE = "https://vercel.live";
+const VERCEL_ASSETS = "https://assets.vercel.com";
+
 /** Junta as fontes de uma diretiva descartando o que estiver vazio. */
 function diretiva(nome: string, ...fontes: Array<string | false | undefined>) {
   const lista = fontes.filter((fonte): fonte is string => Boolean(fonte));
@@ -100,6 +112,7 @@ const csp = [
     "'unsafe-inline'",
     emDesenvolvimento && "'unsafe-eval'",
     usaMercadoPago && MP_SCRIPT,
+    emPreviewVercel && VERCEL_LIVE,
   ),
 
   /*
@@ -125,7 +138,15 @@ const csp = [
    * ficam as fotos de produto em produção — em desenvolvimento elas caem em
    * `public/uploads`, que é 'self'.
    */
-  diretiva("img-src", "'self'", "data:", "blob:", BLOB, usaMercadoPago && MP_IMG),
+  diretiva(
+    "img-src",
+    "'self'",
+    "data:",
+    "blob:",
+    BLOB,
+    usaMercadoPago && MP_IMG,
+    emPreviewVercel && VERCEL_ASSETS,
+  ),
 
   // As fontes do `next/font` saem de /_next/static/media, ou seja, 'self'.
   // O gstatic acompanha o googleapis do style-src pelo mesmo motivo.
@@ -147,6 +168,8 @@ const csp = [
     "https://viacep.com.br",
     BLOB,
     usaMercadoPago && MP_API,
+    emPreviewVercel && VERCEL_LIVE,
+    emPreviewVercel && "wss://vercel.live",
     emDesenvolvimento && "ws:",
     emDesenvolvimento && "http://localhost:*",
   ),
@@ -166,6 +189,7 @@ const csp = [
     "https://www.google.com",
     "https://maps.google.com",
     usaMercadoPago && MP_FRAME,
+    emPreviewVercel && VERCEL_LIVE,
   ),
 
   // Nenhum service worker hoje; `blob:` cobre worker criado por biblioteca.

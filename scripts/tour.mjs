@@ -165,7 +165,20 @@ async function visitar(contexto, grupo, rota, nome) {
   pagina.on("requestfailed", (r) => {
     const url = r.url();
     if (url.startsWith("data:") || /_next\/static\/.*\.hot-update/.test(url)) return;
-    problemas.push(`falhou: ${url.replace(BASE, "").slice(0, 100)}`);
+
+    /**
+     * Requisição cancelada não é requisição com erro.
+     *
+     * O Next pré-carrega a rota ao passar o mouse sobre o link (`?_rsc=`), e
+     * cancela o pedido assim que a navegação acontece ou o mouse sai. Isso
+     * chega aqui como `requestfailed` com ERR_ABORTED — é o comportamento
+     * esperado, não um defeito. Contar como falha enchia o relatório de ruído
+     * e escondia o que importa.
+     */
+    const motivo = r.failure()?.errorText ?? "";
+    if (/ABORTED|CANCEL/i.test(motivo)) return;
+
+    problemas.push(`falhou (${motivo}): ${url.replace(BASE, "").slice(0, 90)}`);
   });
 
   const inicio = Date.now();
@@ -195,11 +208,30 @@ async function visitar(contexto, grupo, rota, nome) {
   }
 
   const duracao = Date.now() - inicio;
-  await pagina.close();
 
-  // 404 é o resultado esperado da rota inexistente
-  const esperado404 = nome === "404";
-  const ok = (esperado404 ? status === 404 : status > 0 && status < 400) && problemas.length === 0;
+  /**
+   * A rota inexistente pode responder 404 puro ou "soft 404".
+   *
+   * Com `loading.tsx` no segmento, o Next abre o streaming antes de a página
+   * conferir se o registro existe, e o status já saiu como 200 — está descrito
+   * em node_modules/next/dist/docs/01-app/03-api-reference/04-functions/not-found.md.
+   * O que segura o SEO nesse caso é a meta robots noindex. Então é ela que
+   * este teste cobra, e não só o número do status.
+   */
+  let ok = status > 0 && status < 400 && problemas.length === 0;
+
+  if (nome === "404") {
+    const naoIndexavel =
+      status === 404 ||
+      (await pagina
+        .locator('meta[name="robots"][content*="noindex"]')
+        .count()
+        .catch(() => 0)) > 0;
+    if (!naoIndexavel) problemas.push("rota inexistente sem 404 nem meta robots noindex");
+    ok = naoIndexavel && problemas.length === 0;
+  }
+
+  await pagina.close();
 
   resultados.push({ grupo, rota, status, ms: duracao, problemas, ok });
 
