@@ -160,7 +160,14 @@ export default async function PaginaListaDePaginas({
               <span>
                 {linhas.length === 1 ? "1 página" : `${linhas.length} páginas`} no site.
               </span>
-              <Link
+              {/*
+                `<a>` e não `<Link>`: o mapa do site é rota de metadado, não
+                página do roteador. Com `<Link>`, o Next pré-carrega o destino
+                como se fosse uma rota React e /sitemap.xml responde 500 ao
+                pedido de pré-carregamento — o link funcionava, mas o console de
+                quem abrisse esta tela ficava com um erro de servidor.
+              */}
+              <a
                 href="/sitemap.xml"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -168,7 +175,7 @@ export default async function PaginaListaDePaginas({
               >
                 Ver o mapa do site
                 <ExternalLink className="size-3.5" aria-hidden />
-              </Link>
+              </a>
             </span>
           ) : undefined
         }

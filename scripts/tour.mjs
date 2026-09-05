@@ -162,6 +162,18 @@ async function visitar(contexto, grupo, rota, nome) {
     problemas.push(`console: ${texto.slice(0, 160)}`);
   });
   pagina.on("pageerror", (e) => problemas.push(`exceção: ${String(e.message).slice(0, 160)}`));
+
+  /**
+   * Resposta de erro com o endereço junto.
+   *
+   * O console do navegador só diz "Failed to load resource: 500" — sem dizer
+   * de quê. Sem a URL, o relatório aponta que existe um problema e não deixa
+   * ninguém investigá-lo.
+   */
+  pagina.on("response", (r) => {
+    if (r.status() < 400) return;
+    problemas.push(`resposta ${r.status()}: ${r.url().replace(BASE, "").slice(0, 110)}`);
+  });
   pagina.on("requestfailed", (r) => {
     const url = r.url();
     if (url.startsWith("data:") || /_next\/static\/.*\.hot-update/.test(url)) return;
