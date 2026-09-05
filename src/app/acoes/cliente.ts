@@ -98,6 +98,37 @@ export async function solicitarAssistencia(_anterior: EstadoCliente, formData: F
     if (!categoriaExiste) categoriaId = null;
   }
 
-  const numero = await prisma.$transaction(async (tx) => proximoCodigo("chamado", tx));
-  return { erro: `Diagnóstico temporário da sequência: ${numero}.` };
+  if (false) {
+    await prisma.$transaction(async (tx) => {
+      const numero = await proximoCodigo("chamado", tx);
+      return tx.serviceRequest.create({
+        data: {
+          number: numero,
+          customerId: sessao?.id ?? null,
+          equipmentId,
+          contactName: dados.data.nome,
+          contactEmail: dados.data.email.toLowerCase(),
+          contactPhone: dados.data.telefone,
+          categoryId: categoriaId,
+          brandName: dados.data.marca,
+          modelName: dados.data.modelo,
+          serialNumber: dados.data.serie,
+          problemKind: dados.data.problema,
+          description: dados.data.descricao,
+          urgency: dados.data.urgencia,
+          addressZip: dados.data.cep,
+          addressStreet: dados.data.endereco,
+          addressNumber: dados.data.numero,
+          addressComplement: dados.data.complemento,
+          addressDistrict: dados.data.bairro,
+          addressCity: dados.data.cidade,
+          addressState: dados.data.estado,
+          availability: dados.data.disponibilidade,
+        },
+        select: { number: true },
+      });
+    });
+  }
+
+  return { erro: "Diagnóstico temporário dos dados de criação do chamado." };
 }
