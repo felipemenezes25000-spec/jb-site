@@ -169,6 +169,16 @@ function gravarPdf(nomeArquivo: string, titulo: string, linhas: string[]) {
 
 const EQUIPE = [
   {
+    // O administrador criado por `seed.ts` nasce com senha aleatória, impressa
+    // uma vez e não guardada — então não serve para demonstração. Este aqui
+    // existe para abrir Usuários e Configurações, e sai no `db:demo:limpar`
+    // junto com o resto do que é de teste.
+    email: "demo.admin@jbteste.local",
+    name: "Administrador de demonstração",
+    role: "admin" as const,
+    phone: "(11) 97000-0000",
+  },
+  {
     email: "demo.gestor@jbteste.local",
     name: "Ana Ribeiro",
     role: "gestor" as const,
