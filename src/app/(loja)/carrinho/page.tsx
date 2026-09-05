@@ -78,7 +78,7 @@ export default async function CarrinhoPage() {
                 </Link>
 
                 <div className="mt-5 space-y-3 border-t border-graf-100 pt-5">
-                  {[[LockKeyhole,"Valores recalculados no servidor"],[ShieldCheck,"Dados da compra protegidos"],[Truck,"Entrega e retirada confirmadas antes do pedido"]].map(([Icon,texto])=>{const I=Icon as typeof LockKeyhole;return <p key={String(texto)} className="flex items-center gap-2.5 text-xs leading-5 text-graf-500"><I className="size-4 shrink-0 text-graf-400" aria-hidden />{String(texto)}</p>})}
+                  {[[LockKeyhole,"Preço e disponibilidade confirmados no fechamento"],[ShieldCheck,"Dados da compra protegidos"],[Truck,"Entrega ou retirada definida antes da confirmação"]].map(([Icon,texto])=>{const I=Icon as typeof LockKeyhole;return <p key={String(texto)} className="flex items-center gap-2.5 text-xs leading-5 text-graf-500"><I className="size-4 shrink-0 text-graf-400" aria-hidden />{String(texto)}</p>})}
                 </div>
               </div>
 
