@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { ArrowRight, Building2, LockKeyhole, Mail, Phone, UserRound } from "lucide-react";
+import { ArrowRight, Building2, LockKeyhole, Mail, UserRound } from "lucide-react";
 
 import { cadastrarCliente, entrarCliente, type EstadoCliente } from "@/app/acoes/cliente";
 
@@ -40,9 +40,9 @@ export function FormEntrar({ voltar }: { voltar?: string }) {
         </span>
       </label>
       <div className="flex justify-end">
-        <Link href="/esqueci-minha-senha" className="text-xs font-bold text-jb-700 hover:text-jb-500">Esqueci minha senha</Link>
+        <Link href="/contato" className="text-xs font-bold text-jb-700 hover:text-jb-500">Precisa de ajuda para acessar?</Link>
       </div>
-      <button disabled={pendente} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-jb-600 px-5 text-sm font-extrabold text-white transition hover:bg-jb-500 disabled:cursor-wait disabled:opacity-60">
+      <button type="submit" disabled={pendente} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-jb-600 px-5 text-sm font-extrabold text-white transition hover:bg-jb-500 disabled:cursor-wait disabled:opacity-60">
         {pendente ? "Entrando…" : "Entrar na Área da Clínica"}
         {!pendente ? <ArrowRight className="size-4" aria-hidden /> : null}
       </button>
@@ -95,7 +95,7 @@ export function FormCadastro() {
           <input name="senha" type="password" minLength={8} required autoComplete="new-password" className={input} placeholder="Pelo menos 8 caracteres" />
         </label>
       </div>
-      <button disabled={pendente} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-jb-600 px-5 text-sm font-extrabold text-white transition hover:bg-jb-500 disabled:cursor-wait disabled:opacity-60">
+      <button type="submit" disabled={pendente} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-jb-600 px-5 text-sm font-extrabold text-white transition hover:bg-jb-500 disabled:cursor-wait disabled:opacity-60">
         {pendente ? "Criando conta…" : "Criar minha Área da Clínica"}
         {!pendente ? <ArrowRight className="size-4" aria-hidden /> : null}
       </button>
