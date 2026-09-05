@@ -81,6 +81,17 @@ test.describe("Painel da equipe", () => {
     await entrarComoEquipe(page);
     await page.goto("/admin/conteudo/paginas/sobre");
 
+    /*
+     * Espera o editor rico montar ANTES de tocar em qualquer campo.
+     *
+     * O tiptap monta com `immediatelyRender: false` — obrigatório no App
+     * Router — e essa montagem re-renderiza o formulário. Digitar durante essa
+     * janela faz o campo voltar ao valor antigo com o texto novo colado na
+     * frente. É uma janela curta, mas real: quem abrir a tela e começar a
+     * escrever na hora passa por ela.
+     */
+    await expect(page.locator(".ProseMirror")).toBeVisible({ timeout: 30_000 });
+
     const chamada = page.getByLabel("Chamada");
     await expect(chamada).toBeVisible();
     const original = await chamada.inputValue();
@@ -99,6 +110,7 @@ test.describe("Painel da equipe", () => {
 
     // devolve o texto original — o teste não pode deixar rastro no conteúdo
     await page.goto("/admin/conteudo/paginas/sobre");
+    await expect(page.locator(".ProseMirror")).toBeVisible({ timeout: 30_000 });
     await page.getByLabel("Chamada").fill(original);
     await expect(page.getByLabel("Chamada")).toHaveValue(original);
     await page.getByRole("button", { name: "Salvar alterações" }).click();
