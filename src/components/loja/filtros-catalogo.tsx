@@ -1,10 +1,11 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 
 import { Botao, classesBotao } from "@/components/ui/button";
+import { usarDialogo } from "@/components/ui/usar-dialogo";
 import { formatarPreco, paraCentavos } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -35,18 +36,23 @@ export function FiltrosCatalogo({
   total,
   travarCategoria,
   travarCondicao,
+  travarMarca,
 }: {
   grupos: GruposFiltro;
   total: number;
-  /** quando a própria rota já define o recorte (ex.: /seminovos) */
+  /** quando a própria rota já define o recorte (ex.: /seminovos, /marcas/alt) */
   travarCategoria?: boolean;
   travarCondicao?: boolean;
+  travarMarca?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const [pendente, iniciar] = useTransition();
   const [aberto, setAberto] = useState(false);
+  // foco preso, Esc e devolução do foco à âncora que abriu a gaveta
+  const fechar = useCallback(() => setAberto(false), []);
+  const gaveta = usarDialogo(aberto, fechar);
 
   function aplicar(mudancas: Record<string, string | null>) {
     const novos = new URLSearchParams(params.toString());
@@ -109,7 +115,9 @@ export function FiltrosCatalogo({
         </Grupo>
       ) : null}
 
-      {grupos.marcas.length > 0 ? (
+      {/* em /marcas/[slug] a marca já é o recorte da rota: mostrar o grupo
+          deixava a pessoa marcar outra marca sem efeito nenhum */}
+      {!travarMarca && grupos.marcas.length > 0 ? (
         <Grupo titulo="Marca">
           {grupos.marcas.map((opcao) => (
             <Caixa
@@ -160,7 +168,7 @@ export function FiltrosCatalogo({
             }
             className="h-10 w-full min-w-0 rounded-lg border border-graf-300 px-3 text-sm focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
           />
-          <span className="text-graf-400" aria-hidden>
+          <span className="text-graf-500" aria-hidden>
             —
           </span>
           <input
@@ -275,9 +283,11 @@ export function FiltrosCatalogo({
             aria-hidden
           />
           <div
+            ref={gaveta}
             role="dialog"
             aria-modal="true"
             aria-label="Filtros"
+            tabIndex={-1}
             className="absolute inset-y-0 right-0 flex w-[min(22rem,92vw)] flex-col bg-white"
           >
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-graf-200 px-4">
@@ -361,7 +371,7 @@ function Caixa({
         {rotulo}
       </span>
       {quantidade !== undefined ? (
-        <span className="text-xs tabular text-graf-400">{quantidade}</span>
+        <span className="text-xs tabular text-graf-500">{quantidade}</span>
       ) : null}
     </label>
   );

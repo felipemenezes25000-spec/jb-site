@@ -12,8 +12,19 @@ import { cn } from "@/lib/utils";
  * de quem posiciona, com a altura definida aqui.
  */
 
-const PROPORCAO_COMPLETA = 900 / 499;
-const PROPORCAO_SIMBOLO = 481 / 497;
+/**
+ * Dimensões reais dos arquivos, conferidas com sharp.
+ *
+ * Estavam codificadas como 900x499 e 481x497 — números que não batiam com os
+ * arquivos (640x355 e 256x265). A diferença aparecia no arredondamento: a
+ * altura calculada não fechava com a proporção real e o Next avisava, a cada
+ * renderização, que só uma das dimensões estava sob controle.
+ *
+ * O padrão correto é este: os atributos carregam o tamanho intrínseco, e o
+ * tamanho de exibição vem do CSS com o outro eixo em `auto`.
+ */
+const LOGO = { largura: 640, altura: 355 };
+const SIMBOLO = { largura: 256, altura: 265 };
 
 export function Logo({
   className,
@@ -28,11 +39,11 @@ export function Logo({
     <Image
       src="/marca/jb-logo.webp"
       alt="JB Soluções Odontológicas"
-      width={Math.round(altura * PROPORCAO_COMPLETA)}
-      height={altura}
+      width={LOGO.largura}
+      height={LOGO.altura}
       priority={prioridade}
-      className={cn("h-auto w-auto select-none", className)}
-      style={{ height: altura }}
+      style={{ height: altura, width: "auto" }}
+      className={cn("select-none", className)}
     />
   );
 }
@@ -51,11 +62,11 @@ export function Simbolo({
       src="/marca/jb-simbolo.webp"
       alt=""
       aria-hidden
-      width={Math.round(tamanho * PROPORCAO_SIMBOLO)}
-      height={tamanho}
+      width={SIMBOLO.largura}
+      height={SIMBOLO.altura}
       priority={prioridade}
+      style={{ height: tamanho, width: "auto" }}
       className={cn("select-none", className)}
-      style={{ height: tamanho }}
     />
   );
 }

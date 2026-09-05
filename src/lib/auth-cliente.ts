@@ -8,6 +8,7 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
+import { ipDoPedido } from "@/lib/seguranca";
 
 /**
  * Sessão do cliente final — separada da equipe interna de ponta a ponta:
@@ -91,7 +92,7 @@ export async function exigirCliente(destino?: string): Promise<ClienteSessao> {
 
 async function ipDaRequisicao() {
   const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  return ipDoPedido(h);
 }
 
 /** Bloqueia força bruta contando tentativas recentes por e-mail e por IP. */
@@ -101,11 +102,20 @@ export async function bloqueadoPorTentativas(email: string) {
 
   const [porEmail, porIp] = await Promise.all([
     prisma.loginAttempt.count({
-      where: { identifier: email.toLowerCase(), success: false, createdAt: { gte: desde } },
+      where: {
+        identifier: `cliente:${email.toLowerCase()}`,
+        success: false,
+        createdAt: { gte: desde },
+      },
     }),
     ip
       ? prisma.loginAttempt.count({
-          where: { ip, success: false, createdAt: { gte: desde } },
+          where: {
+            ip,
+            identifier: { startsWith: "cliente:" },
+            success: false,
+            createdAt: { gte: desde },
+          },
         })
       : Promise.resolve(0),
   ]);
@@ -116,12 +126,20 @@ export async function bloqueadoPorTentativas(email: string) {
 async function registrarTentativa(email: string, sucesso: boolean, customerId?: string) {
   await prisma.loginAttempt.create({
     data: {
-      identifier: email.toLowerCase(),
+      identifier: `cliente:${email.toLowerCase()}`,
       ip: await ipDaRequisicao(),
       success: sucesso,
       customerId: customerId ?? null,
     },
   });
+
+  // acertar a senha limpa as falhas daquele e-mail: quem provou ser o dono não
+  // pode ficar trancado por tentativas antigas
+  if (sucesso) {
+    await prisma.loginAttempt.deleteMany({
+      where: { identifier: `cliente:${email.toLowerCase()}`, success: false },
+    });
+  }
 }
 
 export async function autenticarCliente(email: string, senha: string) {

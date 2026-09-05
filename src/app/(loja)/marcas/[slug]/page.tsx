@@ -36,6 +36,7 @@ export default async function MarcaPage({ params, searchParams }: Props) {
       ]}
       parametros={await searchParams}
       filtrosFixos={{ marca: marca.slug }}
+      travarMarca
     />
   );
 }

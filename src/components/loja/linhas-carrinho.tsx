@@ -46,7 +46,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                 <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
                   <div className="min-w-0">
                     {linha.marca ? (
-                      <p className="text-xs font-semibold uppercase tracking-wide text-graf-400">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-graf-500">
                         {linha.marca}
                       </p>
                     ) : null}
@@ -59,15 +59,27 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                         linha.nome
                       )}
                     </h3>
-                    {condicao ? (
-                      <span className="mt-1.5 inline-block">
+                    <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      {condicao ? (
                         <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-                      </span>
-                    ) : null}
+                      ) : null}
+                      {/* saiu do catálogo depois de entrar no carrinho: fica à
+                          vista para a pessoa entender, mas sem preço e sem
+                          entrar no total */}
+                      {!linha.disponivel ? (
+                        <Etiqueta tom="alerta">Não está mais à venda</Etiqueta>
+                      ) : null}
+                    </span>
                   </div>
 
                   <p className="shrink-0 text-base font-extrabold tabular text-graf-950">
-                    {formatarPreco(linha.totalCents)}
+                    {linha.disponivel ? (
+                      formatarPreco(linha.totalCents)
+                    ) : (
+                      <span className="text-sm font-semibold text-graf-500">
+                        Remova para continuar
+                      </span>
+                    )}
                   </p>
                 </div>
 

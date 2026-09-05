@@ -1,0 +1,6 @@
+# Tudo aqui é gerado ao rodar a suíte e não deve ir para o repositório.
+# O arquivo mora dentro de tests/ de propósito: quem apaga a pasta leva junto
+# a regra que a acompanha.
+.saida/
+.relatorio/
+.fixtures.json

@@ -95,7 +95,7 @@ export function CardProduto({
 
       <div className="flex flex-1 flex-col p-4">
         {produto.brandName ? (
-          <p className="text-xs font-semibold uppercase tracking-wide text-graf-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-graf-500">
             {produto.brandName}
           </p>
         ) : null}
@@ -116,7 +116,7 @@ export function CardProduto({
           ) : (
             <>
               {produto.compareAtCents && produto.compareAtCents > produto.priceCents ? (
-                <p className="text-xs text-graf-400 line-through">
+                <p className="text-xs text-graf-500 line-through">
                   {formatarPreco(produto.compareAtCents)}
                 </p>
               ) : null}

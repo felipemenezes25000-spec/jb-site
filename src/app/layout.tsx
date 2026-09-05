@@ -43,7 +43,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${manrope.variable} ${mono.variable}`}>
+    <html
+      lang="pt-BR"
+      /* o CSS define scroll-behavior: smooth; isto avisa o Next de que a
+         escolha é deliberada e não deve ser desligada na troca de rota */
+      data-scroll-behavior="smooth"
+      className={`${manrope.variable} ${mono.variable}`}
+    >
       <body className="antialiased">
         {children}
         <Toaster

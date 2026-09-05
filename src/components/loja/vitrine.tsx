@@ -93,6 +93,7 @@ export async function Vitrine({
   filtrosFixos,
   travarCategoria,
   travarCondicao,
+  travarMarca,
 }: {
   titulo: string;
   descricao?: string;
@@ -101,6 +102,7 @@ export async function Vitrine({
   filtrosFixos?: Filtros;
   travarCategoria?: boolean;
   travarCondicao?: boolean;
+  travarMarca?: boolean;
 }) {
   const pagina = Number(parametros.pagina ?? 1) || 1;
   const ordem = (parametros.ordem as Ordenacao) ?? "relevancia";
@@ -111,12 +113,16 @@ export async function Vitrine({
 
   const filtros: Filtros = {
     busca: typeof parametros.q === "string" ? parametros.q : undefined,
-    categoria: filtrosFixos?.categoria ?? categorias[0],
-    marca: filtrosFixos?.marca ?? marcas[0],
+    // listas inteiras, não só o primeiro item: a barra de filtros marca várias
+    categoria: filtrosFixos?.categoria ?? (categorias.length ? categorias : undefined),
+    marca: filtrosFixos?.marca ?? (marcas.length ? marcas : undefined),
     condicao:
       filtrosFixos?.condicao ??
       (condicoes.length ? (condicoes as Filtros["condicao"]) : undefined),
-    voltagem: lista(parametros.voltagem)[0],
+    voltagem: (() => {
+      const v = lista(parametros.voltagem);
+      return v.length ? v : undefined;
+    })(),
     precoMin: parametros.preco_min ? Number(parametros.preco_min) : undefined,
     precoMax: parametros.preco_max ? Number(parametros.preco_max) : undefined,
     emEstoque: parametros.estoque === "1",
@@ -151,6 +157,7 @@ export async function Vitrine({
             total={total}
             travarCategoria={travarCategoria}
             travarCondicao={travarCondicao}
+            travarMarca={travarMarca}
           />
         </aside>
 

@@ -125,7 +125,7 @@ export function Vazio({
       )}
     >
       {Icone ? (
-        <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-white text-graf-400 shadow-card">
+        <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-white text-graf-500 shadow-card">
           <Icone className="size-5" />
         </span>
       ) : null}
@@ -237,6 +237,13 @@ export type PassoLinha = {
   estado: "concluido" | "atual" | "futuro" | "cancelado";
 };
 
+const ESTADO_EM_PALAVRAS: Record<PassoLinha["estado"], string> = {
+  concluido: "Etapa concluída:",
+  atual: "Etapa atual:",
+  futuro: "Etapa ainda não iniciada:",
+  cancelado: "Etapa cancelada:",
+};
+
 export function LinhaDoTempo({ passos }: { passos: PassoLinha[] }) {
   return (
     <ol className="relative">
@@ -275,16 +282,19 @@ export function LinhaDoTempo({ passos }: { passos: PassoLinha[] }) {
               <p
                 className={cn(
                   "text-sm font-semibold",
-                  passo.estado === "futuro" ? "text-graf-400" : "text-graf-900",
+                  passo.estado === "futuro" ? "text-graf-500" : "text-graf-900",
                 )}
               >
+                {/* o estado da etapa é dito por escrito, não só pela cor e pelo
+                    marcador — que é aria-hidden e some para o leitor de tela */}
+                <span className="sr-only">{ESTADO_EM_PALAVRAS[passo.estado]} </span>
                 {passo.titulo}
               </p>
               {passo.descricao ? (
                 <p className="mt-0.5 text-sm leading-relaxed text-graf-600">{passo.descricao}</p>
               ) : null}
               {passo.quando ? (
-                <p className="mt-1 text-xs text-graf-400">{passo.quando}</p>
+                <p className="mt-1 text-xs text-graf-500">{passo.quando}</p>
               ) : null}
             </div>
           </li>

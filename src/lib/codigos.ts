@@ -9,6 +9,12 @@ import { prisma } from "@/lib/prisma";
  *
  * O contador vive em DocumentSequence e é incrementado com UPDATE ... RETURNING,
  * que é atômico no Postgres. `count + 1` colidiria sob concorrência.
+ *
+ * A premissa é que TODO número passa por aqui. Se linhas entrarem por fora —
+ * importação do sistema antigo, restauração de backup parcial, INSERT manual —
+ * o contador fica atrás do que já existe e o próximo código colide com um
+ * número gravado. Nesse caso, chame `sincronizarSequencia` antes de voltar a
+ * emitir: ela empurra o contador para o maior número já usado.
  */
 
 export const PREFIXOS = {
@@ -44,6 +50,32 @@ export async function proximoCodigo(
 
   const numero = linhas[0]?.current ?? 1;
   return `${prefixo}-${String(numero).padStart(6, "0")}`;
+}
+
+/**
+ * Alinha o contador ao maior número já gravado.
+ *
+ * Use depois de importar histórico ou restaurar backup, uma vez por prefixo.
+ * `GREATEST` garante que a chamada nunca ande para trás — rodar duas vezes, ou
+ * rodar com um número menor que o atual, não faz nada.
+ */
+export async function sincronizarSequencia(
+  tipo: TipoDocumento,
+  maiorNumero: string | null | undefined,
+  cliente: Cliente = prisma,
+): Promise<void> {
+  const prefixo = PREFIXOS[tipo];
+  const atual = Number(maiorNumero?.split("-")[1] ?? 0);
+  if (!Number.isFinite(atual) || atual <= 0) return;
+
+  await cliente.$executeRaw`
+    INSERT INTO "DocumentSequence" ("prefix", "current", "updatedAt")
+    VALUES (${prefixo}, ${atual}, now())
+    ON CONFLICT ("prefix")
+    DO UPDATE SET
+      "current" = GREATEST("DocumentSequence"."current", ${atual}),
+      "updatedAt" = now()
+  `;
 }
 
 /** Token opaco para carrinho de visitante e afins. */

@@ -329,7 +329,7 @@ export default async function HomePage() {
           </div>
 
           <div id="como-funciona">
-            <p className="text-sm font-bold uppercase tracking-wider text-graf-500">
+            <p className="text-sm font-bold uppercase tracking-wider text-graf-400">
               Como funciona
             </p>
             <ol className="mt-6 divide-y divide-white/10 border-y border-white/10">
@@ -385,7 +385,7 @@ export default async function HomePage() {
                   <Cartao className="h-full p-5">
                     <item.icone className="size-5 text-jb-600" aria-hidden />
                     <p className="mt-3 text-sm font-bold text-graf-900">{item.t}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-graf-500">{item.d}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-graf-400">{item.d}</p>
                   </Cartao>
                 </li>
               ))}

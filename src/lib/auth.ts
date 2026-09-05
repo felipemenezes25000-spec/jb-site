@@ -108,7 +108,7 @@ export async function sessaoStaff(): Promise<StaffUser | null> {
 
 export async function exigirStaff(): Promise<StaffUser> {
   const user = await sessaoStaff();
-  if (!user) redirect("/admin/login");
+  if (!user) redirect("/admin/entrar");
   return user;
 }
 

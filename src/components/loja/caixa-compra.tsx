@@ -66,9 +66,13 @@ export function CaixaCompra({
   const soOrcamento = !permiteCompra || precoCents <= 0;
   const parcelas = soOrcamento ? null : calcularParcelas(precoCents);
 
-  const totalAddons = addons
-    .filter((a) => escolhidos.includes(a.serviceId))
-    .reduce((soma, a) => soma + (a.precoCents ?? 0), 0);
+  // O adicional é cobrado por unidade — dois equipamentos são duas instalações.
+  // É assim que calcularTotais e criarPedido somam; somar uma vez só aqui
+  // mostraria um total menor do que o carrinho cobra na tela seguinte.
+  const totalAddons =
+    addons
+      .filter((a) => escolhidos.includes(a.serviceId))
+      .reduce((soma, a) => soma + (a.precoCents ?? 0), 0) * quantidade;
   const total = precoCents * quantidade + totalAddons;
 
   return (
@@ -84,7 +88,7 @@ export function CaixaCompra({
       ) : (
         <>
           {compareAtCents && compareAtCents > precoCents ? (
-            <p className="text-sm text-graf-400 line-through">
+            <p className="text-sm text-graf-500 line-through">
               {formatarPreco(compareAtCents)}
             </p>
           ) : null}

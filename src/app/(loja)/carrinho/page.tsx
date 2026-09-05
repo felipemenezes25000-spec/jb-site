@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 
+import { CampoCupom } from "@/components/loja/campo-cupom";
 import { LinhasCarrinho } from "@/components/loja/linhas-carrinho";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, Trilha, Vazio } from "@/components/ui/data";
@@ -57,7 +58,7 @@ export default async function CarrinhoPage() {
                 <div className="flex justify-between gap-4">
                   <dt className="text-graf-600">
                     Desconto{" "}
-                    <span className="label-mono text-graf-400">{totais.cupomCodigo}</span>
+                    <span className="label-mono text-graf-500">{totais.cupomCodigo}</span>
                   </dt>
                   <dd className="font-semibold tabular text-ok-700">
                     − {formatarPreco(totais.descontoCents)}
@@ -80,6 +81,8 @@ export default async function CarrinhoPage() {
                 {totais.cupomErro}
               </p>
             ) : null}
+
+            <CampoCupom aplicado={totais.cupomCodigo} />
 
             <div className="mt-4 flex items-baseline justify-between border-t border-graf-200 pt-4">
               <span className="text-sm font-bold text-graf-900">Total</span>

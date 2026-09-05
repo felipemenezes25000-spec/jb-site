@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Logo } from "@/components/ui/logo";
+import { usarDialogo } from "@/components/ui/usar-dialogo";
 import { classesBotao } from "@/components/ui/button";
 import {
   CONDICOES,
@@ -120,13 +121,13 @@ export function Cabecalho({
       <div className="hidden border-b border-graf-200 bg-graf-50 lg:block">
         <div className="container-jb flex h-9 items-center justify-between text-xs text-graf-600">
           <p className="flex items-center gap-1.5">
-            <Clock className="size-3.5 text-graf-400" aria-hidden />
+            <Clock className="size-3.5 text-graf-500" aria-hidden />
             {horario}
           </p>
           <div className="flex items-center gap-5">
             {telefone ? (
               <a href={telHref(telefone)} className="flex items-center gap-1.5 hover:text-jb-700">
-                <Phone className="size-3.5 text-graf-400" aria-hidden />
+                <Phone className="size-3.5 text-graf-500" aria-hidden />
                 {telefone}
               </a>
             ) : null}
@@ -167,7 +168,7 @@ export function Cabecalho({
             <form onSubmit={buscar} role="search" className="hidden min-w-0 flex-1 md:block">
               <div className="relative mx-auto max-w-xl">
                 <Search
-                  className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-500"
                   aria-hidden
                 />
                 <input
@@ -175,7 +176,7 @@ export function Cabecalho({
                   name="q"
                   placeholder="Busque equipamento, marca, modelo ou peça"
                   aria-label="Buscar no catálogo"
-                  className="h-11 w-full rounded-lg border border-graf-300 bg-graf-50 pl-10 pr-3 text-sm transition-colors placeholder:text-graf-400 hover:border-graf-400 focus:border-jb-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                  className="h-11 w-full rounded-lg border border-graf-300 bg-graf-50 pl-10 pr-3 text-sm transition-colors placeholder:text-graf-500 hover:border-graf-400 focus:border-jb-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/15"
                 />
               </div>
             </form>
@@ -275,7 +276,7 @@ export function Cabecalho({
                       {temMega ? (
                         <ChevronDown
                           className={cn(
-                            "size-3.5 text-graf-400 transition-transform",
+                            "size-3.5 text-graf-500 transition-transform",
                             mega === item.megaMenu && "rotate-180",
                           )}
                           aria-hidden
@@ -324,7 +325,7 @@ export function Cabecalho({
             <form onSubmit={buscar} role="search" className="container-jb py-3">
               <div className="relative">
                 <Search
-                  className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-400"
+                  className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-500"
                   aria-hidden
                 />
                 <input
@@ -377,7 +378,7 @@ function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
                   <span className="text-sm font-medium text-graf-800 group-hover:text-jb-700">
                     {categoria.name}
                   </span>
-                  <span className="text-xs tabular text-graf-400">{categoria.count}</span>
+                  <span className="text-xs tabular text-graf-500">{categoria.count}</span>
                 </Link>
               </li>
             ))}
@@ -447,6 +448,8 @@ function MenuMobile({
   whatsapp: string;
 }) {
   const [secao, setSecao] = useState<string | null>(null);
+  // foco preso, Esc e devolução do foco: `role="dialog"` sozinho não faz nada disso
+  const caixa = usarDialogo(aberto, aoFechar);
 
   return (
     <AnimatePresence>
@@ -461,9 +464,11 @@ function MenuMobile({
             aria-hidden
           />
           <motion.div
+            ref={caixa}
             role="dialog"
             aria-label="Menu"
             aria-modal="true"
+            tabIndex={-1}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -496,7 +501,7 @@ function MenuMobile({
                         {item.rotulo}
                         <ChevronDown
                           className={cn(
-                            "size-4 text-graf-400 transition-transform",
+                            "size-4 text-graf-500 transition-transform",
                             secao === "cat" && "rotate-180",
                           )}
                           aria-hidden
@@ -543,14 +548,14 @@ function MenuMobile({
                   href={clienteNome ? "/minha-jb" : "/entrar"}
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold text-graf-800 hover:bg-graf-50"
                 >
-                  <User className="size-5 text-graf-400" aria-hidden />
+                  <User className="size-5 text-graf-500" aria-hidden />
                   {clienteNome ? "Minha JB" : "Entrar ou criar conta"}
                 </Link>
                 <Link
                   href="/minha-jb/favoritos"
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold text-graf-800 hover:bg-graf-50"
                 >
-                  <Heart className="size-5 text-graf-400" aria-hidden />
+                  <Heart className="size-5 text-graf-500" aria-hidden />
                   Favoritos
                 </Link>
               </div>

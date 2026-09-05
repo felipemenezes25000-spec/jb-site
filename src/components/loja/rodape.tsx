@@ -83,7 +83,7 @@ export async function Rodape() {
                     href={telHref(s.telefone)}
                     className="flex items-start gap-2.5 text-graf-600 transition-colors hover:text-jb-700"
                   >
-                    <Phone className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                    <Phone className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                     {s.telefone}
                   </a>
                 </li>
@@ -96,7 +96,7 @@ export async function Rodape() {
                     rel="noopener noreferrer"
                     className="flex items-start gap-2.5 text-graf-600 transition-colors hover:text-jb-700"
                   >
-                    <MessageCircle className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                    <MessageCircle className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                     {s.whatsapp}
                   </a>
                 </li>
@@ -106,12 +106,12 @@ export async function Rodape() {
                   href={`mailto:${s.email}`}
                   className="flex items-start gap-2.5 text-graf-600 transition-colors hover:text-jb-700"
                 >
-                  <Mail className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                  <Mail className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                   <span className="[overflow-wrap:anywhere]">{s.email}</span>
                 </a>
               </li>
               <li className="flex items-start gap-2.5 text-graf-600">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                <MapPin className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <address className="not-italic leading-relaxed">{enderecoCompleto(s)}</address>
               </li>
             </ul>

@@ -76,14 +76,26 @@ export function ordenar(valor: Ordenacao | undefined): Prisma.ProductOrderByWith
 
 export type FiltrosCatalogo = {
   busca?: string;
-  categoria?: string;
-  marca?: string;
+  /**
+   * Categoria, marca e voltagem aceitam vários valores porque a barra de
+   * filtros usa caixas de seleção: marcar ALT e Schuster tem que trazer as
+   * duas. Antes só o primeiro valor era usado, e a segunda caixa ficava
+   * marcada na tela sem filtrar nada.
+   */
+  categoria?: string | string[];
+  marca?: string | string[];
   condicao?: ProductCondition | ProductCondition[];
-  voltagem?: string;
+  voltagem?: string | string[];
   precoMin?: number;
   precoMax?: number;
   emEstoque?: boolean;
 };
+
+/** Normaliza "um ou vários" numa lista sem vazios. */
+function comoLista(valor: string | string[] | undefined): string[] {
+  if (!valor) return [];
+  return (Array.isArray(valor) ? valor : [valor]).map((v) => v.trim()).filter(Boolean);
+}
 
 export function montarFiltro(filtros: FiltrosCatalogo): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = { ...PUBLICADO };
@@ -104,17 +116,19 @@ export function montarFiltro(filtros: FiltrosCatalogo): Prisma.ProductWhereInput
     });
   }
 
-  if (filtros.categoria) {
+  const categorias = comoLista(filtros.categoria);
+  if (categorias.length) {
     // inclui as subcategorias, para "Biossegurança" trazer o que está abaixo dela
     e.push({
       OR: [
-        { category: { slug: filtros.categoria } },
-        { category: { parent: { slug: filtros.categoria } } },
+        { category: { slug: { in: categorias } } },
+        { category: { parent: { slug: { in: categorias } } } },
       ],
     });
   }
 
-  if (filtros.marca) e.push({ brand: { slug: filtros.marca } });
+  const marcas = comoLista(filtros.marca);
+  if (marcas.length) e.push({ brand: { slug: { in: marcas } } });
 
   if (filtros.condicao) {
     e.push(
@@ -124,7 +138,8 @@ export function montarFiltro(filtros: FiltrosCatalogo): Prisma.ProductWhereInput
     );
   }
 
-  if (filtros.voltagem) e.push({ voltage: filtros.voltagem });
+  const voltagens = comoLista(filtros.voltagem);
+  if (voltagens.length) e.push({ voltage: { in: voltagens } });
   if (filtros.emEstoque) e.push({ OR: [{ trackInventory: false }, { stock: { gt: 0 } }] });
   if (filtros.precoMin !== undefined) e.push({ priceCents: { gte: filtros.precoMin } });
   if (filtros.precoMax !== undefined) e.push({ priceCents: { lte: filtros.precoMax } });

@@ -18,6 +18,8 @@ import { LinkBotao } from "@/components/ui/button";
 import { Cartao, Etiqueta, Trilha, TituloSecao } from "@/components/ui/data";
 import { paraCard, SELECAO_CARD } from "@/lib/catalogo";
 import { formatarPreco, whatsappHref } from "@/lib/format";
+import { sanitizarHtml } from "@/components/admin/conteudo/html-seguro";
+import { JsonLd, type DadosJsonLd } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 
@@ -111,8 +113,15 @@ export default async function ProdutoPage({ params }: Props) {
   const condicao = CONDICAO[produto.condition];
   const revisado = produto.condition === "seminovo" || produto.condition === "recondicionado";
   const semEstoque = produto.trackInventory && produto.stock <= 0;
+  /**
+   * `archived` é produto que saiu de linha. A página continua de pé porque o
+   * link pode estar salvo ou indexado — devolver 404 para quem tinha o
+   * equipamento é pior que explicar. O que não pode é continuar vendendo:
+   * antes, só `draft` era barrado e o botão de comprar seguia ativo.
+   */
+  const arquivado = produto.status === "archived";
 
-  const dadosEstruturados = {
+  const dadosEstruturados: DadosJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: produto.name,
@@ -126,9 +135,11 @@ export default async function ProdutoPage({ params }: Props) {
             "@type": "Offer",
             priceCurrency: "BRL",
             price: (produto.priceCents / 100).toFixed(2),
-            availability: semEstoque
-              ? "https://schema.org/OutOfStock"
-              : "https://schema.org/InStock",
+            availability: arquivado
+              ? "https://schema.org/Discontinued"
+              : semEstoque
+                ? "https://schema.org/OutOfStock"
+                : "https://schema.org/InStock",
             itemCondition:
               produto.condition === "novo"
                 ? "https://schema.org/NewCondition"
@@ -139,11 +150,9 @@ export default async function ProdutoPage({ params }: Props) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        // dados do próprio catálogo; nada de avaliação ou nota fictícia
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(dadosEstruturados) }}
-      />
+      {/* dados do próprio catálogo; nada de avaliação ou nota fictícia.
+          JsonLd escapa "<" — nome de produto com "</script>" fecharia a tag. */}
+      <JsonLd dados={dadosEstruturados} />
 
       <div className="container-jb py-6 lg:py-10">
         <Trilha
@@ -190,7 +199,33 @@ export default async function ProdutoPage({ params }: Props) {
             ) : null}
 
             <div className="mt-6">
-              <CaixaCompra
+              {arquivado ? (
+                <Cartao className="p-5">
+                  <p className="text-lg font-bold text-graf-900">
+                    Não vendemos mais este equipamento
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-graf-600">
+                    Ele saiu da nossa linha. A equipe indica um substituto equivalente — veja as
+                    sugestões abaixo ou fale com a gente.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <LinkBotao href="/loja" variante="primario" tamanho="sm">
+                      Ver equipamentos
+                    </LinkBotao>
+                    <LinkBotao
+                      href={whatsappHref(
+                        s.whatsapp,
+                        `Olá! Vi o ${produto.name} no site e gostaria de saber se há um substituto.`,
+                      )}
+                      variante="secundario"
+                      tamanho="sm"
+                    >
+                      Falar com a JB
+                    </LinkBotao>
+                  </div>
+                </Cartao>
+              ) : (
+                <CaixaCompra
                 produtoId={produto.id}
                 nome={produto.name}
                 precoCents={produto.priceCents}
@@ -201,7 +236,8 @@ export default async function ProdutoPage({ params }: Props) {
                 controlaEstoque={produto.trackInventory}
                 unico={produto.unique}
                 addons={addons}
-              />
+                />
+              )}
             </div>
 
             {/* Garantia, entrega e assistência — só o que está cadastrado */}
@@ -369,7 +405,10 @@ export default async function ProdutoPage({ params }: Props) {
               <h2 className="text-lg font-bold text-graf-950">Sobre este equipamento</h2>
               <div
                 className="prose-jb mt-4"
-                dangerouslySetInnerHTML={{ __html: produto.description }}
+                // Saneado na exibição além da gravação: descrição de produto
+                // migrada do site antigo nunca passou pela lista branca, e
+                // esta é a única página pública que renderiza HTML de editor.
+                dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.description) }}
               />
             </div>
           ) : null}
@@ -421,7 +460,7 @@ export default async function ProdutoPage({ params }: Props) {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2.5 rounded-lg border border-graf-200 px-4 py-3 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400"
                       >
-                        <FileText className="size-4 text-graf-400" aria-hidden />
+                        <FileText className="size-4 text-graf-500" aria-hidden />
                         {doc.title}
                       </a>
                     </li>
@@ -442,7 +481,7 @@ export default async function ProdutoPage({ params }: Props) {
                   <details className="group rounded-xl border border-graf-200 bg-white">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 text-sm font-bold text-graf-900">
                       {faq.question}
-                      <span aria-hidden className="text-graf-400 group-open:rotate-45">
+                      <span aria-hidden className="text-graf-500 group-open:rotate-45">
                         +
                       </span>
                     </summary>

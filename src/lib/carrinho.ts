@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import type { Prisma } from "@prisma/client";
+import type { CouponKind, Prisma } from "@prisma/client";
 
 import { tokenAleatorio } from "@/lib/codigos";
 import { prisma } from "@/lib/prisma";
@@ -18,6 +18,9 @@ const INCLUI = {
         include: {
           brand: true,
           media: { orderBy: { order: "asc" }, take: 1, include: { media: true } },
+          // preço que o produto dá ao serviço adicional; sem isto o carrinho
+          // cobraria o preço padrão do serviço, diferente do que a página mostra
+          addons: { select: { serviceId: true, priceCents: true } },
         },
       },
       service: true,
@@ -26,6 +29,55 @@ const INCLUI = {
 } satisfies Prisma.CartInclude;
 
 export type CarrinhoCompleto = Prisma.CartGetPayload<{ include: typeof INCLUI }>;
+
+/**
+ * Preço de um serviço vendido como adicional de um produto.
+ *
+ * `ProductAddon.priceCents` sobrepõe o preço padrão do serviço, e é esse o
+ * valor que a página do produto exibe. Ler `Service.priceCents` direto faria a
+ * loja cobrar diferente do que mostrou — por isso a regra mora aqui, em um
+ * lugar só, e é usada tanto no carrinho quanto no fechamento do pedido.
+ */
+export function precoDoAdicional(
+  adicionaisDoProduto: readonly { serviceId: string; priceCents: number | null }[] | undefined,
+  serviceId: string | null,
+  precoDoServico: number | null | undefined,
+): number {
+  const proprio = adicionaisDoProduto?.find((a) => a.serviceId === serviceId)?.priceCents;
+  return proprio ?? precoDoServico ?? 0;
+}
+
+/**
+ * Regras do cupom, num lugar só.
+ *
+ * O carrinho mostra o desconto e o pedido cobra o desconto. Se as duas contas
+ * morarem em arquivos diferentes elas divergem na primeira mudança — e o
+ * cliente vê um valor na tela e outro na fatura.
+ *
+ * `Coupon` pode ser restrito a um produto ou a uma categoria. Quando é, o
+ * desconto incide só sobre as linhas que se encaixam, não sobre o carrinho
+ * inteiro: um cupom de 10% em peças não pode abater 10% de uma autoclave.
+ */
+export function linhaElegivelAoCupom(
+  cupom: { productId: string | null; categoryId: string | null } | null | undefined,
+  item: { productId: string | null; product?: { categoryId: string | null } | null },
+): boolean {
+  if (!cupom) return false;
+  if (cupom.productId) return item.productId === cupom.productId;
+  if (cupom.categoryId) return item.product?.categoryId === cupom.categoryId;
+  return true;
+}
+
+/** Desconto em centavos sobre a base elegível. Nunca passa da própria base. */
+export function descontoDoCupom(
+  cupom: { kind: CouponKind; value: number },
+  baseCents: number,
+): number {
+  if (baseCents <= 0) return 0;
+  return cupom.kind === "percentual"
+    ? Math.floor((baseCents * cupom.value) / 100)
+    : Math.min(cupom.value, baseCents);
+}
 
 /** Carrinho atual sem criar nada — para leitura (contador do cabeçalho). */
 export async function lerCarrinho(): Promise<CarrinhoCompleto | null> {
@@ -42,15 +94,31 @@ export async function obterOuCriarCarrinho(customerId?: string | null) {
 
   if (token) {
     const existente = await prisma.cart.findUnique({ where: { token }, include: INCLUI });
+
+    /**
+     * Carrinho com dono pertence ao dono, e a mais ninguém.
+     *
+     * Antes, quem entrasse com outra conta no mesmo navegador simplesmente
+     * tomava o carrinho: o código regravava o `customerId` e a pessoa via os
+     * itens de quem tinha usado antes. Numa recepção de clínica, com um
+     * computador compartilhado, isso acontece no primeiro dia.
+     *
+     * Agora só carrinho sem dono é adotado. Se o carrinho é de outra conta —
+     * ou se ninguém está logado e ele tem dono — o cookie é trocado e a pessoa
+     * começa limpa. O carrinho salvo de quem entra volta pelo
+     * `fundirCarrinhoNoLogin`, que procura pelo `customerId`.
+     */
     if (existente) {
-      if (customerId && existente.customerId !== customerId) {
+      if (existente.customerId === (customerId ?? null)) return existente;
+
+      if (existente.customerId === null && customerId) {
         return prisma.cart.update({
           where: { id: existente.id },
           data: { customerId },
           include: INCLUI,
         });
       }
-      return existente;
+      // pertence a outra pessoa: cai adiante e nasce um carrinho novo
     }
   }
 
@@ -67,6 +135,18 @@ export async function obterOuCriarCarrinho(customerId?: string | null) {
     data: { token, customerId: customerId ?? null },
     include: INCLUI,
   });
+}
+
+/**
+ * Solta o carrinho deste navegador.
+ *
+ * Chamado no logout: apagar só o cookie de sessão deixava o cookie do carrinho
+ * apontando para o carrinho de quem saiu, e o próximo a usar o computador
+ * enxergava os itens dele.
+ */
+export async function esquecerCarrinhoDoNavegador() {
+  const jar = await cookies();
+  jar.delete(COOKIE);
 }
 
 /**
@@ -125,6 +205,8 @@ export type LinhaCarrinho = {
   precoUnitarioCents: number;
   quantidade: number;
   totalCents: number;
+  /** produto saiu do ar (rascunho ou arquivado): não soma e não deixa fechar */
+  disponivel: boolean;
   estoqueDisponivel: number;
   unico: boolean;
   addons: {
@@ -166,7 +248,7 @@ export function calcularTotais(carrinho: CarrinhoCompleto | null): TotaisCarrinh
     const addons = carrinho.items
       .filter((a) => a.parentId === item.id)
       .map((a) => {
-        const preco = a.service?.priceCents ?? 0;
+        const preco = precoDoAdicional(item.product?.addons, a.serviceId, a.service?.priceCents);
         return {
           id: a.id,
           nome: a.service?.name ?? "Serviço",
@@ -179,6 +261,10 @@ export function calcularTotais(carrinho: CarrinhoCompleto | null): TotaisCarrinh
     const preco = ehProduto ? (item.product?.priceCents ?? 0) : (item.service?.priceCents ?? 0);
     const totalAddons = addons.reduce((soma, a) => soma + a.totalCents, 0);
 
+    // produto despublicado depois de entrar no carrinho continua na lista para
+    // a pessoa entender o que aconteceu, mas não entra na conta nem no pedido
+    const disponivel = !ehProduto || item.product?.status === "active";
+
     return {
       id: item.id,
       tipo: ehProduto ? "produto" : "servico",
@@ -190,7 +276,8 @@ export function calcularTotais(carrinho: CarrinhoCompleto | null): TotaisCarrinh
       condicao: item.product?.condition ?? null,
       precoUnitarioCents: preco,
       quantidade: item.quantity,
-      totalCents: preco * item.quantity + totalAddons,
+      totalCents: disponivel ? preco * item.quantity + totalAddons : 0,
+      disponivel,
       estoqueDisponivel: item.product?.trackInventory ? (item.product?.stock ?? 0) : 9999,
       unico: item.product?.unique ?? false,
       addons,
@@ -211,15 +298,21 @@ export function calcularTotais(carrinho: CarrinhoCompleto | null): TotaisCarrinh
     const esgotado = cupom.maxUses !== null && cupom.usedCount >= cupom.maxUses;
     const abaixoDoMinimo = subtotalCents < cupom.minSubtotalCents;
 
+    // `principais` e `linhas` andam em paralelo: linhas nasceu do map daquele
+    const baseCupomCents = principais.reduce(
+      (soma, item, i) =>
+        linhaElegivelAoCupom(cupom, item) ? soma + (linhas[i]?.totalCents ?? 0) : soma,
+      0,
+    );
+
     if (!cupom.active || expirado || naoComecou || esgotado) {
       cupomErro = "Este cupom não está mais válido.";
     } else if (abaixoDoMinimo) {
       cupomErro = "O valor do pedido ainda não atinge o mínimo deste cupom.";
+    } else if (baseCupomCents <= 0) {
+      cupomErro = "Este cupom não vale para os itens deste carrinho.";
     } else {
-      descontoCents =
-        cupom.kind === "percentual"
-          ? Math.floor((subtotalCents * cupom.value) / 100)
-          : Math.min(cupom.value, subtotalCents);
+      descontoCents = descontoDoCupom(cupom, baseCupomCents);
     }
   }
 

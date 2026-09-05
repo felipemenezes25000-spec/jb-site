@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 const BASE_CAMPO =
   "w-full rounded-lg border bg-white text-graf-900 shadow-xs transition-colors " +
-  "placeholder:text-graf-400 " +
+  "placeholder:text-graf-500 " +
   "focus:outline-none focus:ring-4 " +
   "disabled:cursor-not-allowed disabled:bg-graf-50 disabled:text-graf-500";
 

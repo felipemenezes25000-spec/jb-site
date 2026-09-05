@@ -31,7 +31,9 @@
   --color-graf-200: #dddfe2;
   --color-graf-300: #c2c6cb;
   --color-graf-400: #9ba1a8;
-  --color-graf-500: #7a818a;
+  /* 4,5:1 sobre branco, graf-50 e graf-100 — este é o cinza do texto
+     secundário e precisa cumprir AA. O antigo #7a818a dava 3,94:1. */
+  --color-graf-500: #666d76;
   --color-graf-600: #636870;
   --color-graf-700: #51565c;
   --color-graf-800: #3f4347;
