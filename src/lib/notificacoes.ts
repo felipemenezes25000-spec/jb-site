@@ -1,5 +1,7 @@
 import "server-only";
 
+import { after } from "next/server";
+
 import crypto from "node:crypto";
 
 import { Prisma } from "@prisma/client";
@@ -212,6 +214,37 @@ function normalizarDestinatario(canal: CanalMensagem, para: string) {
  * Coloca a mensagem na fila com status `pendente`. Idempotente pela
  * `dedupeKey`: chamar duas vezes para o mesmo fato não gera dois envios.
  */
+/**
+ * Tenta entregar a mensagem assim que a resposta sair.
+ *
+ * O cron da Vercel no plano atual roda uma vez por dia, e recuperação de senha
+ * que chega no dia seguinte não serve para nada. `after` do Next executa depois
+ * da resposta, então quem pediu o link não espera o SMTP para ver a tela.
+ *
+ * A fila continua sendo a verdade: se isto falhar, a linha segue `pendente` e
+ * o cron (ou o botão da tela /admin/mensagens) manda depois. Por isso o erro é
+ * engolido aqui — perder a entrega imediata não pode derrubar a ação que a
+ * originou.
+ *
+ * O import é dinâmico de propósito: `mensageria` importa este módulo, e o
+ * import estático fecharia o ciclo.
+ */
+function entregarQuandoPuder(id: string) {
+  try {
+    after(async () => {
+      try {
+        const { reenviarMensagem } = await import("@/lib/mensageria");
+        await reenviarMensagem(id);
+      } catch (erro) {
+        console.error("[fila] entrega imediata falhou; fica para o processamento em lote", erro);
+      }
+    });
+  } catch {
+    // fora de uma requisição (seed, script, teste): não há resposta para
+    // acontecer "depois". A fila resolve na próxima passada.
+  }
+}
+
 export async function enfileirar(entrada: EntradaMensagem): Promise<ResultadoMensagem> {
   const para = normalizarDestinatario(entrada.canal, entrada.para);
   if (!para) {
@@ -249,6 +282,8 @@ export async function enfileirar(entrada: EntradaMensagem): Promise<ResultadoMen
       },
       select: { id: true },
     });
+
+    entregarQuandoPuder(criada.id);
     return pronto(criada.id, false);
   } catch (erro) {
     // P2002: já existe mensagem com esta chave — é exatamente o que se quer
