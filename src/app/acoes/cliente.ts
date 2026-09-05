@@ -8,7 +8,10 @@ import {
   bloqueadoPorTentativas,
   criarSessaoCliente,
   encerrarSessaoCliente,
+  hashSenhaCliente,
 } from "@/lib/auth-cliente";
+import { documentoValido } from "@/lib/format";
+import { prisma } from "@/lib/prisma";
 
 export type EstadoCliente = { erro?: string };
 
@@ -43,11 +46,58 @@ export async function entrarCliente(
   redirect(destinoSeguro(formData.get("voltar")));
 }
 
+const cadastroSchema = z.object({
+  nome: z.string().trim().min(3, "Informe seu nome."),
+  email: z.string().trim().email("Informe um e-mail válido."),
+  telefone: z.string().trim().max(30).default(""),
+  tipo: z.enum(["fisica", "juridica"]).default("fisica"),
+  documento: z.string().trim().max(30).default(""),
+  empresa: z.string().trim().max(120).default(""),
+  senha: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres."),
+});
+
 export async function cadastrarCliente(
   _anterior: EstadoCliente,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<EstadoCliente> {
-  return { erro: "Diagnóstico temporário de tipagem." };
+  const dados = cadastroSchema.safeParse({
+    nome: formData.get("nome"),
+    email: formData.get("email"),
+    telefone: formData.get("telefone") ?? "",
+    tipo: formData.get("tipo") ?? "fisica",
+    documento: formData.get("documento") ?? "",
+    empresa: formData.get("empresa") ?? "",
+    senha: formData.get("senha"),
+  });
+
+  if (!dados.success) {
+    return { erro: dados.error.issues[0]?.message ?? "Revise os dados informados." };
+  }
+
+  if (dados.data.documento && !documentoValido(dados.data.documento, dados.data.tipo)) {
+    return { erro: dados.data.tipo === "fisica" ? "Informe um CPF válido." : "Informe um CNPJ válido." };
+  }
+
+  const email = dados.data.email.toLowerCase();
+  if (await prisma.customer.findUnique({ where: { email }, select: { id: true } })) {
+    return { erro: "Já existe uma conta com este e-mail." };
+  }
+
+  const cliente = await prisma.customer.create({
+    data: {
+      name: dados.data.nome,
+      email,
+      phone: dados.data.telefone,
+      personType: dados.data.tipo,
+      document: dados.data.documento.replace(/\D/g, ""),
+      companyName: dados.data.empresa,
+      passwordHash: await hashSenhaCliente(dados.data.senha),
+    },
+    select: { id: true, name: true, email: true },
+  });
+
+  await criarSessaoCliente(cliente);
+  redirect("/minha-jb");
 }
 
 export async function sairCliente() {
