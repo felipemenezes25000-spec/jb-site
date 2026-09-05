@@ -19,6 +19,21 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+/**
+ * Mesma sequência atômica que a aplicação usa. Não dá para importar
+ * src/lib/codigos.ts aqui: ele é marcado "server-only" e só roda dentro do Next.
+ */
+async function proximoCodigo(prefixo: string) {
+  const linhas = await prisma.$queryRaw<{ current: number }[]>`
+    INSERT INTO "DocumentSequence" ("prefix", "current", "updatedAt")
+    VALUES (${prefixo}, 1, now())
+    ON CONFLICT ("prefix")
+    DO UPDATE SET "current" = "DocumentSequence"."current" + 1, "updatedAt" = now()
+    RETURNING "current"
+  `;
+  return `${prefixo}-${String(linhas[0]?.current ?? 1).padStart(6, "0")}`;
+}
+
 const EMAIL_DEMO = "demo@jbteste.local";
 const SENHA_DEMO = "demo12345";
 
@@ -454,7 +469,7 @@ async function main() {
   if (!chamadoExiste) {
     const chamado = await prisma.serviceRequest.create({
       data: {
-        number: "AT-000001",
+        number: await proximoCodigo("AT"),
         status: "em_diagnostico",
         customerId: cliente.id,
         equipmentId: equipamento.id,

@@ -16,6 +16,12 @@ async function main() {
     console.log("cliente de demonstração removido");
   }
 
+  // ServiceRequest referencia o cliente com SetNull: sem isto sobra órfão
+  const chamados = await prisma.serviceRequest.deleteMany({
+    where: { customerId: null, contactEmail: "demo@jbteste.local" },
+  });
+  if (chamados.count) console.log(`${chamados.count} chamado(s) órfão(s) removido(s)`);
+
   const produtos = await prisma.product.deleteMany({ where: { slug: { startsWith: "demo-" } } });
   const marcas = await prisma.brand.deleteMany({ where: { slug: { startsWith: "demo-" } } });
   const midias = await prisma.media.deleteMany({ where: { folder: "demo" } });

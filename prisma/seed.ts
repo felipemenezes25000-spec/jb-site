@@ -32,15 +32,25 @@ const legado: Legado | null = fs.existsSync(arquivoLegado)
   ? JSON.parse(fs.readFileSync(arquivoLegado, "utf8"))
   : null;
 
-/** Ícone Lucide por categoria migrada — puramente visual, não é dado de negócio. */
-const ICONES: Record<string, string> = {
-  bioseguranca: "ShieldCheck",
-  profilaxia: "Sparkles",
-  cirurgia: "Stethoscope",
-  estetica: "Lightbulb",
-  "outros-perifericos": "Settings",
-  "unidade-basica-de-tratamento": "Armchair",
-};
+/**
+ * As frentes de equipamento que a JB atende. Vieram da tabela `mp5600_servicos`
+ * do site antigo e a migração as copia para Category. Num banco novo (preview,
+ * um ambiente recém-criado) não há o que copiar, então o seed as cria aqui.
+ */
+const CATEGORIAS = [
+  { slug: "bioseguranca", name: "Biossegurança", icon: "ShieldCheck", order: 1 },
+  { slug: "profilaxia", name: "Profilaxia", icon: "Sparkles", order: 2 },
+  { slug: "cirurgia", name: "Cirurgia", icon: "Stethoscope", order: 3 },
+  { slug: "estetica", name: "Estética", icon: "Lightbulb", order: 4 },
+  { slug: "outros-perifericos", name: "Outros periféricos", icon: "Settings", order: 5 },
+  {
+    slug: "unidade-basica-de-tratamento",
+    name: "Unidade básica de tratamento",
+    icon: "Armchair",
+    order: 6,
+  },
+  { slug: "pecas-e-acessorios", name: "Peças e acessórios", icon: "Boxes", order: 7 },
+];
 
 async function main() {
   /* ------------------------------------------------------- configurações */
@@ -145,11 +155,16 @@ async function main() {
 
   /* --------------------------------------------------------- categorias */
   console.log("→ categorias");
-  for (const [slug, icone] of Object.entries(ICONES)) {
-    await prisma.category.updateMany({ where: { slug }, data: { icon: icone } });
+  for (const categoria of CATEGORIAS) {
+    await prisma.category.upsert({
+      where: { slug: categoria.slug },
+      // o nome e a descrição podem ter sido ajustados no painel; só o ícone
+      // e a ordem são reafirmados
+      update: { icon: categoria.icon, order: categoria.order },
+      create: { ...categoria, published: true, featured: true },
+    });
   }
-  const totalCategorias = await prisma.category.count();
-  console.log(`   ${totalCategorias} categorias no catálogo`);
+  console.log(`   ${await prisma.category.count()} categorias no catálogo`);
 
   /* ----------------------------------------------------------- serviços */
   console.log("→ serviços vendáveis");
