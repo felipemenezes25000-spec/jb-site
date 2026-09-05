@@ -1,29 +1,28 @@
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
+const schema = z.object({
+  nome: z.string().trim().min(3),
+  email: z.string().trim().email(),
+  descricao: z.string().trim().min(10),
+  urgencia: z.enum(["baixa", "normal", "alta", "parado"]).default("normal"),
+});
+
 async function diagnosticarCreateServiceRequest() {
+  const dados = schema.parse({
+    nome: "Teste",
+    email: "teste@example.com",
+    descricao: "Descrição de diagnóstico",
+    urgencia: "normal",
+  });
+
   await prisma.serviceRequest.create({
     data: {
       number: "AT-DIAG",
-      customerId: null,
-      equipmentId: null,
-      contactName: "Teste",
-      contactEmail: "teste@example.com",
-      contactPhone: "11999999999",
-      categoryId: null,
-      brandName: "Marca",
-      modelName: "Modelo",
-      serialNumber: "SERIE",
-      problemKind: "Não liga",
-      description: "Descrição de diagnóstico",
-      urgency: "normal",
-      addressZip: "01001000",
-      addressStreet: "Praça da Sé",
-      addressNumber: "1",
-      addressComplement: "",
-      addressDistrict: "Sé",
-      addressCity: "São Paulo",
-      addressState: "SP",
-      availability: "Comercial",
+      contactName: dados.nome,
+      contactEmail: dados.email,
+      description: dados.descricao,
+      urgency: dados.urgencia,
     },
   });
 }
