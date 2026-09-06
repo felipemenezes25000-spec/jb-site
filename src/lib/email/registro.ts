@@ -555,6 +555,54 @@ const MODELO_AVISO: Modelo = {
   },
 };
 
+/**
+ * Convite de avaliacao.
+ *
+ * O texto diz, com todas as letras, que a resposta so vira depoimento publico
+ * se a pessoa autorizar. Nao e cortesia: e a condicao que faz a coleta ser
+ * honesta, e ela precisa estar no convite, nao escondida na pagina.
+ */
+const MODELO_AVALIACAO_CONVITE: Modelo = {
+  rotulo: "Convite de avaliacao",
+  async montar({ referencia, s }) {
+    const convite = await prisma.reviewRequest.findUnique({
+      where: { id: idBase(referencia.refId) },
+      select: {
+        token: true,
+        kind: true,
+        sentAt: true,
+        customer: { select: { name: true } },
+        order: { select: { number: true } },
+        workOrder: { select: { number: true } },
+      },
+    });
+    if (!convite) throw new ErroDeModelo(`Convite ${referencia.refId} nao existe mais.`);
+
+    const numero = convite.order?.number ?? convite.workOrder?.number ?? "";
+    const oQue = convite.kind === "compra" ? `o pedido ${numero}` : `o atendimento ${numero}`;
+    const link = urlAbsoluta(`/avaliar/${convite.token}`);
+
+    return {
+      assunto:
+        convite.kind === "compra"
+          ? "Como foi a sua compra na JB?"
+          : "Como foi o atendimento tecnico da JB?",
+      texto: [
+        `Ola, ${convite.customer.name}.`,
+        "",
+        `Queremos saber como foi ${oQue}. Sao duas perguntas e leva menos de um minuto:`,
+        "",
+        link,
+        "",
+        "A sua resposta chega direto para a equipe da JB. Ela so vira depoimento publico se",
+        "voce autorizar — e a autorizacao e uma caixa que voce marca, ou nao.",
+        "",
+        s.empresa_nome,
+      ].join("\n"),
+    };
+  },
+};
+
 const MODELOS: Record<string, Modelo> = {
   senha_reset: MODELO_SENHA,
   pedido_recebido: MODELO_PEDIDO_RECEBIDO,
@@ -564,6 +612,7 @@ const MODELOS: Record<string, Modelo> = {
   chamado_aberto_equipe: MODELO_CHAMADO_EQUIPE,
   chamado_resposta_cliente: MODELO_CHAMADO_RESPOSTA,
   visita_agendada: MODELO_VISITA_AGENDADA,
+  avaliacao_convite: MODELO_AVALIACAO_CONVITE,
   contato_site: MODELO_CONTATO_SITE,
   orcamento_pedido_equipe: modeloDeInteresseInterno(
     "Pedido de orçamento — equipe",

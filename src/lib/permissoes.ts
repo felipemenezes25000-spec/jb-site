@@ -41,6 +41,8 @@ export type AreaAdmin =
   | "tecnicos"
   | "conteudo"
   | "central"
+  | "avaliacoes"
+  | "cases"
   | "leads"
   | "usuarios"
   | "configuracoes"
@@ -259,6 +261,24 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     leitura: ["tecnico"],
     grupo: "conteudo",
     descricao: "Artigos técnicos: rascunho, revisão, publicação e arquivo",
+  },
+  avaliacoes: {
+    rotulo: "Avaliações",
+    icone: "Star",
+    href: "/admin/avaliacoes",
+    papeis: ["admin", "gestor", "comercial"],
+    leitura: [],
+    grupo: "conteudo",
+    descricao: "Convites, respostas e os depoimentos que foram autorizados",
+  },
+  cases: {
+    rotulo: "Cases técnicos",
+    icone: "ClipboardCheck",
+    href: "/admin/cases",
+    papeis: ["admin", "gestor", "editor"],
+    leitura: ["tecnico"],
+    grupo: "conteudo",
+    descricao: "Atendimentos publicados, com autorização do cliente",
   },
   leads: {
     rotulo: "Leads",

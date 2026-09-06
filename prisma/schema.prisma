@@ -55,6 +55,10 @@ model User {
   /// Artigos da Central Técnica assinados e revisados por esta pessoa.
   artigosEscritos  Article[] @relation("ArtigoAutor")
   artigosRevisados Article[] @relation("ArtigoRevisor")
+
+  /// Cases tecnicos que esta pessoa executou e revisou.
+  casesExecutados TechCase[] @relation("CaseTecnico")
+  casesRevisados  TechCase[] @relation("CaseRevisor")
 }
 
 /// Técnico de campo. Estende um usuário interno com dados operacionais.
@@ -115,6 +119,7 @@ model Customer {
   contracts       MaintenanceContract[]
   resetTokens     PasswordResetToken[]
   loginAttempts   LoginAttempt[]
+  reviewRequests  ReviewRequest[]
 
   @@index([document])
   @@index([createdAt])
@@ -849,8 +854,9 @@ model Order {
   movements    InventoryMovement[]
   equipments   Equipment[]
   documents    Document[]
-  quote        Quote?
-  installTasks InstallationTask[]
+  quote         Quote?
+  installTasks  InstallationTask[]
+  reviewRequest ReviewRequest?
 
   @@index([customerId, placedAt])
   @@index([status, placedAt])
@@ -1339,11 +1345,13 @@ model WorkOrder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items     WorkOrderItem[]
-  events    WorkOrderEvent[]
-  media     WorkOrderMedia[]
-  checklist WorkOrderCheckItem[]
-  documents Document[]
+  items         WorkOrderItem[]
+  events        WorkOrderEvent[]
+  media         WorkOrderMedia[]
+  checklist     WorkOrderCheckItem[]
+  documents     Document[]
+  reviewRequest ReviewRequest?
+  cases         TechCase[]
 
   @@index([status, openedAt])
   @@index([equipmentId])
@@ -1934,6 +1942,22 @@ model Media {
   folder    String   @default("geral")
   createdAt DateTime @default(now())
 
+  /// Credito do fotografo, quando houver.
+  credit String @default("")
+
+  /// Ha pessoa identificavel na imagem?
+  ///
+  /// Quando sim, `authorizedAt` passa a ser condicao para uso publico. A regra
+  /// esta em `src/lib/acervo.ts`, e nao na disciplina de quem opera.
+  hasPeople Boolean @default(false)
+
+  /// Quando a autorizacao de uso de imagem foi obtida, e por quem.
+  authorizedAt DateTime?
+  authorizedBy String    @default("")
+
+  /// Restricoes combinadas com quem autorizou. Ex.: "so no site", "sem redes".
+  usageNote String @default("")
+
   articleCovers  Article[]             @relation("ArtigoCapa")
   pageCovers     Page[]                @relation("PageCover")
   pageImages     PageImage[]
@@ -2081,4 +2105,175 @@ model ArticleProduct {
 
   @@id([articleId, productId])
   @@index([productId])
+}
+
+// ============================================================================
+// AVALIACOES E CASES
+// ============================================================================
+
+enum ReviewKind {
+  compra
+  servico
+}
+
+enum ReviewRequestStatus {
+  /// Criado, ainda nao enviado. E onde tudo nasce, e onde tudo fica enquanto
+  /// o envio nao estiver autorizado.
+  rascunho
+  /// Efetivamente enviado pelo canal autorizado. SO este estado justifica o
+  /// evento `review_requested`.
+  enviado
+  respondido
+  cancelado
+  falhou
+}
+
+/// Um convite de avaliacao.
+///
+/// A distincao entre `rascunho` e `enviado` e a razao de este modelo ter
+/// estado proprio. O escopo exige que o evento `review_requested` represente
+/// uma solicitacao EFETIVAMENTE ENVIADA pelo canal autorizado, e nao um
+/// rascunho criado. Sem esses dois estados separados, um relatorio de
+/// engajamento contaria fila interna como contato com cliente.
+model ReviewRequest {
+  id String @id @default(cuid())
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  kind ReviewKind
+
+  /// A transacao que originou o convite. Uma das duas, nunca as duas.
+  orderId     String?
+  order       Order?     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  workOrderId String?
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  status ReviewRequestStatus @default(rascunho)
+
+  /// Identificador OPACO da pagina de resposta. Nao e o id do pedido nem o do
+  /// cliente: um convite com identificador adivinhavel deixaria qualquer um
+  /// responder pelo outro.
+  token String @unique
+
+  channel       String @default("email")
+  failureReason String @default("")
+
+  createdAt   DateTime  @default(now())
+  sentAt      DateTime?
+  respondedAt DateTime?
+
+  review Review?
+
+  /// Um convite por transacao. E a deduplicacao, e ela mora no banco porque
+  /// mandar dois convites do mesmo pedido e o tipo de erro que so aparece
+  /// depois de o cliente reclamar.
+  @@unique([orderId])
+  @@unique([workOrderId])
+  @@index([customerId, status])
+}
+
+/// A resposta.
+///
+/// Nota e comentario sao FEEDBACK PRIVADO por padrao. Virar depoimento publico
+/// exige `publicConsent` -- uma autorizacao explicita, pedida a todo mundo, e
+/// nao so a quem deu nota alta.
+model Review {
+  id String @id @default(cuid())
+
+  requestId String        @unique
+  request   ReviewRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  /// Satisfacao, de 1 a 5. Uso interno.
+  score Int
+
+  /// Recomendacao, de 0 a 10. Opcional, uso interno.
+  nps Int?
+
+  comment String @default("")
+
+  /// Autorizacao explicita para uso publico do depoimento. Falso por padrao.
+  publicConsent   Boolean   @default(false)
+  publicConsentAt DateTime?
+
+  /// Como a pessoa quer ser identificada publicamente. Vazio significa
+  /// anonimo, e anonimo e uma escolha valida.
+  displayName String @default("")
+
+  /// Curadoria: depoimento vai ao ar depois de alguem conferir. A NOTA NAO E
+  /// criterio de curadoria -- filtrar por nota transformaria a pagina de
+  /// depoimentos numa vitrine construida.
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([publicConsent, publishedAt])
+}
+
+enum CaseStatus {
+  rascunho
+  em_revisao
+  publicado
+  arquivado
+}
+
+/// Um case tecnico.
+///
+/// E uma PROJECAO EDITORIAL AUTORIZADA de um atendimento, e nao a OS. O
+/// vinculo com a OS existe para a JB conseguir comprovar o que publicou; o
+/// texto publico e escrito a mao, campo a campo. Nada aqui e copiado de resumo
+/// automatico: diagnostico inferido de resumo nao e diagnostico.
+model TechCase {
+  id    String @id @default(cuid())
+  slug  String @unique
+  title String
+
+  /// O que o cliente relatou.
+  symptom String @default("")
+
+  /// Familia do equipamento. Ex.: "Autoclave de bancada".
+  equipmentLabel String @default("")
+
+  /// Marca e modelo, quando autorizado a citar.
+  modelLabel String @default("")
+
+  /// O que foi CONFIRMADO na bancada -- nao o que se suspeitou.
+  diagnosis String @default("")
+
+  intervention String @default("")
+
+  /// Pecas substituidas, uma por item.
+  parts String[] @default([])
+
+  finalTests String @default("")
+
+  /// Tempo real, quando conhecido. Vazio nao vira estimativa.
+  durationLabel String @default("")
+
+  result String @default("")
+
+  technicianId String?
+  technician   User?   @relation("CaseTecnico", fields: [technicianId], references: [id], onDelete: SetNull)
+  reviewerId   String?
+  reviewer     User?   @relation("CaseRevisor", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  /// Vinculo interno com a OS. NUNCA exposto ao publico.
+  workOrderId String?
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+
+  /// Autorizacao do cliente para publicar. Sem ela o case nao vai ao ar,
+  /// mesmo completo e revisado.
+  customerConsent   Boolean   @default(false)
+  customerConsentAt DateTime?
+  consentNote       String    @default("")
+
+  status      CaseStatus @default(rascunho)
+  publishedAt DateTime?
+  reviewedAt  DateTime?
+  pendingNote String     @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
 }

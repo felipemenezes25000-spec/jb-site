@@ -329,6 +329,27 @@ de verdade.
 | Pautas | Calendário priorizado e registro do que aguarda | entregue — `docs/evolucao-jb/calendario-editorial.md`, três ondas e o que falta por texto |
 | Pautas | Nada publicado sem revisão profissional real | **cumprido** — os 19 estão em rascunho, sem autor e sem revisor. Publicar exige gente. |
 
+### Fase 15 — acervo real, reviews e cases técnicos (seção 19)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 19.foto | Briefing executável com finalidade, enquadramento, proporção, resolução, alt e autorização | entregue — `docs/evolucao-jb/briefing-acervo.md`, 12 fotos |
+| 19.foto | Onde cada imagem entra, e composição sem o acervo | documentado — tabela por tela; nenhuma tela usa placeholder |
+| 19.foto | CMS preparado para receber | implementado — `Media` ganhou crédito, "tem pessoa", autorização com data e quem obteve, e restrição de uso |
+| 19.foto | Não substituir foto documental por imagem gerada | **decisão registrada** — regra escrita no briefing e no código (`impedimentoDeUsoPublico`) |
+| 19.2.1–2 | Pedidos de avaliação após compra e OS, com elegíveis, intervalo e dedup | validado localmente — 27 testes; dedup no banco por transação |
+| 19.2.3 | CSAT/NPS interno, com finalidade explícita | implementado — nota e NPS não são publicados; a média não sai com poucas respostas |
+| 19.2.4 | Sem filtrar convite por nota; sem recompensa; sem pedir mudança | validado localmente — a função de elegíveis não recebe nota, e um teste verifica a assinatura |
+| 19.2.5 | Sem depoimento sem autorização | validado localmente — caixa desmarcada por padrão, com data de consentimento |
+| 19.2.6 | Separar avaliação pública de feedback privado | implementado — privado é o padrão; público exige autorização **e** curadoria |
+| 19.2.7 | Integração pronta em modo de teste, com passo de ativação | entregue — envio nasce desligado; `docs/evolucao-jb/avaliacoes.md` traz os 6 passos |
+| 19.2.8 | `review_requested` = enviado, não rascunho | implementado — `sentAt` só é carimbado dentro de `enviarConvite`; documentado |
+| 19.case | Estrutura com sintoma, diagnóstico, intervenção, peças, testes, tempo, autorização | implementado — modelo, painel e página pública |
+| 19.case | OS vinculada no backoffice, projeção editorial no público | implementado — o `select` público não contém `workOrderId`, `consentNote` nem `pendingNote` |
+| 19.case | Sem diagnóstico inferido de resumo automático | implementado — nada é copiado da OS; o campo se chama "confirmado na bancada" |
+| 19.case | Sem caso autorizado, explicação do processo como prova | implementado — `/cases` mostra as sete etapas; **nenhum nome ou número foi inventado** |
+| Acervo | Nenhuma foto foi produzida | **pendência declarada** — as fotos dependem de câmera e de autorização real |
+
 ---
 
 ## Matriz de cenários obrigatórios (seção 26)
@@ -370,6 +391,6 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | Analytics recusado | validado localmente — o script não entra na página de quem recusou |
 | Evento de compra | não iniciado |
 | Artigo sem revisão/autor real | validado localmente — publicação recusada com a lista do que falta; 20 testes |
-| Review/case sem autorização | não iniciado |
+| Review/case sem autorização | validado localmente — depoimento e case recusam publicação sem consentimento registrado; 27 testes |
 | Navegação mobile/teclado | não iniciado |
 | Falha do provedor/rede | não iniciado |

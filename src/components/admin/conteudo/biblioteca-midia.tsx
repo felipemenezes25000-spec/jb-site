@@ -16,7 +16,7 @@ import { Botao } from "@/components/ui/button";
 import { BotaoCopiar } from "@/components/ui/copiar";
 import { Vazio } from "@/components/ui/data";
 import { EnviarArquivo } from "@/components/ui/enviar-arquivo";
-import { Campo } from "@/components/ui/form";
+import { Campo, Marcador } from "@/components/ui/form";
 import { Painel } from "@/components/ui/painel";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +43,12 @@ export type MidiaDaBiblioteca = {
   height: number | null;
   folder: string;
   criadaEm: string;
+  credit: string;
+  hasPeople: boolean;
+  /** Data em que a autorização foi obtida, já formatada. Vazio = não há. */
+  autorizadaEm: string;
+  autorizadaPor: string;
+  usageNote: string;
   /** Quantas vezes o arquivo é referenciado em todo o sistema. */
   usos: number;
   /** Onde ele está sendo usado, em palavras. */
@@ -76,10 +82,61 @@ function FormularioDescricao({
         defaultValue={midia.alt}
         ajuda="Descreva o que a imagem mostra. É o texto lido por quem usa leitor de tela."
       />
+
+      <Campo
+        rotulo="Crédito"
+        name="credit"
+        maxLength={120}
+        defaultValue={midia.credit}
+        ajuda="Quem fotografou. Vazio não vira 'Foto: JB' — a linha some."
+      />
+
+      {/* ------------------------------------------- autorização ---
+
+          Foto com gente não vai ao ar sem alguém ter perguntado. A caixa
+          registra o fato; a data registra o ato. Uma vez gravada, a
+          autorização permanece — desmarcar "tem pessoa" não apaga o que
+          aconteceu. */}
+      <div className="space-y-3 rounded-lg border border-graf-200 bg-graf-50 p-3.5">
+        <Marcador
+          rotulo="Há pessoa identificável na imagem"
+          name="hasPeople"
+          defaultChecked={midia.hasPeople}
+          ajuda="Equipe, cliente, paciente — qualquer pessoa reconhecível."
+        />
+
+        {midia.autorizadaEm ? (
+          <p className="text-[0.8125rem] leading-relaxed text-graf-600">
+            Autorização registrada em {midia.autorizadaEm}
+            {midia.autorizadaPor ? `, por ${midia.autorizadaPor}` : ""}.
+          </p>
+        ) : (
+          <Marcador
+            rotulo="A autorização de uso de imagem foi obtida"
+            name="autorizar"
+            ajuda="Marque só depois de a pessoa ter autorizado de fato. A data é gravada agora."
+          />
+        )}
+
+        <Campo
+          rotulo="Restrições de uso"
+          name="usageNote"
+          maxLength={300}
+          defaultValue={midia.usageNote}
+          ajuda="O que foi combinado. Ex.: 'só no site', 'sem redes sociais'."
+        />
+
+        {midia.hasPeople && !midia.autorizadaEm ? (
+          <p className="text-[0.8125rem] font-semibold leading-relaxed text-jb-700">
+            Esta imagem tem pessoa identificável e ainda não pode ser publicada.
+          </p>
+        ) : null}
+      </div>
+
       <MensagemDoFormulario estado={estado} tituloDoErro="Não foi possível salvar" />
       <Botao type="submit" variante="secundario" tamanho="sm" carregando={pendente}>
         <Save className="size-4" aria-hidden />
-        Salvar descrição
+        Salvar cadastro
       </Botao>
     </form>
   );

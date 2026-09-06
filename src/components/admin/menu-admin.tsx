@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Boxes,
+  ClipboardCheck,
   CalendarClock,
   CalendarDays,
   ClipboardList,
@@ -21,6 +22,7 @@ import {
   Send,
   Settings,
   ShoppingCart,
+  Star,
   Stethoscope,
   TicketPercent,
   Truck,
@@ -44,6 +46,8 @@ import type { GrupoMenu } from "@/lib/permissoes";
 const ICONES: Record<string, LucideIcon> = {
   LayoutDashboard,
   BookOpen,
+  ClipboardCheck,
+  Star,
   ShoppingCart,
   CreditCard,
   Users,

@@ -43,6 +43,9 @@ const PRIVADAS = [
      idênticas. O que se quer indexado é a página do produto, não o
      comprovante dela — e a própria página já responde `noindex`. */
   "/verificar",
+  /* Cada convite de avaliacao tem endereco proprio, com token. Nenhum deles e
+     conteudo, e todos identificam uma transacao. */
+  "/avaliar",
 ];
 
 /**
@@ -64,7 +67,7 @@ const REDIRECIONADAS = new Set(["/empresa"]);
  * indexado não é conteúdo. Ela é registrada mais abaixo, e só se houver
  * artigo publicado.
  */
-const CONDICIONAIS = new Set(["/central-tecnica"]);
+const CONDICIONAIS = new Set(["/central-tecnica", "/cases", "/depoimentos"]);
 
 function ehPublica(href: string) {
   if (!href.startsWith("/")) return false;
@@ -101,7 +104,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   try {
-    const [produtos, categorias, marcas, paginas, artigos] = await Promise.all([
+    const [produtos, categorias, marcas, paginas, cases, depoimentos, artigos] =
+      await Promise.all([
       prisma.product.findMany({
         where: { status: "active" },
         orderBy: { updatedAt: "desc" },
@@ -139,6 +143,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       /* Só artigo publicado. Rascunho e "em revisão" não existem para o
          buscador — e arquivado sai do mapa porque deixou de ser conteúdo
          vigente, ainda que o endereço continue respondendo. */
+      prisma.techCase.findMany({
+        where: { status: "publicado" },
+        orderBy: { publishedAt: "desc" },
+        take: TETO_POR_TIPO,
+        select: { slug: true, updatedAt: true, publishedAt: true },
+      }),
+      /* Depoimento nao tem pagina propria: a listagem inteira e uma pagina so.
+         O que interessa ao mapa e se ela tem conteudo. */
+      prisma.review.count({ where: { publicConsent: true, publishedAt: { not: null } } }),
       prisma.article.findMany({
         where: { status: "publicado" },
         orderBy: { publishedAt: "desc" },
@@ -176,6 +189,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: marca.updatedAt,
         changeFrequency: "monthly",
         priority: 0.6,
+      });
+    }
+
+    if (cases.length > 0) {
+      registrar("/cases", {
+        lastModified: cases[0].publishedAt ?? cases[0].updatedAt,
+        changeFrequency: "monthly",
+        priority: 0.6,
+      });
+      for (const caso of cases) {
+        registrar(`/cases/${caso.slug}`, {
+          lastModified: caso.publishedAt ?? caso.updatedAt,
+          changeFrequency: "yearly",
+          priority: 0.5,
+        });
+      }
+    }
+
+    if (depoimentos > 0) {
+      registrar("/depoimentos", {
+        lastModified: agora,
+        changeFrequency: "monthly",
+        priority: 0.5,
       });
     }
 

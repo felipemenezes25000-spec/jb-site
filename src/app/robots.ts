@@ -27,7 +27,9 @@ export default function robots(): MetadataRoute.Robots {
         // painel, área do cliente, checkout e rotas de dados
         /* `/verificar` é o comprovante de uma unidade física. Uma página por
            unidade vendida não é conteúdo — é recibo, e recibo não se indexa. */
-        disallow: ["/admin", "/minha-jb", "/checkout", "/api", "/verificar"],
+        /* `/avaliar` carrega um token que identifica a transacao de uma
+           pessoa. O endereco nao pertence ao indice de ninguem. */
+        disallow: ["/admin", "/minha-jb", "/checkout", "/api", "/verificar", "/avaliar"],
       },
     ],
     sitemap: urlAbsoluta("/sitemap.xml"),

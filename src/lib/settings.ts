@@ -44,6 +44,9 @@ export const SETTING_DEFAULTS = {
   linkedin: "",
   youtube: "",
 
+  // avaliacoes
+  avaliacoes_envio: "nao",
+
   // devolução — vazio significa "política ainda não definida", e nesse caso
   // nada de devolução é publicado. Prazo inventado em dado estruturado é
   // promessa que a JB teria de cumprir.
@@ -72,6 +75,7 @@ export const SETTING_FIELDS: {
     | "contato"
     | "endereco"
     | "loja"
+    | "avaliacoes"
     | "devolucao"
     | "social"
     | "seo"
@@ -137,6 +141,16 @@ export const SETTING_FIELDS: {
     group: "loja",
     type: "email",
     hint: "E-mail interno que recebe cópia de cada pedido. Opcional.",
+  },
+
+  {
+    key: "avaliacoes_envio",
+    label: "Enviar convites de avaliacao",
+    group: "avaliacoes",
+    type: "boolean",
+    hint:
+      "Desligado, os convites continuam sendo montados em rascunho e NINGUEM recebe e-mail. "
+      + "Ligue quando a JB quiser comecar a pedir avaliacao.",
   },
 
   {

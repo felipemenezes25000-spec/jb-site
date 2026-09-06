@@ -1099,25 +1099,59 @@ export async function salvarMidia(
   const usuario = await exigirEdicao("conteudo");
   const id = texto(form, "id").trim();
   const alt = texto(form, "alt").trim().slice(0, 180);
+  const credit = texto(form, "credit").trim().slice(0, 120);
+  const usageNote = texto(form, "usageNote").trim().slice(0, 300);
+  const hasPeople = marcado(form, "hasPeople");
+  const autorizar = marcado(form, "autorizar");
 
   const antes = await prisma.media.findUnique({
     where: { id },
-    select: { id: true, alt: true, filename: true },
+    select: {
+      id: true,
+      alt: true,
+      filename: true,
+      credit: true,
+      hasPeople: true,
+      authorizedAt: true,
+      authorizedBy: true,
+      usageNote: true,
+    },
   });
   if (!antes) return { erro: "Arquivo não encontrado." };
 
-  await prisma.media.update({ where: { id }, data: { alt } });
+  /* A autorização é um ato com data e com quem a obteve, e não um booleano
+     que se marca e desmarca. Uma vez registrada, ela permanece — desmarcar
+     "há pessoa identificável" não apaga o fato de alguém ter autorizado. */
+  const jaAutorizada = Boolean(antes.authorizedAt);
+  const authorizedAt = jaAutorizada ? antes.authorizedAt : autorizar ? new Date() : null;
+  const authorizedBy = jaAutorizada ? antes.authorizedBy : autorizar ? usuario.name : "";
+
+  await prisma.media.update({
+    where: { id },
+    data: { alt, credit, usageNote, hasPeople, authorizedAt, authorizedBy },
+  });
+
   await registrarAuditoria({
     userId: usuario.id,
     acao: "editar",
     entidade: "midia",
     entidadeId: id,
-    antes: { alt: antes.alt },
-    depois: { alt },
+    antes: { ...antes },
+    depois: { alt, credit, usageNote, hasPeople, authorizedAt, authorizedBy },
   });
 
   revalidatePath("/admin/conteudo/midia");
-  return { ok: "Descrição da imagem salva." };
+
+  /* Marcar "tem pessoa" sem autorização NÃO impede salvar: o cadastro precisa
+     poder registrar o fato antes de a autorização existir. O bloqueio fica no
+     uso, em `impedimentoDeUsoPublico` — e a mensagem diz isso, para ninguém
+     sair da tela achando que a foto está liberada. */
+  return {
+    ok:
+      hasPeople && !authorizedAt
+        ? "Salvo. A imagem tem pessoa identificável e ainda não pode ser publicada: falta registrar a autorização."
+        : "Cadastro da imagem salvo.",
+  };
 }
 
 export async function excluirMidia(

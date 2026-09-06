@@ -175,6 +175,7 @@ export const ROTULO_GRUPO_CONFIG: Record<string, string> = {
   contato: "Contato",
   endereco: "Endereço",
   loja: "Loja",
+  avaliacoes: "Avaliações",
   devolucao: "Devolução",
   social: "Redes sociais",
   seo: "Busca e compartilhamento",
@@ -186,6 +187,9 @@ export const DESCRICAO_GRUPO_CONFIG: Record<string, string> = {
   contato: "Telefones, WhatsApp, e-mail e horário — usados no cabeçalho e no rodapé",
   endereco: "Endereço da JB e o mapa exibido na página de contato",
   loja: "Regras de exibição da vitrine e do checkout",
+  avaliacoes:
+    "O convite de avaliação é o mesmo para todo mundo — não há como mandar só para quem se " +
+    "espera satisfeito. Desligado, nada sai.",
   devolucao:
     "Enquanto o prazo estiver vazio, o site não publica política de devolução e o feed " +
     "do Google também não. Prazo declarado é promessa que a JB passa a dever.",
