@@ -1,9 +1,6 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Box, ShieldCheck, Sparkles, Star } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Box, ShieldCheck, Sparkles, Star } from "lucide-react";
 
 type Marca = {
   slug: string;
@@ -11,8 +8,8 @@ type Marca = {
   logo: { url: string; alt: string | null } | null;
 };
 
-const VISIVEIS = 6;
-const INTERVALO = 3600;
+/** Segundos que cada card leva para atravessar a faixa. */
+const RITMO = 6;
 
 const TAGLINES: Record<string, string> = {
   alt: "Soluções em odontologia",
@@ -38,6 +35,22 @@ const BENEFICIOS = [
   { icone: Star, titulo: "Suporte da equipe JB", apoio: "Da escolha ao pós-venda" },
 ];
 
+/**
+ * O trilho é a fila repetida duas vezes e anda exatamente metade da própria
+ * largura: quando a animação reinicia, a segunda cópia já está no lugar da
+ * primeira e a emenda não aparece.
+ */
+const CSS_TICKER = `
+@keyframes jb-marcas-ticker { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+.jb-marcas-trilho { animation: jb-marcas-ticker var(--jb-ritmo) linear infinite; will-change: transform; }
+.jb-marcas:hover .jb-marcas-trilho,
+.jb-marcas:focus-within .jb-marcas-trilho { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .jb-marcas-trilho { animation: none; }
+  .jb-marcas { overflow-x: auto; }
+}
+`;
+
 function chave(marca: Marca) {
   return marca.slug.toLowerCase().replace(/^demo-/, "");
 }
@@ -52,44 +65,51 @@ function arteDaMarca(marca: Marca) {
   return local ? { url: local, alt: marca.name } : null;
 }
 
-function circular(indice: number, total: number) {
-  return ((indice % total) + total) % total;
+function CartaoMarca({ marca }: { marca: Marca }) {
+  const arte = arteDaMarca(marca);
+
+  return (
+    <Link
+      href={`/marcas/${marca.slug}`}
+      className="group foco-jb flex h-[12rem] w-[16.4rem] shrink-0 flex-col items-center justify-center rounded-[1.4rem] border border-graf-100 bg-white/85 px-5 text-center shadow-[0_18px_44px_-34px_rgba(17,24,39,0.32)] transition-[transform,border-color,box-shadow,background-color] duration-300 hover:-translate-y-[6px] hover:border-jb-300 hover:bg-white hover:shadow-[0_28px_50px_-26px_rgba(202,20,30,0.42)]"
+    >
+      <span className="flex h-[4.4rem] w-full items-center justify-center">
+        {arte ? (
+          <Image
+            src={arte.url}
+            alt={arte.alt}
+            width={300}
+            height={120}
+            sizes="262px"
+            className="max-h-[3.9rem] w-auto max-w-[78%] object-contain"
+          />
+        ) : (
+          <span className="text-[1.6rem] font-black tracking-[-0.04em] text-graf-900">
+            {marca.name}
+          </span>
+        )}
+      </span>
+      <span className="mt-4 block text-[1.02rem] font-bold text-graf-800">{marca.name}</span>
+      <span className="mt-1.5 block text-[0.6rem] font-bold uppercase leading-[1.5] tracking-[0.2em] text-graf-400">
+        {legenda(marca)}
+      </span>
+    </Link>
+  );
 }
 
 export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
-  const total = marcas.length;
-  const janela = Math.min(VISIVEIS, total);
-  const [inicio, setInicio] = useState(0);
-  const [fixada, setFixada] = useState<number | null>(null);
-  const [parado, setParado] = useState(false);
+  if (marcas.length === 0) return null;
 
-  useEffect(() => {
-    if (parado || total <= janela) return;
-    const id = setInterval(() => setInicio((valor) => circular(valor + 1, total)), INTERVALO);
-    return () => clearInterval(id);
-  }, [janela, parado, total]);
-
-  const visiveis = useMemo(
-    () =>
-      Array.from({ length: janela }, (_, deslocamento) => {
-        const indice = circular(inicio + deslocamento, total);
-        return { marca: marcas[indice], indice };
-      }),
-    [inicio, janela, marcas, total],
-  );
-
-  if (total === 0) return null;
-
-  const destaque = circular(inicio + Math.min(1, janela - 1), total);
-  const ativa = fixada ?? destaque;
-
-  const andar = (avanco: number) => {
-    setInicio((valor) => circular(valor + avanco, total));
-    setFixada(null);
-  };
+  /* Poucas marcas dariam um trilho curto demais para cobrir telas largas:
+     repetir a fila antes de duplicá-la mantém a faixa sempre cheia. */
+  const repeticoes = Math.max(1, Math.ceil(6 / marcas.length));
+  const fila = Array.from({ length: repeticoes }, () => marcas).flat();
+  const ritmo = `${fila.length * RITMO}s`;
 
   return (
-    <section className="relative isolate overflow-hidden bg-[#fffdfc] py-16 min-[640px]:py-20 min-[1024px]:min-h-[42.7rem] min-[1024px]:pb-[1.8rem] min-[1024px]:pt-[3.9rem]">
+    <section className="relative isolate overflow-hidden bg-[#fffdfc] py-16 min-[640px]:py-20 min-[1024px]:min-h-[40rem] min-[1024px]:pb-[1.8rem] min-[1024px]:pt-[3.9rem]">
+      <style>{CSS_TICKER}</style>
+
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_74%_44%,rgba(214,24,34,0.05),transparent_34%),radial-gradient(circle_at_16%_10%,rgba(214,24,34,0.022),transparent_36%)]"
         aria-hidden
@@ -115,7 +135,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
         <span className="absolute left-32 top-2 h-[26rem] w-11 rounded-full bg-gradient-to-b from-transparent via-graf-200/70 to-transparent" />
       </div>
 
-      <div className="container-jb relative z-10 max-w-[110rem] min-[1024px]:pt-16">
+      <div className="container-jb relative z-10 max-w-[110rem] min-[1024px]:pt-12">
         <div className="pointer-events-none absolute top-0 hidden w-max items-center gap-5 min-[1024px]:right-10 min-[1024px]:flex min-[1840px]:-right-10">
           <span className="grid size-[3.15rem] shrink-0 place-items-center rounded-full bg-jb-50/70 text-graf-800">
             <Sparkles className="size-[1.05rem]" aria-hidden />
@@ -129,7 +149,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
           </p>
         </div>
 
-        <div className="grid gap-12 min-[1024px]:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] min-[1024px]:items-center min-[1600px]:grid-cols-[30rem_minmax(0,1fr)] min-[1024px]:gap-x-12 min-[1360px]:gap-x-[5.5rem]">
+        <div className="grid gap-12 min-[1024px]:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] min-[1024px]:items-center min-[1024px]:gap-x-12 min-[1360px]:gap-x-[5.5rem] min-[1600px]:grid-cols-[30rem_minmax(0,1fr)]">
           <div>
             <div className="flex items-center gap-4">
               <span className="h-[2px] w-9 shrink-0 rounded-full bg-jb-600" aria-hidden />
@@ -167,106 +187,29 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
             </div>
           </div>
 
-          <div
-            className="relative min-w-0 min-[1840px]:-mr-[8.25rem]"
-            onMouseEnter={() => setParado(true)}
-            onMouseLeave={() => {
-              setParado(false);
-              setFixada(null);
-            }}
-            onFocusCapture={() => setParado(true)}
-            onBlurCapture={() => setParado(false)}
-          >
-            <div className="relative px-0 min-[640px]:px-[4.75rem]">
-              <button
-                type="button"
-                onClick={() => andar(-1)}
-                aria-label="Marcas anteriores"
-                className="foco-jb absolute left-0 top-1/2 hidden size-[3.6rem] -translate-y-1/2 place-items-center rounded-full border border-graf-100 bg-white text-graf-600 shadow-[0_16px_36px_-22px_rgba(17,24,39,0.4)] transition hover:-translate-x-0.5 hover:border-jb-200 hover:text-jb-600 min-[640px]:grid"
-              >
-                <ArrowLeft className="size-[1.3rem]" aria-hidden />
-              </button>
-
-              <div className="overflow-hidden">
-                <ul className="flex min-w-0 items-center gap-3.5">
-                {visiveis.map(({ marca, indice }) => {
-                  const arte = arteDaMarca(marca);
-                  const selecionada = indice === ativa;
-                  return (
-                    <li key={`${marca.slug}-${indice}`}>
-                      <Link
-                        href={`/marcas/${marca.slug}`}
-                        onMouseEnter={() => setFixada(indice)}
-                        onFocus={() => setFixada(indice)}
-                        className={`group foco-jb flex h-[12rem] w-[16.4rem] shrink-0 flex-col items-center justify-center rounded-[1.4rem] border px-5 text-center transition-all duration-500 ${
-                          selecionada
-                            ? "-translate-y-[6px] scale-[1.055] border-jb-300 bg-white shadow-[0_28px_50px_-26px_rgba(202,20,30,0.42)]"
-                            : "border-graf-100 bg-white/85 shadow-[0_18px_44px_-34px_rgba(17,24,39,0.32)]"
-                        }`}
-                      >
-                        <span className="flex h-[4.4rem] w-full items-center justify-center">
-                          {arte ? (
-                            <Image
-                              src={arte.url}
-                              alt={arte.alt}
-                              width={300}
-                              height={120}
-                              sizes="262px"
-                              className="max-h-[3.9rem] w-auto max-w-[78%] object-contain"
-                            />
-                          ) : (
-                            <span className="text-[1.6rem] font-black tracking-[-0.04em] text-graf-900">
-                              {marca.name}
-                            </span>
-                          )}
-                        </span>
-                        <span className="mt-4 block text-[1.02rem] font-bold text-graf-800">
-                          {marca.name}
-                        </span>
-                        <span className="mt-1.5 block text-[0.6rem] font-bold uppercase leading-[1.5] tracking-[0.2em] text-graf-400">
-                          {legenda(marca)}
-                        </span>
-                      </Link>
+          <div className="min-w-0 min-[1840px]:-mr-[8.25rem]">
+            <div
+              className="jb-marcas relative overflow-hidden py-5 [mask-image:linear-gradient(to_right,transparent,#000_4%,#000_92%,transparent)]"
+              style={{ ["--jb-ritmo" as string]: ritmo }}
+            >
+              <ul className="jb-marcas-trilho flex w-max items-center gap-3.5">
+                {[0, 1].map((copia) =>
+                  fila.map((marca, posicao) => (
+                    <li
+                      key={`${copia}-${posicao}-${marca.slug}`}
+                      aria-hidden={copia === 1 ? true : undefined}
+                    >
+                      <CartaoMarca marca={marca} />
                     </li>
-                  );
-                })}
-                </ul>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => andar(1)}
-                aria-label="Próximas marcas"
-                className="foco-jb absolute right-0 top-1/2 hidden size-[3.6rem] -translate-y-1/2 place-items-center rounded-full border border-graf-100 bg-white text-graf-600 shadow-[0_16px_36px_-22px_rgba(17,24,39,0.4)] transition hover:translate-x-0.5 hover:border-jb-200 hover:text-jb-600 min-[640px]:grid"
-              >
-                <ArrowRight className="size-[1.3rem]" aria-hidden />
-              </button>
+                  )),
+                )}
+              </ul>
             </div>
 
-            <div className="mt-10 flex items-center justify-center gap-8 min-[640px]:justify-start min-[640px]:pl-[13.5rem] min-[1240px]:mt-[4.6rem]">
-              <div className="flex min-w-0 flex-1 items-center gap-2 min-[1024px]:flex-none min-[1024px]:gap-2.5">
-                {marcas.map((marca, indice) => (
-                  <button
-                    key={marca.slug}
-                    type="button"
-                    aria-label={`Ver ${marca.name}`}
-                    aria-current={indice === ativa || undefined}
-                    onClick={() => {
-                      setInicio(circular(indice - 1, total));
-                      setFixada(indice);
-                    }}
-                    className={`foco-jb h-[3px] w-full min-w-0 rounded-full transition-colors min-[1024px]:w-[5.6rem] ${
-                      indice === ativa ? "bg-jb-600" : "bg-graf-200"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="text-[0.78rem] font-bold tracking-[0.14em] text-graf-400">
-                <span className="text-jb-600">{String(ativa + 1).padStart(2, "0")}</span>
-                <span className="mx-1.5 text-graf-300">/</span>
-                {String(total).padStart(2, "0")}
-              </p>
-            </div>
+            <p className="mt-7 flex items-center gap-4 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-graf-400 min-[1024px]:mt-9">
+              <span className="h-[3px] w-16 shrink-0 rounded-full bg-jb-600" aria-hidden />
+              {marcas.length} marcas com equipamentos publicados
+            </p>
           </div>
         </div>
 

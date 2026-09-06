@@ -15,10 +15,10 @@ const MINIMO_PARA_CONTAR = 4;
  * bloco — fundo claro, produto isolado e sombra de contato.
  */
 const FOTO_CURADA: Record<string, string> = {
-  bioseguranca: "/images/categorias/bioseguranca.webp",
-  profilaxia: "/images/categorias/profilaxia.webp",
-  cirurgia: "/images/categorias/cirurgia.webp",
-  "unidade-basica-de-tratamento": "/images/categorias/unidade-basica-de-tratamento.webp",
+  bioseguranca: "/images/categorias/produto-bioseguranca.webp",
+  profilaxia: "/images/categorias/produto-profilaxia.webp",
+  cirurgia: "/images/categorias/produto-cirurgia.webp",
+  "unidade-basica-de-tratamento": "/images/categorias/produto-unidade-basica-de-tratamento.webp",
 };
 
 const VANTAGENS = [
@@ -101,7 +101,7 @@ export async function SecaoCategorias() {
   const [principal, ...outras] = categorias;
 
   return (
-    <section className="relative isolate overflow-hidden bg-[#fffdfc] py-16 min-[768px]:py-20 min-[1024px]:py-24">
+    <section className="relative isolate overflow-hidden bg-[#fffdfc] py-16 min-[768px]:py-20">
       {/* Fundo: halo quente, arcos finíssimos e o consultório entrando pelas bordas. */}
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_14%,rgba(215,25,32,0.06),transparent_30%),radial-gradient(circle_at_6%_54%,rgba(215,25,32,0.05),transparent_26%),linear-gradient(150deg,#fff_0%,#fffafa_100%)]"
@@ -119,20 +119,6 @@ export async function SecaoCategorias() {
         className="pointer-events-none absolute -bottom-[24rem] -left-[18rem] size-[44rem] rounded-full border border-jb-100"
         aria-hidden
       />
-
-      <div
-        className="pointer-events-none absolute -left-10 bottom-0 hidden w-[clamp(10rem,13vw,15rem)] opacity-70 blur-[2px] min-[1280px]:block"
-        aria-hidden
-      >
-        <Image
-          src="/images/next-step/clinic-chair-left.webp"
-          alt=""
-          width={260}
-          height={566}
-          sizes="240px"
-          className="h-auto w-full object-contain"
-        />
-      </div>
 
       <p
         className="pointer-events-none absolute left-[5rem] top-[8.5rem] hidden text-[0.6rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-400 min-[1600px]:block"
@@ -168,7 +154,7 @@ export async function SecaoCategorias() {
         as etapas
       </p>
 
-      <div className="container-jb relative z-10 max-w-[112rem] min-[1600px]:px-[9rem]">
+      <div className="container-jb relative z-10 max-w-[115rem]">
         {/* ── Cabeçalho editorial ─────────────────────────────────────────── */}
         <div className="grid gap-7 min-[1024px]:grid-cols-[minmax(0,1fr)_auto] min-[1024px]:items-end">
           <div>
@@ -203,11 +189,11 @@ export async function SecaoCategorias() {
         </div>
 
         {/* ── Destaque + lista ────────────────────────────────────────────── */}
-        <div className="mt-9 grid gap-4 min-[1024px]:grid-cols-[minmax(0,1.1fr)_minmax(24rem,0.9fr)] min-[1024px]:gap-5">
+        <div className="mt-10 grid gap-4 min-[1024px]:grid-cols-[minmax(0,1.16fr)_minmax(26rem,0.84fr)] min-[1024px]:gap-5">
           <CategoriaPrincipal categoria={principal} />
 
           {outras.length > 0 ? (
-            <ul className="grid gap-4 min-[1024px]:gap-5">
+            <ul className="grid gap-4 min-[1024px]:grid-rows-3 min-[1024px]:gap-5">
               {outras.map((categoria, indice) => (
                 <li key={categoria.slug} className="min-w-0">
                   <CategoriaCompacta categoria={categoria} numero={indice + 2} />
@@ -253,20 +239,19 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
   return (
     <Link
       href={`/categoria/${categoria.slug}`}
-      className="group relative grid min-h-[29rem] overflow-hidden rounded-[2rem] bg-[#111214] text-white shadow-[0_30px_76px_-50px_rgba(55,0,0,0.55)] transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-jb-500 min-[640px]:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]"
+      className="group relative grid min-h-[30rem] overflow-hidden rounded-[2rem] bg-[#111214] text-white shadow-[0_30px_76px_-50px_rgba(55,0,0,0.55)] transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-jb-500 min-[640px]:grid-cols-[minmax(0,0.87fr)_minmax(0,1.13fr)] min-[1024px]:min-h-[24.5rem]"
     >
       <div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_58%_46%,rgba(226,22,30,0.5),transparent_38%),radial-gradient(circle_at_16%_92%,rgba(150,6,14,0.35),transparent_36%),linear-gradient(118deg,#0c0c0e_0%,#150609_54%,#2a070b_100%)]"
+        className="absolute inset-0 bg-[radial-gradient(120%_90%_at_100%_50%,rgba(226,22,30,0.42),transparent_58%),radial-gradient(circle_at_14%_96%,rgba(150,6,14,0.3),transparent_40%),linear-gradient(118deg,#0c0c0e_0%,#150608_58%,#26070a_100%)]"
         aria-hidden
       />
-      <div className="absolute -left-24 top-1/2 size-[26rem] -translate-y-1/2 rounded-full border border-jb-500/25" aria-hidden />
-      <div className="absolute -left-10 top-1/2 size-[17rem] -translate-y-1/2 rounded-full border border-jb-500/15" aria-hidden />
+      <div className="absolute -left-40 top-1/2 size-[34rem] -translate-y-1/2 rounded-full border border-jb-500/20" aria-hidden />
 
       <div className="relative z-10 flex min-w-0 flex-col justify-end p-7 min-[640px]:p-8 min-[1024px]:p-10">
         <span className="text-[0.64rem] font-black uppercase tracking-[0.2em] text-jb-300">
           Categoria em destaque
         </span>
-        <h3 className="mt-3 max-w-[9ch] text-[clamp(2.1rem,3.4vw,3.7rem)] font-black leading-[0.94] tracking-[-0.055em] text-white">
+        <h3 className="mt-3 text-[clamp(1.9rem,2.9vw,3.3rem)] font-black leading-[0.96] tracking-[-0.05em] text-white [overflow-wrap:normal] hyphens-none">
           {categoria.name}
         </h3>
         <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
@@ -300,7 +285,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
         </div>
       </div>
 
-      <div className="relative min-h-72 overflow-hidden bg-[linear-gradient(150deg,#fff_0%,#fbf7f7_100%)] min-[640px]:min-h-full">
+      <div className="relative min-h-72 overflow-hidden bg-[#f9f7f7] min-[640px]:min-h-full">
         <div className="absolute -right-20 -top-24 size-72 rounded-full border-[3rem] border-jb-50" aria-hidden />
         <div className="absolute -right-6 top-1/2 size-[19rem] -translate-y-1/2 rounded-full border border-jb-100" aria-hidden />
         <div
@@ -326,7 +311,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
             alt={foto.alt}
             fill
             sizes="(max-width: 640px) 100vw, 40vw"
-            className="object-contain p-[9%] transition-transform duration-700 group-hover:scale-[1.05]"
+            className="object-contain p-[6%] transition-transform duration-700 group-hover:scale-[1.04]"
           />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center text-jb-500" aria-hidden>
@@ -344,7 +329,7 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
   return (
     <Link
       href={`/categoria/${categoria.slug}`}
-      className="group grid min-h-[9.3rem] grid-cols-[minmax(0,1fr)_9.5rem] overflow-hidden rounded-[1.5rem] border border-graf-100 bg-white shadow-[0_18px_50px_-44px_rgba(70,0,0,0.35)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-jb-200 hover:shadow-[0_24px_54px_-38px_rgba(80,0,0,0.42)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 min-[640px]:grid-cols-[minmax(0,1fr)_12.5rem]"
+      className="group grid h-full min-h-[8.4rem] grid-cols-[minmax(0,1fr)_9.5rem] overflow-hidden rounded-[1.5rem] border border-graf-100 bg-white shadow-[0_18px_50px_-44px_rgba(70,0,0,0.35)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-jb-200 hover:shadow-[0_24px_54px_-38px_rgba(80,0,0,0.42)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 min-[640px]:grid-cols-[minmax(0,1fr)_14.5rem]"
     >
       <div className="flex min-w-0 flex-col justify-center p-5 min-[640px]:p-7">
         <div className="flex items-center gap-3">
@@ -354,7 +339,7 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
           <span className="h-px w-6 bg-graf-200" aria-hidden />
         </div>
         <div className="mt-2 flex items-center gap-4">
-          <h3 className="min-w-0 text-xl font-black tracking-[-0.038em] text-graf-950 transition-colors group-hover:text-jb-700 min-[640px]:text-[1.6rem]">
+          <h3 className="min-w-0 text-xl font-black leading-[1.1] tracking-[-0.038em] text-graf-950 transition-colors group-hover:text-jb-700 [overflow-wrap:normal] hyphens-none min-[640px]:text-[1.55rem]">
             {categoria.name}
           </h3>
           <span className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-full border border-graf-100 bg-white text-jb-600 shadow-[0_10px_22px_-16px_rgba(17,24,39,0.5)] transition-[transform,border-color] duration-300 group-hover:translate-x-1 group-hover:border-jb-200">
@@ -366,18 +351,14 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
         </p>
       </div>
 
-      <div className="relative overflow-hidden bg-[linear-gradient(160deg,#fff_0%,#fbf8f8_100%)]">
-        <div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_52%_50%,rgba(215,25,32,0.06),transparent_46%)]"
-          aria-hidden
-        />
+      <div className="relative overflow-hidden bg-[#f6f3f4]">
         {foto ? (
           <Image
             src={foto.url}
             alt={foto.alt}
             fill
-            sizes="200px"
-            className="object-contain p-4 transition-transform duration-500 group-hover:scale-[1.07]"
+            sizes="240px"
+            className="object-contain transition-transform duration-500 group-hover:scale-[1.06]"
           />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center text-jb-400" aria-hidden>
