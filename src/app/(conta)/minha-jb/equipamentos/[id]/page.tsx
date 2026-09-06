@@ -31,6 +31,8 @@ import {
 import { distanciaEmDias, formatarData, plural } from "@/lib/format";
 import { ROTULO_CONTRATO, ROTULO_VISITA, STATUS_VISITA_ABERTOS } from "@/lib/manutencao";
 import { ROTULO_OS } from "@/lib/os";
+import { IndiceDoEquipamento } from "@/components/conta/mj-indicadores";
+import { indiceDeManutencao } from "@/lib/indicadores";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -146,10 +148,20 @@ export default async function EquipamentoPage({ params }: { params: Params }) {
 
   if (!equipamento) notFound();
 
-  const [historico, chamadosAbertos] = await Promise.all([
+  const [historico, chamadosAbertos, chamados12Meses] = await Promise.all([
     historicoDoEquipamento(equipamento.id),
     prisma.serviceRequest.count({
       where: { equipmentId: equipamento.id, status: { in: STATUS_CHAMADO_ABERTOS } },
+    }),
+    /* Recorrência dos últimos 12 meses — um dos três fatores do índice de
+       manutenção. Conta chamado aberto E fechado: o que interessa é quantas
+       vezes o aparelho precisou de atendimento, não quantos ainda estão em
+       aberto. */
+    prisma.serviceRequest.count({
+      where: {
+        equipmentId: equipamento.id,
+        createdAt: { gte: new Date(Date.now() - 365 * 86_400_000) },
+      },
     }),
   ]);
 
@@ -164,6 +176,26 @@ export default async function EquipamentoPage({ params }: { params: Params }) {
   const identificacao =
     [equipamento.brandName, equipamento.modelName].filter(Boolean).join(" ") ||
     "Marca e modelo não informados";
+
+  /*
+   * Índice de manutenção deste aparelho.
+   *
+   * A função devolve união discriminada: sem periodicidade cadastrada ou sem
+   * saber desde quando o equipamento está no parque, ela responde "não dá para
+   * calcular" com a lista do que falta — e o componente mostra isso, em vez de
+   * uma nota. Uma nota 100 nesse caso transformaria "ninguém cadastrou" em
+   * "está tudo certo".
+   */
+  const indice = indiceDeManutencao(
+    {
+      ultimaManutencao: equipamento.lastMaintenanceAt,
+      proximaPreventiva: equipamento.nextMaintenanceAt,
+      intervaloDias: equipamento.maintenanceIntervalDays,
+      chamados12Meses,
+      desde: equipamento.purchasedAt ?? equipamento.createdAt,
+    },
+    agora,
+  );
 
   const lugar = [equipamento.location?.name, equipamento.room].filter(Boolean).join(" · ");
 
@@ -410,6 +442,11 @@ export default async function EquipamentoPage({ params }: { params: Params }) {
         </div>
 
         <div className="space-y-6">
+          {/* O índice vem antes da preventiva porque ele resume o que a
+              preventiva detalha — e porque, quando não é calculável, ele diz
+              exatamente o que falta cadastrar para passar a ser. */}
+          <IndiceDoEquipamento indice={indice} />
+
           <Cartao>
             <CabecalhoCartao titulo="Manutenção preventiva" />
             <div className="space-y-3 p-5 text-sm">

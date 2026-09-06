@@ -1066,6 +1066,12 @@ model EquipmentEvent {
   workOrderId String?
   createdAt   DateTime  @default(now())
 
+  /// Situacao para a qual o equipamento passou, quando kind == "status".
+  /// Nulo nos eventos antigos, gravados antes desta coluna existir — e essa
+  /// diferenca importa: sem ela, so daria para adivinhar a situacao lendo o
+  /// titulo em portugues, que e texto de tela e pode mudar.
+  statusTo    EquipmentStatus?
+
   @@index([equipmentId, happenedAt])
 }
 

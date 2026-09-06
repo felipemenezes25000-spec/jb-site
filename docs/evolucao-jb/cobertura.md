@@ -258,6 +258,36 @@ de verdade.
 | 14.7 | Painel para preencher, revisar e publicar | **não iniciado** |
 | 14.9–14.10 | Selo na página do produto, múltiplas unidades | **não iniciado** |
 
+### Fase 11 — produto, pós-compra e instalação registrada (seção 15)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 15.antes | Infraestrutura, voltagem, espaço, dreno | implementado — `infrastructureNotes`, cadastrado no painel |
+| 15.caixa | O que vem e o que é vendido à parte | implementado — `boxContents`; a página declara o resto como à parte |
+| 15.instalacao | Inclusa / opcional / não oferecida | implementado — `installationPolicy`, cinco estados, padrão "não informada" (a seção some) |
+| 15.pos.3 | Prontuário criado, com link autorizado | implementado — `ProntuarioDoPedido`, só quando o equipamento existe |
+| 15.pos.4 | Serial pendente não é inventado | implementado — `Serial` diz "a atribuir", não "—" |
+| 15.pos.2 | Sem "aprovado" enquanto pendente | preexistente, conferido — o bloco só aparece com equipamento criado |
+| 15.instal.1–9 | Fluxo móvel do técnico, checklist, aceite | **adiado para a fase 19** (seção 23 trata do mesmo fluxo) |
+| 15.garantia.6–7 | Marco da garantia | **decisão preservada** — continua da confirmação do pagamento; mudar exigiria snapshot e migração de contratos vigentes (P10) |
+
+### Fase 12 — Área da Clínica como centro de operação (seção 16)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 16.1–16.2 | Shell próprio, priorizar exceções | preexistente, conferido — `PrecisaDeAtencao` ordena por urgência |
+| 16.3 | Contagem por estado e por unidade | validado localmente — filtro de unidade aparece só com mais de uma |
+| 16.4 | Filtros, ordenação, atalhos | preexistente, conferido — `Filtros` com status, unidade e busca |
+| 16.5–16.6 | Orçamentos e próximas manutenções | preexistente, conferido — solicitação, proposta e confirmado são estados distintos |
+| 16.7 | Vazio ensina a primeira ação; sem indicador fabricado | validado localmente — a disponibilidade só aparece com equipamento cadastrado |
+| Disponibilidade | Só com histórico; período, cobertura e fórmula na tela | validado localmente — 33 testes; dias-equipamento, não foto do estado atual |
+| Disponibilidade | Registro incompleto ≠ ausência de parada | validado localmente — `historicoDoParque` devolve `paradas: null` e o percentual não sai |
+| Índice | Nome, pesos declarados, sem laudo de segurança | validado localmente — teste proíbe "risco", "seguro", "bom estado" na leitura |
+| Índice | Dado insuficiente não vira 100 nem zero | validado localmente — união discriminada; teste dedicado |
+| Índice | "Como calculamos" e os fatos por equipamento | validado localmente — os três fatores vão para a tela com peso e observação |
+| 16.8 | Política de timezone e virada de mês/ano | **não iniciado** |
+| 16.9 | Múltiplas unidades e titularidade | preservado — nenhum compartilhamento entre clínicas foi introduzido |
+
 ---
 
 ## Matriz de cenários obrigatórios (seção 26)
@@ -291,7 +321,7 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | OCR ambíguo/falha | não iniciado |
 | Busca com rascunho/dado privado | não iniciado |
 | Comparador/TCO com dado faltante | não iniciado |
-| Indicador sem base temporal | não iniciado |
+| Indicador sem base temporal | validado localmente — parque novo não produz percentual; equipamento sem periodicidade não produz nota |
 | Produção sem URL válida | validado localmente — `resolverOrigem` lança, com teste dedicado |
 | Preview não indexável | não iniciado |
 | Cache com duas contas | validado localmente — nada pessoal entra em escopo cacheado, por construção |

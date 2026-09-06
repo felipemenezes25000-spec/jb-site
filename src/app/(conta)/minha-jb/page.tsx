@@ -15,6 +15,7 @@ import {
 
 import { marcarAvisosComoLidos } from "@/app/acoes/minha-jb";
 import { PrecisaDeAtencao, type Pendencia } from "@/components/conta/mj-atencao";
+import { DisponibilidadeDoParque } from "@/components/conta/mj-indicadores";
 import { Topo } from "@/components/conta/mj-topo";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao, Etiqueta, Vazio } from "@/components/ui/data";
@@ -22,6 +23,11 @@ import { CartaoMetrica, GradeMetricas } from "@/components/ui/metrica";
 import { ROTULO_CHAMADO, ROTULO_URGENCIA, STATUS_CHAMADO_ABERTOS } from "@/lib/assistencia";
 import { exigirCliente } from "@/lib/auth-cliente";
 import { ROTULO_EQUIPAMENTO } from "@/lib/equipamento";
+import {
+  disponibilidadeDoParque,
+  historicoDoParque,
+  type SituacaoDoEquipamento,
+} from "@/lib/indicadores";
 import {
   distanciaEmDias,
   formatarData,
@@ -131,6 +137,8 @@ export default async function VisaoGeralPage() {
     chamadosAbertos,
     orcamentosAbertos,
     pedidosEmAndamento,
+    parque,
+    mudancasDeSituacao,
   ] = await Promise.all([
     prisma.order.findMany({
       where: { customerId: cliente.id },
@@ -256,7 +264,54 @@ export default async function VisaoGeralPage() {
     prisma.order.count({
       where: { customerId: cliente.id, status: { notIn: [...PEDIDOS_ENCERRADOS] } },
     }),
+    /* O parque inteiro, para a disponibilidade. Não é a mesma consulta dos
+       equipamentos em alerta ali em cima: aquela recorta os quatro que pedem
+       atenção hoje, esta precisa de todos, inclusive os desativados, porque
+       eles contribuíram com dias enquanto estiveram. */
+    prisma.equipment.findMany({
+      where: { customerId: cliente.id },
+      select: {
+        id: true,
+        status: true,
+        installedAt: true,
+        purchasedAt: true,
+        createdAt: true,
+      },
+    }),
+    /* Sem recorte de data: uma parada aberta antes da janela precisa ser
+       enxergada, senão o equipamento apareceria operacional o período todo. */
+    prisma.equipmentEvent.findMany({
+      where: { kind: "status", equipment: { customerId: cliente.id } },
+      orderBy: { happenedAt: "asc" },
+      select: { equipmentId: true, happenedAt: true, statusTo: true },
+    }),
   ]);
+
+  /* ------------------------------------------ disponibilidade do parque */
+
+  /* Quando o equipamento passou a existir para a clínica. A instalação vem
+     primeiro porque é quando ele entrou em operação; `createdAt` é o último
+     recurso e subestima o tempo de um aparelho antigo cadastrado agora — erra
+     para menos dias observados, que é o lado certo de errar. */
+  const historico = historicoDoParque({
+    equipamentos: parque.map((equipamento) => ({
+      equipmentId: equipamento.id,
+      entrouEm: equipamento.installedAt ?? equipamento.purchasedAt ?? equipamento.createdAt,
+      situacaoAtual: equipamento.status as SituacaoDoEquipamento,
+    })),
+    mudancas: mudancasDeSituacao.map((evento) => ({
+      equipmentId: evento.equipmentId,
+      quando: evento.happenedAt,
+      situacao: (evento.statusTo as SituacaoDoEquipamento | null) ?? null,
+    })),
+  });
+
+  const disponibilidade = disponibilidadeDoParque({
+    permanencias: historico.permanencias,
+    paradas: historico.paradas,
+    inicio: new Date(agora.getTime() - 365 * DIA),
+    fim: agora,
+  });
 
   /* ------------------------------------------------ próximo compromisso */
 
@@ -483,6 +538,13 @@ export default async function VisaoGeralPage() {
             hrefRotulo="Ver pedidos"
           />
         </GradeMetricas>
+
+        {/* O indicador fica junto dos números, e não escondido numa aba: quando
+            ele diz "ainda não dá para calcular", essa frase é informação — ela
+            explica o que falta para o número existir. */}
+        {totalEquipamentos > 0 ? (
+          <DisponibilidadeDoParque dados={disponibilidade} className="mt-4" />
+        ) : null}
       </section>
 
       {/* ------------------------------------------- próximo compromisso */}

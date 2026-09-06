@@ -361,6 +361,10 @@ export async function mudarStatusEquipamento(
         kind: "status",
         title: `Situação: ${ROTULO_EQUIPAMENTO[status].toLowerCase()}`,
         description: opcoes.nota ?? "",
+        /* O título é texto de tela e pode mudar de redação; a coluna é o que
+           os indicadores leem. Sem ela, calcular quanto tempo um equipamento
+           ficou parado dependeria de casar uma string em português. */
+        statusTo: status,
       },
     });
 

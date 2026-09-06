@@ -144,3 +144,19 @@ Situação possível: `aberta`, `respondida`, `ativada e verificada`.
   objeto privado; se não houver, avaliar upgrade antes de publicar o envio de
   visitante.
 - **Situação:** aberta — **é a de maior risco desta lista**.
+
+---
+
+## P10 — Marco de início da garantia
+
+- **O que falta:** uma decisão da JB, não uma linha de código.
+- **Por que:** a base vigente conta a garantia a partir da confirmação do
+  pagamento. A auditoria propõe contá-la a partir da instalação — o que é
+  defensável, e é uma mudança de direito contratual, não de interface.
+- **Efeito enquanto estiver aberta:** a regra atual continua valendo, sem
+  alteração silenciosa. Nenhum contrato existente foi recalculado.
+- **Passo exato:** a JB decide o marco; só então se modela origem, data
+  inicial, prazo e política com snapshot por equipamento e migração que
+  preserve o direito já adquirido de quem comprou sob a regra antiga.
+- **Situação:** aberta — o escopo (§15.6) manda preservar a política vigente
+  enquanto a decisão não vier, e é o que está feito.

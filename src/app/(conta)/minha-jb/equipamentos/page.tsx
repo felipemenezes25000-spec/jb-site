@@ -47,6 +47,7 @@ export default async function EquipamentosPage({ searchParams }: { searchParams:
   ]);
 
   const status = primeiroValor(params.status);
+  const local = primeiroValor(params.local);
   const termo = primeiroValor(params.q).slice(0, 60);
 
   const todos = await equipamentosDoCliente(cliente.id);
@@ -56,6 +57,7 @@ export default async function EquipamentosPage({ searchParams }: { searchParams:
 
   const lista = todos.filter((equipamento) => {
     if (ehStatus(status) && equipamento.status !== status) return false;
+    if (local && (equipamento.location?.id ?? "sem-local") !== local) return false;
     if (!alvo) return true;
 
     const texto = normalizar(
@@ -78,6 +80,17 @@ export default async function EquipamentosPage({ searchParams }: { searchParams:
     contagem.set(equipamento.status, (contagem.get(equipamento.status) ?? 0) + 1);
   }
 
+  /* Contagem por unidade. O filtro só aparece quando há mais de uma: numa
+     clínica de endereço único ele seria um controle que não separa nada. */
+  const porLocal = new Map<string, { rotulo: string; quantidade: number }>();
+  for (const equipamento of todos) {
+    const chave = equipamento.location?.id ?? "sem-local";
+    const rotulo = equipamento.location?.name ?? "Sem unidade definida";
+    const atual = porLocal.get(chave);
+    if (atual) atual.quantidade += 1;
+    else porLocal.set(chave, { rotulo, quantidade: 1 });
+  }
+
   const grupos: GrupoFiltro[] = [
     {
       nome: "status",
@@ -93,7 +106,22 @@ export default async function EquipamentosPage({ searchParams }: { searchParams:
     },
   ];
 
-  const filtrando = Boolean(status || termo);
+  if (porLocal.size > 1) {
+    grupos.push({
+      nome: "local",
+      rotulo: "Unidade",
+      opcoes: [
+        { valor: "", rotulo: "Todas", quantidade: todos.length },
+        ...[...porLocal.entries()].map(([valor, dados]) => ({
+          valor,
+          rotulo: dados.rotulo,
+          quantidade: dados.quantidade,
+        })),
+      ],
+    });
+  }
+
+  const filtrando = Boolean(status || local || termo);
 
   return (
     <div>
@@ -111,7 +139,7 @@ export default async function EquipamentosPage({ searchParams }: { searchParams:
       {todos.length > 0 ? (
         <Filtros
           base="/minha-jb/equipamentos"
-          parametros={{ status, q: termo }}
+          parametros={{ status, local, q: termo }}
           grupos={grupos}
           busca={{
             nome: "q",
