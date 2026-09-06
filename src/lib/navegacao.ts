@@ -22,6 +22,23 @@ export type ItemMenu = {
  * As descrições descrevem o destino, não prometem nada sobre o produto:
  * quem escreve prazo, garantia ou revisão é a página, com dado do banco.
  */
+/**
+ * Direção principal do cabeçalho.
+ *
+ * Cinco itens: **Equipamentos · Seminovos · Assistência · Manutenção · Central
+ * Técnica**. Busca, Área da Clínica e carrinho continuam à direita, com
+ * prioridade própria.
+ *
+ * Duas mudanças, e as duas têm motivo:
+ *
+ * "Peças e acessórios" saiu da barra e vive dentro de Equipamentos, no mega
+ * menu. Quem procura peça procura pela peça, pela busca ou pelo equipamento a
+ * que ela pertence — raramente por uma aba chamada "peças".
+ *
+ * "Sobre a JB" saiu porque institucional não disputa atenção com o que a
+ * clínica veio fazer. Continua encontrável no rodapé, junto de Estrutura,
+ * Central Técnica, Cases e Depoimentos.
+ */
 export const MENU_PRINCIPAL: ItemMenu[] = [
   {
     rotulo: "Equipamentos",
@@ -35,11 +52,6 @@ export const MENU_PRINCIPAL: ItemMenu[] = [
     descricao: "Equipamentos seminovos disponíveis",
   },
   {
-    rotulo: "Peças e acessórios",
-    href: "/pecas-e-acessorios",
-    descricao: "Peças de reposição e acessórios",
-  },
-  {
     rotulo: "Assistência técnica",
     href: "/assistencia-tecnica",
     descricao: "Abra um chamado e acompanhe o atendimento",
@@ -51,9 +63,9 @@ export const MENU_PRINCIPAL: ItemMenu[] = [
     descricao: "Manutenção preventiva programada",
   },
   {
-    rotulo: "Sobre a JB",
-    href: "/sobre",
-    descricao: "Quem somos e como trabalhamos",
+    rotulo: "Central Técnica",
+    href: "/central-tecnica",
+    descricao: "O que a bancada aprendeu sobre estes equipamentos",
   },
 ];
 
@@ -108,6 +120,8 @@ export const RODAPE_LOJA: ItemMenu[] = [
   { rotulo: "Recondicionados", href: "/recondicionados" },
   { rotulo: "Peças e acessórios", href: "/pecas-e-acessorios" },
   { rotulo: "Marcas", href: "/marcas" },
+  { rotulo: "Comparar equipamentos", href: "/comparar" },
+  { rotulo: "Reparar, seminovo ou novo", href: "/simulador-de-custo" },
 ];
 
 export const RODAPE_ASSISTENCIA: ItemMenu[] = [

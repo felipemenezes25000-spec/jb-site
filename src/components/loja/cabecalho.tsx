@@ -851,6 +851,26 @@ function MenuMobile({
                                       </Link>
                                     </li>
                                   ))}
+                                  {/* Peças saiu da barra principal e vive aqui.
+                                      Na gaveta do celular ela precisa aparecer
+                                      explicitamente: sem esta linha, o único
+                                      caminho seria a busca. */}
+                                  <li>
+                                    <Link
+                                      href="/pecas-e-acessorios"
+                                      className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
+                                    >
+                                      Peças e acessórios
+                                    </Link>
+                                  </li>
+                                  <li>
+                                    <Link
+                                      href="/marcas"
+                                      className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
+                                    >
+                                      Marcas
+                                    </Link>
+                                  </li>
                                 </ul>
                               </li>
                             ) : null}

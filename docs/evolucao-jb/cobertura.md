@@ -383,6 +383,32 @@ de verdade.
 | 21.11 | Limitar requisições e custo; sem processar a cada render | implementado — 6 por minuto; a leitura só roda no clique, e a foto não é guardada |
 | 21.12 | Fixtures de etiqueta boa, ruim, ambígua e falha do provedor | validado localmente — 23 testes |
 
+### Fase 18 — navegação, busca por intenção, comparador e TCO (seção 22)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 22.nav | Equipamentos · Seminovos · Assistência · Manutenção · Central Técnica | implementado — Peças foi para dentro de Equipamentos e Sobre para o rodapé, com o motivo escrito |
+| 22.nav | Peças e institucional continuam encontráveis | implementado — mega menu, gaveta do celular e rodapé |
+| 22.busca.1 | Resultados agrupados de produto, serviço e conteúdo | implementado — quatro grupos numa página |
+| 22.busca.2 | Equipamentos do próprio cliente; nunca de terceiros | implementado — `customerId` da sessão; sem sessão a consulta nem roda |
+| 22.busca.3 | Regras, sinônimos e normalização; IA não é pré-requisito | validado localmente — 21 testes; nenhum modelo envolvido |
+| 22.busca.4 | Os cinco exemplos do escopo | validado localmente — um teste para cada |
+| 22.busca.5 | Dizer por que o resultado é útil; não bloquear busca de produto | validado localmente — intenção **ordena**, não filtra; teste dedicado |
+| 22.busca.6 | Vazio, consulta curta e ordem das respostas | implementado — vazio e curta têm texto próprio |
+| 22.busca.8 | Sem rascunho e sem consulta pessoal em analytics | validado localmente — só publicado; `consultaPodeSerMedida` descarta a consulta inteira |
+| 22.comp.1 | Atributos reais lado a lado | implementado — preço, condição, marca, voltagem, dimensões, peso, garantia, instalação, infra e caixa |
+| 22.comp.2 | Normalizar unidade; ausência não é zero nem vantagem | validado localmente — 25 testes; célula ausente tem tipo próprio |
+| 22.comp.3 | Mobile legível | implementado — um cartão por equipamento abaixo de `lg`, tabela com rolagem acima |
+| 22.comp.4 | "Qual faz sentido para minha clínica?" com três perguntas | implementado — volume, infraestrutura e prioridade |
+| 22.comp.5 | Recomendar só por regra justificada; explicar lacunas | validado localmente — empate não elege; dado ausente vira lacuna escrita, não vantagem |
+| 22.tco.1–2 | Mesmo horizonte; distinguir conhecido, premissa e ausente | validado localmente — três origens, e "sem orçamento" não é reparo grátis |
+| 22.tco.4 | Sem vida útil, falha, revenda ou economia futura | validado localmente — teste sobre a ressalva |
+| 22.tco.5 | Não somar duas vezes o custo de parada | validado localmente — `custoDeParada` com a guarda e o teste |
+| 22.tco.6 | Memória de cálculo e aviso de simulação | implementado — linha a linha, com a origem de cada valor |
+| 22.tco.3 | Diferenças não monetárias ao lado do custo | implementado — observações por cenário |
+| 22.busca.7 | Combobox acessível com autocomplete | **não iniciado** — a busca atual é formulário, sem autocomplete |
+| 22.tco.7 | Integrar orçamentos do usuário com autorização | **não iniciado** — hoje o valor do reparo é digitado |
+
 ---
 
 ## Matriz de cenários obrigatórios (seção 26)
@@ -414,8 +440,8 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | QR privado sem sessão | validado localmente — redireciona para login com retorno construído; nada privado no HTML antes |
 | QR público | implementado — aponta para `/verificar/<código>`; sem série, sem token, sem documento |
 | OCR ambíguo/falha | validado localmente — alternativas em vez de palpite; falha e resposta inválida têm motivo próprio e caem no manual |
-| Busca com rascunho/dado privado | não iniciado |
-| Comparador/TCO com dado faltante | não iniciado |
+| Busca com rascunho/dado privado | validado localmente — só publicado; equipamento só do dono; consulta com dado pessoal não vira evento |
+| Comparador/TCO com dado faltante | validado localmente — 25 testes; ausência não é zero, não é vantagem e bloqueia a comparação |
 | Indicador sem base temporal | validado localmente — parque novo não produz percentual; equipamento sem periodicidade não produz nota |
 | Produção sem URL válida | validado localmente — `resolverOrigem` lança, com teste dedicado |
 | Preview não indexável | não iniciado |
