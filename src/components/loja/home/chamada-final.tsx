@@ -10,10 +10,10 @@ export function ChamadaFinal({ configuracoes: s }: { configuracoes: SettingsMap 
   const horario = s.horario.trim();
 
   return (
-    <section className="bg-white py-14 md:py-18 lg:py-20">
+    <section className="bg-white py-14 md:py-20">
       <div className="container-jb max-w-[112rem]">
         <div className="relative overflow-hidden rounded-[1.8rem] bg-jb-600 px-6 py-8 text-white shadow-[0_28px_70px_-46px_rgba(130,0,0,0.6)] sm:px-8 md:py-10 lg:px-12">
-          <div className="absolute -right-16 -top-28 size-80 rounded-full border-[3.5rem] border-white/7" aria-hidden />
+          <div className="absolute -right-16 -top-28 size-80 rounded-full border-[3.5rem] border-white/[0.07]" aria-hidden />
           <div className="absolute bottom-0 right-[27%] h-full w-px rotate-[25deg] bg-white/10" aria-hidden />
 
           <div className="relative z-10 grid gap-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">
@@ -50,15 +50,15 @@ export function ChamadaFinal({ configuracoes: s }: { configuracoes: SettingsMap 
                   href={whatsappHref(whatsapp, "Olá! Vim pelo site da JB e gostaria de falar com a equipe.")}
                   target="_blank"
                   rel="noopener noreferrer"
-                  variante="claro"
+                  variante="contorno-claro"
                   tamanho="lg"
-                  className="w-full border-white/35 bg-transparent text-white hover:bg-white hover:text-jb-700 sm:w-auto lg:w-full"
+                  className="w-full sm:w-auto lg:w-full"
                 >
                   <MessageCircle className="size-4" aria-hidden />
                   Falar no WhatsApp
                 </LinkBotao>
               ) : (
-                <LinkBotao href="/contato" variante="claro" tamanho="lg" className="w-full border-white/35 bg-transparent text-white hover:bg-white hover:text-jb-700 sm:w-auto lg:w-full">
+                <LinkBotao href="/contato" variante="contorno-claro" tamanho="lg" className="w-full sm:w-auto lg:w-full">
                   Falar com a JB
                 </LinkBotao>
               )}
