@@ -94,13 +94,13 @@ existem para que nenhuma fase desapareça da matriz.
 | Fase | Seção do prompt | Situação |
 |---|---|---|
 | 3 — conta obrigatória e checkout | 7 | **validado localmente** — detalhe abaixo |
-| 4 — domínio canônico e configuração | 8 | não iniciado |
-| 5 — shell pública, cache, performance | 9 | não iniciado |
-| 6 — analytics, funis, erros, CWV | 10 | não iniciado |
-| 7 — CI e validação contínua | 11 | não iniciado |
-| 8 — identidade de produto e Prontuário | 12 | não iniciado |
-| 9 — assistência sem conta, mídia, SOS | 13 | não iniciado |
-| 10 — Seminovo JB Certificado | 14 | não iniciado |
+| 4 — domínio canônico e configuração | 8 | **validado localmente** (8.5 aguarda P2) |
+| 5 — shell pública, cache, performance | 9 | **validado localmente**, com 31 páginas em migração declarada |
+| 6 — analytics, funis, erros, CWV | 10 | **implementado**; emissão em 3 de 30 eventos; observabilidade de erro não iniciada |
+| 7 — CI e validação contínua | 11 | **validado localmente**; branch protection aguarda acesso |
+| 8 — identidade de produto e Prontuário | 12 | **validado localmente**; a ficha real ainda não usa os componentes novos |
+| 9 — assistência sem conta, mídia, SOS | 13 | **validado localmente** na mídia; SOS não iniciado |
+| 10 — Seminovo JB Certificado | 14 | **validado localmente** no domínio e na verificação; painel não iniciado |
 | 11 — produto, pós-compra, instalação | 15 | não iniciado |
 | 12 — Área da Clínica como centro de operação | 16 | não iniciado |
 | 13 — SEO comercial e Merchant Center | 17 | não iniciado |
@@ -150,6 +150,116 @@ executado. Os quatro restantes e o motivo estão em `validacao.md`.
 
 ---
 
+---
+
+## Fases 4 a 10 — resumo por requisito
+
+### Fase 4 — domínio canônico e configuração (seção 8)
+
+| # | Requisito | Implementação | Situação |
+|---|---|---|---|
+| 8.1 | Centralizar a resolução da URL pública | `src/lib/site-url.ts`; os 4 pontos que liam `process.env` passaram a ler daqui | validado localmente |
+| 8.2 | `NEXT_PUBLIC_SITE_URL` obrigatória em produção | `resolverOrigem` **lança** quando falta em `VERCEL_ENV=production` | validado localmente — 18 testes |
+| 8.3 | Validar URL absoluta, protocolo, HTTPS, recusar localhost | `conferirOrigem` | validado localmente |
+| 8.4 | Diferenciar produção, preview, CI e desenvolvimento | por `VERCEL_ENV`; `NODE_ENV=production` **não** é produção | validado localmente — teste explícito |
+| 8.5 | A URL de produção representa o domínio confirmado | — | **aguardando dependência externa** — P2 |
+| 8.6 | Redirecionamento canônico sem laços | `proxy.ts`, 308, só em produção, com três travas contra laço | implementado — sem execução em produção |
+| 8.7 | Preview `noindex`, áreas privadas fora do sitemap | já existia; `/verificar` acrescentado às exclusões | validado localmente |
+| 8.8 | Preservar metadados por produto/categoria/CMS | inalterados | validado localmente — build |
+| 8.9 | Atualizar `.env.example` e documentação | `.env.example` explica os quatro ambientes e o formato | validado localmente |
+| 8.10 | Procedimento exato de ativação | `pendencias-externas.md`, P2 | validado localmente |
+
+### Fase 5 — shell pública, cache e performance (seção 9)
+
+| # | Requisito | Implementação | Situação |
+|---|---|---|---|
+| 9.1 | Ler a documentação instalada antes de ativar `cacheComponents` | lida; as 7 configurações de segmento incompatíveis foram removidas com a citação no comentário | validado localmente |
+| 9.2 | Medir o caminho atual do layout | 4 leituras num `Promise.all`, 2 delas dependentes de cookie | validado localmente |
+| 9.3 | Separar casca pública de conteúdo pessoal | `loja-publica.ts` + `cabecalho-pessoal.tsx` | validado localmente |
+| 9.4 | Sessão e carrinho em fronteiras dinâmicas pequenas | dois `<Suspense>` com esqueleto do mesmo tamanho | validado localmente |
+| 9.5 | Logo, busca, acesso e carrinho imediatos | a casca prerenderiza; o contador transmite depois | validado localmente — home saiu de `ƒ` para `◐` |
+| 9.6 | Cachear dados públicos | configurações, categorias, rodapé e vitrine da home | validado localmente |
+| 9.7 | Tags e invalidação nas mutações do painel | `updateTag` em catálogo e configurações | validado localmente |
+| 9.8 | Nada pessoal em cache compartilhado | por construção: quem lê cookie está fora de todo escopo `use cache` | validado localmente |
+| 9.9 | Auditar páginas, metadata e layouts | feito — foi o que revelou o rodapé e o `generateMetadata` raiz | validado localmente |
+| 9.10 | Preservar a separação da Área da Clínica e do painel | shells intactos | validado localmente — E2E |
+| 9.11 | Evitar provider global para dois contadores | nenhum provider; são dois componentes de servidor | validado localmente |
+| 9.14 | Documentar a incompatibilidade quando houver | **31 páginas da loja e as áreas autenticadas com `instant = false`** | **implementado — pendência declarada** |
+
+**O que a fase 5 NÃO entregou, e está escrito:** as 31 páginas restantes da
+loja não foram migradas para Cache Components. Elas usam `instant = false`, que
+é a saída documentada para migrar rota a rota. A casca e a home foram migradas
+de verdade.
+
+### Fase 6 — analytics, funis e Core Web Vitals (seção 10)
+
+| # | Requisito | Implementação | Situação |
+|---|---|---|---|
+| 10.1 | Verificar se `codigo_analytics` é usado | **não era** — campo validado, zero instrumentação | validado localmente |
+| 10.2 | Camada pequena e tipada, com modo de desenvolvimento | `src/lib/analytics/` | validado localmente — 20 testes |
+| 10.3 | GA4 por identificador validado, sem HTML arbitrário | o componente monta o script | validado localmente |
+| 10.4 | Evento, versão, origem, payload, momento e deduplicação | `taxonomia.ts` + `taxonomia-eventos.md` | validado localmente |
+| 10.5 | Minimizar dados | lista de permissão + filtro de dado pessoal + rota normalizada | validado localmente |
+| 10.6 | Consentimento com recusa e revogação | padrão não medir; revogar para na hora | validado localmente |
+| 10.7 | Resultado só depois da confirmação | `maintenance_lead` só no sucesso do servidor | validado localmente |
+| 10.8 | Tratar dupla emissão | `Set` por aba + `id_ocorrencia` derivado da referência | validado localmente |
+| 10.9 | Coletar Core Web Vitals | `useReportWebVitals`, LCP/INP/CLS | implementado |
+| 10.11 | Metas no p75 | declaradas como **metas**, sem número afirmado | validado localmente |
+| 10.15 | CSP com origens mínimas | duas origens do GA, com a justificativa de por que entram no build | validado localmente |
+| 10.x | Emissão nos demais eventos | 3 de 30 emitem hoje | **implementado parcialmente** — lista evento a evento em `taxonomia-eventos.md` |
+| 10.13 | Observabilidade de erros (Sentry ou equivalente) | — | **não iniciado** |
+
+### Fase 7 — CI (seção 11)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 11.1–11.5 | Workflow único, Node fixo, Postgres isolado, gates de PR | validado localmente — `.github/workflows/validacao.yml` |
+| 11.8 | WCAG 2.2 AA | validado localmente — tags `wcag22a`/`wcag22aa`, 36 medições, 0 problemas |
+| 11.9 | Larguras 320…1440 | validado localmente — **7 larguras**, 126 medições, 0 problemas |
+| 11.13 | Chromium e WebKit | **parcial** — só Chromium, com o motivo escrito em `ci.md` |
+| 11.15 | Branch protection | **aguardando dependência externa** — precisa de acesso de administrador |
+| 11.6 | Regressão visual nas rotas estratégicas | **não iniciado** |
+
+### Fase 8 — identidade de produto e prontuário (seção 12)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 12.1 | Componentes de domínio | validado localmente — `src/components/dominio/prontuario.tsx` |
+| 12.2 | Direção visual preservada | validado localmente |
+| 12.3 | Demonstração pública interativa e rotulada | validado localmente — 3 abas, sem consulta ao banco |
+| 12.4 | Prontuário real usando os componentes | **não iniciado** — a ficha de `/minha-jb/equipamentos/[id]` ainda usa os componentes antigos |
+
+### Fase 9 — assistência sem conta e mídia (seção 13)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 13.1.1–13.1.4 | Upload próprio, escopado, privado | validado localmente |
+| 13.1.6 | Limites 6 fotos/10 MB, 1 vídeo/30 s/40 MB | validado localmente |
+| 13.1.7 | TTL de 24 h | validado localmente |
+| 13.1.8–13.1.10 | Tipo real, duração por metadados, HEIC/MOV | validado localmente — 17 testes |
+| 13.1.11 | Remover metadados de localização | validado localmente |
+| 13.1.12 | Limite compatível com múltiplas instâncias | validado localmente — contagem no banco |
+| 13.1.14–13.1.16 | Vínculo idempotente e limpeza com proteção de corrida | validado localmente |
+| 13.1.17 | Falha de mídia não apaga o relato | validado localmente — vínculo fora da transação |
+| 13.1.5 | Upload direto assinado | **não iniciado** — o limite de payload do host ainda não foi confirmado |
+| 13.2 | Experiência de captura (câmera, galeria, vídeo) | **parcial** — limites e retry existem; os três botões separados não |
+| 13.3 | SOS Equipamento | **não iniciado** |
+
+### Fase 10 — Seminovo JB Certificado (seção 14)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 14.1–14.6 | Certificação por unidade, versão, itens, estados | validado localmente — 17 testes |
+| 14.5 | Não inflar verificação com itens não aplicáveis | validado localmente — teste dedicado |
+| 14.8 | Correção preserva versão e auditoria | implementado — `CertificationRevision` |
+| 14.11 | Página pública de verificação por código opaco | validado localmente |
+| 14.12 | Revogada e vendida ditas com clareza | validado localmente |
+| 14.13 | Sem selo retroativo | validado localmente — padrão `sem_certificacao` |
+| 14.7 | Painel para preencher, revisar e publicar | **não iniciado** |
+| 14.9–14.10 | Selo na página do produto, múltiplas unidades | **não iniciado** |
+
+---
+
 ## Matriz de cenários obrigatórios (seção 26)
 
 Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
@@ -158,7 +268,7 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 |---|---|
 | Home com produto real | validado localmente — narrativa do ciclo de vida com preço e condição do catálogo |
 | Home sem foto/produto | implementado — a coluna some e o texto ocupa a faixa; ainda sem execução com catálogo vazio |
-| Demonstração pública | não iniciado |
+| Demonstração pública | validado localmente — interativa, rotulada, sem consulta ao banco |
 | CMS com texto legado | validado localmente — migrado, com cópia guardada e edição humana respeitada |
 | Plano sem base comercial confirmada | validado localmente — sem base declarada, a tela mostra “Sob consulta” e nenhuma unidade é presumida |
 | Calculadora com zero/dado inválido | validado localmente — 19 testes cobrem NaN, negativo, zero e implausível; a tela lista o que falta, sem NaN |
@@ -171,10 +281,10 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | Seminovo único disputado | validado localmente — 5 pedidos simultâneos, uma venda |
 | Pedido guest antigo | implementado — a conferência de e-mail em `/pedido/[numero]` continua valendo e regrava o cookie; **sem execução automatizada** |
 | Assistência guest com mídia | não iniciado |
-| Upload falso/longo/expirado/alheio | não iniciado |
-| Limpeza e confirmação concorrentes | não iniciado |
+| Upload falso/longo/expirado/alheio | validado localmente — 17 testes de tipo real e duração; escopo por sessão |
+| Limpeza e confirmação concorrentes | implementado — condição de estado no WHERE dos dois lados; sem execução simultânea dirigida |
 | Prontuário de outra conta | não iniciado |
-| Certificação incompleta/revogada | não iniciado |
+| Certificação incompleta/revogada | validado localmente — publicação recusada; revogada dita na verificação |
 | Instalação reenviada | não iniciado |
 | QR privado sem sessão | não iniciado |
 | QR público | não iniciado |
@@ -182,11 +292,11 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | Busca com rascunho/dado privado | não iniciado |
 | Comparador/TCO com dado faltante | não iniciado |
 | Indicador sem base temporal | não iniciado |
-| Produção sem URL válida | não iniciado |
+| Produção sem URL válida | validado localmente — `resolverOrigem` lança, com teste dedicado |
 | Preview não indexável | não iniciado |
-| Cache com duas contas | não iniciado |
-| Alteração de preço/estoque/CMS | não iniciado |
-| Analytics recusado | não iniciado |
+| Cache com duas contas | validado localmente — nada pessoal entra em escopo cacheado, por construção |
+| Alteração de preço/estoque/CMS | validado localmente — `updateTag` no painel; E2E de catálogo confirma |
+| Analytics recusado | validado localmente — o script não entra na página de quem recusou |
 | Evento de compra | não iniciado |
 | Artigo sem revisão/autor real | não iniciado |
 | Review/case sem autorização | não iniciado |

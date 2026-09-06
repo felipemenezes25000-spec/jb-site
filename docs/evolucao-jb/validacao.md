@@ -240,3 +240,52 @@ asserção a mais — o foco visível no campo de senha) e o de frete.
 | Sessão expirada ou conta inativa | `garantirCompradorAutenticado` reconsulta `active` no banco a cada compra. Sem teste automatizado: exige manipular o cookie ou desativar a conta no meio do fluxo |
 | Erro de frete/estoque/provedor com retomada | os caminhos existem e devolvem estado; sem execução dirigida nesta fase |
 | Pedido de visitante antigo | o mecanismo (conferência de e-mail) não foi tocado e continua no código; sem execução nesta fase |
+
+### Fases 4 a 10 — validação conjunta
+
+Executada em 6 de setembro de 2026, servidor em `localhost:50440`, banco de
+desenvolvimento.
+
+| Comando | Resultado |
+|---|---|
+| `pnpm typecheck` | **exit 0** |
+| `pnpm test:unit` | **exit 0** — 249 → **321 testes** |
+| `pnpm build` | **exit 0**, com Cache Components ligado |
+| `E2E_BASE_URL=… pnpm e2e` | **exit 0** — **52 testes** |
+| `pnpm prova:atomicidade` | **exit 0** — "TUDO OK" |
+| `node scripts/acessibilidade.mjs --so=publico` | **exit 0** — 36 medições, 0 problemas, **tags WCAG 2.2** |
+| `node scripts/responsivo.mjs --so=publico` | **exit 0** — **126 medições** (7 larguras), 0 problemas |
+
+Testes novos: 18 em `site-url`, 20 em `analytics-taxonomia`, 17 em
+`midia-real`, 17 em `certificacao`.
+
+#### Evidência da fase 5
+
+A tabela de rotas do `pnpm build` mudou o símbolo da home de `ƒ` (dinâmica) para
+`◐` (parcialmente prerenderizada). É a medição, não a intenção.
+
+#### Seis regressões encontradas pela própria validação
+
+Nenhuma estava no roteiro. Todas foram corrigidas antes deste registro.
+
+| O que quebrou | Causa | Correção |
+|---|---|---|
+| Console da home com erro em toda visita | `metadataBase: new URL(...)` dentro de escopo `use cache` — `URL` não é serializável | textos cacheados; o objeto `Metadata` montado fora |
+| `getByLabel("Situação")` ambíguo no painel | `<Activity>` do Cache Components mantém a rota anterior montada e escondida | localizador escopado ao painel do formulário |
+| "Já recebido" ambíguo no pedido | idem | `filter({ visible: true })` no auxiliar, com o motivo escrito |
+| `/admin/entrar` e o layout do painel acusando "runtime data" | `instant = false` estava no grupo acima, não no segmento que levanta a validação | opt-out no próprio segmento |
+| `aria-controls` das abas da demonstração apontando para id inexistente | só o painel corrente era renderizado | os três painéis passam a existir, com `hidden` |
+| Botão de aba saindo da tela em 320px | a largura entrou na auditoria nesta rodada | `flex-wrap` na lista de abas |
+
+As duas últimas são da demonstração entregue na fase 8 e foram encontradas
+pelos portões de acessibilidade e responsividade — não por leitura de código.
+
+#### O que continua sem execução
+
+| Item | Motivo |
+|---|---|
+| Redirecionamento canônico em produção | só age com `VERCEL_ENV=production`; não há como exercitá-lo localmente |
+| Core Web Vitals reais | exige tráfego real e GA4 configurado |
+| Limpeza e vínculo simultâneos | a proteção está nos dois lados (condição de estado no WHERE); falta uma execução concorrente dirigida |
+| Emissão de 27 dos 30 eventos | a camada existe; falta a chamada em cada tela |
+| CI no GitHub | o workflow existe; nunca rodou lá |

@@ -100,3 +100,47 @@ Situação possível: `aberta`, `respondida`, `ativada e verificada`.
 - **Passo exato de ativação:** subir a foto em `/admin/conteudo/midia` e
   escolhê-la como capa em `/admin/conteudo/paginas/estrutura`.
 - **Situação:** aberta.
+
+---
+
+## P7 — Proteção de branch no GitHub
+
+- **O que falta:** marcar `Tipos e testes de unidade`, `Build de produção` e
+  `E2E, acessibilidade e responsividade` como checks obrigatórios em `main` e
+  `plataforma`.
+- **Por que:** o workflow existe e roda, mas workflow criado não é check
+  obrigatório ativado. Até isso ser feito, o pipeline informa e não impede.
+- **Responsável:** quem tem acesso de administrador ao repositório.
+- **Passo exato:** Settings › Branches › Add rule › "Require status checks to
+  pass before merging" › marcar os três.
+- **Situação:** aberta.
+
+---
+
+## P8 — Propriedade do GA4
+
+- **O que falta:** criar a propriedade e salvar o identificador `G-XXXXXXXXXX`
+  em `/admin/configuracoes`.
+- **Por que:** sem identificador válido nada é carregado — nem o aviso de
+  consentimento aparece. A camada de eventos, o filtro de privacidade e o CSP
+  estão prontos.
+- **Efeito enquanto estiver aberta:** nenhuma métrica é coletada. As Core Web
+  Vitals reais dependem disso e de tráfego.
+- **Situação:** aberta.
+
+---
+
+## P9 — Objeto privado no Vercel Blob
+
+- **O que falta:** confirmar que a loja de blobs aceita `access: "private"`.
+- **Por que:** a mídia que o visitante anexa ao chamado é gravada como objeto
+  privado. Se o plano não suportar, `@/lib/upload` cai para objeto público com
+  nome de 32 hexadecimais e registra um aviso — e nome difícil de adivinhar
+  **não é controle de acesso**: quem receber o link abre o arquivo sem sessão.
+- **Efeito enquanto estiver aberta:** em produção, foto de defeito de clínica
+  pode ficar acessível por URL. Localmente o arquivo vai para `.arquivos/`,
+  fora de `public/`.
+- **Passo exato:** painel da Vercel › Storage › Blob › confirmar suporte a
+  objeto privado; se não houver, avaliar upgrade antes de publicar o envio de
+  visitante.
+- **Situação:** aberta — **é a de maior risco desta lista**.
