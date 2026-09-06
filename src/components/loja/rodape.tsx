@@ -353,41 +353,44 @@ export async function Rodape() {
               ) : null}
             </div>
 
+            {/* As redes ficam lado a lado, com uma legenda só: empilhadas, cada
+                rede nova esticaria o cartão e tiraria o rodapé da altura da
+                referência. */}
             {sociais.length > 0 ? (
-              <ul className="mt-2 border-t border-jb-100 pt-2">
-                {sociais.map((rede) => {
-                  const marca = SOCIAL[rede.chave];
-                  return (
-                    <li key={rede.chave}>
-                      <a
-                        href={rede.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="foco-jb group grid grid-cols-[1.75rem_minmax(0,1fr)] gap-x-3 rounded-xs py-[0.25rem]"
-                      >
-                        <span
-                          className="mt-0.5 flex size-7 items-center justify-center justify-self-center rounded-[0.55rem]"
-                          style={{ backgroundColor: marca.cor }}
-                          aria-hidden
+              <div className="mt-2 border-t border-jb-100 pt-2">
+                <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
+                  {sociais.map((rede) => {
+                    const marca = SOCIAL[rede.chave];
+                    return (
+                      <li key={rede.chave}>
+                        <a
+                          href={rede.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="foco-jb group flex min-h-9 items-center gap-2.5 rounded-xs pointer-coarse:min-h-11"
                         >
-                          <svg viewBox="0 0 24 24" fill="#fff" className="size-[1.05rem]">
-                            <path d={marca.glifo} />
-                          </svg>
-                        </span>
-                        <span className="min-w-0">
+                          <span
+                            className="flex size-7 shrink-0 items-center justify-center rounded-[0.55rem]"
+                            style={{ backgroundColor: marca.cor }}
+                            aria-hidden
+                          >
+                            <svg viewBox="0 0 24 24" fill="#fff" className="size-[1.05rem]">
+                              <path d={marca.glifo} />
+                            </svg>
+                          </span>
                           <span className="flex items-center gap-1.5 text-[0.95rem] font-semibold text-graf-800 transition-colors group-hover:text-jb-700">
                             {rede.rotulo}
                             <ArrowUpRight className="size-3.5" aria-hidden />
                           </span>
-                          <span className="mt-0.5 block text-[0.8rem] text-graf-400">
-                            Acompanhe nossas novidades
-                          </span>
-                        </span>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="pl-[2.375rem] text-[0.8rem] text-graf-400">
+                  Acompanhe nossas novidades
+                </p>
+              </div>
             ) : null}
           </section>
 
