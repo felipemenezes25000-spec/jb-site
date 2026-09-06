@@ -360,7 +360,16 @@ export default async function ProdutoPage({ params }: Props) {
             />
           </div>
 
-          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          {/* A galeria acompanha a leitura da coluna de compra.
+
+              Sem isso, a célula da foto ocupa as duas linhas da grade e fica
+              tão alta quanto a coluna da direita — que tem preço, serviços,
+              condições e atalhos. O resultado era meia tela branca à esquerda
+              enquanto a pessoa lia as condições de compra. Grudando a galeria
+              (`self-start` é obrigatório: o `stretch` padrão de item de grade
+              anula o sticky), a foto do equipamento fica ao lado de cada
+              decisão que a coluna pede. */}
+          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start lg:sticky lg:top-24">
             <GaleriaProduto fotos={fotos} nome={produto.name} />
           </div>
 
