@@ -392,9 +392,20 @@ export async function abrirChamadoPublico(
 
   /* ------------------------------------------------------------- anexos */
 
-  // Só quem tem sessão consegue enviar arquivo (a rota de upload exige), e o
-  // anexo precisa ser recente e da pasta de chamados. Sem isso, um id de mídia
-  // adivinhado grudaria o arquivo de outra pessoa neste chamado.
+  /*
+   * Caminho antigo de anexo, por id de mídia vindo do formulário.
+   *
+   * Continua aqui por compatibilidade: um formulário aberto antes desta
+   * mudança, ainda carregado no navegador de alguém, envia esses campos. A
+   * validação segue estrita — sessão de cliente, pasta de chamados, mídia
+   * recente — porque um id adivinhado grudaria arquivo de outra pessoa neste
+   * chamado.
+   *
+   * O caminho ATUAL é outro: o visitante envia por `/api/envio`, o arquivo
+   * fica preso à sessão de envio daquele navegador, e o vínculo acontece
+   * logo abaixo, depois do chamado criado. O navegador não diz quais
+   * arquivos anexar.
+   */
   let mediaIds: string[] = [];
   const pedidos = formData
     .getAll("midia")

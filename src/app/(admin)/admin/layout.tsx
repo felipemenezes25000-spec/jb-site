@@ -2,6 +2,18 @@ import { Casca } from "@/components/admin/casca";
 import { sessaoStaff } from "@/lib/auth";
 import { ROTULO_PAPEL, menuDoUsuario } from "@/lib/permissoes";
 
+/*
+ * Migração para Cache Components.
+ *
+ * Este layout lê a sessão da equipe a cada requisição — é ele que decide o
+ * que aparece no menu. `instant = false` diz ao Next para não validar
+ * navegação instantânea neste segmento, que é a saída documentada para migrar
+ * rota a rota. A área é autenticada e não tem casca estática a economizar.
+ *
+ * Pendência declarada em docs/evolucao-jb/cobertura.md, fase 5.
+ */
+export const instant = false;
+
 /**
  * Layout do painel — casca e sessão.
  *

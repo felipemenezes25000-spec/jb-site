@@ -13,26 +13,56 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * Envio das fotos do problema.
+ * Envio das fotos e do vídeo do problema.
  *
- * Por que não usar `@/components/ui/enviar-arquivo`: aquele componente manda
- * só o arquivo no corpo do POST e devolve a URL. A rota `/api/upload` exige
- * também o campo `pasta`, e o que o chamado precisa guardar é o ID da mídia
- * (`ServiceRequestMedia.mediaId`), não o endereço do arquivo. São dois
- * contratos diferentes, então este componente é o específico da assistência —
- * mesma mecânica (arrastar e soltar, prévia local, progresso real por XHR,
- * erro por arquivo), outro corpo e outra saída.
+ * Manda para `/api/envio`, que é a porta do VISITANTE: ela não exige conta, e
+ * é isso que faz este componente existir. `/api/upload` exige sessão — quem
+ * está abrindo um chamado sem cadastro não tem nenhuma, e afrouxar aquela
+ * rota abriria um depósito de arquivos na internet.
+ *
+ * O que muda em relação ao contrato anterior: o servidor devolve o id de um
+ * `TempUpload`, não o de uma `Media`. O arquivo pertence à sessão de envio
+ * daquele navegador até um chamado reivindicá-lo, o que acontece no servidor,
+ * dentro de `abrirChamadoPublico`. Por isso não há mais campo escondido com
+ * id de mídia: o vínculo não passa pelo formulário, e não passar pelo
+ * formulário é o que impede alguém de anexar arquivo alheio digitando um id.
  *
  * A validação daqui é só para dar resposta imediata. A palavra final é do
- * servidor, que confere o conteúdo do arquivo — não a extensão do nome.
+ * servidor, que confere o conteúdo do arquivo pelos BYTES — não pela extensão
+ * do nome nem pelo tipo que o navegador declara.
  */
 
 const MB = 1024 * 1024;
 
-/** Mesma lista branca de `@/lib/upload` para a pasta `chamados`. */
-const ACEITOS = ["image/jpeg", "image/png", "image/webp", "image/avif", "application/pdf"];
-const ROTULO_ACEITOS = "JPG, PNG, WebP, AVIF ou PDF";
-const LIMITE_MB = 8;
+/*
+ * Espelha `LIMITES_DO_VISITANTE` de `@/lib/envio-temporario`.
+ *
+ * Repetido aqui porque aquele módulo é `server-only`. Quando um dos dois
+ * mudar, o outro precisa mudar junto — o servidor é quem manda, e divergir só
+ * produz a pior experiência possível: a tela deixa escolher um arquivo que o
+ * servidor recusa.
+ */
+const ACEITOS_FOTO = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/heic",
+  "image/heif",
+];
+const ACEITOS_VIDEO = ["video/mp4", "video/quicktime", "video/webm"];
+const ACEITOS = [...ACEITOS_FOTO, ...ACEITOS_VIDEO];
+
+const ROTULO_ACEITOS = "JPG, PNG, HEIC, MP4 ou MOV";
+const LIMITE_FOTO_MB = 10;
+const LIMITE_VIDEO_MB = 40;
+const SEGUNDOS_DE_VIDEO = 30;
+const MAXIMO_FOTOS = 6;
+const MAXIMO_VIDEOS = 1;
+
+function ehVideo(mime: string) {
+  return mime.startsWith("video/");
+}
 
 type Estado = "enviando" | "pronto" | "erro";
 
@@ -53,7 +83,7 @@ type Item = {
 
 type Resposta = {
   erro?: string;
-  media?: { id?: string; filename?: string };
+  arquivo?: { id?: string; kind?: string; durationSeconds?: number | null };
 };
 
 function formatarTamanho(bytes: number) {
@@ -69,10 +99,11 @@ function postar(
   return new Promise((resolver, rejeitar) => {
     const dados = new FormData();
     dados.append("arquivo", arquivo);
-    dados.append("pasta", "chamados");
 
     const requisicao = new XMLHttpRequest();
-    requisicao.open("POST", "/api/upload");
+    /* A porta do visitante. Sem `pasta`: o destino é fixo e privado, e deixar
+       o navegador escolher pasta é exatamente o que o escopo proíbe. */
+    requisicao.open("POST", "/api/envio");
 
     requisicao.upload.addEventListener("progress", (evento) => {
       if (evento.lengthComputable) {
@@ -92,14 +123,11 @@ function postar(
         rejeitar(new Error(dadosResposta.erro));
         return;
       }
-      if (!dadosResposta.media?.id) {
+      if (!dadosResposta.arquivo?.id) {
         rejeitar(new Error("O arquivo não chegou inteiro. Envie de novo."));
         return;
       }
-      resolver({
-        id: dadosResposta.media.id,
-        nome: dadosResposta.media.filename ?? arquivo.name,
-      });
+      resolver({ id: dadosResposta.arquivo.id, nome: arquivo.name });
     });
 
     requisicao.addEventListener("error", () =>
@@ -112,12 +140,9 @@ function postar(
 }
 
 export function EnvioDeFotos({
-  nome = "midia",
-  maximo = 6,
+  maximo = MAXIMO_FOTOS + MAXIMO_VIDEOS,
   className,
 }: {
-  /** Nome dos inputs escondidos que levam os IDs de mídia no envio do form. */
-  nome?: string;
   maximo?: number;
   className?: string;
 }) {
@@ -193,12 +218,17 @@ export function EnvioDeFotos({
         estado: "enviando",
       };
 
+      /* Foto e vídeo têm limites diferentes — 10 MB contra 40 MB. Usar um
+         número só recusaria vídeo legítimo ou aceitaria foto grande demais
+         para o servidor. */
+      const limiteMb = ehVideo(arquivo.type) ? LIMITE_VIDEO_MB : LIMITE_FOTO_MB;
+
       if (!ACEITOS.includes(arquivo.type)) {
         item.estado = "erro";
         item.erro = `Este formato não entra pelo site. Envie ${ROTULO_ACEITOS}.`;
-      } else if (arquivo.size > LIMITE_MB * MB) {
+      } else if (arquivo.size > limiteMb * MB) {
         item.estado = "erro";
-        item.erro = `Passa de ${LIMITE_MB} MB (tem ${formatarTamanho(arquivo.size)}).`;
+        item.erro = `Passa de ${limiteMb} MB (tem ${formatarTamanho(arquivo.size)}).`;
       } else {
         item.arquivo = arquivo;
         fila.push({ arquivo, chave });
@@ -313,8 +343,14 @@ export function EnvioDeFotos({
           Escolher arquivos
         </label>
 
+        {/* Os limites são ditos ANTES da captura, não depois da recusa. Quem
+            vai gravar um vídeo precisa saber dos 30 segundos enquanto ainda
+            está com o telefone na mão. */}
         <p id={idAjuda} className="mt-4 text-[0.8125rem] leading-relaxed text-graf-500">
-          Até {maximo} arquivos de {LIMITE_MB} MB cada, em {ROTULO_ACEITOS}.
+          Até {MAXIMO_FOTOS} fotos de {LIMITE_FOTO_MB} MB, em {ROTULO_ACEITOS}. Se quiser,
+          {" "}
+          {MAXIMO_VIDEOS} vídeo de até {SEGUNDOS_DE_VIDEO} segundos e {LIMITE_VIDEO_MB} MB —
+          grave só o trecho em que o defeito aparece.
         </p>
       </div>
 
@@ -432,9 +468,19 @@ export function EnvioDeFotos({
             }.`}
       </p>
 
-      {prontos.map((item) => (
-        <input key={item.mediaId} type="hidden" name={nome} value={item.mediaId} />
-      ))}
+      {/*
+        Não há mais campo escondido com id de arquivo.
+
+        Antes o formulário carregava os ids e o servidor os validava. Agora o
+        vínculo acontece pela SESSÃO DE ENVIO, no servidor, dentro de
+        `abrirChamadoPublico` — o navegador não diz quais arquivos anexar, e é
+        justamente isso que impede alguém de anexar arquivo alheio digitando
+        um id no devtools.
+
+        A consequência prática: o que aparece nesta lista é o que está
+        guardado para esta sessão, e é o que vai junto quando o chamado for
+        aberto.
+      */}
     </div>
   );
 }

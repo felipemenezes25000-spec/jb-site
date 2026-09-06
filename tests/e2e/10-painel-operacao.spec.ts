@@ -77,9 +77,23 @@ async function cadastrarClientePeloPainel(page: Page) {
   return cliente;
 }
 
-/** Lê o valor de uma linha da conta do pedido ("Total do pedido", "Falta receber"…). */
+/**
+ * Lê o valor de uma linha da conta do pedido ("Total do pedido", "Falta
+ * receber"…).
+ *
+ * `filter({ visible: true })` não é preciosismo: com Cache Components ligado,
+ * o Next mantém a rota ANTERIOR montada e escondida ao navegar, usando
+ * `<Activity>`. O mesmo rótulo passa a existir duas vezes no DOM — uma na
+ * página que está na tela, outra na que ficou guardada — e o modo estrito do
+ * Playwright recusa o localizador ambíguo antes mesmo de conferir
+ * visibilidade. Ver cacheComponents.md, "Navigation with Activity".
+ */
 async function valorDaLinha(page: Page, rotulo: string): Promise<number> {
-  const linha = page.getByText(rotulo, { exact: true }).locator("xpath=..");
+  const linha = page
+    .getByText(rotulo, { exact: true })
+    .filter({ visible: true })
+    .first()
+    .locator("xpath=..");
   await expect(linha).toBeVisible();
   return emCentavos(await linha.innerText());
 }

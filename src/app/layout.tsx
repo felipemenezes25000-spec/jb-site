@@ -41,22 +41,44 @@ export const viewport: Viewport = {
  * A etiqueta é a mesma das configurações públicas, então salvar o painel
  * derruba este cache junto com o do cabeçalho.
  */
-export async function generateMetadata(): Promise<Metadata> {
+/**
+ * Os textos de SEO, vindos das configurações.
+ *
+ * Só strings. Um objeto `URL` não atravessa a fronteira de um escopo `use
+ * cache` — ele não é serializável, e o React avisa em tempo de execução que
+ * "only plain objects can be passed to Client Components". Foi exatamente o
+ * que aconteceu quando `metadataBase: new URL(...)` ficou dentro do cache: o
+ * build passava e o console da home reclamava.
+ *
+ * Por isso a divisão: o que vem do banco é cacheado aqui, em texto puro, e o
+ * objeto `Metadata` é montado fora, com o `URL` construído na hora.
+ */
+async function textosDoSite() {
   "use cache";
   cacheTag(ETIQUETA_CONFIGURACOES);
   cacheLife("hours");
 
   const s = await getSettings();
   return {
+    titulo: s.seo_titulo,
+    descricao: s.seo_descricao,
+    empresa: s.empresa_nome,
+  };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const textos = await textosDoSite();
+
+  return {
     metadataBase: new URL(SITE_URL),
-    title: { default: s.seo_titulo, template: `%s · ${s.empresa_nome}` },
-    description: s.seo_descricao,
+    title: { default: textos.titulo, template: `%s · ${textos.empresa}` },
+    description: textos.descricao,
     openGraph: {
       type: "website",
       locale: "pt_BR",
-      siteName: s.empresa_nome,
-      title: s.seo_titulo,
-      description: s.seo_descricao,
+      siteName: textos.empresa,
+      title: textos.titulo,
+      description: textos.descricao,
     },
     robots: { index: true, follow: true },
   };

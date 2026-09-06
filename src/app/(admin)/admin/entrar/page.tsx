@@ -7,6 +7,17 @@ import { FormularioEntrarStaff } from "@/components/admin/formulario-entrar-staf
 import { Logo } from "@/components/ui/logo";
 import { sessaoStaff } from "@/lib/auth";
 
+/*
+ * Migração para Cache Components.
+ *
+ * Esta página lê a sessão da equipe para redirecionar quem já está dentro, e
+ * essa leitura é de cookie. O `instant = false` do layout de `(admin)` não
+ * alcança este segmento — a validação é reportada por quem a levanta, e é
+ * aqui. Sem esta linha, o console acusa "runtime data during prerendering" em
+ * toda navegação para a tela de entrada.
+ */
+export const instant = false;
+
 export const metadata: Metadata = {
   title: "Entrar",
   description: "Acesso da equipe ao painel interno da JB Soluções Odontológicas.",

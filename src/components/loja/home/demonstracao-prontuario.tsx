@@ -143,7 +143,15 @@ export function DemonstracaoDoProntuario() {
         <div className="p-5 sm:p-6">
           {/* Abas de verdade: papel, estado e navegação por seta. Três botões
               estilizados dariam a mesma aparência e nenhuma semântica. */}
-          <div role="tablist" aria-label="Partes do prontuário" className="flex gap-1.5">
+          {/* `flex-wrap` e não uma linha só: em 320px — o mínimo que a WCAG
+              2.2 manda suportar — os três botões somavam mais que a largura
+              da tela e o último saía para fora. Encontrado pelo
+              `scripts/responsivo.mjs`. */}
+          <div
+            role="tablist"
+            aria-label="Partes do prontuário"
+            className="flex flex-wrap gap-1.5"
+          >
             {ABAS.map((item) => (
               <button
                 key={item.chave}
@@ -166,43 +174,68 @@ export function DemonstracaoDoProntuario() {
             ))}
           </div>
 
+          {/*
+            Os três painéis existem sempre; o que muda é qual está visível.
+
+            Antes só o painel da aba corrente era renderizado, e o
+            `aria-controls` das outras duas apontava para um id que não existia
+            na página — o que a auditoria de acessibilidade acusou. Para um
+            leitor de tela, uma aba que controla o nada é uma aba quebrada.
+
+            `hidden` e não `display:none` por classe: o atributo tira o painel
+            da árvore de acessibilidade e do fluxo, que é exatamente o
+            comportamento do padrão de abas.
+          */}
           <div
             role="tabpanel"
-            id={`demo-painel-${aba}`}
-            aria-labelledby={`demo-aba-${aba}`}
+            id="demo-painel-resumo"
+            aria-labelledby="demo-aba-resumo"
+            hidden={aba !== "resumo"}
             className="mt-5"
           >
-            {aba === "resumo" ? (
-              <CabecalhoDoProntuario resumo={RESUMO} className="border-graf-200" />
-            ) : null}
+            <CabecalhoDoProntuario resumo={RESUMO} className="border-graf-200" />
+          </div>
 
-            {aba === "historico" ? <LinhaDoTempo eventos={HISTORICO} /> : null}
+          <div
+            role="tabpanel"
+            id="demo-painel-historico"
+            aria-labelledby="demo-aba-historico"
+            hidden={aba !== "historico"}
+            className="mt-5"
+          >
+            <LinhaDoTempo eventos={HISTORICO} />
+          </div>
 
-            {aba === "documentos" ? (
-              <ul className="divide-y divide-graf-100 rounded-xl border border-graf-200">
-                {DOCUMENTOS.map((documento) => (
-                  <li
-                    key={documento.id}
-                    className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3.5"
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-graf-950">
-                        {documento.nome}
-                      </span>
-                      <span className="block text-[0.8125rem] text-graf-500">
-                        {documento.detalhe}
-                      </span>
+          <div
+            role="tabpanel"
+            id="demo-painel-documentos"
+            aria-labelledby="demo-aba-documentos"
+            hidden={aba !== "documentos"}
+            className="mt-5"
+          >
+            <ul className="divide-y divide-graf-100 rounded-xl border border-graf-200">
+              {DOCUMENTOS.map((documento) => (
+                <li
+                  key={documento.id}
+                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3.5"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-graf-950">
+                      {documento.nome}
                     </span>
-                    {/* Sem botão de baixar: não há arquivo, e um botão que não
-                        baixa nada é exatamente o controle inerte que o escopo
-                        proíbe. O que a demonstração mostra é a organização. */}
-                    <span className="shrink-0 text-[0.8125rem] italic text-graf-500">
-                      disponível na sua Área da Clínica
+                    <span className="block text-[0.8125rem] text-graf-500">
+                      {documento.detalhe}
                     </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+                  </span>
+                  {/* Sem botão de baixar: não há arquivo, e um botão que não
+                      baixa nada é exatamente o controle inerte que o escopo
+                      proíbe. O que a demonstração mostra é a organização. */}
+                  <span className="shrink-0 text-[0.8125rem] italic text-graf-500">
+                    disponível na sua Área da Clínica
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-graf-200 pt-5">

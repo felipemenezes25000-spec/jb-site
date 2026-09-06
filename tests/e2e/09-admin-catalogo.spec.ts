@@ -54,7 +54,17 @@ test.describe("Cadastro de produto pelo painel", () => {
     await page.getByRole("link", { name: nome }).first().click();
     await page.waitForURL(/\/admin\/produtos\/[^/]+$/);
 
-    await page.getByLabel("Situação").selectOption("draft");
+    /* Escopado ao painel do formulário, e não global.
+       Com Cache Components ligado, o Next usa `<Activity>` para manter a rota
+       ANTERIOR montada e escondida ao navegar — então a listagem de produtos,
+       com o filtro "Situação", continua no DOM enquanto se edita um produto.
+       Um localizador global passa a encontrar dois campos com o mesmo rótulo.
+       Ver node_modules/next/dist/docs/.../cacheComponents.md, "Navigation with
+       Activity". */
+    await page
+      .getByRole("tabpanel", { name: "Básico" })
+      .getByLabel("Situação")
+      .selectOption("draft");
     await page.getByRole("button", { name: /Salvar/ }).first().click();
     await expect(page.getByText(/salv/i).first()).toBeVisible({ timeout: 30_000 });
 
