@@ -31,7 +31,12 @@ concurrency:
 
 env:
   # O `packageManager` do package.json manda; isto é só para o setup-node.
-  NODE_VERSION: "20"
+  #
+  # 24, e não 20, por um motivo mais forte que a deprecação do runner: a Vercel
+  # constrói este projeto em Node 24.x e a máquina de desenvolvimento também é
+  # 24. A CI era o único lugar em 20 — provando em cima de uma versão que
+  # ninguém usa nem para escrever nem para publicar.
+  NODE_VERSION: "24"
 
 jobs:
   # --------------------------------------------------------------- estático
@@ -40,11 +45,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -78,9 +83,9 @@ jobs:
     timeout-minutes: 15
     needs: estatico
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -130,9 +135,9 @@ jobs:
     timeout-minutes: 30
     needs: estatico
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -208,7 +213,7 @@ jobs:
       # demonstração (`@jbteste.local`), então nada real vai para o artefato.
       - name: Guardar relatórios
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: relatorios-validacao
           path: |
@@ -230,9 +235,9 @@ jobs:
       github.event_name == 'push' ||
       contains(github.event.pull_request.labels.*.name, 'dominio')
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm

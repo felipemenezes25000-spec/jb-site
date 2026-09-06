@@ -341,6 +341,10 @@ roda a suíte descobre que os dois estavam ali.
 
 ### ESLint
 
+> **Corrigido depois desta bateria.** O texto abaixo está preservado porque
+> era o que se sabia na hora; a conclusão dele estava errada, e o registro de
+> uma validação não se reescreve — anota-se.
+
 `npx eslint .` acusa **793 erros**, e nenhum deles vem destas fases: rodado
 sobre os arquivos novos, dá **0 erros**. A configuração tem plugin que não
 resolve (`Definition for rule '@next/next/no-img-element' was not found`) e
@@ -352,6 +356,19 @@ Lint **não é** um dos quatro gates declarados em `ci.md`. Arrumar 793 erros
 pré-existentes seria uma mudança grande e sem relação com o escopo destas
 fases, então fica registrado como pendência, não silenciado.
 
+**O que estava errado nisso:** não havia "a configuração". Não havia ESLint
+no projeto — nem `eslint.config.*`, nem dependência, nem script. `npx eslint .`
+baixava o ESLint na hora e rodava sem config nenhuma, medindo o código contra
+regras que ninguém escolheu, num parser que não lê TSX. Os 793 eram o retrato
+dessa ausência, não do código.
+
+Com flat config de verdade são **76 problemas**: 27 corrigidos, 9 que vinham do
+prefixo `usar` em vez de `use` nos hooks (renomeados — e o efeito colateral era
+pior que o aviso: as regras dos hooks não estavam sendo verificadas naquelas
+chamadas), duas âncoras deliberadas documentadas, e 49 avisos de duas regras do
+compilador React que continuam contadas de propósito. `pnpm lint` fecha em zero
+erro e virou o primeiro passo do job `estatico`. Ver `ci.md`, seção "Lint".
+
 ### O que continua sem execução
 
 | Item | Motivo |
@@ -361,4 +378,4 @@ fases, então fica registrado como pendência, não silenciado.
 | Envio de convite de avaliação | desligado por configuração, à espera de autorização da JB |
 | Publicação de artigo e de case | dependem de gente: autor, revisor e autorização do cliente |
 | Indicadores com dado suficiente | o banco local não tem volume; a tela responde "ainda não há dados suficientes", que é o comportamento correto |
-| ESLint limpo | 793 erros pré-existentes, config quebrada, fora dos gates |
+| ~~ESLint limpo~~ | resolvido depois: zero erro, e agora é gate. Ver acima |
