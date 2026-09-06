@@ -14,7 +14,7 @@ async function carregar() {
   return prisma.category.findMany({
     where: { published: true, parentId: null, products: { some: PUBLICADO } },
     orderBy: [{ featured: "desc" }, { order: "asc" }, { name: "asc" }],
-    take: 6,
+    take: 3,
     select: {
       slug: true,
       name: true,
@@ -42,53 +42,87 @@ export async function SecaoCategorias() {
   if (categorias.length === 0) return null;
 
   return (
-    <Secao fundo="branco" espaco="lg" className="overflow-hidden" classNameInterno="max-w-[112rem]">
-      <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <Secao fundo="branco" espaco="lg" className="overflow-hidden" classNameInterno="max-w-[100rem]">
+      <div className="flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
         <div>
-          <p className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em] text-jb-700">
-            <span className="h-px w-8 bg-jb-500" aria-hidden />
-            Categorias
-          </p>
-          <h2 className="mt-3 text-section text-graf-950">Encontre o que sua clínica precisa</h2>
+          <div className="mb-4 flex items-center gap-3">
+            <span className="h-px w-8 bg-jb-600" aria-hidden />
+            <span className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-jb-700">
+              Categorias em destaque
+            </span>
+          </div>
+          <h2 className="max-w-[44rem] text-[clamp(2.4rem,4vw,4.2rem)] font-black leading-[0.98] tracking-[-0.05em] text-graf-950">
+            Tudo para a sua clínica, em um só lugar.
+          </h2>
         </div>
 
-        <Link href="/loja" className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-extrabold text-jb-700 hover:text-jb-900 sm:self-auto">
-          Ver catálogo completo
-          <ArrowRight className="size-4" aria-hidden />
+        <Link
+          href="/loja"
+          className="group inline-flex min-h-11 items-center gap-2 self-start text-sm font-extrabold text-jb-700 transition-colors hover:text-jb-900 sm:self-auto"
+        >
+          Ver todas as categorias
+          <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
         </Link>
       </div>
 
-      <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        {categorias.map((categoria) => {
+      <ul className="mt-10 grid gap-5 md:grid-cols-3">
+        {categorias.map((categoria, indice) => {
           const fotoProduto = categoria.products[0]?.media[0];
           const total = categoria._count.products;
+          const foto = categoria.image
+            ? { url: categoria.image.url, alt: categoria.image.alt ?? categoria.name, modo: "cover" as const }
+            : fotoProduto
+              ? { url: fotoProduto.media.url, alt: fotoProduto.alt ?? fotoProduto.media.alt ?? categoria.name, modo: "contain" as const }
+              : null;
 
           return (
             <li key={categoria.slug} className="min-w-0">
               <Link
                 href={`/categoria/${categoria.slug}`}
-                className="group relative flex min-h-[13.5rem] min-w-0 flex-col overflow-hidden rounded-2xl border-2 border-jb-100 bg-white transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-jb-500 hover:shadow-[0_20px_45px_-28px_rgba(120,0,0,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                className="group flex min-h-[24rem] flex-col overflow-hidden rounded-[1.8rem] border border-jb-100 bg-white shadow-[0_18px_50px_-38px_rgba(120,0,0,0.28)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-jb-300 hover:shadow-[0_24px_60px_-34px_rgba(120,0,0,0.34)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
-                <div className="relative min-h-36 flex-1 overflow-hidden bg-white">
-                  {categoria.image ? (
-                    <Image src={categoria.image.url} alt="" fill sizes="(max-width: 640px) 48vw, (max-width: 1280px) 32vw, 16vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.045]" />
-                  ) : fotoProduto ? (
-                    <Image src={fotoProduto.media.url} alt="" fill sizes="(max-width: 640px) 48vw, (max-width: 1280px) 32vw, 16vw" className="object-contain p-3 transition-transform duration-700 group-hover:scale-[1.07] sm:p-4" />
+                <div className="relative min-h-[16rem] flex-1 overflow-hidden bg-white">
+                  {foto ? (
+                    <Image
+                      src={foto.url}
+                      alt={foto.alt}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className={foto.modo === "cover"
+                        ? "object-cover transition-transform duration-700 group-hover:scale-[1.045]"
+                        : "object-contain p-7 transition-transform duration-700 group-hover:scale-[1.055]"
+                      }
+                    />
                   ) : (
-                    <span className="absolute inset-0 flex items-center justify-center text-jb-600/75" aria-hidden>
-                      <IconeCategoria nome={categoria.icon} className="size-12" />
+                    <span className="absolute inset-0 flex items-center justify-center bg-jb-50 text-jb-600" aria-hidden>
+                      <IconeCategoria nome={categoria.icon} className="size-16" />
                     </span>
                   )}
+
+                  <span className="absolute left-5 top-5 text-[0.66rem] font-black tracking-[0.2em] text-jb-700">
+                    0{indice + 1}
+                  </span>
                 </div>
 
-                <div className="flex min-w-0 items-end justify-between gap-3 border-t border-jb-100 px-4 py-4">
-                  <div className="min-w-0">
-                    <h3 className="text-[0.96rem] font-extrabold leading-snug text-graf-950 group-hover:text-jb-700">{categoria.name}</h3>
-                    <p className="mt-1 text-xs font-semibold text-graf-500">{total >= MINIMO_PARA_CONTAR ? plural(total, "item", "itens") : "Explorar"}</p>
+                <div className="border-t border-jb-100 bg-white p-6">
+                  <h3 className="text-[1.55rem] font-black leading-tight tracking-[-0.035em] text-graf-950 transition-colors group-hover:text-jb-700">
+                    {categoria.name}
+                  </h3>
+
+                  <div className="mt-3 flex items-end justify-between gap-5">
+                    <p className="max-w-[15rem] text-sm leading-6 text-graf-500">
+                      {total >= MINIMO_PARA_CONTAR
+                        ? `${plural(total, "equipamento", "equipamentos")} nesta categoria.`
+                        : "Explore os equipamentos disponíveis nesta categoria."}
+                    </p>
+
+                    <span
+                      aria-hidden
+                      className="flex size-11 shrink-0 items-center justify-center rounded-full border border-jb-100 text-jb-700 transition-[background-color,color,transform] group-hover:translate-x-0.5 group-hover:bg-jb-600 group-hover:text-white"
+                    >
+                      <ArrowRight className="size-4" />
+                    </span>
                   </div>
-                  <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-jb-500 text-white transition-transform group-hover:translate-x-0.5">
-                    <ArrowRight className="size-4" />
-                  </span>
                 </div>
               </Link>
             </li>
