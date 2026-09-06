@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Box, ShieldCheck, Sparkles, Star } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Marca = {
   slug: string;
@@ -11,7 +11,8 @@ type Marca = {
   logo: { url: string; alt: string | null } | null;
 };
 
-const VISIVEIS = 4;
+const VISIVEIS = 6;
+const INTERVALO = 3600;
 
 const TAGLINES: Record<string, string> = {
   alt: "Soluções em odontologia",
@@ -21,11 +22,21 @@ const TAGLINES: Record<string, string> = {
 };
 
 const LOGOS: Record<string, string> = {
-  alt: "/marcas/alt.png",
-  schuster: "/marcas/schuster.png",
-  suctron: "/marcas/suctron.png",
-  sugmaster: "/marcas/sugmaster.png",
+  alt: "/marcas/logo-alt.png",
+  schuster: "/marcas/logo-schuster.png",
+  suctron: "/marcas/logo-suctron.png",
+  sugmaster: "/marcas/logo-sugmaster.png",
 };
+
+const BENEFICIOS = [
+  { icone: ShieldCheck, titulo: "Marcas de confiança", apoio: "Qualidade comprovada" },
+  {
+    icone: Box,
+    titulo: "Equipamentos para todas as necessidades",
+    apoio: "Do consultório ao centro cirúrgico",
+  },
+  { icone: Star, titulo: "Suporte da equipe JB", apoio: "Da escolha ao pós-venda" },
+];
 
 function chave(marca: Marca) {
   return marca.slug.toLowerCase().replace(/^demo-/, "");
@@ -49,7 +60,14 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
   const total = marcas.length;
   const janela = Math.min(VISIVEIS, total);
   const [inicio, setInicio] = useState(0);
-  const [ativa, setAtiva] = useState(Math.min(1, total - 1));
+  const [fixada, setFixada] = useState<number | null>(null);
+  const [parado, setParado] = useState(false);
+
+  useEffect(() => {
+    if (parado || total <= janela) return;
+    const id = setInterval(() => setInicio((valor) => circular(valor + 1, total)), INTERVALO);
+    return () => clearInterval(id);
+  }, [janela, parado, total]);
 
   const visiveis = useMemo(
     () =>
@@ -62,13 +80,16 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
 
   if (total === 0) return null;
 
-  const andar = (passo: number) => {
-    setInicio((valor) => circular(valor + passo, total));
-    setAtiva((valor) => circular(valor + passo, total));
+  const destaque = circular(inicio + Math.min(1, janela - 1), total);
+  const ativa = fixada ?? destaque;
+
+  const andar = (avanco: number) => {
+    setInicio((valor) => circular(valor + avanco, total));
+    setFixada(null);
   };
 
   return (
-    <section className="relative isolate overflow-hidden bg-[#fffdfc] py-16 sm:py-20 lg:min-h-[42.5rem] lg:py-20 min-[1360px]:min-h-[43.5rem]">
+    <section className="relative isolate overflow-hidden bg-[#fffdfc] py-16 min-[640px]:py-20 min-[1024px]:min-h-[42.7rem] min-[1024px]:pb-[1.8rem] min-[1024px]:pt-[3.9rem]">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_74%_44%,rgba(214,24,34,0.05),transparent_34%),radial-gradient(circle_at_16%_10%,rgba(214,24,34,0.022),transparent_36%)]"
         aria-hidden
@@ -86,7 +107,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -left-16 top-4 hidden h-[38rem] w-56 -rotate-[26deg] opacity-30 blur-lg lg:block"
+        className="pointer-events-none absolute -left-16 top-4 hidden h-[38rem] w-56 -rotate-[26deg] opacity-30 blur-lg min-[1024px]:block"
         aria-hidden
       >
         <span className="absolute left-14 top-0 h-80 w-9 rounded-full bg-gradient-to-b from-transparent via-graf-300/45 to-transparent" />
@@ -94,12 +115,12 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
         <span className="absolute left-32 top-2 h-[26rem] w-11 rounded-full bg-gradient-to-b from-transparent via-graf-200/70 to-transparent" />
       </div>
 
-      <div className="container-jb relative z-10 max-w-[115rem]">
-        <div className="pointer-events-none absolute right-0 top-0 hidden items-center gap-5 lg:flex">
+      <div className="container-jb relative z-10 max-w-[110rem] min-[1024px]:pt-16">
+        <div className="pointer-events-none absolute top-0 hidden w-max items-center gap-5 min-[1024px]:right-10 min-[1024px]:flex min-[1840px]:-right-10">
           <span className="grid size-[3.15rem] shrink-0 place-items-center rounded-full bg-jb-50/70 text-graf-800">
             <Sparkles className="size-[1.05rem]" aria-hidden />
           </span>
-          <p className="text-[0.66rem] font-bold uppercase leading-[1.6] tracking-[0.32em] text-graf-400">
+          <p className="whitespace-nowrap text-[0.66rem] font-bold uppercase leading-[1.6] tracking-[0.32em] text-graf-400">
             Tecnologia
             <br />
             que transforma
@@ -108,8 +129,8 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
           </p>
         </div>
 
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:items-center lg:gap-x-16 min-[1360px]:gap-x-[7rem]">
-          <div className="lg:pb-24">
+        <div className="grid gap-12 min-[1024px]:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] min-[1024px]:items-center min-[1600px]:grid-cols-[30rem_minmax(0,1fr)] min-[1024px]:gap-x-12 min-[1360px]:gap-x-[5.5rem]">
+          <div>
             <div className="flex items-center gap-4">
               <span className="h-[2px] w-9 shrink-0 rounded-full bg-jb-600" aria-hidden />
               <p className="text-[0.72rem] font-black uppercase tracking-[0.26em] text-jb-700">
@@ -121,15 +142,15 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
               Marcas que <span className="text-jb-700">fazem parte do</span> dia a dia da JB.
             </h2>
 
-            <p className="mt-7 max-w-[31rem] text-[1.05rem] leading-[1.5] text-graf-500 min-[1360px]:text-[1.12rem]">
+            <p className="mt-7 max-w-[30rem] text-[1.02rem] leading-[1.5] text-graf-500 min-[1360px]:text-[1.06rem]">
               Navegue por fabricante para encontrar os equipamentos publicados e os modelos que a
               equipe acompanha.
             </p>
 
-            <div className="mt-9 flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-7">
+            <div className="mt-9 flex flex-col gap-6 min-[640px]:flex-row min-[640px]:items-center min-[640px]:gap-6">
               <Link
                 href="/marcas"
-                className="group foco-jb inline-flex min-h-[3.6rem] w-fit items-center gap-8 rounded-full bg-gradient-to-b from-jb-500 to-jb-700 py-2 pl-8 pr-3 text-[0.95rem] font-bold text-white shadow-[0_20px_38px_-18px_rgba(196,16,26,0.7)] transition-transform hover:-translate-y-0.5"
+                className="group foco-jb inline-flex min-h-[3.6rem] w-fit shrink-0 items-center gap-6 whitespace-nowrap rounded-full bg-gradient-to-b from-jb-500 to-jb-700 py-2 pl-8 pr-3 text-[0.95rem] font-bold text-white shadow-[0_20px_38px_-18px_rgba(196,16,26,0.7)] transition-transform hover:-translate-y-0.5"
               >
                 Ver todas as marcas
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white/15 transition-transform group-hover:translate-x-1">
@@ -137,8 +158,8 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
                 </span>
               </Link>
 
-              <div className="hidden h-12 w-px shrink-0 bg-graf-200 sm:block" aria-hidden />
-              <p className="text-[0.95rem] leading-[1.4] text-graf-500">
+              <div className="hidden h-12 w-px shrink-0 bg-graf-200 min-[640px]:block" aria-hidden />
+              <p className="whitespace-nowrap text-[0.95rem] leading-[1.4] text-graf-500">
                 As melhores marcas
                 <br />
                 para o seu consultório.
@@ -146,18 +167,28 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
             </div>
           </div>
 
-          <div className="relative min-w-0 min-[1840px]:-mr-24">
-            <div className="relative px-0 sm:px-[4.75rem]">
+          <div
+            className="relative min-w-0 min-[1840px]:-mr-[8.25rem]"
+            onMouseEnter={() => setParado(true)}
+            onMouseLeave={() => {
+              setParado(false);
+              setFixada(null);
+            }}
+            onFocusCapture={() => setParado(true)}
+            onBlurCapture={() => setParado(false)}
+          >
+            <div className="relative px-0 min-[640px]:px-[4.75rem]">
               <button
                 type="button"
                 onClick={() => andar(-1)}
                 aria-label="Marcas anteriores"
-                className="foco-jb absolute left-0 top-1/2 hidden size-[3.6rem] -translate-y-1/2 place-items-center rounded-full border border-graf-100 bg-white text-jb-600 shadow-[0_16px_36px_-22px_rgba(17,24,39,0.4)] transition hover:-translate-x-0.5 hover:border-jb-200 sm:grid"
+                className="foco-jb absolute left-0 top-1/2 hidden size-[3.6rem] -translate-y-1/2 place-items-center rounded-full border border-graf-100 bg-white text-graf-600 shadow-[0_16px_36px_-22px_rgba(17,24,39,0.4)] transition hover:-translate-x-0.5 hover:border-jb-200 hover:text-jb-600 min-[640px]:grid"
               >
-                <ArrowLeft className="size-[1.35rem]" aria-hidden />
+                <ArrowLeft className="size-[1.3rem]" aria-hidden />
               </button>
 
-              <ul className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 min-[1360px]:grid-cols-4 min-[1360px]:gap-3.5">
+              <div className="overflow-hidden">
+                <ul className="flex min-w-0 items-center gap-3.5">
                 {visiveis.map(({ marca, indice }) => {
                   const arte = arteDaMarca(marca);
                   const selecionada = indice === ativa;
@@ -165,12 +196,12 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
                     <li key={`${marca.slug}-${indice}`}>
                       <Link
                         href={`/marcas/${marca.slug}`}
-                        onMouseEnter={() => setAtiva(indice)}
-                        onFocus={() => setAtiva(indice)}
-                        className={`group foco-jb flex h-[12.4rem] flex-col items-center justify-center rounded-[1.4rem] border px-5 text-center transition-all duration-300 ${
+                        onMouseEnter={() => setFixada(indice)}
+                        onFocus={() => setFixada(indice)}
+                        className={`group foco-jb flex h-[12rem] w-[16.4rem] shrink-0 flex-col items-center justify-center rounded-[1.4rem] border px-5 text-center transition-all duration-500 ${
                           selecionada
-                            ? "-translate-y-[5px] border-jb-300 bg-white shadow-[0_26px_46px_-26px_rgba(202,20,30,0.4)]"
-                            : "border-graf-100 bg-white/85 shadow-[0_18px_44px_-34px_rgba(17,24,39,0.32)] hover:-translate-y-[5px] hover:border-jb-100"
+                            ? "-translate-y-[6px] scale-[1.055] border-jb-300 bg-white shadow-[0_28px_50px_-26px_rgba(202,20,30,0.42)]"
+                            : "border-graf-100 bg-white/85 shadow-[0_18px_44px_-34px_rgba(17,24,39,0.32)]"
                         }`}
                       >
                         <span className="flex h-[4.4rem] w-full items-center justify-center">
@@ -178,18 +209,18 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
                             <Image
                               src={arte.url}
                               alt={arte.alt}
-                              width={280}
-                              height={130}
-                              sizes="270px"
-                              className="max-h-[4.1rem] w-auto max-w-[84%] object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                              width={300}
+                              height={120}
+                              sizes="262px"
+                              className="max-h-[3.9rem] w-auto max-w-[78%] object-contain"
                             />
                           ) : (
-                            <span className="text-[1.75rem] font-black tracking-[-0.04em] text-graf-900">
+                            <span className="text-[1.6rem] font-black tracking-[-0.04em] text-graf-900">
                               {marca.name}
                             </span>
                           )}
                         </span>
-                        <span className="mt-5 block text-[1.02rem] font-bold text-graf-800">
+                        <span className="mt-4 block text-[1.02rem] font-bold text-graf-800">
                           {marca.name}
                         </span>
                         <span className="mt-1.5 block text-[0.6rem] font-bold uppercase leading-[1.5] tracking-[0.2em] text-graf-400">
@@ -199,34 +230,36 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
                     </li>
                   );
                 })}
-              </ul>
+                </ul>
+              </div>
 
               <button
                 type="button"
                 onClick={() => andar(1)}
                 aria-label="Próximas marcas"
-                className="foco-jb absolute right-0 top-1/2 hidden size-[3.6rem] -translate-y-1/2 place-items-center rounded-full border border-graf-100 bg-white text-jb-600 shadow-[0_16px_36px_-22px_rgba(17,24,39,0.4)] transition hover:translate-x-0.5 hover:border-jb-200 sm:grid"
+                className="foco-jb absolute right-0 top-1/2 hidden size-[3.6rem] -translate-y-1/2 place-items-center rounded-full border border-graf-100 bg-white text-graf-600 shadow-[0_16px_36px_-22px_rgba(17,24,39,0.4)] transition hover:translate-x-0.5 hover:border-jb-200 hover:text-jb-600 min-[640px]:grid"
               >
-                <ArrowRight className="size-[1.35rem]" aria-hidden />
+                <ArrowRight className="size-[1.3rem]" aria-hidden />
               </button>
             </div>
 
-            <div className="mt-11 flex items-center justify-center gap-9 sm:justify-start sm:pl-[4.75rem]">
-              <div className="flex items-center gap-2">
-                {Array.from({ length: janela }).map((_, posicao) => {
-                  const indice = circular(inicio + posicao, total);
-                  return (
-                    <button
-                      key={indice}
-                      type="button"
-                      aria-label={`Ver ${marcas[indice].name}`}
-                      onClick={() => setAtiva(indice)}
-                      className={`foco-jb h-[3px] w-[5.5rem] rounded-full transition-colors ${
-                        indice === ativa ? "bg-jb-600" : "bg-graf-200"
-                      }`}
-                    />
-                  );
-                })}
+            <div className="mt-10 flex items-center justify-center gap-8 min-[640px]:justify-start min-[640px]:pl-[13.5rem] min-[1240px]:mt-[4.6rem]">
+              <div className="flex min-w-0 flex-1 items-center gap-2 min-[1024px]:flex-none min-[1024px]:gap-2.5">
+                {marcas.map((marca, indice) => (
+                  <button
+                    key={marca.slug}
+                    type="button"
+                    aria-label={`Ver ${marca.name}`}
+                    aria-current={indice === ativa || undefined}
+                    onClick={() => {
+                      setInicio(circular(indice - 1, total));
+                      setFixada(indice);
+                    }}
+                    className={`foco-jb h-[3px] w-full min-w-0 rounded-full transition-colors min-[1024px]:w-[5.6rem] ${
+                      indice === ativa ? "bg-jb-600" : "bg-graf-200"
+                    }`}
+                  />
+                ))}
               </div>
               <p className="text-[0.78rem] font-bold tracking-[0.14em] text-graf-400">
                 <span className="text-jb-600">{String(ativa + 1).padStart(2, "0")}</span>
@@ -237,45 +270,37 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
           </div>
         </div>
 
-        <div className="mt-14 rounded-[1.6rem] border border-graf-100 bg-white/70 px-6 py-5 shadow-[0_22px_58px_-44px_rgba(17,24,39,0.32)] backdrop-blur-sm sm:px-8 lg:mt-0 lg:ml-[17%] lg:max-w-[64%]">
-          <div className="grid gap-6 sm:grid-cols-3 sm:divide-x sm:divide-graf-200/80">
-            <div className="flex items-center gap-4 sm:pr-7">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-jb-50 text-jb-600">
-                <ShieldCheck className="size-[1.2rem]" aria-hidden />
-              </span>
-              <p className="text-[0.95rem] font-semibold text-graf-700">
-                Marcas de confiança
-                <span className="mt-0.5 block text-[0.82rem] font-normal text-graf-400">
-                  Qualidade comprovada
+        <div className="mt-14 rounded-[1.6rem] border border-graf-100 bg-white/70 px-6 py-5 shadow-[0_22px_58px_-44px_rgba(17,24,39,0.32)] backdrop-blur-sm min-[640px]:px-8 min-[1024px]:mt-6 min-[1024px]:ml-[16%] min-[1024px]:max-w-[70%]">
+          <div className="grid gap-6 min-[640px]:grid-cols-3 min-[640px]:divide-x min-[640px]:divide-graf-200/80">
+            {BENEFICIOS.map(({ icone: IconeBeneficio, titulo, apoio }, posicao) => (
+              <div
+                key={titulo}
+                className={`flex items-center gap-4 ${
+                  posicao === 0
+                    ? "min-[640px]:pr-7"
+                    : posicao === 1
+                      ? "min-[640px]:px-7"
+                      : "min-[640px]:pl-7"
+                }`}
+              >
+                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-jb-50 text-jb-600">
+                  <IconeBeneficio className="size-[1.2rem]" aria-hidden />
                 </span>
-              </p>
-            </div>
-            <div className="flex items-center gap-4 sm:px-7">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-jb-50 text-jb-600">
-                <Box className="size-[1.2rem]" aria-hidden />
-              </span>
-              <p className="text-[0.95rem] font-semibold text-graf-700">
-                Equipamentos para todas as necessidades
-                <span className="mt-0.5 block text-[0.82rem] font-normal text-graf-400">
-                  Do consultório ao centro cirúrgico
-                </span>
-              </p>
-            </div>
-            <div className="flex items-center gap-4 sm:pl-7">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-jb-50 text-jb-600">
-                <Star className="size-[1.2rem]" aria-hidden />
-              </span>
-              <p className="text-[0.95rem] font-semibold text-graf-700">
-                Suporte da equipe JB
-                <span className="mt-0.5 block text-[0.82rem] font-normal text-graf-400">
-                  Da escolha ao pós-venda
-                </span>
-              </p>
-            </div>
+                <p className="text-[0.92rem] font-semibold leading-[1.35] text-graf-700 min-[1840px]:whitespace-nowrap">
+                  {titulo}
+                  <span className="mt-0.5 block text-[0.82rem] font-normal text-graf-400">
+                    {apoio}
+                  </span>
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="pointer-events-none absolute bottom-0 right-0 hidden lg:block" aria-hidden>
+        <div
+          className="pointer-events-none absolute bottom-[1.5rem] right-10 hidden w-max min-[1600px]:block min-[1840px]:-right-10"
+          aria-hidden
+        >
           <p className="text-[0.63rem] font-bold uppercase leading-[1.6] tracking-[0.28em] text-graf-300">
             Juntos
             <br />
