@@ -80,6 +80,7 @@ async function xmlDoFeed() {
 
     const excluido = motivoDeExclusao({
       publicado: true,
+      slug: produto.slug,
       precoCents: produto.priceCents,
       compraDireta: produto.allowDirectPurchase,
       temImagem: fotos.length > 0,

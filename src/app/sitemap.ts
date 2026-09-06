@@ -56,10 +56,21 @@ const PRIVADAS = [
  */
 const REDIRECIONADAS = new Set(["/empresa"]);
 
+/**
+ * Rotas fixas que só entram no mapa quando têm conteúdo.
+ *
+ * `/central-tecnica` existe no menu desde o primeiro dia, mas anunciar uma
+ * listagem vazia é justamente o que o escopo proíbe — resultado vazio
+ * indexado não é conteúdo. Ela é registrada mais abaixo, e só se houver
+ * artigo publicado.
+ */
+const CONDICIONAIS = new Set(["/central-tecnica"]);
+
 function ehPublica(href: string) {
   if (!href.startsWith("/")) return false;
   if (href.includes("#") || href.includes("?")) return false;
   if (REDIRECIONADAS.has(href)) return false;
+  if (CONDICIONAIS.has(href)) return false;
   return !PRIVADAS.some((rota) => href === rota || href.startsWith(`${rota}/`));
 }
 
@@ -90,7 +101,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   try {
-    const [produtos, categorias, marcas, paginas] = await Promise.all([
+    const [produtos, categorias, marcas, paginas, artigos] = await Promise.all([
       prisma.product.findMany({
         where: { status: "active" },
         orderBy: { updatedAt: "desc" },
@@ -125,6 +136,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         take: TETO_POR_TIPO,
         select: { slug: true, updatedAt: true, body: true },
       }),
+      /* Só artigo publicado. Rascunho e "em revisão" não existem para o
+         buscador — e arquivado sai do mapa porque deixou de ser conteúdo
+         vigente, ainda que o endereço continue respondendo. */
+      prisma.article.findMany({
+        where: { status: "publicado" },
+        orderBy: { publishedAt: "desc" },
+        take: TETO_POR_TIPO,
+        select: {
+          slug: true,
+          updatedAt: true,
+          reviewedAt: true,
+          publishedAt: true,
+          cover: { select: { url: true } },
+        },
+      }),
     ]);
 
     for (const produto of produtos) {
@@ -150,6 +176,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: marca.updatedAt,
         changeFrequency: "monthly",
         priority: 0.6,
+      });
+    }
+
+    if (artigos.length > 0) {
+      registrar("/central-tecnica", {
+        lastModified: artigos[0].publishedAt ?? artigos[0].updatedAt,
+        changeFrequency: "weekly",
+        priority: 0.7,
+      });
+    }
+
+    for (const artigo of artigos) {
+      /* `lastModified` sai da data editorial real, não de `updatedAt`: uma
+         correção de vírgula no painel não é revisão técnica, e anunciar todo
+         artigo como reciém-atualizado a cada mexida esvazia o sinal. */
+      registrar(`/central-tecnica/${artigo.slug}`, {
+        lastModified: artigo.reviewedAt ?? artigo.publishedAt ?? artigo.updatedAt,
+        changeFrequency: "monthly",
+        priority: 0.7,
+        images: artigo.cover ? [urlAbsoluta(artigo.cover.url)] : undefined,
       });
     }
 

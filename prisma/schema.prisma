@@ -51,6 +51,10 @@ model User {
   /// Inspeções que esta pessoa conduziu e publicou.
   certificacoesInspecionadas UnitCertification[] @relation("CertificacaoTecnico")
   certificacoesPublicadas    UnitCertification[] @relation("CertificacaoPublicador")
+
+  /// Artigos da Central Técnica assinados e revisados por esta pessoa.
+  artigosEscritos  Article[] @relation("ArtigoAutor")
+  artigosRevisados Article[] @relation("ArtigoRevisor")
 }
 
 /// Técnico de campo. Estende um usuário interno com dados operacionais.
@@ -346,6 +350,7 @@ model Product {
   movements   InventoryMovement[]
   cartItems   CartItem[]
   orderItems  OrderItem[]
+  articles    ArticleProduct[]
   favorites   Favorite[]
   quoteItems  QuoteItem[]
   equipments  Equipment[]
@@ -1929,6 +1934,7 @@ model Media {
   folder    String   @default("geral")
   createdAt DateTime @default(now())
 
+  articleCovers  Article[]             @relation("ArtigoCapa")
   pageCovers     Page[]                @relation("PageCover")
   pageImages     PageImage[]
   slides         Slide[]               @relation("SlideImage")
@@ -1963,4 +1969,116 @@ model DocumentSequence {
   prefix    String   @id
   current   Int      @default(0)
   updatedAt DateTime @updatedAt
+}
+
+// ============================================================================
+// CENTRAL TÉCNICA
+// ============================================================================
+
+enum ArticleStatus {
+  /// Escrito, ainda sem assinatura técnica. Não aparece no site.
+  rascunho
+  /// Fechado pelo autor, esperando o revisor. Continua fora do site.
+  em_revisao
+  /// Assinado, revisado e no ar.
+  publicado
+  /// Saiu do ar, mas continua existindo — o endereço já circulou.
+  arquivado
+}
+
+/// Assunto do artigo. Serve ao filtro da lista e à navegação interna.
+enum ArticleTopic {
+  autoclave
+  compressor
+  vacuo
+  compra
+  operacao
+}
+
+/// Um artigo da Central Técnica JB.
+///
+/// Não é `Page`: `Page` tem slug fixo e serve às páginas institucionais, que
+/// nascem com o site e não têm autoria nem fluxo de revisão. Um artigo técnico
+/// afirma coisas sobre equipamento de saúde, e por isso precisa de coisas que
+/// `Page` não tem: quem assinou, quem revisou, em que modelos aquilo se aplica
+/// e de onde a informação veio.
+model Article {
+  id    String @id @default(cuid())
+  slug  String @unique
+  title String
+  lead  String @default("")
+  body  String @default("") // HTML sanitizado, mesmo caminho das páginas
+
+  status ArticleStatus @default(rascunho)
+  topic  ArticleTopic  @default(operacao)
+
+  /// Autor técnico REAL. Nulo enquanto ninguém assinou — e sem assinatura o
+  /// artigo não pode ser publicado. O escopo é explícito: ausência de revisão
+  /// não autoriza nome fictício.
+  authorId String?
+  author   User?   @relation("ArtigoAutor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  /// Revisor técnico REAL, e diferente do autor: revisão do próprio texto pelo
+  /// próprio autor não é revisão.
+  reviewerId String?
+  reviewer   User?   @relation("ArtigoRevisor", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  /// Datas REAIS, gravadas quando o ato aconteceu. Nunca calculadas no build:
+  /// "revisado hoje" a cada deploy é uma data falsa com aspecto de cuidado.
+  publishedAt DateTime?
+  reviewedAt  DateTime?
+
+  /// Fabricantes, linhas ou modelos a que o conteúdo se aplica. Vazio
+  /// significa "não declarado", e a página diz isso — em vez de deixar o
+  /// leitor supor que vale para o equipamento dele.
+  appliesTo String[] @default([])
+
+  /// O que ainda falta para este rascunho poder ser publicado. Texto para a
+  /// equipe, nunca exibido ao público.
+  pendingNote String @default("")
+
+  coverId String?
+  cover   Media?  @relation("ArtigoCapa", fields: [coverId], references: [id], onDelete: SetNull)
+
+  seoTitle       String?
+  seoDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sources  ArticleSource[]
+  products ArticleProduct[]
+
+  @@index([status, publishedAt])
+  @@index([topic, status])
+}
+
+/// De onde veio a informação do artigo.
+///
+/// Manual do fabricante, norma, orientação técnica. Um artigo que orienta
+/// conduta sobre equipamento pressurizado sem fonte é opinião com aparência
+/// de instrução.
+model ArticleSource {
+  id        String  @id @default(cuid())
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  title String
+  url   String?
+  note  String  @default("")
+  order Int     @default(0)
+
+  @@index([articleId, order])
+}
+
+/// Produto citado pelo artigo. Alimenta o CTA contextual.
+model ArticleProduct {
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Int     @default(0)
+
+  @@id([articleId, productId])
+  @@index([productId])
 }

@@ -29,7 +29,13 @@ const base: ItemDoFeed = {
 };
 
 describe("motivoDeExclusao", () => {
-  const candidato = { publicado: true, precoCents: 100, compraDireta: true, temImagem: true };
+  const candidato = {
+    publicado: true,
+    slug: "autoclave-21",
+    precoCents: 100,
+    compraDireta: true,
+    temImagem: true,
+  };
 
   it("produto publicado, com preço, compra direta e foto entra", () => {
     expect(motivoDeExclusao(candidato)).toBeNull();
@@ -37,6 +43,11 @@ describe("motivoDeExclusao", () => {
 
   it("rascunho e arquivado ficam de fora", () => {
     expect(motivoDeExclusao({ ...candidato, publicado: false })).toBe("nao_publicado");
+  });
+
+  it("produto de demonstração fica de fora", () => {
+    // o catálogo de demonstração existe para conferir tela, não para anunciar
+    expect(motivoDeExclusao({ ...candidato, slug: "demo-autoclave-21l" })).toBe("demonstracao");
   });
 
   it("sem preço não vira oferta de zero real", () => {

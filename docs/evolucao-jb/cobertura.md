@@ -309,6 +309,26 @@ de verdade.
 | Local | Página local só com cobertura real | **decisão de não fazer**, com motivo escrito |
 | Local | Checklist do perfil, fotos e avaliações reais | documentado |
 
+### Fase 14 — Central Técnica JB e arquitetura editorial (seção 18)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 18.1 | Central Técnica, não blog genérico | implementado — cinco temas, todos ligados a equipamento que a JB atende |
+| 18.2 | Rotas estáveis, sem colisão | validado localmente — `/central-tecnica` e `/central-tecnica/[slug]`; `SLUGS_RESERVADOS` recusa slug que é rota da seção |
+| 18.3 | Reusar CMS ou justificar modelo novo | justificado — `Page` tem slug fixo e nenhuma noção de autoria ou revisão; `Article` foi criado com a justificativa no schema |
+| 18.4 | Tema, modelos, autor, revisor, fontes, datas, capa, CTA, relacionados | implementado — todos os campos existem e chegam à tela |
+| 18.5 | Rascunho → revisão → publicado → arquivado, com prévia protegida | validado localmente — prévia é rota de `/admin`, atrás de `exigirArea`; sem token em URL |
+| 18.6 | Não publicar autoria ou revisão que não aconteceram | validado localmente — 20 testes; autor e revisor são lista fechada; a data de revisão só o próprio revisor registra |
+| 18.7 | Separar observável, quando parar e o que exige diagnóstico | implementado — todos os 19 rascunhos têm as três seções |
+| 18.8 | Sem instrução de abrir, despressurizar ou anular proteção | implementado — decisão registrada no cabeçalho de `pautas-central-tecnica.ts`; a página repete o limite ao fim de todo artigo |
+| 18.9 | Aplicabilidade por fabricante e modelo | implementado — `appliesTo` vazio faz a página dizer que não foi declarada, **nunca** que vale para todos |
+| 18.10 | Filtro e links internos | implementado — filtro por tema, CTA de chamado, produtos citados |
+| 18.11 | Sitemap e schema só com publicado; sem indexar vazio | validado localmente — só `publicado` no sitemap; a listagem responde `noindex` enquanto não houver artigo |
+| 18.12 | Sem data de revisão inventada a cada build | validado localmente — `dataEditorial` devolve `null` sem data real; `lastModified` sai de `reviewedAt`/`publishedAt` |
+| Pautas | 19 rascunhos substanciais, com fontes quando necessário | entregue — carregados por `pnpm pautas:carregar`, idempôncia verificada em execução real |
+| Pautas | Calendário priorizado e registro do que aguarda | entregue — `docs/evolucao-jb/calendario-editorial.md`, três ondas e o que falta por texto |
+| Pautas | Nada publicado sem revisão profissional real | **cumprido** — os 19 estão em rascunho, sem autor e sem revisor. Publicar exige gente. |
+
 ---
 
 ## Matriz de cenários obrigatórios (seção 26)
@@ -349,7 +369,7 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | Alteração de preço/estoque/CMS | validado localmente — `updateTag` no painel; E2E de catálogo confirma |
 | Analytics recusado | validado localmente — o script não entra na página de quem recusou |
 | Evento de compra | não iniciado |
-| Artigo sem revisão/autor real | não iniciado |
+| Artigo sem revisão/autor real | validado localmente — publicação recusada com a lista do que falta; 20 testes |
 | Review/case sem autorização | não iniciado |
 | Navegação mobile/teclado | não iniciado |
 | Falha do provedor/rede | não iniciado |

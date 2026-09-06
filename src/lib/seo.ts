@@ -447,6 +447,56 @@ export function servicoJsonLd(servico: ServicoSeo): DadosJsonLd {
 
 export type PerguntaSeo = { pergunta: string; resposta: string };
 
+export type ArtigoSeo = {
+  titulo: string;
+  caminho: string;
+  descricao?: string | null;
+  imagem?: string | null;
+  /** Nome de quem assinou. Sem autor real, NADA de `author` no objeto. */
+  autor?: string | null;
+  revisor?: string | null;
+  publicadoEm?: Date | null;
+  revisadoEm?: Date | null;
+  editor: string;
+};
+
+/**
+ * Artigo da Central Técnica.
+ *
+ * Duas regras que valem mais que o resto do objeto:
+ *
+ * As datas vêm do banco ou não vêm. `datePublished` calculado no build é uma
+ * data falsa com aspecto de cuidado, e ela se renova a cada deploy — o
+ * buscador lê "revisado ontem" para sempre.
+ *
+ * `author` só existe com autor real. Um artigo técnico assinado pela própria
+ * empresa quando ninguém assinou é a ficção que o escopo proíbe nomeadamente.
+ */
+export function artigoJsonLd(artigo: ArtigoSeo): DadosJsonLd {
+  const url = urlAbsoluta(artigo.caminho);
+  const autor = limpo(artigo.autor);
+  const revisor = limpo(artigo.revisor);
+
+  return {
+    "@context": CONTEXTO,
+    "@type": "TechArticle",
+    headline: textoLimpo(artigo.titulo, 110),
+    url,
+    mainEntityOfPage: url,
+    description: artigo.descricao ? textoLimpo(artigo.descricao, 300) : undefined,
+    image: artigo.imagem ? urlAbsoluta(artigo.imagem) : undefined,
+    datePublished: artigo.publicadoEm ? artigo.publicadoEm.toISOString() : undefined,
+    dateModified: artigo.revisadoEm ? artigo.revisadoEm.toISOString() : undefined,
+    author: autor ? { "@type": "Person", name: autor } : undefined,
+    reviewedBy: revisor ? { "@type": "Person", name: revisor } : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: artigo.editor,
+      "@id": `${SITE_URL}/#organizacao`,
+    },
+  };
+}
+
 export function faqJsonLd(perguntas: readonly PerguntaSeo[]): DadosJsonLd {
   return {
     "@context": CONTEXTO,

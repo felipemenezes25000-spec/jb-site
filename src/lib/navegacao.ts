@@ -133,6 +133,7 @@ export const RODAPE_CLIENTE: ItemMenu[] = [
 ];
 
 export const RODAPE_INSTITUCIONAL: ItemMenu[] = [
+  { rotulo: "Central Técnica", href: "/central-tecnica" },
   { rotulo: "Sobre a JB", href: "/sobre" },
   { rotulo: "Nossa estrutura", href: "/estrutura" },
   { rotulo: "Contato", href: "/contato" },

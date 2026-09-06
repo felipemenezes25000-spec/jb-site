@@ -40,6 +40,7 @@ export type AreaAdmin =
   | "equipamentos"
   | "tecnicos"
   | "conteudo"
+  | "central"
   | "leads"
   | "usuarios"
   | "configuracoes"
@@ -249,6 +250,15 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     leitura: [],
     grupo: "conteudo",
     descricao: "Páginas, banners, seções da home e perguntas frequentes",
+  },
+  central: {
+    rotulo: "Central Técnica",
+    href: "/admin/central-tecnica",
+    icone: "BookOpen",
+    papeis: ["admin", "gestor", "editor"],
+    leitura: ["tecnico"],
+    grupo: "conteudo",
+    descricao: "Artigos técnicos: rascunho, revisão, publicação e arquivo",
   },
   leads: {
     rotulo: "Leads",

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BookOpen,
   Boxes,
   CalendarClock,
   CalendarDays,
@@ -42,6 +43,7 @@ import type { GrupoMenu } from "@/lib/permissoes";
 /** Lista fechada — evita arrastar a biblioteca inteira de ícones para o bundle. */
 const ICONES: Record<string, LucideIcon> = {
   LayoutDashboard,
+  BookOpen,
   ShoppingCart,
   CreditCard,
   Users,

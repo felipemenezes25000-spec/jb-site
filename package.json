@@ -27,7 +27,9 @@
     "responsivo": "node scripts/responsivo.mjs",
     "a11y": "node scripts/acessibilidade.mjs",
     "conteudo:prever": "tsx scripts/migrar-conteudo-institucional.ts",
-    "conteudo:migrar": "tsx scripts/migrar-conteudo-institucional.ts --aplicar"
+    "conteudo:migrar": "tsx scripts/migrar-conteudo-institucional.ts --aplicar",
+    "pautas:prever": "tsx scripts/carregar-pautas.ts",
+    "pautas:carregar": "tsx scripts/carregar-pautas.ts --aplicar"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

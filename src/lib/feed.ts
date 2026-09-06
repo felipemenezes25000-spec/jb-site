@@ -21,12 +21,16 @@ export const NAMESPACE_GOOGLE = "http://base.google.com/ns/1.0";
 
 export type MotivoDeExclusao =
   | "nao_publicado"
+  | "demonstracao"
   | "sem_preco"
   | "sem_compra_direta"
   | "sem_imagem";
 
 export const EXPLICACAO_DA_EXCLUSAO: Record<MotivoDeExclusao, string> = {
   nao_publicado: "Só produto publicado vai para o feed. Rascunho e arquivado ficam de fora.",
+  demonstracao:
+    "Produto de demonstração. Ele existe para a JB conferir telas com catálogo cheio, " +
+    "não para ser anunciado — anúncio de produto que a loja não vende é anúncio falso.",
   sem_preco: "Sem preço não há oferta, e oferta sem preço é rejeitada na origem.",
   sem_compra_direta:
     "O produto é só sob orçamento. Anunciá-lo com preço prometeria uma compra que a " +
@@ -37,10 +41,22 @@ export const EXPLICACAO_DA_EXCLUSAO: Record<MotivoDeExclusao, string> = {
 /** O que a regra de elegibilidade precisa saber. Nada além disso. */
 export type CandidatoAoFeed = {
   publicado: boolean;
+  /** O endereço do produto. É por ele que a demonstração é reconhecida. */
+  slug: string;
   precoCents: number;
   compraDireta: boolean;
   temImagem: boolean;
 };
+
+/**
+ * Prefixo dos dados de demonstração.
+ *
+ * A convenção é do próprio projeto: `prisma/seed-demo.ts` cria produto e marca
+ * com slug `demo-`, e `seed-demo-limpar.ts` apaga por esse mesmo prefixo. O
+ * feed usa o mesmo critério porque um item de demonstração anunciado é uma
+ * oferta que a loja não consegue honrar.
+ */
+export const PREFIXO_DEMO = "demo-";
 
 /**
  * Por que este produto não entra no feed — ou `null` quando entra.
@@ -50,6 +66,7 @@ export type CandidatoAoFeed = {
  */
 export function motivoDeExclusao(produto: CandidatoAoFeed): MotivoDeExclusao | null {
   if (!produto.publicado) return "nao_publicado";
+  if (produto.slug.startsWith(PREFIXO_DEMO)) return "demonstracao";
   if (!Number.isFinite(produto.precoCents) || produto.precoCents <= 0) return "sem_preco";
   if (!produto.compraDireta) return "sem_compra_direta";
   if (!produto.temImagem) return "sem_imagem";
