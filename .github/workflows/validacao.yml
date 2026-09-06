@@ -132,7 +132,17 @@ jobs:
   ponta-a-ponta:
     name: E2E, acessibilidade e responsividade
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 45, e não 30. A primeira execução real deste job — antes ele morria na
+    # carga de dados e nunca chegava aos testes — levou 30min16s e foi morta
+    # pelo teto de 30 no meio da responsividade, com E2E e acessibilidade já
+    # verdes. Teto de tempo que corta uma suite saudável não é portão, é ruído:
+    # reprova sem dizer o que está errado, e ensina a ignorar o vermelho.
+    #
+    # O número certo a longo prazo não é este: são 52 E2E, 94 medições de
+    # acessibilidade e 294 de responsividade em série, mais um build no meio.
+    # Separar as auditorias num job próprio faria as duas metades correrem em
+    # paralelo. Fica anotado; primeiro o pipeline precisa fechar verde uma vez.
+    timeout-minutes: 45
     needs: estatico
     steps:
       - uses: actions/checkout@v5
