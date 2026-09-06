@@ -47,6 +47,10 @@ model User {
   technician Technician?
 
   @@index([role, active])
+
+  /// Inspeções que esta pessoa conduziu e publicou.
+  certificacoesInspecionadas UnitCertification[] @relation("CertificacaoTecnico")
+  certificacoesPublicadas    UnitCertification[] @relation("CertificacaoPublicador")
 }
 
 /// Técnico de campo. Estende um usuário interno com dados operacionais.
@@ -381,6 +385,26 @@ model ProductAddon {
 // ESTOQUE
 // ============================================================================
 
+/// Estado da certificação de uma unidade física no programa Seminovo JB.
+///
+/// O selo NÃO é um campo booleano de propósito. "Certificado" é a conclusão de
+/// um processo com etapas, responsável e data — e um booleano não guarda nem a
+/// etapa, nem quem assinou, nem o fato de ter sido revogado depois.
+enum CertificationStatus {
+  /// Nunca entrou no programa. É o estado de todo seminovo antigo: o selo não
+  /// é aplicado retroativamente a quem nunca foi inspecionado.
+  sem_certificacao
+  /// Inspeção começou. Nada disso aparece no site.
+  em_preparacao
+  /// Checklist fechado, aguardando revisão de quem publica.
+  concluida
+  /// Publicada. É o único estado em que o selo aparece ao público.
+  publicada
+  /// Suspensa ou revogada depois de publicada. O selo sai do ar e a página de
+  /// verificação diz que saiu — some sem aviso seria pior que nunca ter tido.
+  revogada
+}
+
 enum UnitStatus {
   disponivel
   reservado
@@ -413,6 +437,9 @@ model InventoryUnit {
   checklist InventoryCheckItem[]
   media     InventoryUnitMedia[]
 
+
+  /// Inspeção do programa Seminovo JB Certificado, quando existe.
+  certification UnitCertification?
   @@index([productId, status])
   @@index([serialNumber])
 }
@@ -428,6 +455,97 @@ model InventoryCheckItem {
   order  Int           @default(0)
 
   @@index([unitId, order])
+}
+
+/// Inspeção de uma unidade física para o programa Seminovo JB Certificado.
+///
+/// A certificação pertence à UNIDADE, não ao produto. Duas autoclaves do mesmo
+/// modelo têm histórico, ciclos e desgaste diferentes; um selo no SKU
+/// afirmaria sobre a segunda o que só foi verificado na primeira.
+///
+/// O programa é da JB. Nada aqui insinua certificação independente ou
+/// regulatória — o texto público diz de quem é o selo, e a página de
+/// verificação existe para que a afirmação seja conferível.
+model UnitCertification {
+  id     String        @id @default(cuid())
+  unitId String        @unique
+  unit   InventoryUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  status CertificationStatus @default(em_preparacao)
+
+  /// Identificador OPACO da página pública de verificação.
+  ///
+  /// Não é o id da unidade nem o número de série: um verificador que fosse o
+  /// serial permitiria varrer o catálogo e descobrir o que a JB tem em
+  /// estoque. Ele é gerado aleatório e serve só para abrir a página.
+  publicCode String @unique
+
+  /// Versão do checklist usada. Sem ela, "34 itens verificados" hoje e "28"
+  /// amanhã seriam a mesma afirmação com números diferentes e nenhuma
+  /// explicação.
+  checklistVersion String @default("v1")
+
+  /// Quantos itens o checklist desta versão tem, e quantos foram aprovados.
+  /// Guardados no fechamento: recontar depois daria outro número se o
+  /// checklist mudasse.
+  itemsTotal    Int @default(0)
+  itemsApproved Int @default(0)
+  /// Itens marcados como não aplicáveis. NÃO entram em `itemsApproved` — um
+  /// item que não se aplica não foi aprovado, e somá-lo infla a verificação.
+  itemsNotApplicable Int @default(0)
+
+  /// Quem conduziu. Pessoa real da equipe; sem ela a inspeção não fecha.
+  technicianId String?
+  technician   User?   @relation("CertificacaoTecnico", fields: [technicianId], references: [id], onDelete: SetNull)
+
+  /// Quem publicou. Pode ser outra pessoa — publicar é decisão, inspecionar é
+  /// trabalho.
+  publishedById String?
+  publishedBy   User?   @relation("CertificacaoPublicador", fields: [publishedById], references: [id], onDelete: SetNull)
+
+  /// Observações estéticas e o que foi testado, em texto livre da equipe.
+  summary String @default("")
+  /// Motivo da revogação. Obrigatório para revogar, e mostrado ao público.
+  revokedReason String @default("")
+
+  inspectedAt DateTime?
+  publishedAt DateTime?
+  revokedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  revisions CertificationRevision[]
+
+  @@index([status])
+}
+
+/// Versão anterior de uma certificação publicada.
+///
+/// Depois de publicada, uma correção não pode reescrever a prova em silêncio:
+/// alguém pode ter decidido a compra pelo que estava escrito antes. Cada
+/// alteração de certificação publicada guarda aqui o que havia.
+model CertificationRevision {
+  id              String            @id @default(cuid())
+  certificationId String
+  certification   UnitCertification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+
+  status             CertificationStatus
+  checklistVersion   String
+  itemsTotal         Int
+  itemsApproved      Int
+  itemsNotApplicable Int
+  summary            String
+
+  /// O que motivou a mudança, escrito por quem a fez.
+  note String @default("")
+
+  /// Quem alterou.
+  changedById String?
+
+  createdAt DateTime @default(now())
+
+  @@index([certificationId, createdAt])
 }
 
 model InventoryUnitMedia {

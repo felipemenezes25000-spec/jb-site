@@ -32,7 +32,18 @@ type Entrada = MetadataRoute.Sitemap[number];
 /** Google recomenda no máximo 50.000 URLs por arquivo. */
 const TETO_POR_TIPO = 5000;
 
-const PRIVADAS = ["/admin", "/minha-jb", "/checkout", "/carrinho", "/entrar", "/api"];
+const PRIVADAS = [
+  "/admin",
+  "/minha-jb",
+  "/checkout",
+  "/carrinho",
+  "/entrar",
+  "/api",
+  /* Uma página por unidade física vendida encheria o índice de páginas quase
+     idênticas. O que se quer indexado é a página do produto, não o
+     comprovante dela — e a própria página já responde `noindex`. */
+  "/verificar",
+];
 
 /**
  * Endereços que existem em `Page` mas não devem ser indexados.
