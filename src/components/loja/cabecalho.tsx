@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 
 import { Logo } from "@/components/ui/logo";
-import { useDialogo } from "@/components/ui/use-dialogo";
 import { classesBotao } from "@/components/ui/button";
+import { useDialogo } from "@/components/ui/use-dialogo";
 import {
   ATALHOS_CLIENTE,
   CONDICOES,
@@ -36,14 +36,6 @@ export type CategoriaMenu = { slug: string; name: string; count: number };
 
 type Props = {
   categorias: CategoriaMenu[];
-  /**
-   * As duas peças que dependem de quem está do outro lado, já renderizadas
-   * pelo servidor dentro do seu próprio `<Suspense>`.
-   *
-   * Chegam como nó pronto, e não como número e nome, para que o cabeçalho —
-   * que é componente de cliente — não precise esperar por uma leitura de
-   * cookie para existir. Ver `cabecalho-pessoal.tsx`.
-   */
   acessoDaConta: React.ReactNode;
   contadorDoCarrinho: React.ReactNode;
   telefone: string;
@@ -53,20 +45,14 @@ type Props = {
 
 const MENSAGEM_WHATSAPP = "Olá! Vim pelo site da JB.";
 
-/* ==========================================================================
-   Cabeçalho da loja
-
-   Três acessos disputam o topo e cada um tem um peso diferente:
-   catálogo (a navegação), busca (o atalho de quem já sabe o que quer) e a
-   área da clínica (o cliente que volta). O carrinho e o pedido de assistência
-   são as duas ações — uma comercial, uma técnica.
-
-   O mega menu é um disclosure de verdade: abre no mouse, mas também no
-   clique e no teclado, com `aria-expanded` no gatilho e Esc devolvendo o foco.
-   Link e gatilho são elementos separados de propósito — clicar no rótulo leva
-   ao catálogo, clicar na seta abre o painel.
-   ========================================================================== */
-
+/**
+ * Cabeçalho público.
+ *
+ * A navegação agora mora na mesma linha da marca, busca e ações. A antiga
+ * segunda faixa de menu deixava o topo com aparência de dois cabeçalhos
+ * empilhados e fazia a primeira dobra começar tarde demais. O mega menu segue
+ * existindo, mas nasce da mesma linha principal.
+ */
 export function Cabecalho({
   categorias,
   acessoDaConta,
@@ -90,8 +76,6 @@ export function Cabecalho({
   const botaoBusca = useRef<HTMLButtonElement>(null);
   const campoBuscaMobile = useRef<HTMLInputElement>(null);
 
-  // identidade estável: `useDialogo` reage à função, e uma nova a cada
-  // render devolveria o foco ao topo da gaveta a cada rolagem da página
   const fecharMenu = useCallback(() => setMenuAberto(false), []);
 
   useEffect(() => {
@@ -101,7 +85,6 @@ export function Cabecalho({
     return () => window.removeEventListener("scroll", aoRolar);
   }, []);
 
-  // navegou: nada de painel aberto sobrando por cima da página nova
   useEffect(() => {
     setMenuAberto(false);
     setMega(null);
@@ -114,9 +97,7 @@ export function Cabecalho({
 
   useEffect(() => {
     function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key !== "Escape") return;
-      // a gaveta tem o próprio Esc, dentro de useDialogo
-      if (menuAberto) return;
+      if (evento.key !== "Escape" || menuAberto) return;
 
       if (mega) {
         const gatilho = gatilhosMega.current[mega];
@@ -124,34 +105,23 @@ export function Cabecalho({
         gatilho?.focus();
         return;
       }
+
       if (buscaAberta) {
         setBuscaAberta(false);
         botaoBusca.current?.focus();
       }
     }
+
     window.addEventListener("keydown", aoTeclar);
     return () => window.removeEventListener("keydown", aoTeclar);
   }, [mega, buscaAberta, menuAberto]);
 
-  /**
-   * Um respiro ao sair evita o painel piscando quando o ponteiro atravessa o
-   * vão entre o rótulo e o painel. Quem abriu pelo teclado não perde o menu
-   * por um passar de mouse: se o foco ainda está no cabeçalho, nada fecha.
-   */
-  const agendarFechamento = () => {
-    if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
-    fecharTimer.current = window.setTimeout(() => {
-      if (refCabecalho.current?.contains(document.activeElement)) return;
-      setMega(null);
-    }, 160);
-  };
-  const cancelarFechamento = () => {
-    if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
-  };
-
-  useEffect(() => () => {
-    if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
+    },
+    [],
+  );
 
   const ativo = (href: string) => rotaAtiva(pathname, href);
 
@@ -163,9 +133,20 @@ export function Cabecalho({
     setBuscaAberta(false);
   }
 
-  // o foco saiu do cabeçalho inteiro: fecha o painel que estava aberto
   function aoPerderFoco(evento: React.FocusEvent<HTMLElement>) {
     if (!evento.currentTarget.contains(evento.relatedTarget)) setMega(null);
+  }
+
+  function cancelarFechamento() {
+    if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
+  }
+
+  function agendarFechamento() {
+    if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
+    fecharTimer.current = window.setTimeout(() => {
+      if (refCabecalho.current?.contains(document.activeElement)) return;
+      setMega(null);
+    }, 160);
   }
 
   const temBarraUtilidade = Boolean(horario || telefone || whatsapp);
@@ -174,46 +155,46 @@ export function Cabecalho({
     <>
       <a
         href="#conteudo"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-graf-950 focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-jb-700 focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
       >
         Pular para o conteúdo
       </a>
 
-      {/* ---------------------------------------------- barra de utilidade */}
       {temBarraUtilidade ? (
-        <div className="hidden border-b border-graf-200 bg-graf-50 lg:block">
-          <div className="container-jb flex h-10 items-center justify-between gap-6 text-[0.8125rem]">
+        <div className="hidden bg-jb-600 text-white lg:block">
+          <div className="mx-auto flex h-9 max-w-[100rem] items-center justify-between gap-8 px-8 text-[0.72rem]">
             {horario ? (
-              <p className="flex items-center gap-2 text-graf-600">
-                <Clock className="size-3.5 shrink-0 text-graf-400" aria-hidden />
+              <p className="flex items-center gap-2 text-white/85">
+                <Clock className="size-3.5 shrink-0" aria-hidden />
                 {horario}
               </p>
             ) : (
               <span />
             )}
-            <div className="flex items-center gap-6">
+
+            <p className="hidden font-semibold tracking-[-0.01em] text-white/90 2xl:block">
+              Equipamentos, assistência e pós-venda no mesmo relacionamento.
+            </p>
+
+            <div className="flex items-center gap-5">
               {telefone ? (
                 <a
                   href={telHref(telefone)}
-                  /* h-10 (a altura da barra): sem isso o alvo tem só a altura
-                     da linha, 16px, abaixo dos 24px que a WCAG 2.5.8 pede.
-                     Altura fixa e não h-full porque o pai flex não tem altura
-                     própria — a porcentagem cairia em `auto`. O desenho não
-                     muda: o link passa a ocupar a barra que já existia. */
-                  className="flex h-10 items-center gap-2 rounded-xs text-graf-600 transition-colors hover:text-jb-700"
+                  className="flex h-9 items-center gap-2 rounded-xs text-white/90 transition-colors hover:text-white"
                 >
-                  <Phone className="size-3.5 shrink-0 text-graf-400" aria-hidden />
+                  <Phone className="size-3.5 shrink-0" aria-hidden />
                   {telefone}
                 </a>
               ) : null}
+
               {whatsapp ? (
                 <a
                   href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 items-center gap-2 rounded-xs font-semibold text-graf-700 transition-colors hover:text-jb-700"
+                  className="flex h-9 items-center gap-2 rounded-xs font-semibold text-white transition-colors hover:text-white/80"
                 >
-                  <span className="size-1.5 shrink-0 rounded-full bg-ok-500" aria-hidden />
+                  <span className="size-1.5 shrink-0 rounded-full bg-white" aria-hidden />
                   WhatsApp {whatsapp}
                 </a>
               ) : null}
@@ -222,63 +203,112 @@ export function Cabecalho({
         </div>
       ) : null}
 
-      {/* --------------------------------------------------------- cabeçalho */}
       <header
         ref={refCabecalho}
         onMouseLeave={agendarFechamento}
         onBlur={aoPerderFoco}
         className={cn(
-          "sticky top-0 z-50 border-b bg-white/95 backdrop-blur transition-shadow duration-200",
-          compacto ? "border-graf-200 shadow-card" : "border-graf-200/70",
+          "sticky top-0 z-50 border-b border-graf-200/80 bg-white/97 backdrop-blur-xl transition-shadow duration-200",
+          compacto && "shadow-card",
         )}
       >
-        <div className="container-jb">
+        <div className="mx-auto max-w-[100rem] px-5 sm:px-8">
           <div
             className={cn(
-              "flex items-center gap-3 transition-[height] duration-200 sm:gap-5",
-              compacto ? "h-15" : "h-20",
+              "flex items-center gap-5 transition-[height] duration-200",
+              compacto ? "h-[72px]" : "h-[88px]",
             )}
           >
             <Link
               href="/"
               aria-label="JB Soluções Odontológicas — início"
-              /* A logo mede 34–42px de altura; o link precisa de 44 para ser
-                 tocável no celular sem que a marca cresça junto. */
               className="flex min-h-11 shrink-0 items-center rounded-sm"
             >
-              <Logo altura={compacto ? 32 : 42} prioridade />
+              <Logo altura={compacto ? 38 : 46} prioridade />
             </Link>
 
-            {/* Busca — a partir do tablet ela mora no topo, sempre visível */}
-            <form onSubmit={buscar} role="search" className="hidden min-w-0 flex-1 md:flex">
+            <nav aria-label="Principal" className="hidden shrink-0 items-center gap-4 2xl:flex">
+              {MENU_PRINCIPAL.map((item) => {
+                const chave = item.megaMenu;
+                const aberto = chave !== undefined && mega === chave;
+                const estaAtivo = ativo(item.href);
+
+                return (
+                  <div
+                    key={item.href}
+                    className="relative flex h-12 items-center"
+                    onMouseEnter={() => {
+                      cancelarFechamento();
+                      setMega(chave ?? null);
+                    }}
+                  >
+                    <Link
+                      href={item.href}
+                      aria-current={estaAtivo ? "page" : undefined}
+                      className={cn(
+                        "relative flex h-12 items-center rounded-lg px-2 text-[0.8125rem] font-semibold transition-colors",
+                        estaAtivo ? "text-jb-700" : "text-graf-800 hover:text-jb-700",
+                      )}
+                    >
+                      {item.rotulo}
+                      {estaAtivo ? (
+                        <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-jb-500" aria-hidden />
+                      ) : null}
+                    </Link>
+
+                    {chave ? (
+                      <button
+                        type="button"
+                        ref={(el) => {
+                          gatilhosMega.current[chave] = el;
+                        }}
+                        aria-expanded={aberto}
+                        aria-label={`${aberto ? "Fechar" : "Abrir"} o menu de ${item.rotulo}`}
+                        onFocus={cancelarFechamento}
+                        onClick={() => setMega(aberto ? null : chave)}
+                        className="-ml-1 flex size-8 items-center justify-center rounded-full text-graf-500 transition-colors hover:bg-jb-50 hover:text-jb-700"
+                      >
+                        <ChevronDown
+                          className={cn("size-3.5 transition-transform duration-200", aberto && "rotate-180")}
+                          aria-hidden
+                        />
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </nav>
+
+            <form
+              onSubmit={buscar}
+              role="search"
+              className="ml-auto hidden min-w-0 max-w-[27rem] flex-1 lg:flex 2xl:ml-2"
+            >
               <CampoBusca id="busca-cabecalho" compacto={compacto} />
             </form>
 
-            <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
+            <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
               <button
                 ref={botaoBusca}
                 type="button"
                 onClick={() => setBuscaAberta((v) => !v)}
                 aria-expanded={buscaAberta}
-                className="flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 md:hidden"
+                className="flex size-11 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-jb-50 hover:text-jb-700 lg:hidden"
               >
-                {buscaAberta ? (
-                  <X className="size-5" aria-hidden />
-                ) : (
-                  <Search className="size-5" aria-hidden />
-                )}
+                {buscaAberta ? <X className="size-5" aria-hidden /> : <Search className="size-5" aria-hidden />}
                 <span className="sr-only">{buscaAberta ? "Fechar a busca" : "Buscar"}</span>
               </button>
 
-              {/* Área da clínica e carrinho: renderizados no servidor, cada um
-                  no seu Suspense. O cabeçalho só reserva o lugar. */}
               {acessoDaConta}
-
               {contadorDoCarrinho}
 
               <Link
                 href="/assistencia-tecnica/solicitar"
-                className={classesBotao("primario", "sm", "ml-1.5 hidden lg:inline-flex")}
+                className={classesBotao(
+                  "primario",
+                  "sm",
+                  "ml-1.5 hidden min-h-12 rounded-xl px-5 shadow-[0_10px_26px_rgba(220,38,38,0.16)] xl:inline-flex",
+                )}
               >
                 <Wrench className="size-4 shrink-0" aria-hidden />
                 Solicitar assistência
@@ -289,87 +319,15 @@ export function Cabecalho({
                 onClick={() => setMenuAberto(true)}
                 aria-haspopup="dialog"
                 aria-expanded={menuAberto}
-                className="flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 lg:hidden"
+                className="ml-1 flex size-11 items-center justify-center rounded-xl border border-graf-200 text-graf-800 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 2xl:hidden"
               >
                 <Menu className="size-5" aria-hidden />
                 <span className="sr-only">Abrir o menu</span>
               </button>
             </div>
           </div>
-
-          {/* ------------------------------------------ navegação — desktop */}
-          <nav aria-label="Principal" className="hidden lg:block">
-            <ul className="-mb-px flex items-center gap-1">
-              {MENU_PRINCIPAL.map((item) => {
-                const chave = item.megaMenu;
-                const aberto = chave !== undefined && mega === chave;
-                const estaAtivo = ativo(item.href);
-
-                return (
-                  <li
-                    key={item.href}
-                    onMouseEnter={() => {
-                      cancelarFechamento();
-                      setMega(chave ?? null);
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        "flex items-center border-b-2 transition-colors",
-                        estaAtivo
-                          ? "border-jb-500"
-                          : aberto
-                            ? "border-graf-400"
-                            : "border-transparent",
-                      )}
-                    >
-                      <Link
-                        href={item.href}
-                        aria-current={estaAtivo ? "page" : undefined}
-                        className={cn(
-                          "rounded-t-md px-3 text-[0.9375rem] font-semibold transition-colors",
-                          compacto ? "py-2" : "py-4",
-                          estaAtivo ? "text-jb-700" : "text-graf-700 hover:text-graf-950",
-                        )}
-                      >
-                        {item.rotulo}
-                      </Link>
-
-                      {chave ? (
-                        <button
-                          type="button"
-                          ref={(el) => {
-                            gatilhosMega.current[chave] = el;
-                          }}
-                          aria-expanded={aberto}
-                          aria-label={`${aberto ? "Fechar" : "Abrir"} o menu de ${item.rotulo}`}
-                          onFocus={cancelarFechamento}
-                          onClick={() => setMega(aberto ? null : chave)}
-                          /* 44x44: em 1024px quem navega já está no toque
-                             (tablet deitado), e 28px de largura era chute. */
-                          className={cn(
-                            "-ml-2 flex w-11 items-center justify-center rounded-t-md text-graf-500 transition-colors hover:text-graf-950",
-                            compacto ? "h-9" : "h-13",
-                          )}
-                        >
-                          <ChevronDown
-                            className={cn(
-                              "size-4 transition-transform duration-200",
-                              aberto && "rotate-180",
-                            )}
-                            aria-hidden
-                          />
-                        </button>
-                      ) : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
         </div>
 
-        {/* ------------------------------------------------- busca — celular */}
         <AnimatePresence initial={false}>
           {buscaAberta ? (
             <motion.div
@@ -378,16 +336,15 @@ export function Cabecalho({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: reduzido ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="overflow-hidden border-t border-graf-200 bg-white md:hidden"
+              className="overflow-hidden border-t border-graf-200 bg-white lg:hidden"
             >
-              <form onSubmit={buscar} role="search" className="container-jb py-3">
+              <form onSubmit={buscar} role="search" className="mx-auto max-w-[100rem] px-5 py-3 sm:px-8">
                 <CampoBusca id="busca-celular" ref={campoBuscaMobile} compacto />
               </form>
             </motion.div>
           ) : null}
         </AnimatePresence>
 
-        {/* ---------------------------------------------------- mega menu */}
         <AnimatePresence>
           {mega ? (
             <motion.div
@@ -397,13 +354,9 @@ export function Cabecalho({
               exit={{ opacity: 0, y: reduzido ? 0 : -6 }}
               transition={{ duration: reduzido ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
               onMouseEnter={cancelarFechamento}
-              /* O cabeçalho é `sticky`, então este painel fica colado abaixo
-                 dele e não acompanha a rolagem da página: sem teto de altura,
-                 num notebook de 1024x600 as duas últimas linhas de categoria
-                 ficavam fora da tela e inalcançáveis. */
-              className="absolute inset-x-0 top-full hidden max-h-[70dvh] overflow-y-auto overscroll-contain border-b border-graf-200 bg-white shadow-pop lg:block"
+              className="absolute inset-x-0 top-full hidden max-h-[70dvh] overflow-y-auto overscroll-contain border-b border-jb-100 bg-white shadow-pop 2xl:block"
             >
-              <div className="container-jb py-9">
+              <div className="mx-auto max-w-[100rem] px-8 py-9">
                 {mega === "catalogo" ? (
                   <MegaCatalogo categorias={categorias} />
                 ) : (
@@ -428,13 +381,6 @@ export function Cabecalho({
   );
 }
 
-/* ------------------------------------------------------------------ busca */
-
-/**
- * Um só campo para o topo e para a gaveta do celular: área de clique larga,
- * botão de enviar dentro da caixa e o foco marcado em dois sinais (borda e
- * anel), que é o que sobrevive à rolagem.
- */
 function CampoBusca({
   id,
   ref,
@@ -442,19 +388,17 @@ function CampoBusca({
 }: {
   id: string;
   ref?: React.Ref<HTMLInputElement>;
-  /** No topo já rolado a caixa perde 8px de altura, junto com o cabeçalho. */
   compacto?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "mx-auto flex w-full max-w-xl items-center rounded-full border border-graf-450 bg-graf-50",
-        "transition-[height,border-color,background-color] duration-200",
-        "hover:border-graf-500 focus-within:border-jb-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-jb-500/15",
+        "flex w-full items-center rounded-full border border-graf-300 bg-graf-50 transition-[height,border-color,background-color,box-shadow] duration-200",
+        "hover:border-graf-400 hover:bg-white focus-within:border-jb-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-jb-500/8",
         compacto ? "h-11" : "h-12",
       )}
     >
-      <Search className="ml-4.5 hidden size-4.5 shrink-0 text-graf-500 lg:block" aria-hidden />
+      <Search className="ml-4 size-4.5 shrink-0 text-jb-600" aria-hidden />
       <label htmlFor={id} className="sr-only">
         Buscar no catálogo
       </label>
@@ -465,18 +409,13 @@ function CampoBusca({
         type="search"
         enterKeyHint="search"
         autoComplete="off"
-        placeholder="Busque equipamento, marca, modelo ou peça"
-        className="h-full min-w-0 flex-1 bg-transparent px-4 text-base text-graf-900 outline-none placeholder:text-graf-500 sm:text-[0.9375rem] lg:pl-3"
+        placeholder="Busque equipamentos, marcas, modelos ou peças..."
+        className="h-full min-w-0 flex-1 bg-transparent px-3 text-[0.875rem] text-graf-900 outline-none placeholder:text-graf-400"
       />
-      {/* Alvo de toque de 44px dentro de uma caixa de 44–48: o botão ocupa a
-          altura inteira e o raio acompanha a caixa, sem virar pastilha preta
-          disputando atenção com o CTA vermelho do topo. */}
       <button
         type="submit"
         aria-label="Buscar"
-        /* 44px: é alvo de toque, e a caixa tem 44–48px de altura — daí o
-           recuo de 2px só na versão alta. */
-        className="mr-0.5 flex size-11 shrink-0 items-center justify-center rounded-full text-graf-600 transition-colors hover:bg-graf-200 hover:text-graf-950 active:bg-graf-300"
+        className="mr-0.5 flex size-11 shrink-0 items-center justify-center rounded-full text-jb-600 transition-colors hover:bg-jb-50 hover:text-jb-800"
       >
         <Search className="size-4.5" aria-hidden />
       </button>
@@ -484,33 +423,22 @@ function CampoBusca({
   );
 }
 
-/* -------------------------------------------------------------- mega menu */
-
 function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
   return (
     <div className="grid gap-10 xl:grid-cols-[1.7fr_1fr]">
       <div>
         <div className="flex items-baseline justify-between gap-6">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-graf-500">Categorias</h2>
-          <Link
-            href="/loja"
-            className="inline-flex items-center gap-1.5 rounded-sm text-sm font-semibold text-jb-700 transition-colors hover:text-jb-800"
-          >
+          <h2 className="text-xs font-bold uppercase tracking-wider text-jb-700">Categorias</h2>
+          <Link href="/loja" className="inline-flex items-center gap-1.5 text-sm font-bold text-jb-700 hover:text-jb-900">
             Ver o catálogo completo
             <ArrowRight className="size-3.5" aria-hidden />
           </Link>
         </div>
 
         {categorias.length === 0 ? (
-          <div className="mt-4 rounded-xl border border-dashed border-graf-300 bg-graf-50 p-6">
-            <p className="text-sm text-graf-600">
-              As categorias ainda não foram publicadas. O catálogo continua aberto para
-              navegação.
-            </p>
-            <Link
-              href="/loja"
-              className="mt-3 inline-flex items-center gap-1.5 rounded-sm text-sm font-semibold text-jb-700 hover:text-jb-800"
-            >
+          <div className="mt-4 rounded-2xl border border-dashed border-jb-200 bg-jb-50/50 p-6">
+            <p className="text-sm text-graf-600">As categorias ainda não foram publicadas.</p>
+            <Link href="/loja" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-jb-700">
               Ver todos os equipamentos
               <ArrowRight className="size-3.5" aria-hidden />
             </Link>
@@ -521,13 +449,13 @@ function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
               <li key={categoria.slug}>
                 <Link
                   href={`/categoria/${categoria.slug}`}
-                  className="group flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-graf-50"
+                  className="group flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-jb-50"
                 >
-                  <span className="text-sm font-medium text-graf-800 transition-colors group-hover:text-jb-700">
+                  <span className="text-sm font-semibold text-graf-800 transition-colors group-hover:text-jb-700">
                     {categoria.name}
                   </span>
                   {categoria.count > 0 ? (
-                    <span className="tabular shrink-0 text-xs text-graf-500">
+                    <span className="tabular shrink-0 text-xs text-graf-400">
                       {categoria.count}
                       <span className="sr-only"> equipamentos</span>
                     </span>
@@ -539,14 +467,14 @@ function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
         )}
       </div>
 
-      <div className="xl:border-l xl:border-graf-200 xl:pl-10">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-graf-500">Por condição</h2>
+      <div className="xl:border-l xl:border-jb-100 xl:pl-10">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-jb-700">Por condição</h2>
         <ul className="mt-4 grid gap-x-6 sm:grid-cols-2 xl:grid-cols-1">
           {CONDICOES.map((condicao) => (
             <li key={condicao.slug}>
               <Link
                 href={`/${condicao.slug}`}
-                className="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium text-graf-800 transition-colors hover:bg-graf-50 hover:text-jb-700"
+                className="flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-graf-800 transition-colors hover:bg-jb-50 hover:text-jb-700"
               >
                 {condicao.rotulo}
               </Link>
@@ -554,18 +482,12 @@ function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
           ))}
         </ul>
 
-        <div className="mt-4 flex flex-wrap gap-x-6 border-t border-graf-200 pt-4">
-          <Link
-            href="/marcas"
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-3 text-sm font-semibold text-jb-700 transition-colors hover:text-jb-800"
-          >
+        <div className="mt-4 flex flex-wrap gap-x-6 border-t border-jb-100 pt-4">
+          <Link href="/marcas" className="inline-flex min-h-11 items-center gap-1.5 px-3 text-sm font-bold text-jb-700 hover:text-jb-900">
             Ver todas as marcas
             <ArrowRight className="size-3.5" aria-hidden />
           </Link>
-          <Link
-            href="/pecas-e-acessorios"
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-3 text-sm font-semibold text-graf-700 transition-colors hover:text-jb-700"
-          >
+          <Link href="/pecas-e-acessorios" className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-graf-700 hover:text-jb-700">
             Peças e acessórios
           </Link>
         </div>
@@ -588,22 +510,16 @@ function MegaAssistencia({
   return (
     <div className={cn("grid gap-8", temContato && "xl:grid-cols-[2.3fr_1fr]")}>
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-wider text-graf-500">
-          Assistência e manutenção
-        </h2>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-jb-700">Assistência e manutenção</h2>
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {MENU_ASSISTENCIA.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex h-full flex-col rounded-xl border border-graf-200 bg-white p-4 transition-[border-color,background-color] hover:border-jb-300 hover:bg-jb-50/50"
+                className="flex h-full flex-col rounded-2xl border border-jb-100 bg-white p-4 transition-colors hover:border-jb-300 hover:bg-jb-50/40"
               >
                 <span className="text-sm font-bold text-graf-950">{item.rotulo}</span>
-                {item.descricao ? (
-                  <span className="mt-1 text-xs leading-relaxed text-graf-500">
-                    {item.descricao}
-                  </span>
-                ) : null}
+                {item.descricao ? <span className="mt-1 text-xs leading-relaxed text-graf-500">{item.descricao}</span> : null}
               </Link>
             </li>
           ))}
@@ -611,9 +527,9 @@ function MegaAssistencia({
       </div>
 
       {temContato ? (
-        <div className="on-dark flex flex-col rounded-xl bg-graf-950 p-5">
-          <p className="text-sm font-bold text-white">Prefere falar com um técnico?</p>
-          <p className="mt-1.5 text-xs leading-relaxed text-graf-300">
+        <div className="flex flex-col rounded-2xl bg-jb-600 p-5 text-white">
+          <p className="text-sm font-bold">Prefere falar com um técnico?</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-white/75">
             {horario ? `Equipe técnica própria. ${horario}.` : "Equipe técnica própria."}
           </p>
           <div className="mt-4 flex flex-col gap-2">
@@ -622,18 +538,18 @@ function MegaAssistencia({
                 href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={classesBotao("claro", "sm", "w-full")}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-jb-700 transition-colors hover:bg-jb-50"
               >
-                <MessageCircle className="size-4 shrink-0" aria-hidden />
+                <MessageCircle className="size-4" aria-hidden />
                 WhatsApp {whatsapp}
               </a>
             ) : null}
             {telefone ? (
               <a
                 href={telHref(telefone)}
-                className={classesBotao("contorno-claro", "sm", "w-full")}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/50 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10"
               >
-                <Phone className="size-4 shrink-0" aria-hidden />
+                <Phone className="size-4" aria-hidden />
                 {telefone}
               </a>
             ) : null}
@@ -643,8 +559,6 @@ function MegaAssistencia({
     </div>
   );
 }
-
-/* ----------------------------------------------------------------- gaveta */
 
 function MenuMobile({
   aberto,
@@ -664,8 +578,6 @@ function MenuMobile({
   reduzido: boolean;
 }) {
   const [secao, setSecao] = useState<ChaveMega | null>(null);
-  // foco preso, Esc, devolução do foco e rolagem travada:
-  // `role="dialog"` sozinho não faz nada disso
   const caixa = useDialogo(aberto, aoFechar);
 
   useEffect(() => {
@@ -684,7 +596,7 @@ function MenuMobile({
             exit={{ opacity: 0 }}
             transition={{ duration: reduzido ? 0 : 0.2 }}
             onClick={aoFechar}
-            className="fixed inset-0 z-60 bg-graf-950/50 lg:hidden"
+            className="fixed inset-0 z-60 bg-jb-950/35 2xl:hidden"
             aria-hidden
           />
           <motion.div
@@ -697,14 +609,14 @@ function MenuMobile({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: reduzido ? 0 : "100%", opacity: reduzido ? 0 : 1 }}
             transition={{ type: "tween", duration: reduzido ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-y-0 right-0 z-70 flex w-[min(23rem,92vw)] flex-col bg-white shadow-pop lg:hidden"
+            className="fixed inset-y-0 right-0 z-70 flex w-[min(24rem,92vw)] flex-col bg-white shadow-pop 2xl:hidden"
           >
-            <div className="flex h-16 shrink-0 items-center justify-between border-b border-graf-200 pl-5 pr-2">
-              <Logo altura={32} />
+            <div className="flex h-16 shrink-0 items-center justify-between border-b border-jb-100 pl-5 pr-2">
+              <Logo altura={34} />
               <button
                 type="button"
                 onClick={aoFechar}
-                className="flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100"
+                className="flex size-11 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-jb-50 hover:text-jb-700"
               >
                 <X className="size-5" aria-hidden />
                 <span className="sr-only">Fechar o menu</span>
@@ -712,45 +624,28 @@ function MenuMobile({
             </div>
 
             <div className="flex-1 overflow-y-auto overscroll-contain">
-              {/* Área da clínica primeiro: é o motivo mais comum de voltar.
-                  O destino é sempre `/minha-jb`: com sessão, a área abre; sem
-                  sessão, o proxy manda para `/entrar` já com o caminho de
-                  volta. Antes o menu decidia isso pelo nome do cliente, que
-                  vinha do layout e obrigava a casca inteira a esperar por uma
-                  leitura de cookie. Um link que funciona nos dois casos custa
-                  menos que um prerender perdido. */}
-              <div className="border-b border-graf-200 p-4">
+              <div className="border-b border-jb-100 p-4">
                 <Link
                   href="/minha-jb"
-                  className="flex items-center gap-3.5 rounded-xl border border-graf-200 bg-graf-50 p-4 transition-colors hover:border-graf-300 hover:bg-graf-100"
+                  className="flex items-center gap-3.5 rounded-2xl border border-jb-100 bg-jb-50/60 p-4 transition-colors hover:border-jb-200"
                 >
-                  <span
-                    aria-hidden
-                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-100"
-                  >
+                  <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-jb-600 ring-1 ring-inset ring-jb-100">
                     <User className="size-5" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-medium text-graf-500">
-                      Área da Clínica
-                    </span>
-                    <span className="block truncate text-base font-bold text-graf-950">
-                      Pedidos, equipamentos e chamados
-                    </span>
+                    <span className="block text-xs font-medium text-graf-500">Área da Clínica</span>
+                    <span className="block truncate text-base font-bold text-graf-950">Pedidos, equipamentos e chamados</span>
                   </span>
-                  <ArrowRight className="size-4 shrink-0 text-graf-400" aria-hidden />
+                  <ArrowRight className="size-4 shrink-0 text-jb-500" aria-hidden />
                 </Link>
 
-                {/* Os atalhos aparecem para todo mundo: cada um leva à rota
-                    real, que pede login quando é o caso. Escondê-los de quem
-                    não tem sessão exigiria saber quem é a pessoa aqui. */}
                 <ul className="mt-2 grid grid-cols-2 gap-1.5">
                   {ATALHOS_CLIENTE.slice(0, 4).map((atalho) => (
                     <li key={atalho.href}>
                       <Link
                         href={atalho.href}
                         aria-current={ativo(atalho.href) ? "page" : undefined}
-                        className="flex min-h-11 items-center rounded-lg border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-graf-300 hover:text-jb-700"
+                        className="flex min-h-11 items-center rounded-xl border border-jb-100 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-jb-200 hover:text-jb-700"
                       >
                         {atalho.rotulo}
                       </Link>
@@ -781,95 +676,51 @@ function MenuMobile({
                           onClick={() => alternar(chave)}
                           aria-expanded={expandido}
                           aria-controls={painel}
-                          className="flex min-h-13 w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-graf-50"
+                          className="flex min-h-13 w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-jb-50/60"
                         >
                           <span className="min-w-0">
-                            <span className="block text-base font-semibold text-graf-900">
-                              {item.rotulo}
-                            </span>
-                            {item.descricao ? (
-                              <span className="mt-0.5 block text-xs text-graf-500">
-                                {item.descricao}
-                              </span>
-                            ) : null}
+                            <span className="block text-base font-semibold text-graf-900">{item.rotulo}</span>
+                            {item.descricao ? <span className="mt-0.5 block text-xs text-graf-500">{item.descricao}</span> : null}
                           </span>
-                          <ChevronDown
-                            className={cn(
-                              "size-4.5 shrink-0 text-graf-500 transition-transform duration-200",
-                              expandido && "rotate-180",
-                            )}
-                            aria-hidden
-                          />
+                          <ChevronDown className={cn("size-4.5 shrink-0 text-jb-500 transition-transform duration-200", expandido && "rotate-180")} aria-hidden />
                         </button>
 
                         <div id={painel} hidden={!expandido}>
-                          <ul className="mb-2 ml-3 border-l border-graf-200 pl-3">
+                          <ul className="mb-2 ml-3 border-l border-jb-100 pl-3">
                             <li>
-                              <Link
-                                href={item.href}
-                                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-jb-700 transition-colors hover:bg-graf-50"
-                              >
-                                {chave === "catalogo"
-                                  ? "Ver todos os equipamentos"
-                                  : "Ver a assistência técnica"}
+                              <Link href={item.href} className="flex min-h-11 items-center rounded-xl px-3 text-sm font-bold text-jb-700 transition-colors hover:bg-jb-50">
+                                {chave === "catalogo" ? "Ver todos os equipamentos" : "Ver a assistência técnica"}
                               </Link>
                             </li>
 
                             {chave === "catalogo"
                               ? categorias.map((categoria) => (
                                   <li key={categoria.slug}>
-                                    <Link
-                                      href={`/categoria/${categoria.slug}`}
-                                      className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
-                                    >
+                                    <Link href={`/categoria/${categoria.slug}`} className="flex min-h-11 items-center rounded-xl px-3 text-sm text-graf-700 transition-colors hover:bg-jb-50">
                                       {categoria.name}
                                     </Link>
                                   </li>
                                 ))
                               : MENU_ASSISTENCIA.map((sub) => (
                                   <li key={sub.href}>
-                                    <Link
-                                      href={sub.href}
-                                      className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
-                                    >
+                                    <Link href={sub.href} className="flex min-h-11 items-center rounded-xl px-3 text-sm text-graf-700 transition-colors hover:bg-jb-50">
                                       {sub.rotulo}
                                     </Link>
                                   </li>
                                 ))}
 
                             {chave === "catalogo" ? (
-                              <li className="mt-1 border-t border-graf-200 pt-1">
+                              <li className="mt-1 border-t border-jb-100 pt-1">
                                 <ul>
                                   {CONDICOES.map((condicao) => (
                                     <li key={condicao.slug}>
-                                      <Link
-                                        href={`/${condicao.slug}`}
-                                        className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
-                                      >
+                                      <Link href={`/${condicao.slug}`} className="flex min-h-11 items-center rounded-xl px-3 text-sm text-graf-700 transition-colors hover:bg-jb-50">
                                         {condicao.rotulo}
                                       </Link>
                                     </li>
                                   ))}
-                                  {/* Peças saiu da barra principal e vive aqui.
-                                      Na gaveta do celular ela precisa aparecer
-                                      explicitamente: sem esta linha, o único
-                                      caminho seria a busca. */}
-                                  <li>
-                                    <Link
-                                      href="/pecas-e-acessorios"
-                                      className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
-                                    >
-                                      Peças e acessórios
-                                    </Link>
-                                  </li>
-                                  <li>
-                                    <Link
-                                      href="/marcas"
-                                      className="flex min-h-11 items-center rounded-lg px-3 text-sm text-graf-700 transition-colors hover:bg-graf-50"
-                                    >
-                                      Marcas
-                                    </Link>
-                                  </li>
+                                  <li><Link href="/pecas-e-acessorios" className="flex min-h-11 items-center rounded-xl px-3 text-sm text-graf-700 hover:bg-jb-50">Peças e acessórios</Link></li>
+                                  <li><Link href="/marcas" className="flex min-h-11 items-center rounded-xl px-3 text-sm text-graf-700 hover:bg-jb-50">Marcas</Link></li>
                                 </ul>
                               </li>
                             ) : null}
@@ -880,50 +731,26 @@ function MenuMobile({
                   })}
                 </ul>
 
-                <ul className="mt-4 space-y-0.5 border-t border-graf-200 pt-4">
-                  <li>
-                    <LinhaMenu
-                      item={{ rotulo: "Favoritos", href: "/minha-jb/favoritos" }}
-                      ativo={ativo("/minha-jb/favoritos")}
-                    />
-                  </li>
-                  <li>
-                    <LinhaMenu
-                      item={{ rotulo: "Pedir orçamento", href: "/orcamento" }}
-                      ativo={ativo("/orcamento")}
-                    />
-                  </li>
-                  <li>
-                    <LinhaMenu
-                      item={{ rotulo: "Contato", href: "/contato" }}
-                      ativo={ativo("/contato")}
-                    />
-                  </li>
+                <ul className="mt-4 space-y-0.5 border-t border-jb-100 pt-4">
+                  <li><LinhaMenu item={{ rotulo: "Favoritos", href: "/minha-jb/favoritos" }} ativo={ativo("/minha-jb/favoritos")} /></li>
+                  <li><LinhaMenu item={{ rotulo: "Pedir orçamento", href: "/orcamento" }} ativo={ativo("/orcamento")} /></li>
+                  <li><LinhaMenu item={{ rotulo: "Contato", href: "/contato" }} ativo={ativo("/contato")} /></li>
                 </ul>
               </nav>
             </div>
 
-            {/* O que importa fica no alcance do polegar */}
-            <div className="shrink-0 space-y-2 border-t border-graf-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <Link
-                href="/assistencia-tecnica/solicitar"
-                className={classesBotao("primario", "md", "w-full")}
-              >
+            <div className="shrink-0 space-y-2 border-t border-jb-100 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <Link href="/assistencia-tecnica/solicitar" className={classesBotao("primario", "md", "w-full rounded-xl")}>
                 <Wrench className="size-4 shrink-0" aria-hidden />
                 Solicitar assistência
               </Link>
               {whatsapp ? (
-                <a
-                  href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={classesBotao("secundario", "md", "w-full")}
-                >
+                <a href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)} target="_blank" rel="noopener noreferrer" className={classesBotao("secundario", "md", "w-full rounded-xl")}>
                   <MessageCircle className="size-4 shrink-0" aria-hidden />
                   Falar no WhatsApp
                 </a>
               ) : telefone ? (
-                <a href={telHref(telefone)} className={classesBotao("secundario", "md", "w-full")}>
+                <a href={telHref(telefone)} className={classesBotao("secundario", "md", "w-full rounded-xl")}>
                   <Phone className="size-4 shrink-0" aria-hidden />
                   Ligar para {telefone}
                 </a>
@@ -942,18 +769,12 @@ function LinhaMenu({ item, ativo }: { item: ItemMenu; ativo: boolean }) {
       href={item.href}
       aria-current={ativo ? "page" : undefined}
       className={cn(
-        "flex min-h-13 flex-col justify-center rounded-lg px-3 py-2.5 transition-colors hover:bg-graf-50",
+        "flex min-h-13 flex-col justify-center rounded-xl px-3 py-2.5 transition-colors hover:bg-jb-50/60",
         ativo && "bg-jb-50",
       )}
     >
-      <span
-        className={cn("text-base font-semibold", ativo ? "text-jb-700" : "text-graf-900")}
-      >
-        {item.rotulo}
-      </span>
-      {item.descricao ? (
-        <span className="mt-0.5 text-xs text-graf-500">{item.descricao}</span>
-      ) : null}
+      <span className={cn("text-base font-semibold", ativo ? "text-jb-700" : "text-graf-900")}>{item.rotulo}</span>
+      {item.descricao ? <span className="mt-0.5 text-xs text-graf-500">{item.descricao}</span> : null}
     </Link>
   );
 }
