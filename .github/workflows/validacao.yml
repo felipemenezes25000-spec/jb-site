@@ -1,0 +1,261 @@
+# ============================================================================
+# Portão de validação da plataforma JB
+#
+# Um workflow, e é de propósito. A política de recursos do escopo pede gates
+# concentrados num pipeline principal; um segundo só se justificaria por
+# gatilho ou custo distintos, e não é o caso aqui — a suíte inteira roda em
+# poucos minutos.
+#
+# A ordem dos jobs é a do custo: o que falha rápido falha primeiro. Typecheck e
+# unitários não precisam de banco nem de navegador e derrubam o PR em segundos;
+# só depois vale acender o Postgres e o Chromium.
+#
+# O banco é um serviço do próprio job — efêmero, criado do zero a cada
+# execução. Nunca, em hipótese alguma, uma variável apontando para Neon: o seed
+# de teste apaga e recria dados.
+# ============================================================================
+
+name: Validação
+
+on:
+  push:
+    branches: [main, plataforma]
+  pull_request:
+
+# Uma execução por referência. Um push novo no mesmo PR cancela o anterior —
+# validação substituída não precisa terminar, e a fila fica livre para quem
+# está esperando.
+concurrency:
+  group: validacao-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # O `packageManager` do package.json manda; isto é só para o setup-node.
+  NODE_VERSION: "20"
+
+jobs:
+  # --------------------------------------------------------------- estático
+  estatico:
+    name: Tipos e testes de unidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # `--frozen-lockfile`: um lockfile desatualizado é falha de PR, não algo
+      # a corrigir silenciosamente durante a instalação.
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      # `prisma generate` roda no postinstall, mas depende de DATABASE_URL
+      # existir no schema. Um valor local basta: nada é conectado aqui.
+      - name: Conferir tipos
+        run: pnpm typecheck
+        env:
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+
+      - name: Testes de unidade
+        run: pnpm test:unit
+
+  # ------------------------------------------------------------------ build
+  build:
+    name: Build de produção
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: estatico
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # O build prerenderiza rotas, então precisa do banco de verdade.
+      - name: Subir Postgres
+        run: |
+          docker run -d --name jb-pg \
+            -e POSTGRES_USER=jb -e POSTGRES_PASSWORD=jb -e POSTGRES_DB=jb \
+            -p 5432:5432 postgres:17-alpine
+          for i in $(seq 1 30); do
+            docker exec jb-pg pg_isready -U jb && break
+            sleep 2
+          done
+
+      - name: Aplicar migrações
+        run: pnpm db:deploy
+        env:
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+
+      - name: Carga base
+        run: pnpm db:seed
+        env:
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+          ADMIN_EMAIL: ci@jbteste.local
+          ADMIN_PASSWORD: ciDeTeste12345
+
+      # NEXT_PUBLIC_SITE_URL é localhost de propósito: CI não é produção. A
+      # validação de `src/lib/site-url.ts` distingue os dois por VERCEL_ENV,
+      # que aqui não existe — e é por isso que o build não exige HTTPS.
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+          AUTH_SECRET: ci-secret-de-teste-nao-usar-em-producao-0000000000
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          CRON_SECRET: ci-cron-secret
+
+  # ------------------------------------------------------------------- e2e
+  ponta-a-ponta:
+    name: E2E, acessibilidade e responsividade
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: estatico
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Subir Postgres
+        run: |
+          docker run -d --name jb-pg \
+            -e POSTGRES_USER=jb -e POSTGRES_PASSWORD=jb -e POSTGRES_DB=jb \
+            -p 5432:5432 postgres:17-alpine
+          for i in $(seq 1 30); do
+            docker exec jb-pg pg_isready -U jb && break
+            sleep 2
+          done
+
+      - name: Aplicar migrações e carregar dados
+        run: |
+          pnpm db:deploy
+          pnpm db:seed
+          pnpm db:demo:operacao
+        env:
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+          ADMIN_EMAIL: ci@jbteste.local
+          ADMIN_PASSWORD: ciDeTeste12345
+          PERMITIR_DEMO: "1"
+
+      # Só o Chromium. WebKit e Firefox multiplicariam o tempo por três para
+      # cobrir o que a suíte atual não diferencia — e o escopo é explícito em
+      # não deixar o resultado parecer teste em iPhone real.
+      - name: Instalar navegador
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Testes de ponta a ponta
+        run: pnpm e2e
+        env:
+          CI: "true"
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+          AUTH_SECRET: ci-secret-de-teste-nao-usar-em-producao-0000000000
+          NEXT_PUBLIC_SITE_URL: http://localhost:3210
+          CRON_SECRET: ci-cron-secret
+
+      # Os dois scripts abaixo medem no navegador de verdade e saem com código
+      # 1 quando acham problema — por isso são portão, e não relatório.
+      - name: Servidor para as auditorias
+        run: |
+          pnpm build
+          pnpm start --port 3400 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:3400 > /dev/null && break
+            sleep 2
+          done
+        env:
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+          AUTH_SECRET: ci-secret-de-teste-nao-usar-em-producao-0000000000
+          NEXT_PUBLIC_SITE_URL: http://localhost:3400
+          CRON_SECRET: ci-cron-secret
+
+      - name: Acessibilidade
+        run: pnpm a11y
+        env:
+          BASE_URL: http://localhost:3400
+
+      - name: Responsividade
+        run: pnpm responsivo
+        env:
+          BASE_URL: http://localhost:3400
+
+      # Relatório, traço e captura de quem falhou. Os dados são de
+      # demonstração (`@jbteste.local`), então nada real vai para o artefato.
+      - name: Guardar relatórios
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-validacao
+          path: |
+            tests/.relatorio
+            tests/.saida
+            .shots
+          retention-days: 7
+
+  # ------------------------------------------------------------ concorrência
+  atomicidade:
+    name: Prova de atomicidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: estatico
+    # Só quando o que muda pode quebrar concorrência. Rodar a prova em toda
+    # alteração de texto gastaria minutos de banco para provar o que ninguém
+    # tocou.
+    if: >-
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.labels.*.name, 'dominio')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Subir Postgres
+        run: |
+          docker run -d --name jb-pg \
+            -e POSTGRES_USER=jb -e POSTGRES_PASSWORD=jb -e POSTGRES_DB=jb \
+            -p 5432:5432 postgres:17-alpine
+          for i in $(seq 1 30); do
+            docker exec jb-pg pg_isready -U jb && break
+            sleep 2
+          done
+
+      - name: Migrações e dados de demonstração
+        run: |
+          pnpm db:deploy
+          pnpm db:seed
+          pnpm db:demo:operacao
+        env:
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+          ADMIN_EMAIL: ci@jbteste.local
+          ADMIN_PASSWORD: ciDeTeste12345
+          PERMITIR_DEMO: "1"
+
+      - name: Concorrência real contra o Postgres
+        run: pnpm prova:atomicidade
+        env:
+          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
+          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
+          AUTH_SECRET: ci-secret-de-teste-nao-usar-em-producao-0000000000

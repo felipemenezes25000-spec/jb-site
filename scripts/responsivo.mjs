@@ -32,6 +32,11 @@ const EQUIPE = { email: "demo.admin@jbteste.local", senha: "demo12345" };
 
 /** As larguras onde o layout costuma quebrar, não uma lista redonda qualquer. */
 const LARGURAS = [
+  /* 320 é a largura mínima que a WCAG 2.2 exige suportar sem rolagem
+     horizontal (1.4.10, reflow). Entrou na fase 7 desta evolução: até então a
+     lista começava em 360, e um iPhone SE de primeira geração com fonte
+     ampliada cai abaixo disso. */
+  { w: 320, h: 720, nome: "320 (mínimo da WCAG)", toque: true },
   { w: 360, h: 780, nome: "360 (celular pequeno)", toque: true },
   { w: 390, h: 844, nome: "390 (celular comum)", toque: true },
   { w: 768, h: 1024, nome: "768 (tablet retrato)", toque: true },

@@ -291,7 +291,28 @@ async function percorrer(grupo, rotas, login) {
           const r = await pagina.evaluate(
             async () =>
               await window.axe.run(document, {
-                runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] },
+                /* WCAG 2.2 AA, e não só 2.1: a 2.2 acrescenta critérios que
+                   importam nesta plataforma — foco não obscurecido por barra
+                   fixa (2.4.11), alvo de toque mínimo (2.5.8) e ajuda
+                   consistente (3.2.6). O axe instalado expõe as tags
+                   `wcag22a` e `wcag22aa`; regra que a versão não conhecer é
+                   simplesmente ignorada, então listar não quebra nada.
+
+                   Vale o de sempre: axe sozinho não comprova conformidade. Ele
+                   pega o que dá para automatizar. O resto — ordem de leitura,
+                   texto alternativo que descreve o que importa, sentido do
+                   foco — continua sendo conferência humana. */
+                runOnly: {
+                  type: "tag",
+                  values: [
+                    "wcag2a",
+                    "wcag2aa",
+                    "wcag21a",
+                    "wcag21aa",
+                    "wcag22a",
+                    "wcag22aa",
+                  ],
+                },
                 resultTypes: ["violations"],
               }),
           );
