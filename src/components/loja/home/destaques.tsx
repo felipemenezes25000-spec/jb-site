@@ -16,7 +16,6 @@ import {
 } from "@/components/loja/home/comum";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
-import { cn } from "@/lib/utils";
 
 /* ============================================================================
    Equipamentos em destaque
