@@ -2,6 +2,7 @@ import { createElement } from "react";
 import type { Metadata } from "next";
 
 import type { SettingsMap } from "@/lib/settings";
+import { resolverOrigem } from "@/lib/site-url";
 
 /**
  * SEO: metadados de página e dados estruturados.
@@ -16,10 +17,14 @@ import type { SettingsMap } from "@/lib/settings";
  * não tenha informado.
  */
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(
-  /\/+$/,
-  "",
-);
+/**
+ * A origem pública do site.
+ *
+ * Resolvida em `@/lib/site-url`, que é o único lugar que lê a variável de
+ * ambiente. Em produção mal configurada isto lança durante o build, em vez de
+ * publicar um site cujos canônicos apontam para `localhost:3000`.
+ */
+export const SITE_URL = resolverOrigem();
 
 /** Caminho interno vira URL completa; URL que já é absoluta passa direto. */
 export function urlAbsoluta(caminho = "/") {

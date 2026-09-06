@@ -37,8 +37,16 @@ export type CategoriaMenu = { slug: string; name: string; count: number };
 
 type Props = {
   categorias: CategoriaMenu[];
-  itensNoCarrinho: number;
-  clienteNome: string | null;
+  /**
+   * As duas peças que dependem de quem está do outro lado, já renderizadas
+   * pelo servidor dentro do seu próprio `<Suspense>`.
+   *
+   * Chegam como nó pronto, e não como número e nome, para que o cabeçalho —
+   * que é componente de cliente — não precise esperar por uma leitura de
+   * cookie para existir. Ver `cabecalho-pessoal.tsx`.
+   */
+  acessoDaConta: React.ReactNode;
+  contadorDoCarrinho: React.ReactNode;
   telefone: string;
   whatsapp: string;
   horario: string;
@@ -62,8 +70,8 @@ const MENSAGEM_WHATSAPP = "Olá! Vim pelo site da JB.";
 
 export function Cabecalho({
   categorias,
-  itensNoCarrinho,
-  clienteNome,
+  acessoDaConta,
+  contadorDoCarrinho,
   telefone,
   whatsapp,
   horario,
@@ -161,17 +169,7 @@ export function Cabecalho({
     if (!evento.currentTarget.contains(evento.relatedTarget)) setMega(null);
   }
 
-  // sessão e saudação são coisas diferentes: um cadastro com o nome em branco
-  // continua logado, só não tem por quem ser chamado
-  const temSessao = clienteNome !== null;
-  const primeiroNome = clienteNome?.trim().split(/\s+/)[0] ?? "";
-  const saudacao = primeiroNome ? `Olá, ${primeiroNome}` : "Entrar";
-
   const temBarraUtilidade = Boolean(horario || telefone || whatsapp);
-  const rotuloCarrinho =
-    itensNoCarrinho === 0
-      ? "Carrinho — nenhum item"
-      : `Carrinho com ${itensNoCarrinho} ${itensNoCarrinho === 1 ? "item" : "itens"}`;
 
   return (
     <>
@@ -273,49 +271,11 @@ export function Cabecalho({
                 <span className="sr-only">{buscaAberta ? "Fechar a busca" : "Buscar"}</span>
               </button>
 
-              {/* Área da clínica — entrada de cliente, não link de rodapé */}
-              <Link
-                href={temSessao ? "/minha-jb" : "/entrar"}
-                aria-label={
-                  temSessao
-                    ? "Área da Clínica — área da clínica"
-                    : "Entrar na Área da Clínica — área da clínica"
-                }
-                className={cn(
-                  "flex h-11 items-center gap-2.5 rounded-lg px-2 transition-colors hover:bg-graf-100",
-                  "lg:border lg:border-graf-300 lg:bg-white lg:px-3 lg:shadow-xs",
-                  "lg:hover:border-graf-400 lg:hover:bg-graf-50",
-                )}
-              >
-                <span
-                  aria-hidden
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-graf-100 text-graf-700 lg:bg-jb-50 lg:text-jb-600"
-                >
-                  <User className="size-4" />
-                </span>
-                <span className="hidden max-w-36 text-left leading-tight lg:block">
-                  <span className="block truncate text-xs font-medium text-graf-500">
-                    {saudacao}
-                  </span>
-                  <span className="block text-sm font-bold text-graf-900">Área da Clínica</span>
-                </span>
-              </Link>
+              {/* Área da clínica e carrinho: renderizados no servidor, cada um
+                  no seu Suspense. O cabeçalho só reserva o lugar. */}
+              {acessoDaConta}
 
-              <Link
-                href="/carrinho"
-                aria-label={rotuloCarrinho}
-                className="relative flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100"
-              >
-                <ShoppingCart className="size-5" aria-hidden />
-                {itensNoCarrinho > 0 ? (
-                  <span
-                    aria-hidden
-                    className="tabular absolute right-0.5 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jb-500 px-1.5 text-[0.6875rem] font-bold leading-none text-white ring-2 ring-white"
-                  >
-                    {itensNoCarrinho > 99 ? "99+" : itensNoCarrinho}
-                  </span>
-                ) : null}
-              </Link>
+              {contadorDoCarrinho}
 
               <Link
                 href="/assistencia-tecnica/solicitar"
@@ -460,8 +420,6 @@ export function Cabecalho({
         aberto={menuAberto}
         aoFechar={fecharMenu}
         categorias={categorias}
-        temSessao={temSessao}
-        primeiroNome={primeiroNome}
         telefone={telefone}
         whatsapp={whatsapp}
         ativo={ativo}
@@ -693,8 +651,6 @@ function MenuMobile({
   aberto,
   aoFechar,
   categorias,
-  temSessao,
-  primeiroNome,
   telefone,
   whatsapp,
   ativo,
@@ -703,8 +659,6 @@ function MenuMobile({
   aberto: boolean;
   aoFechar: () => void;
   categorias: CategoriaMenu[];
-  temSessao: boolean;
-  primeiroNome: string;
   telefone: string;
   whatsapp: string;
   ativo: (href: string) => boolean;
@@ -759,10 +713,16 @@ function MenuMobile({
             </div>
 
             <div className="flex-1 overflow-y-auto overscroll-contain">
-              {/* Área da clínica primeiro: é o motivo mais comum de voltar */}
+              {/* Área da clínica primeiro: é o motivo mais comum de voltar.
+                  O destino é sempre `/minha-jb`: com sessão, a área abre; sem
+                  sessão, o proxy manda para `/entrar` já com o caminho de
+                  volta. Antes o menu decidia isso pelo nome do cliente, que
+                  vinha do layout e obrigava a casca inteira a esperar por uma
+                  leitura de cookie. Um link que funciona nos dois casos custa
+                  menos que um prerender perdido. */}
               <div className="border-b border-graf-200 p-4">
                 <Link
-                  href={temSessao ? "/minha-jb" : "/entrar"}
+                  href="/minha-jb"
                   className="flex items-center gap-3.5 rounded-xl border border-graf-200 bg-graf-50 p-4 transition-colors hover:border-graf-300 hover:bg-graf-100"
                 >
                   <span
@@ -776,31 +736,28 @@ function MenuMobile({
                       Área da Clínica
                     </span>
                     <span className="block truncate text-base font-bold text-graf-950">
-                      {temSessao
-                        ? primeiroNome
-                          ? `Olá, ${primeiroNome}`
-                          : "Área da Clínica"
-                        : "Entrar na Área da Clínica"}
+                      Pedidos, equipamentos e chamados
                     </span>
                   </span>
                   <ArrowRight className="size-4 shrink-0 text-graf-400" aria-hidden />
                 </Link>
 
-                {temSessao ? (
-                  <ul className="mt-2 grid grid-cols-2 gap-1.5">
-                    {ATALHOS_CLIENTE.slice(0, 4).map((atalho) => (
-                      <li key={atalho.href}>
-                        <Link
-                          href={atalho.href}
-                          aria-current={ativo(atalho.href) ? "page" : undefined}
-                          className="flex min-h-11 items-center rounded-lg border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-graf-300 hover:text-jb-700"
-                        >
-                          {atalho.rotulo}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
+                {/* Os atalhos aparecem para todo mundo: cada um leva à rota
+                    real, que pede login quando é o caso. Escondê-los de quem
+                    não tem sessão exigiria saber quem é a pessoa aqui. */}
+                <ul className="mt-2 grid grid-cols-2 gap-1.5">
+                  {ATALHOS_CLIENTE.slice(0, 4).map((atalho) => (
+                    <li key={atalho.href}>
+                      <Link
+                        href={atalho.href}
+                        aria-current={ativo(atalho.href) ? "page" : undefined}
+                        className="flex min-h-11 items-center rounded-lg border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-graf-300 hover:text-jb-700"
+                      >
+                        {atalho.rotulo}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               <nav aria-label="Menu principal" className="p-4">

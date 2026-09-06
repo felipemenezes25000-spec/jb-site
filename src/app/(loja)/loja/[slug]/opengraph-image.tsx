@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+import { SITE_URL } from "@/lib/seo";
+
 import { formatarPreco } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
@@ -34,7 +36,12 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 /** A imagem é regerada no máximo de hora em hora, não a cada compartilhamento. */
-export const revalidate = 3600;
+/*
+ * O `export const revalidate` saiu daqui: com `cacheComponents`, a validade
+ * de um cache é declarada com `cacheLife` DENTRO do escopo `use cache`, e
+ * não como configuração de segmento. A função abaixo passou a declarar o
+ * próprio cache; a hora de vida continua sendo uma hora.
+ */
 
 /* ------------------------------------------------------------------- cores */
 
@@ -52,9 +59,14 @@ const ROTULO_CONDICAO: Record<string, string> = {
   recondicionado: "Recondicionado JB",
 };
 
-const DOMINIO = (process.env.NEXT_PUBLIC_SITE_URL ?? "jbsolucoesodontologicas.com.br")
-  .replace(/^https?:\/\//, "")
-  .replace(/\/+$/, "");
+/**
+ * O domínio escrito no rodapé da imagem.
+ *
+ * O fallback anterior era um domínio nu, sem protocolo — que, concatenado,
+ * vira caminho relativo. A origem agora sai de `@/lib/seo`, e aqui só se tira
+ * o protocolo para exibir.
+ */
+const DOMINIO = SITE_URL.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
 
 /* ------------------------------------------------------------------- dados */
 

@@ -19,6 +19,22 @@ import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, servicoJsonLd, trilhaJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
+/*
+ * Migração para Cache Components — esta rota ainda não foi migrada.
+ *
+ * `instant = false` desliga a validação de navegação instantânea para este
+ * segmento. É a saída documentada para migrar rota a rota
+ * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
+ * "Following validation"): a casca da loja já foi migrada e prerenderiza, e
+ * cada página vai deixando de precisar disto conforme a leitura dela ganha
+ * `use cache` ou um `<Suspense>`.
+ *
+ * A lista do que ainda depende desta linha está em
+ * docs/evolucao-jb/cobertura.md, fase 5. Ela é pendência declarada, não
+ * conclusão.
+ */
+export const instant = false;
+
 /**
  * Manutenção preventiva: por que fazer, o que é verificado e com que ritmo.
  *

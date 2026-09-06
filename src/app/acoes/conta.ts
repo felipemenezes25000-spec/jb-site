@@ -20,6 +20,7 @@ import { cnpjValido, cpfValido, formatarTelefone, somenteDigitos } from "@/lib/f
 import { LIMITE_RECUPERACAO, checarFormulario, mensagemDeEspera } from "@/lib/limite";
 import { enfileirar } from "@/lib/notificacoes";
 import { prisma } from "@/lib/prisma";
+import { SITE_URL } from "@/lib/seo";
 import { ipDoPedido } from "@/lib/seguranca";
 
 /**
@@ -283,7 +284,7 @@ async function enfileirarEmailDeReset(email: string, token: string) {
   if (process.env.NODE_ENV !== "production") {
     // Sem provedor de e-mail ligado, o link precisa aparecer em algum lugar
     // para o fluxo ser testável em desenvolvimento. Em produção, nunca.
-    const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    const base = SITE_URL;
     console.error(
       "[senha_reset] link de redefinição:",
       `${base}/redefinir-senha?token=${encodeURIComponent(token)}`,

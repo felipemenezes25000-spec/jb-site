@@ -18,6 +18,12 @@ import {
   EsqueletoMarcasHome,
   EsqueletoSeminovosHome,
 } from "@/components/loja/home/esqueletos-home";
+import { cacheLife, cacheTag } from "next/cache";
+
+import {
+  ETIQUETA_CATALOGO,
+  ETIQUETA_CONFIGURACOES,
+} from "@/lib/loja-publica";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 
@@ -49,8 +55,24 @@ const PUBLICADO = { status: "active" } as const;
  * marcas — carregam por conta própria dentro de um Suspense, com esqueleto no
  * formato exato da faixa. Assim o topo da página não espera pelo rodapé dela.
  */
-export default async function HomePage() {
-  const [s, vitrine, equipamentos, marcas] = await Promise.all([
+/**
+ * Os dados do topo da home.
+ *
+ * Cacheados como um conjunto só, com etiqueta: são o hero, a faixa de provas e
+ * a foto dos três caminhos — tudo público, igual para todo mundo, e tudo lido
+ * do mesmo banco. Publicar ou arquivar um produto derruba esta etiqueta pelo
+ * painel, então a vitrine não fica velha.
+ *
+ * A home é a única página da loja migrada de verdade para Cache Components
+ * nesta fase; as demais estão com `instant = false` e a lista está em
+ * docs/evolucao-jb/cobertura.md.
+ */
+async function dadosDoTopo() {
+  "use cache";
+  cacheTag(ETIQUETA_CONFIGURACOES, ETIQUETA_CATALOGO);
+  cacheLife("hours");
+
+  return Promise.all([
     getSettings(),
     // só entra no hero o que tem foto: hero de equipamento sem imagem não é
     // hero. O primeiro é a placa do topo; o quarto ilustra a faixa dos três
@@ -64,7 +86,11 @@ export default async function HomePage() {
     }),
     prisma.product.count({ where: PUBLICADO }),
     prisma.brand.count({ where: { published: true, products: { some: PUBLICADO } } }),
-  ]);
+  ] as const);
+}
+
+export default async function HomePage() {
+  const [s, vitrine, equipamentos, marcas] = await dadosDoTopo();
 
   // a quarta foto, quando existe; senão a primeira volta a servir
   const fotoDaFaixa = vitrine[3] ? fotoDe(vitrine[3]) : (vitrine[0] ? fotoDe(vitrine[0]) : null);

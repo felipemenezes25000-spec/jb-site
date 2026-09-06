@@ -23,7 +23,13 @@ import { LIMITE_PADRAO, processarFila } from "@/lib/mensageria";
  */
 
 // A rota lê o banco e o cabeçalho da requisição: nunca pode ser pré-renderizada.
-export const dynamic = "force-dynamic";
+/*
+ * O `export const dynamic = "force-dynamic"` saiu daqui: com
+ * `cacheComponents`, a busca de dados já é dinâmica por padrão e o que se
+ * marca é o que deve ser CACHEADO, não o contrário. Esta rota não tem nenhum
+ * `use cache`, então continua dinâmica — agora por omissão, que é o padrão da
+ * versão instalada.
+ */
 
 /** Comparação em tempo constante: sem isso o segredo vaza pelo relógio. */
 function segredoConfere(recebido: string, esperado: string) {

@@ -2,7 +2,7 @@
 
 import { randomInt } from "node:crypto";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma, type TicketStatus } from "@prisma/client";
 import { z } from "zod";
@@ -15,6 +15,7 @@ import { hashSenha } from "@/lib/auth";
 import { formatarDataHora, gerarSlug, somenteDigitos } from "@/lib/format";
 import { notificar } from "@/lib/notificacoes";
 import { exigirEdicao } from "@/lib/permissoes";
+import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { prisma } from "@/lib/prisma";
 import { SETTING_FIELDS, getSettings } from "@/lib/settings";
 import { removerArquivo } from "@/lib/upload";
@@ -1756,7 +1757,12 @@ export async function salvarConfiguracoes(
     depois: valores,
   });
 
-  // contato, endereço e redes aparecem no cabeçalho e no rodapé de todo o site
+  /* Contato, endereço e redes aparecem no cabeçalho e no rodapé de todo o
+     site — e os dois vivem em escopos `use cache` desde a migração para Cache
+     Components. Só `revalidatePath` não os alcança: sem derrubar a etiqueta, o
+     telefone novo levaria até uma hora para aparecer, e quem salvou concluiria
+     que o painel não funciona. */
+  updateTag(ETIQUETA_CONFIGURACOES);
   revalidatePath("/", "layout");
   return { ok: "Configurações salvas." };
 }

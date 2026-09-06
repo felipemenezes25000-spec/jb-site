@@ -2,7 +2,13 @@ import crypto from "node:crypto";
 
 import { cookies } from "next/headers";
 
-export const dynamic = "force-dynamic";
+/*
+ * O `export const dynamic = "force-dynamic"` saiu daqui: com
+ * `cacheComponents`, a busca de dados já é dinâmica por padrão e o que se
+ * marca é o que deve ser CACHEADO, não o contrário. Esta rota não tem nenhum
+ * `use cache`, então continua dinâmica — agora por omissão, que é o padrão da
+ * versão instalada.
+ */
 
 const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sem I, O, 0 e 1
 const COOKIE = "jb_captcha";

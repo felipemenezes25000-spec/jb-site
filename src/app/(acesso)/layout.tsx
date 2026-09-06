@@ -1,9 +1,33 @@
+import { Suspense } from "react";
+
 import { Cabecalho } from "@/components/loja/cabecalho";
+import {
+  AcessoDaConta,
+  AcessoDaContaEsqueleto,
+  ContadorDoCarrinho,
+  ContadorDoCarrinhoEsqueleto,
+} from "@/components/loja/cabecalho-pessoal";
+import { categoriasDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
 import { Rodape } from "@/components/loja/rodape";
-import { sessaoCliente } from "@/lib/auth-cliente";
-import { contarItensDoCarrinho } from "@/lib/carrinho";
-import { prisma } from "@/lib/prisma";
-import { getSettings } from "@/lib/settings";
+
+/*
+ * Migração para Cache Components, em etapas.
+ *
+ * `instant = false` diz ao Next para não validar que a navegação para esta
+ * área produz UI instantânea — e é a saída documentada para migrar rota a
+ * rota em vez de tudo de uma vez
+ * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md).
+ *
+ * Esta área é autenticada e existe para operar dados que mudam a cada
+ * segundo: pedido, chamado, estoque, agenda. Prerender parcial aqui não tem o
+ * que economizar — a página inteira depende de quem está logado. O ganho de
+ * PPR está na loja pública, e é lá que a migração foi feita de verdade.
+ *
+ * Registrado em docs/evolucao-jb/cobertura.md como pendência consciente, não
+ * como conclusão.
+ */
+export const instant = false;
+
 
 /**
  * Shell das telas de acesso — entrar, cadastro e recuperação de senha.
@@ -17,31 +41,25 @@ import { getSettings } from "@/lib/settings";
  * parênteses não entra no caminho.
  */
 export default async function AcessoLayout({ children }: { children: React.ReactNode }) {
-  const [s, cliente, itensNoCarrinho, categorias] = await Promise.all([
-    getSettings(),
-    sessaoCliente(),
-    contarItensDoCarrinho(),
-    prisma.category.findMany({
-      where: { published: true, parentId: null },
-      orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: {
-        slug: true,
-        name: true,
-        _count: { select: { products: { where: { status: "active" } } } },
-      },
-    }),
+  const [s, categorias] = await Promise.all([
+    configuracoesPublicas(),
+    categoriasDoMenu(),
   ]);
 
   return (
     <div className="flex min-h-dvh flex-col">
       <Cabecalho
-        categorias={categorias.map((c) => ({
-          slug: c.slug,
-          name: c.name,
-          count: c._count.products,
-        }))}
-        itensNoCarrinho={itensNoCarrinho}
-        clienteNome={cliente?.name ?? null}
+        categorias={categorias}
+        acessoDaConta={
+          <Suspense fallback={<AcessoDaContaEsqueleto />}>
+            <AcessoDaConta />
+          </Suspense>
+        }
+        contadorDoCarrinho={
+          <Suspense fallback={<ContadorDoCarrinhoEsqueleto />}>
+            <ContadorDoCarrinho />
+          </Suspense>
+        }
         telefone={s.telefone}
         whatsapp={s.whatsapp}
         horario={s.horario}

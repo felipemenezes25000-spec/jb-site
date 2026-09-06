@@ -3,6 +3,9 @@ import Link from "next/link";
 
 import { Conteudo404 } from "@/components/loja/pagina-404";
 import { Logo } from "@/components/ui/logo";
+import { cacheLife, cacheTag } from "next/cache";
+
+import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { SETTING_DEFAULTS, getSettings, type SettingsMap } from "@/lib/settings";
 
 /**
@@ -23,7 +26,20 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
+/**
+ * As configurações desta página, com rede de proteção e cache.
+ *
+ * `use cache` porque a página 404 é igual para todo mundo: não lê cookie, não
+ * sabe quem chegou, e sem ele o Next não consegue prerenderizá-la — a rota
+ * `/_not-found` é gerada em build e não tem requisição para esperar.
+ *
+ * A rede de proteção continua: banco fora do ar não pode derrubar a própria
+ * página de erro, então a falha cai nos valores padrão.
+ */
 async function configuracoes(): Promise<SettingsMap> {
+  "use cache";
+  cacheTag(ETIQUETA_CONFIGURACOES);
+  cacheLife("hours");
   try {
     return await getSettings();
   } catch (erro) {

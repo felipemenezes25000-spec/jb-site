@@ -1,6 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+
+import { ETIQUETA_CATALOGO, ETIQUETA_CATEGORIAS } from "@/lib/loja-publica";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
@@ -83,7 +85,23 @@ function erroInesperado(contexto: string, erro: unknown): EstadoAcao {
 }
 
 /** Telas do painel e da loja que dependem do catálogo. */
+/**
+ * Derruba o que ficou velho depois de mexer no catálogo.
+ *
+ * `updateTag` além do caminho: desde a migração para Cache Components, a
+ * vitrine da home e a contagem de produtos por categoria no menu vivem em
+ * escopos `use cache` com etiqueta (`@/lib/loja-publica`). Sem derrubar a
+ * etiqueta, publicar um produto no painel só apareceria no site quando a
+ * validade de uma hora expirasse — e a equipe concluiria que "o site não
+ * atualiza".
+ *
+ * O caminho continua sendo invalidado porque as duas coisas cobrem alvos
+ * diferentes: a etiqueta pega os escopos cacheados, o caminho pega o
+ * roteamento.
+ */
 function revalidarCatalogo(slug?: string | null) {
+  updateTag(ETIQUETA_CATALOGO);
+  updateTag(ETIQUETA_CATEGORIAS);
   revalidatePath("/admin/produtos");
   revalidatePath("/admin/estoque");
   revalidatePath("/loja");

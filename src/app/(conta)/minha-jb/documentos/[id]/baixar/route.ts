@@ -19,7 +19,13 @@ import { nomeParaDownload, respostaDeArquivo } from "@/lib/upload";
  */
 
 // lê do disco em `.arquivos/` quando não há Vercel Blob configurado
-export const runtime = "nodejs";
+/*
+ * O `export const runtime = "nodejs"` saiu daqui: com `cacheComponents`
+ * ligado em `next.config.ts`, a configuração de segmento `runtime` não é
+ * aceita — e não é necessária, porque Cache Components exige o runtime
+ * Node.js e o adota como padrão. Ver
+ * node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/cacheComponents.md
+ */
 
 export async function GET(
   _request: Request,

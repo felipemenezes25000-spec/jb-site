@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
+import { cacheLife, cacheTag } from "next/cache";
+
 import { Logo } from "@/components/ui/logo";
+import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import {
   RODAPE_ASSISTENCIA,
   RODAPE_CLIENTE,
@@ -55,7 +58,20 @@ function Coluna({ titulo, itens }: { titulo: string; itens: ItemMenu[] }) {
   );
 }
 
+/**
+ * Rodapé da loja.
+ *
+ * `use cache` porque ele é igual para todo mundo: contatos, endereço e redes
+ * saem das configurações e não dependem de quem está do outro lado. Sem isto,
+ * ele sozinho derrubava o prerender de toda página que o inclui — ou seja, de
+ * toda a loja. A etiqueta é a mesma das configurações públicas, então salvar
+ * o painel atualiza cabeçalho e rodapé juntos.
+ */
 export async function Rodape() {
+  "use cache";
+  cacheTag(ETIQUETA_CONFIGURACOES);
+  cacheLife("hours");
+
   const s = await getSettings();
   const sociais = redesSociais(s);
   const ano = new Date().getFullYear();

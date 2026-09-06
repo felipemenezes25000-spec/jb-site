@@ -2,6 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 
+import { cacheLife, cacheTag } from "next/cache";
+
+import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
+import { SITE_URL } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
 import "./globals.css";
@@ -24,10 +28,26 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
+/**
+ * Metadados raiz.
+ *
+ * `use cache` porque estes valores são iguais para todo mundo — título,
+ * descrição e Open Graph saem das configurações da loja. Sem ele, com Cache
+ * Components ligado, a leitura em `generateMetadata` bloqueia o prerender de
+ * TODA rota que herda este layout: o Next avisa que "os metadados desta rota
+ * estão bloqueados" e a compilação para.
+ *
+ * A etiqueta é a mesma das configurações públicas, então salvar o painel
+ * derruba este cache junto com o do cabeçalho.
+ */
 export async function generateMetadata(): Promise<Metadata> {
+  "use cache";
+  cacheTag(ETIQUETA_CONFIGURACOES);
+  cacheLife("hours");
+
   const s = await getSettings();
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    metadataBase: new URL(SITE_URL),
     title: { default: s.seo_titulo, template: `%s · ${s.empresa_nome}` },
     description: s.seo_descricao,
     openGraph: {

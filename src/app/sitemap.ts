@@ -20,7 +20,12 @@ import { urlAbsoluta } from "@/lib/seo";
  * no robots.txt.
  */
 
-export const revalidate = 3600;
+/*
+ * O `export const revalidate` saiu daqui: com `cacheComponents`, a validade
+ * de um cache é declarada com `cacheLife` DENTRO do escopo `use cache`, e
+ * não como configuração de segmento. A função abaixo passou a declarar o
+ * próprio cache; a hora de vida continua sendo uma hora.
+ */
 
 type Entrada = MetadataRoute.Sitemap[number];
 
