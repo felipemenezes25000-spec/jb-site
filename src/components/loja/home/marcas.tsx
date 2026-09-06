@@ -8,7 +8,7 @@ async function carregar() {
   return prisma.brand.findMany({
     where: { published: true, products: { some: PUBLICADO } },
     orderBy: [{ order: "asc" }, { name: "asc" }],
-    take: 8,
+    take: 12,
     select: { slug: true, name: true, logo: { select: { url: true, alt: true } } },
   });
 }
