@@ -10,6 +10,7 @@ import { SecaoDestaques } from "@/components/loja/home/destaques";
 import { SecaoSeminovos } from "@/components/loja/home/seminovos";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
 import { SecaoAreaClinica } from "@/components/loja/home/area-clinica";
+import { DemonstracaoDoProntuario } from "@/components/loja/home/demonstracao-prontuario";
 import { SecaoMarcas } from "@/components/loja/home/marcas";
 import { ChamadaFinal } from "@/components/loja/home/chamada-final";
 import {
@@ -102,6 +103,11 @@ export default async function HomePage() {
       <ProvasObjetivas configuracoes={s} equipamentos={equipamentos} marcas={marcas} />
 
       <SecaoAreaClinica />
+
+      {/* A demonstração vem logo depois da promessa da Área da Clínica: é ela
+          que transforma a promessa em algo que dá para tocar antes de criar
+          conta. */}
+      <DemonstracaoDoProntuario />
 
       <TresCaminhos foto={fotoDaFaixa} />
 

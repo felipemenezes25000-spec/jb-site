@@ -24,33 +24,15 @@ export class ErroDeEquipamento extends Error {
   }
 }
 
-export const ROTULO_EQUIPAMENTO: Record<EquipmentStatus, string> = {
-  operacional: "Operacional",
-  em_manutencao: "Em manutenção",
-  aguardando_peca: "Aguardando peça",
-  inoperante: "Parado",
-  desativado: "Desativado",
-};
+/* Os rótulos vivem em `@/lib/rotulos-equipamento`, que é puro e serve também
+   ao navegador — este módulo é `server-only`. Reexportados aqui para não
+   quebrar quem já os importava daqui. */
+export { ROTULO_DOCUMENTO, ROTULO_EQUIPAMENTO, ROTULO_ORIGEM } from "@/lib/rotulos-equipamento";
 
-export const ROTULO_ORIGEM: Record<EquipmentOrigin, string> = {
-  compra_jb: "Comprado na JB",
-  cadastro_cliente: "Cadastrado pelo cliente",
-  cadastro_tecnico: "Cadastrado pelo técnico",
-  atendimento: "Registrado em atendimento",
-};
-
-export const ROTULO_DOCUMENTO: Record<DocumentKind, string> = {
-  nota_fiscal: "Nota fiscal",
-  pedido: "Pedido",
-  orcamento: "Orçamento",
-  ordem_servico: "Ordem de serviço",
-  laudo: "Laudo técnico",
-  certificado: "Certificado",
-  manual: "Manual",
-  garantia: "Garantia",
-  contrato: "Contrato",
-  outro: "Documento",
-};
+import {
+  ROTULO_DOCUMENTO,
+  ROTULO_EQUIPAMENTO,
+} from "@/lib/rotulos-equipamento";
 
 const DIA_EM_MS = 86_400_000;
 
