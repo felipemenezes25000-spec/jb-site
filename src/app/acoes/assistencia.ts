@@ -35,6 +35,10 @@ import {
 } from "@/lib/limite";
 import { enfileirar } from "@/lib/notificacoes";
 import { ErroDeOrcamento, criarOrcamento } from "@/lib/orcamento";
+import {
+  sessaoDeEnvioExistente,
+  vincularAoChamado,
+} from "@/lib/envio-temporario";
 import { prisma } from "@/lib/prisma";
 import { urlAbsoluta } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
@@ -462,6 +466,31 @@ export async function abrirChamadoPublico(
     if (erro instanceof ErroDeAssistencia) return { erro: erro.message };
     console.error("Falha ao abrir chamado público", erro);
     return { erro: "Não conseguimos registrar o chamado agora. Tente de novo em instantes." };
+  }
+
+  /*
+   * Os anexos que o visitante enviou antes de o chamado existir.
+   *
+   * Acontece DEPOIS da transação que criou o chamado, e de propósito: falha
+   * de mídia não pode apagar o relato. Se o vínculo falhar, o chamado está
+   * aberto, numerado e na fila da equipe — só sem as fotos, o que é
+   * recuperável por mensagem no próprio chamado.
+   *
+   * A operação é idempotente e escopada à sessão de envio daquele navegador:
+   * um id de arquivo de outra pessoa não é alcançável nem sabendo o valor.
+   */
+  try {
+    const sessao = await sessaoDeEnvioExistente();
+    if (sessao) {
+      const vinculo = await vincularAoChamado(sessao.hash, chamadoId);
+      if (vinculo.ignorados > 0) {
+        console.warn(
+          `[chamado ${numero}] ${vinculo.ignorados} anexo(s) vencido(s) não foram vinculados.`,
+        );
+      }
+    }
+  } catch (falha) {
+    console.error(`[chamado ${numero}] falha ao vincular anexos`, falha);
   }
 
   registrarEnvioAceito("chamado", LIMITE_CHAMADO, { ip: conferencia.ip, email });

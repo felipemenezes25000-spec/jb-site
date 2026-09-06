@@ -20,6 +20,10 @@ import { LIMITE_PADRAO, processarFila } from "@/lib/mensageria";
  *
  * GET e POST fazem o mesmo. O cron chama GET; POST existe para quem preferir
  * disparar de um script.
+ *
+ * Além da fila, esta rota faz a limpeza dos anexos temporários vencidos — os
+ * arquivos que visitantes enviaram e que nunca viraram chamado. Ver o
+ * comentário dentro de `tratar`.
  */
 
 // A rota lê o banco e o cabeçalho da requisição: nunca pode ser pré-renderizada.
@@ -80,7 +84,38 @@ async function tratar(request: Request) {
 
   try {
     const resumo = await processarFila({ limite: limiteDaUrl(request) });
-    return Response.json({ ok: true, ...resumo }, { headers: { "Cache-Control": "no-store" } });
+
+    /*
+     * A limpeza dos anexos órfãos pega carona nesta rota.
+     *
+     * Ela precisa de exatamente o que a fila já tem: um gatilho de máquina,
+     * autenticado por segredo, chamado periodicamente. Criar um segundo
+     * endpoint com o mesmo cron e o mesmo segredo seria duplicar a superfície
+     * protegida para executar duas tarefas do mesmo tipo — e a política de
+     * recursos do escopo pede o contrário.
+     *
+     * Um TTL escrito numa coluna não apaga arquivo sozinho. É esta chamada que
+     * apaga, em lote, e só o que está `pendente` e vencido — um anexo que um
+     * chamado acabou de reivindicar não é alcançado.
+     *
+     * Falha aqui não derruba a fila: e-mail pendente é mais urgente que
+     * arquivo vencido, e a próxima passada tenta de novo.
+     */
+    let anexos = { removidos: 0, falhas: 0 };
+    try {
+      const { limparOrfaosVencidos } = await import("@/lib/envio-temporario");
+      const { removerArquivo } = await import("@/lib/upload");
+      anexos = await limparOrfaosVencidos(async (chave) => {
+        await removerArquivo(chave);
+      });
+    } catch (falha) {
+      console.error("[fila] limpeza de anexos órfãos falhou", falha);
+    }
+
+    return Response.json(
+      { ok: true, ...resumo, anexos },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (erro) {
     // O processador já trata mensagem a mensagem; chegar aqui é falha de banco.
     console.error("[fila] execução interrompida", erro);

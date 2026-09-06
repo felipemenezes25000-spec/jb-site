@@ -945,6 +945,82 @@ enum Urgency {
   parado
 }
 
+/// Estado de um arquivo enviado por visitante antes de existir um chamado.
+enum TempUploadStatus {
+  /// Recebido e validado. Ainda não pertence a nada.
+  pendente
+  /// Vinculado a um chamado. Deixou de ser órfão e não é mais apagável pelo TTL.
+  vinculado
+  /// Recusado na validação (tipo real, duração, tamanho). Guardado só para
+  /// o formulário poder explicar o motivo; o arquivo em si não foi gravado.
+  recusado
+  /// Expirou sem ser vinculado. O arquivo já foi apagado do armazenamento.
+  expirado
+}
+
+/// Arquivo enviado por quem ainda não tem chamado — nem conta.
+///
+/// O escopo exige que o visitante possa anexar foto e vídeo ao abrir um
+/// chamado, sem login. Isso cria um problema que a mídia da equipe não tem:
+/// o arquivo chega ANTES de existir dono. Este modelo é o dono provisório.
+///
+/// Três coisas que o desenho precisa garantir, e que estão aqui:
+///
+///   • **Escopo.** `sessionHash` amarra o arquivo à sessão de envio daquele
+///     navegador. Sem isso, saber o id de um arquivo bastaria para anexá-lo
+///     ao próprio chamado — ou para ler a foto de outra pessoa.
+///   • **Expiração.** `expiresAt` é o prazo do órfão. Um TTL escrito numa
+///     coluna não apaga arquivo sozinho: quem apaga é a limpeza de
+///     `/api/fila`, e esta coluna é o critério dela.
+///   • **Corrida.** A limpeza só apaga linha `pendente`. Vincular muda o
+///     estado na mesma transação que grava o chamado, então um arquivo
+///     reivindicado por um chamado válido nunca é apagado pelo job.
+model TempUpload {
+  id String @id @default(cuid())
+
+  /// SHA-256 do token de sessão de envio. O token em claro fica no cookie do
+  /// navegador e nunca no banco — vazamento de banco não vira acesso a mídia.
+  sessionHash String
+
+  status TempUploadStatus @default(pendente)
+
+  /// Caminho no armazenamento privado. Vazio quando o arquivo foi recusado.
+  storageKey String @default("")
+  /// URL de leitura. Em Blob privado ela ainda exige autenticação.
+  url        String @default("")
+
+  /// Tipo REAL, detectado pelos bytes — não o que o navegador declarou.
+  mime String
+  size Int
+
+  /// Só para vídeo, em segundos, extraída dos metadados do arquivo.
+  durationSeconds Int?
+
+  /// `foto` ou `video`. Os limites de quantidade são por espécie.
+  kind String
+
+  /// Motivo da recusa, quando `status = recusado`.
+  reason String @default("")
+
+  /// O chamado que reivindicou este arquivo.
+  requestId String?
+  request   ServiceRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  /// Mídia definitiva criada no momento do vínculo.
+  mediaId String?
+
+  /// IP de quem enviou, para o freio por origem. Não é identificação.
+  ip String @default("")
+
+  expiresAt DateTime
+  claimedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([sessionHash, status])
+  @@index([status, expiresAt])
+  @@index([requestId])
+}
+
 model ServiceRequest {
   id     String               @id @default(cuid())
   number String               @unique // AT-001205
@@ -991,6 +1067,9 @@ model ServiceRequest {
 
   @@index([customerId, createdAt])
   @@index([status, createdAt])
+
+  /// Arquivos que o visitante enviou antes de o chamado existir.
+  tempUploads TempUpload[]
 }
 
 model ServiceRequestMedia {

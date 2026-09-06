@@ -372,6 +372,31 @@ async function guardarNoBlob(
   return { url: enviado.url, pathname: enviado.pathname, visibilidade: "publico" };
 }
 
+/**
+ * Grava bytes no armazenamento PRIVADO, sem passar pela validação por pasta.
+ *
+ * Existe para o envio de visitante (`@/lib/envio-temporario`), que tem regras
+ * próprias: aceita vídeo, que nenhuma pasta do catálogo aceita, e valida o
+ * tipo pelos bytes antes de chegar aqui. Reaproveitar `enviarArquivo` exigiria
+ * dobrar `TIPOS_IMAGEM` para caber `video/mp4`, o que afrouxaria a validação
+ * de todas as outras pastas para atender uma.
+ *
+ * O que ela NÃO faz, e por isso o nome é explícito: não valida nada. Quem
+ * chama já conferiu tipo real, tamanho e duração — e é responsável por isso.
+ */
+export async function guardarPrivado(
+  pathname: string,
+  bytes: Buffer,
+  mime: string,
+): Promise<{ url: string; pathname: string; privado: boolean }> {
+  const guardado = await guardar(pathname, bytes, mime as TipoAceito, "privado");
+  return {
+    url: guardado.url,
+    pathname: guardado.pathname,
+    privado: guardado.visibilidade === "privado",
+  };
+}
+
 /** Cria a raiz privada já ignorada pelo git, independente do `.gitignore` da raiz. */
 async function garantirRaizPrivada() {
   await fs.mkdir(RAIZ_PRIVADA, { recursive: true });
