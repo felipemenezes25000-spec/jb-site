@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Headphones,
   PackageCheck,
-  ShieldCheck,
   ShoppingCart,
   Wrench,
 } from "lucide-react";
