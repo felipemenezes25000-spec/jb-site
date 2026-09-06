@@ -75,30 +75,56 @@ function IconeDente({ className }: { className?: string }) {
 }
 
 /**
- * Emblema de cada rede — o lucide deixou de publicar ícone de marca na v1, então
- * o glifo mora aqui, em branco sobre o quadrado da cor oficial da rede.
+ * Marca oficial de cada rede, desenhada inteira: o Facebook e o circulo azul
+ * com o "f" vazado e o Instagram e o quadrado com o degrade oficial. Nada de
+ * glifo generico sobre quadrado colorido — sao marcas registradas e a forma
+ * faz parte delas.
  */
-const SOCIAL: Record<string, { cor: string; glifo: string }> = {
-  facebook: {
-    cor: "#1877f2",
-    glifo:
-      "M13.5 22v-8.5h2.86l.43-3.32H13.5V8.06c0-.96.27-1.62 1.65-1.62h1.76V3.47c-.3-.04-1.35-.13-2.57-.13-2.54 0-4.28 1.55-4.28 4.4v2.44H7.2v3.32h2.86V22h3.44Z",
-  },
-  instagram: {
-    cor: "#d62976",
-    glifo:
-      "M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.22.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.05.41 2.22.06 1.27.07 1.65.07 4.86s-.01 3.59-.07 4.86c-.05 1.17-.25 1.8-.41 2.22-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.05.36-2.22.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.22-.41a3.72 3.72 0 0 1-1.38-.9 3.72 3.72 0 0 1-.9-1.38c-.16-.42-.36-1.05-.41-2.22-.06-1.27-.07-1.65-.07-4.86s.01-3.59.07-4.86c.05-1.17.25-1.8.41-2.22.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.05-.36 2.22-.41 1.27-.06 1.65-.07 4.85-.07Zm0 3.87a5.97 5.97 0 1 0 0 11.94 5.97 5.97 0 0 0 0-11.94Zm0 9.85a3.88 3.88 0 1 1 0-7.76 3.88 3.88 0 0 1 0 7.76Zm7.6-10.09a1.4 1.4 0 1 1-2.79 0 1.4 1.4 0 0 1 2.79 0Z",
-  },
-  linkedin: {
-    cor: "#0a66c2",
-    glifo:
-      "M6.94 5.01a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z",
-  },
-  youtube: {
-    cor: "#ff0000",
-    glifo:
-      "M21.6 7.2a2.5 2.5 0 0 0-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.83.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.83-.43a2.5 2.5 0 0 0 1.77-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15.5v-7l6 3.5-6 3.5Z",
-  },
+const SOCIAL: Record<string, () => React.ReactNode> = {
+  facebook: () => (
+    <svg viewBox="0 0 24 24" className="size-full" aria-hidden>
+      <path
+        fill="#1877F2"
+        d="M24 12.07C24 5.44 18.63.07 12 .07S0 5.44 0 12.07c0 5.99 4.39 10.95 10.13 11.86v-8.39H7.08v-3.47h3.05V9.43c0-3.01 1.79-4.67 4.53-4.67 1.31 0 2.69.24 2.69.24v2.95h-1.51c-1.49 0-1.96.93-1.96 1.87v2.25h3.33l-.53 3.47h-2.8v8.39C19.61 23.02 24 18.06 24 12.07Z"
+      />
+    </svg>
+  ),
+  instagram: () => (
+    <svg viewBox="0 0 24 24" className="size-full" aria-hidden>
+      <defs>
+        <radialGradient id="jb-ig" cx="0.25" cy="1.05" r="1.25">
+          <stop offset="0" stopColor="#FFDD55" />
+          <stop offset="0.12" stopColor="#FFDD55" />
+          <stop offset="0.32" stopColor="#FF543E" />
+          <stop offset="0.55" stopColor="#C837AB" />
+          <stop offset="0.82" stopColor="#8134AF" />
+          <stop offset="1" stopColor="#5851DB" />
+        </radialGradient>
+      </defs>
+      <rect width="24" height="24" rx="6.4" fill="url(#jb-ig)" />
+      <path
+        fill="#fff"
+        d="M12 5.4c-1.79 0-2.02.01-2.72.04-.7.03-1.18.14-1.6.31-.43.17-.8.39-1.17.76-.37.37-.59.74-.76 1.17-.17.42-.28.9-.31 1.6-.03.7-.04.93-.04 2.72s.01 2.02.04 2.72c.3.7.14 1.18.31 1.6.17.43.39.8.76 1.17.37.37.74.59 1.17.76.42.17.9.28 1.6.31.7.03.93.04 2.72.04s2.02-.01 2.72-.04c.7-.03 1.18-.14 1.6-.31.43-.17.8-.39 1.17-.76.37-.37.59-.74.76-1.17.17-.42.28-.9.31-1.6.03-.7.04-.93.04-2.72s-.01-2.02-.04-2.72c-.03-.7-.14-1.18-.31-1.6a3.24 3.24 0 0 0-.76-1.17 3.24 3.24 0 0 0-1.17-.76c-.42-.17-.9-.28-1.6-.31-.7-.03-.93-.04-2.72-.04Zm0 1.19c1.76 0 1.97.01 2.66.04.64.03.99.14 1.22.23.31.12.53.26.76.49.23.23.37.45.49.76.09.23.2.58.23 1.22.3.69.04.9.04 2.66s-.01 1.97-.04 2.66c-.3.64-.14.99-.23 1.22-.12.31-.26.53-.49.76-.23.23-.45.37-.76.49-.23.09-.58.2-1.22.23-.69.03-.9.04-2.66.04s-1.97-.01-2.66-.04c-.64-.03-.99-.14-1.22-.23a2.05 2.05 0 0 1-.76-.49 2.05 2.05 0 0 1-.49-.76c-.09-.23-.2-.58-.23-1.22-.03-.69-.04-.9-.04-2.66s.01-1.97.04-2.66c.03-.64.14-.99.23-1.22.12-.31.26-.53.49-.76.23-.23.45-.37.76-.49.23-.9.58-.2 1.22-.23.69-.3.9-.04 2.66-.04Zm0 2.02a3.39 3.39 0 1 0 0 6.78 3.39 3.39 0 0 0 0-6.78Zm0 5.59a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Zm4.32-5.72a.79.79 0 1 1-1.59 0 .79.79 0 0 1 1.59 0Z"
+      />
+    </svg>
+  ),
+  linkedin: () => (
+    <svg viewBox="0 0 24 24" className="size-full" aria-hidden>
+      <rect width="24" height="24" rx="4.2" fill="#0A66C2" />
+      <path
+        fill="#fff"
+        d="M8.4 18.6H5.6V9.9h2.8v8.7ZM7 8.7a1.63 1.63 0 1 1 0-3.26 1.63 1.63 0 0 1 0 3.26Zm11.6 9.9h-2.8v-4.24c0-1.01-.02-2.31-1.41-2.31-1.41 0-1.63 1.1-1.63 2.24v4.31H9.97V9.9h2.68v1.19h.04c.37-.71 1.29-1.46 2.65-1.46 2.83 0 3.36 1.87 3.36 4.29v4.68Z"
+      />
+    </svg>
+  ),
+  youtube: () => (
+    <svg viewBox="0 0 24 24" className="size-full" aria-hidden>
+      <path
+        fill="#FF0000"
+        d="M23.5 6.9a3.02 3.02 0 0 0-2.12-2.14C19.5 4.25 12 4.25 12 4.25s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.9C0 8.79 0 12 0 12s0 3.21.5 5.1a3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14C24 15.21 24 12 24 12s0-3.21-.5-5.1ZM9.55 15.57V8.43L15.82 12l-6.27 3.57Z"
+      />
+    </svg>
+  ),
 };
 
 function Coluna({
@@ -360,7 +386,7 @@ export async function Rodape() {
               <div className="mt-2 border-t border-jb-100 pt-2">
                 <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
                   {sociais.map((rede) => {
-                    const marca = SOCIAL[rede.chave];
+                    const Marca = SOCIAL[rede.chave];
                     return (
                       <li key={rede.chave}>
                         <a
@@ -369,14 +395,8 @@ export async function Rodape() {
                           rel="noopener noreferrer"
                           className="foco-jb group flex min-h-9 items-center gap-2.5 rounded-xs pointer-coarse:min-h-11"
                         >
-                          <span
-                            className="flex size-7 shrink-0 items-center justify-center rounded-[0.55rem]"
-                            style={{ backgroundColor: marca.cor }}
-                            aria-hidden
-                          >
-                            <svg viewBox="0 0 24 24" fill="#fff" className="size-[1.05rem]">
-                              <path d={marca.glifo} />
-                            </svg>
+                          <span className="flex size-7 shrink-0 items-center justify-center" aria-hidden>
+                            <Marca />
                           </span>
                           <span className="flex items-center gap-1.5 text-[0.95rem] font-semibold text-graf-800 transition-colors group-hover:text-jb-700">
                             {rede.rotulo}
