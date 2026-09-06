@@ -30,9 +30,19 @@ const PUBLICADO = { status: "active" } as const;
 /**
  * Página principal.
  *
- * A narrativa é uma só e vai do primeiro contato ao pós-venda: quem é a JB,
- * por onde começar, o que ela vende, o que ela revisa, como ela conserta e o
- * que acontece depois que o equipamento chega na clínica.
+ * A narrativa é uma só, e a ordem das faixas é o argumento:
+ *
+ *   promessa            Hero — "Comprar é só o começo", com equipamento real
+ *   evidência           provas objetivas, só o que é verificável
+ *   prontuário          o registro que continua depois da venda
+ *   caminhos            comprar, consertar ou acompanhar
+ *   curadoria           categorias, destaques e seminovos
+ *   confiança           como a assistência funciona e quais marcas atende
+ *   ação                a última decisão da página
+ *
+ * A demonstração do prontuário vem antes dos caminhos de propósito: é ela que
+ * explica por que "comprar é só o começo" não é slogan. Quem chega decidido a
+ * comprar já tem o botão no hero.
  *
  * Custo de banco: o que o hero e a faixa de provas precisam sai em uma única
  * ida, em paralelo. As faixas de baixo — categorias, destaques, seminovos e
@@ -43,8 +53,9 @@ export default async function HomePage() {
   const [s, vitrine, equipamentos, marcas] = await Promise.all([
     getSettings(),
     // só entra no hero o que tem foto: hero de equipamento sem imagem não é
-    // hero. O quarto ilustra a faixa dos três caminhos — repetir ali a foto
-    // que acabou de aparecer no topo faria a página parecer curta.
+    // hero. O primeiro é a placa do topo; o quarto ilustra a faixa dos três
+    // caminhos — repetir ali a foto que acabou de aparecer no topo faria a
+    // página parecer curta.
     prisma.product.findMany({
       where: { ...PUBLICADO, media: { some: {} } },
       orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
@@ -60,9 +71,11 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero configuracoes={s} produtos={vitrine.slice(0, 3)} parcelamento={lerParcelamento(s)} />
+      <Hero configuracoes={s} produto={vitrine[0] ?? null} parcelamento={lerParcelamento(s)} />
 
       <ProvasObjetivas configuracoes={s} equipamentos={equipamentos} marcas={marcas} />
+
+      <SecaoAreaClinica />
 
       <TresCaminhos foto={fotoDaFaixa} />
 
@@ -79,8 +92,6 @@ export default async function HomePage() {
       </Suspense>
 
       <SecaoAssistencia configuracoes={s} />
-
-      <SecaoAreaClinica />
 
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />

@@ -29,9 +29,21 @@ const TETO_POR_TIPO = 5000;
 
 const PRIVADAS = ["/admin", "/minha-jb", "/checkout", "/carrinho", "/entrar", "/api"];
 
+/**
+ * Endereços que existem em `Page` mas não devem ser indexados.
+ *
+ * `/empresa` é redirecionado para `/sobre` em `next.config.ts` — anunciar no
+ * sitemap uma URL que responde 308 gasta orçamento de rastreamento e sinaliza
+ * conteúdo duplicado. O registro continua no banco; só não é anunciado.
+ *
+ * Esta lista precisa andar junto com `redirects()` do `next.config.ts`.
+ */
+const REDIRECIONADAS = new Set(["/empresa"]);
+
 function ehPublica(href: string) {
   if (!href.startsWith("/")) return false;
   if (href.includes("#") || href.includes("?")) return false;
+  if (REDIRECIONADAS.has(href)) return false;
   return !PRIVADAS.some((rota) => href === rota || href.startsWith(`${rota}/`));
 }
 
@@ -89,10 +101,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         take: TETO_POR_TIPO,
         select: { slug: true, updatedAt: true },
       }),
-      // Page não tem coluna de publicação: toda página cadastrada está no ar
+      /* Page não tem coluna de publicação: toda página cadastrada está no ar.
+         O corpo entra no `select` para o mapa não anunciar página em branco —
+         `/solucoes` existe no banco desde a migração do PHP com corpo vazio, e
+         uma URL que renderiza estado vazio não é conteúdo indexável. */
       prisma.page.findMany({
         take: TETO_POR_TIPO,
-        select: { slug: true, updatedAt: true },
+        select: { slug: true, updatedAt: true, body: true },
       }),
     ]);
 
@@ -127,6 +142,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const pagina of paginas) {
       const caminho = `/${pagina.slug}`;
       if (!ehPublica(caminho)) continue;
+      if (pagina.body.trim().length === 0) continue;
       registrar(caminho, {
         lastModified: pagina.updatedAt,
         changeFrequency: "monthly",

@@ -305,6 +305,23 @@ const nextConfig: NextConfig = {
     // `/(.*)` é a forma que a própria documentação usa para "toda resposta".
     return [{ source: "/(.*)", headers: cabecalhos }];
   },
+
+  /*
+   * Endereços herdados do site em PHP.
+   *
+   * `/empresa` existe como registro em `Page` e vinha servindo, pela rota
+   * coringa `(loja)/[slug]`, a MESMA história institucional de `/sobre` — na
+   * versão antiga, com entidades HTML, erro de concordância e os blocos de
+   * missão/visão/valores. Duas páginas com o mesmo assunto competem entre si
+   * no buscador e envelhecem em ritmos diferentes.
+   *
+   * O registro no banco não é apagado: ele continua lá, e a cópia do texto
+   * antigo está em `PageRevision`. O que muda é para onde o endereço leva.
+   * 308 preserva o método e diz ao buscador que a mudança é definitiva.
+   */
+  async redirects() {
+    return [{ source: "/empresa", destination: "/sobre", permanent: true }];
+  },
 };
 
 export default nextConfig;

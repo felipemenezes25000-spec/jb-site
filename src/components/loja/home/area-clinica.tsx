@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   CalendarClock,
-  Check,
   FileText,
   FolderOpen,
   Headset,
@@ -101,20 +100,20 @@ export function SecaoAreaClinica() {
             Depois da compra, o equipamento continua tendo dono — e história.
           </h2>
           <p className="texto-guia mt-6 max-w-xl text-graf-300">
-            A Área da Clínica é a área da sua clínica dentro da JB. É onde o pós-venda deixa de
-            ser troca de mensagem e vira registro: o que você tem, o que está em
-            atendimento e o que vem pela frente.
+            É onde o pós-venda deixa de ser troca de mensagem e vira registro: o que a
+            sua clínica tem, o que está em atendimento e o que vem pela frente.
           </p>
 
           <ul className="mt-8 space-y-4">
             {VANTAGENS.map((vantagem) => (
               <li key={vantagem} className="flex gap-3 text-[0.9375rem] leading-relaxed text-graf-300">
+                {/* Marcador neutro, não um "check": estes itens descrevem o
+                    que a Área da Clínica faz, e não etapas já cumpridas para
+                    um equipamento. Ver docs/evolucao-jb/direcao-visual.md. */}
                 <span
                   aria-hidden
-                  className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-jb-500/15 text-jb-300"
-                >
-                  <Check className="size-3" />
-                </span>
+                  className="mt-2 size-1.5 shrink-0 rounded-full bg-jb-400"
+                />
                 {vantagem}
               </li>
             ))}

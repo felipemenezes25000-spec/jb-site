@@ -54,6 +54,7 @@ const ROTAS = {
     "/planos-de-manutencao",
     "/orcamento",
     "/sobre",
+    "/estrutura",
     "/contato",
     "/faq",
     "/entrar",

@@ -1,6 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Phone, Wrench } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarClock,
+  ClipboardList,
+  FileText,
+  History,
+  Phone,
+  ShieldQuestion,
+  Wrench,
+} from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { Etiqueta } from "@/components/ui/data";
@@ -18,6 +27,11 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    Hero da página principal
 
+   A promessa é a continuidade: a JB vende, instala, mantém e registra. Por
+   isso o hero não termina no preço — a placa do equipamento é seguida da
+   faixa "Depois da compra", que diz o que acontece com aquela máquina depois
+   que ela chega na clínica.
+
    Texto à esquerda, catálogo de verdade à direita: a foto do equipamento em
    destaque, com o nome e o preço reais. Não há foto de estrutura nem de
    equipe no acervo da JB — então o hero se apoia no que existe de fato, que
@@ -25,31 +39,29 @@ import { cn } from "@/lib/utils";
 
    A placa principal é grande de propósito: equipamento odontológico é objeto
    físico de ticket alto, e miniatura em fundo enorme é o que faz uma loja
-   parecer catálogo improvisado. Os outros equipamentos entram como uma tira
-   fina embaixo — referência, não um segundo grid de cartões disputando o
-   olho com o primeiro.
+   parecer catálogo improvisado.
 
    Sem produto com foto cadastrada, a coluna da direita simplesmente não
    aparece e o texto ocupa a faixa inteira. Nada de imagem de banco.
+
+   Uma regra vale para a faixa "Depois da compra" inteira, e está em
+   docs/evolucao-jb/direcao-visual.md, seção 3: aqui não entra ícone de
+   confirmação. Estes itens são o processo que a JB oferece, não etapas já
+   cumpridas para esta unidade. Um "check" no hero afirmaria instalação ou
+   inspeção que ninguém fez.
    ============================================================================ */
 
 export function Hero({
   configuracoes: s,
-  produtos,
+  produto,
   parcelamento,
 }: {
   configuracoes: SettingsMap;
-  /** Já filtrados: só entram aqui produtos com foto cadastrada. */
-  produtos: ProdutoHome[];
+  /** O equipamento em destaque. Só chega aqui produto com foto cadastrada. */
+  produto: ProdutoHome | null;
   parcelamento: Parcelamento;
 }) {
-  const principal = produtos[0];
-  const secundarios = produtos.slice(1, 3);
-  const temVitrine = Boolean(principal);
-
   const telefone = s.telefone.trim();
-  const desde = s.empresa_desde.trim();
-  const cidade = s.endereco_cidade.trim();
 
   return (
     <section className="relative isolate overflow-hidden border-b border-graf-200 bg-white">
@@ -65,31 +77,30 @@ export function Hero({
       <div
         className={cn(
           "container-jb grid gap-12 py-14 md:py-18 lg:gap-14 lg:py-22 xl:gap-20",
-          temVitrine && "lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center",
+          produto && "lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center",
         )}
       >
         {/* --------------------------------------------------------- texto */}
-        <div className={cn(!temVitrine && "max-w-3xl")}>
-          {desde || cidade ? (
-            <p className="inline-flex max-w-full items-center gap-2.5 rounded-full border border-graf-200 bg-white px-4 py-2 text-[0.8125rem] font-semibold text-graf-600 shadow-xs">
-              <span className="size-1.5 shrink-0 rounded-full bg-jb-500" aria-hidden />
-              <span>
-                {`Equipe técnica própria${cidade ? ` em ${cidade}` : ""}${
-                  desde ? ` · desde ${desde}` : ""
-                }`}
-              </span>
-            </p>
-          ) : null}
+        <div className={cn(!produto && "max-w-3xl")}>
+          <p className="inline-flex max-w-full items-center gap-2.5 rounded-full border border-graf-200 bg-white px-4 py-2 text-[0.8125rem] font-semibold text-graf-600 shadow-xs">
+            <span className="size-1.5 shrink-0 rounded-full bg-jb-500" aria-hidden />
+            <span>Equipamentos + assistência + prontuário técnico</span>
+          </p>
 
           <h1 className="mt-6 text-hero text-balance text-graf-950">
-            Equipamentos odontológicos. Assistência técnica. Tudo em um só lugar
+            Comprar é só o começo
             <span className="text-jb-500">.</span>
           </h1>
 
+          {/* Duas frases, e a segunda some no celular: a promessa cabe na
+              primeira, e a lista de itens só ajuda quem tem tela para lê-la
+              sem empurrar os botões para fora da dobra. */}
           <p className="texto-guia mt-6 max-w-xl text-graf-600">
-            Compra, instalação, manutenção e o histórico de cada máquina no mesmo lugar. A
-            JB continua com o equipamento depois da venda — e deixa registrado o que foi
-            feito em cada um deles.
+            A JB vende, instala, mantém e registra o histórico dos equipamentos da sua
+            clínica.{" "}
+            <span className="hidden sm:inline">
+              Compra, garantia, chamados, documentos e manutenções no mesmo lugar.
+            </span>
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -99,12 +110,25 @@ export function Hero({
             </LinkBotao>
             <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario" tamanho="lg">
               <Wrench className="size-4 shrink-0" aria-hidden />
-              Solicitar assistência
+              Meu equipamento parou
             </LinkBotao>
           </div>
 
+          {/* Terceiro acesso, de propósito menos proeminente: quem já é
+              cliente procura a porta, não precisa ser atraído até ela. */}
+          <p className="mt-5 text-sm text-graf-600">
+            <Link
+              href="/minha-jb"
+              className="inline-flex min-h-11 items-center gap-1.5 font-semibold text-graf-700 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            >
+              Já sou cliente
+              <ArrowRight className="size-3.5 shrink-0" aria-hidden />
+              Área da Clínica
+            </Link>
+          </p>
+
           {telefone ? (
-            <p className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-graf-600">
+            <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-graf-600">
               <Phone className="size-4 shrink-0 text-graf-400" aria-hidden />
               <span>Prefere falar agora?</span>
               <a
@@ -126,26 +150,10 @@ export function Hero({
         </div>
 
         {/* ------------------------------------------------------- vitrine */}
-        {principal ? (
+        {produto ? (
           <div className="relative">
-            <VitrinePrincipal produto={principal} parcelamento={parcelamento} />
-
-            {secundarios.length > 0 ? (
-              <>
-                <p className="mt-6 text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
-                  Também no catálogo
-                </p>
-                <ul
-                  className={cn("mt-3 grid gap-3", secundarios.length > 1 && "sm:grid-cols-2")}
-                >
-                  {secundarios.map((produto) => (
-                    <li key={produto.slug}>
-                      <TiraSecundaria produto={produto} />
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
+            <VitrinePrincipal produto={produto} parcelamento={parcelamento} />
+            <DepoisDaCompra produto={produto} />
           </div>
         ) : null}
       </div>
@@ -175,7 +183,14 @@ function VitrinePrincipal({
             src={foto.url}
             alt={foto.alt}
             fill
-            priority
+            /* `preload`, e não o antigo `priority`: a propriedade foi
+               descontinuada no Next 16 em favor desta, que diz exatamente o
+               que faz — insere o <link rel="preload"> no <head>. Ver
+               node_modules/next/dist/docs/01-app/03-api-reference/02-components/image.md,
+               seções "preload" e "priority". Esta é a única imagem da home
+               acima da dobra e é o elemento de LCP em todos os viewports, que
+               é a condição para usar preload em vez de loading="eager". */
+            preload
             sizes="(max-width: 1024px) 92vw, 52vw"
             className="object-contain p-5 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03] sm:p-7"
           />
@@ -205,32 +220,82 @@ function VitrinePrincipal({
   );
 }
 
+/* -------------------------------------------------------- depois da compra */
+
+type ItemPos = {
+  icone: React.ComponentType<{ className?: string }>;
+  titulo: string;
+  detalhe: string;
+};
+
 /**
- * Tira fina: miniatura e nome, na horizontal. O preço fica na página do
- * equipamento — aqui a peça só existe para dizer que o catálogo continua.
+ * O que acontece com este equipamento depois que ele chega na clínica.
+ *
+ * Verbo no futuro em todos os itens, e nenhum ícone de confirmação: nada
+ * aqui aconteceu ainda. A garantia é a única informação que varia por
+ * produto, e ela só aparece quando `warrantyMonths` está cadastrado — sem
+ * cadastro, o item cede a vez para os documentos, que existem para toda
+ * compra. Prometer "12 meses" por padrão seria inventar cobertura.
  */
-function TiraSecundaria({ produto }: { produto: ProdutoHome }) {
-  const foto = fotoDe(produto);
-  const condicao = CONDICAO_HOME[produto.condition];
+function DepoisDaCompra({ produto }: { produto: ProdutoHome }) {
+  const meses = produto.warrantyMonths ?? 0;
+
+  const itens: ItemPos[] = [
+    {
+      icone: ClipboardList,
+      titulo: "Prontuário Técnico JB",
+      detalhe: "O equipamento entra na Área da Clínica com número de série e histórico.",
+    },
+    meses > 0
+      ? {
+          icone: ShieldQuestion,
+          titulo: `Garantia de ${meses} ${meses === 1 ? "mês" : "meses"}`,
+          detalhe: "Prazo cadastrado para este equipamento, contado a partir da compra.",
+        }
+      : {
+          icone: FileText,
+          titulo: "Documentos reunidos",
+          detalhe: "Nota, manual e certificados ficam disponíveis para download.",
+        },
+    {
+      icone: History,
+      titulo: "Histórico técnico",
+      detalhe: "Cada chamado, orçamento e reparo fica registrado na ficha.",
+    },
+    {
+      icone: CalendarClock,
+      titulo: "Preventiva acompanhada",
+      detalhe: "A próxima revisão é definida no cadastro, conforme o equipamento.",
+    },
+  ];
 
   return (
-    <Link
-      href={`/loja/${produto.slug}`}
-      className="group flex h-full items-center gap-3.5 rounded-xl border border-graf-200 bg-white p-2.5 pr-4 transition-[border-color,background-color] duration-200 hover:border-graf-300 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-    >
-      <span className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-graf-50">
-        {foto ? (
-          <Image src={foto.url} alt={foto.alt} fill sizes="64px" className="object-contain p-1" />
-        ) : null}
-      </span>
-      <span className="min-w-0">
-        <span className="block text-xs font-bold uppercase tracking-wider text-graf-500">
-          {condicao.rotulo}
-        </span>
-        <span className="mt-0.5 line-2 block text-sm font-bold leading-snug text-graf-900 transition-colors group-hover:text-jb-700">
-          {produto.name}
-        </span>
-      </span>
-    </Link>
+    <div className="mt-6 rounded-2xl border border-graf-200 bg-surface-muted px-5 py-5 sm:px-6">
+      <p className="text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
+        Depois da compra
+      </p>
+
+      <ul className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+        {itens.map((item) => {
+          const Icone = item.icone;
+          return (
+            <li key={item.titulo} className="flex gap-3">
+              <span
+                aria-hidden
+                className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-graf-200 bg-white text-graf-600"
+              >
+                <Icone className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold leading-snug text-graf-950">{item.titulo}</p>
+                <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-500">
+                  {item.detalhe}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

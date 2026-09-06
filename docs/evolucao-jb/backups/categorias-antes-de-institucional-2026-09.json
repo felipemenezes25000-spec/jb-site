@@ -1,0 +1,26 @@
+{
+  "bioseguranca": {
+    "name": "Biosegurança",
+    "description": "<p><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Auto claves </span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Cuba lavadora ultras&ocirc;nica</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Seladora </span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Destiladora de &aacute;gua</span></p>"
+  },
+  "profilaxia": {
+    "name": "Profilaxia",
+    "description": "<p><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Jato de bicarbonato</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Ultrassom</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Contra &acirc;ngulo com escova de robson</span></p>"
+  },
+  "cirurgia": {
+    "name": "Cirurgia",
+    "description": "<p><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> C&acirc;mera intra oral</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Bomba v&aacute;cuo</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Motor de implante</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Laser de baixa e alta potencia</span></p>"
+  },
+  "estetica": {
+    "name": "Estética",
+    "description": "<p><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Fotopolimerizador</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Laser para clareamento</span></p>"
+  },
+  "outros-perifericos": {
+    "name": "Outros periféricos",
+    "description": "<p><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Motor de instrumenta&ccedil;&atilde;o rotat&oacute;ria</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Vibrador de gesso</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Solda a ponto</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Equipamentos para implante em geral</span></p>"
+  },
+  "unidade-basica-de-tratamento": {
+    "name": "Unidade básica de tratamento",
+    "description": "<p><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Cadeira</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Equipo</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Cuspideira e sugadores</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Refletor </span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Mocho</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Compressor</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Micro motores + pe&ccedil;a reta + contra &acirc;ngulo</span><br /><span style=\"color: #000000;\"><span style=\"color: #fd0003;\">&bull;</span> Turbinas de alta e baixa rota&ccedil;&atilde;o</span></p>"
+  }
+}

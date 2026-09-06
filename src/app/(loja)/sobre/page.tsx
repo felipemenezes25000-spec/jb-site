@@ -20,6 +20,7 @@ import { Cartao, Etiqueta } from "@/components/ui/data";
 import { Estatistica, Estatisticas } from "@/components/ui/estatistica";
 import { formatarPreco, plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { contagemProva } from "@/lib/prova";
 import {
   JsonLd,
   metadataDePagina,
@@ -67,7 +68,13 @@ export default async function SobrePage() {
 
   /* Prova objetiva, e só o que é verificável: o ano vem da configuração, as
      contagens vêm do próprio catálogo. Faixa de estatística sem número real
-     não existe — some inteira em vez de virar um "—" repetido. */
+     não existe — some inteira em vez de virar um "—" repetido.
+
+     As contagens passam pelo mesmo critério da home (`src/lib/prova.ts`):
+     número pequeno é verdadeiro e mesmo assim trabalha contra quem publica.
+     "3 serviços no catálogo" não é autoridade; é uma lista curta com um
+     rótulo pomposo. Abaixo do limite a contagem simplesmente não entra, e o
+     que a JB faz continua sendo dito em palavras logo abaixo. */
   const numeros = [
     s.empresa_desde
       ? {
@@ -78,7 +85,7 @@ export default async function SobrePage() {
           destaque: true,
         }
       : null,
-    servicos.length > 0
+    contagemProva("servicos", servicos.length)
       ? {
           chave: "servicos",
           valor: String(servicos.length),
@@ -87,7 +94,7 @@ export default async function SobrePage() {
           destaque: false,
         }
       : null,
-    marcas > 0
+    contagemProva("marcas", marcas)
       ? {
           chave: "marcas",
           valor: String(marcas),

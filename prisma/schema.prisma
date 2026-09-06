@@ -1513,7 +1513,48 @@ model Page {
   editable       Boolean  @default(true)
   updatedAt      DateTime @updatedAt
 
-  gallery PageImage[]
+  /// SHA-256 do `body` na última vez que uma migração de conteúdo escreveu
+  /// esta página. É o que distingue "ninguém tocou desde que gravamos" de
+  /// "alguém editou no painel": se o hash do corpo atual não bate com este
+  /// valor, houve edição humana e nenhuma migração pode sobrescrevê-la.
+  /// Nulo em página que jamais passou por migração — inclusive nas herdadas
+  /// do site em PHP, que é justamente o caso que a primeira execução trata.
+  systemHash String?
+
+  gallery   PageImage[]
+  revisions PageRevision[]
+}
+
+/// Versão anterior do conteúdo de uma página, guardada antes de sobrescrever.
+///
+/// O `AuditLog` registra que alguém editou e resume o que mudou, mas guarda
+/// texto, não o corpo inteiro — não dá para restaurar a partir dele. Migração
+/// de conteúdo sem cópia recuperável é perda de dado com etapa extra, então o
+/// corpo completo vem para cá antes de qualquer escrita automática.
+model PageRevision {
+  id       String @id @default(cuid())
+  pageSlug String
+  page     Page   @relation(fields: [pageSlug], references: [slug], onDelete: Cascade)
+
+  title          String
+  eyebrow        String?
+  lead           String?
+  body           String
+  seoTitle       String?
+  seoDescription String?
+
+  /// SHA-256 do `body` desta revisão. Serve para reconhecer o conteúdo sem
+  /// comparar strings longas e para tornar a migração idempotente.
+  bodyHash String
+
+  /// De onde veio a escrita que substituiu esta versão: `migracao:<nome>`
+  /// quando foi um script, `manual` quando foi o painel.
+  origin String
+
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([pageSlug, createdAt])
 }
 
 model PageImage {

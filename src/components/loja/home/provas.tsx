@@ -1,6 +1,7 @@
 import { CalendarClock, ClipboardList, Package, Wrench } from "lucide-react";
 
 import { Secao } from "@/components/ui/secao";
+import { contagemProva } from "@/lib/prova";
 import type { SettingsMap } from "@/lib/settings";
 
 /* ============================================================================
@@ -14,13 +15,10 @@ import type { SettingsMap } from "@/lib/settings";
 
    Por que a contagem de catálogo não aparece por padrão: "7 equipamentos no
    catálogo" é um número verdadeiro que trabalha contra quem o publica — a
-   prova vira confissão de vitrine vazia. Ela só entra quando o catálogo tem
-   massa suficiente para o número virar argumento (`MINIMO_PARA_CONTAR`), e
-   some sozinha de novo se encolher. Esconder não é mentir; inventar seria.
+   prova vira confissão de vitrine vazia. O critério está em
+   `src/lib/prova.ts`, compartilhado com a faixa de estatísticas do Sobre,
+   para que as duas telas não discordem sobre quando um número convence.
    ============================================================================ */
-
-/** Abaixo disso, a contagem de catálogo diminui a JB em vez de provar algo. */
-const MINIMO_PARA_CONTAR = 24;
 
 type Prova = {
   icone: React.ComponentType<{ className?: string }>;
@@ -59,7 +57,7 @@ export function ProvasObjetivas({
       : "O atendimento técnico não é terceirizado.",
   });
 
-  if (equipamentos >= MINIMO_PARA_CONTAR) {
+  if (contagemProva("equipamentos", equipamentos)) {
     provas.push({
       icone: Package,
       titulo: `${equipamentos} equipamentos no catálogo`,

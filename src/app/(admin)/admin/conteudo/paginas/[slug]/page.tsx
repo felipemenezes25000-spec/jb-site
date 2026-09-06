@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, Lock, Trash2 } from "lucide-react";
+import { ExternalLink, History, Lock, Trash2 } from "lucide-react";
 
 import {
   adicionarImagemDaPagina,
   excluirPagina,
   moverImagemDaPagina,
   removerImagemDaPagina,
+  restaurarRevisaoDaPagina,
   salvarPagina,
 } from "@/app/acoes/admin-conteudo";
 import { BotaoAcaoConfirmar } from "@/components/admin/conteudo/botao-acao";
@@ -72,7 +73,17 @@ export default async function PaginaEditarPagina({
   if (!pagina) notFound();
 
   const podeEscrever = podeEditar(usuario, "conteudo") && pagina.editable;
-  const biblioteca = await bibliotecaDeImagens();
+  const [biblioteca, revisoes] = await Promise.all([
+    bibliotecaDeImagens(),
+    /* As dez últimas bastam para a tela: quem precisa de mais fundo está
+       fazendo perícia, e para isso existe a trilha de auditoria. */
+    prisma.pageRevision.findMany({
+      where: { pageSlug: pagina.slug },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: { id: true, title: true, body: true, origin: true, note: true, createdAt: true },
+    }),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -199,6 +210,61 @@ export default async function PaginaEditarPagina({
                 <p className="mt-2 truncate text-[0.8125rem] text-graf-600">
                   {item.caption || item.media.filename}
                 </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="versoes-da-pagina">
+        <h2 id="versoes-da-pagina" className="text-lg font-bold text-graf-950">
+          Histórico de versões
+        </h2>
+        <p className="mb-4 mt-0.5 text-sm text-graf-500">
+          Cada vez que o texto desta página é substituído — por alguém do painel ou por uma
+          migração de conteúdo — a versão anterior fica guardada aqui. Restaurar troca só o
+          texto: capa, galeria e endereço não mudam.
+        </p>
+
+        {revisoes.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-graf-300 bg-graf-50/60 px-4 py-6 text-center text-sm text-graf-500">
+            Nenhuma versão anterior guardada. A primeira aparece quando o texto for alterado.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {revisoes.map((revisao) => (
+              <li
+                key={revisao.id}
+                className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-graf-200 bg-white p-4 shadow-card"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-graf-950">
+                    <History className="size-4 shrink-0 text-graf-400" aria-hidden />
+                    {formatarDataHora(revisao.createdAt)}
+                    <Etiqueta tom={revisao.origin === "manual" ? "neutro" : "marca"}>
+                      {revisao.origin === "manual" ? "Painel" : "Migração"}
+                    </Etiqueta>
+                  </p>
+                  <p className="mt-1.5 text-sm text-graf-600">
+                    {revisao.note || `Título na época: ${revisao.title}`}
+                  </p>
+                  <p className="mt-1 text-[0.8125rem] text-graf-500">
+                    {revisao.body.length.toLocaleString("pt-BR")} caracteres de texto.
+                  </p>
+                </div>
+
+                {podeEscrever ? (
+                  <BotaoAcaoConfirmar
+                    acao={restaurarRevisaoDaPagina}
+                    valores={{ id: revisao.id }}
+                    rotulo="Restaurar"
+                    variante="secundario"
+                    pergunta="Restaurar esta versão do texto?"
+                    detalhe="O texto que está no ar agora vira mais uma versão do histórico, então dá para voltar atrás. Capa, galeria e endereço não mudam."
+                    rotuloConfirmar="Restaurar versão"
+                    tamanho="sm"
+                  />
+                ) : null}
               </li>
             ))}
           </ul>

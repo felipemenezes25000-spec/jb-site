@@ -10,8 +10,9 @@ import { z } from "zod";
 import { sanitizarHtml } from "@/components/admin/conteudo/html-seguro";
 import { STATUS_LEAD, TIPOS_SECAO } from "@/components/admin/conteudo/rotulos";
 import { registrarAuditoria } from "@/lib/auditoria";
+import { hashDeCorpo, MARCA_MANUAL } from "@/lib/conteudo/migracao";
 import { hashSenha } from "@/lib/auth";
-import { gerarSlug, somenteDigitos } from "@/lib/format";
+import { formatarDataHora, gerarSlug, somenteDigitos } from "@/lib/format";
 import { notificar } from "@/lib/notificacoes";
 import { exigirEdicao } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
@@ -232,7 +233,7 @@ export async function salvarPagina(
 
   if (!original) {
     try {
-      await prisma.page.create({ data: { slug, ...comum } });
+      await prisma.page.create({ data: { slug, ...comum, systemHash: MARCA_MANUAL } });
     } catch (erro) {
       if (ehDuplicidade(erro)) {
         return { erro: "Já existe uma página com este endereço.", campo: "slug" };
@@ -262,7 +263,43 @@ export async function salvarPagina(
   }
 
   try {
-    await prisma.page.update({ where: { slug: original }, data: { slug, ...comum } });
+    /*
+     * Guardar antes de sobrescrever.
+     *
+     * O `AuditLog` diz que o corpo mudou e mostra um resumo, mas não guarda o
+     * texto — não dá para voltar atrás por ele. A revisão guarda o corpo
+     * inteiro, e é dela que sai o botão "Restaurar" do histórico.
+     *
+     * Só quando o corpo realmente muda: salvar apenas o título não deve
+     * empilhar revisão idêntica.
+     *
+     * `systemHash: MARCA_MANUAL` declara que, a partir daqui, o conteúdo é
+     * decisão da equipe. Nenhuma migração de conteúdo sobrescreve página com
+     * essa marca — ver src/lib/conteudo/migracao.ts.
+     */
+    await prisma.$transaction(async (tx) => {
+      if (antes.body.trim() && hashDeCorpo(antes.body) !== hashDeCorpo(corpo)) {
+        await tx.pageRevision.create({
+          data: {
+            pageSlug: antes.slug,
+            title: antes.title,
+            eyebrow: antes.eyebrow,
+            lead: antes.lead,
+            body: antes.body,
+            seoTitle: antes.seoTitle,
+            seoDescription: antes.seoDescription,
+            bodyHash: hashDeCorpo(antes.body),
+            origin: "manual",
+            note: `Versão anterior, guardada quando ${usuario.name} salvou a página.`,
+          },
+        });
+      }
+
+      await tx.page.update({
+        where: { slug: original },
+        data: { slug, ...comum, systemHash: MARCA_MANUAL },
+      });
+    });
   } catch (erro) {
     if (ehDuplicidade(erro)) {
       return { erro: "Já existe uma página com este endereço.", campo: "slug" };
@@ -290,6 +327,83 @@ export async function salvarPagina(
   }
 
   return { ok: "Página salva." };
+}
+
+/**
+ * Restaura uma versão anterior do texto de uma página.
+ *
+ * A versão que está no ar vira revisão antes de sair — restaurar por engano
+ * precisa ser tão reversível quanto a edição que motivou a restauração. Sem
+ * isso, o histórico seria uma armadilha de mão única.
+ *
+ * Só o texto volta: capa, galeria, vídeo e o endereço da página ficam como
+ * estão. Uma revisão não carrega o estado das imagens, e fingir que carrega
+ * produziria uma restauração parcial silenciosa.
+ */
+export async function restaurarRevisaoDaPagina(
+  _anterior: EstadoConteudo,
+  form: FormData,
+): Promise<EstadoConteudo> {
+  const usuario = await exigirEdicao("conteudo");
+  const id = texto(form, "id").trim();
+  if (!id) return { erro: "Versão não informada." };
+
+  const revisao = await prisma.pageRevision.findUnique({ where: { id } });
+  if (!revisao) return { erro: "Versão não encontrada." };
+
+  const pagina = await prisma.page.findUnique({ where: { slug: revisao.pageSlug } });
+  if (!pagina) return { erro: "Página não encontrada." };
+  if (!pagina.editable) {
+    return { erro: "Esta página está bloqueada para edição pelo painel." };
+  }
+
+  if (hashDeCorpo(pagina.body) === hashDeCorpo(revisao.body)) {
+    return { erro: "O texto no ar já é o desta versão." };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.pageRevision.create({
+      data: {
+        pageSlug: pagina.slug,
+        title: pagina.title,
+        eyebrow: pagina.eyebrow,
+        lead: pagina.lead,
+        body: pagina.body,
+        seoTitle: pagina.seoTitle,
+        seoDescription: pagina.seoDescription,
+        bodyHash: hashDeCorpo(pagina.body),
+        origin: "manual",
+        note: `Versão que estava no ar quando ${usuario.name} restaurou outra.`,
+      },
+    });
+
+    await tx.page.update({
+      where: { slug: pagina.slug },
+      data: {
+        title: revisao.title,
+        eyebrow: revisao.eyebrow,
+        lead: revisao.lead,
+        body: revisao.body,
+        seoTitle: revisao.seoTitle,
+        seoDescription: revisao.seoDescription,
+        systemHash: MARCA_MANUAL,
+      },
+    });
+  });
+
+  await registrarAuditoria({
+    userId: usuario.id,
+    acao: "restaurar",
+    entidade: "pagina",
+    entidadeId: pagina.slug,
+    resumo: `Restaurou uma versão de ${formatarDataHora(revisao.createdAt)} da página "${pagina.title}"`,
+  });
+
+  revalidatePath(`/admin/conteudo/paginas/${pagina.slug}`);
+  revalidatePath(`/${pagina.slug}`);
+  revalidatePath("/sitemap.xml");
+
+  return { ok: "Versão restaurada." };
 }
 
 export async function excluirPagina(
