@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Headphones,
   PackageCheck,
+  ShieldCheck,
   ShoppingCart,
   Wrench,
 } from "lucide-react";
@@ -21,19 +22,21 @@ import type { SettingsMap } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
 const SERVICOS = [
-  { icone: ShoppingCart, titulo: "Venda" },
+  { icone: ShoppingCart, titulo: "Compra" },
   { icone: PackageCheck, titulo: "Instalação" },
-  { icone: Wrench, titulo: "Manutenção" },
-  { icone: Headphones, titulo: "Suporte" },
+  { icone: Wrench, titulo: "Assistência" },
+  { icone: Headphones, titulo: "Pós-venda" },
+] as const;
+
+const ATALHOS = [
+  { href: "/novos", rotulo: "Equipamentos novos" },
+  { href: "/seminovos", rotulo: "Seminovos revisados" },
+  { href: "/assistencia-tecnica", rotulo: "Assistência técnica" },
 ] as const;
 
 /**
- * Primeira dobra editorial.
- *
- * Branco é o plano dominante. O vermelho fica contido na coluna visual, como
- * assinatura da marca, e nunca mais vira uma parede ocupando metade da tela.
- * A fotografia continua vindo do catálogo real; preço, condição e marca
- * também são os dados do produto publicado.
+ * Primeira dobra orientada a comércio, com a vantagem competitiva da JB
+ * aparecendo como contexto — não como distração da intenção de compra.
  */
 export function Hero({
   configuracoes: _s,
@@ -48,8 +51,8 @@ export function Hero({
     <section className="overflow-hidden border-b border-graf-200 bg-white">
       <div
         className={cn(
-          "mx-auto grid max-w-[100rem]",
-          produto ? "lg:min-h-[38rem] lg:grid-cols-[0.92fr_1.08fr]" : "min-h-[34rem]",
+          "mx-auto grid max-w-[112rem]",
+          produto ? "lg:min-h-[41rem] lg:grid-cols-[0.9fr_1.1fr]" : "min-h-[35rem]",
         )}
       >
         <HeroConteudo />
@@ -70,20 +73,20 @@ function HeroConteudo() {
           </span>
         </div>
 
-        <h1 className="max-w-[10.5ch] text-[clamp(3.25rem,4.7vw,4.8rem)] font-black leading-[0.95] tracking-[-0.055em] text-graf-950">
+        <h1 className="max-w-[11ch] text-[clamp(3.3rem,4.8vw,5.15rem)] font-black leading-[0.93] tracking-[-0.06em] text-graf-950">
           Equipamentos para a sua clínica.
           <span className="mt-2 block text-jb-600">Suporte para o que vem depois.</span>
         </h1>
 
-        <p className="mt-6 max-w-[36rem] text-base leading-7 text-graf-500 sm:text-[1.05rem]">
-          Compra, instalação, assistência e histórico técnico em um só relacionamento. Mais tempo para sua clínica funcionar bem.
+        <p className="mt-6 max-w-[37rem] text-base leading-7 text-graf-500 sm:text-[1.06rem]">
+          Compre novo ou seminovo com orientação, instalação, assistência e histórico técnico conectados à mesma jornada.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <LinkBotao
             href="/loja"
             tamanho="lg"
-            className="min-w-52 rounded-2xl shadow-[0_14px_34px_rgba(220,38,38,0.16)] hover:-translate-y-0.5"
+            className="min-w-52 rounded-2xl shadow-[0_14px_34px_rgba(220,38,38,0.18)] hover:-translate-y-0.5"
           >
             Explorar equipamentos
             <ArrowRight className="size-4" aria-hidden />
@@ -99,33 +102,21 @@ function HeroConteudo() {
           </LinkBotao>
         </div>
 
-        <div className="mt-9 grid max-w-[42rem] gap-5 border-t border-graf-200 pt-6 sm:grid-cols-3">
-          <MiniBeneficio icone={ShoppingCart} titulo="Compra acompanhada" texto="Antes e depois da entrega" />
-          <MiniBeneficio icone={Wrench} titulo="Assistência própria" texto="Equipe técnica da JB" />
-          <MiniBeneficio icone={PackageCheck} titulo="Histórico centralizado" texto="Na Área da Clínica" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MiniBeneficio({
-  icone: Icone,
-  titulo,
-  texto,
-}: {
-  icone: React.ComponentType<{ className?: string }>;
-  titulo: string;
-  texto: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-jb-200 text-jb-600">
-        <Icone className="size-4" aria-hidden />
-      </span>
-      <div>
-        <p className="text-xs font-extrabold text-graf-950">{titulo}</p>
-        <p className="mt-1 text-[0.68rem] leading-4 text-graf-400">{texto}</p>
+        <nav aria-label="Atalhos da loja" className="mt-8 border-t border-graf-200 pt-5">
+          <ul className="flex flex-wrap gap-x-5 gap-y-2">
+            {ATALHOS.map((atalho) => (
+              <li key={atalho.href}>
+                <Link
+                  href={atalho.href}
+                  className="group inline-flex min-h-10 items-center gap-1.5 text-xs font-extrabold text-graf-600 transition-colors hover:text-jb-700"
+                >
+                  {atalho.rotulo}
+                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </div>
   );
@@ -141,50 +132,47 @@ function HeroVisual({
   const foto = fotoDe(produto);
 
   return (
-    <div className="relative hidden min-h-[38rem] overflow-hidden bg-white lg:block">
-      {/* O vermelho fica restrito ao trilho lateral. */}
-      <div className="absolute inset-y-0 right-0 w-[26%] bg-jb-600" aria-hidden />
+    <div className="relative hidden min-h-[41rem] overflow-hidden bg-[#f8f8f8] lg:block">
+      <div className="absolute inset-y-0 right-0 w-[16%] bg-jb-600" aria-hidden />
       <div
-        className="absolute inset-y-0 right-[18%] w-[24%] bg-jb-50"
-        style={{ clipPath: "polygon(48% 0, 100% 0, 56% 100%, 0 100%)" }}
+        className="absolute inset-y-0 right-[9%] w-[52%] bg-[linear-gradient(145deg,#ef1722_0%,#c90b14_44%,#18191c_44%,#0d0e10_100%)]"
+        style={{ clipPath: "polygon(18% 0, 100% 0, 100% 100%, 0 100%)" }}
         aria-hidden
       />
-      <div
-        className="absolute inset-y-0 right-[24%] w-[10%] bg-jb-600/10"
-        style={{ clipPath: "polygon(70% 0, 100% 0, 30% 100%, 0 100%)" }}
-        aria-hidden
-      />
+      <div className="absolute right-[11%] top-[8%] size-72 rounded-full border-[3rem] border-white/5" aria-hidden />
+      <div className="absolute bottom-[8%] right-[18%] h-28 w-80 rounded-full bg-jb-500/25 blur-3xl" aria-hidden />
 
-      <div className="absolute bottom-[5%] left-[0%] top-[4%] z-10 w-[72%]">
+      <div className="absolute bottom-[10%] left-[1%] top-[5%] z-10 w-[71%]">
+        <div className="absolute inset-[7%] rounded-[2.5rem] bg-white/92 shadow-[0_32px_90px_-48px_rgba(80,0,0,0.55)]" aria-hidden />
         {foto ? (
           <Image
             src={foto.url}
             alt={foto.alt}
             fill
             preload
-            sizes="(max-width: 1024px) 0px, 42vw"
-            className="object-contain object-center p-[4%] drop-shadow-[0_28px_34px_rgba(155,0,0,0.14)] transition-transform duration-700 hover:scale-[1.025]"
+            sizes="(max-width: 1024px) 0px, 43vw"
+            className="object-contain object-center p-[10%] drop-shadow-[0_26px_32px_rgba(96,0,0,0.16)] transition-transform duration-700 hover:scale-[1.025]"
           />
         ) : null}
       </div>
 
       <ProdutoFlutuante produto={produto} parcelamento={parcelamento} />
 
-      <div className="absolute right-[2.7%] top-1/2 z-20 w-[20%] -translate-y-1/2 text-white">
-        <p className="text-[0.67rem] font-black uppercase leading-[1.65] tracking-[0.2em] text-white/70">
-          Do equipamento
+      <div className="absolute right-[1.5%] top-1/2 z-20 w-[14%] -translate-y-1/2 text-white">
+        <p className="text-[0.62rem] font-black uppercase leading-[1.65] tracking-[0.18em] text-white/65">
+          Um parceiro
           <br />
-          ao pós-venda
+          para a clínica
         </p>
-        <div className="mt-5 h-px w-10 bg-white/60" aria-hidden />
+        <div className="mt-5 h-px w-8 bg-white/55" aria-hidden />
 
-        <div className="mt-7 space-y-4">
+        <div className="mt-6 space-y-4">
           {SERVICOS.map(({ icone: Icone, titulo }) => (
-            <div key={titulo} className="flex items-center gap-3">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/10">
-                <Icone className="size-4" aria-hidden />
+            <div key={titulo} className="flex items-center gap-2.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/10">
+                <Icone className="size-3.5" aria-hidden />
               </span>
-              <span className="text-[0.69rem] font-extrabold uppercase tracking-[0.08em] text-white">
+              <span className="text-[0.62rem] font-extrabold uppercase tracking-[0.06em] text-white">
                 {titulo}
               </span>
             </div>
@@ -210,7 +198,7 @@ function ProdutoFlutuante({
   return (
     <Link
       href={`/loja/${produto.slug}`}
-      className="group absolute bottom-9 left-[3%] z-30 flex w-[min(31rem,66%)] items-end justify-between gap-5 rounded-[1.4rem] border border-jb-100 bg-white/97 p-5 shadow-[0_26px_70px_-32px_rgba(118,0,0,0.34)] backdrop-blur-xl transition-transform duration-300 hover:-translate-y-1"
+      className="group absolute bottom-8 left-[3%] z-30 flex w-[min(32rem,68%)] items-end justify-between gap-5 rounded-[1.5rem] border border-white/80 bg-white/95 p-5 shadow-[0_28px_80px_-30px_rgba(80,0,0,0.38)] backdrop-blur-xl transition-transform duration-300 hover:-translate-y-1"
     >
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
