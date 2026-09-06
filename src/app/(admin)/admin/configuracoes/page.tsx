@@ -40,6 +40,7 @@ export default async function PaginaConfiguracoes() {
     tipo: campo.type,
     ajuda: campo.hint,
     valor: valores[campo.key],
+    opcoes: campo.options,
   }));
 
   return (

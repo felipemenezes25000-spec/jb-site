@@ -1699,6 +1699,19 @@ function validarConfiguracao(
   if (campo.key === "endereco_uf" && !/^[A-Za-z]{2}$/.test(valor)) {
     return "UF: use a sigla de duas letras.";
   }
+  if (campo.key === "devolucao_prazo_dias") {
+    const numero = Number(valor);
+    if (!Number.isInteger(numero) || numero < 1 || numero > 365) {
+      return "Prazo de devolução: informe um número inteiro de dias, de 1 a 365.";
+    }
+  }
+  /* Opção fora da lista não é erro de digitação do usuário: é formulário
+     adulterado. Recusar aqui evita gravar valor que depois viraria atributo
+     desconhecido no dado estruturado. */
+  if (campo.type === "select" && campo.options) {
+    const admitidos = campo.options.map((opcao) => opcao.value);
+    if (!admitidos.includes(valor)) return `${campo.label}: escolha uma das opções da lista.`;
+  }
   return null;
 }
 
@@ -1722,6 +1735,28 @@ export async function salvarConfiguracoes(
     const erro = validarConfiguracao(campo, bruto);
     if (erro) return { erro, campo: campo.key };
     valores[campo.key] = bruto;
+  }
+
+  /* A política de devolução vale inteira ou não vale. Meia política gravada
+     não é publicada em lugar nenhum — e quem salvou sairia da tela achando
+     que publicou. Recusar aqui é a única forma de a pessoa saber. */
+  const partesDaDevolucao = [
+    { chave: "devolucao_prazo_dias", rotulo: "o prazo" },
+    { chave: "devolucao_metodo", rotulo: "como o cliente devolve" },
+    { chave: "devolucao_frete", rotulo: "quem paga o retorno" },
+  ];
+  const preenchidas = partesDaDevolucao.filter((parte) => valores[parte.chave] !== "");
+  if (preenchidas.length > 0 && preenchidas.length < partesDaDevolucao.length) {
+    const faltando = partesDaDevolucao
+      .filter((parte) => valores[parte.chave] === "")
+      .map((parte) => parte.rotulo);
+    return {
+      erro:
+        `Devolução: falta ${faltando.join(" e ")}. ` +
+        "Enquanto os três campos não estiverem preenchidos, nenhuma política de " +
+        "devolução é publicada no site nem enviada ao Google.",
+      campo: partesDaDevolucao.find((parte) => valores[parte.chave] === "")?.chave,
+    };
   }
 
   await prisma.$transaction(

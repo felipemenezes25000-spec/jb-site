@@ -318,6 +318,14 @@ model Product {
   /// O que vem na caixa, e por tabela o que NÃO vem. Um por linha.
   boxContents String[] @default([])
 
+  /// Código de barras do fabricante (GTIN-8, UPC-12, EAN-13 ou ITF-14).
+  /// Guardado só dígitos e só depois de conferido o dígito verificador. O SKU
+  /// interno da JB nunca entra aqui: ver `src/lib/identificadores.ts`.
+  gtin String?
+
+  /// Código da peça no fabricante. Também nunca é o SKU interno.
+  mpn String?
+
   // regulatório — todos opcionais, nunca inventar
   anvisaCode       String?
   manufacturer     String?

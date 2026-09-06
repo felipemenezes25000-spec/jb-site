@@ -2,6 +2,13 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 
+import {
+  conferirGtin,
+  conferirMpn,
+  EXPLICACAO_DO_GTIN,
+  EXPLICACAO_DO_MPN,
+  normalizarGtin,
+} from "@/lib/identificadores";
 import { ETIQUETA_CATALOGO, ETIQUETA_CATEGORIAS } from "@/lib/loja-publica";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
@@ -586,6 +593,8 @@ const esquemaSeo = z.object({
   id: texto(40).min(1),
   seoTitle: opcional(70),
   seoDescription: opcional(180),
+  gtin: opcional(20),
+  mpn: opcional(70),
   anvisaCode: opcional(60),
   manufacturer: opcional(120),
   regulatoryHolder: opcional(160),
@@ -607,6 +616,8 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
     id: campo(formData, "id"),
     seoTitle: campo(formData, "seoTitle"),
     seoDescription: campo(formData, "seoDescription"),
+    gtin: campo(formData, "gtin"),
+    mpn: campo(formData, "mpn"),
     anvisaCode: campo(formData, "anvisaCode"),
     manufacturer: campo(formData, "manufacturer"),
     regulatoryHolder: campo(formData, "regulatoryHolder"),
@@ -627,6 +638,9 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
       slug: true,
       seoTitle: true,
       seoDescription: true,
+      sku: true,
+      gtin: true,
+      mpn: true,
       anvisaCode: true,
       manufacturer: true,
       regulatoryHolder: true,
@@ -641,6 +655,21 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
   });
   if (!antes) return falha("Produto não encontrado.");
 
+  /* Os identificadores são conferidos aqui, contra o SKU deste produto, e não
+     no formulário: quem escreve no banco é quem tem de garantir. A mesma
+     função vale para o JSON-LD e para o feed, então as três leituras do
+     número não podem divergir. */
+  const gtinLimpo = normalizarGtin(dados.data.gtin);
+  const problemaDoGtin = conferirGtin(gtinLimpo, { sku: antes.sku });
+  if (problemaDoGtin) {
+    return { erro: EXPLICACAO_DO_GTIN[problemaDoGtin], campo: "gtin" };
+  }
+
+  const problemaDoMpn = conferirMpn(dados.data.mpn, { sku: antes.sku });
+  if (problemaDoMpn) {
+    return { erro: EXPLICACAO_DO_MPN[problemaDoMpn], campo: "mpn" };
+  }
+
   try {
     const depois = await prisma.product.update({
       where: { id: dados.data.id },
@@ -648,6 +677,8 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
         // campo vazio vira nulo: título de SEO em branco significa "use o nome"
         seoTitle: dados.data.seoTitle || null,
         seoDescription: dados.data.seoDescription || null,
+        gtin: gtinLimpo || null,
+        mpn: dados.data.mpn || null,
         anvisaCode: dados.data.anvisaCode || null,
         manufacturer: dados.data.manufacturer || null,
         regulatoryHolder: dados.data.regulatoryHolder || null,
@@ -666,6 +697,9 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
         slug: true,
         seoTitle: true,
         seoDescription: true,
+        sku: true,
+        gtin: true,
+        mpn: true,
         anvisaCode: true,
         manufacturer: true,
         regulatoryHolder: true,

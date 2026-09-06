@@ -44,6 +44,7 @@ import {
   faqJsonLd,
   JsonLd,
   metadataDePagina,
+  politicaDeDevolucao,
   produtoJsonLd,
   textoLimpo,
   trilhaJsonLd,
@@ -126,7 +127,10 @@ async function carregar(slug: string) {
           media: { orderBy: { order: "asc" }, include: { media: true } },
         },
       },
-      shippingProfile: true,
+      /* As faixas entram porque o dado estruturado declara preço e prazo POR
+         faixa de CEP. Sem elas só restaria a alternativa que o escopo proíbe:
+         publicar um valor único de frete que na verdade depende do CEP. */
+      shippingProfile: { include: { zones: { orderBy: { order: "asc" } } } },
       relatedFrom: {
         orderBy: { order: "asc" },
         take: 8,
@@ -319,6 +323,21 @@ export default async function ProdutoPage({ params }: Props) {
     disponivel: !semEstoque,
     garantiaMeses,
     vendedor: s.empresa_nome,
+    gtin: produto.gtin,
+    mpn: produto.mpn,
+    /* Perfil sob orçamento não declara entrega nenhuma: o preço dele não
+       existe ainda. Faixa sem preço também fica de fora — zero real é outra
+       coisa, e o perfil "grátis" tem tipo próprio. */
+    entrega:
+      produto.shippingProfile && produto.shippingProfile.kind !== "sob_orcamento"
+        ? produto.shippingProfile.zones.map((faixa) => ({
+            cepInicio: faixa.zipStart,
+            cepFim: faixa.zipEnd,
+            valorCents: produto.shippingProfile?.kind === "gratis" ? 0 : faixa.priceCents,
+            prazoDias: faixa.etaDays,
+          }))
+        : undefined,
+    devolucao: politicaDeDevolucao(s),
   });
 
   // Fora de linha é diferente de "sem estoque": o buscador precisa ler

@@ -288,6 +288,27 @@ de verdade.
 | 16.8 | Política de timezone e virada de mês/ano | **não iniciado** |
 | 16.9 | Múltiplas unidades e titularidade | preservado — nenhum compartilhamento entre clínicas foi introduzido |
 
+### Fase 13 — SEO comercial, Merchant Center e presença local (seção 17)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 17.1 | Organization, LocalBusiness, Product, Offer, Service, FAQ, Breadcrumb | preexistente, revisado |
+| 17.2 | GTIN/MPN só quando conhecidos e válidos | validado localmente — 15 testes; dígito verificador e recusa do SKU |
+| 17.3 | `shippingDetails` a partir da regra comercial real | validado localmente — uma faixa por zona de CEP cadastrada |
+| 17.4 | Sem prazo/custo fixo inventado; sem prazo de devolução sem política | validado localmente — zona sem `etaDays` omite `deliveryTime`; devolução só sai com os três campos |
+| 17.5 | Coerência página / JSON-LD / feed | implementado — os três leem `Product.priceCents`, `condition` e `slug` |
+| 17.6 | Sem rating agregado inventado | preservado — `aggregateRating` continua ausente |
+| Feed 1 | Requisitos oficiais consultados | feito — support.google.com/merchants/answer/7052112, citado no código |
+| Feed 2 | Feed validável em `/feed/produtos.xml` | validado localmente — 21 testes de formato e escape |
+| Feed 3 | Condição mapeada para os valores admitidos | validado localmente — só `new`/`used`/`refurbished`; o programa vai em `custom_label_0` |
+| Feed 4 | Exclui rascunho, não elegível, privado e demonstração | validado localmente — quatro recusas nomeadas |
+| Feed 5 | Unidades com preço/condição diferentes | documentado — o modelo não admite; a regra está em `merchant-center.md` |
+| Feed 6 | Atualização, cache e diagnóstico documentados | implementado — etiquetas `catalogo`/`configuracoes`; seção própria no documento |
+| Feed 7 | Instruções de verificação e acompanhamento | documentado — **nenhuma conta externa foi tocada** |
+| Local | NAP, horário e área de atendimento centralizados | implementado — `area_atendimento` alimenta `areaServed` |
+| Local | Página local só com cobertura real | **decisão de não fazer**, com motivo escrito |
+| Local | Checklist do perfil, fotos e avaliações reais | documentado |
+
 ---
 
 ## Matriz de cenários obrigatórios (seção 26)

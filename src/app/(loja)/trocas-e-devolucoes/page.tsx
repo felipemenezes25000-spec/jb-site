@@ -10,7 +10,7 @@ import {
 } from "@/components/institucional/documento-legal";
 import { MolduraInstitucional } from "@/components/institucional/moldura";
 import { CorpoCms, carregarPaginaCms, temTexto } from "@/components/institucional/pagina-cms";
-import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
+import { JsonLd, metadataDePagina, politicaDeDevolucao, trilhaJsonLd } from "@/lib/seo";
 import { formatarTelefone } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 
@@ -65,6 +65,12 @@ export default async function TrocasPage() {
   const [pagina, s] = await Promise.all([carregarPaginaCms(SLUG), getSettings()]);
   const temCms = temTexto(pagina?.body);
 
+  /* A política configurada no painel é a mesma que o dado estruturado publica
+     e a mesma que o Merchant Center vai cobrar. Quando ela existe, aparece
+     aqui — duas políticas diferentes, uma na tela e outra no schema, é motivo
+     de suspensão de conta, e vira discussão com o cliente que leu a errada. */
+  const devolucao = politicaDeDevolucao(s);
+
   const secoes: SecaoLegal[] = [
     {
       id: "arrependimento",
@@ -89,6 +95,30 @@ export default async function TrocasPage() {
         </>
       ),
     },
+    ...(devolucao
+      ? [
+          {
+            id: "politica-da-jb",
+            titulo: `Política de devolução da JB: ${devolucao.dias} dias`,
+            conteudo: (
+              <>
+                <p>
+                  Além do direito legal acima, a JB aceita devolução em até{" "}
+                  <strong>{devolucao.dias} dias corridos</strong> contados do recebimento.
+                </p>
+                <p>
+                  {devolucao.metodo === "no_local"
+                    ? "A devolução é feita no endereço da JB, em horário comercial."
+                    : "O equipamento volta por transportadora ou correio."}{" "}
+                  {devolucao.quemPaga === "jb"
+                    ? "O custo do retorno é da JB."
+                    : "O custo do retorno é do cliente."}
+                </p>
+              </>
+            ),
+          } satisfies SecaoLegal,
+        ]
+      : []),
     {
       id: "defeito",
       titulo: "Produto com defeito",

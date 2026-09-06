@@ -198,9 +198,14 @@ export function localNegocioJsonLd(s: SettingsMap): DadosJsonLd {
     telephone: telefoneInternacional(s.telefone),
     address: enderecoPostal(s),
     openingHours: horarioSchema(s.horario),
-    areaServed: limpo(s.endereco_cidade)
-      ? { "@type": "City", name: s.endereco_cidade }
-      : undefined,
+    /* A área de atendimento vem das configurações quando a JB a declarou; só
+       na falta dela caímos na cidade do endereço. Listar cidade onde não há
+       cobertura é o erro que o escopo proíbe — e ele custa visita perdida. */
+    areaServed: limpo(s.area_atendimento)
+      ? { "@type": "AdministrativeArea", name: s.area_atendimento.trim() }
+      : limpo(s.endereco_cidade)
+        ? { "@type": "City", name: s.endereco_cidade }
+        : undefined,
     sameAs: redes(s),
   };
 }
@@ -213,6 +218,104 @@ const CONDICAO_SCHEMA: Record<CondicaoSeo, string> = {
   usado: "https://schema.org/UsedCondition",
   recondicionado: "https://schema.org/RefurbishedCondition",
 };
+
+/**
+ * Uma faixa de CEP com preço e prazo reais, como o painel cadastrou.
+ *
+ * O escopo proíbe inventar prazo ou custo fixo quando eles dependem do CEP. A
+ * saída não é omitir a entrega: é declarar cada faixa com o preço dela e o
+ * intervalo de CEP em que aquele preço vale. `prazoDias` nulo não vira
+ * número — sai do JSON-LD.
+ */
+export type FaixaDeEntregaSeo = {
+  cepInicio: string;
+  cepFim: string;
+  valorCents: number;
+  prazoDias: number | null;
+};
+
+/** Devolução, quando — e só quando — a JB definiu a política inteira. */
+export type DevolucaoSeo = {
+  dias: number;
+  metodo: "transporte" | "no_local";
+  quemPaga: "jb" | "cliente";
+};
+
+const METODO_DE_DEVOLUCAO = {
+  transporte: "https://schema.org/ReturnByMail",
+  no_local: "https://schema.org/ReturnInStore",
+} as const;
+
+const FRETE_DA_DEVOLUCAO = {
+  jb: "https://schema.org/FreeReturn",
+  cliente: "https://schema.org/ReturnFeesCustomerResponsibility",
+} as const;
+
+/**
+ * Lê a política de devolução das configurações.
+ *
+ * Devolve `null` a menos que os três campos estejam preenchidos. Meia
+ * política publicada é pior que nenhuma: o Google mostra o prazo, o cliente
+ * cobra o prazo, e a JB nunca combinou o resto.
+ */
+export function politicaDeDevolucao(s: SettingsMap): DevolucaoSeo | null {
+  const dias = Number((s.devolucao_prazo_dias ?? "").trim());
+  const metodo = (s.devolucao_metodo ?? "").trim();
+  const quemPaga = (s.devolucao_frete ?? "").trim();
+
+  if (!Number.isInteger(dias) || dias < 1) return null;
+  if (metodo !== "transporte" && metodo !== "no_local") return null;
+  if (quemPaga !== "jb" && quemPaga !== "cliente") return null;
+
+  return { dias, metodo, quemPaga };
+}
+
+function devolucaoJsonLd(devolucao: DevolucaoSeo): DadosJsonLd {
+  return {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "BR",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: devolucao.dias,
+    returnMethod: METODO_DE_DEVOLUCAO[devolucao.metodo],
+    returnFees: FRETE_DA_DEVOLUCAO[devolucao.quemPaga],
+  };
+}
+
+function entregaJsonLd(faixa: FaixaDeEntregaSeo): DadosJsonLd {
+  return {
+    "@type": "OfferShippingDetails",
+    shippingRate: {
+      "@type": "MonetaryAmount",
+      value: (faixa.valorCents / 100).toFixed(2),
+      currency: "BRL",
+    },
+    shippingDestination: {
+      "@type": "DefinedRegion",
+      addressCountry: "BR",
+      postalCodeRange: [
+        {
+          "@type": "PostalCodeRangeSpecification",
+          postalCodeBegin: faixa.cepInicio,
+          postalCodeEnd: faixa.cepFim,
+        },
+      ],
+    },
+    /* Prazo desconhecido sai do objeto. O campo não admite "não sei", e
+       chutar dois dias porque o concorrente promete dois é como se inventa
+       prazo de entrega. */
+    deliveryTime:
+      faixa.prazoDias !== null && faixa.prazoDias > 0
+        ? {
+            "@type": "ShippingDeliveryTime",
+            transitTime: {
+              "@type": "QuantitativeValue",
+              maxValue: faixa.prazoDias,
+              unitCode: "DAY",
+            },
+          }
+        : undefined,
+  };
+}
 
 export type ProdutoSeo = {
   nome: string;
@@ -231,6 +334,12 @@ export type ProdutoSeo = {
   disponivel?: boolean;
   garantiaMeses?: number | null;
   vendedor?: string | null;
+  /** Já conferido por `@/lib/identificadores`. String vazia é ausência. */
+  gtin?: string | null;
+  mpn?: string | null;
+  /** Faixas reais do perfil de frete do produto. Vazio: nada é declarado. */
+  entrega?: readonly FaixaDeEntregaSeo[];
+  devolucao?: DevolucaoSeo | null;
 };
 
 export function produtoJsonLd(produto: ProdutoSeo): DadosJsonLd {
@@ -246,12 +355,19 @@ export function produtoJsonLd(produto: ProdutoSeo): DadosJsonLd {
   const vendedor = limpo(produto.vendedor);
   const condicao = produto.condicao ? CONDICAO_SCHEMA[produto.condicao] : undefined;
 
+  const faixas = (produto.entrega ?? []).map(entregaJsonLd);
+
   return {
     "@context": CONTEXTO,
     "@type": "Product",
     name: produto.nome,
     url,
     sku: limpo(produto.sku),
+    /* GTIN e MPN só chegam aqui depois de conferidos. O que este arquivo
+       garante é o outro lado: quando não há identificador, o campo some — e
+       não vira o SKU interno "para preencher". */
+    gtin: limpo(produto.gtin),
+    mpn: limpo(produto.mpn),
     model: limpo(produto.modelo),
     description: produto.descricao ? textoLimpo(produto.descricao, 300) : undefined,
     image: imagens.length ? imagens : undefined,
@@ -270,6 +386,10 @@ export function produtoJsonLd(produto: ProdutoSeo): DadosJsonLd {
               : "https://schema.org/InStock",
           itemCondition: condicao,
           seller: vendedor ? { "@type": "Organization", name: vendedor } : undefined,
+          shippingDetails: faixas.length ? faixas : undefined,
+          hasMerchantReturnPolicy: produto.devolucao
+            ? devolucaoJsonLd(produto.devolucao)
+            : undefined,
           ...(produto.garantiaMeses && produto.garantiaMeses > 0
             ? {
                 warranty: {

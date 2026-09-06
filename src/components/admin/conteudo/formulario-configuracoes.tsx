@@ -15,7 +15,7 @@ import {
   ROTULO_GRUPO_CONFIG,
 } from "@/components/admin/conteudo/rotulos";
 import { Botao } from "@/components/ui/button";
-import { Area, Campo, Marcador } from "@/components/ui/form";
+import { Area, Campo, Marcador, Selecao } from "@/components/ui/form";
 
 /* ============================================================================
    Configurações do site
@@ -30,9 +30,10 @@ export type CampoDeConfiguracao = {
   chave: string;
   rotulo: string;
   grupo: string;
-  tipo: "text" | "textarea" | "url" | "email" | "tel" | "boolean";
+  tipo: "text" | "textarea" | "url" | "email" | "tel" | "boolean" | "select";
   ajuda?: string;
   valor: string;
+  opcoes?: { value: string; label: string }[];
 };
 
 const VAZIO: EstadoAcao = {};
@@ -96,6 +97,25 @@ export function FormularioConfiguracoes({
                       </p>
                     ) : null}
                   </div>
+                );
+              }
+
+              if (campo.tipo === "select" && campo.opcoes) {
+                return (
+                  <Selecao
+                    key={campo.chave}
+                    rotulo={campo.rotulo}
+                    name={campo.chave}
+                    defaultValue={campo.valor}
+                    ajuda={campo.ajuda}
+                    erro={erro}
+                  >
+                    {campo.opcoes.map((opcao) => (
+                      <option key={opcao.value} value={opcao.value}>
+                        {opcao.label}
+                      </option>
+                    ))}
+                  </Selecao>
                 );
               }
 

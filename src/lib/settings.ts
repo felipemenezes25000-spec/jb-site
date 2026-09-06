@@ -44,7 +44,15 @@ export const SETTING_DEFAULTS = {
   linkedin: "",
   youtube: "",
 
+  // devolução — vazio significa "política ainda não definida", e nesse caso
+  // nada de devolução é publicado. Prazo inventado em dado estruturado é
+  // promessa que a JB teria de cumprir.
+  devolucao_prazo_dias: "",
+  devolucao_metodo: "",
+  devolucao_frete: "",
+
   // seo
+  area_atendimento: "",
   seo_titulo: "JB Soluções Odontológicas — equipamentos e assistência técnica",
   seo_descricao:
     "Equipamentos odontológicos novos e seminovos revisados, com instalação, manutenção preventiva e assistência técnica especializada em São Paulo.",
@@ -59,9 +67,19 @@ export type SettingsMap = Record<SettingKey, string>;
 export const SETTING_FIELDS: {
   key: SettingKey;
   label: string;
-  group: "identidade" | "contato" | "endereco" | "loja" | "social" | "seo" | "integracoes";
-  type: "text" | "textarea" | "url" | "email" | "tel" | "boolean";
+  group:
+    | "identidade"
+    | "contato"
+    | "endereco"
+    | "loja"
+    | "devolucao"
+    | "social"
+    | "seo"
+    | "integracoes";
+  type: "text" | "textarea" | "url" | "email" | "tel" | "boolean" | "select";
   hint?: string;
+  /** Só para `select`. A primeira opção é sempre a ausência de escolha. */
+  options?: { value: string; label: string }[];
 }[] = [
   { key: "empresa_nome", label: "Nome exibido", group: "identidade", type: "text" },
   { key: "empresa_desde", label: "Em atividade desde", group: "identidade", type: "text" },
@@ -121,11 +139,52 @@ export const SETTING_FIELDS: {
     hint: "E-mail interno que recebe cópia de cada pedido. Opcional.",
   },
 
+  {
+    key: "devolucao_prazo_dias",
+    label: "Prazo de devolução (dias)",
+    group: "devolucao",
+    type: "text",
+    hint:
+      "Dias corridos a partir do recebimento. Vazio: nenhuma política de devolução é " +
+      "publicada no site nem enviada ao Google.",
+  },
+  {
+    key: "devolucao_metodo",
+    label: "Como o cliente devolve",
+    group: "devolucao",
+    type: "select",
+    options: [
+      { value: "", label: "Não definido" },
+      { value: "transporte", label: "Envia de volta por transportadora ou correio" },
+      { value: "no_local", label: "Devolve no endereço da JB" },
+    ],
+  },
+  {
+    key: "devolucao_frete",
+    label: "Quem paga o retorno",
+    group: "devolucao",
+    type: "select",
+    options: [
+      { value: "", label: "Não definido" },
+      { value: "jb", label: "A JB paga" },
+      { value: "cliente", label: "O cliente paga" },
+    ],
+  },
+
   { key: "facebook", label: "Facebook", group: "social", type: "url" },
   { key: "instagram", label: "Instagram", group: "social", type: "url" },
   { key: "linkedin", label: "LinkedIn", group: "social", type: "url" },
   { key: "youtube", label: "YouTube", group: "social", type: "url" },
 
+  {
+    key: "area_atendimento",
+    label: "Área de atendimento",
+    group: "seo",
+    type: "text",
+    hint:
+      "Onde a JB atende de verdade. Ex.: \"São Paulo e Grande São Paulo\". Vai para o " +
+      "schema de negócio local — não liste cidade onde não há cobertura.",
+  },
   { key: "seo_titulo", label: "Título padrão", group: "seo", type: "text" },
   { key: "seo_descricao", label: "Descrição padrão", group: "seo", type: "textarea" },
 

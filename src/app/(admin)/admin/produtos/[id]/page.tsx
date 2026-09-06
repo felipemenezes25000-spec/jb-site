@@ -280,6 +280,8 @@ export default async function PaginaProduto({
             slug: produto.slug,
             seoTitle: produto.seoTitle,
             seoDescription: produto.seoDescription,
+            gtin: produto.gtin,
+            mpn: produto.mpn,
             anvisaCode: produto.anvisaCode,
             manufacturer: produto.manufacturer,
             regulatoryHolder: produto.regulatoryHolder,

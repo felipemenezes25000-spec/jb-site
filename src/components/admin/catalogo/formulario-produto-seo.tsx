@@ -34,6 +34,8 @@ export type ProdutoSeo = {
   slug: string;
   seoTitle: string | null;
   seoDescription: string | null;
+  gtin: string | null;
+  mpn: string | null;
   anvisaCode: string | null;
   manufacturer: string | null;
   regulatoryHolder: string | null;
@@ -195,6 +197,29 @@ export function FormularioProdutoSeo({
                 ajuda="Um item por linha. O que não estiver aqui a página declara como vendido à parte."
                 placeholder={"Equipamento\nCabo de força\nManual do fabricante"}
               />
+              {/* --------------------------------------- identificadores ---
+
+                  GTIN e MPN existem para o feed do Google casar o produto da
+                  JB com o produto certo. Preencher com o SKU interno "para
+                  não deixar vazio" é o erro caro: o anúncio é aceito e um dia
+                  o código casa com o item de outra empresa. A ação confere o
+                  dígito verificador e recusa o SKU. */}
+              <Campo
+                rotulo="GTIN (código de barras)"
+                name="gtin"
+                defaultValue={produto.gtin ?? ""}
+                maxLength={14}
+                inputMode="numeric"
+                ajuda="8, 12, 13 ou 14 dígitos, como está na embalagem. Em branco se não souber."
+              />
+              <Campo
+                rotulo="MPN (código do fabricante)"
+                name="mpn"
+                defaultValue={produto.mpn ?? ""}
+                maxLength={70}
+                ajuda="O código que o fabricante dá à peça — nunca o SKU da JB."
+              />
+
               <Campo
                 rotulo="Fabricante"
                 name="manufacturer"
