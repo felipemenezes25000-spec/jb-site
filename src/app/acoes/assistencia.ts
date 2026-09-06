@@ -945,6 +945,11 @@ const esquemaPlano = z.object({
   cidade: z.string().trim().max(80).default(""),
   uf: z.string().trim().max(2).default(""),
   mensagem: z.string().trim().max(2000).default(""),
+  /* Resumo da calculadora de parada, trazido pelo formulário. É texto gerado
+     pelo próprio site, mas chega pelo navegador e por isso é tratado como
+     entrada não confiável: limite de tamanho e nada além de anexar à
+     observação do lead. Não alimenta cálculo nem decisão. */
+  premissas: z.string().trim().max(1000).default(""),
   novidades: z.coerce.boolean().default(false),
 });
 
@@ -976,6 +981,7 @@ export async function interesseEmPlano(
     cidade: formData.get("cidade") ?? "",
     uf: formData.get("uf") ?? "",
     mensagem: formData.get("mensagem") ?? "",
+    premissas: formData.get("premissas") ?? "",
     novidades: formData.get("novidades") === "on",
   });
   if (!dados.success) return primeiroProblema(dados.error);
@@ -1003,11 +1009,18 @@ export async function interesseEmPlano(
 
   const agente = await agenteDaRequisicao();
 
+  /* As premissas da calculadora entram no lead porque é isso que torna o
+     contato útil para a equipe: sem elas, a proposta começa perguntando de
+     novo o que a pessoa já respondeu. Vão para o CRM interno, nunca para
+     analytics — dado financeiro de clínica não é métrica de produto. */
   const observacao = [
     `Interesse no plano: ${plano.name}`,
     `Equipamentos a cobrir: ${entrada.equipamentos}`,
     entrada.empresa ? `Clínica: ${entrada.empresa}` : "",
     entrada.mensagem,
+    entrada.premissas
+      ? `\nPremissas da simulação de parada:\n${entrada.premissas}`
+      : "",
   ]
     .filter(Boolean)
     .join("\n");

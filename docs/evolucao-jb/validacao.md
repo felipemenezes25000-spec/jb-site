@@ -127,3 +127,71 @@ O parágrafo de teste foi removido em seguida, e o estado final conferido:
 | a11y e responsivo nos grupos `conta` e `admin` | a fase não alterou essas telas; serão medidos quando forem alteradas |
 | largura de 320 px | ainda não está na lista do `responsivo.mjs`; entra na fase 7, conforme a seção 11 do prompt |
 | Safari/WebKit e aparelho real | o ambiente só tem Chromium disponível |
+
+### Fase 2 — planos e calculadora
+
+Executado em 6 de setembro de 2026, banco de desenvolvimento, servidor em
+`localhost:57762`.
+
+#### Portões automáticos
+
+| Comando | Resultado |
+|---|---|
+| `pnpm typecheck` | **exit 0** |
+| `pnpm test:unit` | **exit 0** — 213 → **249 testes** |
+| `pnpm build` | **exit 0**, 8,1 s |
+| `E2E_BASE_URL=… pnpm e2e` | **exit 0** — 48 testes, 4,0 min |
+| `node scripts/acessibilidade.mjs --so=publico` | **exit 0** — 36 medições, 0 problemas |
+| `node scripts/responsivo.mjs --so=publico` | **exit 0** — 108 medições, 0 problemas |
+
+Testes novos: 17 em `plano.test.ts`, 19 em `parada.test.ts`.
+
+`/manutencao-preventiva` entrou nas duas listas de auditoria. Na primeira
+execução ela **reprovou**: o link do nome do plano media 37×21 px em 390 e
+69×21 px em 768, abaixo do alvo mínimo de 44 px. Defeito preexistente, exposto
+por incluir a rota. Corrigido com `min-h-11 min-w-11`; as duas larguras passam
+depois.
+
+#### Base de cobrança — verificação no painel e no site
+
+| Verificação | Como | Resultado |
+|---|---|---|
+| Padrão seguro | planos existentes após a migração | os três ficaram `sob_consulta` e passaram a exibir "Sob consulta", apesar de terem preço cadastrado |
+| Painel mostra o efeito | lista em `/admin/manutencao/planos` | "PREÇO CADASTRADO R$ 890,00 · BASE DE COBRANÇA Sob consulta · **NO SITE APARECE COMO Sob consulta**" |
+| Validação cruzada | salvar com base `pacote` e quantidade vazia | recusado: "Pacote precisa dizer quantos equipamentos o preço cobre." Nada gravado |
+| Gravação | salvar com `por_equipamento` e as condições | gravado; conferido no banco |
+| Efeito público | `/planos-de-manutencao` | "R$ 890,00 · por equipamento, por 12 meses de cobertura", com peças, deslocamento, elegibilidade, fatores de preço e exclusões |
+| Comparativo com bases diferentes | seed de demonstração com as três bases | linha "Cobrança" mostra "por equipamento", "para até 5 equipamentos" e "a partir de"; o aviso "Estes planos não cobram pela mesma coisa" aparece **antes** da tabela |
+
+#### Calculadora — conferência aritmética na tela
+
+Entradas: R$ 250,00/h, 50% da agenda, 8 h/dia, 2 dias, 2 vezes/ano, reparo
+R$ 900,00.
+
+```text
+R$ 250,00/h × 50% da agenda      → R$ 125,00/h em risco
+8 h/dia × 2 dias parados         → 16 h sem atender
+16 h × R$ 125,00 por hora        → R$ 2.000,00 por parada
+R$ 2.000,00 × 2 paradas no ano   → R$ 4.000,00 de receita
+R$ 900,00 de reparo × 2          → R$ 1.800,00 em consertos
+                                   ─────────────────────────
+Exposição anual estimada           R$ 5.800,00
+```
+
+O total fecha com a soma das linhas, o percentual aparece uma vez só, e o
+rótulo é "Exposição anual estimada" — não economia. A frase exigida pelo
+escopo está na tela, literal: "Simulação com os dados informados. Não
+representa garantia de economia ou ausência de falhas."
+
+Com a receita zerada, a coluna do resultado lista o que falta ("Informe a
+receita por hora.") em vez de mostrar R$ 0,00 ou NaN.
+
+#### Passagem das premissas para a proposta
+
+| Verificação | Resultado |
+|---|---|
+| Clicar em "Pedir proposta" | vai para `/planos-de-manutencao` com a URL limpa — **nenhum dado financeiro em parâmetro** |
+| Onde o dado ficou | `sessionStorage`, chave `jb:premissas-parada` |
+| No formulário | bloco "Da sua simulação" com as sete linhas, visível antes do envio |
+| Campo enviado | `input[name=premissas]` com o mesmo texto |
+| Botão "Não enviar" | remove o bloco, o campo oculto **e** a chave do `sessionStorage` |

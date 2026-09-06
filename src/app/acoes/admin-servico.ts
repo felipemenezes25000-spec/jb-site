@@ -1357,6 +1357,23 @@ const esquemaPlano = z.object({
   descricao: z.string().trim().max(2000).optional().default(""),
   beneficios: z.string().max(2000).optional().default(""),
   precoCents: centavosDoFormulario,
+  baseDeCobranca: z
+    .enum(["sob_consulta", "por_equipamento", "pacote", "a_partir_de"])
+    .default("sob_consulta"),
+  equipamentosCobertos: z
+    .string()
+    .trim()
+    .default("")
+    .transform((valor) => (valor === "" ? null : Number(valor)))
+    .refine(
+      (valor) => valor === null || (Number.isInteger(valor) && valor >= 1 && valor <= 999),
+      { message: "Quantidade coberta entre 1 e 999." },
+    ),
+  elegibilidade: z.string().trim().max(400).optional().default(""),
+  fatoresDePreco: z.string().max(2000).optional().default(""),
+  politicaDePecas: z.string().trim().max(200).optional().default(""),
+  politicaDeDeslocamento: z.string().trim().max(200).optional().default(""),
+  exclusoes: z.string().max(2000).optional().default(""),
   periodoMeses: z
     .string()
     .trim()
@@ -1387,7 +1404,39 @@ const esquemaPlano = z.object({
     .trim()
     .default("0")
     .transform((valor) => Number(valor) || 0),
+}).superRefine((dados, ctx) => {
+  /* Pacote sem quantidade é o mesmo buraco que a base de cobrança veio tapar:
+     o preço volta a não dizer o que cobre. O cadastro recusa a combinação em
+     vez de deixar a página pública cair silenciosamente para "sob consulta" e
+     ninguém entender por quê. */
+  if (dados.baseDeCobranca === "pacote" && dados.equipamentosCobertos === null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["equipamentosCobertos"],
+      message: "Pacote precisa dizer quantos equipamentos o preço cobre.",
+    });
+  }
+
+  /* Declarar uma base e não informar preço publica um plano que promete
+     clareza e entrega "sob consulta". Se o valor ainda não existe, a base
+     correta é `sob_consulta` — que já é a opção padrão. */
+  if (dados.baseDeCobranca !== "sob_consulta" && dados.precoCents <= 0) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["precoCents"],
+      message: 'Sem preço cadastrado, a base de cobrança precisa ser "Sob consulta".',
+    });
+  }
 });
+
+/** Uma lista cadastrada como texto, uma por linha. Linha vazia some; até 20. */
+function linhas(texto: string) {
+  return texto
+    .split("\n")
+    .map((linha) => linha.trim())
+    .filter(Boolean)
+    .slice(0, 20);
+}
 
 export async function salvarPlanoDeManutencao(
   _anterior: EstadoAcao,
@@ -1397,11 +1446,7 @@ export async function salvarPlanoDeManutencao(
   const dados = esquemaPlano.safeParse(comoObjeto(formData));
   if (!dados.success) return problemaZod(dados.error);
 
-  const beneficios = dados.data.beneficios
-    .split("\n")
-    .map((linha) => linha.trim())
-    .filter(Boolean)
-    .slice(0, 20);
+  const beneficios = linhas(dados.data.beneficios);
 
   const conteudo = {
     name: dados.data.nome,
@@ -1414,6 +1459,17 @@ export async function salvarPlanoDeManutencao(
     partsDiscountPercent: dados.data.descontoPecas,
     published: dados.data.publicado,
     order: dados.data.ordem,
+    billingBasis: dados.data.baseDeCobranca,
+    /* A quantidade só é guardada quando a base é pacote. Deixar um número
+       pendurado numa base "por equipamento" faria a próxima edição do plano
+       reaparecer com um dado que não vale para nada. */
+    coveredEquipment:
+      dados.data.baseDeCobranca === "pacote" ? dados.data.equipamentosCobertos : null,
+    eligibility: dados.data.elegibilidade,
+    priceFactors: linhas(dados.data.fatoresDePreco),
+    partsPolicy: dados.data.politicaDePecas,
+    travelPolicy: dados.data.politicaDeDeslocamento,
+    exclusions: linhas(dados.data.exclusoes),
   };
 
   try {

@@ -1043,6 +1043,15 @@ async function montarOrcamentos(
    Planos e contratos de manutenção
    ========================================================================== */
 
+/*
+ * Os três planos de demonstração.
+ *
+ * As bases de cobrança abaixo são DE DEMONSTRAÇÃO, escolhidas para exercitar
+ * as três leituras possíveis de preço numa mesma tela — não são a tabela
+ * comercial da JB. A tabela real ainda não existe; enquanto não existir, o
+ * banco de produção mantém `sob_consulta`, que é o padrão da coluna. Ver
+ * docs/evolucao-jb/pendencias-externas.md, P1.
+ */
 const PLANOS = [
   {
     slug: "demo-plano-essencial",
@@ -1059,6 +1068,12 @@ const PLANOS = [
     periodMonths: 12,
     visitsIncluded: 1,
     partsDiscountPercent: 5,
+    billingBasis: "por_equipamento" as const,
+    eligibility: "Clínicas na região metropolitana, com até três equipamentos críticos",
+    priceFactors: ["Distância do atendimento", "Idade do equipamento"],
+    partsPolicy: "Orçadas à parte, com 5% de desconto",
+    travelPolicy: "Incluído na capital",
+    exclusions: ["Peças de reposição", "Dano por mau uso ou instalação elétrica irregular"],
     order: 0,
   },
   {
@@ -1077,6 +1092,13 @@ const PLANOS = [
     periodMonths: 12,
     visitsIncluded: 2,
     partsDiscountPercent: 10,
+    billingBasis: "pacote" as const,
+    coveredEquipment: 5,
+    eligibility: "Clínicas com agenda em dois turnos",
+    priceFactors: ["Equipamentos acima de cinco", "Atendimento fora da região metropolitana"],
+    partsPolicy: "Orçadas à parte, com 10% de desconto",
+    travelPolicy: "Incluído na região metropolitana",
+    exclusions: ["Peças de reposição", "Reforma de estofamento"],
     order: 1,
   },
   {
@@ -1095,6 +1117,16 @@ const PLANOS = [
     periodMonths: 12,
     visitsIncluded: 4,
     partsDiscountPercent: 15,
+    billingBasis: "a_partir_de" as const,
+    eligibility: "Clínicas que não podem interromper o atendimento",
+    priceFactors: [
+      "Quantidade de equipamentos cobertos",
+      "Distância do atendimento",
+      "Necessidade de equipamento reserva",
+    ],
+    partsPolicy: "Orçadas à parte, com 15% de desconto",
+    travelPolicy: "Incluído",
+    exclusions: ["Peças de reposição"],
     order: 2,
   },
 ];

@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { CircleCheck, Send } from "lucide-react";
+import { useActionState, useEffect, useState } from "react";
+import { Calculator, CircleCheck, Send, X } from "lucide-react";
 
 import { Verificacao } from "@/components/assistencia/verificacao";
 import { interesseEmPlano, type EstadoAssistencia } from "@/app/acoes/assistencia";
@@ -9,6 +9,7 @@ import { Aviso } from "@/components/ui/aviso";
 import { Botao, LinkBotao } from "@/components/ui/button";
 import { CampoTelefone } from "@/components/ui/campos-br";
 import { Area, Campo, Marcador, Selecao } from "@/components/ui/form";
+import { CHAVE_PREMISSAS_PARADA } from "@/lib/premissas-parada";
 
 /**
  * Interesse em um plano de manutenção.
@@ -38,6 +39,36 @@ export function FormularioPlano({
     {},
   );
   const [tel, setTel] = useState(cliente?.telefone ?? "");
+
+  /**
+   * Premissas trazidas da calculadora de parada.
+   *
+   * Lidas de `sessionStorage`, não da URL — ver `src/lib/premissas-parada.ts`.
+   * Ficam à vista e podem ser removidas antes do envio: quem simulou uma
+   * hipótese não é obrigado a mandar os números da própria clínica junto para
+   * a JB, e descobrir isso depois de enviar seria tarde.
+   *
+   * A leitura acontece depois da montagem porque `sessionStorage` não existe
+   * no servidor; um valor inicial lido direto quebraria a hidratação.
+   */
+  const [premissas, setPremissas] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      setPremissas(window.sessionStorage.getItem(CHAVE_PREMISSAS_PARADA));
+    } catch {
+      setPremissas(null);
+    }
+  }, []);
+
+  function descartarPremissas() {
+    setPremissas(null);
+    try {
+      window.sessionStorage.removeItem(CHAVE_PREMISSAS_PARADA);
+    } catch {
+      /* Nada a fazer: o campo já saiu do formulário, que é o que importa. */
+    }
+  }
 
   /* Já estamos dentro do cartão da página — nada de cartão dentro de cartão. */
   if (estado.ok) {
@@ -95,6 +126,34 @@ export function FormularioPlano({
           />
         </div>
       </section>
+
+      {/* --------------------------------------------- premissas da simulação */}
+      {premissas ? (
+        <section className="mt-8 rounded-xl border border-graf-200 bg-surface-muted p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h3 className="flex items-center gap-2 text-[0.9375rem] font-bold text-graf-950">
+              <Calculator className="size-4 shrink-0 text-graf-400" aria-hidden />
+              Da sua simulação
+            </h3>
+            <button
+              type="button"
+              onClick={descartarPremissas}
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-graf-600 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            >
+              <X className="size-3.5 shrink-0" aria-hidden />
+              Não enviar
+            </button>
+          </div>
+          <p className="mt-1.5 text-sm leading-relaxed text-graf-500">
+            Estes números vão junto para a equipe entender de onde você partiu. Eles não
+            entram em nenhum contrato.
+          </p>
+          <pre className="mt-4 overflow-x-auto whitespace-pre-wrap font-mono text-[0.8125rem] leading-relaxed text-graf-700">
+            {premissas}
+          </pre>
+          <input type="hidden" name="premissas" value={premissas} />
+        </section>
+      ) : null}
 
       {/* ----------------------------------------------------------- contato */}
       <section className="mt-9 border-t border-graf-200 pt-8">

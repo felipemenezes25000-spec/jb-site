@@ -44,6 +44,7 @@ const ROTAS = {
     "/assistencia-tecnica",
     "/assistencia-tecnica/solicitar",
     "/planos-de-manutencao",
+    "/manutencao-preventiva",
     "/orcamento",
     "/sobre",
     "/estrutura",

@@ -9,12 +9,16 @@ import {
 } from "lucide-react";
 
 import { CabecalhoAssistencia } from "@/components/assistencia/apoio";
-import {
-  CartaoPlano,
-  periodicidade,
-  type PlanoPublico,
-} from "@/components/assistencia/cartao-plano";
+import { CartaoPlano, periodicidade } from "@/components/assistencia/cartao-plano";
 import { FormularioPlano } from "@/components/assistencia/formulario-plano";
+import {
+  escoposComparaveis,
+  paraPlanoPublico,
+  precoDoPlano,
+  SELECAO_PLANO_PUBLICO,
+  type PlanoPublico,
+} from "@/lib/plano";
+import { Aviso } from "@/components/ui/aviso";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
 import { Grade, colunasParaTotal } from "@/components/ui/grade";
@@ -73,9 +77,14 @@ const COMUM = [
 ];
 
 /**
- * As linhas do comparativo. Só o que está cadastrado no plano: valor,
- * vigência, visitas, ritmo e desconto em peças. Campo sem valor vira a
- * condição real ("sob consulta", "a combinar"), nunca um traço solto.
+ * As linhas do comparativo. Só o que está cadastrado no plano. Campo sem valor
+ * vira a condição real ("sob consulta", "a combinar"), nunca um traço solto.
+ *
+ * A linha "Cobrança" vem logo abaixo do valor, e é a mais importante da
+ * tabela. Sem ela, uma coluna com R$ 890 ao lado de outra com R$ 2.890 leva o
+ * leitor a concluir que um plano é três vezes mais caro — quando os dois
+ * podem estar cobrando por coisas diferentes. Preço só se compara depois de a
+ * unidade estar na mesma linha de visão.
  */
 const LINHAS_COMPARATIVO: {
   rotulo: string;
@@ -83,10 +92,30 @@ const LINHAS_COMPARATIVO: {
 }[] = [
   {
     rotulo: "Valor",
-    valor: (plano) =>
-      plano.precoCents !== null && plano.precoCents > 0
-        ? formatarPreco(plano.precoCents)
-        : "Sob consulta",
+    valor: (plano) => {
+      const preco = precoDoPlano({
+        priceCents: plano.precoCents,
+        periodMonths: plano.mesesDeVigencia,
+        billingBasis: plano.baseDeCobranca,
+        coveredEquipment: plano.equipamentosCobertos,
+      });
+      if (preco.tipo !== "valor") return "Sob consulta";
+      return preco.aPartirDe
+        ? `A partir de ${formatarPreco(preco.centavos)}`
+        : formatarPreco(preco.centavos);
+    },
+  },
+  {
+    rotulo: "Cobrança",
+    valor: (plano) => {
+      const preco = precoDoPlano({
+        priceCents: plano.precoCents,
+        periodMonths: plano.mesesDeVigencia,
+        billingBasis: plano.baseDeCobranca,
+        coveredEquipment: plano.equipamentosCobertos,
+      });
+      return preco.tipo === "valor" ? preco.unidade : "A definir com a equipe";
+    },
   },
   {
     rotulo: "Vigência",
@@ -104,9 +133,14 @@ const LINHAS_COMPARATIVO: {
     valor: (plano) => periodicidade(plano) ?? "Definida no diagnóstico",
   },
   {
-    rotulo: "Desconto em peças",
+    rotulo: "Peças",
     valor: (plano) =>
-      plano.descontoEmPecas > 0 ? `${plano.descontoEmPecas}%` : "Não incluso",
+      plano.politicaDePecas ||
+      (plano.descontoEmPecas > 0 ? `${plano.descontoEmPecas}% de desconto` : "Orçadas à parte"),
+  },
+  {
+    rotulo: "Deslocamento",
+    valor: (plano) => plano.politicaDeDeslocamento || "A combinar",
   },
 ];
 
@@ -131,17 +165,7 @@ export default async function PlanosPage({
     prisma.maintenancePlan.findMany({
       where: { published: true },
       orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        description: true,
-        benefits: true,
-        priceCents: true,
-        periodMonths: true,
-        visitsIncluded: true,
-        partsDiscountPercent: true,
-      },
+      select: SELECAO_PLANO_PUBLICO,
     }),
   ]);
 
@@ -152,16 +176,7 @@ export default async function PlanosPage({
       })
     : null;
 
-  const lista: PlanoPublico[] = planos.map((plano) => ({
-    slug: plano.slug,
-    nome: plano.name,
-    descricao: plano.description,
-    beneficios: plano.benefits,
-    precoCents: plano.priceCents,
-    mesesDeVigencia: plano.periodMonths,
-    visitasIncluidas: plano.visitsIncluded,
-    descontoEmPecas: plano.partsDiscountPercent,
-  }));
+  const lista: PlanoPublico[] = planos.map(paraPlanoPublico);
 
   // O "mais completo" é o de mais visitas, e só quando há mais de um plano
   // para comparar. Sem plano de referência, ninguém ganha selo.
@@ -173,6 +188,26 @@ export default async function PlanosPage({
     lista.length > 1 && maisVisitas > 0
       ? (lista.find((plano) => plano.visitasIncluidas === maisVisitas)?.slug ?? null)
       : null;
+
+  /* Todos os planos publicados cobram pela mesma unidade e pelo mesmo prazo?
+     A resposta decide se o comparativo pode ser lido como comparação de preço
+     ou precisa avisar que não é. */
+  const escoposHomogeneos = lista.every((plano) =>
+    escoposComparaveis(
+      {
+        priceCents: plano.precoCents,
+        periodMonths: plano.mesesDeVigencia,
+        billingBasis: plano.baseDeCobranca,
+        coveredEquipment: plano.equipamentosCobertos,
+      },
+      {
+        priceCents: lista[0].precoCents,
+        periodMonths: lista[0].mesesDeVigencia,
+        billingBasis: lista[0].baseDeCobranca,
+        coveredEquipment: lista[0].equipamentosCobertos,
+      },
+    ),
+  );
 
   const escolhido = lista.some((plano) => plano.slug === planoPedido)
     ? planoPedido
@@ -251,6 +286,21 @@ export default async function PlanosPage({
                   valor publicado sai como sob consulta — o preço fecha na proposta,
                   depois de saber quantos equipamentos entram.
                 </p>
+
+                {/* Aviso de escopo.
+                    Uma tabela põe números na mesma coluna e, com isso, afirma
+                    que eles são comparáveis. Quando as bases de cobrança ou as
+                    vigências diferem, essa afirmação é falsa e a leitura rápida
+                    conclui o contrário do que os dados dizem. O aviso é dado
+                    ANTES da tabela, não num rodapé — depois da conclusão, a
+                    ressalva chega tarde. */}
+                {!escoposHomogeneos ? (
+                  <Aviso tom="atencao" titulo="Estes planos não cobram pela mesma coisa">
+                    A base de cobrança ou a vigência muda de um plano para o outro, então
+                    os valores da linha "Valor" não são diretamente comparáveis. Confira a
+                    linha "Cobrança" antes de concluir qual sai mais em conta.
+                  </Aviso>
+                ) : null}
 
                 {/* A tabela rola sozinha em tela estreita; a página não. Como
                     a rolagem é a única forma de ver a última coluna, a área

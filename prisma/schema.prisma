@@ -1248,6 +1248,27 @@ model QuoteEvent {
 // MANUTENÇÃO
 // ============================================================================
 
+/// Como o preço de um plano deve ser lido.
+///
+/// Existe porque `priceCents` sozinho não diz nada: R$ 890 por 12 meses pode
+/// ser a anuidade de UM equipamento, o pacote de uma clínica inteira ou o
+/// piso de uma faixa. Cada leitura leva a uma decisão de compra diferente, e
+/// escolher uma por conta própria é inventar a tabela comercial da JB.
+///
+/// O padrão é `sob_consulta` de propósito: plano cadastrado antes desta
+/// modelagem não tem base declarada, e a página precisa dizer isso em voz alta
+/// em vez de supor a mais vendável.
+enum PlanBillingBasis {
+  /// Base comercial não definida. A tela mostra "Sob consulta".
+  sob_consulta
+  /// O preço vale por equipamento coberto.
+  por_equipamento
+  /// O preço cobre a quantidade em `coveredEquipment`.
+  pacote
+  /// O preço é o piso de um escopo elegível. Só aqui "a partir de" é honesto.
+  a_partir_de
+}
+
 model MaintenancePlan {
   id                   String   @id @default(cuid())
   slug                 String   @unique
@@ -1263,6 +1284,32 @@ model MaintenancePlan {
   order                Int      @default(0)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+
+  /// Como ler `priceCents`. Ver PlanBillingBasis.
+  billingBasis PlanBillingBasis @default(sob_consulta)
+
+  /// Quantos equipamentos o preço cobre. Só faz sentido em `pacote`, e nesse
+  /// caso é obrigatório — pacote sem quantidade é a mesma ambiguidade que a
+  /// base de cobrança veio resolver.
+  coveredEquipment Int?
+
+  /// A quem o plano se aplica: tipo de equipamento, região de atendimento,
+  /// condição do parque. Texto livre porque é regra comercial, não enum.
+  eligibility String @default("")
+
+  /// O que faz o valor mudar em relação ao preço anunciado — distância,
+  /// quantidade, modelo, idade do equipamento. Um por linha no painel.
+  priceFactors String[] @default([])
+
+  /// Peças estão incluídas, têm desconto ou são orçadas à parte.
+  partsPolicy String @default("")
+
+  /// Deslocamento incluído, cobrado por faixa ou orçado.
+  travelPolicy String @default("")
+
+  /// O que o plano NÃO cobre. Some da tela quando vazio; nunca é preenchido
+  /// pelo código.
+  exclusions String[] @default([])
 
   contracts MaintenanceContract[]
 }

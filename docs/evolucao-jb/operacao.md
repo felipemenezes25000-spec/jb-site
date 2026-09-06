@@ -23,6 +23,19 @@ Aplicar com `pnpm db:deploy`. Em base existente, todas as páginas nascem com
 `systemHash` nulo, que é exatamente o estado "conteúdo legado" que a migração
 de conteúdo espera encontrar na primeira execução.
 
+### `20260906042505_plano_base_de_cobranca`
+
+Também aditiva. Cria o enum `PlanBillingBasis` e acrescenta a
+`MaintenancePlan`: `billingBasis` (padrão `sob_consulta`), `coveredEquipment`,
+`eligibility`, `priceFactors`, `partsPolicy`, `travelPolicy` e `exclusions`.
+
+**O efeito em produção precisa ser esperado:** todo plano existente nasce com
+`billingBasis = sob_consulta` e passa a exibir **"Sob consulta"** na página
+pública, mesmo tendo preço cadastrado. Isso é intencional — sem base declarada
+não se sabe do que o preço é o preço. Para voltar a exibir valor, abrir
+`/admin/manutencao/planos`, editar cada plano e escolher a base de cobrança.
+Ver `pendencias-externas.md`, P1.
+
 ## Tarefas agendadas novas
 
 _(nenhuma até agora)_

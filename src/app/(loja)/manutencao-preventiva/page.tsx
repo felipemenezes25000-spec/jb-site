@@ -3,7 +3,12 @@ import Link from "next/link";
 import { ArrowRight, CalendarClock, CircleCheck, CircleX, Wrench } from "lucide-react";
 
 import { CalculadoraParada } from "@/components/assistencia/calculadora-parada";
-import { periodicidade, type PlanoPublico } from "@/components/assistencia/cartao-plano";
+import { periodicidade } from "@/components/assistencia/cartao-plano";
+import {
+  paraPlanoPublico,
+  SELECAO_PLANO_PUBLICO,
+  type PlanoPublico,
+} from "@/lib/plano";
 import { ROTULO_SERVICO } from "@/components/assistencia/rotulos";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
@@ -70,31 +75,13 @@ export default async function ManutencaoPreventivaPage() {
     prisma.maintenancePlan.findMany({
       where: { published: true },
       orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: {
-        slug: true,
-        name: true,
-        description: true,
-        benefits: true,
-        priceCents: true,
-        periodMonths: true,
-        visitsIncluded: true,
-        partsDiscountPercent: true,
-      },
+      select: SELECAO_PLANO_PUBLICO,
     }),
   ]);
 
   const ritmos = planos
     .map((plano) => {
-      const publico: PlanoPublico = {
-        slug: plano.slug,
-        nome: plano.name,
-        descricao: plano.description,
-        beneficios: plano.benefits,
-        precoCents: plano.priceCents,
-        mesesDeVigencia: plano.periodMonths,
-        visitasIncluidas: plano.visitsIncluded,
-        descontoEmPecas: plano.partsDiscountPercent,
-      };
+      const publico: PlanoPublico = paraPlanoPublico(plano);
       return { plano: publico, ritmo: periodicidade(publico) };
     })
     .filter((linha) => linha.ritmo !== null);
@@ -263,9 +250,14 @@ export default async function ManutencaoPreventivaPage() {
                     className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4"
                   >
                     <div className="min-w-0">
+                      {/* `inline-flex` com altura mínima, e não só texto: o
+                          nome do plano é curto ("Total" mede 37px) e no dedo
+                          virava um alvo de 37×21, abaixo dos 44 exigidos.
+                          Encontrado pelo `scripts/responsivo.mjs` quando esta
+                          rota entrou na lista auditada. */}
                       <Link
                         href={`/planos-de-manutencao#${plano.slug}`}
-                        className="text-[0.9375rem] font-bold text-graf-950 underline-offset-2 hover:text-jb-700 hover:underline"
+                        className="inline-flex min-h-11 min-w-11 items-center text-[0.9375rem] font-bold text-graf-950 underline-offset-2 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                       >
                         {plano.nome}
                       </Link>

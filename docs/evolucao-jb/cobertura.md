@@ -67,21 +67,22 @@ consomem (1 e 5, respectivamente) — registrado aqui em vez de dado por feito.
 | # | Requisito | Implementação | Evidência | Situação |
 |---|---|---|---|---|
 | 2.1 | Investigar o significado real de `priceCents` | — | `decisoes.md` D3, D4 | validado localmente |
-| 2.2 | Não presumir anuidade por equipamento | — | `decisoes.md` D3 | validado localmente |
-| 2.3 | Modelar base de cobrança explícita + admin | — | — | não iniciado |
-| 2.4 | Cartão mostra preço, período, unidade, cobertura, elegibilidade | — | — | não iniciado |
-| 2.5 | "A partir de" só com oferta mínima real; senão "Sob consulta" | — | — | não iniciado |
-| 2.6 | Declarar visitas, intervalo, peças, deslocamento, exclusões | — | — | não iniciado |
-| 2.7 | Não criar contratação automática | — | — | não iniciado |
-| 2.8 | Preservar contratos já firmados | — | — | não iniciado |
-| 2.9 | Calculadora: unidades explícitas de cada entrada | — | — | não iniciado |
-| 2.10 | Calculadora: fórmula sem dupla contagem | — | — | não iniciado |
-| 2.11 | Calculadora: validação de finitos, não negativos, intervalos | — | — | não iniciado |
-| 2.12 | Calculadora: resultado antes da captura | — | — | não iniciado |
-| 2.13 | Calculadora: comparar só escopos equivalentes | — | — | não iniciado |
-| 2.14 | Calculadora: linguagem de exposição, não de ROI garantido | — | — | não iniciado |
-| 2.15 | CTAs levam premissas ao formulário sem redigitação | — | — | não iniciado |
-| 2.16 | Eventos `downtime_calculated` e `maintenance_lead` sem dado financeiro identificável | — | — | não iniciado |
+| 2.2 | Não presumir anuidade por equipamento | `PlanBillingBasis` com padrão `sob_consulta` | com base indefinida, os três planos exibem "Sob consulta" mesmo tendo preço | validado localmente |
+| 2.3 | Modelar base de cobrança explícita + admin | migração `plano_base_de_cobranca`; `src/lib/plano.ts`; campos em `/admin/manutencao/planos` | 17 testes em `plano.test.ts`; validação recusando pacote sem quantidade verificada no painel | validado localmente |
+| 2.4 | Cartão mostra preço, período, unidade, cobertura, elegibilidade | `cartao-plano.tsx` | "R$ 890,00 · por equipamento, por 12 meses de cobertura" | validado localmente |
+| 2.5 | "A partir de" só com oferta mínima real; senão "Sob consulta" | `precoDoPlano` — `a_partir_de` é base declarada, não curinga | testes; comparativo mostra "A partir de R$ 2.890,00" só no plano com essa base | validado localmente |
+| 2.6 | Declarar visitas, intervalo, peças, deslocamento, exclusões | `partsPolicy`, `travelPolicy`, `exclusions`, `priceFactors`, `eligibility` | cartão e comparativo renderizando os cinco | validado localmente |
+| 2.7 | Não criar contratação automática | fluxo preservado: o formulário gera `Lead`, não contrato | `interesseEmPlano` inalterado nesse ponto | validado localmente |
+| 2.8 | Preservar contratos já firmados | `MaintenanceContract.priceCents` já é snapshot na criação | leitura de `contratarPlano`; mudar o plano não reescreve contrato | validado localmente |
+| 2.9 | Calculadora: unidades explícitas de cada entrada | receita passou a ser **da clínica**, com percentual afetado à parte | inspeção: "Receita por hora da clínica" + "% que para" | validado localmente |
+| 2.10 | Calculadora: fórmula sem dupla contagem | `src/lib/parada.ts` | 19 testes; o percentual é aplicado uma vez e aparece como passo próprio | validado localmente |
+| 2.11 | Calculadora: validação de finitos, não negativos, intervalos | `conferirPremissas` | testes de NaN, negativo, zero, >24 h/dia, >100% | validado localmente |
+| 2.12 | Calculadora: resultado antes da captura | já era assim; preservado | memória de cálculo visível sem qualquer campo de contato | validado localmente |
+| 2.13 | Calculadora: comparar só escopos equivalentes | nenhuma comparação de preço é feita ao lado do resultado; o comparativo de planos avisa quando as bases diferem | `escoposComparaveis` + aviso renderizado | validado localmente |
+| 2.14 | Calculadora: exposição, não ROI garantido | resultado rotulado "Exposição anual estimada" + frase exigida | inspeção | validado localmente |
+| 2.15 | CTAs levam premissas ao formulário sem redigitação | `sessionStorage` via `src/lib/premissas-parada.ts` | verificado ponta a ponta: premissas aparecem no formulário, com opção "Não enviar" | validado localmente |
+| 2.16 | Eventos `downtime_calculated` e `maintenance_lead` | — | — | **aguardando fase 6** — a camada de eventos é criada lá (seção 10 do prompt); o ponto de emissão e o payload sem dado financeiro já existem no componente |
+| 2.17 | *(acrescido)* Alvo de toque abaixo de 44px em `/manutencao-preventiva` | `min-h-11 min-w-11` no link do plano | `responsivo.mjs` reprovava em 390 e 768; passa depois | validado localmente |
 
 ---
 
@@ -122,8 +123,8 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | Home sem foto/produto | implementado — a coluna some e o texto ocupa a faixa; ainda sem execução com catálogo vazio |
 | Demonstração pública | não iniciado |
 | CMS com texto legado | validado localmente — migrado, com cópia guardada e edição humana respeitada |
-| Plano sem base comercial confirmada | não iniciado |
-| Calculadora com zero/dado inválido | não iniciado |
+| Plano sem base comercial confirmada | validado localmente — sem base declarada, a tela mostra “Sob consulta” e nenhuma unidade é presumida |
+| Calculadora com zero/dado inválido | validado localmente — 19 testes cobrem NaN, negativo, zero e implausível; a tela lista o que falta, sem NaN |
 | Carrinho anônimo | não iniciado |
 | Comprador novo cria conta no checkout | não iniciado |
 | Cliente existente | não iniciado |

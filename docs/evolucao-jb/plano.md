@@ -26,8 +26,8 @@ quando tem evidência associada em `validacao.md`.
 | # | Entrega | Fases | Situação |
 |---|---|---|---|
 | 1 | Baseline, mapa, planejamento, direção visual | 0 | **concluído** |
-| 2 | Narrativa, institucional, naming, planos, calculadora | 1, 2 | fase 1 **validada localmente**; fase 2 em execução |
-| 3 | Checkout com conta obrigatória | 3 | não iniciado |
+| 2 | Narrativa, institucional, naming, planos, calculadora | 1, 2 | **validado localmente** |
+| 3 | Checkout com conta obrigatória | 3 | em execução |
 | 4 | URL canônica, cache/shell, analytics/RUM | 4, 5, 6 | não iniciado |
 | 5 | CI consolidado | 7 | não iniciado |
 | 6 | Componentes de domínio, prontuário, demonstração | 8 | não iniciado |

@@ -9,7 +9,7 @@ import {
   subnavServico,
   SubNavegacao,
 } from "@/components/admin/servico/cabecalho";
-import { AreaAcao, CampoAcao, MoedaAcao } from "@/components/admin/servico/campos";
+import { AreaAcao, CampoAcao, MoedaAcao, SelecaoAcao } from "@/components/admin/servico/campos";
 import { FormularioAcao, Oculto } from "@/components/admin/servico/formulario";
 import { PainelAcao } from "@/components/admin/servico/painel-acao";
 import { Confirmar } from "@/components/ui/confirmar";
@@ -20,6 +20,7 @@ import {
   salvarPlanoDeManutencao,
 } from "@/app/acoes/admin-servico";
 import { formatarPreco, plural } from "@/lib/format";
+import { precoDoPlano, ROTULO_BASE } from "@/lib/plano";
 import { exigirArea, podeEditar } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 
@@ -70,12 +71,42 @@ function CamposDoPlano({ plano }: { plano?: MaintenancePlan }) {
         placeholder={"Duas visitas preventivas por ano\nAtendimento prioritário\n10% de desconto em peças"}
       />
 
+      {/* ---------------------------------------------------- cobrança ---
+
+          A base de cobrança é o campo que faltava, e é ele que decide o que a
+          página pública tem permissão de afirmar. Preço e vigência sozinhos
+          não dizem se R$ 890 cobre um aparelho ou a clínica inteira — e a
+          plataforma não escolhe por conta própria: sem base declarada, a tela
+          mostra "Sob consulta". */}
+      <SelecaoAcao
+        rotulo="Base de cobrança"
+        name="baseDeCobranca"
+        defaultValue={plano?.billingBasis ?? "sob_consulta"}
+        ajuda="Define como o preço é lido na página pública. Sem base declarada, o plano aparece como “Sob consulta”, mesmo tendo preço cadastrado."
+      >
+        <option value="sob_consulta">{ROTULO_BASE.sob_consulta}</option>
+        <option value="por_equipamento">{ROTULO_BASE.por_equipamento}</option>
+        <option value="pacote">{ROTULO_BASE.pacote}</option>
+        <option value="a_partir_de">{ROTULO_BASE.a_partir_de}</option>
+      </SelecaoAcao>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <MoedaAcao
           rotulo="Preço"
           nome="precoCents"
           valorInicialCents={plano?.priceCents ?? undefined}
-          ajuda="Deixe zerado para o plano ficar “sob orçamento”."
+          ajuda="Deixe zerado só com a base “Sob consulta”."
+        />
+        <CampoAcao
+          rotulo="Equipamentos cobertos pelo preço"
+          name="equipamentosCobertos"
+          type="number"
+          min={1}
+          max={999}
+          step={1}
+          inputMode="numeric"
+          defaultValue={plano?.coveredEquipment ?? ""}
+          ajuda="Obrigatório na base “Pacote”. Ignorado nas outras."
         />
         <CampoAcao
           rotulo="Vigência (meses)"
@@ -109,6 +140,56 @@ function CamposDoPlano({ plano }: { plano?: MaintenancePlan }) {
           defaultValue={plano?.partsDiscountPercent ?? 0}
         />
       </div>
+
+      {/* ------------------------------------------------- condições ---
+
+          Peças, deslocamento, elegibilidade, o que muda o valor e o que não
+          está coberto. Nada aqui é sugerido pelo código: campo vazio some da
+          página pública em vez de virar uma linha inventada. */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CampoAcao
+          rotulo="Peças"
+          name="politicaDePecas"
+          maxLength={200}
+          defaultValue={plano?.partsPolicy ?? ""}
+          placeholder="Ex.: Orçadas à parte, com 10% de desconto"
+          ajuda="Substitui a linha de desconto no cartão quando preenchido."
+        />
+        <CampoAcao
+          rotulo="Deslocamento"
+          name="politicaDeDeslocamento"
+          maxLength={200}
+          defaultValue={plano?.travelPolicy ?? ""}
+          placeholder="Ex.: Incluído na capital; demais regiões sob consulta"
+        />
+      </div>
+
+      <CampoAcao
+        rotulo="Para quem o plano se aplica"
+        name="elegibilidade"
+        maxLength={400}
+        defaultValue={plano?.eligibility ?? ""}
+        placeholder="Ex.: Clínicas em São Paulo capital, com autoclave e compressor"
+        ajuda="Critério de elegibilidade. Aparece na ficha do plano."
+      />
+
+      <AreaAcao
+        rotulo="O que pode alterar o valor"
+        name="fatoresDePreco"
+        rows={3}
+        defaultValue={(plano?.priceFactors ?? []).join("\n")}
+        ajuda="Um fator por linha. Aparece junto do preço, não num rodapé."
+        placeholder={"Distância do atendimento\nQuantidade de equipamentos\nIdade do aparelho"}
+      />
+
+      <AreaAcao
+        rotulo="O que o plano NÃO cobre"
+        name="exclusoes"
+        rows={3}
+        defaultValue={(plano?.exclusions ?? []).join("\n")}
+        ajuda="Uma exclusão por linha. Some da página quando vazio."
+        placeholder={"Peças de reposição\nReparo de dano por mau uso"}
+      />
 
       <CampoAcao
         rotulo="Ordem de exibição"
@@ -178,6 +259,17 @@ export default async function PaginaPlanos() {
                 ? Math.max(1, Math.round(plano.periodMonths / plano.visitsIncluded))
                 : null;
 
+            /* O que a página pública realmente vai dizer. Mostrar isto no
+               painel evita a surpresa mais cara desta tela: cadastrar preço,
+               esquecer a base de cobrança e descobrir semanas depois que o
+               site anuncia "Sob consulta" para um plano com valor definido. */
+            const noSite = precoDoPlano({
+              priceCents: plano.priceCents,
+              periodMonths: plano.periodMonths,
+              billingBasis: plano.billingBasis,
+              coveredEquipment: plano.coveredEquipment,
+            });
+
             return (
               <li key={plano.id}>
                 <Cartao className="h-full">
@@ -193,13 +285,30 @@ export default async function PaginaPlanos() {
 
                   <div className="space-y-5 px-5 py-5">
                     <Dados>
-                      <Dado rotulo="Preço">
+                      <Dado rotulo="Preço cadastrado">
                         {plano.priceCents === null ? (
-                          <span className="text-graf-500">Sob orçamento</span>
+                          <span className="text-graf-500">Sem valor</span>
                         ) : (
                           <span className="tabular font-semibold">
                             {formatarPreco(plano.priceCents)}
                           </span>
+                        )}
+                      </Dado>
+                      <Dado rotulo="Base de cobrança">
+                        {ROTULO_BASE[plano.billingBasis]}
+                        {plano.billingBasis === "pacote" && plano.coveredEquipment
+                          ? ` · ${plural(plano.coveredEquipment, "equipamento", "equipamentos")}`
+                          : ""}
+                      </Dado>
+                      <Dado rotulo="No site aparece como">
+                        {noSite.tipo === "valor" ? (
+                          <span className="font-semibold text-graf-900">
+                            {noSite.aPartirDe ? "A partir de " : ""}
+                            {formatarPreco(noSite.centavos)}
+                            {noSite.aPartirDe ? "" : `, ${noSite.unidade}`}
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-warn-700">Sob consulta</span>
                         )}
                       </Dado>
                       <Dado rotulo="Vigência">
