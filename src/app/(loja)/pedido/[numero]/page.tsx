@@ -24,6 +24,7 @@ import {
   type EstadoConferencia,
 } from "@/components/loja/acompanhar-pedido";
 import { PagamentoPix } from "@/components/loja/pagamento-pix";
+import { ProntuarioDoPedido } from "@/components/loja/prontuario-do-pedido";
 import { Aviso } from "@/components/ui/aviso";
 import { LinkBotao } from "@/components/ui/button";
 import {
@@ -420,6 +421,27 @@ export default async function PedidoPage({ params }: Props) {
     pedido.shippingKind === "retirada",
   );
 
+  /*
+   * Os equipamentos que este pedido criou no prontuário.
+   *
+   * Consultados só quando o pedido está pago: antes disso não existe nenhum, e
+   * a consulta seria uma ida ao banco para confirmar o vazio. O bloco na tela
+   * aparece apenas se houver linha — anunciar o prontuário antes da
+   * confirmação do pagamento afirmaria um estado que ainda não é verdade.
+   */
+  const equipamentosDoPedido = pedido.paidAt
+    ? await prisma.equipment.findMany({
+        where: { orderId: pedido.id },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          name: true,
+          serialNumber: true,
+          warrantyUntil: true,
+        },
+      })
+    : [];
+
   /* Bairro · Cidade/UF · CEP montados por junção: com o pedaço que falta
      removido antes, nunca sobra um "·" órfão começando a linha. */
   const linhaLocalidade = [
@@ -479,6 +501,20 @@ export default async function PedidoPage({ params }: Props) {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-10">
         <div className="min-w-0 space-y-8">
+          {/* ------------------------------------------------ prontuário
+
+              Vem antes do pagamento porque, quando existe, é a novidade: o
+              pagamento já foi confirmado e o que a pessoa ainda não sabe é que
+              o equipamento ganhou ficha. */}
+          <ProntuarioDoPedido
+            equipamentos={equipamentosDoPedido.map((equipamento) => ({
+              id: equipamento.id,
+              nome: equipamento.name,
+              serial: equipamento.serialNumber,
+              garantiaAte: equipamento.warrantyUntil,
+            }))}
+          />
+
           {/* ------------------------------------------------- pagamento */}
           <Cartao className="p-5 sm:p-7">
             <h2 className="text-lg font-bold text-graf-950">Pagamento</h2>

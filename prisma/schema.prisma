@@ -186,6 +186,25 @@ model LoginAttempt {
 // CATÁLOGO
 // ============================================================================
 
+/// Como a instalação deste equipamento é oferecida.
+///
+/// Existe porque "instalação inclusa" e "instalação sob consulta" são
+/// promessas comerciais diferentes, e a página do produto precisava dizer uma
+/// das duas sem que ninguém tivesse onde escolher. O padrão é
+/// `nao_informada`: enquanto a equipe não declarar, a tela não afirma nada.
+enum InstallationPolicy {
+  /// Ninguém declarou. A seção de instalação some da página.
+  nao_informada
+  /// A JB não instala este equipamento.
+  nao_oferecida
+  /// Pode ser contratada à parte. O valor sai do adicional cadastrado.
+  opcional
+  /// Já está no preço.
+  inclusa
+  /// Depende do local, da distância ou do conjunto. Vira conversa.
+  sob_consulta
+}
+
 enum ProductStatus {
   draft
   active
@@ -283,6 +302,21 @@ model Product {
   depthMm           Int?
   shippingProfileId String?
   shippingProfile   ShippingProfile? @relation(fields: [shippingProfileId], references: [id], onDelete: SetNull)
+
+  /// Como a instalação é oferecida. Ver `InstallationPolicy`.
+  installationPolicy InstallationPolicy @default(nao_informada)
+
+  /// Elegibilidade, cobertura e o que a instalação inclui ou não.
+  /// Texto livre porque é condição comercial, e condição comercial não cabe
+  /// em enum. Vazio some da página.
+  installationNote String @default("")
+
+  /// O que a clínica precisa ter pronto ANTES da entrega: ponto elétrico,
+  /// ponto hidráulico, dreno, espaço, pé-direito. Um por linha no painel.
+  infrastructureNotes String[] @default([])
+
+  /// O que vem na caixa, e por tabela o que NÃO vem. Um por linha.
+  boxContents String[] @default([])
 
   // regulatório — todos opcionais, nunca inventar
   anvisaCode       String?

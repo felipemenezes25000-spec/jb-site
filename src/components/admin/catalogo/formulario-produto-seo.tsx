@@ -40,6 +40,15 @@ export type ProdutoSeo = {
   regulatoryNote: string | null;
   warrantyMonths: number | null;
   voltage: string | null;
+  installationPolicy:
+    | "nao_informada"
+    | "nao_oferecida"
+    | "opcional"
+    | "inclusa"
+    | "sob_consulta";
+  installationNote: string;
+  infrastructureNotes: string[];
+  boxContents: string[];
 };
 
 const LIMITE_TITULO = 60;
@@ -139,6 +148,53 @@ export function FormularioProdutoSeo({
                 <option value="220">220 V</option>
                 <option value="bivolt">Bivolt</option>
               </Selecao>
+
+              {/* ------------------------------------------ instalação ---
+
+                  A política da instalação é escolha, não texto livre: "inclusa"
+                  e "sob consulta" são promessas comerciais diferentes, e a
+                  página precisa saber qual das duas afirmar. O padrão é "não
+                  informada", e nesse caso a seção some do site em vez de
+                  afirmar por omissão. */}
+              <Selecao
+                rotulo="Instalação"
+                name="installationPolicy"
+                defaultValue={produto.installationPolicy}
+                ajuda="Sem escolher, a seção de instalação não aparece na página do produto."
+              >
+                <option value="nao_informada">Não informada</option>
+                <option value="nao_oferecida">A JB não instala este equipamento</option>
+                <option value="opcional">Opcional, contratada à parte</option>
+                <option value="inclusa">Inclusa no preço</option>
+                <option value="sob_consulta">Sob consulta</option>
+              </Selecao>
+
+              <Area
+                rotulo="Condições da instalação"
+                name="installationNote"
+                rows={3}
+                maxLength={400}
+                defaultValue={produto.installationNote}
+                ajuda="Elegibilidade, cobertura, o que está incluído e o que não está. Vazio some da página."
+              />
+
+              <Area
+                rotulo="O que precisa estar pronto no local"
+                name="infrastructureNotes"
+                rows={4}
+                defaultValue={produto.infrastructureNotes.join("\n")}
+                ajuda="Um requisito por linha: ponto elétrico, ponto hidráulico, dreno, espaço, pé-direito."
+                placeholder={"Tomada 220 V com aterramento a até 1,5 m\nPonto de água e dreno na parede\nBancada com 60 cm livres"}
+              />
+
+              <Area
+                rotulo="O que vem na caixa"
+                name="boxContents"
+                rows={4}
+                defaultValue={produto.boxContents.join("\n")}
+                ajuda="Um item por linha. O que não estiver aqui a página declara como vendido à parte."
+                placeholder={"Equipamento\nCabo de força\nManual do fabricante"}
+              />
               <Campo
                 rotulo="Fabricante"
                 name="manufacturer"

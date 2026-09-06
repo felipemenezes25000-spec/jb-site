@@ -9,6 +9,12 @@ import { CaixaCompra, type AddonProduto } from "@/components/loja/caixa-compra";
 import { GaleriaProduto, type FotoProduto } from "@/components/loja/galeria-produto";
 import { GradeProdutos } from "@/components/loja/card-produto";
 import { AjudaDaEquipe } from "@/components/loja/produto/ajuda-da-equipe";
+import {
+  AntesDeComprar,
+  DepoisDaCompraNoProduto,
+  Instalacao,
+  OQueVemNaCaixa,
+} from "@/components/loja/produto/antes-e-depois";
 import { AssistenciaRelacionada } from "@/components/loja/produto/assistencia-relacionada";
 import { definicaoDaCondicao } from "@/components/loja/produto/condicao";
 import { CondicoesDeCompra } from "@/components/loja/produto/condicoes-de-compra";
@@ -250,6 +256,15 @@ export default async function ProdutoPage({ params }: Props) {
   /* ------------------------------------------------------------- detalhes */
 
   const grupos = agruparEspecificacoes(produto.specs);
+
+  /* O valor da instalação sai do adicional cadastrado, e não de um número
+     escrito na página: `ProductAddon.priceCents` sobrepõe o preço do serviço
+     quando definido, e é essa a regra que o carrinho também usa. */
+  const adicionalDeInstalacao = produto.addons.find(
+    (adicional) => adicional.service.kind === "instalacao",
+  );
+  const precoDaInstalacao =
+    adicionalDeInstalacao?.priceCents ?? adicionalDeInstalacao?.service.priceCents ?? null;
   const documentos = produto.documents.map((documento) => ({
     id: documento.id,
     titulo: documento.title,
@@ -526,6 +541,46 @@ export default async function ProdutoPage({ params }: Props) {
           </div>
         </Secao>
       ) : null}
+
+      {/* ============================================ ANTES E DEPOIS DA COMPRA
+
+          Estas quatro seções respondem, nesta ordem, às perguntas que fazem
+          alguém desistir quando ficam sem resposta: cabe na minha sala, preciso
+          comprar mais alguma coisa, quem instala, e o que acontece depois.
+
+          Cada uma some inteira quando o cadastro está vazio. Uma ficha cheia
+          de "não informado" é pior que a ausência da seção — ela ocupa espaço
+          para dizer que a JB não sabe. */}
+      <Secao espaco="lg" separador>
+        <div className="grid max-w-4xl gap-12">
+          <AntesDeComprar
+            dados={{
+              voltagem: produto.voltage,
+              pesoGramas: produto.weightGrams,
+              larguraMm: produto.widthMm,
+              alturaMm: produto.heightMm,
+              profundidadeMm: produto.depthMm,
+              requisitos: produto.infrastructureNotes,
+            }}
+          />
+
+          <OQueVemNaCaixa itens={produto.boxContents} />
+
+          <Instalacao
+            politica={produto.installationPolicy}
+            observacao={produto.installationNote}
+            precoCents={precoDaInstalacao}
+          />
+
+          <DepoisDaCompraNoProduto
+            garantiaMeses={produto.warrantyMonths}
+            /* Só produto vira equipamento no prontuário. Serviço, peça e
+               acessório não — dizer que viram encheria a Área da Clínica de
+               linhas que não são máquina nenhuma. */
+            geraEquipamento={produto.condition !== "novo" || produto.trackInventory}
+          />
+        </div>
+      </Secao>
 
       {/* ====================================================== FICHA TÉCNICA */}
       {temFichaTecnica ? (

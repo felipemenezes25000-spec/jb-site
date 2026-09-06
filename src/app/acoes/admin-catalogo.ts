@@ -567,6 +567,21 @@ export async function salvarEstoqueProduto(
   }
 }
 
+/**
+ * Texto de várias linhas vira lista.
+ *
+ * Linha vazia some: no meio da lista ela produziria um marcador solto na
+ * página do produto, e no fim produziria um item invisível que ninguém
+ * entende por que existe.
+ */
+function linhasDaLista(texto: string) {
+  return texto
+    .split("\n")
+    .map((linha) => linha.trim())
+    .filter(Boolean)
+    .slice(0, 20);
+}
+
 const esquemaSeo = z.object({
   id: texto(40).min(1),
   seoTitle: opcional(70),
@@ -577,6 +592,12 @@ const esquemaSeo = z.object({
   regulatoryNote: opcional(400),
   warrantyMonths: z.union([z.literal(""), z.coerce.number().int().min(0).max(600)]).transform((v) => (v === "" ? null : v)),
   voltage: opcional(20),
+  installationPolicy: z
+    .enum(["nao_informada", "nao_oferecida", "opcional", "inclusa", "sob_consulta"])
+    .default("nao_informada"),
+  installationNote: opcional(400),
+  infrastructureNotes: z.string().max(2000).optional().default(""),
+  boxContents: z.string().max(2000).optional().default(""),
 });
 
 export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Promise<EstadoAcao> {
@@ -592,6 +613,10 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
     regulatoryNote: campo(formData, "regulatoryNote"),
     warrantyMonths: campo(formData, "warrantyMonths"),
     voltage: campo(formData, "voltage"),
+    installationPolicy: campo(formData, "installationPolicy") || "nao_informada",
+    installationNote: campo(formData, "installationNote"),
+    infrastructureNotes: campo(formData, "infrastructureNotes"),
+    boxContents: campo(formData, "boxContents"),
   });
   if (!dados.success) return doZod(dados.error);
 
@@ -608,6 +633,10 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
       regulatoryNote: true,
       warrantyMonths: true,
       voltage: true,
+      installationPolicy: true,
+      installationNote: true,
+      infrastructureNotes: true,
+      boxContents: true,
     },
   });
   if (!antes) return falha("Produto não encontrado.");
@@ -625,6 +654,12 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
         regulatoryNote: dados.data.regulatoryNote || null,
         warrantyMonths: dados.data.warrantyMonths,
         voltage: dados.data.voltage || null,
+        installationPolicy: dados.data.installationPolicy,
+        installationNote: dados.data.installationNote,
+        /* Uma linha por item, e nada de item vazio: linha em branco no meio
+           da lista viraria um marcador solto na página do produto. */
+        infrastructureNotes: linhasDaLista(dados.data.infrastructureNotes),
+        boxContents: linhasDaLista(dados.data.boxContents),
       },
       select: {
         id: true,
@@ -637,6 +672,10 @@ export async function salvarSeo(_anterior: EstadoAcao, formData: FormData): Prom
         regulatoryNote: true,
         warrantyMonths: true,
         voltage: true,
+        installationPolicy: true,
+        installationNote: true,
+        infrastructureNotes: true,
+        boxContents: true,
       },
     });
 

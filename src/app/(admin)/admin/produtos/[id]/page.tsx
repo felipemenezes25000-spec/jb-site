@@ -286,6 +286,10 @@ export default async function PaginaProduto({
             regulatoryNote: produto.regulatoryNote,
             warrantyMonths: produto.warrantyMonths,
             voltage: produto.voltage,
+            installationPolicy: produto.installationPolicy,
+            installationNote: produto.installationNote,
+            infrastructureNotes: produto.infrastructureNotes,
+            boxContents: produto.boxContents,
           }}
         />
       ),
