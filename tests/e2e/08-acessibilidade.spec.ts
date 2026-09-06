@@ -135,6 +135,15 @@ test.describe("Acessibilidade do checkout", () => {
     await tabAte(page, (atual) => atual.nome === "email");
     await page.keyboard.type(`teclado.${sufixo()}@jbteste.local`);
 
+    /* A senha entrou na etapa 0 quando a compra passou a exigir conta. Ela é
+       alcançada pelo mesmo Tab — o que este teste prova é justamente que o
+       novo campo não quebrou a ordem de tabulação. */
+    await tabAte(page, (atual) => atual.nome === "senha");
+    expect(await focoDesenhaAlgo(page), "o campo de senha focado precisa se destacar").toBe(true);
+    // como no e-mail acima: a conferência de foco tira o foco do campo
+    await tabAte(page, (atual) => atual.nome === "senha");
+    await page.keyboard.type("senhaDeTeste123");
+
     const continuar = await tabAte(page, (atual) => atual.texto.startsWith("Continuar"));
     expect(continuar.tag).toBe("button");
     expect(await focoDesenhaAlgo(page), "o botão focado precisa se destacar").toBe(true);
@@ -189,7 +198,10 @@ test.describe("Acessibilidade do checkout", () => {
       expect(await camposSemNome(page), `campos sem rótulo na etapa "${etapa}"`).toEqual([]);
 
       if (indice === 0) {
-        await page.getByLabel("E-mail").fill(`rotulos.${sufixo()}@jbteste.local`);
+        await page
+          .getByRole("textbox", { name: "E-mail", exact: true })
+          .fill(`rotulos.${sufixo()}@jbteste.local`);
+        await page.getByLabel(/^Crie uma senha/).fill("senhaDeTeste123");
       }
       if (indice === 1) {
         await page.getByLabel("Nome completo").fill("Pessoa com Rótulo");

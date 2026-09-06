@@ -83,7 +83,11 @@ async function irAteAEntrega(page: Page, email: string) {
   await page.goto("/checkout");
   await expect(page.getByRole("heading", { name: "Fechar pedido", level: 1 })).toBeVisible();
 
-  await page.getByLabel("E-mail").fill(email);
+  /* Desde a fase 3, o checkout público não fecha sem conta: a etapa de
+     identificação pede uma senha junto do e-mail. O que este arquivo testa é
+     frete, não identidade — então cria um acesso e segue. */
+  await page.getByRole("textbox", { name: "E-mail", exact: true }).fill(email);
+  await page.getByLabel(/^Crie uma senha/).fill("senhaDeTeste123");
   await continuar(page, "Dados do comprador");
 
   await page.getByLabel("Nome completo").fill("Compradora com Entrega");

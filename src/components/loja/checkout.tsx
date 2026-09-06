@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
+  ClipboardList,
   CreditCard,
   Lock,
   MapPin,
@@ -94,7 +95,7 @@ const FRETE_RETIRADA: FreteExibido = {
 const ETAPA_DO_CAMPO: Record<string, number> = {
   email: 0,
   senha: 0,
-  criarConta: 0,
+  modoAcesso: 0,
   nome: 1,
   telefone: 1,
   tipoPessoa: 1,
@@ -151,6 +152,57 @@ function usarFocoNaEtapa(
     secao.tabIndex = -1;
     secao.focus({ preventScroll: true });
   }, [etapa, ativo, raiz]);
+}
+
+/**
+ * Uma das duas portas de identificação: criar acesso ou entrar.
+ *
+ * É um `radio` de verdade, com o rótulo inteiro clicável. Duas alternativas
+ * que mudam o significado dos campos seguintes precisam de estado anunciado
+ * ao leitor de tela e de navegação por setas — que é o que o grupo de rádio dá
+ * de graça, e um par de botões estilizados não dá.
+ */
+function OpcaoDeAcesso({
+  valor,
+  atual,
+  aoEscolher,
+  titulo,
+  detalhe,
+}: {
+  valor: "criar" | "entrar";
+  atual: "criar" | "entrar";
+  aoEscolher: (valor: "criar" | "entrar") => void;
+  titulo: string;
+  detalhe: string;
+}) {
+  const escolhido = atual === valor;
+
+  return (
+    <label
+      className={cn(
+        "flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors",
+        "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-jb-500",
+        escolhido
+          ? "border-jb-300 bg-jb-50/60 ring-1 ring-jb-500/15"
+          : "border-graf-300 bg-white hover:border-graf-400 hover:bg-graf-50",
+      )}
+    >
+      <input
+        type="radio"
+        name="modoAcessoEscolha"
+        value={valor}
+        checked={escolhido}
+        onChange={() => aoEscolher(valor)}
+        className="mt-0.5 size-4 shrink-0 accent-jb-500"
+      />
+      <span className="min-w-0">
+        <span className="block text-sm font-bold text-graf-950">{titulo}</span>
+        <span className="mt-0.5 block text-[0.8125rem] leading-relaxed text-graf-600">
+          {detalhe}
+        </span>
+      </span>
+    </label>
+  );
 }
 
 /**
@@ -300,7 +352,9 @@ export function Checkout({
 
   // identificação
   const [email, setEmail] = useState(inicial.email);
-  const [criarConta, setCriarConta] = useState(false);
+  /* Como esta pessoa se identifica. Só vale para quem chega sem sessão; com
+     sessão, a identidade é a do cookie e o servidor ignora estes campos. */
+  const [modoAcesso, setModoAcesso] = useState<"criar" | "entrar">("criar");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
@@ -436,8 +490,18 @@ export function Checkout({
       if (!EMAIL_PLAUSIVEL.test(email.trim())) {
         return "Informe um e-mail válido — é por ele que a confirmação do pedido chega.";
       }
-      if (criarConta && senha.length < 8) {
-        return "A senha da sua conta precisa de pelo menos 8 caracteres.";
+      if (!logado) {
+        if (senha.length === 0) {
+          return modoAcesso === "entrar"
+            ? "Informe a senha da sua conta para continuar."
+            : "Crie uma senha para a conta da clínica.";
+        }
+        /* O mínimo de 8 vale só para senha nova. Ao entrar, senha curta é
+           senha errada, e quem responde isso é o servidor — a tela não sabe
+           (nem deve saber) o tamanho da senha guardada. */
+        if (modoAcesso === "criar" && senha.length < 8) {
+          return "A senha da sua conta precisa de pelo menos 8 caracteres.";
+        }
       }
     }
 
@@ -592,88 +656,158 @@ export function Checkout({
         <EtapaCheckout
           visivel={etapa === 0}
           titulo="Identificação"
-          descricao="É por aqui que a JB fala com você sobre este pedido."
+          descricao={
+            logado
+              ? "É por aqui que a JB fala com você sobre este pedido."
+              : "A compra fica registrada na conta da sua clínica. É por ela que você acompanha o pedido depois."
+          }
         >
           {logado ? (
-            <div className="flex items-start gap-3 rounded-xl border border-graf-200 bg-graf-50 p-4">
-              <UserRound className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
-              <p className="text-sm leading-relaxed text-graf-700">
-                Você está na sua conta
-                {nomeCliente ? (
-                  <>
-                    , <strong className="font-semibold text-graf-900">{nomeCliente}</strong>
-                  </>
-                ) : null}
-                . O pedido fica salvo em{" "}
-                <Link href="/minha-jb/pedidos" className="font-semibold text-jb-700 underline">
-                  Área da Clínica
-                </Link>
-                .
-              </p>
-            </div>
+            <>
+              <div className="flex items-start gap-3 rounded-xl border border-graf-200 bg-graf-50 p-4">
+                <UserRound className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
+                <p className="text-sm leading-relaxed text-graf-700">
+                  Você está na sua conta
+                  {nomeCliente ? (
+                    <>
+                      , <strong className="font-semibold text-graf-900">{nomeCliente}</strong>
+                    </>
+                  ) : null}
+                  . O pedido fica salvo em{" "}
+                  <Link href="/minha-jb/pedidos" className="font-semibold text-jb-700 underline">
+                    Área da Clínica
+                  </Link>
+                  .
+                </p>
+              </div>
+
+              <Campo
+                rotulo="E-mail para este pedido"
+                name="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(evento) => setEmail(evento.currentTarget.value)}
+                erro={erroDoCampo("email")}
+                /* Este campo é o contato DA COMPRA, não o login. Trocá-lo aqui
+                   não muda o e-mail da conta nem o titular do pedido — o
+                   servidor usa a identidade da sessão e ignora o que vier
+                   escrito aqui para decidir de quem é o pedido. */
+                ajuda="Para a confirmação e a nota deste pedido. Não altera o e-mail de acesso da sua conta."
+              />
+            </>
           ) : (
-            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-graf-200 bg-graf-50 p-4">
-              <p className="min-w-0 flex-1 text-sm leading-relaxed text-graf-700">
-                <span className="font-semibold text-graf-900">Já é cliente da JB?</span> Entrar
-                preenche seus dados e endereços automaticamente.
-              </p>
-              <Link
-                href="/entrar?voltar=%2Fcheckout"
-                className="inline-flex min-h-11 items-center rounded-lg border border-graf-300 bg-white px-4 text-sm font-semibold text-graf-800 shadow-xs transition-colors hover:border-graf-400 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-              >
-                Entrar na conta
-              </Link>
-            </div>
-          )}
+            <>
+              {/* Duas portas, e a escolha é explícita.
+                  O desenho anterior era uma caixa "quero criar minha conta"
+                  que, desmarcada, deixava a compra seguir sem conta nenhuma —
+                  e quem já era cliente digitava o e-mail e comprava fora da
+                  própria conta sem perceber. */}
+              <fieldset>
+                <legend className="text-sm font-bold text-graf-950">
+                  Como você quer continuar
+                </legend>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <OpcaoDeAcesso
+                    valor="criar"
+                    atual={modoAcesso}
+                    aoEscolher={setModoAcesso}
+                    titulo="Criar meu acesso"
+                    detalhe="Primeira compra na JB"
+                  />
+                  <OpcaoDeAcesso
+                    valor="entrar"
+                    atual={modoAcesso}
+                    aoEscolher={setModoAcesso}
+                    titulo="Já tenho conta"
+                    detalhe="Entrar com minha senha"
+                  />
+                </div>
+              </fieldset>
 
-          <Campo
-            rotulo="E-mail"
-            name="email"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(evento) => setEmail(evento.currentTarget.value)}
-            erro={erroDoCampo("email")}
-            ajuda="Enviamos aqui a confirmação da compra e o link de acompanhamento do pedido."
-          />
+              <input type="hidden" name="modoAcesso" value={modoAcesso} />
 
-          {logado ? null : (
-            <div className="rounded-xl border border-graf-200 p-4">
-              <Marcador
-                name="criarConta"
-                rotulo="Quero criar minha conta na JB"
-                ajuda="Guarda seus pedidos, equipamentos e chamados no mesmo lugar."
-                checked={criarConta}
-                onChange={(evento) => setCriarConta(evento.currentTarget.checked)}
+              <Campo
+                rotulo="E-mail"
+                name="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(evento) => setEmail(evento.currentTarget.value)}
+                erro={erroDoCampo("email")}
+                ajuda={
+                  modoAcesso === "entrar"
+                    ? "O e-mail da sua conta na JB."
+                    : "Será o e-mail de acesso e o endereço da confirmação do pedido."
+                }
               />
 
-              {criarConta ? (
-                <div className="mt-4">
-                  <Campo
-                    rotulo="Senha"
-                    name="senha"
-                    type={mostrarSenha ? "text" : "password"}
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                    value={senha}
-                    onChange={(evento) => setSenha(evento.currentTarget.value)}
-                    erro={erroDoCampo("senha")}
-                    ajuda="Pelo menos 8 caracteres."
-                  />
+              <div>
+                <Campo
+                  rotulo={modoAcesso === "entrar" ? "Senha" : "Crie uma senha"}
+                  name="senha"
+                  type={mostrarSenha ? "text" : "password"}
+                  /* `current-password` e `new-password` são o que fazem o
+                     gerenciador de senhas oferecer a senha certa em vez de
+                     propor uma nova para quem está entrando. */
+                  autoComplete={modoAcesso === "entrar" ? "current-password" : "new-password"}
+                  required
+                  minLength={modoAcesso === "entrar" ? undefined : 8}
+                  value={senha}
+                  onChange={(evento) => setSenha(evento.currentTarget.value)}
+                  erro={erroDoCampo("senha")}
+                  ajuda={modoAcesso === "entrar" ? undefined : "Pelo menos 8 caracteres."}
+                />
+
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4">
                   <button
                     type="button"
                     aria-pressed={mostrarSenha}
                     onClick={() => setMostrarSenha((v) => !v)}
-                    className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                   >
                     {mostrarSenha ? "Esconder senha" : "Mostrar senha"}
                   </button>
+
+                  {modoAcesso === "entrar" ? (
+                    <Link
+                      href="/recuperar-senha?voltar=%2Fcheckout"
+                      className="inline-flex min-h-11 items-center text-sm font-semibold text-jb-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    >
+                      Esqueci minha senha
+                    </Link>
+                  ) : null}
                 </div>
+              </div>
+
+              {modoAcesso === "criar" ? (
+                <>
+                  {/* Por que a conta existe, dito onde a conta é pedida. */}
+                  <div className="flex items-start gap-3 rounded-xl border border-graf-200 bg-surface-muted p-4">
+                    <ClipboardList
+                      className="mt-0.5 size-5 shrink-0 text-graf-500"
+                      aria-hidden
+                    />
+                    <p className="text-sm leading-relaxed text-graf-700">
+                      Seu equipamento ficará registrado na Área da Clínica, junto com
+                      garantia, documentos e histórico de manutenção.
+                    </p>
+                  </div>
+
+                  {/* Separado e opcional: criar conta para comprar não é
+                      consentimento para receber publicidade. */}
+                  <Marcador
+                    name="novidades"
+                    rotulo="Quero receber novidades e condições da JB por e-mail"
+                    ajuda="Opcional. Não é necessário para concluir a compra."
+                  />
+                </>
               ) : null}
-            </div>
+            </>
           )}
         </EtapaCheckout>
 
@@ -1073,9 +1207,15 @@ export function Checkout({
           <div className="space-y-3">
             <BlocoRevisao titulo="Identificação" icone={UserRound} aoEditar={() => irPara(0)}>
               {email ? <p className="break-words font-semibold">{email}</p> : null}
-              {criarConta ? (
-                <p className="text-graf-600">Sua conta na JB será criada com este e-mail.</p>
-              ) : null}
+              {logado ? (
+                <p className="text-graf-600">O pedido fica na conta em que você está.</p>
+              ) : modoAcesso === "criar" ? (
+                <p className="text-graf-600">
+                  Sua conta na JB será criada com este e-mail ao confirmar.
+                </p>
+              ) : (
+                <p className="text-graf-600">Você entrará na sua conta ao confirmar.</p>
+              )}
             </BlocoRevisao>
 
             <BlocoRevisao titulo="Comprador" icone={UserRound} aoEditar={() => irPara(1)}>

@@ -93,7 +93,7 @@ existem para que nenhuma fase desapareça da matriz.
 
 | Fase | Seção do prompt | Situação |
 |---|---|---|
-| 3 — conta obrigatória e checkout | 7 | não iniciado |
+| 3 — conta obrigatória e checkout | 7 | **validado localmente** — detalhe abaixo |
 | 4 — domínio canônico e configuração | 8 | não iniciado |
 | 5 — shell pública, cache, performance | 9 | não iniciado |
 | 6 — analytics, funis, erros, CWV | 10 | não iniciado |
@@ -113,6 +113,43 @@ existem para que nenhuma fase desapareça da matriz.
 
 ---
 
+---
+
+## Fase 3 — conta obrigatória e checkout (seção 7)
+
+| # | Requisito | Implementação | Evidência | Situação |
+|---|---|---|---|---|
+| 7.1.1 | Reaproveitar o checkout existente, menos campos possível | as cinco etapas seguem as mesmas; só a etapa 0 mudou | inspeção | validado localmente |
+| 7.1.2 | E-mail e criação de senha na identificação | modo "Criar meu acesso" | E2E "cria a conta dentro do checkout" | validado localmente |
+| 7.1.3 | Remover a caixa "Quero criar minha conta" e a saída de convidado | trocada por escolha explícita entre duas portas | E2E "sem senha, o checkout não fecha" assere `toHaveCount(0)` na caixa antiga | validado localmente |
+| 7.1.4 | Login e recuperação sem perder carrinho nem dados | modo "Já tenho conta" + link "Esqueci minha senha"; `redefinirSenha` respeita destino | E2E "cliente existente entra no próprio checkout" | validado localmente |
+| 7.1.5 | Autenticado usa a identidade da sessão; nenhum campo oculto escolhe titular | `garantirCompradorAutenticado` ignora `modoAcesso`/`senha` com sessão | leitura + E2E de 05-conta | validado localmente |
+| 7.1.6 | Separar dados fiscais do titular autenticado | com sessão, o campo vira "E-mail para este pedido", com aviso de que não muda o acesso | inspeção | validado localmente |
+| 7.1.7 | Pessoa física e jurídica com os campos existentes | inalterado | E2E | validado localmente |
+| 7.1.8 | Labels, autocomplete, mostrar/ocultar, erro junto do campo, foco | `autocomplete` muda com o modo; erro por campo; foco na etapa | E2E de acessibilidade do checkout | validado localmente |
+| 7.1.9 | Permitir colar senha e usar gerenciador | campo comum, sem bloqueio de colagem; `current-password`/`new-password` | inspeção | validado localmente |
+| 7.1.10 | Explicar o benefício com a frase do escopo | bloco na etapa 0 | inspeção — frase literal | validado localmente |
+| 7.1.11 | Opt-in de marketing separado e opcional | `novidades`, só no modo criar | inspeção | validado localmente |
+| 7.2.1 | Exigir sessão válida antes de pedido e cobrança | `garantirCompradorAutenticado` antes de `criarPedido` | E2E "sem senha" e "senha errada" | validado localmente |
+| 7.2.2 | Reaproveitar autenticação, hash, freio e fusão existentes | usa `autenticarCliente`, `bloqueadoPorTentativas`, `hashSenhaCliente`, `fundirCarrinhoNoLogin` | leitura | validado localmente |
+| 7.2.3 | Retirar o bypass `criarConta=false` | campo removido do esquema e da UI | `grep -rn criarConta src/` → 0 | validado localmente |
+| 7.2.4 | E-mail existente exige autenticação ou recuperação | modo criar com e-mail existente é recusado | E2E "e-mail já cadastrado não vira conta nova" | validado localmente |
+| 7.2.5 | Cadastro legado sem senha não vira acesso por e-mail digitado | `autenticarCliente` recusa `passwordHash` nulo; criar esbarra na unicidade; ativação é por `/recuperar-senha` | leitura de `auth-cliente.ts` e `pedirRecuperacao` | validado localmente |
+| 7.2.6 | Normalizar e-mail, preservar unicidade, tratar corrida | `toLowerCase().trim()`; `P2002` devolve a mesma frase do e-mail existente | leitura | validado localmente |
+| 7.2.7 | Reduzir enumeração de contas | "E-mail ou senha inválidos." no entrar; frase única no criar | E2E "senha errada no checkout não revela se o e-mail existe" | validado localmente |
+| 7.2.8 | Revalidar dono e conteúdo do carrinho depois da fusão | carrinho é relido quando houve login/criação, e o dono é conferido | leitura; E2E de fusão em 05-conta | validado localmente |
+| 7.2.9 | Não herdar carrinho nem pedido de outro usuário | `sairCliente` apaga carrinho **e** o cookie `jb_pedidos` | leitura; E2E de logout em 05-conta | validado localmente |
+| 7.2.10 | Conta criada continua utilizável se o pagamento falhar | a conta é criada e a sessão aberta antes da cobrança; falha de cobrança não desfaz | leitura; E2E "recusar o pagamento simulado" | validado localmente |
+| 7.2.11 | Nada de senha/token/documento em localStorage, URL ou analytics | senha só trafega no POST do formulário | leitura | validado localmente |
+| 7.2.12 | Não aplicar a regra a importações e pedidos administrativos | `criarPedido` tem um único consumidor público; a conversão de orçamento usa outro caminho | `grep -rn criarPedido src/` | validado localmente |
+| 7.3.1–7.3.12 | Pedido, cobrança e prontuário | inalterados — já cumpriam | `pnpm prova:atomicidade` **TUDO OK** | validado localmente |
+
+**Testes obrigatórios da fase** (seção 7, lista): dos 16 cenários, 12 têm teste
+executado. Os quatro restantes e o motivo estão em `validacao.md`.
+
+
+---
+
 ## Matriz de cenários obrigatórios (seção 26)
 
 Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
@@ -125,14 +162,14 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | CMS com texto legado | validado localmente — migrado, com cópia guardada e edição humana respeitada |
 | Plano sem base comercial confirmada | validado localmente — sem base declarada, a tela mostra “Sob consulta” e nenhuma unidade é presumida |
 | Calculadora com zero/dado inválido | validado localmente — 19 testes cobrem NaN, negativo, zero e implausível; a tela lista o que falta, sem NaN |
-| Carrinho anônimo | não iniciado |
-| Comprador novo cria conta no checkout | não iniciado |
-| Cliente existente | não iniciado |
-| E-mail existente sem prova | não iniciado |
-| Checkout direto sem sessão | não iniciado |
-| Duplo envio/webhook | não iniciado |
-| Seminovo único disputado | não iniciado |
-| Pedido guest antigo | não iniciado |
+| Carrinho anônimo | validado localmente — adicionar ao carrinho segue sem login |
+| Comprador novo | validado localmente — cria conta dentro do checkout e o pedido aparece na Área da Clínica |
+| Cliente existente | validado localmente — entra na própria etapa 0 e o pedido fica na conta dele |
+| E-mail existente sem prova | validado localmente — recusado, sem conta nova e sem vínculo |
+| Checkout direto sem sessão | validado localmente — o servidor recusa antes de pedido e cobrança |
+| Duplo envio/webhook | validado localmente — `prova:atomicidade`, 5 confirmações em paralelo produzem um equipamento só |
+| Seminovo único disputado | validado localmente — 5 pedidos simultâneos, uma venda |
+| Pedido guest antigo | implementado — a conferência de e-mail em `/pedido/[numero]` continua valendo e regrava o cookie; **sem execução automatizada** |
 | Assistência guest com mídia | não iniciado |
 | Upload falso/longo/expirado/alheio | não iniciado |
 | Limpeza e confirmação concorrentes | não iniciado |

@@ -139,7 +139,14 @@ export type DadosCheckout = {
   nome?: string;
   telefone?: string;
   documento?: string;
-  criarConta?: { senha: string };
+  /**
+   * Como se identificar na etapa 0.
+   *
+   * O checkout público não fecha mais compra sem conta, então uma senha é
+   * sempre necessária para quem chega sem sessão. `undefined` significa "já
+   * estou com sessão aberta" — aí a etapa nem mostra os campos de acesso.
+   */
+  acesso?: { modo: "criar" | "entrar"; senha: string };
 };
 
 /** Avança uma etapa do checkout e confere que a próxima realmente apareceu. */
@@ -162,11 +169,21 @@ export async function fecharPedidoComPix(
 
   /* 0. identificação */
   await expect(page.getByRole("heading", { name: "Identificação" })).toBeVisible();
-  await page.getByLabel("E-mail").fill(dados.email);
 
-  if (dados.criarConta) {
-    await page.getByLabel("Quero criar minha conta na JB").check();
-    await page.getByLabel(/^Senha/).fill(dados.criarConta.senha);
+  if (dados.acesso) {
+    /* `getByRole` e não `getByLabel`: o rótulo dos campos obrigatórios termina
+       com um asterisco decorativo, então o TEXTO do label é "E-mail*" e o nome
+       ACESSÍVEL é "E-mail" — o asterisco é `aria-hidden`. Casar pelo papel usa
+       o nome acessível, que é o que a pessoa com leitor de tela ouve. */
+    const rotulo = dados.acesso.modo === "criar" ? /Criar meu acesso/ : /Já tenho conta/;
+    await page.getByRole("radio", { name: rotulo }).check();
+    await page.getByRole("textbox", { name: "E-mail", exact: true }).fill(dados.email);
+    await page
+      .getByLabel(dados.acesso.modo === "criar" ? /^Crie uma senha/ : /^Senha/)
+      .fill(dados.acesso.senha);
+  } else {
+    // com sessão aberta o campo muda de nome: ele é o contato do pedido
+    await page.getByLabel("E-mail para este pedido").fill(dados.email);
   }
   await continuar(page, "Dados do comprador");
 
@@ -246,4 +263,46 @@ export async function entrarComoEquipe(page: Page) {
   await page.getByRole("button", { name: "Entrar no painel" }).click();
   await page.waitForURL(/\/admin(\/|$)/, { timeout: 60_000 });
   await expect(page).not.toHaveURL(/\/admin\/entrar/);
+}
+
+/** Sai da conta do cliente pelo botão real da Área da Clínica. */
+export async function sairDaConta(page: Page) {
+  await page.goto("/minha-jb");
+  await page.getByRole("button", { name: "Sair da conta" }).click();
+  await page.waitForURL((url) => !url.pathname.startsWith("/minha-jb"), { timeout: 60_000 });
+}
+
+/**
+ * Preenche as etapas 1 a 3 e para na revisão, sem confirmar.
+ *
+ * Serve aos testes que precisam apertar "Confirmar pedido" e observar a
+ * recusa do servidor: eles não podem usar `fecharPedidoComPix`, que espera um
+ * pedido criado no fim.
+ */
+export async function avancarAteRevisao(page: Page) {
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByRole("heading", { name: "Dados do comprador" })).toBeVisible();
+
+  await page.getByLabel("Nome completo").fill("Comprador de Teste JB");
+  await page.getByLabel("Telefone").fill(TELEFONE_DE_TESTE);
+  await page.getByRole("textbox", { name: "CPF" }).fill(CPF_DE_TESTE);
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByRole("heading", { name: "Entrega" })).toBeVisible();
+
+  const retirada = page.getByRole("radio", { name: /Retirar na JB/ });
+  if (await retirada.count()) {
+    await retirada.check();
+  } else {
+    await page.getByLabel("CEP").fill("01310-100");
+    await page.getByLabel("Logradouro").fill("Avenida Paulista");
+    await page.getByLabel("Número").fill("1000");
+    await page.getByLabel("Bairro").fill("Bela Vista");
+    await page.getByLabel("Cidade").fill("São Paulo");
+    await page.getByLabel("Estado").selectOption("SP");
+  }
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByRole("heading", { name: "Pagamento" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByRole("heading", { name: "Revisão" })).toBeVisible();
 }

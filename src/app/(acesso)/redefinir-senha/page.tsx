@@ -21,6 +21,8 @@ type Busca = Promise<{ [chave: string]: string | string[] | undefined }>;
 export default async function RedefinirSenhaPage({ searchParams }: { searchParams: Busca }) {
   const params = await searchParams;
   const token = typeof params.token === "string" ? params.token.trim() : "";
+  /* O servidor revalida com `destinoSeguro`; aqui basta repassar. */
+  const voltar = typeof params.voltar === "string" ? params.voltar : undefined;
 
   if (!token) {
     return (
@@ -65,7 +67,7 @@ export default async function RedefinirSenhaPage({ searchParams }: { searchParam
         </p>
       }
     >
-      <FormularioRedefinir token={token} />
+      <FormularioRedefinir token={token} destino={voltar} />
     </MolduraAutenticacao>
   );
 }

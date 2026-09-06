@@ -15,6 +15,7 @@ import {
   hashSenhaCliente,
 } from "@/lib/auth-cliente";
 import { esquecerCarrinhoDoNavegador, fundirCarrinhoNoLogin } from "@/lib/carrinho";
+import { esquecerPedidosDoNavegador } from "@/lib/acompanhamento";
 import { cnpjValido, cpfValido, formatarTelefone, somenteDigitos } from "@/lib/format";
 import { LIMITE_RECUPERACAO, checarFormulario, mensagemDeEspera } from "@/lib/limite";
 import { enfileirar } from "@/lib/notificacoes";
@@ -385,7 +386,10 @@ export async function redefinirSenha(
   await fundirCarrinhoNoLogin(cliente.id);
 
   revalidatePath("/", "layout");
-  redirect(DESTINO_PADRAO);
+  /* Quem veio do checkout redefinir a senha precisa voltar para lá com o
+     carrinho intacto, e não cair na visão geral da conta tendo de recomeçar.
+     O destino passa pelo mesmo filtro de redirecionamento aberto. */
+  redirect(destinoSeguro(formData.get("destino")));
 }
 
 /* ============================================================================
@@ -397,6 +401,20 @@ export async function sairCliente() {
   // o carrinho vai junto: em computador compartilhado, quem entra depois não
   // pode encontrar os itens de quem saiu
   await esquecerCarrinhoDoNavegador();
+  /*
+   * E o cookie de acompanhamento de pedidos também.
+   *
+   * Ele lista números de pedido fechados neste navegador e abre
+   * `/pedido/[numero]` sem pedir mais nada. Enquanto todo pedido novo era de
+   * convidado isso era o único caminho que essa pessoa tinha; agora que a
+   * compra exige conta, deixá-lo para trás no logout entrega o pedido de quem
+   * saiu para quem entrar depois no mesmo computador.
+   *
+   * Quem comprou como visitante antes desta mudança não perde nada: a página
+   * do pedido tem a conferência de e-mail, com freio de tentativas, e ela
+   * regrava o cookie.
+   */
+  await esquecerPedidosDoNavegador();
   revalidatePath("/", "layout");
   redirect("/");
 }

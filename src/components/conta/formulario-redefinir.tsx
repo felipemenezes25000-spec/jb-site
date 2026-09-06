@@ -74,7 +74,14 @@ function CampoSenha({
   );
 }
 
-export function FormularioRedefinir({ token }: { token: string }) {
+export function FormularioRedefinir({
+  token,
+  destino,
+}: {
+  token: string;
+  /** Caminho interno para onde voltar depois de redefinir. */
+  destino?: string;
+}) {
   const [estado, acao, enviando] = useActionState<EstadoConta, FormData>(redefinirSenha, {});
   const [senha, setSenha] = useState("");
   const [confirmacao, setConfirmacao] = useState("");
@@ -120,6 +127,11 @@ export function FormularioRedefinir({ token }: { token: string }) {
   return (
     <form ref={formulario} action={acao} noValidate className="space-y-5">
       <input type="hidden" name="token" value={token} />
+      {/* Para onde voltar depois de redefinir. Quem foi parar aqui a partir do
+          checkout precisa voltar ao checkout, com o carrinho intacto — e não
+          cair na visão geral da conta tendo de recomeçar a compra. O valor
+          passa pelo filtro de redirecionamento aberto no servidor. */}
+      {destino ? <input type="hidden" name="destino" value={destino} /> : null}
 
       {erroGeral ? (
         <p

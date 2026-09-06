@@ -1,10 +1,8 @@
-import crypto from "node:crypto";
-
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import type { OrderStatus } from "@prisma/client";
 import {
   FlaskConical,
@@ -36,6 +34,7 @@ import {
   type PassoLinha,
   type Tom,
 } from "@/components/ui/data";
+import { liberarAcompanhamento, pedidosDoNavegador } from "@/lib/acompanhamento";
 import { sessaoCliente } from "@/lib/auth-cliente";
 import { ipDoPedido } from "@/lib/seguranca";
 import { formatarDataHora, formatarPreco, telHref, whatsappHref } from "@/lib/format";
@@ -70,55 +69,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-/* ------------------------------------------------- cookie de acompanhamento */
-
-/**
- * Par de leitura do cookie gravado em src/app/acoes/checkout.ts. As duas
- * pontas precisam mudar juntas: formato `numero1.numero2~assinatura`.
- *
- * A verificação é duplicada aqui de propósito. O arquivo de ações é "use
- * server", onde todo export vira endpoint público — não dá para exportar um
- * utilitário compartilhado de lá sem abrir uma porta que ninguém pediu.
- */
-const COOKIE_PEDIDOS = "jb_pedidos";
-const DURACAO_PEDIDOS = 60 * 60 * 24 * 30;
-const MAX_PEDIDOS_NO_COOKIE = 10;
-
-function assinarPedidos(lista: string) {
-  const segredo = process.env.AUTH_SECRET;
-  if (!segredo) throw new Error("AUTH_SECRET ausente no ambiente");
-  return crypto.createHmac("sha256", `${segredo}:pedido`).update(lista).digest("base64url");
-}
-
-function conferirAssinatura(lista: string, assinatura: string) {
-  const esperada = assinarPedidos(lista);
-  if (assinatura.length !== esperada.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(assinatura), Buffer.from(esperada));
-}
-
-function numerosDoCookie(bruto: string | undefined) {
-  if (!bruto) return [];
-  const corte = bruto.lastIndexOf("~");
-  if (corte <= 0) return [];
-  const lista = bruto.slice(0, corte);
-  return conferirAssinatura(lista, bruto.slice(corte + 1)) ? lista.split(".") : [];
-}
-
-async function liberarAcompanhamento(numero: string) {
-  const jar = await cookies();
-  const anteriores = numerosDoCookie(jar.get(COOKIE_PEDIDOS)?.value);
-  const lista = [numero, ...anteriores.filter((n) => n !== numero)]
-    .slice(0, MAX_PEDIDOS_NO_COOKIE)
-    .join(".");
-
-  jar.set(COOKIE_PEDIDOS, `${lista}~${assinarPedidos(lista)}`, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: DURACAO_PEDIDOS,
-  });
-}
 
 /* ------------------------------------------------------- conferência por e-mail */
 
@@ -351,7 +301,7 @@ export default async function PedidoPage({ params }: Props) {
 
   const numero = decodeURIComponent(bruto).trim().toUpperCase();
 
-  const [pedido, sessao, jar] = await Promise.all([
+  const [pedido, sessao] = await Promise.all([
     prisma.order.findUnique({
       where: { number: numero },
       include: {
@@ -369,7 +319,6 @@ export default async function PedidoPage({ params }: Props) {
       },
     }),
     sessaoCliente(),
-    cookies(),
   ]);
 
   /**
@@ -385,7 +334,7 @@ export default async function PedidoPage({ params }: Props) {
   const liberado =
     pedido !== null &&
     ((sessao !== null && pedido.customerId === sessao.id) ||
-      numerosDoCookie(jar.get(COOKIE_PEDIDOS)?.value).includes(pedido.number));
+      (await pedidosDoNavegador()).includes(pedido.number));
 
   const trilha = (
     <Trilha

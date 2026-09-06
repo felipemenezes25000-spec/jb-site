@@ -1,15 +1,24 @@
 "use server";
 
-import crypto from "node:crypto";
-
 import { revalidatePath } from "next/cache";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { Order, PaymentMethod } from "@prisma/client";
 
-import { criarSessaoCliente, hashSenhaCliente, sessaoCliente } from "@/lib/auth-cliente";
-import { calcularTotais, lerCarrinho, type CarrinhoCompleto } from "@/lib/carrinho";
+import {
+  autenticarCliente,
+  bloqueadoPorTentativas,
+  criarSessaoCliente,
+  hashSenhaCliente,
+  sessaoCliente,
+} from "@/lib/auth-cliente";
+import {
+  calcularTotais,
+  fundirCarrinhoNoLogin,
+  lerCarrinho,
+  type CarrinhoCompleto,
+} from "@/lib/carrinho";
 import {
   calcularFreteDePedido,
   freteDeRetirada,
@@ -25,6 +34,8 @@ import {
   somenteDigitos,
 } from "@/lib/format";
 import { chaveDeIp, checarLimite, segundosDeEspera } from "@/lib/limite";
+import { liberarAcompanhamento, pedidosDoNavegador } from "@/lib/acompanhamento";
+import { formatarTelefone } from "@/lib/format";
 import { enfileirar } from "@/lib/notificacoes";
 import { provedorPagamento } from "@/lib/pagamento";
 import {
@@ -42,63 +53,20 @@ export type EstadoCheckout = { erro?: string; campo?: string; ok?: boolean };
 /** Resposta de `consultarFrete` — a tela mostra, o servidor decide. */
 export type RespostaFrete = { erro?: string; frete?: FreteExibido };
 
-/* --------------------------------------------- acompanhamento do convidado */
+/* ------------------------------------------- acompanhamento sem sessão */
 
 /**
- * Quem compra como convidado precisa acompanhar o pedido logo depois de
- * fechá-lo, e não tem sessão. Jogar o e-mail na URL resolveria — e vazaria em
- * histórico, referer e link compartilhado. Em vez disso gravamos um cookie
- * assinado com os números dos últimos pedidos abertos neste navegador.
+ * Sessão dona do pedido ou cookie assinado. Nada mais abre a porta.
  *
- * A assinatura é obrigatória: cookie é dado do cliente. Sem HMAC bastaria
- * digitar o número de outra pessoa no devtools para ler o pedido dela.
- *
- * O par de leitura vive em src/app/(loja)/pedido/[numero]/page.tsx e precisa
- * andar junto com estas funções — o formato do valor é `n1.n2~assinatura`.
+ * O cookie e a assinatura vivem em `@/lib/acompanhamento`, compartilhados com
+ * a página do pedido — enquanto eram duas cópias do mesmo formato, manter as
+ * duas de acordo dependia de um comentário pedindo cuidado.
  */
-const COOKIE_PEDIDOS = "jb_pedidos";
-const DURACAO_PEDIDOS = 60 * 60 * 24 * 30; // 30 dias
-const MAX_PEDIDOS_NO_COOKIE = 10;
-
-function assinarPedidos(lista: string) {
-  const segredo = process.env.AUTH_SECRET;
-  if (!segredo) throw new Error("AUTH_SECRET ausente no ambiente");
-  return crypto.createHmac("sha256", `${segredo}:pedido`).update(lista).digest("base64url");
-}
-
-function numerosDoCookie(bruto: string | undefined) {
-  if (!bruto) return [];
-  const separador = bruto.lastIndexOf("~");
-  if (separador <= 0) return [];
-  const lista = bruto.slice(0, separador);
-  const assinatura = bruto.slice(separador + 1);
-  return assinatura === assinarPedidos(lista) ? lista.split(".") : [];
-}
-
-/** Dá a este navegador o direito de ver o pedido recém-aberto. */
-async function liberarAcompanhamento(numero: string) {
-  const jar = await cookies();
-  const anteriores = numerosDoCookie(jar.get(COOKIE_PEDIDOS)?.value);
-  const lista = [numero, ...anteriores.filter((n) => n !== numero)]
-    .slice(0, MAX_PEDIDOS_NO_COOKIE)
-    .join(".");
-
-  jar.set(COOKIE_PEDIDOS, `${lista}~${assinarPedidos(lista)}`, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: DURACAO_PEDIDOS,
-  });
-}
-
-/** Sessão dona do pedido ou cookie assinado. Nada mais abre a porta. */
 async function temAcessoAoPedido(pedido: Pick<Order, "number" | "customerId">) {
   const sessao = await sessaoCliente();
   if (sessao && pedido.customerId === sessao.id) return true;
 
-  const jar = await cookies();
-  return numerosDoCookie(jar.get(COOKIE_PEDIDOS)?.value).includes(pedido.number);
+  return (await pedidosDoNavegador()).includes(pedido.number);
 }
 
 const esquema = z
@@ -126,8 +94,17 @@ const esquema = z
     bandeira: z.string().trim().default(""),
 
     observacao: z.string().trim().max(1000).default(""),
-    criarConta: z.coerce.boolean().default(false),
+
+    /*
+     * Como esta pessoa se identifica.
+     *
+     * Só é lido quando NÃO existe sessão. Com sessão válida, a identidade é a
+     * do cookie e este campo é ignorado — um campo de formulário não escolhe
+     * o titular de um pedido.
+     */
+    modoAcesso: z.enum(["criar", "entrar"]).default("criar"),
     senha: z.string().default(""),
+    novidades: z.coerce.boolean().default(false),
   })
   .superRefine((dados, ctx) => {
     const doc = somenteDigitos(dados.documento);
@@ -148,7 +125,17 @@ const esquema = z
       }
     }
 
-    if (dados.criarConta && dados.senha.length < 8) {
+    /*
+     * A senha é conferida aqui apenas no formato. Se ela é obrigatória depende
+     * de haver sessão, e isso o esquema não sabe — quem decide é
+     * `garantirCompradorAutenticado`, no servidor, onde a sessão existe.
+     *
+     * O mínimo de 8 vale só para senha NOVA. Ao entrar, senha curta é senha
+     * errada, e a resposta a isso é a do login, não a da política de cadastro:
+     * dizer "a senha precisa de 8 caracteres" a quem está entrando revelaria
+     * que a senha guardada tem outro tamanho.
+     */
+    if (dados.modoAcesso === "criar" && dados.senha.length > 0 && dados.senha.length < 8) {
       ctx.addIssue({
         code: "custom",
         path: ["senha"],
@@ -226,23 +213,201 @@ export async function consultarFrete(cepBruto: string): Promise<RespostaFrete> {
  * envia preço nenhum. Só depois do pedido criado é que a cobrança é aberta no
  * provedor, e o estado do pagamento nunca vem do navegador.
  */
+/* ------------------------------------------------- identidade do comprador */
+
+/** Mesma frase para e-mail já cadastrado e para colisão na gravação. */
+const CONTA_NAO_CRIADA =
+  "Não foi possível criar a conta com este e-mail. Se você já tem cadastro na JB, entre com " +
+  "sua senha nesta mesma tela ou peça a redefinição.";
+
+function ehChaveDuplicada(erro: unknown) {
+  return (
+    typeof erro === "object" &&
+    erro !== null &&
+    "code" in erro &&
+    (erro as { code?: unknown }).code === "P2002"
+  );
+}
+
+type Identidade =
+  | { ok: true; customerId: string; entrou: boolean }
+  | { ok: false; estado: EstadoCheckout };
+
+/**
+ * Quem está comprando — e a garantia de que existe alguém.
+ *
+ * Esta é a fronteira onde a exigência de conta vale. Ela fica aqui, e não
+ * dentro de `criarPedido`, porque `criarPedido` também serve à conversão de
+ * orçamento comercial pela equipe e a pedidos que nascem no painel: exigir
+ * sessão de cliente lá dentro quebraria fluxos legítimos que nunca tiveram
+ * uma. O checkout público é que precisa de titular autenticado.
+ *
+ * Três caminhos, e só três:
+ *
+ *   sessão válida  →  a identidade é a do cookie. O formulário não escolhe
+ *                     titular; `modoAcesso` e `senha` são ignorados.
+ *   entrar         →  autentica com a senha, pelo mesmo caminho de /entrar,
+ *                     com o mesmo freio de tentativas.
+ *   criar          →  cria a conta com prova de posse da senha nova. E-mail já
+ *                     cadastrado é recusado sem confirmar que existe.
+ *
+ * Não existe quarto caminho. Digitar um e-mail alheio não vincula pedido a
+ * conta nenhuma, e um cadastro legado sem senha continua exigindo a
+ * recuperação por e-mail para virar acesso — `autenticarCliente` recusa
+ * `passwordHash` nulo, e criar por cima esbarra na unicidade.
+ */
+async function garantirCompradorAutenticado(
+  dados: z.infer<typeof esquema>,
+): Promise<Identidade> {
+  const sessao = await sessaoCliente();
+
+  if (sessao) {
+    /*
+     * O cookie prova quem assinou, não que a conta continua valendo. Entre a
+     * emissão do token (30 dias) e este clique a conta pode ter sido
+     * desativada ou removida — e um pedido preso a um cliente inativo é um
+     * pedido que ninguém consegue atender.
+     */
+    const atual = await prisma.customer.findUnique({
+      where: { id: sessao.id },
+      select: { id: true, active: true },
+    });
+
+    if (!atual || !atual.active) {
+      return {
+        ok: false,
+        estado: {
+          erro:
+            "Sua sessão não está mais válida. Entre de novo para concluir a compra — o " +
+            "carrinho continua aqui.",
+          campo: "email",
+        },
+      };
+    }
+
+    return { ok: true, customerId: atual.id, entrou: false };
+  }
+
+  const email = dados.email.toLowerCase().trim();
+
+  if (dados.senha.length === 0) {
+    return {
+      ok: false,
+      estado: {
+        erro:
+          dados.modoAcesso === "entrar"
+            ? "Informe a senha da sua conta."
+            : "Crie uma senha para a conta da clínica.",
+        campo: "senha",
+      },
+    };
+  }
+
+  /* --------------------------------------------------------- entrar */
+  if (dados.modoAcesso === "entrar") {
+    if (await bloqueadoPorTentativas(email)) {
+      return {
+        ok: false,
+        estado: {
+          erro:
+            "Muitas tentativas seguidas. Aguarde 15 minutos e tente de novo, ou redefina sua senha.",
+          campo: "senha",
+        },
+      };
+    }
+
+    const cliente = await autenticarCliente(email, dados.senha);
+    // mensagem única: conta inexistente, senha errada e conta inativa soam igual
+    if (!cliente) {
+      return { ok: false, estado: { erro: "E-mail ou senha inválidos.", campo: "senha" } };
+    }
+
+    await criarSessaoCliente(cliente);
+    await fundirCarrinhoNoLogin(cliente.id);
+    return { ok: true, customerId: cliente.id, entrou: true };
+  }
+
+  /* ---------------------------------------------------------- criar */
+  if (dados.senha.length < 8) {
+    return {
+      ok: false,
+      estado: { erro: "A senha precisa de ao menos 8 caracteres.", campo: "senha" },
+    };
+  }
+
+  const jaExiste = await prisma.customer.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+  if (jaExiste) {
+    return { ok: false, estado: { erro: CONTA_NAO_CRIADA, campo: "senha" } };
+  }
+
+  let novo: { id: string; name: string; email: string };
+  try {
+    novo = await prisma.customer.create({
+      data: {
+        name: dados.nome,
+        email,
+        phone: formatarTelefone(dados.telefone),
+        personType: dados.tipoPessoa,
+        document: somenteDigitos(dados.documento),
+        companyName: dados.tipoPessoa === "juridica" ? dados.razaoSocial : "",
+        passwordHash: await hashSenhaCliente(dados.senha),
+        /* Opt-in de marketing é decisão à parte: criar conta para comprar não
+           é consentimento para receber publicidade. */
+        marketingOptInAt: dados.novidades ? new Date() : null,
+      },
+      select: { id: true, name: true, email: true },
+    });
+  } catch (erro) {
+    /* Corrida entre dois cadastros com o mesmo e-mail: o segundo chega aqui.
+       A resposta é a mesma do e-mail já cadastrado — não um erro genérico de
+       servidor, que faria a pessoa tentar de novo no mesmo caminho fechado. */
+    if (ehChaveDuplicada(erro)) {
+      return { ok: false, estado: { erro: CONTA_NAO_CRIADA, campo: "senha" } };
+    }
+    console.error("[checkout/conta]", erro);
+    return {
+      ok: false,
+      estado: { erro: "Não foi possível criar a conta agora. Tente novamente em instantes." },
+    };
+  }
+
+  await criarSessaoCliente(novo);
+  await fundirCarrinhoNoLogin(novo.id);
+  return { ok: true, customerId: novo.id, entrou: true };
+}
+
+/**
+ * Fecha o pedido.
+ *
+ * O total é recalculado no servidor a partir do carrinho — o formulário não
+ * envia preço nenhum. Só depois do pedido criado é que a cobrança é aberta no
+ * provedor, e o estado do pagamento nunca vem do navegador.
+ *
+ * Desde a exigência de conta, a ordem das etapas importa: a identidade é
+ * resolvida ANTES da leitura definitiva do carrinho, porque entrar ou criar
+ * conta funde carrinhos e pode mudar o que está lá dentro.
+ */
 export async function finalizarCompra(
   _anterior: EstadoCheckout,
   formData: FormData,
 ): Promise<EstadoCheckout> {
-  const bruto = {
-    ...Object.fromEntries(formData),
-    criarConta: formData.get("criarConta") === "on",
-  };
-  const dados = esquema.safeParse(bruto);
+  const dados = esquema.safeParse(Object.fromEntries(formData));
 
   if (!dados.success) {
     const problema = dados.error.issues[0];
-    return { erro: problema?.message ?? "Confira os dados.", campo: String(problema?.path[0] ?? "") };
+    return {
+      erro: problema?.message ?? "Confira os dados.",
+      campo: String(problema?.path[0] ?? ""),
+    };
   }
 
-  const carrinho = await lerCarrinho();
-  if (!carrinho || carrinho.items.length === 0) {
+  /* Carrinho vazio é recusado antes da identidade: não faz sentido criar conta
+     para uma compra que não existe. */
+  const carrinhoInicial = await lerCarrinho();
+  if (!carrinhoInicial || carrinhoInicial.items.length === 0) {
     return { erro: "Seu carrinho está vazio." };
   }
 
@@ -251,56 +416,36 @@ export async function finalizarCompra(
     return { erro: "Esta forma de pagamento não está disponível.", campo: "metodo" };
   }
 
-  const sessao = await sessaoCliente();
-  let customerId = sessao?.id ?? null;
+  const identidade = await garantirCompradorAutenticado(dados.data);
+  if (!identidade.ok) return identidade.estado;
+  const customerId = identidade.customerId;
 
-  // compra como convidado pode virar conta no mesmo passo
-  if (!customerId) {
-    const email = dados.data.email.toLowerCase();
-    const existente = await prisma.customer.findUnique({ where: { email } });
+  /*
+   * Reler o carrinho depois da identificação.
+   *
+   * Entrar ou criar conta chama `fundirCarrinhoNoLogin`, que pode acrescentar
+   * itens de um carrinho anterior daquela conta e apagar o outro registro.
+   * Fechar a compra com a referência lida antes disso cobraria por uma lista
+   * que já não é a que está no banco — e, no pior caso, por um carrinho que
+   * acabou de ser removido.
+   */
+  const carrinho = identidade.entrou ? await lerCarrinho() : carrinhoInicial;
+  if (!carrinho || carrinho.items.length === 0) {
+    return { erro: "Seu carrinho está vazio." };
+  }
 
-    if (existente) {
-      // Definir senha aqui seria tomar uma conta alheia só sabendo o e-mail:
-      // o caminho para virar dono do cadastro é entrar ou redefinir a senha,
-      // que passa pela caixa de entrada.
-      if (dados.data.criarConta) {
-        return {
-          erro:
-            "Este e-mail já tem cadastro na JB. Entre na sua conta para concluir a compra, " +
-            "ou desmarque a criação de conta e siga como convidado.",
-          campo: "criarConta",
-        };
-      }
-      /**
-       * O pedido NÃO é pendurado na conta existente.
-       *
-       * Digitar um e-mail não prova ser dono dele. Se alguém erra uma letra e
-       * cai no e-mail de outro cliente da JB, o nome, o endereço e os itens
-       * dessa compra apareceriam no "Área da Clínica" de um estranho. Vínculo com
-       * conta exige sessão; quem compra como convidado acompanha o pedido pelo
-       * cookie assinado, que é o mesmo caminho de sempre.
-       */
-      customerId = null;
-    } else {
-      const novo = await prisma.customer.create({
-        data: {
-          name: dados.data.nome,
-          email,
-          phone: dados.data.telefone,
-          personType: dados.data.tipoPessoa,
-          document: somenteDigitos(dados.data.documento),
-          companyName: dados.data.razaoSocial,
-          passwordHash: dados.data.criarConta
-            ? await hashSenhaCliente(dados.data.senha)
-            : null,
-        },
-      });
-      customerId = novo.id;
-
-      if (dados.data.criarConta) {
-        await criarSessaoCliente({ id: novo.id, name: novo.name, email: novo.email });
-      }
-    }
+  /*
+   * O carrinho tem de ser desta conta.
+   *
+   * `fundirCarrinhoNoLogin` já carimba o dono, mas a conferência é barata e
+   * fecha a janela em que um carrinho de outra pessoa ainda estivesse amarrado
+   * a este navegador — computador compartilhado, sessão trocada, fusão que não
+   * rodou.
+   */
+  if (carrinho.customerId !== null && carrinho.customerId !== customerId) {
+    return {
+      erro: "Este carrinho é de outra conta. Abra o carrinho de novo para continuar.",
+    };
   }
 
   const retirada = dados.data.entrega === "retirada";
@@ -364,7 +509,7 @@ export async function finalizarCompra(
   }
 
   // guarda o endereço para as próximas compras
-  if (customerId && !retirada) {
+  if (!retirada) {
     const jaTem = await prisma.customerAddress.findFirst({ where: { customerId } });
     if (!jaTem) {
       await prisma.customerAddress.create({
@@ -416,7 +561,19 @@ export async function finalizarCompra(
     bandeira: dados.data.bandeira,
   });
 
-  // convidado precisa entrar na página do pedido sem sessão
+  /*
+   * Acompanhamento por cookie.
+   *
+   * Desde a exigência de conta, todo pedido novo tem titular, e a sessão já é
+   * porta suficiente para `/pedido/[numero]`. O cookie continua sendo gravado
+   * mesmo assim porque ele cobre a janela em que a sessão some — expiração,
+   * navegação anônima fechada e reaberta, logout logo depois da compra — sem
+   * abrir acesso a mais nada: ele é assinado e lista só os números fechados
+   * neste navegador.
+   *
+   * Ele é apagado no logout, junto do carrinho: em computador compartilhado,
+   * quem entra depois não pode encontrar o pedido de quem saiu.
+   */
   await liberarAcompanhamento(pedido.number);
 
   revalidatePath("/carrinho");

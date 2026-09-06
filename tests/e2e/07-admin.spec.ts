@@ -54,6 +54,7 @@ test.describe("Painel da equipe", () => {
     const { numero, totalCents } = await fecharPedidoComPix(page, {
       email: `admin.pedido.${sufixo()}@jbteste.local`,
       nome: "Comprador Visto pelo Painel",
+      acesso: { modo: "criar", senha: "senhaDeTeste123" },
     });
 
     await entrarComoEquipe(page);

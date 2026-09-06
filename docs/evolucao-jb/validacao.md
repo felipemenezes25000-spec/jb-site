@@ -195,3 +195,48 @@ receita por hora.") em vez de mostrar R$ 0,00 ou NaN.
 | No formulário | bloco "Da sua simulação" com as sete linhas, visível antes do envio |
 | Campo enviado | `input[name=premissas]` com o mesmo texto |
 | Botão "Não enviar" | remove o bloco, o campo oculto **e** a chave do `sessionStorage` |
+
+### Fase 3 — conta obrigatória e checkout
+
+Executado em 6 de setembro de 2026, servidor em `localhost:57762`.
+
+| Comando | Resultado |
+|---|---|
+| `pnpm typecheck` | **exit 0** |
+| `pnpm test:unit` | **exit 0** — 249 testes |
+| `pnpm build` | **exit 0** |
+| `E2E_BASE_URL=… pnpm e2e` | **exit 0** — 48 → **52 testes**, 4,2 min |
+| `pnpm prova:atomicidade` | **exit 0** — "TUDO OK", 14 conferências |
+| `node scripts/acessibilidade.mjs --so=publico` | **exit 0** — 36 medições, 0 problemas |
+| `node scripts/responsivo.mjs --so=publico` | **exit 0** — 108 medições, 0 problemas |
+
+#### Testes E2E: o que mudou e o que entrou
+
+Quatro testes novos, e um reescrito. O reescrito é o ponto importante:
+`04-checkout.spec.ts` tinha "fecha o pedido como convidado e chega na página
+do pedido", que descrevia exatamente o comportamento que esta fase remove. Ele
+**não foi desligado**: virou "cria a conta dentro do checkout e chega na página
+do pedido", com uma asserção a mais — o pedido precisa aparecer em
+`/minha-jb/pedidos` sem passar por login, que é o que separa "criou conta" de
+"criou conta e amarrou o pedido nela".
+
+| Teste | O que prova |
+|---|---|
+| cria a conta dentro do checkout | comprador novo conclui e o pedido nasce na conta |
+| sem senha, o checkout não fecha | a caixa antiga não existe (`toHaveCount(0)`) e a etapa 0 não avança |
+| e-mail já cadastrado não vira conta nova | recusa com a frase única; segue em `/checkout`, sem pedido |
+| cliente existente entra no próprio checkout | login na etapa 0 e pedido na conta certa |
+| senha errada não cria pedido nem revela o e-mail | "E-mail ou senha inválidos.", sem pedido |
+
+Três testes preexistentes precisaram do campo novo e foram ajustados, não
+enfraquecidos: os dois de acessibilidade do checkout (o de teclado ganhou uma
+asserção a mais — o foco visível no campo de senha) e o de frete.
+
+#### Cenários da fase ainda sem execução automatizada
+
+| Cenário | Situação |
+|---|---|
+| Cadastro legado com `passwordHash` nulo | a defesa está lida e é dupla (`autenticarCliente` recusa hash nulo; criar esbarra na unicidade). Falta um teste que crie esse estado no banco — o seed não produz cliente legado |
+| Sessão expirada ou conta inativa | `garantirCompradorAutenticado` reconsulta `active` no banco a cada compra. Sem teste automatizado: exige manipular o cookie ou desativar a conta no meio do fluxo |
+| Erro de frete/estoque/provedor com retomada | os caminhos existem e devolvem estado; sem execução dirigida nesta fase |
+| Pedido de visitante antigo | o mecanismo (conferência de e-mail) não foi tocado e continua no código; sem execução nesta fase |

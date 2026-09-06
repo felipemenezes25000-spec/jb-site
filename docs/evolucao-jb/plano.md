@@ -27,8 +27,8 @@ quando tem evidência associada em `validacao.md`.
 |---|---|---|---|
 | 1 | Baseline, mapa, planejamento, direção visual | 0 | **concluído** |
 | 2 | Narrativa, institucional, naming, planos, calculadora | 1, 2 | **validado localmente** |
-| 3 | Checkout com conta obrigatória | 3 | em execução |
-| 4 | URL canônica, cache/shell, analytics/RUM | 4, 5, 6 | não iniciado |
+| 3 | Checkout com conta obrigatória | 3 | **validado localmente** |
+| 4 | URL canônica, cache/shell, analytics/RUM | 4, 5, 6 | em execução |
 | 5 | CI consolidado | 7 | não iniciado |
 | 6 | Componentes de domínio, prontuário, demonstração | 8 | não iniciado |
 | 7 | Mídia de visitante e SOS Equipamento | 9 | não iniciado |

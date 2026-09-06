@@ -196,6 +196,7 @@ test.describe("Pagamento parcial no painel", () => {
     const { numero, totalCents } = await fecharPedidoComPix(page, {
       email: `sinal.${sufixo()}@jbteste.local`,
       nome: "Comprador do Sinal",
+      acesso: { modo: "criar", senha: "senhaDeTeste123" },
     });
 
     expect(totalCents, "o pedido precisa ter valor para ser pago em partes").toBeGreaterThan(0);
