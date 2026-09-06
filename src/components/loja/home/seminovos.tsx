@@ -1,33 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, ImageOff } from "lucide-react";
+import { ArrowRight, CheckCircle2, Gauge, ImageOff, ShieldCheck } from "lucide-react";
 
+import { Etiqueta } from "@/components/ui/data";
 import { LinkBotao } from "@/components/ui/button";
-import { Etiqueta, TituloSecao } from "@/components/ui/data";
-import { GradeConteudoApoio } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
-import {
-  BlocoPreco,
-  disponibilidadeDe,
-  lerParcelamento,
-  type Parcelamento,
-} from "@/components/loja/home/comum";
-import { plural } from "@/lib/format";
+import { disponibilidadeDe } from "@/components/loja/home/comum";
+import { formatarPreco, plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { getSettings } from "@/lib/settings";
-import { cn } from "@/lib/utils";
 
 /* ============================================================================
-   Seminovos revisados
+   Seminovo JB
 
-   Seminovo é a parte do catálogo em que o cliente mais precisa de prova, e é
-   também onde o dado existe: cada unidade física tem ano, uso, checklist de
-   revisão, fotos próprias e as condições escritas.
-
-   Por isso nada aqui é texto de vitrine: os fatos que aparecem no cartão são
-   os campos preenchidos daquela unidade, e o painel lateral só promete o que
-   as unidades exibidas realmente têm registrado. Campo vazio some — não vira
-   travessão repetido.
+   A seção trata seminovo como um programa próprio da JB, não como apenas mais
+   uma categoria. A unidade principal recebe escala grande; ano, uso, checklist
+   e garantia aparecem somente quando existem no cadastro real.
    ============================================================================ */
 
 const DISPONIVEL = { status: "active", condition: "seminovo" } as const;
@@ -84,226 +71,207 @@ async function carregar() {
 type ProdutoSeminovo = Awaited<ReturnType<typeof carregar>>["produtos"][number];
 
 export async function SecaoSeminovos() {
-  const [{ produtos, total }, s] = await Promise.all([carregar(), getSettings()]);
+  const { produtos, total } = await carregar();
   if (produtos.length === 0) return null;
 
-  const parcelamento = lerParcelamento(s);
-  const unidades = produtos.flatMap((produto) => produto.units);
-
-  /* O painel lateral só afirma o que estas unidades de fato trazem. */
-  const registrado: string[] = [];
-  if (unidades.some((u) => u.media.length > 0)) {
-    registrado.push("Fotos da unidade que está à venda, não do catálogo do fabricante");
-  }
-  if (unidades.some((u) => u._count.checklist > 0)) {
-    registrado.push("Checklist de revisão, item a item, com o resultado de cada verificação");
-  }
-  if (unidades.some((u) => u.manufactureYear || u.usageHours || u.usageCycles)) {
-    registrado.push("Ano de fabricação e o uso acumulado do equipamento");
-  }
-  if (unidades.some((u) => u.conditionNotes.trim())) {
-    registrado.push("As condições descritas por escrito, inclusive as marcas de uso");
-  }
-  if (unidades.some((u) => u.warrantyMonths) || produtos.some((p) => p.warrantyMonths)) {
-    registrado.push("O prazo de garantia registrado para aquela unidade");
-  }
+  const [principal, ...outros] = produtos;
 
   return (
-    <Secao fundo="branco" espaco="lg">
-      <TituloSecao
-        sobretitulo="Seminovo JB"
-        titulo="Seminovo não precisa ser uma aposta"
-        descricao="Cada unidade é uma máquina específica, com histórico próprio. O que a JB apurou sobre ela fica registrado e aparece antes da compra."
-        acao={
-          <LinkBotao href="/seminovos" variante="secundario">
-            Ver {plural(total, "seminovo", "seminovos")}
-            <ArrowRight className="size-4 shrink-0" aria-hidden />
-          </LinkBotao>
-        }
-        className="mb-10"
-      />
+    <Secao fundo="grafite" espaco="lg" padraoDeFundo>
+      <div className="mb-9 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-3xl">
+          <p className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em] text-jb-300">
+            <span className="h-px w-8 bg-jb-500" aria-hidden />
+            Seminovo JB
+          </p>
+          <h2 className="mt-3 text-section text-white">Você sabe qual máquina está comprando.</h2>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-graf-300">
+            Cada unidade tem identidade própria. Quando ano, uso, checklist, condição ou garantia foram registrados, essas informações aparecem antes da compra.
+          </p>
+        </div>
 
-      {registrado.length > 0 ? (
-        <GradeConteudoApoio
-          conteudo={<ListaSeminovos produtos={produtos} parcelamento={parcelamento} />}
-          apoio={
-            <div className="rounded-2xl border border-graf-200 bg-surface-muted p-6 lg:p-7">
-              <h3 className="text-title text-graf-950">O que fica registrado</h3>
-              <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-600">
-                Antes de entrar no catálogo, a unidade passa pela equipe técnica. O que foi
-                apurado vai para a página dela.
-              </p>
-              <ul className="mt-6 space-y-3.5 border-t border-graf-200 pt-6">
-                {registrado.map((item) => (
-                  <li
-                    key={item}
-                    className="flex gap-2.5 text-[0.9375rem] leading-relaxed text-graf-600"
-                  >
-                    <Check className="mt-0.5 size-4 shrink-0 text-jb-500" aria-hidden />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          }
-        />
-      ) : (
-        /* Sem nada registrado nas unidades, o painel lateral não teria o que
-           afirmar — e a lista ocupa a faixa inteira em vez de deixar um vão. */
-        <ListaSeminovos produtos={produtos} parcelamento={parcelamento} />
-      )}
+        <LinkBotao href="/seminovos" variante="contorno-claro" tamanho="lg">
+          Ver {plural(total, "seminovo", "seminovos")}
+          <ArrowRight className="size-4" aria-hidden />
+        </LinkBotao>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(20rem,0.7fr)] xl:gap-5">
+        <CartaoPrincipal produto={principal} />
+
+        {outros.length > 0 ? (
+          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 xl:gap-5">
+            {outros.map((produto) => (
+              <li key={produto.slug} className="flex min-w-0">
+                <CartaoSecundario produto={produto} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     </Secao>
   );
 }
 
-function ListaSeminovos({
-  produtos,
-  parcelamento,
-}: {
-  produtos: ProdutoSeminovo[];
-  parcelamento: Parcelamento;
-}) {
-  return (
-    <ul className="grid gap-5">
-      {produtos.map((produto) => (
-        <li key={produto.slug}>
-          <CartaoSeminovo produto={produto} parcelamento={parcelamento} />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function CartaoSeminovo({
-  produto,
-  parcelamento,
-}: {
-  produto: ProdutoSeminovo;
-  parcelamento: Parcelamento;
-}) {
+function fotoDeSeminovo(produto: ProdutoSeminovo) {
   const unidade = produto.units[0];
   const fotoUnidade = unidade?.media[0]?.media;
   const fotoCatalogo = produto.media[0];
-  const foto = fotoUnidade
-    ? { url: fotoUnidade.url, alt: fotoUnidade.alt || produto.name, daUnidade: true }
-    : fotoCatalogo
-      ? {
-          url: fotoCatalogo.media.url,
-          alt: fotoCatalogo.alt || fotoCatalogo.media.alt || produto.name,
-          daUnidade: false,
-        }
-      : null;
 
-  const estado = disponibilidadeDe(produto);
+  if (fotoUnidade) return { url: fotoUnidade.url, alt: fotoUnidade.alt || produto.name, unidade: true };
+  if (fotoCatalogo) {
+    return {
+      url: fotoCatalogo.media.url,
+      alt: fotoCatalogo.alt || fotoCatalogo.media.alt || produto.name,
+      unidade: false,
+    };
+  }
+  return null;
+}
+
+function fatosDe(produto: ProdutoSeminovo) {
+  const unidade = produto.units[0];
   const garantia = unidade?.warrantyMonths ?? produto.warrantyMonths;
-
   const fatos: { rotulo: string; valor: string }[] = [];
-  if (unidade?.manufactureYear) {
-    fatos.push({ rotulo: "Ano de fabricação", valor: String(unidade.manufactureYear) });
-  }
-  if (unidade?.usageHours) {
-    fatos.push({ rotulo: "Horas de uso", valor: `${unidade.usageHours} h` });
-  }
-  if (unidade?.usageCycles) {
-    fatos.push({ rotulo: "Ciclos registrados", valor: String(unidade.usageCycles) });
-  }
+
+  if (unidade?.manufactureYear) fatos.push({ rotulo: "Ano", valor: String(unidade.manufactureYear) });
+  if (unidade?.usageHours) fatos.push({ rotulo: "Uso", valor: `${unidade.usageHours} h` });
+  if (unidade?.usageCycles) fatos.push({ rotulo: "Ciclos", valor: String(unidade.usageCycles) });
   if (unidade && unidade._count.checklist > 0) {
-    fatos.push({
-      rotulo: "Revisão",
-      valor: plural(unidade._count.checklist, "item verificado", "itens verificados"),
-    });
+    fatos.push({ rotulo: "Revisão", valor: plural(unidade._count.checklist, "item", "itens") });
   }
-  if (garantia) {
-    fatos.push({ rotulo: "Garantia", valor: plural(garantia, "mês", "meses") });
-  }
+  if (garantia) fatos.push({ rotulo: "Garantia", valor: plural(garantia, "mês", "meses") });
+
+  return fatos.slice(0, 5);
+}
+
+function CartaoPrincipal({ produto }: { produto: ProdutoSeminovo }) {
+  const foto = fotoDeSeminovo(produto);
+  const fatos = fatosDe(produto);
+  const unidade = produto.units[0];
+  const estado = disponibilidadeDe(produto);
 
   return (
     <Link
       href={`/loja/${produto.slug}`}
-      /* A coluna da foto vale 19rem porque a unidade física é o argumento da
-         faixa: quem compra seminovo compra AQUELA máquina, e uma miniatura de
-         208px com 16px de recuo de cada lado deixava o equipamento do tamanho
-         de um ícone. Sem sombra em repouso — a borda basta, e a sombra fica
-         para o hover. */
-      className="group grid gap-5 rounded-2xl border border-graf-200 bg-white p-4 transition-[border-color,box-shadow] duration-200 hover:border-jb-200 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 sm:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] sm:gap-7 sm:p-5"
+      className="group grid min-h-[33rem] overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.055] shadow-[0_32px_90px_-45px_rgba(0,0,0,0.9)] transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.075] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:grid-cols-[minmax(0,1.08fr)_minmax(20rem,0.92fr)]"
     >
-      <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-gradient-to-b from-graf-50 to-white sm:aspect-square">
+      <div className="relative min-h-80 overflow-hidden bg-[radial-gradient(circle_at_50%_48%,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.93)_42%,rgba(255,255,255,0.08)_74%,transparent_80%)] lg:min-h-full">
         {foto ? (
           <Image
             src={foto.url}
             alt={foto.alt}
             fill
-            sizes="(max-width: 640px) 92vw, 304px"
-            className="object-contain p-3 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
+            sizes="(max-width: 1024px) 92vw, 48vw"
+            className="object-contain p-7 transition-transform duration-700 group-hover:scale-[1.04] sm:p-10"
           />
         ) : (
-          <span
-            aria-hidden
-            className="absolute inset-0 flex items-center justify-center text-graf-300"
-          >
-            <ImageOff className="size-8" />
+          <span className="absolute inset-0 flex items-center justify-center text-white/25" aria-hidden>
+            <ImageOff className="size-12" />
           </span>
         )}
-        {foto?.daUnidade ? (
-          <span className="absolute inset-x-0 bottom-0 bg-graf-950/75 py-2 text-center text-xs font-semibold uppercase tracking-wider text-white">
-            Foto desta unidade
-          </span>
-        ) : null}
+
+        <div className="absolute left-5 top-5 flex flex-wrap gap-2">
+          <Etiqueta tom="marca">Seminovo JB</Etiqueta>
+          {foto?.unidade ? <Etiqueta tom="ok">Foto da unidade</Etiqueta> : null}
+        </div>
       </div>
 
-      <div className="flex min-w-0 flex-col">
-        <div className="flex flex-wrap items-center gap-2">
-          <Etiqueta tom="marca">Seminovo JB</Etiqueta>
-          <Etiqueta tom={estado.tom} ponto>
-            {estado.texto}
-          </Etiqueta>
-        </div>
-
+      <div className="flex min-w-0 flex-col justify-center border-t border-white/10 p-6 sm:p-8 lg:border-l lg:border-t-0 xl:p-9">
         {produto.brand ? (
-          <p className="mt-3.5 text-xs font-semibold uppercase tracking-wider text-graf-500">
+          <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-graf-400">
             {produto.brand.name}
           </p>
         ) : null}
-
-        <h3
-          className={cn(
-            "line-2 text-lg font-bold leading-snug text-graf-950 group-hover:text-jb-700",
-            produto.brand ? "mt-1" : "mt-3.5",
-          )}
-        >
+        <h3 className="mt-2 text-[clamp(1.7rem,2.3vw,2.6rem)] font-extrabold leading-[1.06] tracking-[-0.035em] text-white">
           {produto.name}
         </h3>
-
-        {produto.model ? (
-          <p className="mt-1 truncate text-sm text-graf-500">{produto.model}</p>
-        ) : null}
+        {produto.model ? <p className="mt-2 text-sm text-graf-400">{produto.model}</p> : null}
 
         {fatos.length > 0 ? (
-          <dl className="mt-4 grid grid-cols-2 gap-x-5 gap-y-3 border-t border-graf-100 pt-4">
+          <dl className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-white/10 sm:grid-cols-3">
             {fatos.map((fato) => (
-              <div key={fato.rotulo} className="min-w-0">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-graf-500">
-                  {fato.rotulo}
-                </dt>
-                <dd className="tabular mt-0.5 text-sm font-bold text-graf-900">{fato.valor}</dd>
+              <div key={`${fato.rotulo}-${fato.valor}`} className="bg-graf-950/55 p-3.5">
+                <dt className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-graf-500">{fato.rotulo}</dt>
+                <dd className="mt-1 text-sm font-extrabold text-white">{fato.valor}</dd>
               </div>
             ))}
           </dl>
         ) : null}
 
         {unidade?.conditionNotes.trim() ? (
-          <p className="mt-4 line-2 text-sm leading-relaxed text-graf-600">
-            {unidade.conditionNotes}
-          </p>
+          <p className="mt-5 line-3 text-sm leading-relaxed text-graf-300">{unidade.conditionNotes}</p>
         ) : null}
 
-        <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-5">
-          <BlocoPreco produto={produto} parcelamento={parcelamento} />
-          <span className="inline-flex items-center gap-1.5 pb-1 text-sm font-bold text-jb-700 transition-transform duration-200 group-hover:translate-x-0.5">
-            Ver esta unidade
-            <ArrowRight className="size-4 shrink-0" aria-hidden />
-          </span>
+        <div className="mt-7 border-t border-white/10 pt-6">
+          <p className="text-2xl font-extrabold tracking-tight text-white">
+            {produto.allowDirectPurchase && produto.priceCents > 0
+              ? formatarPreco(produto.priceCents)
+              : "Sob orçamento"}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Etiqueta tom={estado.tom} ponto>
+              {estado.texto}
+            </Etiqueta>
+            <span className="ml-auto inline-flex min-h-11 items-center gap-2 text-sm font-extrabold text-jb-300 transition-transform group-hover:translate-x-1">
+              Ver esta unidade
+              <ArrowRight className="size-4" aria-hidden />
+            </span>
+          </div>
         </div>
+      </div>
+    </Link>
+  );
+}
+
+function CartaoSecundario({ produto }: { produto: ProdutoSeminovo }) {
+  const foto = fotoDeSeminovo(produto);
+  const fatos = fatosDe(produto).slice(0, 3);
+
+  return (
+    <Link
+      href={`/loja/${produto.slug}`}
+      className="group grid w-full min-w-0 grid-cols-[8rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.055] transition-[transform,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.075] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:grid-cols-1 xl:grid-cols-[9.5rem_minmax(0,1fr)]"
+    >
+      <div className="relative min-h-44 bg-white/95 sm:min-h-52 xl:min-h-full">
+        {foto ? (
+          <Image
+            src={foto.url}
+            alt={foto.alt}
+            fill
+            sizes="(max-width: 640px) 36vw, (max-width: 1280px) 46vw, 15vw"
+            className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.05]"
+          />
+        ) : null}
+      </div>
+
+      <div className="flex min-w-0 flex-col justify-center border-l border-white/10 p-4 sm:border-l-0 sm:border-t xl:border-l xl:border-t-0 xl:p-5">
+        <div className="flex items-center gap-2 text-jb-300">
+          <ShieldCheck className="size-4" aria-hidden />
+          <span className="text-[0.66rem] font-extrabold uppercase tracking-[0.12em]">Seminovo JB</span>
+        </div>
+        <h3 className="mt-2 line-2 text-lg font-extrabold leading-snug text-white">{produto.name}</h3>
+
+        {fatos.length > 0 ? (
+          <ul className="mt-4 space-y-2 text-xs text-graf-300">
+            {fatos.map((fato) => (
+              <li key={`${fato.rotulo}-${fato.valor}`} className="flex items-center gap-2">
+                {fato.rotulo === "Uso" || fato.rotulo === "Ciclos" ? (
+                  <Gauge className="size-3.5 shrink-0 text-graf-500" aria-hidden />
+                ) : (
+                  <CheckCircle2 className="size-3.5 shrink-0 text-graf-500" aria-hidden />
+                )}
+                <span className="font-semibold text-graf-400">{fato.rotulo}:</span>
+                <span>{fato.valor}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <span className="mt-4 inline-flex min-h-11 items-center gap-1.5 text-xs font-extrabold text-jb-300">
+          Ver unidade
+          <ArrowRight className="size-3.5" aria-hidden />
+        </span>
       </div>
     </Link>
   );

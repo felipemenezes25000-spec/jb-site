@@ -1,43 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  CalendarClock,
-  ClipboardList,
-  FileText,
-  Headphones,
-  History,
-  Phone,
-  ShieldQuestion,
-  Sparkles,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, ClipboardList, ShieldCheck, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { Etiqueta } from "@/components/ui/data";
 import {
-  BlocoPreco,
   CONDICAO_HOME,
   fotoDe,
   type Parcelamento,
   type ProdutoHome,
 } from "@/components/loja/home/comum";
-import { telHref } from "@/lib/format";
+import { calcularParcelas, formatarPreco } from "@/lib/format";
 import type { SettingsMap } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
-   Hero da página principal
+   Hero editorial da home
 
-   A primeira dobra precisa parecer uma empresa de equipamento de alto ticket,
-   não uma listagem administrativa. O fundo grafite dá peso à marca; o vermelho
-   fica restrito a ação e ênfase; e o produto real do catálogo continua sendo a
-   única imagem do hero — nada de consultório de banco ou número inventado.
-
-   A narrativa comercial agora abre pelo resultado para a clínica e fecha com
-   a continuidade que diferencia a JB: venda, instalação, assistência e
-   prontuário do equipamento. O produto ocupa uma "mesa de luz" própria para
-   funcionar mesmo quando a foto cadastrada tem fundo branco.
+   O hero não é uma ficha de produto aumentada. O equipamento participa da
+   composição como imagem principal, e a informação comercial fica reduzida a
+   uma legenda pequena. A primeira dobra fala da proposta da JB; o catálogo
+   aparece como prova visual, não como um card branco dentro de outro card.
    ============================================================================ */
 
 export function Hero({
@@ -49,123 +32,101 @@ export function Hero({
   produto: ProdutoHome | null;
   parcelamento: Parcelamento;
 }) {
-  const telefone = s.telefone.trim();
+  const cidade = s.endereco_cidade.trim();
 
   return (
     <section className="on-dark relative isolate overflow-hidden border-b border-white/10 bg-graf-950">
-      {/* Luzes grandes e suaves: profundidade sem transformar a home em landing
-          page de SaaS. São puramente decorativas e não carregam imagem. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -left-24 top-16 -z-10 size-80 rounded-full bg-jb-500/12 blur-3xl"
+        className="pointer-events-none absolute inset-0 -z-20 bg-[radial-gradient(circle_at_77%_42%,rgba(255,255,255,0.08),transparent_33%),radial-gradient(circle_at_3%_30%,rgba(224,20,27,0.13),transparent_24%)]"
       />
       <span
         aria-hidden
-        className="pointer-events-none absolute -right-20 -top-24 -z-10 size-[34rem] rounded-full bg-white/7 blur-3xl"
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(115deg,transparent_0%,transparent_44%,rgba(255,255,255,0.035)_44%,rgba(255,255,255,0.035)_44.2%,transparent_44.2%)]"
+        className="pointer-events-none absolute inset-y-0 left-[48%] -z-10 hidden w-px rotate-[24deg] bg-gradient-to-b from-transparent via-white/10 to-transparent lg:block"
       />
 
       <div
         className={cn(
-          "container-jb grid gap-12 py-14 sm:py-16 lg:min-h-[42rem] lg:items-center lg:gap-16 lg:py-16 xl:gap-20",
-          produto && "lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]",
+          "container-jb grid gap-10 py-12 sm:py-14 lg:min-h-[36rem] lg:items-center lg:gap-10 lg:py-12 xl:min-h-[39rem] xl:gap-14",
+          produto && "lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]",
         )}
       >
-        <div className={cn(!produto && "max-w-4xl py-8")}>
-          <div className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.16em] text-jb-400">
-            <span className="h-px w-8 bg-jb-500" aria-hidden />
-            Tecnologia, assistência e pós-venda
-          </div>
+        <div className={cn("relative z-10", !produto && "max-w-5xl py-10")}>
+          <p className="flex items-center gap-3 text-[0.72rem] font-extrabold uppercase tracking-[0.17em] text-jb-300 sm:text-xs">
+            <span className="h-px w-9 bg-jb-500" aria-hidden />
+            Equipamentos odontológicos + assistência técnica
+          </p>
 
-          <h1 className="mt-6 max-w-4xl text-hero text-white">
-            Equipamentos que elevam o padrão da{" "}
-            <span className="text-jb-400">sua clínica.</span>
+          <h1 className="mt-6 max-w-[12ch] text-[clamp(3.2rem,5.25vw,6.6rem)] font-extrabold leading-[0.94] tracking-[-0.055em] text-white">
+            Equipamentos para a sua clínica.
+            <span className="mt-2 block text-jb-400">Suporte para o que vem depois.</span>
           </h1>
 
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-graf-300 sm:text-xl">
-            A JB vende, instala, mantém e acompanha o equipamento depois da compra — com
-            assistência técnica e histórico reunido na Área da Clínica.
+          <p className="mt-7 max-w-2xl text-base leading-relaxed text-graf-300 sm:text-lg xl:text-xl">
+            A JB reúne compra, instalação, assistência e histórico técnico em um só
+            relacionamento — para o equipamento não virar um problema depois que sai da caixa.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <LinkBotao href="/loja" tamanho="lg" className="shadow-[0_14px_32px_-14px_rgba(224,20,27,0.75)]">
-              Ver equipamentos
-              <ArrowRight className="size-4 shrink-0" aria-hidden />
+            <LinkBotao
+              href="/loja"
+              tamanho="lg"
+              className="min-w-48 shadow-[0_16px_42px_-18px_rgba(224,20,27,0.9)]"
+            >
+              Explorar equipamentos
+              <ArrowRight className="size-4" aria-hidden />
             </LinkBotao>
             <LinkBotao
               href="/assistencia-tecnica/solicitar"
               variante="contorno-claro"
               tamanho="lg"
+              className="min-w-48"
             >
-              <Wrench className="size-4 shrink-0" aria-hidden />
-              Falar com a assistência
+              <Wrench className="size-4" aria-hidden />
+              Preciso de assistência
             </LinkBotao>
           </div>
 
-          <ul className="mt-9 grid max-w-2xl gap-3 text-sm text-graf-300 sm:grid-cols-3">
-            <li className="flex items-center gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/7 text-white">
-                <Sparkles className="size-4" aria-hidden />
-              </span>
-              Venda consultiva
-            </li>
-            <li className="flex items-center gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/7 text-white">
-                <Wrench className="size-4" aria-hidden />
-              </span>
-              Assistência JB
-            </li>
-            <li className="flex items-center gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/7 text-white">
-                <ClipboardList className="size-4" aria-hidden />
-              </span>
-              Prontuário técnico
-            </li>
-          </ul>
-
-          {telefone ? (
-            <p className="mt-7 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-graf-400">
-              <Phone className="size-4 shrink-0" aria-hidden />
-              <span>Prefere falar agora?</span>
-              <a
-                href={telHref(telefone)}
-                className="inline-flex min-h-11 items-center font-bold text-white underline-offset-4 hover:text-jb-300 hover:underline"
-              >
-                {telefone}
-              </a>
-              {s.horario.trim() ? (
-                <span className="text-graf-400 sm:before:mr-1.5 sm:before:content-['·']">
-                  {s.horario}
-                </span>
-              ) : null}
-            </p>
-          ) : null}
+          <div className="mt-9 grid max-w-2xl gap-3 border-t border-white/10 pt-6 sm:grid-cols-3">
+            <MiniProva icone={ShieldCheck} titulo="Compra acompanhada" detalhe="Antes e depois da entrega" />
+            <MiniProva
+              icone={Wrench}
+              titulo="Assistência própria"
+              detalhe={cidade ? `Equipe técnica JB em ${cidade}` : "Atendimento técnico JB"}
+            />
+            <MiniProva icone={ClipboardList} titulo="Histórico centralizado" detalhe="Na Área da Clínica" />
+          </div>
         </div>
 
-        {produto ? (
-          <div className="relative lg:py-4">
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] bg-white/5 blur-2xl"
-            />
-            <VitrinePrincipal produto={produto} parcelamento={parcelamento} />
-            <DepoisDaCompra produto={produto} />
-          </div>
-        ) : null}
+        {produto ? <ProdutoEditorial produto={produto} parcelamento={parcelamento} /> : null}
       </div>
     </section>
   );
 }
 
-/**
- * Produto real, tratado como peça de campanha. A fotografia ganha uma mesa de
- * luz clara e o bloco comercial fica no mesmo cartão, sem mini-card flutuando
- * em cima de mini-card.
- */
-function VitrinePrincipal({
+function MiniProva({
+  icone: Icone,
+  titulo,
+  detalhe,
+}: {
+  icone: React.ComponentType<{ className?: string }>;
+  titulo: string;
+  detalhe: string;
+}) {
+  return (
+    <div className="flex min-w-0 gap-3">
+      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/8 text-jb-300 ring-1 ring-inset ring-white/10">
+        <Icone className="size-4" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-bold text-white">{titulo}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-graf-400">{detalhe}</p>
+      </div>
+    </div>
+  );
+}
+
+function ProdutoEditorial({
   produto,
   parcelamento,
 }: {
@@ -174,133 +135,67 @@ function VitrinePrincipal({
 }) {
   const foto = fotoDe(produto);
   const condicao = CONDICAO_HOME[produto.condition];
+  const parcelas = produto.allowDirectPurchase
+    ? calcularParcelas(produto.priceCents, parcelamento.max, parcelamento.minimaCents)
+    : null;
 
   return (
-    <Link
-      href={`/loja/${produto.slug}`}
-      className="group block overflow-hidden rounded-[1.75rem] border border-white/15 bg-white shadow-[0_34px_90px_-34px_rgba(0,0,0,0.85)] transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-    >
-      <div className="relative aspect-[16/11] overflow-hidden bg-gradient-to-br from-white via-white to-graf-100">
-        <span
-          aria-hidden
-          className="absolute -right-20 -top-24 size-72 rounded-full bg-jb-100/65 blur-3xl"
+    <div className="relative min-h-[25rem] sm:min-h-[30rem] lg:min-h-[32rem] xl:min-h-[35rem]">
+      <span
+        aria-hidden
+        className="absolute inset-[7%_3%_4%_8%] rounded-[48%] bg-[radial-gradient(circle_at_52%_48%,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.91)_42%,rgba(255,255,255,0.24)_62%,transparent_73%)] blur-[1px]"
+      />
+      <span
+        aria-hidden
+        className="absolute bottom-[9%] left-[14%] right-[7%] h-16 rounded-[50%] bg-black/55 blur-3xl"
+      />
+
+      {foto ? (
+        <Image
+          src={foto.url}
+          alt={foto.alt}
+          fill
+          preload
+          sizes="(max-width: 1024px) 96vw, 58vw"
+          className="relative z-10 object-contain p-5 drop-shadow-[0_40px_35px_rgba(0,0,0,0.35)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.025] sm:p-8 lg:p-5 xl:p-8"
         />
-        <span
-          aria-hidden
-          className="absolute -bottom-24 -left-16 size-64 rounded-full bg-graf-200/70 blur-3xl"
-        />
+      ) : null}
 
-        {foto ? (
-          <Image
-            src={foto.url}
-            alt={foto.alt}
-            fill
-            preload
-            sizes="(max-width: 1024px) 92vw, 52vw"
-            className="object-contain p-7 drop-shadow-[0_28px_24px_rgba(20,24,28,0.16)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.045] sm:p-10 lg:p-12"
-          />
-        ) : null}
-
-        <span className="absolute left-5 top-5 sm:left-6 sm:top-6">
-          <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-        </span>
-      </div>
-
-      <div className="grid gap-5 border-t border-graf-200 bg-white px-6 py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:px-7 sm:py-7">
+      <div className="absolute bottom-2 left-1/2 z-20 w-[min(92%,38rem)] -translate-x-1/2 rounded-2xl border border-white/15 bg-graf-950/88 p-4 shadow-pop backdrop-blur-xl sm:bottom-4 sm:flex sm:items-end sm:justify-between sm:gap-5 sm:p-5">
         <div className="min-w-0">
-          {produto.brand ? (
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-graf-500">
-              {produto.brand.name}
+          <div className="flex flex-wrap items-center gap-2">
+            <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
+            {produto.brand ? (
+              <span className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-graf-400">
+                {produto.brand.name}
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-2 line-2 text-lg font-extrabold leading-snug text-white sm:text-xl">
+            {produto.name}
+          </p>
+          {produto.allowDirectPurchase && produto.priceCents > 0 ? (
+            <p className="mt-2 text-lg font-extrabold tracking-tight text-white">
+              {formatarPreco(produto.priceCents)}
+              {parcelas ? (
+                <span className="ml-2 text-xs font-medium text-graf-400">
+                  até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
+                </span>
+              ) : null}
             </p>
-          ) : null}
-          <p className="mt-1.5 line-2 text-title text-graf-950">{produto.name}</p>
-          {produto.model ? <p className="mt-1 text-sm text-graf-500">{produto.model}</p> : null}
-          <BlocoPreco produto={produto} parcelamento={parcelamento} className="mt-4" />
+          ) : (
+            <p className="mt-2 text-sm font-bold text-white">Sob orçamento</p>
+          )}
         </div>
 
-        <span className="inline-flex min-h-11 items-center gap-2 font-bold text-jb-700 transition-transform duration-200 group-hover:translate-x-1">
+        <Link
+          href={`/loja/${produto.slug}`}
+          className="mt-4 inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-bold text-jb-300 transition-colors hover:text-white sm:mt-0"
+        >
           Ver equipamento
-          <ArrowRight className="size-4 shrink-0" aria-hidden />
-        </span>
+          <ArrowRight className="size-4" aria-hidden />
+        </Link>
       </div>
-    </Link>
-  );
-}
-
-type ItemPos = {
-  icone: React.ComponentType<{ className?: string }>;
-  titulo: string;
-  detalhe: string;
-};
-
-/**
- * Continuidade do produto em uma placa de vidro escura. Continua sem ícone de
- * confirmação: os itens descrevem o que a plataforma fará, não algo que já foi
- * executado nesta unidade.
- */
-function DepoisDaCompra({ produto }: { produto: ProdutoHome }) {
-  const meses = produto.warrantyMonths ?? 0;
-
-  const itens: ItemPos[] = [
-    {
-      icone: ClipboardList,
-      titulo: "Prontuário Técnico JB",
-      detalhe: "Número de série e histórico na Área da Clínica.",
-    },
-    meses > 0
-      ? {
-          icone: ShieldQuestion,
-          titulo: `Garantia de ${meses} ${meses === 1 ? "mês" : "meses"}`,
-          detalhe: "Prazo cadastrado para este equipamento.",
-        }
-      : {
-          icone: FileText,
-          titulo: "Documentos reunidos",
-          detalhe: "Arquivos da compra no mesmo lugar.",
-        },
-    {
-      icone: History,
-      titulo: "Histórico técnico",
-      detalhe: "Chamados, orçamentos e reparos registrados.",
-    },
-    {
-      icone: CalendarClock,
-      titulo: "Preventiva acompanhada",
-      detalhe: "Próxima revisão vinculada ao equipamento.",
-    },
-  ];
-
-  return (
-    <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-5 backdrop-blur-sm sm:px-6">
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-graf-400">
-          Depois da compra
-        </p>
-        <span className="hidden items-center gap-1.5 text-xs font-semibold text-graf-400 sm:inline-flex">
-          <Headphones className="size-3.5" aria-hidden />
-          Pós-venda integrado
-        </span>
-      </div>
-
-      <ul className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
-        {itens.map((item) => {
-          const Icone = item.icone;
-          return (
-            <li key={item.titulo} className="flex min-w-0 gap-3">
-              <span
-                aria-hidden
-                className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/8 text-jb-300"
-              >
-                <Icone className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-bold leading-snug text-white">{item.titulo}</p>
-                <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-400">{item.detalhe}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
     </div>
   );
 }

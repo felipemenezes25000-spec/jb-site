@@ -13,28 +13,16 @@ import { categoriasDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
 /**
  * Casca da loja pública.
  *
- * A leitura foi separada em duas naturezas, e essa separação é o ponto:
- *
- *   pública        configurações e categorias — iguais para todo mundo,
- *                  cacheadas com etiqueta em `@/lib/loja-publica`;
- *   personalizada  sessão e carrinho — lidas a cada requisição, dentro de
- *                  `<Suspense>`, em `cabecalho-pessoal.tsx`.
- *
- * Antes as quatro leituras estavam no mesmo `Promise.all`. Como duas delas
- * dependem de cookie, a casca inteira era dinâmica — e nenhuma página pública
- * tinha prerender, nem a home, nem a ficha de equipamento. Agora o logo, a
- * busca, o menu e o telefone chegam com a casca; a saudação e o contador
- * transmitem em seguida.
- *
- * O que NÃO pode voltar para cá: qualquer leitura de cookie no corpo deste
- * arquivo. Ela derrubaria a casca de novo, e sem erro visível — só o prerender
- * sumindo silenciosamente.
+ * A leitura pública continua separada da personalizada. O seletor no elemento
+ * raiz só amplia o container do header em monitores largos; não cria um novo
+ * ancestral em torno do `header`, então o comportamento sticky continua
+ * funcionando normalmente.
  */
 export default async function LojaLayout({ children }: { children: React.ReactNode }) {
   const [s, categorias] = await Promise.all([configuracoesPublicas(), categoriasDoMenu()]);
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]">
       <Cabecalho
         categorias={categorias}
         acessoDaConta={

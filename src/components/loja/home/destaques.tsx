@@ -2,8 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ImageOff } from "lucide-react";
 
-import { Etiqueta, TituloSecao } from "@/components/ui/data";
-import { TrilhoOuGrade, colunasParaTotal } from "@/components/ui/grade";
+import { Etiqueta } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
 import {
   BlocoPreco,
@@ -22,23 +21,13 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    Equipamentos em destaque
 
-   Cartão grande, imagem dominante e só a informação que ajuda a decidir:
-   condição, marca, nome, modelo, preço, parcela calculada e disponibilidade.
-   Sem badge inventado, sem contador de visitas, sem selo que o dado não
-   sustenta.
-
-   Quando ainda não há nada marcado como destaque no painel, a faixa mostra o
-   que entrou por último — e diz isso no título, em vez de fingir curadoria.
+   A vitrine usa hierarquia de verdade: um equipamento principal ocupa a área
+   que merece, e os demais funcionam como atalhos. Quatro cards idênticos eram
+   visualmente corretos e comercialmente mornos — nada dizia para onde olhar.
    ============================================================================ */
 
 const PUBLICADO = { status: "active" } as const;
-
-/*
- * Quatro, não seis. No desktop fecha uma fileira exata; no celular, onde a
- * grade vira uma coluna só, cada cartão a mais custa quase 500px de rolagem —
- * e a faixa existe para dar uma amostra do catálogo, não para substituí-lo.
- */
-const NA_VITRINE = 4;
+const NA_VITRINE = 5;
 
 async function carregar() {
   const marcados = await prisma.product.findMany({
@@ -64,46 +53,52 @@ export async function SecaoDestaques() {
   const [{ produtos, curados }, s] = await Promise.all([carregar(), getSettings()]);
   if (produtos.length === 0) return null;
 
+  const [principal, ...secundarios] = produtos;
   const parcelamento = lerParcelamento(s);
 
   return (
     <Secao fundo="clara" espaco="lg" separador>
-      <TituloSecao
-        sobretitulo={curados ? "Em destaque" : "Novidades"}
-        titulo={curados ? "Escolhidos pela equipe técnica" : "Últimos equipamentos publicados"}
-        descricao={
-          curados
-            ? "Os equipamentos que a JB põe à frente agora, com preço e disponibilidade atualizados."
-            : "O que entrou no catálogo por último, com preço e disponibilidade atualizados."
-        }
-        acao={
-          <Link
-            href="/loja"
-            className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-jb-700 transition-colors hover:text-jb-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-          >
-            Ver todo o catálogo
-            <ArrowRight className="size-4 shrink-0" aria-hidden />
-          </Link>
-        }
-        className="mb-10"
-      />
+      <div className="mb-9 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em] text-graf-500">
+            <span className="h-px w-8 bg-jb-500" aria-hidden />
+            {curados ? "Em destaque" : "Novidades"}
+          </p>
+          <h2 className="mt-3 text-section text-graf-950">
+            {curados ? "Equipamentos escolhidos pela JB" : "Últimos equipamentos publicados"}
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-graf-600">
+            Preço, condição e disponibilidade vêm do catálogo — sem vitrine paralela e sem informação desatualizada.
+          </p>
+        </div>
 
-      <TrilhoOuGrade colunas={colunasParaTotal(produtos.length)} espaco="md" como="ul">
-        {produtos.map((produto) => (
-          <li key={produto.slug} className="flex">
-            <CartaoDestaque produto={produto} parcelamento={parcelamento} />
-          </li>
-        ))}
-      </TrilhoOuGrade>
+        <Link
+          href="/loja"
+          className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-bold text-graf-800 transition-colors hover:text-jb-700 sm:self-auto"
+        >
+          Ver todos os equipamentos
+          <ArrowRight className="size-4" aria-hidden />
+        </Link>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] xl:gap-5">
+        <CartaoPrincipal produto={principal} parcelamento={parcelamento} />
+
+        {secundarios.length > 0 ? (
+          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-rows-2 xl:gap-5">
+            {secundarios.map((produto) => (
+              <li key={produto.slug} className="flex min-w-0">
+                <CartaoCompacto produto={produto} parcelamento={parcelamento} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     </Secao>
   );
 }
 
-/**
- * O cartão inteiro é o link: um alvo grande, um único ponto de tabulação e o
- * nome acessível montado a partir do próprio conteúdo.
- */
-export function CartaoDestaque({
+function CartaoPrincipal({
   produto,
   parcelamento,
 }: {
@@ -113,77 +108,109 @@ export function CartaoDestaque({
   const foto = fotoDe(produto);
   const condicao = CONDICAO_HOME[produto.condition];
   const estado = disponibilidadeDe(produto);
-  const esgotado = produto.trackInventory && produto.stock <= 0;
-
-  const desconto =
-    produto.compareAtCents && produto.compareAtCents > produto.priceCents
-      ? Math.round(
-          ((produto.compareAtCents - produto.priceCents) / produto.compareAtCents) * 100,
-        )
-      : 0;
 
   return (
     <Link
       href={`/loja/${produto.slug}`}
-      className="group flex w-full flex-col overflow-hidden rounded-2xl border border-graf-200 bg-white transition-[border-color,box-shadow] duration-200 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+      className="group grid min-h-[31rem] overflow-hidden rounded-[1.75rem] border border-graf-200 bg-white shadow-card transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-graf-300 hover:shadow-pop focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 md:grid-cols-[minmax(0,1.08fr)_minmax(18rem,0.92fr)]"
     >
-      <div className="relative aspect-5/4 overflow-hidden bg-gradient-to-b from-white to-graf-50">
+      <div className="relative min-h-72 overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#fff_0%,#fff_45%,#f2f3f4_100%)] md:min-h-full">
         {foto ? (
           <Image
             src={foto.url}
             alt={foto.alt}
             fill
-            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 30vw"
-            className={cn(
-              "object-contain p-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04] sm:p-5",
-              esgotado && "opacity-60 grayscale",
-            )}
+            sizes="(max-width: 768px) 92vw, 44vw"
+            className="object-contain p-6 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.045] sm:p-8 lg:p-10"
           />
         ) : (
-          <span
-            aria-hidden
-            className="absolute inset-0 flex items-center justify-center text-graf-300"
-          >
-            <ImageOff className="size-10" />
+          <span className="absolute inset-0 flex items-center justify-center text-graf-300" aria-hidden>
+            <ImageOff className="size-12" />
           </span>
         )}
 
-        <span className="absolute left-4 top-4 flex flex-wrap gap-2">
+        <span className="absolute left-5 top-5">
           <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-          {desconto >= 5 && !esgotado ? <Etiqueta tom="ok">−{desconto}%</Etiqueta> : null}
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col border-t border-graf-200 p-5 sm:p-6">
-        {/* Altura reservada nas três linhas de identificação — marca, nome e
-            modelo. Sem isso, um nome de uma linha e outro de duas empurram o
-            preço para alturas diferentes e a fileira inteira desalinha. */}
-        <p className="h-4 text-xs font-semibold uppercase tracking-wider text-graf-500">
-          {produto.brand ? produto.brand.name : null}
-        </p>
-
-        <h3 className="mt-1.5 line-2 min-h-11 text-lg font-bold leading-snug text-graf-950 group-hover:text-jb-700">
+      <div className="flex min-w-0 flex-col justify-center border-t border-graf-200 p-6 sm:p-8 md:border-l md:border-t-0 xl:p-9">
+        {produto.brand ? (
+          <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-graf-500">
+            {produto.brand.name}
+          </p>
+        ) : null}
+        <h3 className="mt-2 text-[clamp(1.75rem,2.3vw,2.7rem)] font-extrabold leading-[1.05] tracking-[-0.035em] text-graf-950 transition-colors group-hover:text-jb-700">
           {produto.name}
         </h3>
+        {produto.model ? <p className="mt-2 text-sm text-graf-500">{produto.model}</p> : null}
 
-        <p className="mt-1 h-5 truncate text-sm text-graf-500">
-          {produto.model ? produto.model : null}
-        </p>
+        <BlocoPreco produto={produto} parcelamento={parcelamento} tamanho="lg" className="mt-7" />
 
-        <div className="mt-auto pt-6">
-          <BlocoPreco produto={produto} parcelamento={parcelamento} />
-
-          <div className="mt-5 flex h-11 items-center justify-between gap-3 border-t border-graf-100 pt-4">
-            <Etiqueta tom={estado.tom} ponto className="min-w-0">
-              <span className="min-w-0 truncate">{estado.texto}</span>
-            </Etiqueta>
-            <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-jb-700 transition-transform duration-200 group-hover:translate-x-0.5">
-              Ver equipamento
-              <ArrowRight className="size-4 shrink-0" aria-hidden />
-            </span>
-          </div>
+        <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-graf-100 pt-6">
+          <Etiqueta tom={estado.tom} ponto>
+            {estado.texto}
+          </Etiqueta>
+          <span className="ml-auto inline-flex min-h-11 items-center gap-2 text-sm font-extrabold text-jb-700 transition-transform group-hover:translate-x-1">
+            Ver equipamento
+            <ArrowRight className="size-4" aria-hidden />
+          </span>
         </div>
       </div>
     </Link>
   );
+}
+
+function CartaoCompacto({
+  produto,
+  parcelamento,
+}: {
+  produto: ProdutoHome;
+  parcelamento: Parcelamento;
+}) {
+  const foto = fotoDe(produto);
+  const condicao = CONDICAO_HOME[produto.condition];
+
+  return (
+    <Link
+      href={`/loja/${produto.slug}`}
+      className="group grid w-full min-w-0 grid-cols-[7.25rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-graf-200 bg-white transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 sm:grid-cols-1 lg:grid-cols-[8.5rem_minmax(0,1fr)] xl:grid-cols-[9.5rem_minmax(0,1fr)]"
+    >
+      <div className="relative min-h-40 overflow-hidden bg-gradient-to-br from-white to-graf-50 sm:min-h-48 lg:min-h-full">
+        {foto ? (
+          <Image
+            src={foto.url}
+            alt={foto.alt}
+            fill
+            sizes="(max-width: 640px) 35vw, (max-width: 1280px) 42vw, 16vw"
+            className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.05] sm:p-4"
+          />
+        ) : null}
+        <span className="absolute left-3 top-3 scale-90 origin-top-left">
+          <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
+        </span>
+      </div>
+
+      <div className="flex min-w-0 flex-col justify-center border-l border-graf-200 p-4 sm:border-l-0 sm:border-t lg:border-l lg:border-t-0 xl:p-5">
+        {produto.brand ? (
+          <p className="truncate text-[0.65rem] font-bold uppercase tracking-[0.12em] text-graf-500">
+            {produto.brand.name}
+          </p>
+        ) : null}
+        <h3 className="mt-1.5 line-2 text-base font-extrabold leading-snug text-graf-950 transition-colors group-hover:text-jb-700 xl:text-lg">
+          {produto.name}
+        </h3>
+        <BlocoPreco produto={produto} parcelamento={parcelamento} className="mt-4" />
+        <span className="mt-4 inline-flex min-h-11 items-center gap-1.5 text-xs font-extrabold text-jb-700">
+          Ver equipamento
+          <ArrowRight className="size-3.5" aria-hidden />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+/** Mantido exportado para quem já usa o cartão de destaque fora desta faixa. */
+export function CartaoDestaque(props: { produto: ProdutoHome; parcelamento: Parcelamento }) {
+  return <CartaoCompacto {...props} />;
 }

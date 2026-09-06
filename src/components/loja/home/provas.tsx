@@ -6,9 +6,8 @@ import type { SettingsMap } from "@/lib/settings";
 /* ============================================================================
    Faixa de confiança
 
-   O hero é emocional; esta faixa é objetiva. Ela usa apenas informação que o
-   próprio banco/configuração consegue provar. Nada de "+5.000 clientes",
-   avaliação inventada ou cobertura nacional sem dado para sustentar.
+   Uma faixa curta, legível em um olhar. O hero já explica a proposta; aqui só
+   entram provas objetivas vindas de configuração e banco.
    ============================================================================ */
 
 type Prova = {
@@ -34,7 +33,7 @@ export function ProvasObjetivas({
       ? {
           icone: CalendarClock,
           titulo: `Desde ${desde}`,
-          detalhe: "Venda e assistência técnica odontológica.",
+          detalhe: "Experiência em equipamento odontológico.",
         }
       : {
           icone: Wrench,
@@ -49,24 +48,24 @@ export function ProvasObjetivas({
         }
       : {
           icone: Wrench,
-          titulo: "Equipe técnica própria",
-          detalhe: cidade ? `Atendimento em ${cidade}, sem terceirização.` : "Atendimento sem terceirização.",
+          titulo: "Assistência própria",
+          detalhe: cidade ? `Equipe JB em ${cidade}, sem terceirização.` : "Equipe técnica da própria JB.",
         },
     contagemProva("equipamentos", equipamentos)
       ? {
           icone: Package,
-          titulo: `${equipamentos} equipamentos no catálogo`,
-          detalhe: "Ficha, condição e disponibilidade atualizadas.",
+          titulo: `${equipamentos} equipamentos`,
+          detalhe: "Catálogo com condição e disponibilidade atuais.",
         }
       : {
           icone: Package,
-          titulo: "Novos, seminovos e recondicionados",
-          detalhe: "A condição real é declarada em cada anúncio.",
+          titulo: "Novo, seminovo e recondicionado",
+          detalhe: "A condição real aparece em cada anúncio.",
         },
     {
       icone: ClipboardList,
-      titulo: "Prontuário do equipamento",
-      detalhe: "Compra, manutenção e chamados reunidos na Área da Clínica.",
+      titulo: "Pós-venda organizado",
+      detalhe: "Compras, chamados e histórico na Área da Clínica.",
     },
   ];
 
@@ -75,6 +74,7 @@ export function ProvasObjetivas({
       <h2 id="titulo-provas-home" className="sr-only">
         Por que escolher a JB
       </h2>
+
       <div className="container-jb">
         <ul className="grid sm:grid-cols-2 lg:grid-cols-4">
           {provas.map((prova, indice) => {
@@ -82,19 +82,23 @@ export function ProvasObjetivas({
             return (
               <li
                 key={prova.titulo}
-                className={`flex min-w-0 gap-4 py-6 sm:px-5 sm:py-7 lg:px-7 ${
+                className={`flex min-w-0 gap-4 py-5 sm:px-5 sm:py-6 lg:px-7 xl:px-9 ${
                   indice > 0 ? "lg:border-l lg:border-graf-200" : ""
                 }`}
               >
                 <span
                   aria-hidden
-                  className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600"
+                  className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-jb-50 text-jb-600"
                 >
                   <Icone className="size-5" />
                 </span>
-                <div className="min-w-0">
-                  <p className="text-base font-extrabold leading-snug text-graf-950">{prova.titulo}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-graf-500">{prova.detalhe}</p>
+                <div className="min-w-0 self-center">
+                  <p className="text-[1.02rem] font-extrabold leading-tight text-graf-950">
+                    {prova.titulo}
+                  </p>
+                  <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-graf-500">
+                    {prova.detalhe}
+                  </p>
                 </div>
               </li>
             );

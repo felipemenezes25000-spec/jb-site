@@ -2,16 +2,15 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 
-import { fotoDe, lerParcelamento, SELECAO_HOME } from "@/components/loja/home/comum";
+import { lerParcelamento, SELECAO_HOME } from "@/components/loja/home/comum";
 import { Hero } from "@/components/loja/home/hero";
 import { ProvasObjetivas } from "@/components/loja/home/provas";
 import { SecaoCategorias } from "@/components/loja/home/categorias";
 import { SecaoDestaques } from "@/components/loja/home/destaques";
 import { SecaoSeminovos } from "@/components/loja/home/seminovos";
-import { SecaoAreaClinica } from "@/components/loja/home/area-clinica";
-import { DemonstracaoDoProntuario } from "@/components/loja/home/demonstracao-prontuario";
-import { TresCaminhos } from "@/components/loja/home/caminhos";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
+import { SecaoAreaClinica } from "@/components/loja/home/area-clinica";
+import { SecaoCentralTecnica } from "@/components/loja/home/central-tecnica";
 import { SecaoMarcas } from "@/components/loja/home/marcas";
 import { ChamadaFinal } from "@/components/loja/home/chamada-final";
 import {
@@ -31,13 +30,13 @@ export const metadata: Metadata = {
 const PUBLICADO = { status: "active" } as const;
 
 /**
- * Página principal.
+ * Home pública.
  *
- * A primeira metade agora é deliberadamente comercial: promessa forte, prova,
- * categorias e equipamentos. O visitante que chegou para comprar não precisa
- * atravessar a explicação do prontuário antes de ver o catálogo. A Área da
- * Clínica e o pós-venda continuam centrais, mas entram depois da vitrine — onde
- * passam a funcionar como diferenciação em vez de barreira para a descoberta.
+ * A página agora tem uma progressão única, sem repetir três vezes os mesmos
+ * caminhos: impacto -> prova -> descoberta -> produto -> seminovo -> serviço ->
+ * pós-venda -> autoridade -> marcas -> ação. A Área da Clínica incorpora a
+ * demonstração do prontuário, e o antigo bloco "Três caminhos" deixa de ser
+ * necessário na home.
  */
 async function dadosDoTopo() {
   "use cache";
@@ -59,10 +58,9 @@ async function dadosDoTopo() {
 
 export default async function HomePage() {
   const [s, vitrine, equipamentos, marcas] = await dadosDoTopo();
-  const fotoDaFaixa = vitrine[3] ? fotoDe(vitrine[3]) : (vitrine[0] ? fotoDe(vitrine[0]) : null);
 
   return (
-    <>
+    <div className="[&_.container-jb]:max-w-[112rem]">
       <Hero configuracoes={s} produto={vitrine[0] ?? null} parcelamento={lerParcelamento(s)} />
 
       <ProvasObjetivas configuracoes={s} equipamentos={equipamentos} marcas={marcas} />
@@ -79,19 +77,19 @@ export default async function HomePage() {
         <SecaoSeminovos />
       </Suspense>
 
+      <SecaoAssistencia configuracoes={s} />
+
       <SecaoAreaClinica />
 
-      <DemonstracaoDoProntuario />
-
-      <TresCaminhos foto={fotoDaFaixa} />
-
-      <SecaoAssistencia configuracoes={s} />
+      <Suspense fallback={null}>
+        <SecaoCentralTecnica />
+      </Suspense>
 
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
       </Suspense>
 
       <ChamadaFinal configuracoes={s} />
-    </>
+    </div>
   );
 }

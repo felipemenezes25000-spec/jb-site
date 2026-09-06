@@ -2,18 +2,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import { TituloSecao } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
 import { prisma } from "@/lib/prisma";
 
 /* ============================================================================
    Marcas
 
-   Só as marcas cadastradas e publicadas que têm produto no ar. Nada de mural
-   de "parceiros" com logotipo de fabricante que a JB não representa.
-
-   Marca sem logotipo aparece pelo nome, com o mesmo peso das outras — o mural
-   continua alinhado em vez de abrir um buraco.
+   Em vez de doze cartões independentes, os logotipos formam uma única faixa
+   editorial. Isso reduz a sensação de tabela e deixa a marca do fabricante
+   respirar sem competir com borda, sombra e CTA em cada célula.
    ============================================================================ */
 
 const PUBLICADO = { status: "active" } as const;
@@ -37,64 +34,58 @@ export async function SecaoMarcas() {
 
   return (
     <Secao fundo="branco" espaco="md" separador>
-      <TituloSecao
-        sobretitulo="Marcas"
-        titulo="As marcas que estão no catálogo"
-        acao={
-          <Link
-            href="/marcas"
-            className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-jb-700 transition-colors hover:text-jb-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-          >
-            Ver todas as marcas
-            <ArrowRight className="size-4 shrink-0" aria-hidden />
-          </Link>
-        }
-        className="mb-8"
-      />
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em] text-graf-500">
+            <span className="h-px w-8 bg-jb-500" aria-hidden />
+            Marcas no catálogo
+          </p>
+          <h2 className="mt-3 text-section text-graf-950">Equipamentos que a JB vende e acompanha</h2>
+        </div>
 
-      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-graf-200 bg-graf-200 sm:grid-cols-3 lg:grid-cols-6">
-        {/* As divisórias são o próprio fundo do mosaico aparecendo pelo vão de
-            1px. Linha incompleta deixaria esse fundo à mostra como um bloco
-            cinza vazio, então as sobras viram células brancas. Seis é múltiplo
-            de 2 e de 3: completar até o próximo múltiplo fecha a última linha
-            nos três pontos de quebra de uma vez. */}
+        <Link
+          href="/marcas"
+          className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-extrabold text-graf-800 transition-colors hover:text-jb-700 sm:self-auto"
+        >
+          Ver todas as marcas
+          <ArrowRight className="size-4" aria-hidden />
+        </Link>
+      </div>
+
+      <ul className="mt-8 grid overflow-hidden rounded-2xl border border-graf-200 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {marcas.map((marca) => (
-          <li key={marca.slug} className="flex bg-white">
+          <li key={marca.slug} className="flex border-b border-graf-200 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b lg:[&:nth-last-child(-n+3)]:border-b-0 xl:border-b-0 xl:border-r xl:last:border-r-0">
             <Link
               href={`/marcas/${marca.slug}`}
-              className="flex min-h-24 w-full items-center justify-center px-4 py-6 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
+              className="group flex min-h-28 w-full items-center justify-center bg-white px-5 py-7 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
             >
               {marca.logo ? (
                 <Image
                   src={marca.logo.url}
                   alt={marca.logo.alt || marca.name}
-                  width={160}
-                  height={48}
-                  className="h-9 w-auto max-w-full object-contain"
+                  width={180}
+                  height={56}
+                  className="h-9 w-auto max-w-full object-contain opacity-70 grayscale transition-[filter,opacity,transform] duration-300 group-hover:scale-[1.03] group-hover:opacity-100 group-hover:grayscale-0"
                 />
               ) : (
-                <span className="text-center text-base font-extrabold tracking-tight text-graf-800">
+                <span className="text-center text-lg font-extrabold tracking-tight text-graf-700 transition-colors group-hover:text-graf-950">
                   {marca.name}
                 </span>
               )}
             </Link>
           </li>
         ))}
-
-        {Array.from({ length: (6 - (marcas.length % 6)) % 6 }, (_, i) => (
-          <li key={`vao-${i}`} aria-hidden className="min-h-24 bg-white" />
-        ))}
       </ul>
 
-      <p className="mt-6 text-sm leading-relaxed text-graf-600">
-        Não achou a sua marca?{" "}
+      <p className="mt-5 text-sm leading-relaxed text-graf-600">
+        Não encontrou a marca?{" "}
         <Link
           href="/assistencia-tecnica/solicitar"
-          className="inline-flex min-h-11 items-center font-bold text-jb-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+          className="inline-flex min-h-11 items-center font-extrabold text-jb-700 underline-offset-4 hover:underline"
         >
           Informe marca e modelo ao abrir o chamado
         </Link>{" "}
-        e a equipe avalia o atendimento.
+        para a equipe avaliar o atendimento.
       </p>
     </Secao>
   );
