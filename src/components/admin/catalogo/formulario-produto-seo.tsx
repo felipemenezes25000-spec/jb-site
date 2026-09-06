@@ -88,7 +88,7 @@ export function FormularioProdutoSeo({
             />
 
             <div className="rounded-lg border border-graf-200 bg-graf-50/60 p-4">
-              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-graf-500">
+              <p className="mb-3 text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
                 Prévia do resultado de busca
               </p>
               <p className="text-xs text-ok-700">jbsolucoes.com.br › loja › {produto.slug}</p>
@@ -103,7 +103,7 @@ export function FormularioProdutoSeo({
               <p className="line-2 mt-1 text-sm leading-relaxed text-graf-600">
                 {descricaoFinal || "Sem resumo: escreva um na aba Básico ou preencha a descrição aqui."}
               </p>
-              <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-graf-500">
+              <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem] text-graf-500">
                 <span className={tituloFinal.length > LIMITE_TITULO ? "font-semibold text-warn-700" : undefined}>
                   Título: {tituloFinal.length}/{LIMITE_TITULO}
                   {tituloFinal.length > LIMITE_TITULO ? " — o Google deve cortar" : ""}

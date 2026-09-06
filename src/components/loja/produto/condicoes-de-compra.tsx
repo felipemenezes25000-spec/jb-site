@@ -10,6 +10,10 @@ import { formatarPreco } from "@/lib/format";
    preenchido no cadastro ou na configuração da loja — a lista encolhe em vez
    de exibir travessão.
 
+   Sem moldura de propósito: este bloco corre logo abaixo da caixa de compra,
+   e uma segunda borda ali dentro faria a coluna virar uma pilha de cartões.
+   Fio fino entre as linhas basta.
+
    A única linha fixa é a assistência própria, porque é fato da JB: quem vende
    é a mesma equipe técnica que atende depois.
    ============================================================================ */
@@ -105,33 +109,33 @@ export function CondicoesDeCompra({
   });
 
   return (
-    <div className="rounded-xl border border-graf-200 bg-white p-5 shadow-card sm:p-6">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-graf-500">
+    <section aria-labelledby="condicoes-desta-compra">
+      <h2
+        id="condicoes-desta-compra"
+        className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
+      >
         Condições desta compra
       </h2>
-      <ul className="mt-4 space-y-4">
+      <ul className="mt-3 divide-y divide-graf-200 border-t border-graf-200">
         {linhas.map((linha) => {
           const Icone = linha.icone;
           return (
-            <li key={linha.titulo} className="flex gap-3.5">
-              <span
-                aria-hidden
-                className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-600"
-              >
-                <Icone className="size-[18px]" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-bold text-graf-900">{linha.titulo}</span>
+            <li key={linha.titulo} className="flex gap-3 py-3.5">
+              <Icone className="mt-0.5 size-[18px] shrink-0 text-graf-500" aria-hidden />
+              <div className="min-w-0">
+                <p className="text-[0.9375rem] font-semibold text-graf-900">
+                  {linha.titulo}
+                </p>
                 {linha.detalhe ? (
-                  <span className="mt-0.5 block text-sm leading-relaxed text-graf-500">
+                  <p className="mt-0.5 text-sm leading-relaxed text-graf-500">
                     {linha.detalhe}
-                  </span>
+                  </p>
                 ) : null}
-              </span>
+              </div>
             </li>
           );
         })}
       </ul>
-    </div>
+    </section>
   );
 }

@@ -69,7 +69,7 @@ export default async function ServicosPage() {
         trilha={<Trilha itens={TRILHA} />}
         sobretitulo="Equipe técnica"
         titulo="Serviços técnicos"
-        resumo="O que a equipe da JB executa além do conserto: instalar, revisar, treinar a equipe da clínica e retirar equipamento que saiu de uso. Preço base publicado quando o serviço tem valor fechado; o resto sai no orçamento, depois de saber o que a clínica precisa."
+        resumo="O que a equipe da JB executa além do conserto: instalar, revisar, treinar a equipe da clínica e retirar equipamento que saiu de uso. Onde existe valor fechado, o preço está publicado; no resto, ele sai no orçamento, depois de saber o que a clínica precisa."
       />
 
       <Secao espaco="md">
@@ -85,11 +85,13 @@ export default async function ServicosPage() {
             {ordenados.map((servico) => (
               <li key={servico.id}>
                 <Cartao interativo className="relative flex h-full flex-col p-6">
-                  <p className="text-xs font-bold uppercase tracking-wider text-jb-600">
+                  {/* O tipo é degrau de leitura, não destaque: o vermelho da
+                      página fica na ação de cada cartão e no botão da faixa. */}
+                  <p className="label-mono uppercase text-graf-500">
                     {ROTULO_SERVICO[servico.kind]}
                   </p>
 
-                  <h2 className="mt-2 text-lg font-bold leading-snug text-graf-950">
+                  <h2 className="mt-2.5 text-lg font-bold leading-snug text-graf-950">
                     <Link
                       href={`/servicos/${servico.slug}`}
                       className="after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -99,17 +101,17 @@ export default async function ServicosPage() {
                   </h2>
 
                   {servico.description ? (
-                    <p className="line-3 mt-2 text-sm leading-relaxed text-graf-600">
+                    <p className="line-3 mt-2.5 text-sm leading-relaxed text-graf-600">
                       {servico.description}
                     </p>
                   ) : null}
 
-                  <div className="mt-auto flex items-end justify-between gap-4 border-t border-graf-100 pt-5">
+                  <div className="mt-auto flex flex-wrap items-end justify-between gap-x-4 gap-y-3 border-t border-graf-200 pt-5">
                     <div>
                       {servico.priceCents !== null && servico.priceCents > 0 ? (
                         <>
                           <p className="label-mono uppercase text-graf-500">A partir de</p>
-                          <p className="tabular mt-0.5 text-lg font-bold text-graf-950">
+                          <p className="tabular mt-1 text-xl font-extrabold tracking-tight text-graf-950">
                             {formatarPreco(servico.priceCents)}
                           </p>
                         </>

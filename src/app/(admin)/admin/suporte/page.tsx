@@ -119,7 +119,7 @@ export default async function PaginaSuporte({
       rotulo: "Ticket",
       renderizar: (linha) => (
         <span className="block">
-          <span className="label-mono block text-xs text-graf-500">{linha.numero}</span>
+          <span className="label-mono block text-graf-500">{linha.numero}</span>
           <span className="block font-semibold text-graf-900">{linha.assunto}</span>
         </span>
       ),
@@ -151,17 +151,17 @@ export default async function PaginaSuporte({
       renderizar: (linha) => (
         <span className="block text-graf-600">
           {linha.atualizado}
-          <span className="block text-xs text-graf-500">aberto {linha.espera}</span>
+          <span className="block text-[0.8125rem] text-graf-500">aberto {linha.espera}</span>
         </span>
       ),
     },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         titulo="Suporte ao cliente"
-        descricao="Tickets abertos pelo site e pela área do cliente. Responder aqui manda um aviso para a conta de quem perguntou."
+        descricao="Tickets abertos pelo site e pela Área da Clínica. Responder aqui manda um aviso para a conta de quem perguntou."
         etiqueta={
           naFila > 0 ? (
             <Etiqueta tom="alerta" ponto>
@@ -215,7 +215,7 @@ export default async function PaginaSuporte({
           icone: LifeBuoy,
           titulo: "Nenhum ticket com esses filtros",
           descricao:
-            "Tickets aparecem aqui quando alguém pede ajuda pelo site ou pela área do cliente.",
+            "Tickets aparecem aqui quando alguém pede ajuda pelo site ou pela Área da Clínica.",
         }}
       />
 

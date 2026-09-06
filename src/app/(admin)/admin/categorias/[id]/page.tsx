@@ -82,17 +82,16 @@ export default async function PaginaCategoria({
         ]}
       />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-graf-950">{categoria.name}</h1>
+            <h1 className="text-2xl font-bold leading-tight text-graf-950">{categoria.name}</h1>
             <Etiqueta tom={categoria.published ? "ok" : "neutro"}>
               {categoria.published ? "Publicada" : "Oculta"}
             </Etiqueta>
           </div>
           <p className="mt-1 text-sm text-graf-500">
-            {categoria._count.products} {plural(categoria._count.products, "produto", "produtos")} ·{" "}
-            {categoria._count.children}{" "}
+            {plural(categoria._count.products, "produto", "produtos")} ·{" "}
             {plural(categoria._count.children, "subcategoria", "subcategorias")}
             {categoria.published ? (
               <>
@@ -130,10 +129,10 @@ export default async function PaginaCategoria({
       {bloqueiaExclusao && !somenteLeitura ? (
         <Aviso tom="info" titulo="Não dá para apagar agora">
           {categoria._count.products > 0
-            ? `Há ${categoria._count.products} ${plural(categoria._count.products, "produto", "produtos")} nesta categoria. `
+            ? `Há ${plural(categoria._count.products, "produto", "produtos")} nesta categoria. `
             : ""}
           {categoria._count.children > 0
-            ? `Há ${categoria._count.children} ${plural(categoria._count.children, "subcategoria", "subcategorias")} abaixo dela. `
+            ? `Há ${plural(categoria._count.children, "subcategoria", "subcategorias")} abaixo dela. `
             : ""}
           Mova o que estiver aqui para outra categoria e a exclusão fica liberada. Se a intenção é
           só tirá-la do site, desmarque &quot;Publicada&quot;.
@@ -197,10 +196,16 @@ export default async function PaginaCategoria({
                     <span className="block truncate text-sm font-semibold text-graf-900">
                       {produto.name}
                     </span>
-                    <span className="block truncate text-xs text-graf-500">{produto.sku}</span>
+                    <span className="block truncate text-[0.8125rem] text-graf-500">
+                      {produto.sku}
+                    </span>
                   </span>
-                  <span className="tabular shrink-0 text-sm font-semibold text-graf-800">
-                    {produto.priceCents > 0 ? formatarPreco(produto.priceCents) : "—"}
+                  <span className="shrink-0 text-sm font-semibold text-graf-800">
+                    {produto.priceCents > 0 ? (
+                      <span className="tabular">{formatarPreco(produto.priceCents)}</span>
+                    ) : (
+                      <span className="font-normal text-graf-500">Sob consulta</span>
+                    )}
                   </span>
                 </Link>
               </li>

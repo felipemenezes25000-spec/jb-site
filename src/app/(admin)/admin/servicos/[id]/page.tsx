@@ -51,10 +51,10 @@ export default async function PaginaServico({ params }: { params: Promise<{ id: 
         ]}
       />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-graf-950">{servico.name}</h1>
+            <h1 className="text-2xl font-bold leading-tight text-graf-950">{servico.name}</h1>
             <Etiqueta tom={servico.published ? "ok" : "neutro"}>
               {servico.published ? "Publicado" : "Oculto"}
             </Etiqueta>
@@ -63,8 +63,7 @@ export default async function PaginaServico({ params }: { params: Promise<{ id: 
             {servico.priceCents === null
               ? "Sob orçamento"
               : `Preço base ${formatarPreco(servico.priceCents)}`}{" "}
-            · em {servico.addons.length}{" "}
-            {plural(servico.addons.length, "produto", "produtos")}
+            · em {plural(servico.addons.length, "produto", "produtos")}
           </p>
         </div>
 
@@ -131,7 +130,7 @@ export default async function PaginaServico({ params }: { params: Promise<{ id: 
                     <span className="block truncate text-sm font-semibold text-graf-900">
                       {addon.product.name}
                     </span>
-                    <span className="block truncate text-xs text-graf-500">
+                    <span className="block truncate text-[0.8125rem] text-graf-500">
                       {addon.product.sku}
                     </span>
                   </span>

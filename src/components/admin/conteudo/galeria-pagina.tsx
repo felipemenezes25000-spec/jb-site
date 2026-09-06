@@ -75,13 +75,13 @@ export function GaleriaDaPagina({
                 <p className="truncate text-sm font-semibold text-graf-900">
                   {imagem.caption || imagem.media.filename}
                 </p>
-                <p className="truncate text-xs text-graf-500">
+                <p className="truncate text-[0.8125rem] text-graf-500">
                   {imagem.caption ? imagem.media.filename : "Sem legenda"}
                   {imagem.media.width && imagem.media.height
                     ? ` · ${imagem.media.width}×${imagem.media.height}`
                     : ""}
                 </p>
-                <p className="mt-1 text-xs text-graf-500">
+                <p className="mt-1 text-[0.8125rem] text-graf-500">
                   Posição {indice + 1} de {imagens.length}
                 </p>
               </div>

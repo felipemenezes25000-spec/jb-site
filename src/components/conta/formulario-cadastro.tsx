@@ -22,14 +22,40 @@ type TipoPessoa = "fisica" | "juridica";
  * tela vira uma coluna sem começo nem fim, e quem preenche perde o fio.
  */
 
-/** Bloco nomeado do formulário — `fieldset` de verdade, com legenda real. */
-function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+/**
+ * Bloco nomeado do formulário — `fieldset` de verdade, com legenda real.
+ *
+ * O número à esquerda dá o degrau que oito campos numa coluna só não dão: sem
+ * ele, a pessoa não sabe se está no começo ou no fim do cadastro. Ele é
+ * decorativo para o leitor de tela, que já ouve a legenda do grupo.
+ */
+function Bloco({
+  numero,
+  titulo,
+  children,
+}: {
+  numero: number;
+  titulo: string;
+  children: React.ReactNode;
+}) {
   return (
     <fieldset>
       {/* o respiro fica no `pt-5` do conteúdo: margem em `legend` é território
-          de comportamento antigo de navegador, e aqui não precisa disso */}
-      <legend className="block w-full border-b border-graf-200 pb-2 text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
-        {titulo}
+          de comportamento antigo de navegador, e aqui não precisa disso.
+          O flex mora num span dentro da legenda, e não na própria legenda,
+          porque `display` em `legend` ainda tem cantos escuros de navegador. */}
+      <legend className="block w-full border-b border-graf-200 pb-2.5">
+        <span className="flex items-center gap-2.5">
+          <span
+            className="tabular flex size-6 shrink-0 items-center justify-center rounded-md bg-graf-100 text-xs font-bold text-graf-700"
+            aria-hidden
+          >
+            {numero}
+          </span>
+          <span className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+            {titulo}
+          </span>
+        </span>
       </legend>
       <div className="space-y-5 pt-5">{children}</div>
     </fieldset>
@@ -141,7 +167,7 @@ export function FormularioCadastro({
         </p>
       ) : null}
 
-      <Bloco titulo="Seus dados">
+      <Bloco numero={1} titulo="Seus dados">
         <Campo
           rotulo="Nome completo"
           name="nome"
@@ -180,7 +206,7 @@ export function FormularioCadastro({
         />
       </Bloco>
 
-      <Bloco titulo="Para a nota fiscal e a garantia">
+      <Bloco numero={2} titulo="Para a nota fiscal e a garantia">
         <Opcoes<TipoPessoa>
           nome="tipoPessoa"
           rotulo="Você compra como"
@@ -220,7 +246,7 @@ export function FormularioCadastro({
         ) : null}
       </Bloco>
 
-      <Bloco titulo="Senha de acesso">
+      <Bloco numero={3} titulo="Senha de acesso">
         <div className="grid gap-5 sm:grid-cols-2">
           <CampoSenha
             rotulo="Senha"

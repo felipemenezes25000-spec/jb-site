@@ -181,12 +181,12 @@ export default async function PaginaUnidades({ params }: Props) {
                           )}
 
                           {unidade.notes ? (
-                            <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-graf-500">
+                            <p className="mt-2 whitespace-pre-line text-[0.8125rem] leading-relaxed text-graf-500">
                               {unidade.notes}
                             </p>
                           ) : null}
 
-                          <p className="mt-2 flex items-center gap-1.5 text-xs text-graf-500">
+                          <p className="mt-2 flex items-center gap-1.5 text-[0.8125rem] text-graf-500">
                             <MonitorCog className="size-3.5 shrink-0" aria-hidden />
                             {plural(
                               unidade._count.equipments,
@@ -238,12 +238,12 @@ export default async function PaginaUnidades({ params }: Props) {
                   {enderecos.map((endereco) => (
                     <li key={endereco.id}>
                       <span className="font-medium text-graf-900">{endereco.rotulo}</span>
-                      <span className="block text-xs text-graf-500">{endereco.resumo}</span>
+                      <span className="block text-[0.8125rem] text-graf-500">{endereco.resumo}</span>
                     </li>
                   ))}
                 </ul>
               )}
-              <p className="mt-4 text-xs leading-relaxed text-graf-500">
+              <p className="mt-4 text-[0.8125rem] leading-relaxed text-graf-500">
                 O endereço da unidade é o mesmo registro usado na entrega. Corrigir a rua
                 aqui conserta pedido e visita técnica de uma vez.
               </p>

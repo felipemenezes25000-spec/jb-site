@@ -517,7 +517,9 @@ function CampoBusca({
       <button
         type="submit"
         aria-label="Buscar"
-        className="mr-1 flex size-10 shrink-0 items-center justify-center rounded-full text-graf-600 transition-colors hover:bg-graf-200 hover:text-graf-950 active:bg-graf-300"
+        /* 44px: é alvo de toque, e a caixa tem 44–48px de altura — daí o
+           recuo de 2px só na versão alta. */
+        className="mr-0.5 flex size-11 shrink-0 items-center justify-center rounded-full text-graf-600 transition-colors hover:bg-graf-200 hover:text-graf-950 active:bg-graf-300"
       >
         <Search className="size-4.5" aria-hidden />
       </button>

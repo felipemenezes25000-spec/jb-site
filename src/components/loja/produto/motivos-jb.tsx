@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
    Faixa curta logo abaixo do preço, com o que a empresa é de fato: tempo de
    atividade, equipe própria, cidade de atendimento e a garantia registrada
-   NESTE cadastro.
+   NESTE cadastro. Três colunas separadas por fio — não três cartões.
 
    Cada item nasce de um campo real — configuração da loja ou cadastro do
    produto. Sem nada para dizer, a faixa não existe: é melhor não ter do que
@@ -70,25 +70,27 @@ export function MotivosJB({
 
   return (
     <Secao fundo="clara" espaco="md" separador>
+      <h2 className="text-title texto-forte">Por que comprar na JB</h2>
+
       <ul
         className={cn(
-          "grid gap-8 sm:gap-10 sm:divide-x sm:divide-graf-200",
-          "sm:[&>*]:px-8 sm:[&>*:first-child]:pl-0 sm:[&>*:last-child]:pr-0",
-          motivos.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3",
+          /* O fio vertical vive na borda do item, então o respiro tem de vir do
+             `px` e não do `gap` — com os dois, a coluna do meio ficaria com
+             menos de 150px de texto em 768px. */
+          "mt-8 grid gap-y-10 md:gap-x-0 md:divide-x md:divide-graf-200 lg:mt-10",
+          "md:[&>*]:px-8 md:[&>*:first-child]:pl-0 md:[&>*:last-child]:pr-0",
+          motivos.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3",
         )}
       >
         {motivos.map((motivo) => {
           const Icone = motivo.icone;
           return (
             <li key={motivo.titulo}>
-              <span
-                aria-hidden
-                className="flex size-10 items-center justify-center rounded-lg bg-white text-jb-600 shadow-card"
-              >
-                <Icone className="size-5" />
-              </span>
-              <p className="mt-4 text-base font-bold text-graf-950">{motivo.titulo}</p>
-              <p className="mt-1.5 text-sm leading-relaxed text-graf-600">{motivo.texto}</p>
+              <Icone className="size-5 text-jb-600" aria-hidden />
+              <p className="mt-3.5 text-base font-bold text-graf-950">{motivo.titulo}</p>
+              <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+                {motivo.texto}
+              </p>
             </li>
           );
         })}

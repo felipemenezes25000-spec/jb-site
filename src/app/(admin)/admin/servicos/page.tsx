@@ -67,7 +67,7 @@ export default async function PaginaServicos() {
       renderizar: (linha) => (
         <span className="block">
           <span className="block truncate font-semibold">{linha.name}</span>
-          <span className="block truncate text-xs font-normal text-graf-500">/{linha.slug}</span>
+          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">/{linha.slug}</span>
         </span>
       ),
     },
@@ -92,22 +92,24 @@ export default async function PaginaServicos() {
       rotulo: "Em produtos",
       alinhamento: "direita",
       esconderNoMobile: true,
-      renderizar: (linha) => (
-        <span className="tabular">
-          {linha._count.addons === 0 ? "—" : linha._count.addons}
-        </span>
-      ),
+      renderizar: (linha) =>
+        linha._count.addons === 0 ? (
+          <span className="text-graf-500">Nenhum</span>
+        ) : (
+          <span className="tabular">{linha._count.addons}</span>
+        ),
     },
     {
       chave: "orderItems",
       rotulo: "Vendas",
       alinhamento: "direita",
       esconderNoMobile: true,
-      renderizar: (linha) => (
-        <span className="tabular">
-          {linha._count.orderItems === 0 ? "—" : linha._count.orderItems}
-        </span>
-      ),
+      renderizar: (linha) =>
+        linha._count.orderItems === 0 ? (
+          <span className="text-graf-500">Nenhuma</span>
+        ) : (
+          <span className="tabular">{linha._count.orderItems}</span>
+        ),
     },
     {
       chave: "published",
@@ -124,19 +126,19 @@ export default async function PaginaServicos() {
     <div className="space-y-6">
       <Trilha itens={[{ rotulo: "Painel", href: "/admin" }, { rotulo: "Serviços" }]} />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-graf-950">Serviços</h1>
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold leading-tight text-graf-950">Serviços</h1>
           <p className="mt-1 text-sm text-graf-500">
             {servicos.length === 0
               ? "O que a JB vende além do equipamento."
-              : `${servicos.length} ${plural(servicos.length, "serviço cadastrado", "serviços cadastrados")}.`}
+              : `${plural(servicos.length, "serviço cadastrado", "serviços cadastrados")}.`}
           </p>
         </div>
         {podeMexer ? (
           <LinkBotao href="/admin/servicos/novo">Novo serviço</LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-xs font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
             Somente consulta
           </p>
         )}

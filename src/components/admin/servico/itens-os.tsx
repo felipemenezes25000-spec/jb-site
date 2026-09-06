@@ -87,7 +87,7 @@ export function ItensDaOS({
             <li key={item.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-3">
               <span
                 className={cn(
-                  "shrink-0 rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+                  "shrink-0 rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wide",
                   COR_TIPO[item.kind] ?? "bg-graf-100 text-graf-600",
                 )}
               >
@@ -136,7 +136,7 @@ export function ItensDaOS({
       )}
 
       {/* ------------------------------------------------------------ totais */}
-      <dl className="rounded-lg bg-graf-50 px-4 py-3 text-sm">
+      <dl className="rounded-lg bg-graf-50 px-4 py-3.5 text-sm">
         <Linha rotulo="Peças" valor={totais.partsCents} />
         <Linha rotulo="Mão de obra" valor={totais.laborCents} />
         <Linha rotulo="Deslocamento" valor={totais.travelCents} />
@@ -236,9 +236,11 @@ function Linha({
   destaque?: "desconto";
 }) {
   return (
-    <div className="flex items-center justify-between py-0.5">
+    /* Mesmo ritmo da linha de total do backoffice comercial: rótulo em
+       grafite médio, valor em seminegrito e tabular. */
+    <div className="flex items-baseline justify-between gap-4 py-1.5">
       <dt className="text-graf-600">{rotulo}</dt>
-      <dd className={cn("tabular font-medium", destaque ? "text-jb-700" : "text-graf-800")}>
+      <dd className={cn("tabular font-semibold", destaque ? "text-ok-700" : "text-graf-800")}>
         {formatarPreco(valor)}
       </dd>
     </div>

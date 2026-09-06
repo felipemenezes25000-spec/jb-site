@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, MessageCircle, ShoppingCart, Wrench } from "lucide-react";
+import { ArrowRight, MessageCircle, ShieldCheck, ShoppingCart, Wrench } from "lucide-react";
 
 import { CampoCupom } from "@/components/loja/campo-cupom";
 import { LinhasCarrinho } from "@/components/loja/linhas-carrinho";
@@ -77,6 +77,18 @@ export default async function CarrinhoPage() {
               <LinkBotao href="/orcamento" variante="secundario">
                 Pedir orçamento
               </LinkBotao>
+              {/* a saída pelo WhatsApp só existe quando há número cadastrado */}
+              {whatsapp ? (
+                <LinkBotao
+                  href={whatsapp}
+                  variante="texto"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="size-4" aria-hidden />
+                  Falar com a JB
+                </LinkBotao>
+              ) : null}
             </div>
           }
           className="mt-10"
@@ -132,7 +144,7 @@ export default async function CarrinhoPage() {
           <aside aria-labelledby="titulo-resumo" className="min-w-0 lg:sticky lg:top-28">
             <Cartao className="p-5 sm:p-6">
               <h2 id="titulo-resumo" className="text-lg font-bold text-graf-950">
-                Resumo
+                Resumo do pedido
               </h2>
 
               <dl className="mt-5 space-y-3 text-sm">
@@ -162,23 +174,23 @@ export default async function CarrinhoPage() {
 
                 <div className="flex items-start justify-between gap-4">
                   <dt className="text-graf-600">Frete</dt>
-                  <dd className="max-w-40 text-right text-xs leading-snug text-graf-500">
+                  <dd className="max-w-44 text-right text-[0.8125rem] leading-snug text-graf-500">
                     calculado na próxima etapa, pelo CEP
                   </dd>
                 </div>
               </dl>
 
               {totais.cupomErro ? (
-                <p className="mt-4 rounded-lg bg-warn-50 px-3.5 py-2.5 text-xs leading-relaxed text-warn-700 ring-1 ring-inset ring-warn-500/25">
+                <p className="mt-4 rounded-lg bg-warn-50 px-3.5 py-2.5 text-[0.8125rem] leading-relaxed text-warn-700 ring-1 ring-inset ring-warn-500/25">
                   {totais.cupomErro}
                 </p>
               ) : null}
 
               <CampoCupom aplicado={totais.cupomCodigo} />
 
-              <div className="mt-5 flex items-baseline justify-between gap-4 border-t border-graf-200 pt-5">
+              <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-graf-200 pt-5">
                 <span className="text-base font-bold text-graf-900">Total</span>
-                <span className="text-2xl font-extrabold tabular tracking-tight text-graf-950">
+                <span className="text-3xl font-extrabold tabular tracking-tight text-graf-950">
                   {formatarPreco(totais.totalCents)}
                 </span>
               </div>
@@ -200,17 +212,23 @@ export default async function CarrinhoPage() {
                 </p>
               )}
 
-              <p className="mt-4 text-center text-xs leading-relaxed text-graf-500">
-                O valor final aparece antes da confirmação. Nada é cobrado até você concluir o
-                pagamento.
+              <p className="mt-4 flex items-start justify-center gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                <span>
+                  Pagamento seguro. Você confere o valor final antes de confirmar, e nada é
+                  cobrado até lá.
+                </span>
               </p>
             </Cartao>
 
             <div className="mt-5 rounded-xl border border-graf-200 bg-graf-50 p-5">
               <p className="text-sm font-bold text-graf-900">Ficou com dúvida no equipamento?</p>
+              {/* o ano só entra na frase quando existe no cadastro: sem ele a
+                  frase continua correta, em vez de terminar em "desde ." */}
               <p className="mt-1.5 text-sm leading-relaxed text-graf-600">
-                A equipe técnica da JB atende São Paulo desde {s.empresa_desde} e ajuda a escolher
-                antes de você fechar.
+                {s.empresa_desde
+                  ? `A equipe técnica da JB atende São Paulo desde ${s.empresa_desde} e ajuda a escolher o equipamento antes de você fechar.`
+                  : "A equipe técnica da JB ajuda a escolher o equipamento antes de você fechar."}
               </p>
               <div className="mt-4 space-y-2.5">
                 {whatsapp ? (
@@ -226,7 +244,7 @@ export default async function CarrinhoPage() {
                   </LinkBotao>
                 ) : null}
                 {s.horario ? (
-                  <p className="text-center text-xs text-graf-500">{s.horario}</p>
+                  <p className="text-center text-[0.8125rem] text-graf-500">{s.horario}</p>
                 ) : null}
               </div>
             </div>

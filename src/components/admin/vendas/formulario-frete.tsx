@@ -402,7 +402,7 @@ export function GestorFrete({
                       >
                         <div className="min-w-0">
                           <p className="font-medium text-graf-900">{zona.nome}</p>
-                          <p className="tabular text-xs text-graf-500">
+                          <p className="tabular text-[0.8125rem] text-graf-500">
                             {formatarCep(zona.cepInicio)} até {formatarCep(zona.cepFim)}
                             {zona.prazo ? ` · ${zona.prazo} dia(s) útil(eis)` : ""}
                           </p>

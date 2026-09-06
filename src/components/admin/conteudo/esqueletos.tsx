@@ -13,7 +13,7 @@ function Moldura({ children }: { children: React.ReactNode }) {
   return (
     <div aria-busy="true" className="space-y-5">
       <p role="status" aria-live="polite" className="sr-only">
-        Carregando…
+        Carregando os dados desta tela…
       </p>
       {children}
     </div>
@@ -33,7 +33,7 @@ export function EsqueletoDeLista({ linhas = 6 }: { linhas?: number }) {
   return (
     <Moldura>
       <Cabecalho />
-      <Esqueleto className="h-[4.25rem]" />
+      <Esqueleto className="h-[5.25rem] sm:h-[4.75rem]" />
       <div className="space-y-3">
         {Array.from({ length: linhas }, (_, indice) => (
           <Esqueleto key={indice} className="h-20" />

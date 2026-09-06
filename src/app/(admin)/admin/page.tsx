@@ -124,10 +124,12 @@ function Secao({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div>
-        <h2 className="text-lg font-bold text-graf-950">{titulo}</h2>
-        <p className="text-sm text-graf-500">{descricao}</p>
+        <h2 className="text-[1.1875rem] font-bold leading-tight tracking-[-0.01em] text-graf-950">
+          {titulo}
+        </h2>
+        <p className="mt-1 text-[0.9375rem] leading-relaxed text-graf-500">{descricao}</p>
       </div>
       {children}
     </section>
@@ -152,7 +154,7 @@ function Linha({
       <Link
         href={href}
         className={cn(
-          "flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 transition-colors",
+          "flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 transition-colors",
           "hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
         )}
       >
@@ -162,7 +164,7 @@ function Linha({
             etiqueta para a linha de baixo. */}
         <span className="min-w-[12rem] flex-1">
           <span className="block truncate text-sm font-semibold text-graf-900">{titulo}</span>
-          <span className="block truncate text-xs text-graf-500">{detalhe}</span>
+          <span className="block truncate text-[0.8125rem] text-graf-500">{detalhe}</span>
         </span>
         {valor ? (
           <span className="tabular shrink-0 text-sm font-semibold text-graf-800">{valor}</span>
@@ -181,12 +183,12 @@ function EsqueletoBloco() {
   return (
     <div className="space-y-3">
       <Esqueleto className="h-5 w-40" />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
           <Esqueleto key={i} className="h-32" />
         ))}
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Esqueleto className="h-64" />
         <Esqueleto className="h-64" />
       </div>
@@ -216,22 +218,25 @@ export default async function PaginaPainel({
   const semBlocos = !verComercial && !verOrcamentos && !verAssistencia && !verEstoque && !verLeads;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <header>
-        <h1 className="text-2xl font-bold text-graf-950">
+        <p className="text-[0.8125rem] font-medium text-graf-500">
+          {formatarDataExtensa(new Date())}
+        </p>
+        <h1 className="mt-2 text-[1.625rem] font-bold leading-[1.15] tracking-[-0.02em] text-graf-950 sm:text-[1.75rem]">
           Olá, {usuario.name.split(" ")[0]}
         </h1>
-        <p className="mt-1 text-sm text-graf-500">
-          {formatarDataExtensa(new Date())} · o que precisa de atenção agora
+        <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-500">
+          Abaixo está o que depende da JB para andar hoje.
         </p>
       </header>
 
       {areaNegada || erro === "permissao" ? (
         <p
           role="alert"
-          className="flex items-start gap-2.5 rounded-xl border border-warn-500/30 bg-warn-50 px-4 py-3 text-sm font-medium text-warn-700"
+          className="flex items-start gap-3 rounded-xl bg-warn-50 px-4 py-3.5 text-sm font-medium leading-relaxed text-warn-700 ring-1 ring-inset ring-warn-500/25"
         >
-          <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
           <span>
             {areaNegada
               ? `Seu perfil não abre a área "${areaNegada}". Fale com um administrador se precisar desse acesso.`
@@ -384,7 +389,7 @@ async function BlocoComercial({ usuario }: { usuario: StaffUser }) {
         ) : null}
       </Indicadores>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Cartao>
           <CabecalhoCartao
             titulo="Pedidos por status"
@@ -583,7 +588,7 @@ async function BlocoAssistencia() {
         />
       </Indicadores>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Cartao>
           <CabecalhoCartao
             titulo="Chamados por urgência"
@@ -610,19 +615,21 @@ async function BlocoAssistencia() {
 
               {urgentes.length > 0 ? (
                 <div className="border-t border-graf-200 bg-graf-50/60 px-5 py-3">
-                  <p className="label-mono mb-2 uppercase text-graf-500">Precisa de resposta</p>
+                  <p className="mb-2 text-[0.8125rem] font-semibold uppercase tracking-[0.08em] text-graf-500">
+                    Precisa de resposta
+                  </p>
                   <ul className="space-y-1.5">
                     {urgentes.map((chamado) => (
                       <li key={chamado.id}>
                         <Link
                           href={`/admin/assistencia/${chamado.id}`}
-                          className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-0.5 rounded text-sm text-graf-700 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                          className="flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-0.5 rounded text-sm text-graf-700 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                         >
                           <span className="label-mono text-graf-500">{chamado.number}</span>
                           <span className="min-w-0 flex-1 truncate font-medium">
                             {chamado.customer?.name ?? chamado.contactName}
                           </span>
-                          <span className="text-xs text-graf-500">
+                          <span className="text-[0.8125rem] text-graf-500">
                             aberto {distanciaEmDias(chamado.createdAt)}
                           </span>
                         </Link>
@@ -717,7 +724,7 @@ async function BlocoApoio({
       titulo="Catálogo e captação"
       descricao="O que pode faltar na prateleira e quem chegou pelo site"
     >
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {verEstoque ? (
           <Cartao>
             <CabecalhoCartao

@@ -230,7 +230,7 @@ export function Calendario({
           {DIAS_CURTOS.map((dia) => (
             <div
               key={dia}
-              className="px-2 py-2 text-center text-xs font-bold uppercase tracking-wider text-graf-500"
+              className="px-2 py-2 text-center text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
             >
               {dia}
             </div>
@@ -270,7 +270,7 @@ export function Calendario({
                   >
                     {Number(dia.slice(8))}
                   </span>
-                  {ehHoje ? <span className="text-[11px] font-bold uppercase tracking-[0.08em]">hoje</span> : null}
+                  {ehHoje ? <span className="text-xs font-bold uppercase tracking-[0.08em]">hoje</span> : null}
                 </p>
 
                 <ul className="space-y-1">
@@ -389,7 +389,7 @@ function VisitasParaRemarcar({
                   {formatoDiaLongo.format(visita.quando)} ·{" "}
                   {formatoHora.format(visita.quando)} — {visita.titulo}
                 </Link>
-                <span className="block truncate text-xs text-graf-500">
+                <span className="block truncate text-[0.8125rem] text-graf-500">
                   {visita.detalhe || "Sem chamado vinculado"}
                   {visita.tecnico ? ` · ${visita.tecnico}` : " · sem técnico"}
                 </span>
@@ -457,7 +457,7 @@ function ItemDoDia({
 /** Legenda das cores. Cor nunca é o único indicador: o texto vem junto. */
 export function LegendaDaAgenda() {
   return (
-    <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-graf-600">
+    <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.8125rem] text-graf-600">
       {(Object.keys(ROTULO_TIPO_AGENDA) as TipoCompromisso[]).map((tipo) => (
         <li key={tipo} className="flex items-center gap-1.5">
           <span

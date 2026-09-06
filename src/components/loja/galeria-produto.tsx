@@ -103,9 +103,11 @@ export function GaleriaProduto({
     };
   }, [ampliado, irPara]);
 
+  // Sem foto o palco não precisa ser quadrado: um vazio de 790px de altura no
+  // desktop seria mais chamativo que o próprio equipamento.
   if (total === 0) {
     return (
-      <div className="flex aspect-square flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-graf-300 bg-graf-50 px-6 text-center">
+      <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-graf-300 bg-graf-50 px-6 py-16 text-center lg:min-h-96">
         <ImageOff className="size-9 text-graf-400" aria-hidden />
         <p className="text-sm font-semibold text-graf-700">
           Ainda não há foto deste equipamento
@@ -139,10 +141,12 @@ export function GaleriaProduto({
             fill
             priority
             /* No desktop a galeria ocupa 7 das 12 colunas do container de
-               1440px — cerca de 55vw. Pedir menos entregaria imagem borrada
+               1440px — cerca de 58vw. Pedir menos entregaria imagem borrada
                justamente na peça que a pessoa está avaliando. */
-            sizes="(max-width: 1023px) 100vw, 55vw"
-            className="object-contain p-6 sm:p-10"
+            sizes="(max-width: 1023px) 100vw, 58vw"
+            /* Respiro curto de propósito: a foto é o argumento da página, e
+               cada pixel de moldura sai do equipamento. */
+            className="object-contain p-4 sm:p-6 lg:p-8"
           />
 
           <button
@@ -158,7 +162,7 @@ export function GaleriaProduto({
         </div>
 
         {foto.daUnidade ? (
-          <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center rounded-full bg-graf-950/85 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
+          <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center rounded-full bg-graf-950/85 px-3 py-1.5 text-[0.8125rem] font-semibold text-white backdrop-blur">
             Foto desta unidade
           </span>
         ) : null}
@@ -183,7 +187,7 @@ export function GaleriaProduto({
             </button>
             <p
               aria-live="polite"
-              className="pointer-events-none absolute bottom-3 right-3 z-10 rounded-full bg-graf-950/80 px-3 py-1 text-xs font-semibold tabular text-white backdrop-blur"
+              className="pointer-events-none absolute bottom-3 right-3 z-10 rounded-full bg-graf-950/80 px-3 py-1.5 text-[0.8125rem] font-semibold tabular text-white backdrop-blur"
             >
               <span className="sr-only">Imagem </span>
               {atual + 1} de {total}
@@ -195,7 +199,7 @@ export function GaleriaProduto({
       {total > 1 ? (
         <ul
           aria-label={`Imagens de ${nome}`}
-          className="scrollbar-none mt-3 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1"
+          className="scrollbar-none mt-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1"
         >
           {fotos.map((imagem, indice) => (
             <li key={`${imagem.url}-${indice}`} className="shrink-0 snap-start">
@@ -205,9 +209,9 @@ export function GaleriaProduto({
                 aria-label={`Ver imagem ${indice + 1} de ${total}`}
                 aria-current={indice === atual ? "true" : undefined}
                 className={cn(
-                  "foco-jb relative block size-18 overflow-hidden rounded-lg border-2 bg-white transition-colors duration-150 sm:size-20",
+                  "foco-jb relative block size-16 overflow-hidden rounded-lg border bg-white transition-colors duration-150 sm:size-18",
                   indice === atual
-                    ? "border-jb-500"
+                    ? "border-jb-500 ring-1 ring-inset ring-jb-500"
                     : "border-graf-200 hover:border-graf-400",
                 )}
               >
@@ -215,13 +219,13 @@ export function GaleriaProduto({
                   src={imagem.url}
                   alt=""
                   fill
-                  sizes="80px"
+                  sizes="72px"
                   className="object-contain p-1.5"
                 />
                 {imagem.daUnidade ? (
                   <span
                     aria-hidden
-                    className="absolute inset-x-0 bottom-0 bg-graf-950/75 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-white"
+                    className="absolute inset-x-0 bottom-0 bg-graf-950/75 py-0.5 text-center text-[0.6875rem] font-semibold uppercase tracking-wide text-white"
                   >
                     unidade
                   </span>
@@ -249,7 +253,7 @@ export function GaleriaProduto({
                   <span className="tabular">{atual + 1}</span> de{" "}
                   <span className="tabular">{total}</span>
                   {foto.daUnidade ? (
-                    <span className="ml-3 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold text-white">
+                    <span className="ml-3 rounded-full bg-white/15 px-2.5 py-1 text-[0.8125rem] font-semibold text-white">
                       Foto desta unidade
                     </span>
                   ) : null}

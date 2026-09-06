@@ -7,7 +7,7 @@ import { periodicidade, type PlanoPublico } from "@/components/assistencia/carta
 import { ROTULO_SERVICO } from "@/components/assistencia/rotulos";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
-import { Grade } from "@/components/ui/grade";
+import { Grade, colunasParaTotal } from "@/components/ui/grade";
 import { FaixaChamada, Secao } from "@/components/ui/secao";
 import { plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -32,19 +32,19 @@ const TRILHA = [
   { rotulo: "Manutenção preventiva" },
 ];
 
-/** As duas colunas do comparativo. Nenhum número: só o que muda na rotina. */
-const PREVENTIVA = [
-  "Data marcada por você",
-  "Peça de desgaste trocada antes de falhar",
-  "Orçamento previsível",
-  "Agenda da clínica preservada",
-];
-
-const CORRETIVA = [
-  "Data marcada pelo defeito",
-  "Peça pedida na urgência",
-  "Custo descoberto depois",
-  "Paciente remarcado",
+/**
+ * O comparativo, linha a linha. Nenhum número: só o que muda na rotina da
+ * clínica. Os dois lados vêm emparelhados de propósito — é a mesma decisão
+ * vista de dois jeitos, e lida em par ela se explica sozinha.
+ */
+const CONFRONTO = [
+  { preventiva: "Data marcada por você", corretiva: "Data marcada pelo defeito" },
+  {
+    preventiva: "Peça de desgaste trocada antes de falhar",
+    corretiva: "Peça pedida na urgência",
+  },
+  { preventiva: "Orçamento previsível", corretiva: "Custo descoberto depois" },
+  { preventiva: "Agenda da clínica preservada", corretiva: "Paciente remarcado" },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -129,7 +129,7 @@ export default async function ManutencaoPreventivaPage() {
 
         <div className="grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-graf-600 shadow-xs">
+            <p className="inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 py-1.5 text-[0.8125rem] font-semibold text-graf-600 shadow-xs">
               <CalendarClock className="size-3.5 text-jb-600" aria-hidden />
               Revisão programada
             </p>
@@ -155,35 +155,43 @@ export default async function ManutencaoPreventivaPage() {
             </div>
           </div>
 
-          {/* Preventiva x corretiva, sem número inventado: o que muda de fato */}
+          {/* Preventiva x corretiva, sem número inventado: as duas colunas
+              emparelhadas linha a linha, para o olho comparar de lado. */}
           <Cartao className="p-6 lg:p-8">
             <p className="label-mono uppercase text-graf-500">O que muda na prática</p>
 
-            <div className="mt-6 grid gap-6 sm:grid-cols-2">
-              <div>
-                <p className="flex items-center gap-2 text-[0.9375rem] font-bold text-ok-700">
-                  <CircleCheck className="size-4.5" aria-hidden />
-                  Preventiva
-                </p>
-                <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-graf-600">
-                  {PREVENTIVA.map((linha) => (
-                    <li key={linha}>{linha}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="border-t border-graf-200 pt-6 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
-                <p className="flex items-center gap-2 text-[0.9375rem] font-bold text-jb-700">
-                  <CircleX className="size-4.5" aria-hidden />
-                  Corretiva
-                </p>
-                <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-graf-600">
-                  {CORRETIVA.map((linha) => (
-                    <li key={linha}>{linha}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            {/* Tabela de verdade: são duas colunas comparáveis, e o leitor de
+                tela precisa ouvir "Preventiva"/"Corretiva" em cada célula. */}
+            <table className="mt-6 w-full table-fixed border-collapse text-left">
+              <thead>
+                <tr className="border-b border-graf-200">
+                  <th scope="col" className="pb-3 pr-5 sm:pr-8">
+                    <span className="flex items-center gap-2 text-[0.9375rem] font-bold text-ok-700">
+                      <CircleCheck className="size-4.5 shrink-0" aria-hidden />
+                      Preventiva
+                    </span>
+                  </th>
+                  <th scope="col" className="pb-3">
+                    <span className="flex items-center gap-2 text-[0.9375rem] font-bold text-graf-700">
+                      <CircleX className="size-4.5 shrink-0 text-jb-600" aria-hidden />
+                      Corretiva
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {CONFRONTO.map((linha) => (
+                  <tr key={linha.preventiva} className="border-b border-graf-100 last:border-b-0">
+                    <td className="py-3.5 pr-5 align-top text-[0.8125rem] font-semibold leading-relaxed text-graf-800 sm:pr-8 sm:text-sm">
+                      {linha.preventiva}
+                    </td>
+                    <td className="py-3.5 align-top text-[0.8125rem] leading-relaxed text-graf-500 sm:text-sm">
+                      {linha.corretiva}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </Cartao>
         </div>
       </Secao>
@@ -205,14 +213,14 @@ export default async function ManutencaoPreventivaPage() {
             acao={<LinkBotao href="/orcamento?tipo=servico">Pedir orçamento</LinkBotao>}
           />
         ) : (
-          <Grade como="ul" colunas={{ base: 1, md: 2, lg: 3 }} espaco="md">
+          <Grade como="ul" colunas={colunasParaTotal(servicos.length)} espaco="md">
             {servicos.map((servico) => (
               <li key={servico.id}>
-                <Cartao interativo className="relative flex h-full flex-col p-5">
+                <Cartao interativo className="relative flex h-full flex-col p-6">
                   <p className="label-mono uppercase text-graf-500">
                     {ROTULO_SERVICO[servico.kind]}
                   </p>
-                  <h3 className="mt-2 text-[0.9375rem] font-bold text-graf-950">
+                  <h3 className="mt-2.5 text-lg font-bold leading-snug text-graf-950">
                     <Link
                       href={`/servicos/${servico.slug}`}
                       className="after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -221,10 +229,14 @@ export default async function ManutencaoPreventivaPage() {
                     </Link>
                   </h3>
                   {servico.description ? (
-                    <p className="line-3 mt-2 text-sm leading-relaxed text-graf-600">
+                    <p className="line-3 mt-2.5 text-sm leading-relaxed text-graf-600">
                       {servico.description}
                     </p>
                   ) : null}
+                  <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-bold text-jb-700">
+                    Ver serviço
+                    <ArrowRight className="size-4 shrink-0" aria-hidden />
+                  </span>
                 </Cartao>
               </li>
             ))}
@@ -257,7 +269,7 @@ export default async function ManutencaoPreventivaPage() {
                       >
                         {plano.nome}
                       </Link>
-                      <p className="mt-0.5 text-xs text-graf-500">
+                      <p className="mt-1 text-[0.8125rem] text-graf-500">
                         {plural(plano.mesesDeVigencia, "mês de vigência", "meses de vigência")}{" "}
                         · {plural(plano.visitasIncluidas, "visita incluída", "visitas incluídas")}
                       </p>

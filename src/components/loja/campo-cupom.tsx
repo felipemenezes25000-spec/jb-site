@@ -85,7 +85,7 @@ export function CampoCupom({ aplicado }: { aplicado: string }) {
         role="status"
         aria-live="polite"
         className={cn(
-          "text-xs leading-relaxed",
+          "text-[0.8125rem] leading-relaxed",
           estado.erro || estado.ok ? "mt-2" : "",
           estado.erro ? "text-jb-700" : "text-ok-700",
         )}

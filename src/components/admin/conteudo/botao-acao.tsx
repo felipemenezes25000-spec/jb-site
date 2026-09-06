@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
 
 import { Botao, type Tamanho, type Variante } from "@/components/ui/button";
@@ -189,7 +190,7 @@ export function BotoesDeOrdem({
         somenteIcone
         desabilitado={primeiro}
         variante="sutil"
-        icone={<SetaCima />}
+        icone={<ArrowUp className="size-4" aria-hidden />}
       />
       <BotaoAcao
         acao={acao}
@@ -199,36 +200,8 @@ export function BotoesDeOrdem({
         somenteIcone
         desabilitado={ultimo}
         variante="sutil"
-        icone={<SetaBaixo />}
+        icone={<ArrowDown className="size-4" aria-hidden />}
       />
     </div>
-  );
-}
-
-function SetaCima() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" className="size-4" aria-hidden>
-      <path
-        d="M10 15.5V4.5M10 4.5 5 9.5M10 4.5l5 5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function SetaBaixo() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" className="size-4" aria-hidden>
-      <path
-        d="M10 4.5v11M10 15.5l5-5M10 15.5l-5-5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

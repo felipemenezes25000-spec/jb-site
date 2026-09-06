@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import type { Prisma, ProductCondition, ProductStatus } from "@prisma/client";
-import { Package, PackageX, TriangleAlert } from "lucide-react";
+import { Package, PackageX, Plus, TriangleAlert } from "lucide-react";
 
 import { FiltrosLista } from "@/components/admin/filtros-lista";
 import { AtalhosCatalogo } from "@/components/admin/catalogo/atalhos-catalogo";
 import { LinkBotao } from "@/components/ui/button";
-import { Esqueleto, Etiqueta, type Tom } from "@/components/ui/data";
+import { Esqueleto, Etiqueta, Trilha, type Tom } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
 import { Tabela, type Coluna, type Direcao } from "@/components/ui/tabela";
 import { formatarData, formatarPreco } from "@/lib/format";
@@ -101,18 +101,23 @@ export default async function PaginaProdutos({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-graf-950">Produtos</h1>
+      <Trilha itens={[{ rotulo: "Painel", href: "/admin" }, { rotulo: "Produtos" }]} />
+
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold leading-tight text-graf-950">Produtos</h1>
           <p className="mt-1 text-sm text-graf-500">
             Catálogo completo — publicados, rascunhos e arquivados.
           </p>
         </div>
         {podeMexer ? (
-          <LinkBotao href="/admin/produtos/novo">Novo produto</LinkBotao>
+          <LinkBotao href="/admin/produtos/novo">
+            <Plus className="size-4" aria-hidden />
+            Novo produto
+          </LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-xs font-semibold text-graf-600">
-            Seu perfil abre o catálogo apenas para consulta.
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
+            Seu acesso ao catálogo é apenas de consulta.
           </p>
         )}
       </header>
@@ -272,10 +277,10 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
       renderizar: (linha) => (
         <span className="block">
           <span className="block truncate font-semibold">{linha.name}</span>
-          <span className="block truncate text-xs font-normal text-graf-500">
+          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">
             {linha.sku}
             {linha.brand ? ` · ${linha.brand.name}` : ""}
-            {linha.featured ? " · destaque" : ""}
+            {linha.featured ? " · em destaque na loja" : ""}
           </span>
         </span>
       ),
@@ -284,7 +289,12 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
       chave: "category",
       rotulo: "Categoria",
       esconderNoMobile: true,
-      renderizar: (linha) => linha.category?.name ?? "—",
+      renderizar: (linha) =>
+        linha.category ? (
+          linha.category.name
+        ) : (
+          <span className="text-graf-500">Sem categoria</span>
+        ),
     },
     {
       chave: "condition",
@@ -296,9 +306,14 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
       rotulo: "Preço",
       alinhamento: "direita",
       ordenavel: true,
-      renderizar: (linha) => (
-        <span className="tabular">{linha.priceCents > 0 ? formatarPreco(linha.priceCents) : "—"}</span>
-      ),
+      renderizar: (linha) =>
+        linha.priceCents > 0 ? (
+          <span className="tabular font-semibold text-graf-900">
+            {formatarPreco(linha.priceCents)}
+          </span>
+        ) : (
+          <span className="text-graf-500">Sob consulta</span>
+        ),
     },
     {
       chave: "stock",
@@ -343,7 +358,7 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Tabela<LinhaProduto>
         colunas={colunas}
         linhas={produtos}

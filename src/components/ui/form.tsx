@@ -53,7 +53,7 @@ function Rotulo({
 function Ajuda({ id, texto }: { id: string; texto?: string }) {
   if (!texto) return null;
   return (
-    <p id={id} className="mt-1.5 text-xs leading-relaxed text-graf-500">
+    <p id={id} className="mt-1.5 text-[0.8125rem] leading-relaxed text-graf-500">
       {texto}
     </p>
   );
@@ -208,7 +208,9 @@ export function Marcador({
         className="flex min-h-11 cursor-pointer flex-col justify-center text-sm leading-snug text-graf-700"
       >
         <span className="font-medium text-graf-800">{rotulo}</span>
-        {ajuda ? <span className="mt-0.5 block text-xs text-graf-500">{ajuda}</span> : null}
+        {ajuda ? (
+          <span className="mt-0.5 block text-[0.8125rem] text-graf-500">{ajuda}</span>
+        ) : null}
       </label>
     </div>
   );
@@ -260,7 +262,7 @@ export function Opcoes<T extends string>({
               />
               {opcao.rotulo}
               {opcao.descricao ? (
-                <span className="mt-0.5 block text-xs font-normal text-graf-500">
+                <span className="mt-0.5 block text-[0.8125rem] font-normal text-graf-500">
                   {opcao.descricao}
                 </span>
               ) : null}

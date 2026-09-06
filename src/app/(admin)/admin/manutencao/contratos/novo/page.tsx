@@ -217,7 +217,7 @@ export default async function PaginaNovoContrato({
                 <legend className="mb-1 text-sm font-semibold text-graf-800">
                   Equipamentos cobertos
                 </legend>
-                <p className="mb-3 text-xs text-graf-500">
+                <p className="mb-3 text-[0.8125rem] text-graf-500">
                   Marque o que entra na preventiva. Cada equipamento marcado ganha a própria
                   agenda de visitas.
                 </p>
@@ -251,9 +251,9 @@ export default async function PaginaNovoContrato({
                               {equipamento.name}
                             </span>
                             {detalhe ? (
-                              <span className="block text-xs text-graf-500">{detalhe}</span>
+                              <span className="block text-[0.8125rem] text-graf-500">{detalhe}</span>
                             ) : null}
-                            <span className="block text-xs text-graf-500">
+                            <span className="block text-[0.8125rem] text-graf-500">
                               {equipamento.maintenanceIntervalDays
                                 ? `Intervalo próprio: ${plural(equipamento.maintenanceIntervalDays, "dia", "dias")}`
                                 : "Sem intervalo próprio — depende do plano ou do campo acima"}

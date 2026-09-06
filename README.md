@@ -127,10 +127,24 @@ Para remover só o que os seeds de demonstração criaram, sem tocar em dado rea
 
 Metadados gerados: `/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`.
 
-### Conta do cliente — grupo `src/app/(conta)`
+### Acesso — grupo `src/app/(acesso)`
 
-`/entrar`, `/cadastro`, `/recuperar-senha`, `/redefinir-senha` e, atrás de
-sessão, tudo sob `/minha-jb`:
+`/entrar`, `/cadastro`, `/recuperar-senha` e `/redefinir-senha`. Este grupo usa o
+**cabeçalho e o rodapé da loja**: quem ainda não entrou está decidindo confiar
+na JB, e nessa hora o catálogo, o telefone e o carrinho precisam estar à mão.
+
+### Área da Clínica — grupo `src/app/(conta)`, tudo sob `/minha-jb`
+
+Atrás de sessão, e com **casca própria** — não a da loja. Depois do login a área
+é uma aplicação: topo de 64px (marca, nome da área, sino de avisos, identidade,
+sair e a volta para a loja), coluna de navegação fixa com contadores de
+pendência e um rodapé de três linhas. Busca de catálogo, mega menu e carrinho
+ficam de fora de propósito: quem está nessa tela já comprou, e a barra de compra
+fazia a ferramenta parecer de novo uma página do site.
+
+A separação é só de layout. As URLs não mudam — grupo de rota entre parênteses
+não entra no caminho —, então nenhum link antigo quebra. O nome público da área
+é **Área da Clínica**; `/minha-jb` permanece como endereço.
 
 | Rota | O que é |
 |---|---|

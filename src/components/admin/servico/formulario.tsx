@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useActionState, useContext, useEffect, useId, useRef } from "react";
+import { CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import type { EstadoAcao } from "@/app/acoes/admin-servico";
@@ -109,17 +110,24 @@ export function FormularioAcao({
       </EstadoDaAcao.Provider>
 
       {/* A região existe sempre montada: um alerta que só nasce depois do erro
-          costuma não ser anunciado pelo leitor de tela. */}
+          costuma não ser anunciado pelo leitor de tela. Aparecendo, usa a mesma
+          caixa de erro do resto do painel — texto vermelho solto no meio do
+          formulário se confundia com o rótulo de um campo. */}
       <p
         id={idErro}
         role="alert"
         aria-live="assertive"
         className={cn(
-          "text-sm font-medium text-jb-700",
-          estado.erro ? "flex items-start gap-1.5" : "sr-only",
+          "text-sm font-medium",
+          estado.erro
+            ? "flex items-start gap-3 rounded-xl bg-jb-50 px-4 py-3.5 leading-relaxed text-jb-800 ring-1 ring-inset ring-jb-500/20"
+            : "sr-only",
         )}
       >
-        {estado.erro ?? ""}
+        {estado.erro ? (
+          <CircleAlert className="mt-0.5 size-5 shrink-0 text-jb-700" aria-hidden />
+        ) : null}
+        <span>{estado.erro ?? ""}</span>
       </p>
 
       {esconderBotao ? null : (
@@ -138,7 +146,7 @@ export function FormularioAcao({
           </Botao>
           {acoesExtras}
           {desabilitado && motivoDesabilitado ? (
-            <span className="text-xs text-graf-500">{motivoDesabilitado}</span>
+            <span className="text-[0.8125rem] text-graf-500">{motivoDesabilitado}</span>
           ) : null}
         </div>
       )}

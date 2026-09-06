@@ -260,18 +260,18 @@ export default async function OrcamentoPage({ params }: Props) {
                       )}
                     </Dado>
                     <Dado rotulo="E-mail">{orcamento.contactEmail}</Dado>
-                    <Dado rotulo="Telefone">
-                      {orcamento.contactPhone ? formatarTelefone(orcamento.contactPhone) : ""}
-                    </Dado>
+                    {orcamento.contactPhone ? (
+                      <Dado rotulo="Telefone">{formatarTelefone(orcamento.contactPhone)}</Dado>
+                    ) : null}
                     <Dado rotulo="Validade">
-                      {orcamento.validUntil ? formatarData(orcamento.validUntil) : ""}
+                      {orcamento.validUntil ? formatarData(orcamento.validUntil) : "Sem prazo"}
                     </Dado>
-                    <Dado rotulo="Enviada em">
-                      {orcamento.sentAt ? formatarDataHora(orcamento.sentAt) : ""}
-                    </Dado>
-                    <Dado rotulo="Decidida em">
-                      {orcamento.decidedAt ? formatarDataHora(orcamento.decidedAt) : ""}
-                    </Dado>
+                    {orcamento.sentAt ? (
+                      <Dado rotulo="Enviada em">{formatarDataHora(orcamento.sentAt)}</Dado>
+                    ) : null}
+                    {orcamento.decidedAt ? (
+                      <Dado rotulo="Decidida em">{formatarDataHora(orcamento.decidedAt)}</Dado>
+                    ) : null}
                     {orcamento.decidedByName ? (
                       <Dado rotulo="Decidida por">{orcamento.decidedByName}</Dado>
                     ) : null}
@@ -287,8 +287,8 @@ export default async function OrcamentoPage({ params }: Props) {
                 somenteLeitura
                 motivoBloqueio={
                   travado
-                    ? "Proposta decidida — leitura apenas."
-                    : "Seu papel abre esta área só para consulta."
+                    ? "Proposta já decidida: o conteúdo fica travado como registro."
+                    : "Seu acesso a orçamentos é apenas de consulta."
                 }
                 inicial={{
                   kind: orcamento.kind,
@@ -374,7 +374,7 @@ export default async function OrcamentoPage({ params }: Props) {
                           {evento.message}
                         </p>
                       ) : null}
-                      <p className="mt-1 text-xs text-graf-500">
+                      <p className="mt-1 text-[0.8125rem] text-graf-500">
                         {formatarDataHora(evento.createdAt)}
                         {evento.userId && nomePorUsuario.get(evento.userId)
                           ? ` · ${nomePorUsuario.get(evento.userId)}`
@@ -405,11 +405,11 @@ export default async function OrcamentoPage({ params }: Props) {
             />
           ) : (
             <Cartao>
-              <CabecalhoCartao titulo="Somente leitura" />
+              <CabecalhoCartao titulo="Somente consulta" />
               <div className="p-5">
                 <p className="text-sm leading-relaxed text-graf-600">
-                  Seu papel abre os orçamentos para consulta, mas não permite enviar nem
-                  registrar decisão.
+                  Seu acesso aos orçamentos é apenas de consulta: dá para acompanhar a proposta,
+                  mas não para enviá-la nem registrar a decisão do cliente.
                 </p>
               </div>
             </Cartao>

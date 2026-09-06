@@ -72,9 +72,9 @@ export default async function PaginaUnidades({
         ]}
       />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div>
-          <h1 className="text-2xl font-bold text-graf-950">Unidades de estoque</h1>
+          <h1 className="text-2xl font-bold leading-tight text-graf-950">Unidades de estoque</h1>
           <p className="mt-1 text-sm text-graf-500">
             Peças identificadas de seminovos, usados e recondicionados.
           </p>
@@ -82,7 +82,7 @@ export default async function PaginaUnidades({
         {podeMexer ? (
           <LinkBotao href="/admin/estoque/unidades/nova">Nova unidade</LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-xs font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
             Somente consulta
           </p>
         )}
@@ -206,7 +206,7 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
           <span className="block truncate font-semibold">
             {linha.serialNumber || "Sem número de série"}
           </span>
-          <span className="block truncate text-xs font-normal text-graf-500">
+          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">
             {linha.product.name} · {linha.product.sku}
           </span>
         </span>
@@ -217,16 +217,24 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
       rotulo: "Ano",
       alinhamento: "direita",
       esconderNoMobile: true,
-      renderizar: (linha) => (
-        <span className="tabular">{linha.manufactureYear ?? "—"}</span>
-      ),
+      renderizar: (linha) =>
+        linha.manufactureYear ? (
+          <span className="tabular">{linha.manufactureYear}</span>
+        ) : (
+          <span className="text-graf-500">Não informado</span>
+        ),
     },
     {
       chave: "usageHours",
       rotulo: "Horas",
       alinhamento: "direita",
       esconderNoMobile: true,
-      renderizar: (linha) => <span className="tabular">{linha.usageHours ?? "—"}</span>,
+      renderizar: (linha) =>
+        linha.usageHours === null ? (
+          <span className="text-graf-500">Não medido</span>
+        ) : (
+          <span className="tabular">{linha.usageHours}</span>
+        ),
     },
     {
       chave: "checklist",
@@ -235,12 +243,17 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
       renderizar: (linha) =>
         linha._count.checklist === 0
           ? "Sem checklist"
-          : `${linha._count.checklist} ${plural(linha._count.checklist, "item", "itens")}`,
+          : plural(linha._count.checklist, "item", "itens"),
     },
     {
       chave: "pedido",
       rotulo: "Pedido",
-      renderizar: (linha) => linha.orderItem?.order.number ?? "—",
+      renderizar: (linha) =>
+        linha.orderItem ? (
+          <span className="tabular">{linha.orderItem.order.number}</span>
+        ) : (
+          <span className="text-graf-500">Ainda em estoque</span>
+        ),
     },
     {
       chave: "status",
@@ -260,7 +273,7 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
   const filtrando = Boolean(parametros.q || parametros.status || parametros.produto);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Tabela<LinhaUnidade>
         colunas={colunas}
         linhas={unidades}

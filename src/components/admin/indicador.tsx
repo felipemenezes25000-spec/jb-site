@@ -10,6 +10,14 @@ import { cn } from "@/lib/utils";
  * `href`, o cartão inteiro é o alvo do clique — quem lê o número quer a lista
  * por trás dele.
  *
+ * DUAS DECISÕES QUE VALEM PARA A TELA INTEIRA
+ *
+ * O painel mostra oito destes lado a lado. Por isso a moldura é só borda —
+ * oito sombras na mesma tela viram sujeira, e a sombra fica para o que precisa
+ * flutuar de verdade. E a chamada do rodapé nasce em grafite, virando vermelho
+ * só no ponteiro: oito linhas vermelhas em negrito faziam do vermelho da marca
+ * a cor de fundo do painel, quando ele deveria marcar o que é excepcional.
+ *
  * Componente de servidor: sem estado, sem evento. Pode ser usado direto em
  * qualquer página do painel.
  */
@@ -17,11 +25,11 @@ import { cn } from "@/lib/utils";
 export type TomIndicador = "neutro" | "marca" | "ok" | "aviso" | "info";
 
 const TONS: Record<TomIndicador, { valor: string; icone: string }> = {
-  neutro: { valor: "text-graf-950", icone: "bg-graf-100 text-graf-600" },
-  marca: { valor: "text-jb-700", icone: "bg-jb-50 text-jb-600" },
-  ok: { valor: "text-ok-700", icone: "bg-ok-50 text-ok-700" },
-  aviso: { valor: "text-warn-700", icone: "bg-warn-50 text-warn-700" },
-  info: { valor: "text-info-700", icone: "bg-info-50 text-info-700" },
+  neutro: { valor: "text-graf-950", icone: "text-graf-500" },
+  marca: { valor: "text-jb-700", icone: "text-jb-600" },
+  ok: { valor: "text-ok-700", icone: "text-ok-700" },
+  aviso: { valor: "text-warn-700", icone: "text-warn-700" },
+  info: { valor: "text-info-700", icone: "text-info-700" },
 };
 
 export type Variacao = {
@@ -59,30 +67,27 @@ export function Indicador({
   const conteudo = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium leading-snug text-graf-600">{rotulo}</p>
+        <p className="text-[0.9375rem] font-medium leading-snug text-graf-600">{rotulo}</p>
         {Icone ? (
-          <span
-            aria-hidden
-            className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", cores.icone)}
-          >
-            <Icone className="size-4" />
+          <span aria-hidden className="shrink-0">
+            <Icone className={cn("size-5", cores.icone)} />
           </span>
         ) : null}
       </div>
 
-      <p className={cn("tabular mt-3 text-3xl font-bold leading-none", cores.valor)}>{valor}</p>
+      <p className={cn("tabular mt-4 text-[2rem] font-bold leading-none", cores.valor)}>{valor}</p>
 
       {variacao ? <SeloVariacao {...variacao} /> : null}
 
       {detalhe ? (
-        <p className="mt-2 text-sm leading-snug text-graf-500">{detalhe}</p>
+        <p className="mt-2 text-[0.8125rem] leading-relaxed text-graf-500">{detalhe}</p>
       ) : null}
 
       {href ? (
-        <p className="mt-4 flex items-center gap-1 text-sm font-semibold text-jb-700 group-hover:text-jb-500">
+        <p className="mt-auto flex items-center gap-1.5 pt-4 text-[0.8125rem] font-semibold text-graf-600 transition-colors group-hover:text-jb-700">
           {hrefRotulo ?? "Ver lista"}
           <ArrowRight
-            className="size-4 transition-transform duration-150 group-hover:translate-x-0.5"
+            className="size-3.5 transition-transform duration-150 group-hover:translate-x-0.5"
             aria-hidden
           />
         </p>
@@ -91,7 +96,7 @@ export function Indicador({
   );
 
   const base = cn(
-    "flex h-full flex-col rounded-xl border border-graf-200 bg-white p-4 shadow-card",
+    "flex h-full flex-col rounded-xl border border-graf-200 bg-white p-5",
     className,
   );
 
@@ -103,7 +108,7 @@ export function Indicador({
       className={cn(
         base,
         "group transition-[box-shadow,border-color] duration-200",
-        "hover:border-graf-300 hover:shadow-raised",
+        "hover:border-graf-300 hover:shadow-card",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
       )}
     >
@@ -119,7 +124,7 @@ function SeloVariacao({ percentual, rotulo, quedaEhBoa }: Variacao) {
   const sinal = subiu ? "+" : "−";
 
   return (
-    <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
+    <p className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
       <span
         className={cn(
           "inline-flex items-center gap-1 font-semibold",
@@ -145,10 +150,7 @@ export function Indicadores({
 }) {
   return (
     <div
-      className={cn(
-        "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4",
-        className,
-      )}
+      className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4", className)}
     >
       {children}
     </div>

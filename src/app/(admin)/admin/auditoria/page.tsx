@@ -125,10 +125,10 @@ export default async function PaginaAuditoria({
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         titulo="Trilha de auditoria"
-        descricao="Quem alterou o quê e quando. O registro guarda só os campos que mudaram — senha, token e hash nunca aparecem com valor."
+        descricao="Quem alterou o quê e quando. O registro guarda só os campos que mudaram; senha e dados de acesso nunca aparecem com o valor."
         etiqueta={
           <Etiqueta tom="neutro">{plural(total, "registro", "registros")} no filtro</Etiqueta>
         }
@@ -140,7 +140,7 @@ export default async function PaginaAuditoria({
             tipo: "busca",
             nome: "busca",
             rotulo: "Buscar",
-            placeholder: "Trecho do resumo ou identificador do registro",
+            placeholder: "Trecho do que foi alterado ou código do registro",
           },
           {
             tipo: "selecao",
@@ -207,9 +207,7 @@ export default async function PaginaAuditoria({
                         {rotuloEntidade(registro.entity)}
                       </span>
                       {registro.entityId ? (
-                        <span className="label-mono text-xs text-graf-500">
-                          {registro.entityId}
-                        </span>
+                        <span className="label-mono text-graf-500">{registro.entityId}</span>
                       ) : null}
                     </div>
 
@@ -230,7 +228,7 @@ export default async function PaginaAuditoria({
                       </p>
                     )}
 
-                    <p className="mt-2 text-xs text-graf-500">
+                    <p className="mt-2 text-[0.8125rem] text-graf-500">
                       {registro.user
                         ? `${registro.user.name} · ${ROTULO_PAPEL[registro.user.role]}`
                         : "Sem usuário identificado"}

@@ -12,6 +12,7 @@ import {
 import { AreaAcao, CampoAcao, SelecaoAcao } from "@/components/admin/servico/campos";
 import { FormularioAcao, Oculto } from "@/components/admin/servico/formulario";
 import { PainelAcao } from "@/components/admin/servico/painel-acao";
+import { LinkBotao } from "@/components/ui/button";
 import { CabecalhoCartao, Cartao, Etiqueta, Vazio } from "@/components/ui/data";
 import { alternarTecnicoAtivo, salvarTecnico } from "@/app/acoes/admin-servico";
 import { STATUS_CHAMADO_ABERTOS } from "@/lib/assistencia";
@@ -166,7 +167,7 @@ export default async function PaginaTecnicos() {
                 />
                 <span className="text-sm text-graf-700">
                   <span className="font-medium text-graf-800">Ativo na escala</span>
-                  <span className="mt-0.5 block text-xs text-graf-500">
+                  <span className="mt-0.5 block text-[0.8125rem] text-graf-500">
                     Só técnico ativo aparece nos formulários de agendamento.
                   </span>
                 </span>
@@ -185,12 +186,9 @@ export default async function PaginaTecnicos() {
           descricao="Sem técnico cadastrado, não é possível atribuir chamados, agendar visitas nem montar a agenda."
           acao={
             editar ? undefined : (
-              <Link
-                href="/admin/manutencao"
-                className="text-sm font-semibold text-jb-700 hover:text-jb-500"
-              >
+              <LinkBotao href="/admin/manutencao" variante="secundario">
                 Voltar para manutenção
-              </Link>
+              </LinkBotao>
             )
           }
         />

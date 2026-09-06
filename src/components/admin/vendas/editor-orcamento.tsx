@@ -251,7 +251,7 @@ export function EditorOrcamento({
               <div className="w-full sm:w-72">
                 <label
                   htmlFor={`${base}-catalogo`}
-                  className="mb-1 block text-xs font-semibold text-graf-600"
+                  className="mb-1 block text-[0.8125rem] font-semibold text-graf-600"
                 >
                   Puxar do catálogo
                 </label>

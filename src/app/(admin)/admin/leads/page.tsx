@@ -78,7 +78,7 @@ export default async function PaginaLeads({
     contato: [lead.email, lead.telefone ? formatarTelefone(lead.telefone) : ""]
       .filter(Boolean)
       .join(" · "),
-    local: [lead.cidade, lead.estado].filter(Boolean).join("/") || "—",
+    local: [lead.cidade, lead.estado].filter(Boolean).join("/"),
     status: lead.status,
     recebido: formatarDataHora(lead.createdAt),
     resumo: lead.obs.replace(/\s+/g, " ").trim(),
@@ -97,7 +97,7 @@ export default async function PaginaLeads({
       renderizar: (linha) => (
         <span className="block">
           <span className="block font-semibold text-graf-900">{linha.nome}</span>
-          <span className="mt-0.5 block text-xs text-graf-500">{linha.contato}</span>
+          <span className="mt-0.5 block text-[0.8125rem] text-graf-500">{linha.contato}</span>
         </span>
       ),
     },
@@ -106,12 +106,18 @@ export default async function PaginaLeads({
       rotulo: "Mensagem",
       esconderNoMobile: true,
       renderizar: (linha) => (
-        <span className="line-2 block max-w-md text-xs text-graf-600">
-          {linha.resumo || "Sem mensagem"}
+        <span className="line-2 block max-w-md text-[0.8125rem] leading-relaxed text-graf-600">
+          {linha.resumo || <span className="text-graf-500">Enviou o formulário sem mensagem</span>}
         </span>
       ),
     },
-    { chave: "local", rotulo: "Cidade", largura: "9rem" },
+    {
+      chave: "local",
+      rotulo: "Cidade",
+      largura: "9rem",
+      renderizar: (linha) =>
+        linha.local ? linha.local : <span className="text-graf-500">Não informada</span>,
+    },
     {
       chave: "status",
       rotulo: "Situação",
@@ -132,7 +138,7 @@ export default async function PaginaLeads({
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         titulo="Leads do site"
         descricao="Contatos vindos dos formulários. Marque o atendimento para a equipe saber o que já foi respondido."

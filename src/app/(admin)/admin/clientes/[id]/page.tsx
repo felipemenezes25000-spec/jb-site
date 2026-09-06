@@ -254,7 +254,7 @@ export default async function ClientePage({ params }: Props) {
           valor={formatarPreco(totalComprado)}
           icone={Wallet}
           tom="marca"
-          detalhe={`${plural(compras._count, "pedido pago", "pedidos pagos")}`}
+          detalhe={plural(compras._count, "pedido pago", "pedidos pagos")}
         />
         <Indicador
           rotulo="Pedidos"
@@ -270,16 +270,16 @@ export default async function ClientePage({ params }: Props) {
           rotulo="Equipamentos"
           valor={cliente._count.equipments}
           icone={MonitorCog}
-          detalhe={`${cliente._count.serviceRequests} chamado(s) abertos historicamente`}
+          detalhe={`${plural(cliente._count.serviceRequests, "chamado aberto", "chamados abertos")} desde o cadastro`}
         />
         <Indicador
           rotulo="Último contato"
-          valor={ultimoContato ? formatarData(ultimoContato) : "—"}
+          valor={ultimoContato ? formatarData(ultimoContato) : "Nenhum"}
           icone={CalendarClock}
           detalhe={
             ultimoContato
               ? "Compra, orçamento, chamado ou acesso à conta"
-              : "Sem interação registrada"
+              : "Este cliente ainda não comprou nem abriu chamado"
           }
         />
       </Indicadores>
@@ -329,7 +329,7 @@ export default async function ClientePage({ params }: Props) {
                         >
                           {pedido.number}
                         </Link>
-                        <p className="text-xs text-graf-500">
+                        <p className="text-[0.8125rem] text-graf-500">
                           {formatarData(pedido.placedAt)}
                           {pedido.paidAt ? ` · pago em ${formatarData(pedido.paidAt)}` : ""}
                         </p>
@@ -391,7 +391,7 @@ export default async function ClientePage({ params }: Props) {
                         >
                           {orcamento.number}
                         </Link>
-                        <p className="text-xs text-graf-500">
+                        <p className="text-[0.8125rem] text-graf-500">
                           {orcamento.kind === "comercial" ? "Venda" : "Serviço técnico"} ·{" "}
                           {formatarData(orcamento.createdAt)}
                           {orcamento.validUntil
@@ -450,7 +450,7 @@ export default async function ClientePage({ params }: Props) {
                           {ROTULO_EQUIPAMENTO[equipamento.status]}
                         </Etiqueta>
                       </div>
-                      <p className="text-xs text-graf-500">
+                      <p className="text-[0.8125rem] text-graf-500">
                         {[
                           equipamento.brandName,
                           equipamento.modelName,
@@ -502,7 +502,7 @@ export default async function ClientePage({ params }: Props) {
                           {ROTULO_CHAMADO[chamado.status]}
                         </Etiqueta>
                       </div>
-                      <p className="line-2 text-xs text-graf-500">
+                      <p className="line-2 text-[0.8125rem] text-graf-500">
                         {formatarData(chamado.createdAt)} · {chamado.description}
                       </p>
                     </li>
@@ -532,7 +532,7 @@ export default async function ClientePage({ params }: Props) {
                       >
                         {contrato.number}
                       </Link>
-                      <p className="text-xs text-graf-500">
+                      <p className="text-[0.8125rem] text-graf-500">
                         {[
                           contrato.plan?.name,
                           `${contrato._count.items} equipamento(s)`,
@@ -584,7 +584,7 @@ export default async function ClientePage({ params }: Props) {
                         <FileText className="size-4 shrink-0 text-graf-500" aria-hidden />
                         {documento.title}
                       </a>
-                      <p className="text-xs text-graf-500">
+                      <p className="text-[0.8125rem] text-graf-500">
                         {formatarData(documento.createdAt)}
                       </p>
                     </li>
@@ -609,9 +609,9 @@ export default async function ClientePage({ params }: Props) {
                     {cliente.email}
                   </a>
                 </Dado>
-                <Dado rotulo="Telefone">
-                  {cliente.phone ? formatarTelefone(cliente.phone) : ""}
-                </Dado>
+                {cliente.phone ? (
+                  <Dado rotulo="Telefone">{formatarTelefone(cliente.phone)}</Dado>
+                ) : null}
                 <Dado rotulo="E-mail confirmado">
                   {cliente.emailVerifiedAt ? formatarData(cliente.emailVerifiedAt) : "Ainda não"}
                 </Dado>
@@ -651,7 +651,7 @@ export default async function ClientePage({ params }: Props) {
                       className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-graf-200 p-3"
                     >
                       <span className="text-sm font-semibold text-graf-900">{unidade.name}</span>
-                      <span className="text-xs text-graf-500">
+                      <span className="text-[0.8125rem] text-graf-500">
                         {unidade.address
                           ? `${[unidade.address.district, `${unidade.address.city}/${unidade.address.state}`]
                               .filter(Boolean)

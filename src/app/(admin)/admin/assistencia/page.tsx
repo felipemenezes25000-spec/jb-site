@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { Prisma, ServiceRequestStatus, Urgency } from "@prisma/client";
 import { CalendarDays, Plus, Stethoscope } from "lucide-react";
 
@@ -282,7 +281,7 @@ export default async function PaginaChamados({
           <span className="block min-w-0">
             <span className="block truncate">{nome}</span>
             {serie ? (
-              <span className="label-mono block text-xs text-graf-500">série {serie}</span>
+              <span className="label-mono block text-graf-500">série {serie}</span>
             ) : null}
           </span>
         );
@@ -326,7 +325,7 @@ export default async function PaginaChamados({
       renderizar: (linha) => (
         <span className="block">
           <span className="block text-graf-800">{distanciaEmDias(linha.createdAt)}</span>
-          <span className="block text-xs text-graf-500">{formatarData(linha.createdAt)}</span>
+          <span className="block text-[0.8125rem] text-graf-500">{formatarData(linha.createdAt)}</span>
         </span>
       ),
     },
@@ -339,7 +338,7 @@ export default async function PaginaChamados({
         descricao="Equipamento parado primeiro, e dentro de cada urgência o que espera há mais tempo."
         acoes={
           <>
-            <LinkBotao href="/admin/agenda" variante="secundario" tamanho="md">
+            <LinkBotao href="/admin/agenda" variante="secundario" tamanho="sm">
               <CalendarDays className="size-4" aria-hidden />
               Ver agenda
             </LinkBotao>
@@ -431,14 +430,11 @@ export default async function PaginaChamados({
           icone: Stethoscope,
           titulo: "Nenhum chamado com esses filtros",
           descricao:
-            "Ajuste a busca ou volte para a fila em aberto. Chamados novos chegam pelo formulário do site e pela área do cliente.",
+            "Ajuste a busca ou volte para a fila em aberto. Chamados novos chegam pelo formulário do site e pela Área da Clínica.",
           acao: (
-            <Link
-              href="/admin/assistencia"
-              className="text-sm font-semibold text-jb-700 hover:text-jb-500"
-            >
+            <LinkBotao href="/admin/assistencia" variante="secundario">
               Ver a fila em aberto
-            </Link>
+            </LinkBotao>
           ),
         }}
       />

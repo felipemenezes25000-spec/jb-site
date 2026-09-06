@@ -14,7 +14,7 @@ import { LinkBotao } from "@/components/ui/button";
 import { Etiqueta } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
 import { Tabela, type Coluna, type Direcao } from "@/components/ui/tabela";
-import { distanciaEmDias, formatarData, formatarPreco } from "@/lib/format";
+import { distanciaEmDias, formatarData, formatarPreco, plural } from "@/lib/format";
 import { ROTULO_ORCAMENTO, ROTULO_TIPO_ORCAMENTO } from "@/lib/orcamento";
 import { exigirArea } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
@@ -150,8 +150,8 @@ export default async function OrcamentosPage({ searchParams }: { searchParams: B
               linha.contactName ||
               "Contato não informado"}
           </span>
-          <span className="block truncate text-xs text-graf-500">
-            {linha.contactEmail || "sem e-mail"}
+          <span className="block truncate text-[0.8125rem] text-graf-500">
+            {linha.contactEmail || "E-mail não informado"}
           </span>
         </span>
       ),
@@ -184,12 +184,12 @@ export default async function OrcamentosPage({ searchParams }: { searchParams: B
             }
           >
             {formatarData(linha.validUntil)}
-            <span className="block text-xs text-graf-500">
+            <span className="block text-[0.8125rem] text-graf-500">
               {distanciaEmDias(linha.validUntil)}
             </span>
           </span>
         ) : (
-          <span className="text-graf-500">sem prazo</span>
+          <span className="text-graf-500">Sem prazo</span>
         ),
     },
     {
@@ -222,7 +222,7 @@ export default async function OrcamentosPage({ searchParams }: { searchParams: B
         titulo="Orçamentos"
         apoio="Propostas comerciais e de assistência, da montagem à aprovação."
         acoes={
-          <LinkBotao href="/admin/orcamentos/novo" tamanho="sm">
+          <LinkBotao href="/admin/orcamentos/novo">
             <Plus className="size-4" aria-hidden />
             Novo orçamento
           </LinkBotao>
@@ -249,7 +249,7 @@ export default async function OrcamentosPage({ searchParams }: { searchParams: B
           valor={`${conversao}%`}
           icone={total > 0 ? TrendingUp : CircleCheck}
           tom={conversao >= 50 ? "ok" : "neutro"}
-          detalhe={`${decididos} aprovada(s) de ${total}`}
+          detalhe={`${plural(decididos, "proposta fechada", "propostas fechadas")} de ${total}`}
         />
       </Indicadores>
 

@@ -85,13 +85,21 @@ export function MenuAdmin({
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Áreas do painel" className={cn("flex flex-col gap-5 py-4", className)}>
-      {grupos.map((grupo) => (
+    <nav aria-label="Áreas do painel" className={cn("flex flex-col gap-6 pb-6 pt-3", className)}>
+      {grupos.map((grupo, indice) => (
         <div key={grupo.grupo}>
           {colapsado ? (
-            <div className="mx-3 mb-2 h-px bg-graf-200" role="presentation" />
+            /* Recolhido não há espaço para o nome do grupo; um fio separa as
+               famílias de ícones. O primeiro grupo não leva fio — encostaria
+               na borda de baixo do logotipo e viraria uma linha dupla. */
+            indice > 0 ? <div className="mx-4 mb-3 h-px bg-graf-200" role="presentation" /> : null
           ) : (
-            <p className="label-mono mb-1.5 px-3 uppercase text-graf-500">{grupo.rotulo}</p>
+            /* Grudado no topo enquanto o grupo rola: com seis famílias e mais
+               de vinte áreas, o menu passa da altura da tela e sem isto a
+               pessoa perde de vista em qual parte do painel está olhando. */
+            <p className="sticky top-0 z-10 bg-white px-4 pb-2 pt-1 text-[0.8125rem] font-semibold uppercase tracking-[0.08em] text-graf-500">
+              {grupo.rotulo}
+            </p>
           )}
 
           <ul className="space-y-0.5 px-2">
@@ -107,9 +115,9 @@ export function MenuAdmin({
                     aria-current={ativo ? "page" : undefined}
                     title={colapsado ? item.rotulo : undefined}
                     className={cn(
-                      "group relative flex h-11 items-center gap-3 rounded-lg text-sm font-medium transition-colors",
-                      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-                      colapsado ? "justify-center px-0" : "px-3",
+                      "group relative flex h-11 items-center gap-3 rounded-lg text-[0.9375rem] font-medium transition-colors",
+                      "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
+                      colapsado ? "justify-center px-0" : "pl-3.5 pr-2.5",
                       ativo
                         ? "bg-jb-50 font-semibold text-jb-800"
                         : "text-graf-700 hover:bg-graf-100 hover:text-graf-950",
@@ -119,7 +127,7 @@ export function MenuAdmin({
                     {ativo ? (
                       <span
                         aria-hidden
-                        className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-jb-500"
+                        className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-jb-500"
                       />
                     ) : null}
 
@@ -137,12 +145,15 @@ export function MenuAdmin({
                       <>
                         <span className="truncate">{item.rotulo}</span>
                         {item.somenteLeitura ? (
-                          <span
-                            className="ml-auto shrink-0 rounded bg-graf-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-graf-500"
-                            title="Você abre esta área apenas para consulta"
-                          >
-                            leitura
-                          </span>
+                          <>
+                            <span
+                              aria-hidden
+                              className="ml-auto shrink-0 rounded-full bg-graf-100 px-2 py-0.5 text-xs font-medium text-graf-600"
+                            >
+                              leitura
+                            </span>
+                            <span className="sr-only">— você abre esta área apenas para consulta</span>
+                          </>
                         ) : null}
                       </>
                     )}

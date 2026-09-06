@@ -1,6 +1,13 @@
 import Link from "next/link";
 
-import { Trilha, type Migalha } from "@/components/ui/data";
+import {
+  CabecalhoBase,
+  GradeDados,
+  ParDados,
+  SubNav,
+  type ItemSubNav,
+} from "@/components/admin/pagina";
+import type { Migalha } from "@/components/ui/data";
 import type { StaffUser } from "@/lib/auth";
 import { podeVer, type AreaAdmin } from "@/lib/permissoes";
 import { cn } from "@/lib/utils";
@@ -11,6 +18,10 @@ import { cn } from "@/lib/utils";
    Cabeçalho, sub-navegação e lista rótulo/valor. São componentes de servidor:
    sem estado, sem evento — só o desenho que se repete em toda tela desta área,
    para que "Chamados", "OS" e "Manutenção" pareçam o mesmo produto.
+
+   O cabeçalho e a lista de dados vieram para `admin/pagina.tsx`, que é de onde
+   as áreas comercial e de conteúdo também desenham as suas: o painel inteiro
+   passa a ter um só tamanho de título e um só ritmo de ficha.
    ============================================================================ */
 
 export function CabecalhoPagina({
@@ -22,7 +33,7 @@ export function CabecalhoPagina({
   className,
 }: {
   trilha?: Migalha[];
-  titulo: string;
+  titulo: React.ReactNode;
   descricao?: React.ReactNode;
   /** Etiquetas de estado ao lado do título. */
   etiquetas?: React.ReactNode;
@@ -30,25 +41,18 @@ export function CabecalhoPagina({
   className?: string;
 }) {
   return (
-    <header className={cn("space-y-3", className)}>
-      {trilha && trilha.length > 0 ? <Trilha itens={trilha} /> : null}
-      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="text-2xl font-bold leading-tight text-graf-950">{titulo}</h1>
-            {etiquetas}
-          </div>
-          {descricao ? (
-            <p className="mt-1.5 text-sm leading-relaxed text-graf-500">{descricao}</p>
-          ) : null}
-        </div>
-        {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
-      </div>
-    </header>
+    <CabecalhoBase
+      trilha={trilha}
+      titulo={titulo}
+      descricao={descricao}
+      etiquetas={etiquetas}
+      acoes={acoes}
+      className={className}
+    />
   );
 }
 
-export type ItemSubNav = { rotulo: string; href: string; contador?: number };
+export type { ItemSubNav };
 
 /**
  * Sub-navegação da área. Recebe qual está ativa por prop em vez de ler o
@@ -65,47 +69,7 @@ export function SubNavegacao({
   atual: string;
   className?: string;
 }) {
-  return (
-    <nav
-      aria-label="Seções da área"
-      className={cn("scrollbar-none -mx-1 overflow-x-auto px-1", className)}
-    >
-      <ul className="flex min-w-max items-center gap-1 border-b border-graf-200">
-        {itens.map((item) => {
-          const ativo = item.href === atual;
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={ativo ? "page" : undefined}
-                className={cn(
-                  "-mb-px inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-2 px-4 text-sm font-semibold transition-colors",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-                  ativo
-                    ? "border-jb-500 text-jb-700"
-                    : "border-transparent text-graf-500 hover:border-graf-300 hover:text-graf-800",
-                )}
-              >
-                {item.rotulo}
-                {typeof item.contador === "number" ? (
-                  <span
-                    className={cn(
-                      // text-xs (12px) em vez de 11px: contador é informação, e 1px aqui não
-                      // muda o desenho da pílula mas tira o texto do limite do legível
-                      "tabular inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold",
-                      ativo ? "bg-jb-100 text-jb-700" : "bg-graf-100 text-graf-600",
-                    )}
-                  >
-                    {item.contador}
-                  </span>
-                ) : null}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
+  return <SubNav itens={itens} atual={atual} className={className} />;
 }
 
 /**
@@ -151,22 +115,16 @@ export function Dados({
   className?: string;
 }) {
   return (
-    <dl
-      className={cn(
-        "grid gap-x-6 gap-y-4",
-        colunas === 1 ? "grid-cols-1" : colunas === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2",
-        className,
-      )}
-    >
+    <GradeDados colunas={colunas} className={className}>
       {children}
-    </dl>
+    </GradeDados>
   );
 }
 
 export function Dado({
   rotulo,
   children,
-  vazio = "—",
+  vazio,
   className,
 }: {
   rotulo: string;
@@ -175,20 +133,10 @@ export function Dado({
   vazio?: string;
   className?: string;
 }) {
-  const temValor =
-    children !== null &&
-    children !== undefined &&
-    children !== false &&
-    children !== "" &&
-    !(Array.isArray(children) && children.length === 0);
-
   return (
-    <div className={cn("min-w-0", className)}>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-graf-500">{rotulo}</dt>
-      <dd className={cn("mt-1 text-sm", temValor ? "text-graf-900" : "text-graf-500")}>
-        {temValor ? children : vazio}
-      </dd>
-    </div>
+    <ParDados rotulo={rotulo} vazio={vazio} className={className}>
+      {children}
+    </ParDados>
   );
 }
 
@@ -211,18 +159,30 @@ export function Contador({
       href={href}
       aria-current={ativo ? "true" : undefined}
       className={cn(
-        "flex min-h-11 min-w-[7.5rem] flex-1 flex-col justify-center rounded-lg border px-3 py-2 transition-colors",
+        "flex min-h-11 min-w-[7.5rem] flex-1 flex-col justify-center rounded-lg border px-3.5 py-2.5 transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
         ativo
-          ? "border-jb-500 bg-jb-50"
+          ? "border-jb-500 bg-jb-50 ring-1 ring-inset ring-jb-500/25"
           : "border-graf-200 bg-white hover:border-graf-300 hover:bg-graf-50",
         className,
       )}
     >
-      <span className={cn("tabular text-lg font-bold leading-none", ativo ? "text-jb-700" : "text-graf-950")}>
+      <span
+        className={cn(
+          "tabular text-xl font-bold leading-none",
+          ativo ? "text-jb-700" : "text-graf-950",
+        )}
+      >
         {valor}
       </span>
-      <span className="mt-1 text-xs font-medium leading-snug text-graf-500">{rotulo}</span>
+      <span
+        className={cn(
+          "mt-1.5 text-[0.8125rem] font-medium leading-snug",
+          ativo ? "text-jb-700" : "text-graf-500",
+        )}
+      >
+        {rotulo}
+      </span>
     </Link>
   );
 }

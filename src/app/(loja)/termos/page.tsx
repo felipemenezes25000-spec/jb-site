@@ -125,9 +125,8 @@ export default async function TermosPage() {
             disponível para outros clientes.
           </p>
           <p>
-            O valor total, incluindo serviços contratados e frete, é sempre recalculado
-            pelo servidor da JB no momento do fechamento — o que aparece na tela é
-            conferido antes de qualquer cobrança.
+            O valor total, incluindo serviços contratados e frete, é sempre reconferido
+            pela JB no momento do fechamento, antes de qualquer cobrança.
           </p>
           <p>
             A JB pode recusar ou cancelar pedidos com indício de fraude, divergência

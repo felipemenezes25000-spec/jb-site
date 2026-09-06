@@ -70,9 +70,9 @@ export default async function CupomPage() {
       />
 
       {!podeEditar(usuario, "cupons") ? (
-        <Aviso tom="info" titulo="Somente leitura">
-          Seu papel abre esta área para consulta. Para criar, editar ou desativar um cupom, peça
-          o acesso a um administrador.
+        <Aviso tom="info" titulo="Somente consulta">
+          Seu acesso aos cupons é apenas de consulta. Para criar, editar ou desativar um cupom,
+          peça a liberação a um administrador.
         </Aviso>
       ) : null}
 
@@ -81,7 +81,7 @@ export default async function CupomPage() {
           rotulo="Cupons cadastrados"
           valor={cupons.length}
           icone={TicketPercent}
-          detalhe={`${plural(ativos.length, "ativo", "ativos")}`}
+          detalhe={plural(ativos.length, "ativo", "ativos")}
         />
         <Indicador
           rotulo="Usos registrados"

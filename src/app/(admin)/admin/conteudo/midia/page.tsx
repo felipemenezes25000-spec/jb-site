@@ -132,7 +132,7 @@ export default async function PaginaBibliotecaDeMidia({
   const espaco = ocupacao._sum.size ?? 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         trilha={[{ rotulo: "Conteúdo", href: "/admin/conteudo" }, { rotulo: "Biblioteca de mídia" }]}
         titulo="Biblioteca de mídia"

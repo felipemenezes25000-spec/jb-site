@@ -24,7 +24,7 @@ export default async function PaginaNovoServico() {
       />
 
       <header>
-        <h1 className="text-2xl font-bold text-graf-950">Novo serviço</h1>
+        <h1 className="text-2xl font-bold leading-tight text-graf-950">Novo serviço</h1>
         <p className="mt-1 text-sm text-graf-500">
           Instalação, treinamento, preventiva. Pode ser vendido sozinho ou junto de um produto.
         </p>

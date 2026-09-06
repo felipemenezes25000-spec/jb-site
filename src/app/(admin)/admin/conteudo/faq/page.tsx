@@ -149,7 +149,7 @@ export default async function PaginaFaq({
                         </div>
                         <p className="mt-1 line-2 text-sm text-graf-600">{pergunta.answer}</p>
                         {pergunta.product ? (
-                          <p className="mt-1.5 text-xs text-graf-500">
+                          <p className="mt-1.5 text-[0.8125rem] text-graf-500">
                             Aparece só na ficha de {pergunta.product.name}
                           </p>
                         ) : null}

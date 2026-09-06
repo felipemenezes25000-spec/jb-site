@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { CabecalhoDeSecao } from "@/components/admin/conteudo/cabecalho";
+import { Botao } from "@/components/ui/button";
 import { Etiqueta, Vazio, type Tom } from "@/components/ui/data";
 import type { StaffUser } from "@/lib/auth";
 import { ROTULO_CHAMADO } from "@/lib/assistencia";
@@ -303,7 +304,7 @@ export default async function PaginaBuscaGlobal({
   const encontrados = grupos.reduce((soma, grupo) => soma + grupo.itens.length, 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         titulo={termo ? `Resultados para "${termo}"` : "Busca"}
         descricao="Procura em pedidos, clientes, produtos, chamados, ordens de serviço e orçamentos — somente nas áreas que o seu perfil abre."
@@ -322,7 +323,7 @@ export default async function PaginaBuscaGlobal({
         role="search"
         className="rounded-xl border border-graf-200 bg-white p-3 shadow-card"
       >
-        <label htmlFor="termo-da-busca" className="mb-1 block text-xs font-semibold text-graf-600">
+        <label htmlFor="termo-da-busca" className="mb-1 block text-[0.8125rem] font-semibold text-graf-600">
           O que você procura
         </label>
         <div className="flex flex-wrap gap-2">
@@ -345,12 +346,7 @@ export default async function PaginaBuscaGlobal({
               )}
             />
           </div>
-          <button
-            type="submit"
-            className="inline-flex h-11 items-center rounded-lg bg-jb-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-          >
-            Buscar
-          </button>
+          <Botao type="submit">Buscar</Botao>
         </div>
       </form>
 
@@ -364,7 +360,7 @@ export default async function PaginaBuscaGlobal({
         <Vazio
           icone={Search}
           titulo="Termo curto demais"
-          descricao="Use pelo menos dois caracteres — com um só, a busca devolveria quase tudo."
+          descricao="Escreva pelo menos duas letras ou números — com um só, a busca devolveria quase tudo."
         />
       ) : grupos.length === 0 ? (
         <Vazio
@@ -393,7 +389,7 @@ export default async function PaginaBuscaGlobal({
                   {grupo.hrefTodos && grupo.itens.length === LIMITE_POR_TIPO ? (
                     <Link
                       href={grupo.hrefTodos}
-                      className="text-sm font-semibold text-jb-700 underline underline-offset-2"
+                      className="inline-flex min-h-11 items-center text-sm font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-500"
                     >
                       Ver todos em {grupo.rotulo.toLowerCase()}
                     </Link>
@@ -414,7 +410,7 @@ export default async function PaginaBuscaGlobal({
                           <span className="block truncate text-sm font-semibold text-graf-900">
                             {item.titulo}
                           </span>
-                          <span className="block truncate text-xs text-graf-500">
+                          <span className="block truncate text-[0.8125rem] text-graf-500">
                             {item.detalhe}
                           </span>
                         </span>

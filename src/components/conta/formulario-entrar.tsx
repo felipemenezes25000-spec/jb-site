@@ -58,6 +58,7 @@ export function FormularioEntrar({
         required
         autoFocus
         placeholder="voce@clinica.com.br"
+        ajuda="Use o e-mail informado no cadastro."
         erro={erroDe("email")}
       />
 

@@ -12,6 +12,10 @@ import { Secao } from "@/components/ui/secao";
    grafite aparece uma vez por página, no fim, ligando o equipamento que a
    pessoa está vendo aos caminhos reais da assistência.
 
+   Três colunas separadas por fio, sem caixa de vidro em volta: em fundo
+   escuro, cartão translúcido é o efeito que mais entrega template. O bloco
+   inteiro é clicável pelo link do título.
+
    Nenhum prazo, nenhuma cobertura e nenhum número: só as portas de entrada que
    existem no site.
    ============================================================================ */
@@ -55,47 +59,45 @@ export function AssistenciaRelacionada({
         sobretitulo="Depois da entrega"
         titulo="Quem vende é quem conserta"
         descricao={`A JB é assistência técnica de equipamento odontológico${desdeQuando}, com equipe própria${praca}. O equipamento que sai daqui continua com a mesma equipe do outro lado.`}
+        acao={
+          <LinkBotao href="/assistencia-tecnica/solicitar" variante="claro" tamanho="lg">
+            Abrir um chamado
+          </LinkBotao>
+        }
       />
 
-      <ul className="mt-10 grid gap-4 md:grid-cols-3 lg:gap-6">
+      {/* O respiro entre as colunas vem do `px` dos itens, não do `gap`: o fio
+          do `divide-x` mora na borda, e somar os dois espremeria o texto. */}
+      <ul className="mt-12 grid gap-y-10 md:grid-cols-3 md:gap-x-0 md:divide-x md:divide-white/12 md:[&>*:first-child]:pl-0 md:[&>*:last-child]:pr-0 md:[&>*]:px-8 lg:mt-14">
         {CAMINHOS.map((caminho) => {
           const Icone = caminho.icone;
           return (
-            <li key={caminho.href} className="flex">
-              <Link
-                href={caminho.href}
-                className="group flex w-full flex-col rounded-xl border border-white/12 bg-white/5 p-5 transition-colors duration-200 hover:border-white/30 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:p-6"
-              >
-                <span
-                  aria-hidden
-                  className="flex size-10 items-center justify-center rounded-lg bg-jb-500 text-white"
+            <li key={caminho.href} className="group relative">
+              <Icone className="size-5 text-jb-300" aria-hidden />
+              <h3 className="mt-3.5 text-base font-bold text-white">
+                <Link
+                  href={caminho.href}
+                  /* Link esticado: o item inteiro fica clicável sem virar
+                     cartão e sem duplicar o mesmo destino em dois links. */
+                  className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
-                  <Icone className="size-5" />
-                </span>
-                <span className="mt-4 block text-base font-bold text-white">
                   {caminho.titulo}
-                </span>
-                <span className="mt-1.5 block text-sm leading-relaxed text-graf-300">
-                  {caminho.texto}
-                </span>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-white">
-                  Ver como funciona
-                  <ArrowRight
-                    className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
-                    aria-hidden
-                  />
-                </span>
-              </Link>
+                </Link>
+              </h3>
+              <p className="texto-suave mt-2 text-[0.9375rem] leading-relaxed">
+                {caminho.texto}
+              </p>
+              <span className="mt-3.5 inline-flex items-center gap-1.5 text-sm font-semibold text-white">
+                Ver como funciona
+                <ArrowRight
+                  className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                  aria-hidden
+                />
+              </span>
             </li>
           );
         })}
       </ul>
-
-      <div className="mt-8">
-        <LinkBotao href="/assistencia-tecnica/solicitar" variante="claro" tamanho="lg">
-          Abrir um chamado
-        </LinkBotao>
-      </div>
     </Secao>
   );
 }

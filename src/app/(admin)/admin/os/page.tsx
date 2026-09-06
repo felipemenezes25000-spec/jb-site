@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { Prisma, WorkOrderStatus } from "@prisma/client";
 import { CalendarDays, ClipboardList, Plus } from "lucide-react";
 
@@ -217,18 +216,26 @@ export default async function PaginaOrdens({
     {
       chave: "equipamento",
       rotulo: "Equipamento",
-      renderizar: (linha) => (
-        <span className="block min-w-0">
-          <span className="block truncate">
-            {linha.equipment?.name ?? linha.reportedIssue ?? "—"}
+      renderizar: (linha) => {
+        // A OS avulsa de balcão pode nascer sem equipamento cadastrado: nesse
+        // caso o que identifica a linha é o defeito relatado, e só quando nem
+        // isso existe é que aparece o aviso de cadastro incompleto.
+        const identificacao = linha.equipment?.name || linha.reportedIssue;
+        return (
+          <span className="block min-w-0">
+            {identificacao ? (
+              <span className="block truncate">{identificacao}</span>
+            ) : (
+              <span className="block text-graf-500">Equipamento não identificado</span>
+            )}
+            {linha.equipment?.serialNumber ? (
+              <span className="label-mono block text-graf-500">
+                série {linha.equipment.serialNumber}
+              </span>
+            ) : null}
           </span>
-          {linha.equipment?.serialNumber ? (
-            <span className="label-mono block text-xs text-graf-500">
-              série {linha.equipment.serialNumber}
-            </span>
-          ) : null}
-        </span>
-      ),
+        );
+      },
     },
     {
       chave: "tecnico",
@@ -267,7 +274,7 @@ export default async function PaginaOrdens({
       renderizar: (linha) => (
         <span className="block">
           <span className="block text-graf-800">{distanciaEmDias(linha.openedAt)}</span>
-          <span className="block text-xs text-graf-500">{formatarData(linha.openedAt)}</span>
+          <span className="block text-[0.8125rem] text-graf-500">{formatarData(linha.openedAt)}</span>
         </span>
       ),
     },
@@ -280,7 +287,7 @@ export default async function PaginaOrdens({
         descricao="Diagnóstico, peças, mão de obra e laudo de cada reparo."
         acoes={
           <>
-            <LinkBotao href="/admin/agenda" variante="secundario" tamanho="md">
+            <LinkBotao href="/admin/agenda" variante="secundario" tamanho="sm">
               <CalendarDays className="size-4" aria-hidden />
               Ver agenda
             </LinkBotao>
@@ -394,9 +401,9 @@ export default async function PaginaOrdens({
           descricao:
             "As OS nascem a partir de um chamado, de uma visita preventiva com pendência ou avulsas, pelo botão acima.",
           acao: (
-            <Link href="/admin/os" className="text-sm font-semibold text-jb-700 hover:text-jb-500">
+            <LinkBotao href="/admin/os" variante="secundario">
               Ver as ordens em aberto
-            </Link>
+            </LinkBotao>
           ),
         }}
       />

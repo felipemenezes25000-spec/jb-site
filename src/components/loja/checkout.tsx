@@ -10,6 +10,7 @@ import {
   MapPin,
   Pencil,
   QrCode,
+  ShieldCheck,
   Store,
   TriangleAlert,
   Truck,
@@ -72,7 +73,7 @@ const UFS = [
 ];
 
 const ETAPAS = [
-  { rotulo: "Identificação", descricao: "Onde você recebe o pedido" },
+  { rotulo: "Identificação", descricao: "Para onde vai a confirmação" },
   { rotulo: "Dados", descricao: "Nome, contato e documento" },
   { rotulo: "Entrega", descricao: "Retirada ou entrega" },
   { rotulo: "Pagamento", descricao: "Pix ou cartão" },
@@ -234,7 +235,7 @@ function BlocoRevisao({
   return (
     <div className="rounded-xl border border-graf-200 bg-white p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-graf-500">
+        <h3 className="flex items-center gap-2 text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500">
           <Icone className="size-4 shrink-0 text-graf-400" aria-hidden />
           {titulo}
         </h3>
@@ -514,6 +515,17 @@ export function Checkout({
     });
   }
 
+  /**
+   * A recusa do servidor também aparece colada ao campo que a causou.
+   *
+   * O aviso do topo continua existindo — é ele que o leitor de tela anuncia —
+   * mas quem enxerga a tela precisa ver o problema onde vai corrigi-lo, sem
+   * relacionar mensagem e campo de cabeça.
+   */
+  function erroDoCampo(nome: string) {
+    return estado.campo === nome ? estado.erro : undefined;
+  }
+
   function preencherPeloCep(endereco: EnderecoCep) {
     setLogradouro((atual) => endereco.logradouro || atual);
     setBairro((atual) => endereco.bairro || atual);
@@ -546,9 +558,16 @@ export function Checkout({
 
       <Passos passos={ETAPAS} atual={etapa} rotulo="Etapas do pedido" className="mb-7" />
 
+      {/* A recusa do servidor tem duas formas. Presa a um campo, a frase
+          inteira já aparece colada a ele: aqui o aviso só aponta, senão o
+          mesmo texto fica em dois lugares da tela e o leitor de tela anuncia
+          duas vezes. Sem campo — recusa do pedido inteiro —, este é o único
+          lugar em que a mensagem existe. */}
       {estado.erro ? (
         <Aviso tom="erro" titulo="Não deu para fechar o pedido" className="mb-6">
-          {estado.erro}
+          {estado.campo
+            ? "Confira o campo destacado no formulário para continuar."
+            : estado.erro}
         </Aviso>
       ) : null}
 
@@ -616,6 +635,7 @@ export function Checkout({
             required
             value={email}
             onChange={(evento) => setEmail(evento.currentTarget.value)}
+            erro={erroDoCampo("email")}
             ajuda="Enviamos aqui a confirmação da compra e o link de acompanhamento do pedido."
           />
 
@@ -640,6 +660,7 @@ export function Checkout({
                     minLength={8}
                     value={senha}
                     onChange={(evento) => setSenha(evento.currentTarget.value)}
+                    erro={erroDoCampo("senha")}
                     ajuda="Pelo menos 8 caracteres."
                   />
                   <button
@@ -669,6 +690,7 @@ export function Checkout({
             required
             value={nome}
             onChange={(evento) => setNome(evento.currentTarget.value)}
+            erro={erroDoCampo("nome")}
           />
 
           <CampoTelefone
@@ -676,6 +698,7 @@ export function Checkout({
             required
             valor={telefone}
             aoMudar={setTelefone}
+            erro={erroDoCampo("telefone")}
             ajuda="Usamos para combinar entrega e instalação."
           />
 
@@ -699,6 +722,7 @@ export function Checkout({
             tipo={tipoPessoa}
             valor={documento}
             aoMudar={setDocumento}
+            erro={erroDoCampo("documento")}
           />
 
           {tipoPessoa === "juridica" ? (
@@ -709,6 +733,7 @@ export function Checkout({
               required
               value={razaoSocial}
               onChange={(evento) => setRazaoSocial(evento.currentTarget.value)}
+              erro={erroDoCampo("razaoSocial")}
             />
           ) : (
             <input type="hidden" name="razaoSocial" value="" />
@@ -741,7 +766,7 @@ export function Checkout({
               <Store className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
               <div className="min-w-0 text-sm leading-relaxed text-graf-700">
                 <p className="text-base font-bold text-graf-950">Retirada na JB</p>
-                <p className="mt-1.5">{enderecoJb}</p>
+                {enderecoJb ? <p className="mt-1.5">{enderecoJb}</p> : null}
                 {horarioJb ? <p className="mt-1">{horarioJb}</p> : null}
                 {instrucoesRetirada ? (
                   <p className="mt-2.5 text-graf-600">{instrucoesRetirada}</p>
@@ -750,82 +775,99 @@ export function Checkout({
             </div>
           ) : (
             <>
-              <div className="grid gap-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
-                <CampoCep
-                  name="cep"
-                  required
-                  valor={cep}
-                  aoMudar={setCep}
-                  aoEncontrar={preencherPeloCep}
-                />
-                <Campo
-                  rotulo="Logradouro"
-                  name="logradouro"
-                  autoComplete="address-line1"
-                  required
-                  value={logradouro}
-                  onChange={(evento) => setLogradouro(evento.currentTarget.value)}
-                />
-              </div>
+              {/* os campos do endereço andam juntos: uma moldura só, com
+                  legenda, separa "onde entregar" do resultado do frete logo
+                  abaixo — em vez de nove campos soltos em fila */}
+              <fieldset className="min-w-0 rounded-xl border border-graf-200 p-4 sm:p-5">
+                <legend className="px-1.5 text-sm font-bold text-graf-800">
+                  Endereço de entrega
+                </legend>
 
-              <div className="grid gap-5 sm:grid-cols-[8rem_minmax(0,1fr)]">
-                <Campo
-                  rotulo="Número"
-                  name="numero"
-                  required
-                  value={numero}
-                  onChange={(evento) => setNumero(evento.currentTarget.value)}
-                />
-                <Campo
-                  rotulo="Complemento"
-                  name="complemento"
-                  autoComplete="address-line2"
-                  value={complemento}
-                  onChange={(evento) => setComplemento(evento.currentTarget.value)}
-                  ajuda="Sala, andar, bloco."
-                />
-              </div>
+                <div className="space-y-5">
+                  <div className="grid gap-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
+                    <CampoCep
+                      name="cep"
+                      required
+                      valor={cep}
+                      aoMudar={setCep}
+                      aoEncontrar={preencherPeloCep}
+                      erro={erroDoCampo("cep")}
+                    />
+                    <Campo
+                      rotulo="Logradouro"
+                      name="logradouro"
+                      autoComplete="address-line1"
+                      required
+                      value={logradouro}
+                      onChange={(evento) => setLogradouro(evento.currentTarget.value)}
+                      erro={erroDoCampo("logradouro")}
+                    />
+                  </div>
 
-              <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_7rem]">
-                <Campo
-                  rotulo="Bairro"
-                  name="bairro"
-                  required
-                  value={bairro}
-                  onChange={(evento) => setBairro(evento.currentTarget.value)}
-                />
-                <Campo
-                  rotulo="Cidade"
-                  name="cidade"
-                  autoComplete="address-level2"
-                  required
-                  value={cidade}
-                  onChange={(evento) => setCidade(evento.currentTarget.value)}
-                />
-                <Selecao
-                  rotulo="Estado"
-                  name="uf"
-                  autoComplete="address-level1"
-                  required
-                  value={uf}
-                  onChange={(evento) => setUf(evento.currentTarget.value)}
-                >
-                  <option value="">—</option>
-                  {UFS.map((sigla) => (
-                    <option key={sigla} value={sigla}>
-                      {sigla}
-                    </option>
-                  ))}
-                </Selecao>
-              </div>
+                  <div className="grid gap-5 sm:grid-cols-[8rem_minmax(0,1fr)]">
+                    <Campo
+                      rotulo="Número"
+                      name="numero"
+                      required
+                      value={numero}
+                      onChange={(evento) => setNumero(evento.currentTarget.value)}
+                      erro={erroDoCampo("numero")}
+                    />
+                    <Campo
+                      rotulo="Complemento"
+                      name="complemento"
+                      autoComplete="address-line2"
+                      value={complemento}
+                      onChange={(evento) => setComplemento(evento.currentTarget.value)}
+                      ajuda="Sala, andar, bloco."
+                    />
+                  </div>
 
-              <Campo
-                rotulo="Ponto de referência"
-                name="referencia"
-                value={referencia}
-                onChange={(evento) => setReferencia(evento.currentTarget.value)}
-                ajuda="Ajuda o motorista a achar a clínica. Opcional."
-              />
+                  <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_7rem]">
+                    <Campo
+                      rotulo="Bairro"
+                      name="bairro"
+                      required
+                      value={bairro}
+                      onChange={(evento) => setBairro(evento.currentTarget.value)}
+                      erro={erroDoCampo("bairro")}
+                    />
+                    <Campo
+                      rotulo="Cidade"
+                      name="cidade"
+                      autoComplete="address-level2"
+                      required
+                      value={cidade}
+                      onChange={(evento) => setCidade(evento.currentTarget.value)}
+                      erro={erroDoCampo("cidade")}
+                    />
+                    <Selecao
+                      rotulo="Estado"
+                      name="uf"
+                      autoComplete="address-level1"
+                      required
+                      value={uf}
+                      onChange={(evento) => setUf(evento.currentTarget.value)}
+                      erro={erroDoCampo("uf")}
+                    >
+                      <option value="">Selecione</option>
+                      {UFS.map((sigla) => (
+                        <option key={sigla} value={sigla}>
+                          {sigla}
+                        </option>
+                      ))}
+                    </Selecao>
+                  </div>
+
+                  <Campo
+                    rotulo="Ponto de referência"
+                    name="referencia"
+                    value={referencia}
+                    onChange={(evento) => setReferencia(evento.currentTarget.value)}
+                    ajuda="Ajuda o motorista a achar a clínica. Opcional."
+                  />
+                </div>
+              </fieldset>
 
               {/*
                 O resultado do frete é anunciado sozinho: quem usa leitor de
@@ -865,7 +907,7 @@ export function Checkout({
                       {freteEntrega.rotulo}
                       {prazoDoFrete ? ` · ${prazoDoFrete}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-graf-500">
+                    <p className="mt-1 text-[0.8125rem] text-graf-500">
                       O valor já está somado no resumo do pedido.
                     </p>
                   </CaixaFrete>
@@ -886,7 +928,7 @@ export function Checkout({
             <span className="text-xl font-extrabold tabular tracking-tight text-graf-950">
               {formatarPreco(totalComFreteCents)}
             </span>
-            <span className="w-full text-xs leading-relaxed text-graf-500">
+            <span className="w-full text-[0.8125rem] leading-relaxed text-graf-500">
               {entrega === "retirada"
                 ? "Retirada na JB, sem custo de frete."
                 : frete?.orcadoDepois
@@ -1055,7 +1097,7 @@ export function Checkout({
               {entrega === "retirada" ? (
                 <>
                   <p className="font-semibold">Retirada na JB</p>
-                  <p className="text-graf-600">{enderecoJb}</p>
+                  {enderecoJb ? <p className="text-graf-600">{enderecoJb}</p> : null}
                   {horarioJb ? <p className="text-graf-600">{horarioJb}</p> : null}
                 </>
               ) : (
@@ -1152,6 +1194,7 @@ export function Checkout({
             maxLength={1000}
             value={observacao}
             onChange={(evento) => setObservacao(evento.currentTarget.value)}
+            erro={erroDoCampo("observacao")}
             ajuda="Horário melhor para entrega, acesso à clínica, o que mais ajudar. Opcional."
           />
 
@@ -1162,7 +1205,6 @@ export function Checkout({
               antes de despachar. Você aprova antes de qualquer cobrança extra.
             </Aviso>
           ) : null}
-
         </EtapaCheckout>
 
         {/* ------------------------------------------------------ navegação */}
@@ -1213,11 +1255,24 @@ export function Checkout({
         </div>
       </Cartao>
 
-      <p className="mt-5 flex items-start gap-2.5 text-sm leading-relaxed text-graf-600">
-        <Truck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
-        Ao confirmar, a JB reserva o equipamento e entra em contato por telefone ou WhatsApp para
-        acertar o prazo de entrega e a instalação.
-      </p>
+      {/* o sinal de confiança fica em linguagem de cliente: o que acontece com
+          o dinheiro e o que acontece com o equipamento */}
+      <ul className="mt-5 space-y-2.5 text-sm leading-relaxed text-graf-600">
+        <li className="flex items-start gap-2.5">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <span>
+            <strong className="font-semibold text-graf-900">Pagamento seguro.</strong> Os dados do
+            pagamento ficam com o meio de pagamento — a JB não guarda cartão.
+          </span>
+        </li>
+        <li className="flex items-start gap-2.5">
+          <Truck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <span>
+            Ao confirmar, a JB reserva o equipamento e entra em contato por telefone ou WhatsApp
+            para acertar a entrega e a instalação.
+          </span>
+        </li>
+      </ul>
     </form>
   );
 }

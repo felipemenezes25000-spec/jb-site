@@ -158,3 +158,69 @@ export function GradeConteudoApoio({
     </div>
   );
 }
+
+/* ============================================================================
+   Trilho no celular, grade no resto
+
+   Uma faixa de vitrine na home tem quatro cartões. Em coluna única de 390px
+   isso vira quase 2.800px de rolagem só para dar uma amostra do catálogo — e
+   quem chega pelo celular desiste antes de ver a assistência, que é o
+   argumento comercial da JB.
+
+   Espremer os cartões em duas colunas de 167px resolveria a altura e mataria
+   a fotografia, que é justamente o que faz o equipamento parecer equipamento.
+   Então abaixo de `sm` a faixa vira um trilho horizontal com encaixe: o cartão
+   continua largo, a foto continua grande, e o pedaço do próximo cartão
+   aparecendo na borda é o convite para arrastar.
+
+   É rolagem nativa — sem biblioteca, sem botão, sem estado. O foco do teclado
+   leva o trilho junto, e `prefers-reduced-motion` não tem nada a desligar.
+
+   A margem negativa sangra o trilho até a borda da tela e o recuo interno
+   devolve o alinhamento do primeiro cartão à coluna do texto. Os dois valores
+   acompanham o `container-jb`: 1rem até 400px, 1.25rem daí em diante — que é
+   toda a faixa em que o trilho existe.
+   ============================================================================ */
+
+export function TrilhoOuGrade({
+  colunas,
+  espaco = "md",
+  como = "ul",
+  className,
+  children,
+}: {
+  colunas?: ColunasPorTela;
+  espaco?: EspacoGrade;
+  como?: "div" | "ul" | "ol";
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const Elemento = como;
+  const { base = 1, sm, md, lg, xl } = colunas ?? {};
+
+  return (
+    <Elemento
+      className={cn(
+        // trilho — só abaixo de sm
+        "-mx-4 flex snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-1",
+        "min-[25rem]:-mx-5 min-[25rem]:scroll-px-5 min-[25rem]:px-5",
+        "scrollbar-none",
+        // cada peça ocupa quase a tela, deixando ver que há mais ao lado
+        "[&>*]:w-[78vw] [&>*]:max-w-[19rem] [&>*]:shrink-0 [&>*]:snap-start",
+        // grade — de sm para cima, exatamente como <Grade>
+        "sm:mx-0 sm:grid sm:snap-none sm:overflow-visible sm:px-0 sm:pb-0",
+        "sm:[&>*]:w-auto sm:[&>*]:max-w-none sm:[&>*]:shrink",
+        BASE[base],
+        sm && SM[sm],
+        md && MD[md],
+        lg && LG[lg],
+        xl && XL[xl],
+        ESPACOS[espaco],
+        como !== "div" && "list-none p-0",
+        className,
+      )}
+    >
+      {children}
+    </Elemento>
+  );
+}

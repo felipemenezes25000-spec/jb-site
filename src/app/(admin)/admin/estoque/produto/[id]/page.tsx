@@ -167,9 +167,13 @@ export default async function PaginaEstoqueProduto({
       rotulo: "Motivo",
       renderizar: (linha) => (
         <span className="block">
-          <span className="block">{linha.reason || "—"}</span>
+          {linha.reason ? (
+            <span className="block">{linha.reason}</span>
+          ) : (
+            <span className="block text-graf-500">Sem motivo anotado</span>
+          )}
           {linha.pedido ? (
-            <span className="block text-xs text-graf-500">Pedido {linha.pedido}</span>
+            <span className="block text-[0.8125rem] text-graf-500">Pedido {linha.pedido}</span>
           ) : null}
         </span>
       ),
@@ -193,9 +197,9 @@ export default async function PaginaEstoqueProduto({
         ]}
       />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-graf-950">{produto.name}</h1>
+          <h1 className="text-2xl font-bold leading-tight text-graf-950">{produto.name}</h1>
           <p className="mt-1 text-sm text-graf-500">
             {produto.sku} ·{" "}
             <Link
@@ -208,12 +212,20 @@ export default async function PaginaEstoqueProduto({
         </div>
         <div className="rounded-xl border border-graf-200 bg-white px-5 py-3 text-right shadow-card">
           <p className="text-xs font-semibold uppercase tracking-wide text-graf-500">Saldo atual</p>
-          <p className="tabular mt-1 text-3xl font-bold leading-none text-graf-950">
-            {produto.trackInventory ? produto.stock : "—"}
-          </p>
-          <p className="mt-1 text-xs text-graf-500">
-            {produto.trackInventory ? `alerta em ${produto.lowStockAlert}` : "sem controle de estoque"}
-          </p>
+          {produto.trackInventory ? (
+            <>
+              <p className="tabular mt-1 text-3xl font-bold leading-none text-graf-950">
+                {produto.stock}
+              </p>
+              <p className="mt-1 text-[0.8125rem] text-graf-500">
+                Alerta em {produto.lowStockAlert}
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 max-w-[14rem] text-[0.8125rem] leading-snug text-graf-500">
+              Este produto não controla saldo em estoque.
+            </p>
+          )}
         </div>
       </header>
 
@@ -242,7 +254,7 @@ export default async function PaginaEstoqueProduto({
           </div>
         </Cartao>
       ) : (
-        <Aviso tom="info">Seu perfil abre o estoque apenas para consulta.</Aviso>
+        <Aviso tom="info">Seu acesso ao estoque é apenas de consulta.</Aviso>
       )}
 
       <section className="space-y-3">
@@ -252,7 +264,7 @@ export default async function PaginaEstoqueProduto({
             <p className="text-sm text-graf-500">
               {produto._count.movements === 0
                 ? "Nada registrado ainda."
-                : `${produto._count.movements} ${plural(produto._count.movements, "movimento", "movimentos")} no total${produto._count.movements > movimentos.length ? ` · mostrando os ${movimentos.length} mais recentes` : ""}.`}
+                : `${plural(produto._count.movements, "movimento", "movimentos")} no total${produto._count.movements > movimentos.length ? ` · mostrando os ${movimentos.length} mais recentes` : ""}.`}
             </p>
           </div>
         </div>
@@ -279,7 +291,7 @@ export default async function PaginaEstoqueProduto({
             <p className="text-sm text-graf-500">
               {produto._count.units === 0
                 ? "Nenhuma peça identificada."
-                : `${produto._count.units} ${plural(produto._count.units, "unidade", "unidades")}${produto._count.units > produto.units.length ? ` · mostrando as ${produto.units.length} mais recentes` : ""}.`}
+                : `${plural(produto._count.units, "unidade", "unidades")}${produto._count.units > produto.units.length ? ` · mostrando as ${produto.units.length} mais recentes` : ""}.`}
             </p>
           </div>
           {podeMexer ? (
@@ -320,7 +332,7 @@ export default async function PaginaEstoqueProduto({
                       <span className="block truncate text-sm font-semibold text-graf-900">
                         {unidade.serialNumber || "Sem número de série"}
                       </span>
-                      <span className="block text-xs text-graf-500">
+                      <span className="block text-[0.8125rem] text-graf-500">
                         cadastrada em {formatarDataHora(unidade.createdAt)}
                       </span>
                     </span>
@@ -329,7 +341,7 @@ export default async function PaginaEstoqueProduto({
                     </Etiqueta>
                   </span>
                   {unidade.orderItem?.order ? (
-                    <span className="mt-3 text-xs text-graf-500">
+                    <span className="mt-3 text-[0.8125rem] text-graf-500">
                       Vendida no pedido {unidade.orderItem.order.number}
                     </span>
                   ) : null}

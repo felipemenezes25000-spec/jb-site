@@ -5,9 +5,10 @@ import { ArrowRight } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { CampoMoeda } from "@/components/ui/campos-br";
-import { Cartao } from "@/components/ui/data";
+import { Cartao, Etiqueta } from "@/components/ui/data";
 import { Campo } from "@/components/ui/form";
 import { formatarPreco, plural } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 /**
  * Quanto custa o equipamento parado.
@@ -18,7 +19,9 @@ import { formatarPreco, plural } from "@/lib/format";
  * para poder ser conferida.
  *
  * A conta começa zerada de propósito. Um valor sugerido no campo viraria, na
- * prática, um número da JB dentro de um resultado que é do cliente.
+ * prática, um número da JB dentro de um resultado que é do cliente. Pelo mesmo
+ * motivo o resultado é apresentado como estimativa, e não como previsão: o que
+ * entra é uma suposição de quem preenche, e o que sai também.
  */
 
 function inteiro(valor: string, maximo: number) {
@@ -47,22 +50,24 @@ export function CalculadoraParada({ className }: { className?: string }) {
   const completo = receitaHoraCents > 0 && horas > 0 && dias > 0 && vezes > 0;
 
   return (
-    <Cartao className={className}>
-      <div className="grid gap-8 p-6 lg:grid-cols-2 lg:p-8">
+    <Cartao className={cn("overflow-hidden", className)}>
+      <div className="grid lg:grid-cols-2">
         {/* ------------------------------------------------------ entradas */}
-        <div>
-          <h3 className="text-lg font-bold text-graf-950">Os números são seus</h3>
-          <p className="mt-1 text-sm leading-relaxed text-graf-600">
-            Preencha com a realidade da sua clínica. Nada aqui é enviado para a JB: o
-            resultado é seu, e some quando você fecha a página.
+        <div className="p-6 sm:p-8">
+          <p className="label-mono uppercase text-graf-500">Os números são seus</p>
+          <h3 className="mt-2 text-title texto-forte">Preencha com a rotina da clínica</h3>
+          <p className="mt-3 max-w-prose text-[0.9375rem] leading-relaxed text-graf-600">
+            Nada do que você digitar aqui chega até a JB. A conta acontece nesta tela e
+            desaparece quando a página fecha.
           </p>
 
-          <div className="mt-6 grid gap-5">
+          <div className="mt-7 grid gap-6">
             <CampoMoeda
               rotulo="Quanto a cadeira fatura por hora"
               valorCents={receitaHoraCents}
               aoMudar={setReceitaHoraCents}
               ajuda="Digite só os números: 25000 vira R$ 250,00."
+              className="sm:max-w-xs"
             />
 
             <div className="grid gap-5 sm:grid-cols-3">
@@ -73,6 +78,7 @@ export function CalculadoraParada({ className }: { className?: string }) {
                 value={horasPorDia}
                 onChange={(evento) => setHorasPorDia(evento.target.value)}
                 maxLength={2}
+                ajuda="De atendimento."
               />
               <Campo
                 rotulo="Dias parados"
@@ -90,6 +96,7 @@ export function CalculadoraParada({ className }: { className?: string }) {
                 value={ocorrencias}
                 onChange={(evento) => setOcorrencias(evento.target.value)}
                 maxLength={2}
+                ajuda="Quantas paradas."
               />
             </div>
 
@@ -98,17 +105,21 @@ export function CalculadoraParada({ className }: { className?: string }) {
               valorCents={reparoCents}
               aoMudar={setReparoCents}
               ajuda="Opcional. Peça mais mão de obra, quando você já tem esse histórico."
+              className="sm:max-w-xs"
             />
           </div>
         </div>
 
         {/* ---------------------------------------------------- resultado */}
-        <div className="rounded-xl bg-graf-50 p-6 ring-1 ring-inset ring-graf-200">
-          <h3 className="text-lg font-bold text-graf-950">A conta, passo a passo</h3>
+        <div className="border-t border-graf-200 bg-graf-50 p-6 sm:p-8 lg:border-l lg:border-t-0">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="label-mono uppercase text-graf-500">A conta, passo a passo</p>
+            <Etiqueta tom="neutro">Estimativa</Etiqueta>
+          </div>
 
           {completo ? (
             <>
-              <ol className="mt-5 space-y-3" aria-live="polite">
+              <ol className="mt-6 space-y-3" aria-live="polite">
                 <Linha
                   conta={`${horas} h/dia × ${plural(dias, "dia parado", "dias parados")}`}
                   resultado={`${horasPorOcorrencia} h sem atender`}
@@ -129,28 +140,38 @@ export function CalculadoraParada({ className }: { className?: string }) {
                 ) : null}
               </ol>
 
-              <div className="mt-6 border-t border-graf-300 pt-5">
-                <p className="label-mono uppercase text-graf-500">Custo da parada no ano</p>
-                <p className="tabular mt-1 text-display font-bold leading-none text-jb-600">
+              <div className="mt-7 border-t border-graf-300 pt-6">
+                <p className="label-mono uppercase text-graf-500">
+                  Custo estimado de um ano de paradas
+                </p>
+                <p className="tabular mt-2 text-display leading-none text-graf-950">
                   {formatarPreco(totalNoAno)}
                 </p>
-                <p className="mt-3 text-sm leading-relaxed text-graf-600">
-                  É o que a clínica deixa de faturar
-                  {reparoCents > 0 ? " somado ao que gasta consertando" : ""} quando o
-                  equipamento para nas condições que você informou.
+                <p className="mt-4 text-[0.9375rem] leading-relaxed text-graf-600">
+                  É o que a clínica deixaria de faturar
+                  {reparoCents > 0 ? ", somado ao que gastaria consertando," : ""} se o
+                  equipamento parasse do jeito que você descreveu acima.
                 </p>
               </div>
 
-              <LinkBotao href="/planos-de-manutencao" className="mt-6" larguraTotal>
+              <p className="mt-5 text-[0.8125rem] leading-relaxed text-graf-500">
+                Estimativa montada só com os números desta tela. Não é um orçamento nem
+                uma previsão da JB — mude qualquer campo e o resultado muda junto.
+              </p>
+
+              <LinkBotao href="/planos-de-manutencao" className="mt-7" larguraTotal>
                 Comparar planos de manutenção
                 <ArrowRight className="size-4" aria-hidden />
               </LinkBotao>
             </>
           ) : (
-            <p className="mt-5 text-sm leading-relaxed text-graf-600" aria-live="polite">
+            <p
+              className="mt-6 max-w-prose text-[0.9375rem] leading-relaxed text-graf-600"
+              aria-live="polite"
+            >
               Informe o faturamento por hora e quantas horas, dias e vezes por ano o
-              equipamento fica fora do ar. O resultado aparece aqui, com cada multiplicação
-              à mostra.
+              equipamento fica fora do ar. A estimativa aparece aqui, com cada
+              multiplicação à mostra para você conferir.
             </p>
           )}
         </div>
@@ -161,7 +182,7 @@ export function CalculadoraParada({ className }: { className?: string }) {
 
 function Linha({ conta, resultado }: { conta: string; resultado: string }) {
   return (
-    <li className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-dashed border-graf-300 pb-3 last:border-0">
+    <li className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-dashed border-graf-300 pb-3 last:border-0 last:pb-0">
       <span className="text-sm text-graf-600">{conta}</span>
       <span className="tabular text-sm font-bold text-graf-900">{resultado}</span>
     </li>

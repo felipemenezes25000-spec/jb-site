@@ -18,11 +18,12 @@ export default async function BuscaPage({
 
   return (
     <Vitrine
+      sobretitulo="Busca"
       titulo={termo ? `Resultados para “${termo}”` : "Buscar no catálogo"}
       descricao={
         termo
           ? undefined
-          : "Procure pelo nome do equipamento, pela marca, pelo modelo ou pela peça. Se não encontrar, a equipe atende sob orçamento."
+          : "Procure pelo nome do equipamento, pela marca, pelo modelo ou pelo código da peça. Se não aparecer nada, descreva o que a clínica precisa: a equipe responde com preço e prazo."
       }
       trilha={[{ rotulo: "Início", href: "/" }, { rotulo: "Busca" }]}
       caminho="/busca"

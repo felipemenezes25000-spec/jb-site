@@ -3,7 +3,11 @@ import { ArrowRight } from "lucide-react";
 
 import { CanaisDeContato } from "@/components/institucional/canais";
 import { MapaDaUnidade } from "@/components/institucional/mapa";
-import { MolduraInstitucional, SecaoInstitucional } from "@/components/institucional/moldura";
+import {
+  MolduraInstitucional,
+  PilhaDeSecoes,
+  SecaoInstitucional,
+} from "@/components/institucional/moldura";
 import {
   CapaCms,
   CorpoCms,
@@ -80,11 +84,14 @@ export default async function EstruturaPage() {
         lateral={
           <Cartao className="p-5">
             <h2 className="text-base font-bold text-graf-950">Onde encontrar a JB</h2>
+            <p className="mt-2 text-sm leading-relaxed text-graf-600">
+              Visitas à sede são combinadas antes, pelo telefone ou pelo WhatsApp.
+            </p>
             <CanaisDeContato s={s} className="mt-4" />
           </Cartao>
         }
       >
-        <div className="space-y-12">
+        <div className="space-y-12 lg:space-y-16">
           <CapaCms imagem={pagina?.cover ?? null} />
 
           <div className="max-w-3xl">
@@ -102,10 +109,7 @@ export default async function EstruturaPage() {
                   </p>
                 ) : null}
                 {s.horario ? (
-                  <p>
-                    O horário de funcionamento é {s.horario.toLowerCase()}. Visitas à sede
-                    são combinadas antes pelo telefone ou pelo WhatsApp.
-                  </p>
+                  <p>O horário de funcionamento é {s.horario.toLowerCase()}.</p>
                 ) : null}
               </div>
             )}
@@ -116,42 +120,46 @@ export default async function EstruturaPage() {
             titulo={pagina?.title || "Nossa estrutura"}
           />
 
-          {pagina?.gallery?.length ? (
-            <SecaoInstitucional titulo="A estrutura em imagens">
-              <GaleriaCms imagens={pagina.gallery} />
-            </SecaoInstitucional>
-          ) : null}
+          <PilhaDeSecoes>
+            {pagina?.gallery?.length ? (
+              <SecaoInstitucional titulo="A estrutura em imagens">
+                <GaleriaCms imagens={pagina.gallery} />
+              </SecaoInstitucional>
+            ) : null}
 
-          {servicos.length > 0 ? (
-            <SecaoInstitucional
-              titulo="O que sai daqui"
-              descricao="Serviços que a estrutura sustenta, do agendamento ao laudo."
-            >
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {servicos.map((servico) => (
-                  <li
-                    key={servico.id}
-                    className="rounded-lg border border-graf-200 bg-white px-4 py-3.5"
-                  >
-                    <p className="text-sm font-semibold text-graf-900">{servico.name}</p>
-                    {servico.description ? (
-                      <p className="mt-1 text-sm leading-relaxed text-graf-600">
-                        {servico.description}
+            {servicos.length > 0 ? (
+              <SecaoInstitucional
+                titulo="O que sai daqui"
+                descricao="Serviços que a estrutura sustenta, do agendamento ao laudo."
+              >
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {servicos.map((servico) => (
+                    <li
+                      key={servico.id}
+                      className="rounded-xl border border-graf-200 bg-white px-5 py-4"
+                    >
+                      <p className="text-base font-semibold leading-snug text-graf-950">
+                        {servico.name}
                       </p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </SecaoInstitucional>
-          ) : null}
+                      {servico.description ? (
+                        <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-graf-600">
+                          {servico.description}
+                        </p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </SecaoInstitucional>
+            ) : null}
 
-          <SecaoInstitucional titulo="Como chegar">
-            <MapaDaUnidade
-              src={s.maps_embed}
-              endereco={endereco}
-              titulo={`Mapa com a localização da ${s.empresa_nome}`}
-            />
-          </SecaoInstitucional>
+            <SecaoInstitucional titulo="Como chegar">
+              <MapaDaUnidade
+                src={s.maps_embed}
+                endereco={endereco}
+                titulo={`Mapa com a localização da ${s.empresa_nome}`}
+              />
+            </SecaoInstitucional>
+          </PilhaDeSecoes>
         </div>
       </MolduraInstitucional>
     </>

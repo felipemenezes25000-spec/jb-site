@@ -79,7 +79,7 @@ export default async function PaginaDetalheDoLead({
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         <div className="space-y-5">
           <Cartao>
             <CabecalhoCartao
@@ -108,7 +108,7 @@ export default async function PaginaDetalheDoLead({
             />
           ) : (
             <Cartao>
-              <CabecalhoCartao titulo="Atendimento" descricao="Somente consulta." />
+              <CabecalhoCartao titulo="Atendimento" descricao="Seu acesso a este lead é apenas de consulta." />
               <div className="px-5 py-4">
                 <p className="text-sm text-graf-500">
                   Situação: <span className="font-medium text-graf-800">{rotuloLead(lead.status)}</span>
@@ -116,7 +116,7 @@ export default async function PaginaDetalheDoLead({
                 {lead.notas.trim() ? (
                   <p className="mt-3 whitespace-pre-line text-sm text-graf-700">{lead.notas}</p>
                 ) : (
-                  <p className="mt-3 text-sm text-graf-500">Sem anotações internas.</p>
+                  <p className="mt-3 text-sm text-graf-500">Ninguém anotou nada sobre este contato ainda.</p>
                 )}
               </div>
             </Cartao>
@@ -130,7 +130,7 @@ export default async function PaginaDetalheDoLead({
               <li className="flex items-start gap-3 px-5 py-3">
                 <Mail className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-xs text-graf-500">E-mail</span>
+                  <span className="block text-[0.8125rem] text-graf-500">E-mail</span>
                   {lead.email ? (
                     <a
                       href={`mailto:${lead.email}`}
@@ -147,7 +147,7 @@ export default async function PaginaDetalheDoLead({
               <li className="flex items-start gap-3 px-5 py-3">
                 <Phone className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-xs text-graf-500">Telefone</span>
+                  <span className="block text-[0.8125rem] text-graf-500">Telefone</span>
                   {telefone ? (
                     <>
                       <a
@@ -160,7 +160,7 @@ export default async function PaginaDetalheDoLead({
                         href={whatsappHref(telefone)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 inline-flex min-h-11 items-center text-xs font-semibold text-graf-600 underline underline-offset-2 hover:text-jb-700"
+                        className="mt-1 inline-flex min-h-11 items-center text-[0.8125rem] font-semibold text-graf-600 underline underline-offset-2 hover:text-jb-700"
                       >
                         Abrir no WhatsApp
                       </a>
@@ -174,7 +174,7 @@ export default async function PaginaDetalheDoLead({
               <li className="flex items-start gap-3 px-5 py-3">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-xs text-graf-500">Endereço</span>
+                  <span className="block text-[0.8125rem] text-graf-500">Endereço</span>
                   <span className="block text-sm text-graf-800">
                     {endereco || "Não informado"}
                   </span>
@@ -182,7 +182,7 @@ export default async function PaginaDetalheDoLead({
               </li>
 
               <li className="px-5 py-3">
-                <span className="block text-xs text-graf-500">Aceita novidades por e-mail</span>
+                <span className="block text-[0.8125rem] text-graf-500">Aceita novidades por e-mail</span>
                 <span className="block text-sm text-graf-800">{lead.news ? "Sim" : "Não"}</span>
               </li>
             </ul>
@@ -209,7 +209,7 @@ export default async function PaginaDetalheDoLead({
                 />
               ) : (
                 <p className="text-sm text-graf-500">
-                  Seu perfil abre os leads somente para consulta.
+                  Seu acesso aos leads é apenas de consulta.
                 </p>
               )}
             </div>
@@ -217,11 +217,19 @@ export default async function PaginaDetalheDoLead({
 
           <Cartao>
             <CabecalhoCartao titulo="Origem" descricao="Registrado no envio do formulário." />
-            <dl className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-4 gap-y-2 px-5 py-4 text-sm">
-              <dt className="text-graf-500">IP</dt>
-              <dd className="break-all text-graf-800">{lead.ip || "—"}</dd>
-              <dt className="text-graf-500">Navegador</dt>
-              <dd className="break-words text-xs text-graf-600">{lead.userAgent || "—"}</dd>
+            <dl className="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-4 gap-y-2 px-5 py-4 text-sm">
+              {lead.ip ? (
+                <>
+                  <dt className="text-graf-500">Origem do envio</dt>
+                  <dd className="break-all text-graf-800">{lead.ip}</dd>
+                </>
+              ) : null}
+              {lead.userAgent ? (
+                <>
+                  <dt className="text-graf-500">Aparelho</dt>
+                  <dd className="break-words text-[0.8125rem] text-graf-600">{lead.userAgent}</dd>
+                </>
+              ) : null}
               <dt className="text-graf-500">Atualizado</dt>
               <dd className="text-graf-800">{formatarDataHora(lead.updatedAt)}</dd>
             </dl>

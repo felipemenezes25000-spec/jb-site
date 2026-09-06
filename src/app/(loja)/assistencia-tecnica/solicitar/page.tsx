@@ -133,12 +133,12 @@ export default async function SolicitarPage() {
         trilha={<Trilha itens={TRILHA} />}
         sobretitulo="Abertura de chamado"
         titulo="Solicitar assistência técnica"
-        resumo="Cinco passos rápidos. Ao final o chamado ganha um número e entra na fila da equipe técnica — e você acompanha cada etapa por ele."
+        resumo="Conte o que está acontecendo com o equipamento. Ao final, o chamado ganha um número e entra na fila da equipe técnica — é por ele que você acompanha cada etapa."
       />
 
       <div className="container-jb py-10 lg:py-14">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-14">
-          <Cartao className="p-6 lg:p-8">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-14">
+          <Cartao className="p-6 sm:p-8 lg:p-10">
             <AssistenteChamado
               /* Carimbado no servidor: o relógio do navegador não entra nesta
                  conta, e assim não há divergência de hidratação. */
@@ -188,6 +188,17 @@ export default async function SolicitarPage() {
                 mensagem="Olá! Quero abrir um chamado de assistência técnica."
               />
             </CartaoApoio>
+
+            <p className="px-1 text-sm leading-relaxed text-graf-500">
+              Quer saber o que acontece depois do envio?{" "}
+              <Link
+                href="/assistencia-tecnica#como-funciona"
+                className="font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-800"
+              >
+                Veja as seis etapas do atendimento
+              </Link>
+              .
+            </p>
           </aside>
         </div>
       </div>

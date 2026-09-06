@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { MapPin, PackageCheck } from "lucide-react";
+import { MapPin, MessageCircle, PackageCheck, Phone } from "lucide-react";
 
 import { CanaisDeContato } from "@/components/institucional/canais";
 import { FormularioContato } from "@/components/institucional/formulario-contato";
 import { MapaDaUnidade } from "@/components/institucional/mapa";
 import { MolduraInstitucional } from "@/components/institucional/moldura";
 import { CorpoCms, carregarPaginaCms } from "@/components/institucional/pagina-cms";
+import { classesBotao } from "@/components/ui/button";
 import { Cartao } from "@/components/ui/data";
+import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import { JsonLd, localNegocioJsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 import { enderecoCompleto, getSettings, ligado } from "@/lib/settings";
 
@@ -31,6 +33,7 @@ export default async function ContatoPage() {
 
   const endereco = enderecoCompleto(s);
   const aceitaRetirada = ligado(s.retirada_disponivel);
+  const whatsapp = whatsappHref(s.whatsapp, `Olá! Vim pelo site da ${s.empresa_nome}.`);
 
   return (
     <>
@@ -49,11 +52,35 @@ export default async function ContatoPage() {
           pagina?.lead ||
           "Conte o que a sua clínica precisa. A equipe responde no horário de atendimento, pelo canal que você preferir."
         }
+        /* Telefone e WhatsApp saem do painel e sobem para o alto da página: a
+           clínica com equipamento parado não deve precisar rolar até o
+           formulário para achar um número. */
+        acoes={
+          <>
+            {s.telefone ? (
+              <a href={telHref(s.telefone)} className={classesBotao("primario", "md")}>
+                <Phone className="size-4" aria-hidden />
+                {formatarTelefone(s.telefone)}
+              </a>
+            ) : null}
+            {whatsapp ? (
+              <a
+                href={whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={classesBotao("secundario", "md")}
+              >
+                <MessageCircle className="size-4" aria-hidden />
+                WhatsApp
+              </a>
+            ) : null}
+          </>
+        }
         lateral={
           <div className="space-y-5">
             <Cartao className="p-5">
               <h2 className="text-base font-bold text-graf-950">Canais diretos</h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-graf-600">
+              <p className="mt-2 text-sm leading-relaxed text-graf-600">
                 Para urgência com equipamento parado, o telefone e o WhatsApp são o caminho
                 mais curto.
               </p>
@@ -63,7 +90,7 @@ export default async function ContatoPage() {
             {aceitaRetirada && s.retirada_instrucoes ? (
               <Cartao className="p-5">
                 <h2 className="flex items-center gap-2 text-base font-bold text-graf-950">
-                  <PackageCheck className="size-4.5 text-jb-600" aria-hidden />
+                  <PackageCheck className="size-4.5 shrink-0 text-graf-400" aria-hidden />
                   Retirada no local
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-graf-600">
@@ -74,44 +101,49 @@ export default async function ContatoPage() {
           </div>
         }
       >
-        <div className="space-y-8">
+        <div className="space-y-10">
           {/* Quando existe página de CMS com o slug "contato", o texto dela
               entra antes do formulário — a rota fixa é só o esqueleto. */}
           <CorpoCms html={pagina?.body ?? ""} />
 
           <div>
             <h2 className="text-title texto-forte">Envie sua mensagem</h2>
-            <p className="mt-2.5 max-w-xl text-[0.9375rem] leading-relaxed text-graf-600">
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-graf-600">
               Os campos marcados com asterisco são obrigatórios. A mensagem vai direto para
               a equipe da JB — nada aparece publicamente no site.
             </p>
-            <div className="mt-6">
+            <div className="mt-7">
               <FormularioContato />
             </div>
           </div>
         </div>
       </MolduraInstitucional>
 
+      {/* Fora da moldura porque o mapa é a peça mais larga da página, mas com
+          a mesma caixa de 72rem — desalinhar o mapa do texto acima seria o
+          detalhe que denuncia um layout montado às pressas. */}
       <section id="mapa" className="container-jb scroll-mt-28 pb-16 lg:pb-24">
-        <h2 className="text-title texto-forte flex items-center gap-2.5">
-          <MapPin className="size-6 shrink-0 text-jb-600" aria-hidden />
-          Onde a JB fica
-        </h2>
-        <p className="mt-2.5 max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600">
-          {s.horario
-            ? `Atendimento presencial ${s.horario.charAt(0).toLowerCase()}${s.horario.slice(1)}.`
-            : "Visitas com hora marcada."}{" "}
-          {aceitaRetirada
-            ? "A retirada de equipamento é feita neste endereço, com agendamento."
-            : null}
-        </p>
+        <div className="mx-auto max-w-6xl">
+          <h2 className="text-title texto-forte flex items-center gap-2.5">
+            <MapPin className="size-6 shrink-0 text-jb-600" aria-hidden />
+            Onde a JB fica
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-graf-600">
+            {s.horario
+              ? `Atendimento presencial ${s.horario.charAt(0).toLowerCase()}${s.horario.slice(1)}.`
+              : "Visitas com hora marcada."}{" "}
+            {aceitaRetirada
+              ? "A retirada de equipamento é feita neste endereço, com agendamento."
+              : null}
+          </p>
 
-        <MapaDaUnidade
-          className="mt-6"
-          src={s.maps_embed}
-          endereco={endereco}
-          titulo={`Mapa com a localização da ${s.empresa_nome}`}
-        />
+          <MapaDaUnidade
+            className="mt-7"
+            src={s.maps_embed}
+            endereco={endereco}
+            titulo={`Mapa com a localização da ${s.empresa_nome}`}
+          />
+        </div>
       </section>
     </>
   );

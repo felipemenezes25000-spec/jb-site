@@ -68,7 +68,7 @@ export default async function PaginaSlides({
   ).length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         trilha={[{ rotulo: "Conteúdo", href: "/admin/conteudo" }, { rotulo: "Slides" }]}
         titulo="Slides do carrossel"
@@ -135,7 +135,7 @@ export default async function PaginaSlides({
                       className="h-16 w-28 shrink-0 rounded-lg border border-graf-200 object-cover"
                     />
                   ) : (
-                    <span className="flex h-16 w-28 shrink-0 items-center justify-center rounded-lg border border-dashed border-graf-300 text-xs text-graf-500">
+                    <span className="flex h-16 w-28 shrink-0 items-center justify-center rounded-lg border border-dashed border-graf-300 text-[0.8125rem] text-graf-500">
                       Sem imagem
                     </span>
                   )}
@@ -152,7 +152,7 @@ export default async function PaginaSlides({
                       <p className="mt-1 line-2 text-sm text-graf-600">{slide.subtitle}</p>
                     ) : null}
 
-                    <p className="mt-2 text-xs text-graf-500">
+                    <p className="mt-2 text-[0.8125rem] text-graf-500">
                       {slide.href ? `Leva para ${slide.href}` : "Sem link"}
                       {slide.startsAt || slide.endsAt
                         ? ` · vigência ${slide.startsAt ? formatarData(slide.startsAt) : "sempre"} até ${slide.endsAt ? formatarData(slide.endsAt) : "sem fim"}`

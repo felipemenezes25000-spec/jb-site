@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import {
   CircleUser,
-  ExternalLink,
   LogOut,
   Menu,
   PanelLeftClose,
@@ -161,24 +160,16 @@ export function CabecalhoAdmin({
           />
           <kbd
             aria-hidden
-            className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border border-graf-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-graf-500 sm:block"
+            className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border border-graf-300 bg-white px-1.5 py-0.5 text-xs font-medium text-graf-500 sm:block"
           >
             /
           </kbd>
         </form>
 
         <div className="ml-auto flex items-center gap-1">
-          <Link
-            href="/"
-            className={cn(
-              "hidden h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-graf-600 transition-colors md:inline-flex",
-              "hover:bg-graf-100 hover:text-graf-900",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-            )}
-          >
-            <ExternalLink className="size-4" aria-hidden />
-            Ver site
-          </Link>
+          {/* Fio entre a busca e o canto da conta: sem ele o campo de busca e o
+              nome de quem está logado leem como um bloco só. */}
+          <span className="mr-1 hidden h-6 w-px shrink-0 bg-graf-200 sm:block" aria-hidden />
 
           {/* Identidade de quem está logado é também a porta da própria conta:
               é onde a pessoa procura para trocar a senha. No telefone, onde o
@@ -194,13 +185,15 @@ export function CabecalhoAdmin({
           >
             <span
               aria-hidden
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-jb-50 text-xs font-bold text-jb-700 ring-1 ring-inset ring-jb-500/20"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-jb-50 text-[0.8125rem] font-bold text-jb-700 ring-1 ring-inset ring-jb-500/20"
             >
               {iniciais || "JB"}
             </span>
             <span className="min-w-0 leading-tight">
-              <span className="block truncate text-sm font-semibold text-graf-900">{nome}</span>
-              <span className="block truncate text-xs text-graf-500" title={email}>
+              <span className="block max-w-[10rem] truncate text-sm font-semibold text-graf-900">
+                {nome}
+              </span>
+              <span className="block max-w-[10rem] truncate text-[0.8125rem] text-graf-500" title={email}>
                 {papel}
               </span>
             </span>

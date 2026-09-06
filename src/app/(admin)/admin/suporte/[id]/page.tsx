@@ -136,7 +136,7 @@ export default async function PaginaDetalheDoTicket({
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         <div className="space-y-5">
           <Cartao>
             <CabecalhoCartao
@@ -170,7 +170,7 @@ export default async function PaginaDetalheDoTicket({
                     >
                       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                         <span className="text-sm font-bold text-graf-900">{autor}</span>
-                        <span className="text-xs text-graf-500">
+                        <span className="text-[0.8125rem] text-graf-500">
                           {formatarDataHora(mensagem.createdAt)}
                         </span>
                         {!mensagem.visibleToCustomer ? (
@@ -210,20 +210,28 @@ export default async function PaginaDetalheDoTicket({
                     {ticket.customer.name}
                   </Link>
                 ) : (
-                  ticket.contactName || "—"
+                  ticket.contactName || (
+                    <span className="text-graf-500">Nome não informado</span>
+                  )
                 )}
               </dd>
 
               <dt className="text-graf-500">E-mail</dt>
               <dd className="break-all text-graf-800">
-                {ticket.customer?.email || ticket.contactEmail || "—"}
+                {ticket.customer?.email || ticket.contactEmail || (
+                  <span className="text-graf-500">E-mail não informado</span>
+                )}
               </dd>
 
               <dt className="text-graf-500">Telefone</dt>
               <dd className="text-graf-800">
                 {(() => {
                   const telefone = ticket.customer?.phone || ticket.contactPhone;
-                  return telefone ? formatarTelefone(telefone) : "—";
+                  return telefone ? (
+                    formatarTelefone(telefone)
+                  ) : (
+                    <span className="text-graf-500">Telefone não informado</span>
+                  );
                 })()}
               </dd>
 
@@ -244,7 +252,7 @@ export default async function PaginaDetalheDoTicket({
                 >
                   {produto.name}
                 </Link>
-                <p className="mt-1 text-xs text-graf-500">SKU {produto.sku}</p>
+                <p className="mt-1 text-[0.8125rem] text-graf-500">SKU {produto.sku}</p>
               </div>
             </Cartao>
           ) : null}

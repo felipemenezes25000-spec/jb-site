@@ -191,7 +191,7 @@ export function RodapeClinica({
           {telefone ? (
             <a
               href={telHref(telefone)}
-              className="inline-flex min-h-11 items-center font-semibold text-graf-700 transition-colors hover:text-jb-700 sm:min-h-0"
+              className="inline-flex min-h-11 items-center font-semibold text-graf-700 transition-colors hover:text-jb-700"
             >
               {telefone}
             </a>
@@ -201,20 +201,20 @@ export function RodapeClinica({
               href={whatsappHref(whatsapp, "Olá! Sou cliente da JB e vim pela Área da Clínica.")}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center font-semibold text-graf-700 transition-colors hover:text-jb-700 sm:min-h-0"
+              className="inline-flex min-h-11 items-center font-semibold text-graf-700 transition-colors hover:text-jb-700"
             >
               WhatsApp
             </a>
           ) : null}
           <Link
             href="/privacidade"
-            className="inline-flex min-h-11 items-center text-graf-500 transition-colors hover:text-graf-800 sm:min-h-0"
+            className="inline-flex min-h-11 items-center text-graf-500 transition-colors hover:text-graf-800"
           >
             Privacidade
           </Link>
           <Link
             href="/termos"
-            className="inline-flex min-h-11 items-center text-graf-500 transition-colors hover:text-graf-800 sm:min-h-0"
+            className="inline-flex min-h-11 items-center text-graf-500 transition-colors hover:text-graf-800"
           >
             Termos
           </Link>

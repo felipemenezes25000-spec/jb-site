@@ -239,7 +239,7 @@ export function Anexos({
           <Paperclip className="size-4" aria-hidden />
           Escolher arquivo{multiplo ? "s" : ""}
         </label>
-        <p className="mt-2 text-xs text-graf-500">ou arraste e solte aqui</p>
+        <p className="mt-2 text-[0.8125rem] text-graf-500">ou arraste e solte aqui</p>
       </div>
 
       {ajuda ? (

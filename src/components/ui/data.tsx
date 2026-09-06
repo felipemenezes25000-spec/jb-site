@@ -35,7 +35,7 @@ export function Etiqueta({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.8125rem] font-semibold ring-1 ring-inset",
         TONS[tom],
         className,
       )}
@@ -61,8 +61,13 @@ export function Cartao({
   return (
     <div
       {...props}
+      /* Borda é o padrão da plataforma; sombra é exceção. Com `shadow-card`
+         embutido, TODO cartão do painel e da Área da Clínica flutuava um
+         pouquinho — e o efeito somado de dezenas deles é exatamente a
+         aparência de template que se quer evitar. Quem precisa de profundidade
+         pede `interativo` (sombra no hover) ou passa a sombra por className. */
       className={cn(
-        "rounded-xl border border-graf-200 bg-white shadow-card",
+        "rounded-xl border border-graf-200 bg-white",
         interativo &&
           "transition-[box-shadow,border-color] duration-200 hover:border-graf-300 hover:shadow-raised",
         className,
@@ -113,7 +118,8 @@ export function Vazio({
 }: {
   icone?: React.ComponentType<{ className?: string }>;
   titulo: string;
-  descricao?: string;
+  /** Aceita nó para o estado vazio poder oferecer um link no meio da frase. */
+  descricao?: React.ReactNode;
   acao?: React.ReactNode;
   className?: string;
 }) {
@@ -125,7 +131,7 @@ export function Vazio({
       )}
     >
       {Icone ? (
-        <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-white text-graf-500 shadow-card">
+        <span className="mb-4 flex size-12 items-center justify-center rounded-full border border-graf-200 bg-white text-graf-500">
           <Icone className="size-5" />
         </span>
       ) : null}

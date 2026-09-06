@@ -103,16 +103,20 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
     <ul className="space-y-3">
       {linhas.map((linha) => (
         <li key={linha.id} className="flex gap-3">
-          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-graf-200 bg-graf-50">
-            {linha.imagem ? (
-              <Image src={linha.imagem} alt="" fill sizes="56px" className="object-contain p-1" />
-            ) : (
-              <span className="flex size-full items-center justify-center text-graf-400">
-                <ImageOff className="size-4" aria-hidden />
-              </span>
-            )}
+          {/* a moldura recorta a foto; o selo de quantidade fica FORA dela,
+              senão o `overflow-hidden` corta metade do círculo */}
+          <div className="relative size-16 shrink-0">
+            <div className="relative size-full overflow-hidden rounded-lg border border-graf-200 bg-white">
+              {linha.imagem ? (
+                <Image src={linha.imagem} alt="" fill sizes="64px" className="object-contain p-1" />
+              ) : (
+                <span className="flex size-full items-center justify-center text-graf-400">
+                  <ImageOff className="size-4" aria-hidden />
+                </span>
+              )}
+            </div>
             <span
-              className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-graf-800 text-[11px] font-bold tabular text-white"
+              className="absolute -right-1.5 -top-1.5 flex size-[1.375rem] items-center justify-center rounded-full bg-graf-900 text-xs font-bold tabular text-white ring-2 ring-white"
               aria-hidden
             >
               {linha.quantidade}
@@ -127,7 +131,7 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
             {linha.addons.length > 0 ? (
               <ul className="mt-1 space-y-0.5">
                 {linha.addons.map((addon) => (
-                  <li key={addon.id} className="text-xs text-graf-500">
+                  <li key={addon.id} className="text-[0.8125rem] text-graf-500">
                     + {addon.nome}
                   </li>
                 ))}
@@ -147,12 +151,12 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
 /** A linha do frete, com os quatro estados que ela realmente tem. */
 function ValorDoFrete({ frete, carregando }: EstadoFrete) {
   if (carregando) {
-    return <dd className="text-right text-xs leading-snug text-graf-500">calculando…</dd>;
+    return <dd className="text-right text-[0.8125rem] leading-snug text-graf-500">calculando…</dd>;
   }
 
   if (!frete) {
     return (
-      <dd className="max-w-44 text-right text-xs leading-snug text-graf-500">
+      <dd className="max-w-44 text-right text-[0.8125rem] leading-snug text-graf-500">
         informe o CEP na etapa de entrega
       </dd>
     );
@@ -160,7 +164,7 @@ function ValorDoFrete({ frete, carregando }: EstadoFrete) {
 
   if (frete.orcadoDepois) {
     return (
-      <dd className="max-w-44 text-right text-xs leading-snug text-warn-700">
+      <dd className="max-w-44 text-right text-[0.8125rem] leading-snug text-warn-700">
         a combinar — a JB envia o valor antes de despachar
       </dd>
     );
@@ -179,7 +183,9 @@ function ValorDoFrete({ frete, carregando }: EstadoFrete) {
       >
         {frete.valorCents === 0 ? "Sem custo" : formatarPreco(frete.valorCents)}
       </span>
-      {prazo ? <span className="block text-xs leading-snug text-graf-500">{prazo}</span> : null}
+      {prazo ? (
+        <span className="block text-[0.8125rem] leading-snug text-graf-500">{prazo}</span>
+      ) : null}
     </dd>
   );
 }
@@ -216,7 +222,7 @@ function Totais({
           <dt className="text-graf-600">
             Frete
             {frete && !frete.orcadoDepois ? (
-              <span className="block text-xs leading-snug text-graf-500">{frete.rotulo}</span>
+              <span className="block text-[0.8125rem] leading-snug text-graf-500">{frete.rotulo}</span>
             ) : null}
           </dt>
           <ValorDoFrete frete={frete} carregando={carregando} />
@@ -231,7 +237,7 @@ function Totais({
       </div>
 
       {frete?.orcadoDepois ? (
-        <p className="mt-2.5 text-xs leading-relaxed text-graf-600">
+        <p className="mt-2.5 text-[0.8125rem] leading-relaxed text-graf-600">
           O frete não está neste total. A JB confere as dimensões do equipamento e o endereço, e
           combina o valor com você antes de despachar.
         </p>
@@ -289,7 +295,7 @@ export function ResumoCheckout({
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 shadow-raised backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-4 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="min-w-0">
-            <p className="text-xs text-graf-500">
+            <p className="text-[0.8125rem] text-graf-500">
               Total · {plural(quantidade, "unidade", "unidades")}
               {frete?.orcadoDepois ? " · frete à parte" : null}
             </p>

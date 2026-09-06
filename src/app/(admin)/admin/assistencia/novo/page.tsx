@@ -206,13 +206,13 @@ export default async function PaginaNovoChamado({
                       <span className="block truncate text-sm font-semibold text-graf-900">
                         {pessoa.companyName || pessoa.name}
                       </span>
-                      <span className="block truncate text-xs text-graf-500">
+                      <span className="block truncate text-[0.8125rem] text-graf-500">
                         {pessoa.email}
                         {pessoa.phone ? ` · ${formatarTelefone(pessoa.phone)}` : ""}
                         {pessoa.document ? ` · ${formatarDocumento(pessoa.document)}` : ""}
                       </span>
                     </span>
-                    <span className="text-xs text-graf-500">
+                    <span className="text-[0.8125rem] text-graf-500">
                       {plural(pessoa._count.equipments, "equipamento", "equipamentos")}
                     </span>
                   </Link>
@@ -387,7 +387,7 @@ export default async function PaginaNovoChamado({
                 </Dado>
               </Dados>
 
-              <p className="mt-5 text-xs leading-relaxed text-graf-500">
+              <p className="mt-5 text-[0.8125rem] leading-relaxed text-graf-500">
                 Falta uma clínica na lista?{" "}
                 <Link
                   href={`/admin/clientes/${cliente.id}/unidades`}

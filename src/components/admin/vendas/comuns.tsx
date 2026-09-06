@@ -8,6 +8,7 @@ import type {
   ShippingKind,
 } from "@prisma/client";
 
+import { CabecalhoBase, GradeDados, ParDados } from "@/components/admin/pagina";
 import { Etiqueta, type Tom } from "@/components/ui/data";
 import { cn } from "@/lib/utils";
 
@@ -186,45 +187,36 @@ export function CabecalhoPagina({
   acoes?: React.ReactNode;
   className?: string;
 }) {
-  // `<header>` e não `<div>`: é o mesmo elemento que os cabeçalhos das áreas
-  // de conteúdo e de serviço usam, e é o que dá a região de cabeçalho para
-  // quem navega por marcos no leitor de tela.
+  // O desenho vem de `admin/pagina.tsx`, o mesmo das áreas técnica e de
+  // conteúdo — só a supressão na impressão é daqui, porque estas telas viram
+  // folha de pedido e o cabeçalho da tela não entra no papel.
   return (
-    <header
-      className={cn(
-        "flex flex-wrap items-start justify-between gap-x-6 gap-y-3 print:hidden",
-        className,
-      )}
-    >
-      <div className="min-w-0">
-        <h1 className="text-2xl font-bold leading-tight text-graf-950">{titulo}</h1>
-        {apoio ? <div className="mt-1 text-sm text-graf-500">{apoio}</div> : null}
-      </div>
-      {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
-    </header>
+    <CabecalhoBase
+      titulo={titulo}
+      descricao={apoio}
+      acoes={acoes}
+      className={cn("print:hidden", className)}
+    />
   );
 }
 
-/** Par rótulo/valor. Valor vazio vira travessão em vez de sumir da tela. */
+/** Par rótulo/valor da ficha. Sem valor, diz que o dado não foi informado. */
 export function Dado({
   rotulo,
   children,
+  vazio,
   className,
 }: {
   rotulo: string;
   children?: React.ReactNode;
+  /** Frase para quando não há valor. O padrão de ParDados é "Não informado". */
+  vazio?: string;
   className?: string;
 }) {
-  const vazio =
-    children === null || children === undefined || children === "" || children === false;
-
   return (
-    <div className={cn("min-w-0", className)}>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-graf-500">{rotulo}</dt>
-      <dd className={cn("mt-0.5 text-sm", vazio ? "text-graf-500" : "text-graf-900")}>
-        {vazio ? "—" : children}
-      </dd>
-    </div>
+    <ParDados rotulo={rotulo} vazio={vazio} className={className}>
+      {children}
+    </ParDados>
   );
 }
 
@@ -239,15 +231,9 @@ export function ListaDeDados({
   className?: string;
 }) {
   return (
-    <dl
-      className={cn(
-        "grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2",
-        colunas === 3 && "lg:grid-cols-3",
-        className,
-      )}
-    >
+    <GradeDados colunas={colunas} className={className}>
       {children}
-    </dl>
+    </GradeDados>
   );
 }
 

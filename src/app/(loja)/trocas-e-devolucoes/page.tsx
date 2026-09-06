@@ -242,7 +242,11 @@ export default async function TrocasPage() {
           </div>
         }
       >
-        {temCms ? <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" /> : <CorpoLegal secoes={secoes} />}
+        {temCms ? (
+          <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" />
+        ) : (
+          <CorpoLegal secoes={secoes} />
+        )}
 
         <NotaDeRevisao>
           Esta página descreve as condições de compra neste site e reproduz direitos

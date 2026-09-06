@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
 import { CAMPO_CODIGO, CAMPO_INICIO, CAMPO_ISCA } from "@/components/assistencia/rotulos";
+import { Aviso } from "@/components/ui/aviso";
 import { Erro } from "@/components/ui/form";
 import { telHref } from "@/lib/format";
 
@@ -21,7 +22,8 @@ import { telHref } from "@/lib/format";
  * O código da imagem só aparece na escalada: quem envia pela primeira vez
  * nunca vê captcha. Isso é decisão de acessibilidade — `/api/captcha` não tem
  * alternativa em áudio, e ninguém pode ficar sem abrir um chamado por não
- * enxergar cinco letras tortas.
+ * enxergar cinco letras tortas. Por isso o telefone da JB aparece logo abaixo:
+ * é a saída de quem não consegue ler a imagem.
  */
 
 export function Verificacao({
@@ -65,14 +67,13 @@ export function Verificacao({
       <input type="hidden" name={CAMPO_INICIO} value={inicio} readOnly />
 
       {exigirCodigo ? (
-        <div className="rounded-xl border border-warn-500/30 bg-warn-50 p-4">
-          <p className="text-sm font-bold text-warn-700">Confirme que é você</p>
-          <p className="mt-1 text-sm leading-relaxed text-graf-700">
-            Recebemos vários envios deste acesso. Digite as letras e os números da imagem
-            para continuar.
+        <Aviso tom="atencao" titulo="Confirme que é você">
+          <p>
+            Chegaram vários pedidos seguidos daqui. Digite as letras e os números da
+            imagem para continuar.
           </p>
 
-          <div className="mt-3 flex flex-wrap items-end gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <img
               /* A imagem é gerada a cada carregamento e assinada em cookie; o
                  parâmetro só serve para furar o cache do navegador. */
@@ -81,20 +82,20 @@ export function Verificacao({
               width={150}
               height={44}
               id={idImagem}
-              className="h-11 w-[150px] rounded-md border border-graf-300 bg-white"
+              className="h-11 w-[150px] rounded-lg border border-graf-300 bg-white"
             />
 
             <button
               type="button"
               onClick={() => setVersao((v) => v + 1)}
-              className="inline-flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-100 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-graf-700 transition-colors hover:bg-white hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
               <RefreshCw className="size-4" aria-hidden />
               Gerar outra imagem
             </button>
           </div>
 
-          <div className="mt-3 max-w-xs">
+          <div className="mt-4 max-w-[14rem]">
             <label
               htmlFor={idCampo}
               className="mb-1.5 block text-sm font-semibold text-graf-800"
@@ -112,13 +113,13 @@ export function Verificacao({
               maxLength={5}
               aria-describedby={idImagem}
               aria-invalid={erro ? true : undefined}
-              className="tabular h-11 w-full rounded-lg border border-graf-450 bg-white px-3.5 uppercase tracking-[0.3em] text-graf-900 shadow-xs focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+              className="tabular h-11 w-full rounded-lg border border-graf-450 bg-white px-3.5 text-center text-lg font-bold uppercase tracking-[0.3em] text-graf-950 shadow-xs focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
             />
             <Erro texto={erro} />
           </div>
 
           {telefone ? (
-            <p className="mt-3 text-xs leading-relaxed text-graf-600">
+            <p className="mt-4 text-[0.8125rem] leading-relaxed text-graf-600">
               Não consegue ler o código? Ligue para{" "}
               <a
                 href={telHref(telefone)}
@@ -129,7 +130,7 @@ export function Verificacao({
               e a equipe registra o pedido com você.
             </p>
           ) : null}
-        </div>
+        </Aviso>
       ) : null}
     </div>
   );

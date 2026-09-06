@@ -46,17 +46,17 @@ export default async function PaginaUsuarios() {
   const admins = usuarios.filter((pessoa) => pessoa.active && pessoa.role === "admin").length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         titulo="Equipe interna"
-        descricao="Quem entra no painel e o que cada pessoa enxerga. A senha nunca é exibida: o que fica guardado é só o hash."
+        descricao="Quem entra no painel e o que cada pessoa enxerga. Nenhuma senha é exibida aqui — nem para um administrador."
         etiqueta={
           <Etiqueta tom={ativos > 0 ? "ok" : "alerta"}>
             {plural(ativos, "acesso ativo", "acessos ativos")}
           </Etiqueta>
         }
         acoes={
-          <LinkBotao href="/admin/usuarios/novo" tamanho="sm">
+          <LinkBotao href="/admin/usuarios/novo">
             <Plus className="size-4" aria-hidden />
             Novo acesso
           </LinkBotao>
@@ -123,11 +123,11 @@ export default async function PaginaUsuarios() {
                     </div>
 
                     <p className="mt-0.5 break-all text-sm text-graf-600">{pessoa.email}</p>
-                    <p className="mt-1 text-xs text-graf-500">
+                    <p className="mt-1 text-[0.8125rem] text-graf-500">
                       {DESCRICAO_PAPEL[pessoa.role]}
                       {pessoa.phone ? ` · ${formatarTelefone(pessoa.phone)}` : ""}
                     </p>
-                    <p className="mt-1 text-xs text-graf-500">
+                    <p className="mt-1 text-[0.8125rem] text-graf-500">
                       {pessoa.lastLoginAt
                         ? `Último acesso em ${formatarDataHora(pessoa.lastLoginAt)}`
                         : "Nunca entrou no painel"}

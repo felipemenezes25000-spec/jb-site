@@ -61,15 +61,16 @@ export default async function PaginaEstoque({
     <div className="space-y-6">
       <Trilha itens={[{ rotulo: "Painel", href: "/admin" }, { rotulo: "Estoque" }]} />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-graf-950">Estoque</h1>
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold leading-tight text-graf-950">Estoque</h1>
           <p className="mt-1 text-sm text-graf-500">
             Saldo por produto, movimentações e as unidades identificadas de seminovos.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <LinkBotao href="/admin/estoque/unidades" variante="secundario">
+        <div className="flex flex-wrap items-center gap-2">
+          <LinkBotao href="/admin/estoque/unidades" variante="secundario" tamanho="sm">
+            <ScanBarcode className="size-4" aria-hidden />
             Unidades
           </LinkBotao>
           {podeMexer ? (
@@ -262,7 +263,7 @@ async function Lista({ parametros }: { parametros: Busca }) {
       renderizar: (linha) => (
         <span className="block">
           <span className="block truncate font-semibold">{linha.name}</span>
-          <span className="block truncate text-xs font-normal text-graf-500">
+          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">
             {linha.sku}
             {linha.category ? ` · ${linha.category.name}` : ""}
           </span>
@@ -273,9 +274,12 @@ async function Lista({ parametros }: { parametros: Busca }) {
       chave: "stock",
       rotulo: "Saldo",
       alinhamento: "direita",
-      renderizar: (linha) => (
-        <span className="tabular font-semibold">{linha.trackInventory ? linha.stock : "—"}</span>
-      ),
+      renderizar: (linha) =>
+        linha.trackInventory ? (
+          <span className="tabular font-semibold text-graf-900">{linha.stock}</span>
+        ) : (
+          <span className="text-graf-500">Sem controle</span>
+        ),
     },
     {
       chave: "lowStockAlert",
@@ -289,20 +293,24 @@ async function Lista({ parametros }: { parametros: Busca }) {
       rotulo: "Unidades",
       alinhamento: "direita",
       esconderNoMobile: true,
-      renderizar: (linha) => (
-        <span className="tabular">{linha._count.units === 0 ? "—" : linha._count.units}</span>
-      ),
+      renderizar: (linha) =>
+        linha._count.units > 0 ? (
+          <span className="tabular">{linha._count.units}</span>
+        ) : (
+          <span className="text-graf-500">Nenhuma</span>
+        ),
     },
     {
       chave: "priceCents",
       rotulo: "Preço",
       alinhamento: "direita",
       esconderNoMobile: true,
-      renderizar: (linha) => (
-        <span className="tabular">
-          {linha.priceCents > 0 ? formatarPreco(linha.priceCents) : "—"}
-        </span>
-      ),
+      renderizar: (linha) =>
+        linha.priceCents > 0 ? (
+          <span className="tabular">{formatarPreco(linha.priceCents)}</span>
+        ) : (
+          <span className="text-graf-500">Sob consulta</span>
+        ),
     },
     {
       chave: "situacao",
@@ -317,7 +325,7 @@ async function Lista({ parametros }: { parametros: Busca }) {
   const filtrando = Boolean(parametros.q || parametros.situacao || parametros.categoria);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Tabela<LinhaEstoque>
         colunas={colunas}
         linhas={produtos}

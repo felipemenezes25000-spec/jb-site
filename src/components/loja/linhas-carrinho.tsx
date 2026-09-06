@@ -31,7 +31,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
   const [pendente, iniciar] = useTransition();
 
   return (
-    <ul className="overflow-hidden rounded-xl border border-graf-200 bg-white shadow-card">
+    <ul className="overflow-hidden rounded-xl border border-graf-200 bg-white">
       {linhas.map((linha, indice) => {
         const condicao = linha.condicao
           ? CONDICAO[linha.condicao as keyof typeof CONDICAO]
@@ -54,10 +54,12 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
           >
             <div className="flex gap-4 sm:gap-6">
               {/* caixa de tamanho fixo: a imagem entra sem empurrar a linha,
-                  então nada salta de lugar enquanto ela carrega */}
+                  então nada salta de lugar enquanto ela carrega. O respiro
+                  interno é curto de propósito — quem compra equipamento decide
+                  pela foto, e a foto precisa ocupar a moldura */}
               <div
                 className={cn(
-                  "relative size-20 shrink-0 overflow-hidden rounded-xl border border-graf-200 bg-white sm:size-28",
+                  "relative size-24 shrink-0 overflow-hidden rounded-xl border border-graf-200 bg-white sm:size-32",
                   !linha.disponivel && "opacity-60",
                 )}
               >
@@ -66,8 +68,8 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                     src={linha.imagem}
                     alt=""
                     fill
-                    sizes="(min-width: 640px) 112px, 80px"
-                    className="object-contain p-2"
+                    sizes="(min-width: 640px) 128px, 96px"
+                    className="object-contain p-1.5"
                   />
                 ) : (
                   <span className="flex size-full items-center justify-center text-graf-400">
@@ -80,7 +82,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                 <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
                   <div className="min-w-0 flex-1">
                     {linha.marca ? (
-                      <p className="text-xs font-bold uppercase tracking-wider text-graf-500">
+                      <p className="text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500">
                         {linha.marca}
                       </p>
                     ) : null}
@@ -117,7 +119,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                           {formatarPreco(linha.totalCents)}
                         </p>
                         {linha.quantidade > 1 ? (
-                          <p className="mt-1.5 text-xs text-graf-500">
+                          <p className="mt-1.5 text-[0.8125rem] text-graf-500">
                             {formatarPreco(linha.precoUnitarioCents)} cada
                           </p>
                         ) : null}
@@ -155,7 +157,10 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                       </p>
                     ) : (
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center rounded-lg border border-graf-300 bg-white shadow-xs">
+                        {/* graf-450 é o degrau de borda que cumpre 3:1 — o
+                            controle de quantidade é um controle de formulário,
+                            não um enfeite */}
+                        <div className="flex items-center rounded-lg border border-graf-450 bg-white shadow-xs">
                           <button
                             type="button"
                             disabled={pendente || linha.quantidade <= 1}
@@ -171,7 +176,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                           </button>
                           <span
                             aria-live="polite"
-                            className="w-10 border-x border-graf-200 text-center text-base font-bold tabular leading-[2.75rem] text-graf-950"
+                            className="w-11 border-x border-graf-300 text-center text-base font-bold tabular leading-[2.75rem] text-graf-950"
                           >
                             <span className="sr-only">Quantidade de {linha.nome}: </span>
                             {linha.quantidade}
@@ -192,7 +197,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                         </div>
 
                         {noLimite && estoqueConhecido ? (
-                          <p className="text-xs leading-snug text-graf-500">
+                          <p className="text-[0.8125rem] leading-snug text-graf-500">
                             {linha.estoqueDisponivel === 1
                               ? "Última unidade em estoque"
                               : `${plural(linha.estoqueDisponivel, "unidade", "unidades")} em estoque`}

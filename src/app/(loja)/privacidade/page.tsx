@@ -36,6 +36,11 @@ import { enderecoCompleto, getSettings } from "@/lib/settings";
 const SLUG = "privacidade";
 const CAMINHO = "/privacidade";
 
+/* `.prose-jb` não estiliza <code>, e o nome do cookie sem moldura some no meio
+   do parágrafo. Aqui ele ganha o mesmo rótulo técnico usado em SKU e número
+   de série. */
+const CLASSE_COOKIE = "label-mono rounded bg-graf-100 px-1.5 py-0.5 text-graf-800";
+
 export async function generateMetadata(): Promise<Metadata> {
   const pagina = await carregarPaginaCms(SLUG);
 
@@ -165,14 +170,16 @@ export default async function PrivacidadePage() {
           <p>Este site usa cookies estritamente necessários ao funcionamento:</p>
           <ul>
             <li>
-              <code>jb_cliente</code> — mantém você conectado na Área da Clínica;
+              <code className={CLASSE_COOKIE}>jb_cliente</code> — mantém você conectado na
+              Área da Clínica;
             </li>
             <li>
-              <code>jb_carrinho</code> — guarda o carrinho de quem ainda não entrou na
-              conta;
+              <code className={CLASSE_COOKIE}>jb_carrinho</code> — guarda o carrinho de quem
+              ainda não entrou na conta;
             </li>
             <li>
-              <code>jb_staff</code> — sessão da equipe da JB no painel interno.
+              <code className={CLASSE_COOKIE}>jb_staff</code> — sessão da equipe da JB no
+              painel interno.
             </li>
           </ul>
           <p>
@@ -347,7 +354,11 @@ export default async function PrivacidadePage() {
           </div>
         }
       >
-        {temCms ? <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" /> : <CorpoLegal secoes={secoes} />}
+        {temCms ? (
+          <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" />
+        ) : (
+          <CorpoLegal secoes={secoes} />
+        )}
 
         <NotaDeRevisao>
           Ao usar este site você também concorda com os{" "}

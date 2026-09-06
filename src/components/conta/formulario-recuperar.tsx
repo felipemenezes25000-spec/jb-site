@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import Link from "next/link";
 import { AlertCircle, MailCheck } from "lucide-react";
 
 import { pedirRecuperacao, type EstadoConta } from "@/app/acoes/conta";
@@ -91,19 +90,11 @@ export function FormularioRecuperar({ emailInicial = "" }: { emailInicial?: stri
         erro={erroDe("email")}
       />
 
+      {/* o caminho de volta para a tela de entrar vive no rodapé da página:
+          aqui ele sumiria junto com o formulário assim que o pedido é aceito */}
       <Botao type="submit" tamanho="lg" larguraTotal carregando={enviando}>
         {enviando ? "Enviando…" : "Enviar link de redefinição"}
       </Botao>
-
-      <p className="text-sm text-graf-600">
-        Lembrou a senha?{" "}
-        <Link
-          href="/entrar"
-          className="font-semibold text-jb-700 underline-offset-4 hover:underline"
-        >
-          Voltar para entrar
-        </Link>
-      </p>
     </form>
   );
 }

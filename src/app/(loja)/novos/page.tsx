@@ -5,13 +5,22 @@ import {
   atalhosDeCondicao,
   type ParametrosVitrine,
 } from "@/components/loja/vitrine";
+import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Equipamentos novos",
-  description:
-    "Equipamentos de linha, lacrados, com garantia de fábrica registrada no cadastro de cada item.",
-  alternates: { canonical: "/novos" },
-};
+const CAMINHO = "/novos";
+
+const TRILHA = [
+  { rotulo: "Início", href: "/" },
+  { rotulo: "Equipamentos", href: "/loja" },
+  { rotulo: "Equipamentos novos" },
+];
+
+export const metadata: Metadata = metadataDePagina({
+  titulo: "Equipamentos novos",
+  descricao:
+    "Equipamentos de linha, lacrados. A ficha traz modelo, voltagem, medidas e o prazo de garantia informado pelo fabricante.",
+  caminho: CAMINHO,
+});
 
 export default async function Pagina({
   searchParams,
@@ -21,20 +30,21 @@ export default async function Pagina({
   const [parametros, atalhos] = await Promise.all([searchParams, atalhosDeCondicao("novo")]);
 
   return (
-    <Vitrine
-      titulo="Equipamentos novos"
-      descricao="Equipamentos de linha, lacrados, com garantia de fábrica registrada no cadastro de cada item."
-      trilha={[
-        { rotulo: "Início", href: "/" },
-        { rotulo: "Equipamentos", href: "/loja" },
-        { rotulo: "Equipamentos novos" },
-      ]}
-      caminho="/novos"
-      parametros={parametros}
-      filtrosFixos={{ condicao: "novo" }}
-      atalhos={atalhos}
-      rotuloAtalhos="Outras condições"
-      travarCondicao
-    />
+    <>
+      <JsonLd dados={trilhaJsonLd(TRILHA)} />
+
+      <Vitrine
+        sobretitulo="Por condição"
+        titulo="Equipamentos novos"
+        descricao="Equipamentos de linha, lacrados, direto para a clínica. A ficha traz modelo, voltagem, medidas e — quando o fabricante informa — o prazo de garantia."
+        trilha={TRILHA}
+        caminho={CAMINHO}
+        parametros={parametros}
+        filtrosFixos={{ condicao: "novo" }}
+        atalhos={atalhos}
+        rotuloAtalhos="Outras condições"
+        travarCondicao
+      />
+    </>
   );
 }

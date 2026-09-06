@@ -48,15 +48,16 @@ const TIPOS: TipoPedido[] = ["compra", "servico", "plano"];
 const DEPOIS = [
   {
     icone: ScrollText,
-    texto: "Seu pedido vira uma proposta numerada, ainda em rascunho, na fila da equipe.",
+    texto: "Seu pedido vira uma proposta numerada e entra na fila da equipe comercial.",
   },
   {
     icone: Timer,
-    texto: "A equipe comercial confere disponibilidade e prazo antes de precificar.",
+    texto: "A equipe confere disponibilidade e prazo antes de fechar qualquer valor.",
   },
   {
     icone: FileCheck2,
-    texto: "Você recebe a proposta com item a item detalhado e um prazo de validade claro.",
+    texto:
+      "Você recebe a proposta com cada linha separada — equipamento, serviço e entrega.",
   },
 ];
 
@@ -96,8 +97,8 @@ export default async function OrcamentoPage({
       />
 
       <div className="container-jb py-10 lg:py-14">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-14">
-          <Cartao className="p-6 lg:p-8">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-14">
+          <Cartao className="p-6 sm:p-8 lg:p-10">
             <FormularioOrcamento
               /* Carimbado no servidor para não divergir na hidratação. */
               inicio={Date.now()}
@@ -123,7 +124,7 @@ export default async function OrcamentoPage({
 
             <CartaoApoio
               titulo="Equipamento com defeito?"
-              descricao="Para conserto, o caminho certo é o chamado de assistência: ele já nasce com número e linha do tempo, e o orçamento sai depois do diagnóstico."
+              descricao="Para conserto, o caminho certo é o chamado de assistência: ele já nasce com número e histórico próprio, e o orçamento sai depois do diagnóstico."
             >
               <Link
                 href="/assistencia-tecnica/solicitar"

@@ -64,12 +64,12 @@ export function VisitasDoChamado({
                   <EtiquetaAgendamento status={visita.status} />
                 </p>
                 <p className="mt-1 text-sm text-graf-600">{visita.title}</p>
-                <p className="mt-1 text-xs text-graf-500">
+                <p className="mt-1 text-[0.8125rem] text-graf-500">
                   {visita.technician?.user.name ?? "Sem técnico definido"}
                   {visita.addressSummary ? ` · ${visita.addressSummary}` : ""}
                 </p>
                 {visita.notes ? (
-                  <p className="mt-1 whitespace-pre-line text-xs text-graf-500">
+                  <p className="mt-1 whitespace-pre-line text-[0.8125rem] text-graf-500">
                     {visita.notes}
                   </p>
                 ) : null}

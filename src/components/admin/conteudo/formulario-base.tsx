@@ -1,5 +1,6 @@
 "use client";
 
+import { BarraForm, BlocoForm } from "@/components/admin/pagina";
 import { Aviso } from "@/components/ui/aviso";
 import { cn } from "@/lib/utils";
 import type { EstadoAcao } from "@/components/admin/conteudo/botao-acao";
@@ -53,19 +54,16 @@ export function Bloco({
   className?: string;
 }) {
   return (
-    <section
-      className={cn("rounded-xl border border-graf-200 bg-white p-5 shadow-card", className)}
-    >
-      <h2 className="text-base font-bold text-graf-950">{titulo}</h2>
-      {descricao ? <p className="mt-0.5 text-sm text-graf-500">{descricao}</p> : null}
-      <div className="mt-4 space-y-4">{children}</div>
-    </section>
+    <BlocoForm titulo={titulo} descricao={descricao} className={className}>
+      {children}
+    </BlocoForm>
   );
 }
 
 /**
  * Barra de ações do formulário. Fica colada no fim da janela para que o botão
- * de salvar não fuja da tela em formulário longo.
+ * de salvar não fuja da tela em formulário longo. Os recuos negativos casam com
+ * o respiro da página do painel, e não com o do bloco.
  */
 export function BarraDeSalvar({
   children,
@@ -77,14 +75,8 @@ export function BarraDeSalvar({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center gap-3 border-t border-graf-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6",
-        className,
-      )}
-    >
-      {aviso ? <p className="min-w-0 flex-1 text-xs text-graf-500">{aviso}</p> : null}
-      <div className={cn("flex flex-wrap gap-3", !aviso && "ml-auto")}>{children}</div>
-    </div>
+    <BarraForm ajuda={aviso} className={cn("-mx-4 px-4 sm:-mx-6 sm:px-6", className)}>
+      {children}
+    </BarraForm>
   );
 }

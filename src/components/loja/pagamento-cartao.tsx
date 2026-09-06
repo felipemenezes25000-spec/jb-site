@@ -107,6 +107,17 @@ const BANDEIRAS = [
   { valor: "hipercard", rotulo: "Hipercard" },
 ];
 
+/**
+ * O código da bandeira ("master", "elo") é linguagem de sistema. Na tela vale
+ * o nome que está impresso no cartão; o que não estiver na lista aparece com
+ * a inicial maiúscula, que ainda se lê melhor do que o código cru.
+ */
+function rotuloBandeira(valor: string) {
+  const conhecida = BANDEIRAS.find((b) => b.valor === valor.toLowerCase());
+  if (conhecida) return conhecida.rotulo;
+  return valor.charAt(0).toUpperCase() + valor.slice(1);
+}
+
 function tokenDeSimulacao() {
   const aleatorio =
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
@@ -171,8 +182,10 @@ function CartaoSimulado({
 
 /* ------------------------------------------------------ cartão de verdade */
 
+// graf-450 é o degrau de borda que cumpre 3:1 — o mesmo dos campos de
+// <Campo>, para o cartão não parecer um formulário de outra loja
 const CAIXA_SEGURA =
-  "h-11 w-full rounded-lg border border-graf-300 bg-white px-3.5 shadow-xs " +
+  "h-11 w-full rounded-lg border border-graf-450 bg-white px-3.5 shadow-xs " +
   "[&>iframe]:h-full [&>iframe]:w-full";
 
 function CartaoTokenizado({
@@ -254,7 +267,7 @@ function CartaoTokenizado({
         console.error("[cartao]", falha);
         setEstado("falhou");
         setErro(
-          "Não conseguimos carregar os campos seguros do cartão. Atualize a página ou escolha o Pix para concluir.",
+          "Não conseguimos abrir o formulário do cartão. Atualize a página ou escolha o Pix para concluir o pedido.",
         );
       }
     }
@@ -307,9 +320,9 @@ function CartaoTokenizado({
 
   return (
     <div className="space-y-4">
-      <Aviso tom="info" titulo="Os dados do cartão não passam pela JB">
-        Número, validade e código de segurança são digitados direto nos campos do serviço de
-        pagamento. A JB recebe apenas uma autorização de uso único — nunca o seu cartão.
+      <Aviso tom="info" titulo="Pagamento seguro">
+        Número, validade e código de segurança vão direto para o meio de pagamento. A JB não
+        recebe e não guarda os dados do seu cartão.
       </Aviso>
 
       <div>
@@ -352,7 +365,7 @@ function CartaoTokenizado({
       {estado === "carregando" ? (
         <p className="flex items-center gap-2 text-sm text-graf-600">
           <Loader2 className="size-4 animate-spin" aria-hidden />
-          Preparando os campos seguros do cartão…
+          Preparando o formulário do cartão…
         </p>
       ) : null}
 
@@ -376,7 +389,7 @@ function CartaoTokenizado({
 
         {token ? (
           <Etiqueta tom="ok" ponto>
-            Cartão validado{bandeira ? ` · ${bandeira}` : ""}
+            Cartão validado{bandeira ? ` · ${rotuloBandeira(bandeira)}` : ""}
           </Etiqueta>
         ) : (
           <span className="text-sm text-graf-600">

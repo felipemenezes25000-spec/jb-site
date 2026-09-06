@@ -68,7 +68,7 @@ export function MiniaturaMidia({
         )}
       >
         <FileText className="size-5" aria-hidden />
-        <span className="line-2 text-center text-[11px] leading-tight">{midia.filename}</span>
+        <span className="line-2 text-center text-xs leading-tight">{midia.filename}</span>
       </div>
     );
   }
@@ -170,10 +170,10 @@ function GradeDaBiblioteca({
                   )}
                 >
                   <MiniaturaMidia midia={midia} tamanho="md" className="border-0" />
-                  <span className="mt-2 block truncate text-xs font-medium text-graf-800">
+                  <span className="mt-2 block truncate text-[0.8125rem] font-medium text-graf-800">
                     {midia.filename}
                   </span>
-                  <span className="block truncate text-[11px] text-graf-500">
+                  <span className="block truncate text-xs text-graf-500">
                     {midia.alt || "Sem descrição"}
                   </span>
                 </button>
@@ -265,7 +265,7 @@ export function SeletorDeMidia({
       >
         <MiniaturaMidia midia={escolhida} tamanho="lg" />
 
-        <p className="mt-2 truncate text-xs text-graf-500">
+        <p className="mt-2 truncate text-[0.8125rem] text-graf-500">
           {escolhida ? escolhida.filename : "Nenhuma imagem escolhida"}
         </p>
 
@@ -359,11 +359,11 @@ export function SeletorDeMidia({
                   />
                   {rascunho ? (
                     <div className="rounded-xl border border-graf-200 bg-graf-50 p-3">
-                      <p className="mb-2 text-xs font-semibold text-graf-600">
+                      <p className="mb-2 text-[0.8125rem] font-semibold text-graf-600">
                         Selecionada agora
                       </p>
                       <MiniaturaMidia midia={rascunho} tamanho="md" />
-                      <p className="mt-2 truncate text-xs text-graf-500">{rascunho.filename}</p>
+                      <p className="mt-2 truncate text-[0.8125rem] text-graf-500">{rascunho.filename}</p>
                     </div>
                   ) : null}
                 </div>

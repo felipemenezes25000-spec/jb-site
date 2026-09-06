@@ -57,6 +57,9 @@ const CONDICOES_ROTA: Record<ProductCondition, string> = {
 
 const ORDEM_CONDICAO: ProductCondition[] = ["novo", "seminovo", "recondicionado", "usado"];
 
+/** Só existe uma fileira de atalhos por página — o id fixo dá nome à navegação. */
+const ID_ATALHOS = "atalhos-da-colecao";
+
 export type ParametrosVitrine = ParametrosCatalogo;
 
 /** Link de coleção mostrado abaixo do título — só com contagem real. */
@@ -244,10 +247,12 @@ async function montarGrupos(base: Prisma.ProductWhereInput): Promise<GruposFiltr
 function EsqueletoResultados() {
   return (
     <div>
-      <Esqueleto className="h-4 w-40" />
+      <div className="border-b border-graf-200 pb-3">
+        <Esqueleto className="h-4 w-40" />
+      </div>
       <EsqueletoGradeProdutos
         quantidade={6}
-        className="mt-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        className="mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
       />
     </div>
   );
@@ -358,13 +363,13 @@ function SemResultado({
 /** O convite comercial que fecha toda coleção com resultado. */
 function ChamadaCatalogo() {
   return (
-    <div className="mt-14 rounded-xl border border-graf-200 bg-surface-muted px-6 py-8 sm:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-6">
+    <div className="mt-14 rounded-xl border border-graf-200 bg-surface-muted px-6 py-9 sm:mt-16 sm:px-9 sm:py-10">
+      <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-6">
         <div className="max-w-xl">
           <h2 className="text-title text-graf-950">Não encontrou o que procura?</h2>
-          <p className="mt-2 text-base leading-relaxed text-graf-600">
-            A JB atende além do que está publicado. Diga o equipamento, a marca e o modelo e a
-            equipe responde com preço e prazo.
+          <p className="mt-3 text-base leading-relaxed text-graf-600">
+            O catálogo publicado é uma parte do que a JB fornece. Diga o equipamento, a marca e
+            o modelo e a equipe responde com preço e prazo.
           </p>
         </div>
         <LinkBotao href="/orcamento" tamanho="lg" className="shrink-0">
@@ -417,24 +422,37 @@ async function Resultados({
     );
   }
 
+  const paginas = Math.ceil(dados.total / POR_PAGINA);
+
   return (
     <div>
-      <p className="text-sm text-graf-600" aria-live="polite">
-        <span className="tabular font-bold text-graf-950">{dados.total}</span>{" "}
-        {busca || temFiltro
-          ? dados.total === 1
-            ? "item encontrado"
-            : "itens encontrados"
-          : dados.total === 1
-            ? "item nesta lista"
-            : "itens nesta lista"}
-      </p>
+      {/* cabeçalho da listagem: quantidade à esquerda, posição na lista à
+          direita. O filete embaixo separa a contagem dos cartões sem pedir
+          mais uma caixa na tela */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-graf-200 pb-3">
+        <p className="text-[0.9375rem] text-graf-600" aria-live="polite">
+          <span className="tabular text-base font-bold text-graf-950">{dados.total}</span>{" "}
+          {busca || temFiltro
+            ? dados.total === 1
+              ? "item encontrado"
+              : "itens encontrados"
+            : dados.total === 1
+              ? "item nesta lista"
+              : "itens nesta lista"}
+        </p>
+
+        {paginas > 1 ? (
+          <p className="tabular text-[0.8125rem] text-graf-500">
+            Página {pagina} de {paginas}
+          </p>
+        ) : null}
+      </div>
 
       <GradeProdutos
         produtos={dados.produtos}
         parcelamento={parcelamento}
         colunas={{ base: 1, sm: 2, lg: 2, xl: 3 }}
-        className="mt-5"
+        className="mt-6"
       />
 
       {dados.total > POR_PAGINA ? (
@@ -458,6 +476,7 @@ async function Resultados({
    ============================================================================ */
 
 export async function Vitrine({
+  sobretitulo,
   titulo,
   descricao,
   trilha,
@@ -471,6 +490,8 @@ export async function Vitrine({
   travarCondicao,
   travarMarca,
 }: {
+  /** Degrau acima do título — "Catálogo", "Por condição", "Marca". */
+  sobretitulo?: string;
   titulo: string;
   descricao?: string;
   trilha: Migalha[];
@@ -562,17 +583,22 @@ export async function Vitrine({
 
       <header className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
         <div className="max-w-2xl">
-          <h1 className="text-display text-graf-950">{titulo}</h1>
+          {/* `text-section`, não `text-display`: numa listagem o título nomeia
+              a coleção, não abre a marca. O degrau de hero fica reservado para
+              a página principal, e o sobretítulo devolve a hierarquia que o
+              título sozinho perdia. */}
+          {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
+          <h1 className="text-section text-graf-950">{titulo}</h1>
           {descricao ? <p className="texto-guia mt-4 text-graf-600">{descricao}</p> : null}
         </div>
 
         {imagem ? (
-          <div className="flex h-20 w-40 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white p-4 shadow-card">
+          <div className="flex h-22 w-44 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white p-5">
             <Image
               src={imagem.url}
               alt={imagem.alt}
-              width={160}
-              height={64}
+              width={176}
+              height={72}
               className="h-full w-auto object-contain"
             />
           </div>
@@ -580,17 +606,26 @@ export async function Vitrine({
       </header>
 
       {atalhos && atalhos.length > 0 ? (
-        <nav aria-label={rotuloAtalhos} className="mt-7">
-          <ul className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+        <nav aria-labelledby={ID_ATALHOS} className="mt-8">
+          {/* o rótulo da fileira vira texto na tela: sem ele, uma linha de
+              pastilhas soltas embaixo do título não explica o que é. O mesmo
+              texto serve de nome acessível da navegação, sem repetição */}
+          <p
+            id={ID_ATALHOS}
+            className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
+          >
+            {rotuloAtalhos}
+          </p>
+          <ul className="scrollbar-none -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
             {atalhos.map((atalho) => (
               <li key={atalho.href} className="shrink-0">
                 <Link
                   href={atalho.href}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 text-sm font-semibold text-graf-800 shadow-xs transition-colors hover:border-graf-400 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
                   {atalho.rotulo}
                   {atalho.quantidade !== undefined ? (
-                    <span className="tabular text-xs font-medium text-graf-500">
+                    <span className="tabular text-[0.8125rem] font-medium text-graf-500">
                       {atalho.quantidade}
                     </span>
                   ) : null}

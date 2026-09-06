@@ -1,15 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, ClipboardList, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck,
+  ClipboardList,
+  ShieldCheck,
+  Stethoscope,
+} from "lucide-react";
 
 import { CabecalhoAssistencia } from "@/components/assistencia/apoio";
-import { CartaoPlano, type PlanoPublico } from "@/components/assistencia/cartao-plano";
+import {
+  CartaoPlano,
+  periodicidade,
+  type PlanoPublico,
+} from "@/components/assistencia/cartao-plano";
 import { FormularioPlano } from "@/components/assistencia/formulario-plano";
 import { LinkBotao } from "@/components/ui/button";
-import { Cartao, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
-import { Grade } from "@/components/ui/grade";
+import { Cartao, Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
+import { Grade, colunasParaTotal } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import { sessaoCliente } from "@/lib/auth-cliente";
+import { formatarPreco, plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, servicoJsonLd, trilhaJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
@@ -33,7 +44,7 @@ const TRILHA = [
   { rotulo: "Planos de manutenção" },
 ];
 
-/** O que não muda de um plano para o outro. */
+/** O que não muda de um plano para o outro — inclusive o que fica de fora. */
 const COMUM = [
   {
     icone: CalendarCheck,
@@ -45,13 +56,57 @@ const COMUM = [
     icone: ClipboardList,
     titulo: "Registro por equipamento",
     texto:
-      "Cada visita fecha com o que foi verificado gravado no histórico do aparelho, disponível na sua conta.",
+      "Cada visita fecha com o que foi verificado gravado no histórico do aparelho, disponível na Área da Clínica.",
   },
   {
     icone: ShieldCheck,
     titulo: "Orçamento antes de trocar peça",
     texto:
       "Se a revisão encontrar algo a reparar, vira orçamento à parte — nada é substituído sem sua aprovação.",
+  },
+  {
+    icone: Stethoscope,
+    titulo: "Cobertura fechada por equipamento",
+    texto:
+      "A lista de aparelhos cobertos é definida com você antes de assinar. O que ficar de fora continua sendo atendido por chamado avulso.",
+  },
+];
+
+/**
+ * As linhas do comparativo. Só o que está cadastrado no plano: valor,
+ * vigência, visitas, ritmo e desconto em peças. Campo sem valor vira a
+ * condição real ("sob consulta", "a combinar"), nunca um traço solto.
+ */
+const LINHAS_COMPARATIVO: {
+  rotulo: string;
+  valor: (plano: PlanoPublico) => string;
+}[] = [
+  {
+    rotulo: "Valor",
+    valor: (plano) =>
+      plano.precoCents !== null && plano.precoCents > 0
+        ? formatarPreco(plano.precoCents)
+        : "Sob consulta",
+  },
+  {
+    rotulo: "Vigência",
+    valor: (plano) => plural(plano.mesesDeVigencia, "mês", "meses"),
+  },
+  {
+    rotulo: "Visitas incluídas",
+    valor: (plano) =>
+      plano.visitasIncluidas > 0
+        ? plural(plano.visitasIncluidas, "visita", "visitas")
+        : "A combinar",
+  },
+  {
+    rotulo: "Periodicidade",
+    valor: (plano) => periodicidade(plano) ?? "Definida no diagnóstico",
+  },
+  {
+    rotulo: "Desconto em peças",
+    valor: (plano) =>
+      plano.descontoEmPecas > 0 ? `${plano.descontoEmPecas}%` : "Não incluso",
   },
 ];
 
@@ -158,7 +213,9 @@ export default async function PlanosPage({
           />
         ) : (
           <>
-            <Grade como="ul" colunas={{ base: 1, md: 2, xl: 3 }} espaco="md">
+            {/* A contagem escolhe a grade: dois planos não viram uma fileira de
+                três com um buraco do lado. */}
+            <Grade como="ul" colunas={colunasParaTotal(lista.length)} espaco="md">
               {lista.map((plano) => (
                 <li key={plano.slug} id={plano.slug} className="scroll-mt-28">
                   <CartaoPlano
@@ -181,17 +238,107 @@ export default async function PlanosPage({
               ))}
             </Grade>
 
+            {/* ------------------------------------------------- lado a lado */}
+            {/* Cartão explica um plano; tabela compara os três. Com um plano
+                só publicado não há o que comparar, e a tabela não aparece. */}
+            {lista.length > 1 ? (
+              <section className="mt-16" aria-labelledby="comparar-planos">
+                <h2 id="comparar-planos" className="text-title texto-forte">
+                  Lado a lado
+                </h2>
+                <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600">
+                  Os mesmos números dos cartões acima, um do lado do outro. Plano sem
+                  valor publicado sai como sob consulta — o preço fecha na proposta,
+                  depois de saber quantos equipamentos entram.
+                </p>
+
+                {/* A tabela rola sozinha em tela estreita; a página não. Como
+                    a rolagem é a única forma de ver a última coluna, a área
+                    recebe foco e nome — quem navega por teclado alcança. */}
+                <div
+                  role="region"
+                  aria-label="Comparativo dos planos de manutenção"
+                  tabIndex={0}
+                  className="-mx-4 mt-7 overflow-x-auto px-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 sm:mx-0 sm:px-0"
+                >
+                  <table className="w-full min-w-[36rem] border-collapse text-left">
+                    <caption className="sr-only">
+                      Comparação entre os planos de manutenção publicados
+                    </caption>
+                    <thead>
+                      <tr className="border-b border-graf-300">
+                        <th
+                          scope="col"
+                          className="w-40 py-4 pr-5 align-bottom text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500"
+                        >
+                          Plano
+                        </th>
+                        {lista.map((plano) => (
+                          <th
+                            key={plano.slug}
+                            scope="col"
+                            className="px-5 py-4 align-bottom"
+                          >
+                            <a
+                              href={`#${plano.slug}`}
+                              /* volta ao cartão do plano; 44px de alvo, que
+                                 no celular esta é a linha que se toca. */
+                              className="inline-flex min-h-11 min-w-11 items-center justify-center text-base font-bold text-graf-950 underline-offset-4 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                            >
+                              {plano.nome}
+                            </a>
+                            {plano.slug === slugDestaque ? (
+                              <Etiqueta tom="marca" className="mt-2 flex w-max">
+                                Mais completo
+                              </Etiqueta>
+                            ) : null}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {LINHAS_COMPARATIVO.map((linha) => (
+                        <tr key={linha.rotulo} className="border-b border-graf-200">
+                          <th
+                            scope="row"
+                            className="py-4 pr-5 align-top text-sm font-semibold text-graf-600"
+                          >
+                            {linha.rotulo}
+                          </th>
+                          {lista.map((plano) => (
+                            <td
+                              key={plano.slug}
+                              className="tabular px-5 py-4 align-top text-[0.9375rem] font-semibold text-graf-900"
+                            >
+                              {linha.valor(plano)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ) : null}
+
             {/* ---------------------------------------------- vale para todos */}
             <section className="mt-16" aria-labelledby="comum-a-todos">
               <h2 id="comum-a-todos" className="text-title texto-forte">
                 Vale para qualquer plano
               </h2>
 
-              <Grade como="ul" colunas={{ base: 1, md: 3 }} espaco="md" className="mt-7">
+              <Grade
+                como="ul"
+                colunas={{ base: 1, sm: 2, lg: 4 }}
+                espaco="md"
+                className="mt-7"
+              >
                 {COMUM.map((item) => (
                   <li key={item.titulo}>
                     <Cartao className="h-full p-5">
-                      <span className="flex size-10 items-center justify-center rounded-lg bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-100">
+                      {/* Chip neutro: o vermelho da página fica nos botões e no
+                          selo do plano mais completo, não em quatro quadrados. */}
+                      <span className="flex size-10 items-center justify-center rounded-lg bg-graf-100 text-graf-700">
                         <item.icone className="size-5" aria-hidden />
                       </span>
                       <p className="mt-4 text-[0.9375rem] font-bold text-graf-950">

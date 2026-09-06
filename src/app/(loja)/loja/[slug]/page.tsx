@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowRight, Wrench } from "lucide-react";
 
 import { CaixaCompra, type AddonProduto } from "@/components/loja/caixa-compra";
 import { GaleriaProduto, type FotoProduto } from "@/components/loja/galeria-produto";
@@ -44,16 +45,21 @@ import {
 } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { getSettings, ligado } from "@/lib/settings";
-import { cn } from "@/lib/utils";
 
 /**
  * Página de um equipamento.
  *
- * A tela é montada em faixas: identidade em largura inteira, depois galeria e
- * caixa de compra, e então os blocos que sustentam uma compra de cinco dígitos
- * — por que na JB, a unidade física quando existe, descrição, ficha técnica,
- * documentação, serviços da equipe, dúvidas, equipamentos relacionados e a
- * assistência que continua depois da entrega.
+ * A primeira dobra é a compra: galeria grande à esquerda, e à direita a coluna
+ * que decide — marca, nome, identificadores, preço, disponibilidade, botão,
+ * condições e o caminho para falar com a equipe. Essa coluna tem UMA moldura
+ * (a caixa de compra); o resto corre em fio fino, para a página não abrir com
+ * quatro cartões empilhados.
+ *
+ * Abaixo da dobra a página vira faixa, não pilha de cartão: por que na JB, a
+ * unidade física quando existe, a descrição em coluna de leitura, a ficha
+ * técnica, os serviços da equipe, as dúvidas, os equipamentos relacionados e a
+ * assistência que continua depois da entrega. Cada faixa alterna o fundo e tem
+ * título próprio.
  *
  * A regra que atravessa o arquivo inteiro: campo vazio não vira linha. Não há
  * prazo, frete, certificação, nota nem depoimento que não esteja no banco.
@@ -245,8 +251,14 @@ export default async function ProdutoPage({ params }: Props) {
   // `<p></p>` vindo do editor tem comprimento, mas não tem conteúdo: sem tirar
   // a marcação, a página abriria um título "Sobre este equipamento" vazio.
   const temDescricao = textoLimpo(descricao, 4000).length > 0;
-  const temFicha = grupos.length > 0 || temMedidas || temRegulatorio;
-  const temColunaDeApoio = temFicha || documentos.length > 0;
+
+  // A faixa da ficha técnica tem duas colunas — especificações à esquerda,
+  // medidas, regulatório e documentos à direita. Quando só um dos lados tem
+  // conteúdo, a faixa vira coluna única em vez de deixar metade da tela vazia.
+  const temEspecificacoes = grupos.length > 0;
+  const temApoioTecnico = temMedidas || temRegulatorio || documentos.length > 0;
+  const temFichaTecnica = temEspecificacoes || temApoioTecnico;
+  const duasColunasNaFicha = temEspecificacoes && temApoioTecnico;
 
   /* ---------------------------------------------------------------- trilha */
 
@@ -304,117 +316,139 @@ export default async function ProdutoPage({ params }: Props) {
           JsonLd escapa "<": nome de produto com "</script>" fecharia a tag. */}
       <JsonLd dados={estruturados} />
 
-      {/* ======================================================= IDENTIDADE */}
+      {/* ==================================================== PRIMEIRA DOBRA */}
       {/* `espaco="nenhum"` de propósito: o respiro é escrito aqui inteiro, para
           o `pb` não disputar com o `md:py` do preset e perder no desktop. */}
-      <Secao como="div" espaco="nenhum" className="pt-6 pb-14 lg:pt-8 lg:pb-20">
+      <Secao como="div" espaco="nenhum" className="pt-6 pb-16 lg:pt-8 lg:pb-24">
         <Trilha itens={trilha} className="mb-6 lg:mb-8" />
 
-        <IdentidadeProduto
-          nome={produto.name}
-          modelo={produto.model}
-          sku={produto.sku}
-          numeroDeSerie={unidade?.serialNumber ?? null}
-          condicao={produto.condition}
-          definicaoDaCondicao={definicao}
-          marca={
-            produto.brand
-              ? {
-                  nome: produto.brand.name,
-                  slug: produto.brand.slug,
-                  logo: produto.brand.logo
-                    ? {
-                        url: produto.brand.logo.url,
-                        alt: produto.brand.logo.alt || produto.brand.name,
-                        largura: produto.brand.logo.width,
-                        altura: produto.brand.logo.height,
-                      }
-                    : null,
-                }
-              : null
-          }
-          categoria={
-            produto.category
-              ? { nome: produto.category.name, slug: produto.category.slug }
-              : null
-          }
-          resumo={produto.shortDescription}
-        />
-
-        <div className="mt-10 grid gap-8 lg:mt-12 lg:grid-cols-12 lg:gap-12">
-          <div className="min-w-0 lg:col-span-7">
-            <GaleriaProduto fotos={fotos} nome={produto.name} />
-          </div>
-
-          <div className="min-w-0 space-y-5 lg:col-span-5">
-            {arquivado ? (
-              <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
-            ) : (
-              <CaixaCompra
-                produtoId={produto.id}
-                precoCents={produto.priceCents}
-                compareAtCents={produto.compareAtCents}
-                permiteCompra={produto.allowDirectPurchase}
-                permiteOrcamento={produto.allowQuoteRequest}
-                estoque={produto.stock}
-                controlaEstoque={produto.trackInventory}
-                unico={produto.unique}
-                addons={addons}
-                hrefOrcamento={hrefOrcamento}
-                maxParcelas={maxParcelas}
-                minParcelaCents={minParcelaCents}
-              />
-            )}
-
-            {!arquivado && semEstoque ? (
-              <SemEstoque
-                unico={produto.unique}
-                hrefAlternativas={
-                  produto.condition === "novo"
-                    ? "/loja"
-                    : produto.condition === "seminovo"
-                      ? "/seminovos"
-                      : produto.condition === "recondicionado"
-                        ? "/recondicionados"
-                        : "/usados"
-                }
-              />
-            ) : null}
-
-            <CondicoesDeCompra
-              garantiaMeses={garantiaMeses}
-              garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
-              frete={
-                produto.shippingProfile
+        {/* A ordem do DOM é a do celular: nome e condição, depois a foto,
+            depois o preço. No desktop as posições explícitas montam o outro
+            desenho — galeria à esquerda ocupando as duas linhas, identidade e
+            compra empilhadas na coluna da direita. */}
+        <div className="grid gap-y-8 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-10 xl:gap-x-16">
+          <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-1">
+            <IdentidadeProduto
+              nome={produto.name}
+              modelo={produto.model}
+              sku={produto.sku}
+              numeroDeSerie={unidade?.serialNumber ?? null}
+              condicao={produto.condition}
+              definicaoDaCondicao={definicao}
+              marca={
+                produto.brand
                   ? {
-                      nome: produto.shippingProfile.name,
-                      tipo: produto.shippingProfile.kind,
-                      descricao: produto.shippingProfile.description,
-                      gratisAcimaCents: produto.shippingProfile.freeAboveCents,
+                      nome: produto.brand.name,
+                      slug: produto.brand.slug,
+                      logo: produto.brand.logo
+                        ? {
+                            url: produto.brand.logo.url,
+                            alt: produto.brand.logo.alt || produto.brand.name,
+                            largura: produto.brand.logo.width,
+                            altura: produto.brand.logo.height,
+                          }
+                        : null,
                     }
                   : null
               }
-              retirada={
-                ligado(s.retirada_disponivel)
-                  ? s.retirada_instrucoes.trim() || null
+              categoria={
+                produto.category
+                  ? { nome: produto.category.name, slug: produto.category.slug }
                   : null
               }
-              voltagem={produto.voltage}
+              resumo={produto.shortDescription}
             />
+          </div>
 
-            <AjudaDaEquipe
-              nomeDoProduto={produto.name}
-              sku={produto.sku}
-              telefone={s.telefone}
-              whatsapp={s.whatsapp}
-              email={s.email}
-              horario={s.horario}
-            />
+          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+            <GaleriaProduto fotos={fotos} nome={produto.name} />
+          </div>
+
+          <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-2">
+            <div className="space-y-8 lg:sticky lg:top-24">
+              {arquivado ? (
+                <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
+              ) : (
+                <CaixaCompra
+                  produtoId={produto.id}
+                  precoCents={produto.priceCents}
+                  compareAtCents={produto.compareAtCents}
+                  permiteCompra={produto.allowDirectPurchase}
+                  permiteOrcamento={produto.allowQuoteRequest}
+                  estoque={produto.stock}
+                  controlaEstoque={produto.trackInventory}
+                  unico={produto.unique}
+                  addons={addons}
+                  hrefOrcamento={hrefOrcamento}
+                  maxParcelas={maxParcelas}
+                  minParcelaCents={minParcelaCents}
+                />
+              )}
+
+              {!arquivado && semEstoque ? (
+                <SemEstoque
+                  unico={produto.unique}
+                  hrefAlternativas={
+                    produto.condition === "novo"
+                      ? "/loja"
+                      : produto.condition === "seminovo"
+                        ? "/seminovos"
+                        : produto.condition === "recondicionado"
+                          ? "/recondicionados"
+                          : "/usados"
+                  }
+                />
+              ) : null}
+
+              <CondicoesDeCompra
+                garantiaMeses={garantiaMeses}
+                garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
+                frete={
+                  produto.shippingProfile
+                    ? {
+                        nome: produto.shippingProfile.name,
+                        tipo: produto.shippingProfile.kind,
+                        descricao: produto.shippingProfile.description,
+                        gratisAcimaCents: produto.shippingProfile.freeAboveCents,
+                      }
+                    : null
+                }
+                retirada={
+                  ligado(s.retirada_disponivel)
+                    ? s.retirada_instrucoes.trim() || null
+                    : null
+                }
+                voltagem={produto.voltage}
+              />
+
+              <AjudaDaEquipe
+                nomeDoProduto={produto.name}
+                sku={produto.sku}
+                telefone={s.telefone}
+                whatsapp={s.whatsapp}
+                email={s.email}
+                horario={s.horario}
+              />
+
+              {/* Atalho para quem já tem o equipamento e caiu aqui procurando
+                  conserto — sem virar mais um cartão na coluna. */}
+              <Link
+                href="/assistencia-tecnica"
+                className="foco-jb group inline-flex min-h-11 items-center gap-2 rounded-md text-[0.9375rem] font-semibold text-jb-700 transition-colors duration-150 hover:text-jb-500"
+              >
+                <Wrench className="size-4 shrink-0" aria-hidden />
+                Já tem este equipamento? Ver assistência técnica
+                <ArrowRight
+                  className="size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
+                  aria-hidden
+                />
+              </Link>
+            </div>
           </div>
         </div>
       </Secao>
 
-      {/* ================================================ POR QUE NA JB */}
+      {/* ====================================================== POR QUE NA JB */}
       {arquivado ? null : (
         <MotivosJB
           desde={s.empresa_desde}
@@ -426,88 +460,94 @@ export default async function ProdutoPage({ params }: Props) {
       )}
 
       {/* ==================================================== UNIDADE FÍSICA */}
+      {/* A faixa vem montada de dentro do componente: sem nenhum campo da
+          unidade preenchido ela some inteira, em vez de sobrar uma tira vazia. */}
       {unidade ? (
-        <Secao espaco="lg" separador>
-          <UnidadeFisica
-            condicao={produto.condition}
-            numeroDeSerie={unidade.serialNumber}
-            anoDeFabricacao={unidade.manufactureYear}
-            horasDeUso={unidade.usageHours}
-            ciclos={unidade.usageCycles}
-            garantiaMeses={unidade.warrantyMonths}
-            notasDeEstado={unidade.conditionNotes}
-            notasDeInspecao={unidade.inspectionNotes}
-            checklist={checklist}
-            vendida={unidade.status === "vendido"}
-          />
+        <UnidadeFisica
+          condicao={produto.condition}
+          numeroDeSerie={unidade.serialNumber}
+          anoDeFabricacao={unidade.manufactureYear}
+          horasDeUso={unidade.usageHours}
+          ciclos={unidade.usageCycles}
+          garantiaMeses={unidade.warrantyMonths}
+          notasDeEstado={unidade.conditionNotes}
+          notasDeInspecao={unidade.inspectionNotes}
+          checklist={checklist}
+          vendida={unidade.status === "vendido"}
+        />
+      ) : null}
+
+      {/* ========================================================== DESCRIÇÃO */}
+      {temDescricao ? (
+        <Secao fundo="afundada" espaco="lg" separador>
+          {/* Título de um lado, texto do outro em medida curta: texto corrido
+              em 1400px de largura ninguém lê. */}
+          <div className="grid gap-6 lg:grid-cols-12 lg:gap-16">
+            <div className="lg:col-span-4">
+              <h2 className="text-section texto-forte">Sobre este equipamento</h2>
+            </div>
+            <div className="min-w-0 lg:col-span-8">
+              <div
+                /* `max-w-full` na imagem do editor: conteúdo migrado do site
+                   antigo traz `width` fixo, que estouraria a coluna no
+                   celular e daria rolagem horizontal na página. */
+                className="prose-jb max-w-[68ch] [&_img]:h-auto [&_img]:max-w-full"
+                /* Saneado na exibição além da gravação: descrição migrada do
+                   site antigo nunca passou pela lista branca, e esta é a
+                   única página pública que renderiza HTML de editor. */
+                dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.description) }}
+              />
+            </div>
+          </div>
         </Secao>
       ) : null}
 
-      {/* ========================================= DESCRIÇÃO E FICHA TÉCNICA */}
-      {temDescricao || temColunaDeApoio ? (
+      {/* ====================================================== FICHA TÉCNICA */}
+      {temFichaTecnica ? (
         <Secao espaco="lg" separador>
+          <TituloSecao como="h2" titulo="Ficha técnica" />
+
           <div
-            className={cn(
-              "grid gap-12 lg:gap-16",
-              temDescricao && temColunaDeApoio && "lg:grid-cols-12",
-            )}
+            className={
+              duasColunasNaFicha
+                ? "mt-10 grid gap-12 lg:mt-12 lg:grid-cols-12 lg:gap-16"
+                : "mt-10 max-w-3xl lg:mt-12"
+            }
           >
-            {temDescricao ? (
-              <div className={temColunaDeApoio ? "min-w-0 lg:col-span-7" : "max-w-3xl"}>
-                <TituloSecao como="h2" tamanho="titulo" titulo="Sobre este equipamento" />
-                <div
-                  /* `max-w-full` na imagem do editor: conteúdo migrado do site
-                     antigo traz `width` fixo, que estouraria a coluna no
-                     celular e daria rolagem horizontal na página. */
-                  className="prose-jb mt-5 [&_img]:h-auto [&_img]:max-w-full"
-                  /* Saneado na exibição além da gravação: descrição migrada do
-                     site antigo nunca passou pela lista branca, e esta é a
-                     única página pública que renderiza HTML de editor. */
-                  dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.description) }}
-                />
+            {temEspecificacoes ? (
+              <div className={duasColunasNaFicha ? "min-w-0 lg:col-span-7" : "min-w-0"}>
+                <FichaTecnica grupos={grupos} />
               </div>
             ) : null}
 
-            {temColunaDeApoio ? (
-              <div className={temDescricao ? "min-w-0 lg:col-span-5" : "max-w-3xl"}>
-                {temFicha ? (
-                  <>
-                    <TituloSecao
-                      como="h2"
-                      tamanho="titulo"
-                      titulo="Ficha técnica"
-                      className="mb-5"
-                    />
-                    <div className="space-y-4">
-                      <FichaTecnica grupos={grupos} />
-                      <MedidasEPeso
-                        larguraMm={produto.widthMm}
-                        alturaMm={produto.heightMm}
-                        profundidadeMm={produto.depthMm}
-                        pesoG={produto.weightGrams}
-                      />
-                      <Regulatorio
-                        codigoAnvisa={produto.anvisaCode}
-                        fabricante={produto.manufacturer}
-                        detentor={produto.regulatoryHolder}
-                        observacao={produto.regulatoryNote}
-                      />
-                    </div>
-                  </>
-                ) : null}
-
-                {documentos.length > 0 ? (
-                  <div className={temFicha ? "mt-8" : undefined}>
-                    <Documentacao documentos={documentos} />
-                  </div>
-                ) : null}
+            {temApoioTecnico ? (
+              <div
+                className={
+                  duasColunasNaFicha
+                    ? "min-w-0 space-y-10 lg:col-span-5"
+                    : "min-w-0 space-y-10"
+                }
+              >
+                <MedidasEPeso
+                  larguraMm={produto.widthMm}
+                  alturaMm={produto.heightMm}
+                  profundidadeMm={produto.depthMm}
+                  pesoG={produto.weightGrams}
+                />
+                <Regulatorio
+                  codigoAnvisa={produto.anvisaCode}
+                  fabricante={produto.manufacturer}
+                  detentor={produto.regulatoryHolder}
+                  observacao={produto.regulatoryNote}
+                />
+                <Documentacao documentos={documentos} />
               </div>
             ) : null}
           </div>
         </Secao>
       ) : null}
 
-      {/* ================================================== SERVIÇOS DA JB */}
+      {/* ==================================================== SERVIÇOS DA JB */}
       {servicos.length > 0 && !arquivado ? (
         <Secao fundo="clara" espaco="lg" separador>
           <TituloSecao
@@ -515,13 +555,13 @@ export default async function ProdutoPage({ params }: Props) {
             titulo="O que a JB faz neste equipamento"
             descricao="Cada serviço é executado pela equipe da própria JB e entra no mesmo pedido do equipamento — é só marcar antes de adicionar ao carrinho."
           />
-          <div className="mt-8 lg:mt-10">
+          <div className="mt-10 lg:mt-12">
             <ServicosDoProduto servicos={servicos} />
           </div>
         </Secao>
       ) : null}
 
-      {/* ============================================================= FAQ */}
+      {/* ================================================================ FAQ */}
       {produto.faqs.length > 0 ? (
         <Secao espaco="lg" largura="estreita" separador>
           <TituloSecao como="h2" titulo="Dúvidas sobre este equipamento" />
@@ -537,7 +577,7 @@ export default async function ProdutoPage({ params }: Props) {
         </Secao>
       ) : null}
 
-      {/* ==================================================== RELACIONADOS */}
+      {/* ======================================================= RELACIONADOS */}
       <Secao fundo="clara" espaco="lg" separador>
         {/* Título neutro de propósito: a lista mistura relação cadastrada com
             complemento por categoria e marca. Chamar tudo de "substituto"
@@ -557,7 +597,7 @@ export default async function ProdutoPage({ params }: Props) {
         </div>
       </Secao>
 
-      {/* ==================================================== ASSISTÊNCIA */}
+      {/* ========================================================= ASSISTÊNCIA */}
       <AssistenciaRelacionada desde={s.empresa_desde} cidade={s.endereco_cidade} />
     </>
   );

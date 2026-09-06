@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 
 import { CabecalhoAdmin } from "@/components/admin/cabecalho-admin";
 import { MenuAdmin } from "@/components/admin/menu-admin";
@@ -108,15 +108,15 @@ export function Casca({
           </Link>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <MenuAdmin grupos={grupos} colapsado={colapsado} />
         </div>
 
-        {!colapsado ? (
-          <p className="border-t border-graf-200 px-4 py-3 text-xs leading-snug text-graf-500">
-            Painel interno · JB Soluções Odontológicas
-          </p>
-        ) : null}
+        {/* O pé do trilho não é assinatura: é a única saída do painel para a
+            loja, que antes só existia no topo e sumia abaixo de 768px. */}
+        <div className="shrink-0 border-t border-graf-200 p-2">
+          <LinkVerSite colapsado={colapsado} />
+        </div>
       </aside>
 
       {/* ----------------------------------------------------------- gaveta */}
@@ -168,13 +168,18 @@ export function Casca({
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <MenuAdmin grupos={grupos} aoNavegar={fecharGaveta} />
           </div>
 
-          <div className="border-t border-graf-200 px-4 py-3">
-            <p className="truncate text-sm font-semibold text-graf-900">{usuario.nome}</p>
-            <p className="truncate text-xs text-graf-500">{usuario.papel}</p>
+          <div className="shrink-0 border-t border-graf-200 p-2">
+            <LinkVerSite />
+            <div className="px-3.5 pb-1 pt-2">
+              <p className="truncate text-[0.9375rem] font-semibold text-graf-900">
+                {usuario.nome}
+              </p>
+              <p className="truncate text-[0.8125rem] text-graf-500">{usuario.papel}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -197,10 +202,34 @@ export function Casca({
 
         {/* `min-w-0` no eixo do conteúdo: sem ele, um filho largo (tabela,
             faixa de filtros) cresce em vez de rolar dentro da própria caixa. */}
-        <main id="conteudo-admin" className="min-w-0 px-4 py-6 sm:px-6 lg:px-8">
+        <main id="conteudo-admin" className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="mx-auto min-w-0 max-w-[100rem]">{children}</div>
         </main>
       </div>
     </div>
+  );
+}
+
+/**
+ * Saída para a loja, no pé do menu.
+ *
+ * Desenhado como item de menu de propósito: é navegação, não comando, e no
+ * trilho recolhido vira só o ícone com o nome dito ao leitor de tela.
+ */
+function LinkVerSite({ colapsado = false }: { colapsado?: boolean }) {
+  return (
+    <Link
+      href="/"
+      title={colapsado ? "Ver o site" : undefined}
+      className={cn(
+        "flex h-11 items-center gap-3 rounded-lg text-[0.9375rem] font-medium text-graf-600 transition-colors",
+        "hover:bg-graf-100 hover:text-graf-950",
+        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
+        colapsado ? "justify-center px-0" : "pl-3.5 pr-2.5",
+      )}
+    >
+      <ExternalLink className="size-[18px] shrink-0 text-graf-500" aria-hidden />
+      {colapsado ? <span className="sr-only">Ver o site</span> : <span>Ver o site</span>}
+    </Link>
   );
 }

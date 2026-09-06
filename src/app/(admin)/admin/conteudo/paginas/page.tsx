@@ -69,7 +69,7 @@ export default async function PaginaListaDePaginas({
       renderizar: (linha) => (
         <span className="block">
           <span className="block font-semibold text-graf-900">{linha.title}</span>
-          <span className="mt-0.5 block text-xs text-graf-500">
+          <span className="mt-0.5 block text-[0.8125rem] text-graf-500">
             {linha.lead || linha.resumo || "Sem texto cadastrado"}
           </span>
         </span>
@@ -89,7 +89,7 @@ export default async function PaginaListaDePaginas({
       largura: "10rem",
       esconderNoMobile: true,
       renderizar: (linha) => (
-        <span className="text-xs text-graf-600">
+        <span className="text-[0.8125rem] text-graf-600">
           {linha.resumo ? "Texto preenchido" : "Sem texto"}
           {linha.imagens > 0 ? ` · ${linha.imagens} na galeria` : ""}
         </span>
@@ -119,7 +119,7 @@ export default async function PaginaListaDePaginas({
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         trilha={[{ rotulo: "Conteúdo", href: "/admin/conteudo" }, { rotulo: "Páginas" }]}
         titulo="Páginas do site"

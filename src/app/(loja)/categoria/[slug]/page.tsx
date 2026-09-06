@@ -8,6 +8,7 @@ import {
 } from "@/components/loja/vitrine";
 import { textoDeHtml } from "@/lib/html";
 import { prisma } from "@/lib/prisma";
+import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -26,11 +27,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const categoria = await prisma.category.findUnique({ where: { slug } });
   if (!categoria) return {};
-  return {
-    title: categoria.seoTitle ?? categoria.name,
-    description: categoria.seoDescription ?? (textoDeHtml(categoria.description) || undefined),
-    alternates: { canonical: `/categoria/${categoria.slug}` },
-  };
+  return metadataDePagina({
+    titulo: categoria.seoTitle || categoria.name,
+    descricao: categoria.seoDescription || textoDeHtml(categoria.description),
+    caminho: `/categoria/${categoria.slug}`,
+  });
 }
 
 export default async function CategoriaPage({ params, searchParams }: Props) {
@@ -56,22 +57,29 @@ export default async function CategoriaPage({ params, searchParams }: Props) {
   const pai =
     categoria.parent && categoria.parent.published ? categoria.parent : null;
 
+  const trilha = [
+    { rotulo: "Início", href: "/" },
+    { rotulo: "Equipamentos", href: "/loja" },
+    ...(pai ? [{ rotulo: pai.name, href: `/categoria/${pai.slug}` }] : []),
+    { rotulo: categoria.name },
+  ];
+
   return (
-    <Vitrine
-      titulo={categoria.name}
-      descricao={textoDeHtml(categoria.description) || undefined}
-      trilha={[
-        { rotulo: "Início", href: "/" },
-        { rotulo: "Equipamentos", href: "/loja" },
-        ...(pai ? [{ rotulo: pai.name, href: `/categoria/${pai.slug}` }] : []),
-        { rotulo: categoria.name },
-      ]}
-      caminho={`/categoria/${categoria.slug}`}
-      parametros={parametros}
-      filtrosFixos={{ categoria: categoria.slug }}
-      atalhos={atalhos}
-      rotuloAtalhos={`Subcategorias de ${categoria.name}`}
-      travarCategoria
-    />
+    <>
+      <JsonLd dados={trilhaJsonLd(trilha)} />
+
+      <Vitrine
+        sobretitulo="Categoria"
+        titulo={categoria.name}
+        descricao={textoDeHtml(categoria.description) || undefined}
+        trilha={trilha}
+        caminho={`/categoria/${categoria.slug}`}
+        parametros={parametros}
+        filtrosFixos={{ categoria: categoria.slug }}
+        atalhos={atalhos}
+        rotuloAtalhos={`Subcategorias de ${categoria.name}`}
+        travarCategoria
+      />
+    </>
   );
 }

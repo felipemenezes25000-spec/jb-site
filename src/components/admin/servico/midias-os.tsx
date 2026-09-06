@@ -80,7 +80,7 @@ function Fase({
     <section className="space-y-3">
       <div>
         <h3 className="text-sm font-bold text-graf-900">{titulo}</h3>
-        <p className="text-xs text-graf-500">{descricao}</p>
+        <p className="text-[0.8125rem] text-graf-500">{descricao}</p>
       </div>
 
       {midias.length === 0 ? (
@@ -112,7 +112,7 @@ function Fase({
                 ) : (
                   <span className="flex aspect-square w-full flex-col items-center justify-center gap-1.5 px-2 text-center text-graf-600">
                     <FileText className="size-6" aria-hidden />
-                    <span className="line-2 text-[11px] font-medium">{midia.nome}</span>
+                    <span className="line-2 text-xs font-medium">{midia.nome}</span>
                   </span>
                 )}
               </a>

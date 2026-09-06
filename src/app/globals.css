@@ -479,3 +479,25 @@
     content: "";
   }
 }
+
+/* Código dentro de conteúdo do editor e de página institucional. Sem esta
+   regra, `<code>` sai com a fonte do corpo e some no meio da frase — e o CMS
+   é justamente onde ele aparece: nome de variável, código de rastreio, CNPJ
+   formatado. */
+.prose-jb code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--color-graf-100);
+  color: var(--color-graf-900);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-xs);
+  overflow-wrap: anywhere;
+}
+
+/* Texto de apoio — o degrau que faltava entre `text-sm` (14px) e `text-xs`
+   (12px, pequeno demais para leitura corrida). 13px é o piso confortável da
+   plataforma: ajuda de campo, contagem em tabela, legenda de cartão. */
+@utility texto-apoio {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}

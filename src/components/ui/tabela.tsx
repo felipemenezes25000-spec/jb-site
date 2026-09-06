@@ -28,6 +28,15 @@ export type Coluna<T> = {
   largura?: string;
   /** Quando ausente, o valor é lido de `linha[chave]` e formatado do jeito óbvio. */
   renderizar?: (linha: T) => React.ReactNode;
+  /**
+   * O que escrever quando a célula está vazia.
+   *
+   * O travessão solto era o padrão e é exatamente o que a plataforma não
+   * quer: numa coluna inteira ele vira um paredão de traços que não informa
+   * se o dado não existe, não se aplica ou não foi preenchido. Diga em
+   * português — "Sem controle", "Não informado", "Sob consulta".
+   */
+  vazio?: string;
   /** Some no mobile — use em colunas de apoio, nunca na que identifica a linha. */
   esconderNoMobile?: boolean;
   ordenavel?: boolean;
@@ -49,18 +58,21 @@ const ALINHAR: Record<Alinhamento, string> = {
 };
 
 /** Valor bruto virando texto sem surpresa: nada vazio na tela, sempre um "—". */
-function valorPadrao(linha: unknown, chave: string): React.ReactNode {
+function valorPadrao(linha: unknown, chave: string, vazio: string): React.ReactNode {
   const bruto = (linha as Record<string, unknown>)[chave];
-  if (bruto === null || bruto === undefined) return "—";
+  const semValor = <span className="text-graf-500">{vazio}</span>;
+  if (bruto === null || bruto === undefined) return semValor;
   if (bruto instanceof Date) return formatarData(bruto);
   if (typeof bruto === "boolean") return bruto ? "Sim" : "Não";
   if (typeof bruto === "number" || typeof bruto === "bigint") return String(bruto);
-  if (typeof bruto === "string") return bruto.trim() === "" ? "—" : bruto;
-  return "—";
+  if (typeof bruto === "string") return bruto.trim() === "" ? semValor : bruto;
+  return semValor;
 }
 
 function conteudoDaCelula<T>(linha: T, coluna: Coluna<T>): React.ReactNode {
-  return coluna.renderizar ? coluna.renderizar(linha) : valorPadrao(linha, coluna.chave);
+  return coluna.renderizar
+    ? coluna.renderizar(linha)
+    : valorPadrao(linha, coluna.chave, coluna.vazio ?? "Não informado");
 }
 
 function CabecalhoOrdenavel({
@@ -174,7 +186,7 @@ export function Tabela<T>({
                         : undefined
                     }
                     className={cn(
-                      "whitespace-nowrap px-4 py-3 text-xs font-bold uppercase tracking-wider text-graf-500",
+                      "whitespace-nowrap px-4 py-3 text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500",
                       ALINHAR[coluna.alinhamento ?? "esquerda"],
                     )}
                   >

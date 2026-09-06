@@ -14,6 +14,7 @@ import {
 import { AcoesDaVisita } from "@/components/admin/servico/acoes-visita";
 import { EtiquetaVisita } from "@/components/admin/servico/etiquetas";
 import { FormularioAcao, Oculto } from "@/components/admin/servico/formulario";
+import { LinkBotao } from "@/components/ui/button";
 import { CabecalhoCartao, Cartao, Esqueleto } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
 import { Tabela, type Coluna } from "@/components/ui/tabela";
@@ -188,7 +189,7 @@ export default async function PaginaManutencao({
           <span className="block truncate font-semibold text-graf-900">
             {linha.equipment.name}
           </span>
-          <span className="block truncate text-xs text-graf-500">
+          <span className="block truncate text-[0.8125rem] text-graf-500">
             {linha.equipment.customer.name}
           </span>
         </span>
@@ -216,8 +217,8 @@ export default async function PaginaManutencao({
           <span
             className={
               linha.dueAt < agora && linha.status !== "concluida"
-                ? "block text-xs font-semibold text-jb-700"
-                : "block text-xs text-graf-500"
+                ? "block text-[0.8125rem] font-semibold text-jb-700"
+                : "block text-[0.8125rem] text-graf-500"
             }
           >
             {distanciaEmDias(linha.dueAt)}
@@ -317,7 +318,7 @@ export default async function PaginaManutencao({
                   >
                     {visita.equipment.name}
                   </Link>
-                  <span className="block truncate text-xs text-graf-500">
+                  <span className="block truncate text-[0.8125rem] text-graf-500">
                     {visita.equipment.customer.name} · prevista para{" "}
                     {formatarData(visita.dueAt)} ({distanciaEmDias(visita.dueAt)})
                   </span>
@@ -340,7 +341,7 @@ export default async function PaginaManutencao({
             ))}
           </ul>
           {lembretes.length > 8 ? (
-            <p className="border-t border-graf-200 bg-graf-50 px-5 py-2.5 text-xs text-graf-500">
+            <p className="border-t border-graf-200 bg-graf-50 px-5 py-2.5 text-[0.8125rem] text-graf-500">
               e mais {lembretes.length - 8} aviso(s) na fila.
             </p>
           ) : null}
@@ -391,12 +392,9 @@ export default async function PaginaManutencao({
           descricao:
             "As visitas nascem quando um contrato de manutenção é criado. Comece pelo contrato para o ano inteiro entrar na agenda de uma vez.",
           acao: (
-            <Link
-              href="/admin/manutencao/contratos"
-              className="text-sm font-semibold text-jb-700 hover:text-jb-500"
-            >
+            <LinkBotao href="/admin/manutencao/contratos" variante="secundario">
               Ver contratos
-            </Link>
+            </LinkBotao>
           ),
         }}
       />

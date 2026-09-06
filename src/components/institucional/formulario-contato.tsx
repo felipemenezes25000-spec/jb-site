@@ -132,12 +132,12 @@ export function FormularioContato() {
           ajuda="Opcional. Dá para cancelar quando quiser."
         />
 
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-2">
           <Botao type="submit" tamanho="lg" carregando={pendente}>
             {pendente ? "Enviando…" : "Enviar mensagem"}
             {pendente ? null : <Send className="size-4" aria-hidden />}
           </Botao>
-          <p className="text-xs leading-relaxed text-graf-500">
+          <p className="max-w-xs text-[0.8125rem] leading-relaxed text-graf-500">
             Ao enviar, seus dados são usados apenas para responder este contato.{" "}
             <Link
               href="/privacidade"

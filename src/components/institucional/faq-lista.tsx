@@ -116,7 +116,7 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
         ) : null}
       </div>
 
-      <p className="mt-5 text-sm text-graf-500" aria-live="polite">
+      <p className="mt-5 text-[0.8125rem] text-graf-500" aria-live="polite">
         {busca.length >= 2 || grupoAtivo !== "todos"
           ? `${plural(total, "pergunta encontrada", "perguntas encontradas")}.`
           : `${plural(total, "pergunta respondida", "perguntas respondidas")} nesta página.`}
@@ -133,12 +133,15 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
         <div className="mt-6 space-y-10">
           {filtrados.map((grupo) => (
             <section key={grupo.chave}>
+              {/* O título não pode ser `shrink-0`: um assunto longo em 360px
+                  passaria a ser largura mínima e jogaria a página para fora
+                  da tela. O fio é que cede espaço, nunca o texto. */}
               <div className="flex items-center gap-4">
-                <h2 className="shrink-0 text-lg font-bold text-graf-950">{grupo.rotulo}</h2>
-                <span aria-hidden className="h-px flex-1 bg-graf-200" />
+                <h2 className="text-title texto-forte min-w-0">{grupo.rotulo}</h2>
+                <span aria-hidden className="h-px min-w-6 flex-1 bg-graf-200" />
               </div>
 
-              <ul className="mt-4 divide-y divide-graf-200 overflow-hidden rounded-xl border border-graf-200 bg-white">
+              <ul className="mt-5 divide-y divide-graf-200 overflow-hidden rounded-xl border border-graf-200 bg-white">
                 {grupo.perguntas.map((item) => {
                   const aberta = estaAberta(item.id);
                   return (
@@ -150,9 +153,9 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
                           aria-expanded={aberta}
                           aria-controls={`faq-painel-${item.id}`}
                           onClick={() => alternar(item.id)}
-                          className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-graf-50"
+                          className="foco-jb flex w-full items-start justify-between gap-4 px-5 py-4.5 text-left transition-colors hover:bg-graf-50 sm:px-6"
                         >
-                          <span className="text-[0.9375rem] font-semibold leading-snug text-graf-900">
+                          <span className="text-base font-semibold leading-snug text-graf-950">
                             {item.pergunta}
                           </span>
                           <ChevronDown
@@ -170,7 +173,7 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
                         role="region"
                         aria-labelledby={`faq-botao-${item.id}`}
                         hidden={!aberta}
-                        className="px-5 pb-5 text-[0.9375rem] leading-relaxed text-graf-600"
+                        className="px-5 pb-6 text-base leading-relaxed text-graf-600 sm:px-6"
                       >
                         {nl2br(item.resposta)}
                       </div>

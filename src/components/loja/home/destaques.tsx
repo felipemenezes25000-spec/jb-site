@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ImageOff } from "lucide-react";
 
 import { Etiqueta, TituloSecao } from "@/components/ui/data";
-import { Grade, colunasParaTotal } from "@/components/ui/grade";
+import { TrilhoOuGrade, colunasParaTotal } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import {
   BlocoPreco,
@@ -88,13 +88,13 @@ export async function SecaoDestaques() {
         className="mb-10"
       />
 
-      <Grade colunas={colunasParaTotal(produtos.length)} espaco="md" como="ul">
+      <TrilhoOuGrade colunas={colunasParaTotal(produtos.length)} espaco="md" como="ul">
         {produtos.map((produto) => (
           <li key={produto.slug} className="flex">
             <CartaoDestaque produto={produto} parcelamento={parcelamento} />
           </li>
         ))}
-      </Grade>
+      </TrilhoOuGrade>
     </Secao>
   );
 }

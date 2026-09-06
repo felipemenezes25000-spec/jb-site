@@ -43,16 +43,16 @@ export default async function PaginaMarca({ params }: { params: Promise<{ id: st
         ]}
       />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-graf-950">{marca.name}</h1>
+            <h1 className="text-2xl font-bold leading-tight text-graf-950">{marca.name}</h1>
             <Etiqueta tom={marca.published ? "ok" : "neutro"}>
               {marca.published ? "Publicada" : "Oculta"}
             </Etiqueta>
           </div>
           <p className="mt-1 text-sm text-graf-500">
-            {marca._count.products} {plural(marca._count.products, "produto", "produtos")}
+            {plural(marca._count.products, "produto", "produtos")}
             {temProdutos ? (
               <>
                 {" · "}
@@ -99,7 +99,7 @@ export default async function PaginaMarca({ params }: { params: Promise<{ id: st
 
       {temProdutos && !somenteLeitura ? (
         <Aviso tom="info" titulo="Marca em uso">
-          {marca._count.products} {plural(marca._count.products, "produto usa", "produtos usam")}{" "}
+          {plural(marca._count.products, "produto usa", "produtos usam")}{" "}
           esta marca, então ela não pode ser apagada. Para tirá-la do site sem mexer nos produtos,
           desmarque &quot;Publicada&quot;.
         </Aviso>

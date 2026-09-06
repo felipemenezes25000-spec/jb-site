@@ -70,8 +70,8 @@ export default async function PagamentoPage({ params }: Props) {
   const manual = pagamento.provider === "manual";
   const podeConsultar = !manual && Boolean(pagamento.externalId);
   const motivoSemConsulta = manual
-    ? "Pagamento registrado à mão pela equipe: não existe cobrança no provedor para consultar."
-    : "Esta cobrança não guardou o identificador do provedor, então não há o que consultar.";
+    ? "Pagamento registrado à mão pela equipe: não existe cobrança na operadora para consultar."
+    : "Esta cobrança não ficou com uma identificação na operadora, então não há o que consultar.";
 
   const diferencaDoPedido = pagamento.amountCents - pagamento.order.totalCents;
 
@@ -159,19 +159,19 @@ export default async function PagamentoPage({ params }: Props) {
                 <Dado rotulo="Parcelas">
                   {pagamento.installments > 1 ? `${pagamento.installments}x` : "À vista"}
                 </Dado>
-                <Dado rotulo="Provedor">{rotuloProvedor(pagamento.provider)}</Dado>
+                <Dado rotulo="Operadora">{rotuloProvedor(pagamento.provider)}</Dado>
 
-                <Dado rotulo="Identificador no provedor">
-                  {pagamento.externalId ? (
+                {pagamento.externalId ? (
+                  <Dado rotulo="Identificação da cobrança">
                     <span className="break-all font-mono text-xs">{pagamento.externalId}</span>
-                  ) : null}
-                </Dado>
-                <Dado rotulo="Aprovada em">
-                  {pagamento.approvedAt ? formatarDataHora(pagamento.approvedAt) : null}
-                </Dado>
-                <Dado rotulo="Expira em">
-                  {pagamento.expiresAt ? formatarDataHora(pagamento.expiresAt) : null}
-                </Dado>
+                  </Dado>
+                ) : null}
+                {pagamento.approvedAt ? (
+                  <Dado rotulo="Aprovada em">{formatarDataHora(pagamento.approvedAt)}</Dado>
+                ) : null}
+                {pagamento.expiresAt ? (
+                  <Dado rotulo="Expira em">{formatarDataHora(pagamento.expiresAt)}</Dado>
+                ) : null}
 
                 {pagamento.cardLast4 ? (
                   <Dado rotulo="Cartão">
@@ -211,15 +211,15 @@ export default async function PagamentoPage({ params }: Props) {
 
           <Cartao>
             <CabecalhoCartao
-              titulo="Eventos do provedor"
-              descricao="Conteúdo bruto de cada notificação e consulta, na ordem inversa."
+              titulo="Retorno do meio de pagamento"
+              descricao="O que a operadora informou sobre esta cobrança, do mais recente para o mais antigo."
             />
             <div className="p-5">
               {pagamento.events.length === 0 ? (
                 <Vazio
                   icone={History}
-                  titulo="Nenhum evento registrado"
-                  descricao="Webhooks e consultas manuais aparecem aqui assim que chegarem."
+                  titulo="Nenhuma resposta registrada"
+                  descricao="Assim que a operadora informar algo sobre esta cobrança, o registro aparece aqui."
                 />
               ) : (
                 <ul className="space-y-4">
@@ -227,11 +227,11 @@ export default async function PagamentoPage({ params }: Props) {
                     <li key={evento.id} className="rounded-lg border border-graf-200">
                       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-graf-200 bg-graf-50 px-4 py-2.5">
                         <span className="text-sm font-semibold text-graf-900">{evento.kind}</span>
-                        <span className="text-xs text-graf-500">
+                        <span className="text-[0.8125rem] text-graf-500">
                           {formatarDataHora(evento.createdAt)}
                         </span>
                       </div>
-                      <p className="border-b border-graf-100 px-4 py-2 font-mono text-[11px] break-all text-graf-500">
+                      <p className="break-all border-b border-graf-100 px-4 py-2 font-mono text-xs text-graf-500">
                         {evento.eventKey}
                       </p>
                       <div className="overflow-x-auto">
@@ -254,7 +254,7 @@ export default async function PagamentoPage({ params }: Props) {
             podeConsultar={podeConsultar && !pagamentoEhSimulado()}
             motivoSemConsulta={
               pagamentoEhSimulado() && !manual
-                ? "O provedor simulado não guarda estado próprio: não há a quem perguntar. Configure um provedor real para usar a reconsulta."
+                ? "O modo de teste não tem uma operadora do outro lado para consultar. Com o meio de pagamento real ligado, a reconsulta passa a funcionar."
                 : motivoSemConsulta
             }
             podeEstornar={PODE.confirmarPagamentoManual(usuario)}

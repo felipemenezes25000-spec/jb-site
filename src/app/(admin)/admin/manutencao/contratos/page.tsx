@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ContractStatus, Prisma } from "@prisma/client";
 import { FileSignature, Plus } from "lucide-react";
 
@@ -164,7 +163,7 @@ export default async function PaginaContratos({
           <span className="block">
             {plural(linha._count.items, "equipamento", "equipamentos")}
           </span>
-          <span className="block text-xs text-graf-500">
+          <span className="block text-[0.8125rem] text-graf-500">
             {linha._count.visits === 0
               ? "sem visitas geradas"
               : `${linha.visitasAbertas} de ${linha._count.visits} visitas em aberto`}
@@ -196,7 +195,7 @@ export default async function PaginaContratos({
         descricao="Cobertura preventiva por cliente, com a agenda de visitas do período."
         acoes={
           editar ? (
-            <LinkBotao href="/admin/manutencao/contratos/novo" variante="primario" tamanho="md">
+            <LinkBotao href="/admin/manutencao/contratos/novo">
               <Plus className="size-4" aria-hidden />
               Novo contrato
             </LinkBotao>
@@ -238,16 +237,13 @@ export default async function PaginaContratos({
           descricao:
             "Um contrato cobre os equipamentos escolhidos e já nasce com a agenda de visitas do período inteiro.",
           acao: editar ? (
-            <LinkBotao href="/admin/manutencao/contratos/novo" variante="primario" tamanho="sm">
+            <LinkBotao href="/admin/manutencao/contratos/novo">
               Criar o primeiro contrato
             </LinkBotao>
           ) : (
-            <Link
-              href="/admin/manutencao/contratos"
-              className="text-sm font-semibold text-jb-700 hover:text-jb-500"
-            >
+            <LinkBotao href="/admin/manutencao/contratos" variante="secundario">
               Limpar filtros
-            </Link>
+            </LinkBotao>
           ),
         }}
       />

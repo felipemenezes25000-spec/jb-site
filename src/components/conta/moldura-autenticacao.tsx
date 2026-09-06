@@ -1,24 +1,74 @@
-import { Clock, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import {
+  Clock,
+  FileText,
+  LifeBuoy,
+  MessageCircle,
+  Package,
+  Phone,
+  ShieldCheck,
+  Stethoscope,
+  Wrench,
+} from "lucide-react";
 
-import { classesBotao } from "@/components/ui/button";
 import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
-import { enderecoCompleto, getSettings, type SettingsMap } from "@/lib/settings";
+import { getSettings, type SettingsMap } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
 /**
- * Moldura das quatro telas de autenticação.
+ * Moldura das quatro telas de acesso — entrar, criar conta, recuperar e
+ * redefinir senha.
  *
- * Composição centrada e curta de propósito: quem chega aqui quer entrar, não
- * ler a loja. A coluna do formulário tem 27rem, e ao lado dela — só a partir de
- * `lg`, onde sobra largura — o painel grafite com o atendimento da JB.
+ * É aqui que a clínica decide se confia na JB, então a tela não pode ser um
+ * formulário solto no meio do branco. A composição é uma folha só, com borda
+ * fina e um filete vermelho no topo: à esquerda o formulário, à direita a
+ * lateral grafite que diz, sem promessa nenhuma, o que a Área da Clínica
+ * guarda de fato — equipamentos, chamados, manutenções, pedidos e documentos.
+ * Cada linha dessa lista corresponde a uma área que já existe na conta.
  *
- * Tudo o que o painel mostra vem de `getSettings`: nome, ano de início,
- * resumo, telefone, WhatsApp, horário e endereço. Campo vazio nas configurações
- * simplesmente não aparece — nada de número inventado nem de traço repetido.
+ * No celular a folha vira uma coluna: o texto e o formulário primeiro, a
+ * lateral grafite embaixo, para quem só quer entrar não ter de rolar por cima
+ * de argumento nenhum.
  *
- * No celular o painel sai da frente e vira um bloco curto de ajuda embaixo do
- * formulário, com telefone e WhatsApp em botão de toque cheio.
+ * O contato vem inteiro de `getSettings` — telefone, WhatsApp e horário.
+ * Campo vazio nas configurações simplesmente não aparece: nada de número
+ * inventado nem de traço solto no lugar do dado que falta.
  */
+
+type Recurso = {
+  icone: React.ComponentType<{ className?: string }>;
+  titulo: string;
+  descricao: string;
+};
+
+/* O que a conta entrega. Cada item espelha uma área da Área da Clínica: se um
+   dia a área sair do produto, a linha sai daqui junto. */
+const RECURSOS: Recurso[] = [
+  {
+    icone: Stethoscope,
+    titulo: "Seus equipamentos",
+    descricao: "Garantia, histórico de manutenção e chamados de cada aparelho.",
+  },
+  {
+    icone: LifeBuoy,
+    titulo: "Chamados de assistência",
+    descricao: "Abra o chamado e acompanhe a etapa e as respostas da equipe.",
+  },
+  {
+    icone: Wrench,
+    titulo: "Manutenções",
+    descricao: "Contratos ativos, visitas previstas e o que já foi feito.",
+  },
+  {
+    icone: Package,
+    titulo: "Pedidos e orçamentos",
+    descricao: "O andamento das compras e as propostas para aprovar ou recusar.",
+  },
+  {
+    icone: FileText,
+    titulo: "Documentos",
+    descricao: "Notas fiscais, laudos e contratos prontos para baixar.",
+  },
+];
 
 type Canal = {
   icone: React.ComponentType<{ className?: string }>;
@@ -53,43 +103,50 @@ function canaisDeAtendimento(s: SettingsMap): Canal[] {
     canais.push({ icone: Clock, rotulo: "Atendimento", valor: s.horario });
   }
 
-  if (s.endereco_logradouro.trim()) {
-    canais.push({ icone: MapPin, rotulo: "Onde estamos", valor: enderecoCompleto(s) });
-  }
-
   return canais;
 }
 
-/** Linha do painel grafite. Os tons claros vêm de `on-dark`, no globals.css. */
-function ItemCanal({ canal }: { canal: Canal }) {
-  const { icone: Icone, rotulo, valor, href } = canal;
+/** Uma linha da lista de recursos, dentro da lateral grafite. */
+function ItemRecurso({ recurso }: { recurso: Recurso }) {
+  const { icone: Icone, titulo, descricao } = recurso;
 
   return (
     <li className="flex gap-3.5">
       <span
-        className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white"
+        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-jb-300"
         aria-hidden
       >
         <Icone className="size-4" />
       </span>
 
       <span className="min-w-0">
-        <span className="block text-xs font-bold uppercase tracking-[0.08em] texto-suave">
-          {rotulo}
-        </span>
-        {href ? (
-          <a
-            href={href}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-white underline-offset-4 hover:underline [overflow-wrap:anywhere]"
-          >
-            {valor}
-          </a>
-        ) : (
-          <span className="mt-1 block text-sm leading-relaxed texto-suave [overflow-wrap:anywhere]">
-            {valor}
-          </span>
-        )}
+        <span className="block text-[0.9375rem] font-semibold text-white">{titulo}</span>
+        <span className="mt-1 block text-[0.8125rem] leading-relaxed texto-suave">{descricao}</span>
       </span>
+    </li>
+  );
+}
+
+/** Uma linha de contato. O rótulo vai no nome acessível, não em texto solto. */
+function ItemCanal({ canal }: { canal: Canal }) {
+  const { icone: Icone, rotulo, valor, href } = canal;
+
+  return (
+    <li className="flex items-center gap-3">
+      <Icone className="size-4 shrink-0 text-jb-300" aria-hidden />
+      {href ? (
+        <a
+          href={href}
+          aria-label={`${rotulo}: ${valor}`}
+          className="flex min-h-11 items-center text-sm font-semibold text-white underline-offset-4 hover:underline [overflow-wrap:anywhere]"
+        >
+          {valor}
+        </a>
+      ) : (
+        <span className="flex min-h-11 items-center text-sm leading-relaxed texto-suave [overflow-wrap:anywhere]">
+          {valor}
+        </span>
+      )}
     </li>
   );
 }
@@ -100,6 +157,7 @@ export async function MolduraAutenticacao({
   subtitulo,
   aviso,
   rodape,
+  largura = "padrao",
   children,
 }: {
   /** degrau em caixa alta acima do título — mantém as quatro telas irmãs */
@@ -110,94 +168,82 @@ export async function MolduraAutenticacao({
   aviso?: React.ReactNode;
   /** links de troca de tela: criar conta, voltar a entrar, recuperar senha */
   rodape?: React.ReactNode;
+  /** `ampla` abre a coluna do formulário — o cadastro tem oito campos */
+  largura?: "padrao" | "ampla";
   children: React.ReactNode;
 }) {
   const s = await getSettings();
-
-  const desde = Number(s.empresa_desde);
-  const anoDeInicio =
-    Number.isInteger(desde) && desde > 1900 && desde <= new Date().getFullYear() ? desde : null;
-
   const canais = canaisDeAtendimento(s);
-  const telefone = telHref(s.telefone);
-  const whatsapp = whatsappHref(s.whatsapp);
+  const ampla = largura === "ampla";
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-12 lg:flex-row lg:items-start lg:justify-center lg:gap-16">
-      <div className="mx-auto w-full max-w-[27rem] lg:mx-0">
-        {/* Sem logotipo aqui: as quatro telas de acesso ficam dentro do
-            cabeçalho da loja, que já traz a marca e o link para a home. Repetir
-            a logo dois blocos abaixo dela só empurrava o formulário para baixo. */}
-        {etapa ? <p className="sobretitulo">{etapa}</p> : null}
-        <h1 className={cn("text-title", etapa && "mt-2")}>{titulo}</h1>
-        <p className="mt-3 text-base leading-relaxed text-graf-600">{subtitulo}</p>
+    <div
+      className={cn(
+        "relative mx-auto w-full overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card",
+        "lg:flex lg:items-stretch",
+        ampla ? "max-w-6xl" : "max-w-5xl",
+      )}
+    >
+      {/* filete da marca no topo da folha inteira: é o único vermelho grande
+          da tela, e serve de assinatura — não de decoração repetida */}
+      <span className="absolute inset-x-0 top-0 h-[3px] bg-jb-500" aria-hidden />
 
-        {aviso ? <div className="mt-6">{aviso}</div> : null}
+      <div className="min-w-0 flex-1 px-5 pb-9 pt-8 sm:px-8 sm:pb-12 sm:pt-11 lg:px-12 lg:py-14">
+        <div className={cn("mx-auto w-full", ampla ? "max-w-[34rem]" : "max-w-[27rem]")}>
+          {/* Sem logotipo aqui: as telas de acesso ficam dentro do cabeçalho da
+              loja, que já traz a marca e o caminho de volta para a home. */}
+          {etapa ? <p className="sobretitulo">{etapa}</p> : null}
+          <h1 className={cn("text-title", etapa && "mt-2.5")}>{titulo}</h1>
+          <p className="mt-3 text-base leading-relaxed text-graf-600">{subtitulo}</p>
 
-        <div className="mt-8">{children}</div>
+          {aviso ? <div className="mt-6">{aviso}</div> : null}
 
-        {rodape ? (
-          <div className="mt-8 border-t border-graf-200 pt-6 text-sm leading-relaxed text-graf-600">
-            {rodape}
-          </div>
-        ) : null}
+          <div className="mt-8">{children}</div>
 
-        {telefone || whatsapp ? (
-          <div className="mt-8 rounded-xl border border-graf-200 bg-graf-50 p-5 lg:hidden">
-            <p className="text-sm font-semibold text-graf-900">Precisa de ajuda para acessar?</p>
-            {s.horario.trim() ? (
-              <p className="mt-1 text-sm leading-relaxed text-graf-600">
-                Fale com a equipe da JB. {s.horario}.
-              </p>
-            ) : null}
-
-            <div className="mt-4 flex flex-wrap gap-2.5">
-              {telefone ? (
-                <a href={telefone} className={classesBotao("secundario", "md")}>
-                  <Phone className="size-4" aria-hidden />
-                  Ligar para a JB
-                </a>
-              ) : null}
-              {whatsapp ? (
-                <a href={whatsapp} className={classesBotao("secundario", "md")}>
-                  <MessageCircle className="size-4" aria-hidden />
-                  WhatsApp
-                </a>
-              ) : null}
+          {rodape ? (
+            <div className="mt-8 border-t border-graf-200 pt-6 text-sm leading-relaxed text-graf-600">
+              {rodape}
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
 
-      <aside className="hidden w-80 shrink-0 lg:block" aria-label="Atendimento da JB">
-        <div className="on-dark field-orbit sticky top-28 overflow-hidden rounded-2xl bg-graf-950 p-7">
-          <span className="absolute inset-x-0 top-0 h-1 bg-jb-500" aria-hidden />
+      <aside
+        className="on-dark bg-graf-950 px-5 py-9 sm:px-8 sm:py-10 lg:w-[21.5rem] lg:shrink-0 lg:px-8 lg:py-14"
+        aria-labelledby="painel-area-clinica"
+      >
+        {/* sem sobretítulo aqui: "Área da Clínica" já está no degrau acima do
+            título, a dois palmos de distância — repetir seria eco */}
+        <h2 id="painel-area-clinica" className="text-xl font-bold leading-snug text-white">
+          O que fica guardado na Área da Clínica
+        </h2>
+        <p className="mt-2.5 text-sm leading-relaxed texto-suave">
+          A mesma conta serve para a compra e para a assistência.
+        </p>
 
-          <p className="sobretitulo">{s.empresa_nome}</p>
+        <ul className="mt-8 space-y-5 border-t border-white/10 pt-7">
+          {RECURSOS.map((recurso) => (
+            <ItemRecurso key={recurso.titulo} recurso={recurso} />
+          ))}
+        </ul>
 
-          {anoDeInicio !== null ? (
-            <p className="mt-3 text-xl font-bold leading-snug text-white">
-              Em atividade desde {anoDeInicio}
+        {canais.length ? (
+          <div className="mt-8 border-t border-white/10 pt-6">
+            <p className="text-[0.8125rem] font-semibold text-white">
+              Dificuldade para entrar? Fale com a equipe
             </p>
-          ) : null}
-
-          {s.empresa_resumo.trim() ? (
-            <p className="mt-2 text-sm leading-relaxed texto-suave">{s.empresa_resumo}</p>
-          ) : null}
-
-          {canais.length ? (
-            <ul className="mt-7 space-y-4 border-t border-white/10 pt-6">
+            <ul className="mt-2">
               {canais.map((canal) => (
                 <ItemCanal key={canal.rotulo} canal={canal} />
               ))}
             </ul>
-          ) : null}
+          </div>
+        ) : null}
 
-          <p className="mt-7 flex gap-3 border-t border-white/10 pt-6 text-xs leading-relaxed texto-suave">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-white" aria-hidden />
-            <span>A JB nunca pede sua senha por telefone, e-mail ou WhatsApp.</span>
-          </p>
-        </div>
+        <p className="mt-7 flex gap-3 border-t border-white/10 pt-6 text-[0.8125rem] leading-relaxed texto-suave">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-white" aria-hidden />
+          <span>A JB nunca pede sua senha por telefone, e-mail ou WhatsApp.</span>
+        </p>
       </aside>
     </div>
   );

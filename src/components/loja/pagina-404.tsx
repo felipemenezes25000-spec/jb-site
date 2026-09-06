@@ -1,17 +1,8 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  Headset,
-  LayoutGrid,
-  MessageCircle,
-  Phone,
-  Recycle,
-  UserRound,
-} from "lucide-react";
+import { ArrowRight, Headset, LayoutGrid, Recycle, UserRound } from "lucide-react";
 
+import { FaixaDeContato } from "@/components/institucional/canais";
 import { BuscaHero } from "@/components/loja/busca-hero";
-import { LinkBotao } from "@/components/ui/button";
-import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import type { SettingsMap } from "@/lib/settings";
 
 /* ============================================================================
@@ -25,7 +16,9 @@ import type { SettingsMap } from "@/lib/settings";
        grupo de rotas — ali a página traz a própria marca e o próprio rodapé.
 
    Quem chegou num link morto precisa de saída, não de desculpa: busca,
-   caminhos prováveis e um canal direto com a equipe.
+   caminhos prováveis e um canal direto com a equipe. O fim da página usa a
+   mesma faixa de contato das páginas institucionais, em vez de um bloco
+   próprio — telefone e WhatsApp continuam saindo das configurações.
    ============================================================================ */
 
 const ATALHOS = [
@@ -33,13 +26,13 @@ const ATALHOS = [
     href: "/loja",
     icone: LayoutGrid,
     titulo: "Catálogo completo",
-    texto: "Equipamentos novos, peças e acessórios.",
+    texto: "Equipamentos, peças e acessórios por categoria.",
   },
   {
     href: "/seminovos",
     icone: Recycle,
     titulo: "Seminovos JB",
-    texto: "Unidades revisadas, com checklist e fotos reais.",
+    texto: "Equipamentos seminovos disponíveis.",
   },
   {
     href: "/assistencia-tecnica/solicitar",
@@ -51,7 +44,7 @@ const ATALHOS = [
     href: "/minha-jb",
     icone: UserRound,
     titulo: "Área da Clínica",
-    texto: "Pedidos, chamados, garantias e documentos.",
+    texto: "Pedidos, chamados, equipamentos e documentos.",
   },
 ];
 
@@ -63,15 +56,13 @@ export function Conteudo404({
   /** O link para a home é redundante quando o cabeçalho da loja está na tela. */
   mostrarVoltar?: boolean;
 }) {
-  const whatsapp = whatsappHref(s.whatsapp, "Olá! Não encontrei uma página no site da JB.");
-
   return (
-    <>
-      <p className="label-mono text-jb-600">Erro 404</p>
-      <h1 className="mt-3 max-w-2xl text-display leading-tight">
+    <div className="mx-auto max-w-5xl">
+      <p className="sobretitulo">Erro 404</p>
+      <h1 className="text-display texto-forte mt-3 max-w-2xl">
         Esta página não existe — ou mudou de endereço.
       </h1>
-      <p className="mt-4 max-w-xl text-lg leading-relaxed text-graf-600">
+      <p className="texto-guia texto-suave mt-5 max-w-xl">
         O link pode estar velho, o produto pode ter saído do catálogo ou o endereço veio com
         um erro de digitação. Procure pelo que você precisa:
       </p>
@@ -80,81 +71,46 @@ export function Conteudo404({
         <BuscaHero />
       </div>
 
-      <h2 className="mt-14 text-xs font-bold uppercase tracking-wider text-graf-500">
+      <h2 className="mt-14 text-[0.8125rem] font-bold text-graf-950">
         Caminhos mais procurados
       </h2>
-      <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {ATALHOS.map((atalho) => (
           <li key={atalho.href}>
             <Link
               href={atalho.href}
-              className="flex h-full flex-col rounded-xl border border-graf-200 bg-white p-5 shadow-card transition-[border-color,box-shadow] hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+              className="group flex h-full items-start gap-3.5 rounded-xl border border-graf-200 bg-white p-5 transition-[border-color,box-shadow] hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
-              <span className="flex size-9 items-center justify-center rounded-lg bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-100">
-                <atalho.icone className="size-4.5" aria-hidden />
-              </span>
-              <span className="mt-4 text-base font-bold text-graf-950">{atalho.titulo}</span>
-              <span className="mt-1 text-sm leading-relaxed text-graf-600">{atalho.texto}</span>
-              <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-jb-700">
-                Ir para lá
-                <ArrowRight className="size-4" aria-hidden />
+              <atalho.icone className="mt-0.5 size-5 shrink-0 text-graf-400" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2 text-base font-bold text-graf-950">
+                  {atalho.titulo}
+                  <ArrowRight
+                    className="size-4 text-jb-600 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </span>
+                <span className="mt-1 block text-sm leading-relaxed text-graf-600">
+                  {atalho.texto}
+                </span>
               </span>
             </Link>
           </li>
         ))}
       </ul>
 
-      <section className="mt-12 rounded-2xl border border-graf-200 bg-white px-6 py-7 shadow-card sm:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5">
-          <div className="max-w-lg">
-            <h2 className="text-xl font-bold text-graf-950">Prefere falar com alguém?</h2>
-            <p className="mt-2 text-sm leading-relaxed text-graf-600">
-              {s.horario
-                ? `A equipe da JB atende ${s.horario.charAt(0).toLowerCase()}${s.horario.slice(1)}.`
-                : "A equipe da JB responde pelos canais abaixo."}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            {s.telefone ? (
-              <a
-                href={telHref(s.telefone)}
-                className="inline-flex h-11 items-center gap-2 rounded-lg bg-jb-500 px-5 text-[0.9375rem] font-semibold text-white transition-colors hover:bg-jb-700"
-              >
-                <Phone className="size-4" aria-hidden />
-                {formatarTelefone(s.telefone)}
-              </a>
-            ) : null}
-
-            {whatsapp ? (
-              <a
-                href={whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-11 items-center gap-2 rounded-lg border border-graf-300 bg-white px-5 text-[0.9375rem] font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50"
-              >
-                <MessageCircle className="size-4" aria-hidden />
-                WhatsApp
-              </a>
-            ) : null}
-
-            <LinkBotao href="/contato" variante="secundario">
-              Enviar mensagem
-            </LinkBotao>
-          </div>
-        </div>
-      </section>
+      <FaixaDeContato s={s} className="mt-12" />
 
       {mostrarVoltar ? (
         <p className="mt-10">
           <Link
             href="/"
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-graf-700 underline underline-offset-4 transition-colors hover:text-jb-700"
+            className="foco-jb inline-flex min-h-11 items-center rounded-xs text-sm font-semibold text-graf-700 underline underline-offset-4 transition-colors hover:text-jb-700"
           >
             Voltar para a página inicial
           </Link>
         </p>
       ) : null}
-    </>
+    </div>
   );
 }

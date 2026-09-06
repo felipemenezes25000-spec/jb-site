@@ -18,6 +18,7 @@ import {
   tituloDaVisao,
   type Compromisso,
 } from "@/components/admin/servico/calendario";
+import { Botao } from "@/components/ui/button";
 import { Cartao } from "@/components/ui/data";
 import { plural } from "@/lib/format";
 import { exigirArea } from "@/lib/permissoes";
@@ -279,12 +280,9 @@ export default async function PaginaAgenda({
                   </option>
                 ))}
               </select>
-              <button
-                type="submit"
-                className="inline-flex min-h-11 items-center rounded-lg border border-graf-300 px-3.5 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-              >
+              <Botao type="submit" variante="secundario">
                 Filtrar
-              </button>
+              </Botao>
             </form>
           </div>
         </div>
@@ -301,7 +299,7 @@ export default async function PaginaAgenda({
 
       <Calendario visao={visao} ancora={ancora} compromissos={compromissos} hoje={hoje} />
 
-      <p className="text-xs text-graf-500">
+      <p className="text-[0.8125rem] text-graf-500">
         A bolinha colorida é a cor cadastrada na ficha do técnico. Compromisso sem técnico — ou
         com técnico sem cor definida — aparece sem bolinha; o nome continua escrito no cartão.
       </p>

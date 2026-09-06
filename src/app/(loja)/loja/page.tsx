@@ -5,13 +5,18 @@ import {
   atalhosDeCategorias,
   type ParametrosVitrine,
 } from "@/components/loja/vitrine";
+import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Equipamentos",
-  description:
+const CAMINHO = "/loja";
+
+const TRILHA = [{ rotulo: "Início", href: "/" }, { rotulo: "Equipamentos" }];
+
+export const metadata: Metadata = metadataDePagina({
+  titulo: "Equipamentos",
+  descricao:
     "Equipamentos odontológicos novos, seminovos revisados e recondicionados, com instalação e assistência técnica da JB.",
-  alternates: { canonical: "/loja" },
-};
+  caminho: CAMINHO,
+});
 
 export default async function LojaPage({
   searchParams,
@@ -21,14 +26,19 @@ export default async function LojaPage({
   const [parametros, atalhos] = await Promise.all([searchParams, atalhosDeCategorias()]);
 
   return (
-    <Vitrine
-      titulo="Equipamentos odontológicos"
-      descricao="Tudo que a JB vende e atende, no mesmo lugar. Filtre por categoria, marca, condição ou faixa de preço — e conte com a nossa assistência técnica depois da compra."
-      trilha={[{ rotulo: "Início", href: "/" }, { rotulo: "Equipamentos" }]}
-      caminho="/loja"
-      parametros={parametros}
-      atalhos={atalhos}
-      rotuloAtalhos="Categorias do catálogo"
-    />
+    <>
+      <JsonLd dados={trilhaJsonLd(TRILHA)} />
+
+      <Vitrine
+        sobretitulo="Catálogo"
+        titulo="Equipamentos odontológicos"
+        descricao="Tudo que a JB vende e atende, no mesmo lugar. A ficha de cada item traz modelo, voltagem, medidas e o que acompanha o equipamento — e a assistência técnica continua com a gente depois da entrega."
+        trilha={TRILHA}
+        caminho={CAMINHO}
+        parametros={parametros}
+        atalhos={atalhos}
+        rotuloAtalhos="Categorias do catálogo"
+      />
+    </>
   );
 }

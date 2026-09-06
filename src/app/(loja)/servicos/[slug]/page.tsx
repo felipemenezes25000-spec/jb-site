@@ -6,7 +6,7 @@ import { ArrowRight, ClipboardCheck, FileCheck2, Wrench } from "lucide-react";
 import { CanaisDiretos, CartaoApoio } from "@/components/assistencia/apoio";
 import { ROTULO_SERVICO } from "@/components/assistencia/rotulos";
 import { LinkBotao } from "@/components/ui/button";
-import { Cartao, Etiqueta, Trilha } from "@/components/ui/data";
+import { Cartao, Trilha } from "@/components/ui/data";
 import { PassosNumerados } from "@/components/ui/passos";
 import { formatarPreco } from "@/lib/format";
 import { nl2br } from "@/lib/html";
@@ -94,7 +94,7 @@ export default async function ServicoPage({ params }: Parametros) {
   const linkOrcamento = `/orcamento?tipo=servico&item=${encodeURIComponent(servico.name)}`;
 
   return (
-    <div className="container-jb py-8 lg:py-12">
+    <div className="container-jb py-10 lg:py-14">
       <JsonLd
         dados={[
           servicoJsonLd({
@@ -114,8 +114,10 @@ export default async function ServicoPage({ params }: Parametros) {
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
         <div>
-          <Etiqueta tom="neutro">{ROTULO_SERVICO[servico.kind]}</Etiqueta>
-          <h1 className="text-display texto-forte mt-4">{servico.name}</h1>
+          {/* Sobretítulo, não etiqueta: o tipo é o degrau acima do nome do
+              serviço, e não um estado a ser sinalizado. */}
+          <p className="sobretitulo mb-3">{ROTULO_SERVICO[servico.kind]}</p>
+          <h1 className="text-display texto-forte">{servico.name}</h1>
 
           {servico.description ? (
             <div className="texto-guia mt-6 max-w-2xl text-graf-700">
@@ -163,7 +165,9 @@ export default async function ServicoPage({ params }: Parametros) {
               ]}
             />
 
-            <p className="mt-6 rounded-xl bg-graf-50 p-5 text-[0.9375rem] leading-relaxed text-graf-600 ring-1 ring-inset ring-graf-200">
+            {/* Fio à esquerda em vez de caixa: é uma ressalva de leitura, não
+                um aviso de sistema. */}
+            <p className="mt-8 border-l-2 border-jb-200 pl-5 text-[0.9375rem] leading-relaxed text-graf-600">
               <strong className="font-semibold text-graf-900">Sobre prazo: </strong>
               a data de execução é combinada no orçamento, depois de a equipe saber o que o
               serviço envolve. Prometer prazo antes de olhar o equipamento é chute, e chute
@@ -188,7 +192,7 @@ export default async function ServicoPage({ params }: Parametros) {
                         <span className="block text-sm font-bold text-graf-950">
                           {outro.name}
                         </span>
-                        <span className="mt-0.5 block text-xs text-graf-500">
+                        <span className="mt-1 block text-[0.8125rem] text-graf-500">
                           {ROTULO_SERVICO[outro.kind]}
                         </span>
                       </span>
@@ -207,46 +211,44 @@ export default async function ServicoPage({ params }: Parametros) {
 
         {/* --------------------------------------------------------- lateral */}
         <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-          <Cartao>
-            <div className="px-5 py-6">
-              {temPreco ? (
-                <>
-                  <p className="label-mono uppercase text-graf-500">Preço base</p>
-                  <p className="tabular mt-1 text-title font-bold leading-none text-graf-950">
-                    {formatarPreco(servico.priceCents ?? 0)}
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-graf-500">
-                    Valor do serviço padrão. Peças e deslocamento fora da região entram no
-                    orçamento.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="label-mono uppercase text-graf-500">Preço</p>
-                  <p className="mt-1 text-title font-bold leading-none text-graf-950">
-                    Sob orçamento
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-graf-500">
-                    O valor depende do equipamento e da quantidade. A equipe responde com a
-                    proposta detalhada.
-                  </p>
-                </>
-              )}
+          <Cartao className="p-6">
+            {temPreco ? (
+              <>
+                <p className="label-mono uppercase text-graf-500">Preço base</p>
+                <p className="tabular mt-1.5 text-3xl font-extrabold tracking-tight text-graf-950">
+                  {formatarPreco(servico.priceCents ?? 0)}
+                </p>
+                <p className="mt-2.5 text-sm leading-relaxed text-graf-500">
+                  Valor do serviço padrão. Peças e deslocamento fora da região entram no
+                  orçamento.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="label-mono uppercase text-graf-500">Preço</p>
+                <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-graf-950">
+                  Sob orçamento
+                </p>
+                <p className="mt-2.5 text-sm leading-relaxed text-graf-500">
+                  O valor depende do equipamento e da quantidade. A equipe responde com a
+                  proposta detalhada.
+                </p>
+              </>
+            )}
 
-              <LinkBotao href={linkOrcamento} larguraTotal tamanho="lg" className="mt-6">
-                Pedir orçamento
-                <ArrowRight className="size-4" aria-hidden />
-              </LinkBotao>
+            <LinkBotao href={linkOrcamento} larguraTotal tamanho="lg" className="mt-6">
+              Pedir orçamento
+              <ArrowRight className="size-4" aria-hidden />
+            </LinkBotao>
 
-              <LinkBotao
-                href="/assistencia-tecnica/solicitar"
-                variante="secundario"
-                larguraTotal
-                className="mt-3"
-              >
-                Abrir chamado técnico
-              </LinkBotao>
-            </div>
+            <LinkBotao
+              href="/assistencia-tecnica/solicitar"
+              variante="secundario"
+              larguraTotal
+              className="mt-3"
+            >
+              Abrir chamado técnico
+            </LinkBotao>
           </Cartao>
 
           <CartaoApoio titulo="Falar com a equipe" descricao={s.horario}>

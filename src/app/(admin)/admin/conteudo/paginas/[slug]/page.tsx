@@ -154,7 +154,7 @@ export default async function PaginaEditarPagina({
         <section className="rounded-xl border border-graf-200 bg-white p-5 shadow-card">
           <h2 className="text-base font-bold text-graf-950">Texto da página</h2>
           <p className="mt-0.5 text-sm text-graf-500">
-            Seu perfil abre o conteúdo somente para consulta.
+            Seu acesso ao conteúdo é apenas de consulta.
           </p>
           <HtmlSeguro html={pagina.body} className="mt-4" />
         </section>
@@ -196,7 +196,7 @@ export default async function PaginaEditarPagina({
                   loading="lazy"
                   className="h-28 w-full rounded-lg object-contain"
                 />
-                <p className="mt-2 truncate text-xs text-graf-600">
+                <p className="mt-2 truncate text-[0.8125rem] text-graf-600">
                   {item.caption || item.media.filename}
                 </p>
               </li>

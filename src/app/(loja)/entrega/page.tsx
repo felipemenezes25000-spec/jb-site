@@ -7,6 +7,7 @@ import {
   CorpoLegal,
   IndiceLegal,
   NotaDeRevisao,
+  type ItemIndice,
   type SecaoLegal,
 } from "@/components/institucional/documento-legal";
 import { MolduraInstitucional } from "@/components/institucional/moldura";
@@ -176,6 +177,15 @@ export default async function EntregaPage() {
     },
   ];
 
+  /* O índice cobre a página inteira, e não só o texto corrido: a tabela de
+     formas de envio e a retirada são justamente o que a clínica procura
+     primeiro. */
+  const indice: ItemIndice[] = [
+    ...(perfis.length > 0 ? [{ id: "formas-de-envio", titulo: "Formas de envio" }] : []),
+    ...(aceitaRetirada ? [{ id: "retirada", titulo: "Retirada no local" }] : []),
+    ...secoes.map(({ id, titulo }) => ({ id, titulo })),
+  ];
+
   return (
     <>
       <JsonLd
@@ -193,23 +203,23 @@ export default async function EntregaPage() {
         atualizadoEm={pagina?.updatedAt ?? null}
         lateral={
           <div className="space-y-5">
-            {temCms ? null : <IndiceLegal secoes={secoes} />}
+            {temCms ? null : <IndiceLegal secoes={indice} />}
             <CaixaDeAjuda s={s} titulo="Dúvida sobre o frete?" />
           </div>
         }
       >
-        <div className="space-y-12">
+        <div className="space-y-12 lg:space-y-16">
           {perfis.length > 0 ? (
             <section id="formas-de-envio" className="scroll-mt-28">
               <h2 className="text-title texto-forte">Formas de envio</h2>
-              <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-600">
+              <p className="mt-3 max-w-2xl text-base leading-relaxed text-graf-600">
                 Cada produto usa uma destas condições, indicada na própria página do item.
               </p>
 
-              <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+              <ul className="mt-7 grid gap-4 sm:grid-cols-2">
                 {perfis.map((perfil) => (
                   <li key={perfil.id}>
-                    <Cartao className="flex h-full flex-col p-5">
+                    <Cartao className="flex h-full flex-col p-5 sm:p-6">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <h3 className="text-base font-bold text-graf-950">{perfil.name}</h3>
                         <Etiqueta tom={TOM_FRETE[perfil.kind]}>
@@ -218,7 +228,7 @@ export default async function EntregaPage() {
                       </div>
 
                       {perfil.description ? (
-                        <p className="mt-2 text-sm leading-relaxed text-graf-600">
+                        <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-600">
                           {perfil.description}
                         </p>
                       ) : null}
@@ -258,7 +268,7 @@ export default async function EntregaPage() {
           {aceitaRetirada ? (
             <section id="retirada" className="scroll-mt-28">
               <h2 className="text-title texto-forte">Retirada no local</h2>
-              <div className="prose-jb mt-3 max-w-none">
+              <div className="prose-jb mt-4 max-w-3xl">
                 {s.retirada_instrucoes ? <p>{s.retirada_instrucoes}</p> : null}
                 {endereco ? (
                   <p>
@@ -271,21 +281,25 @@ export default async function EntregaPage() {
             </section>
           ) : null}
 
-          {temCms ? <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" /> : <CorpoLegal secoes={secoes} />}
-
-          <NotaDeRevisao>
-            As condições desta página valem para as compras feitas neste site e não
-            substituem o que estiver escrito na confirmação do seu pedido. Para trocas,
-            devoluções e prazo de arrependimento, veja a página de{" "}
-            <Link
-              href="/trocas-e-devolucoes"
-              className="font-semibold text-graf-700 underline underline-offset-4 hover:text-jb-700"
-            >
-              trocas e devoluções
-            </Link>
-            .
-          </NotaDeRevisao>
+          {temCms ? (
+            <CorpoCms html={pagina?.body ?? ""} className="max-w-3xl" />
+          ) : (
+            <CorpoLegal secoes={secoes} indice={indice} />
+          )}
         </div>
+
+        <NotaDeRevisao>
+          As condições desta página valem para as compras feitas neste site e não
+          substituem o que estiver escrito na confirmação do seu pedido. Para trocas,
+          devoluções e prazo de arrependimento, veja a página de{" "}
+          <Link
+            href="/trocas-e-devolucoes"
+            className="font-semibold text-graf-700 underline underline-offset-4 hover:text-jb-700"
+          >
+            trocas e devoluções
+          </Link>
+          .
+        </NotaDeRevisao>
       </MolduraInstitucional>
     </>
   );

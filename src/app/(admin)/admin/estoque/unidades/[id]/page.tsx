@@ -82,10 +82,10 @@ export default async function PaginaUnidade({ params }: { params: Promise<{ id: 
         ]}
       />
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-graf-950">
+            <h1 className="text-2xl font-bold leading-tight text-graf-950">
               {unidade.serialNumber || "Unidade sem número de série"}
             </h1>
             <Etiqueta tom={TOM_STATUS[unidade.status]}>{ROTULO_STATUS[unidade.status]}</Etiqueta>

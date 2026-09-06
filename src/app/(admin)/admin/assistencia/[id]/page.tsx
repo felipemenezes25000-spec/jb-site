@@ -225,7 +225,9 @@ export default async function PaginaChamado({
                   ) : (
                     <>
                       {chamado.contactName}{" "}
-                      <span className="text-xs text-graf-500">(sem conta na Área da Clínica)</span>
+                      <span className="text-[0.8125rem] text-graf-500">
+                        sem conta na Área da Clínica
+                      </span>
                     </>
                   )}
                 </Dado>
@@ -250,7 +252,7 @@ export default async function PaginaChamado({
                         )}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-ok-700 hover:underline"
+                        className="inline-flex min-h-11 items-center gap-1 text-[0.8125rem] font-semibold text-ok-700 hover:underline"
                       >
                         <Phone className="size-3.5" aria-hidden />
                         WhatsApp
@@ -382,7 +384,7 @@ export default async function PaginaChamado({
                         ) : (
                           <span className="flex aspect-square w-full flex-col items-center justify-center gap-1.5 px-2 text-center text-graf-600">
                             <FileText className="size-6" aria-hidden />
-                            <span className="line-2 text-[11px] font-medium">
+                            <span className="line-2 text-[0.8125rem] font-medium">
                               {anexo.media.filename}
                             </span>
                           </span>
@@ -426,7 +428,7 @@ export default async function PaginaChamado({
                             {evento.title}
                           </span>
                           <span
-                            className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[0.8125rem] font-semibold ${
                               evento.visibleToCustomer
                                 ? "bg-jb-50 text-jb-700"
                                 : "bg-graf-100 text-graf-600"
@@ -445,7 +447,7 @@ export default async function PaginaChamado({
                             {evento.message}
                           </p>
                         ) : null}
-                        <p className="mt-1 text-xs text-graf-500">
+                        <p className="mt-1 text-[0.8125rem] text-graf-500">
                           {formatarDataHora(evento.createdAt)}
                           {evento.userId && nomeDoAutor.get(evento.userId)
                             ? ` · ${nomeDoAutor.get(evento.userId)}`
@@ -656,7 +658,7 @@ export default async function PaginaChamado({
 
               {!editar && !editarOS ? (
                 <p className="text-sm text-graf-500">
-                  Seu perfil abre este chamado apenas para consulta.
+                  Seu acesso a este chamado é apenas de consulta.
                 </p>
               ) : null}
             </div>

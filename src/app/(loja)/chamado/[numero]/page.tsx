@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  CalendarClock,
-  CircleCheck,
-  FileText,
-  MapPin,
-  MessageCircle,
-  Phone,
-  Wrench,
-} from "lucide-react";
+import { CalendarClock, CircleCheck, FileText, MapPin, Wrench } from "lucide-react";
 
 import { podeVerChamado } from "@/components/assistencia/acesso";
 import { AcompanharChamado } from "@/components/assistencia/acompanhar-chamado";
+import { CanaisDiretos, CartaoApoio } from "@/components/assistencia/apoio";
 import { LimparRascunho } from "@/components/assistencia/limpar-rascunho";
 import { ResponderChamado } from "@/components/assistencia/responder-chamado";
 import { SITUACAO_CHAMADO } from "@/components/assistencia/rotulos";
@@ -28,7 +21,7 @@ import {
 } from "@/components/ui/data";
 import { ROTULO_CHAMADO, ROTULO_URGENCIA, passosDoChamado } from "@/lib/assistencia";
 import { sessaoCliente } from "@/lib/auth-cliente";
-import { formatarDataHora, telHref, whatsappHref } from "@/lib/format";
+import { formatarDataHora } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { metadataDePagina } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
@@ -166,16 +159,15 @@ export default async function ChamadoPage({ params }: Parametros) {
     .filter(Boolean)
     .join(" — ");
 
+  /* Vazio quando nem o cadastro nem o relato trouxeram identificação — e aí
+     a linha some da ficha, em vez de estampar "não identificado". */
   const equipamento =
     chamado.equipment?.name ||
     [chamado.brandName, chamado.modelName].filter(Boolean).join(" ") ||
     chamado.category?.name ||
-    "Equipamento não identificado";
+    "";
 
-  const whatsapp = whatsappHref(
-    s.whatsapp,
-    `Olá! Estou falando sobre o chamado ${chamado.number}.`,
-  );
+  const mensagemWhatsapp = `Olá! Estou falando sobre o chamado ${chamado.number}.`;
 
   return (
     <>
@@ -206,7 +198,16 @@ export default async function ChamadoPage({ params }: Parametros) {
               <h1 className="tabular text-display mt-2 font-mono text-white">
                 {chamado.number}
               </h1>
-              <p className="texto-suave mt-4 text-sm">
+              {equipamento ? (
+                <p className="mt-4 text-[0.9375rem] font-semibold text-white">
+                  {equipamento}
+                </p>
+              ) : null}
+              <p
+                className={
+                  equipamento ? "texto-suave mt-1.5 text-sm" : "texto-suave mt-4 text-sm"
+                }
+              >
                 Aberto em {formatarDataHora(chamado.createdAt)}
                 {chamado.closedAt
                   ? ` · Encerrado em ${formatarDataHora(chamado.closedAt)}`
@@ -286,7 +287,7 @@ export default async function ChamadoPage({ params }: Parametros) {
                         {formatarDataHora(visita.startsAt)}
                       </p>
                       {visita.endsAt ? (
-                        <p className="mt-0.5 text-xs text-graf-500">
+                        <p className="mt-1 text-[0.8125rem] text-graf-500">
                           Previsão de término: {formatarDataHora(visita.endsAt)}
                         </p>
                       ) : null}
@@ -300,7 +301,7 @@ export default async function ChamadoPage({ params }: Parametros) {
                         <p className="text-[0.9375rem] font-semibold text-graf-900">
                           {visita.technician.user.name}
                         </p>
-                        <p className="mt-0.5 text-xs text-graf-500">Técnico responsável</p>
+                        <p className="mt-1 text-[0.8125rem] text-graf-500">Técnico responsável</p>
                       </div>
                     </div>
                   ) : null}
@@ -348,7 +349,7 @@ export default async function ChamadoPage({ params }: Parametros) {
                         <p className="text-[0.9375rem] font-semibold text-graf-900">
                           {evento.title}
                         </p>
-                        <p className="text-xs text-graf-500">
+                        <p className="text-[0.8125rem] text-graf-500">
                           {formatarDataHora(evento.createdAt)}
                         </p>
                       </div>
@@ -370,7 +371,7 @@ export default async function ChamadoPage({ params }: Parametros) {
                 descricao={
                   encerrado
                     ? "Este chamado está encerrado."
-                    : "Sua mensagem entra na mesma linha do tempo que a equipe acompanha."
+                    : "Sua mensagem entra no mesmo histórico que a equipe acompanha."
                 }
               />
               <div className="px-5 py-5">
@@ -397,13 +398,19 @@ export default async function ChamadoPage({ params }: Parametros) {
             <Cartao>
               <CabecalhoCartao titulo="Equipamento e local" />
               <dl className="space-y-4 px-5 py-5 text-[0.9375rem]">
-                <div>
-                  <dt className="label-mono uppercase text-graf-500">Equipamento</dt>
-                  <dd className="mt-1 font-semibold text-graf-900">{equipamento}</dd>
-                  {chamado.serialNumber ? (
-                    <dd className="mt-0.5 text-graf-500">Série {chamado.serialNumber}</dd>
-                  ) : null}
-                </div>
+                {equipamento || chamado.serialNumber ? (
+                  <div>
+                    <dt className="label-mono uppercase text-graf-500">Equipamento</dt>
+                    {equipamento ? (
+                      <dd className="mt-1 font-semibold text-graf-900">{equipamento}</dd>
+                    ) : null}
+                    {chamado.serialNumber ? (
+                      <dd className="label-mono mt-1 text-graf-500">
+                        Série {chamado.serialNumber}
+                      </dd>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {chamado.problemKind ? (
                   <div>
@@ -470,45 +477,27 @@ export default async function ChamadoPage({ params }: Parametros) {
               </Cartao>
             ) : null}
 
-            <Cartao className="p-5">
-              <h2 className="text-[0.9375rem] font-bold text-graf-950">
-                Falar por outro canal
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-graf-600">{s.horario}</p>
-              <div className="mt-4 space-y-3 text-[0.9375rem]">
-                {s.telefone ? (
-                  <a
-                    href={telHref(s.telefone)}
-                    className="flex min-h-11 items-center gap-3 font-semibold text-graf-900 hover:text-jb-700"
-                  >
-                    <Phone className="size-4.5 shrink-0 text-jb-600" aria-hidden />
-                    {s.telefone}
-                  </a>
-                ) : null}
-                {whatsapp ? (
-                  <a
-                    href={whatsapp}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex min-h-11 items-center gap-3 font-semibold text-graf-900 hover:text-jb-700"
-                  >
-                    <MessageCircle className="size-4.5 shrink-0 text-jb-600" aria-hidden />
-                    {s.whatsapp}
-                  </a>
-                ) : null}
-              </div>
-              <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-graf-500">
+            {/* Mesma pilha de contato das outras telas da assistência: o
+                telefone e o WhatsApp saem das configurações, com alvo de
+                toque de 44px em cada linha. */}
+            <CartaoApoio titulo="Falar por outro canal" descricao={s.horario}>
+              <CanaisDiretos
+                telefone={s.telefone}
+                whatsapp={s.whatsapp}
+                mensagem={mensagemWhatsapp}
+              />
+              <p className="mt-4 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
                 <CircleCheck className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
                 Cite o número {chamado.number} para a equipe achar seu atendimento na hora.
               </p>
-            </Cartao>
+            </CartaoApoio>
 
             {cliente ? (
               <Link
                 href="/minha-jb/assistencia"
-                className="block text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-800"
+                className="inline-flex min-h-11 items-center text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-800"
               >
-                Ver todos os meus chamados
+                Ver todos os chamados na Área da Clínica
               </Link>
             ) : null}
           </aside>

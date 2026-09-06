@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { TituloSecao } from "@/components/ui/data";
-import { Grade, colunasParaTotal } from "@/components/ui/grade";
+import { TrilhoOuGrade, colunasParaTotal } from "@/components/ui/grade";
 import { IconeCategoria } from "@/components/ui/icone";
 import { Secao } from "@/components/ui/secao";
 import { plural } from "@/lib/format";
@@ -84,7 +84,7 @@ export async function SecaoCategorias() {
         className="mb-10"
       />
 
-      <Grade colunas={colunasParaTotal(categorias.length)} espaco="md" como="ul">
+      <TrilhoOuGrade colunas={colunasParaTotal(categorias.length)} espaco="md" como="ul">
         {categorias.map((categoria) => {
           const fotoProduto = categoria.products[0]?.media[0];
           const total = categoria._count.products;
@@ -153,7 +153,7 @@ export async function SecaoCategorias() {
             </li>
           );
         })}
-      </Grade>
+      </TrilhoOuGrade>
     </Secao>
   );
 }

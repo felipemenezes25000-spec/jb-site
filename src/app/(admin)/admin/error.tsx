@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { LifeBuoy, RotateCcw, TriangleAlert } from "lucide-react";
 
-import { Botao } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Botao, LinkBotao } from "@/components/ui/button";
 
 /**
  * Tela de erro do backoffice.
@@ -47,7 +45,7 @@ export default function ErroDoPainel({
 
   return (
     <div className="mx-auto max-w-2xl py-6 sm:py-10">
-      <div className="rounded-xl border border-graf-200 bg-white p-6 shadow-card sm:p-8">
+      <div className="rounded-2xl border border-graf-200 bg-white p-6 sm:p-8">
         <span
           aria-hidden
           className="flex size-11 items-center justify-center rounded-lg bg-warn-50 text-warn-700"
@@ -55,11 +53,11 @@ export default function ErroDoPainel({
           <TriangleAlert className="size-5" />
         </span>
 
-        <h1 className="mt-4 text-2xl font-bold leading-tight text-graf-950">
+        <h1 className="mt-5 text-[1.625rem] font-bold leading-[1.15] tracking-[-0.02em] text-graf-950">
           Esta tela não carregou
         </h1>
 
-        <p className="mt-3 text-sm leading-relaxed text-graf-600">
+        <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-600">
           O restante do painel continua funcionando — o problema ficou nesta página. Nenhum
           pedido, chamado ou ordem de serviço foi alterado, e o que já estava salvo continua
           salvo.
@@ -76,20 +74,13 @@ export default function ErroDoPainel({
             Tentar de novo
           </Botao>
 
-          <Link
-            href="/admin"
-            className={cn(
-              "inline-flex h-11 items-center justify-center rounded-lg border border-graf-300 bg-white px-5 text-sm font-semibold text-graf-800",
-              "transition-colors hover:border-graf-400 hover:bg-graf-50",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-            )}
-          >
+          <LinkBotao href="/admin" variante="secundario">
             Voltar para a visão geral
-          </Link>
+          </LinkBotao>
         </div>
 
         {error.digest ? (
-          <p className="mt-6 border-t border-graf-100 pt-5 text-sm leading-relaxed text-graf-500">
+          <p className="mt-7 border-t border-graf-200 pt-5 text-[0.9375rem] leading-relaxed text-graf-500">
             Se acontecer de novo, passe este código para quem cuida do sistema:{" "}
             <span className="label-mono rounded bg-graf-100 px-2 py-1 text-graf-700">
               {error.digest}
@@ -97,7 +88,7 @@ export default function ErroDoPainel({
           </p>
         ) : null}
 
-        <p className="mt-5 flex items-start gap-2 text-sm leading-relaxed text-graf-500">
+        <p className="mt-5 flex items-start gap-2.5 text-[0.9375rem] leading-relaxed text-graf-500">
           <LifeBuoy className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
           <span>
             Enquanto isso, dá para chegar às outras áreas pelo menu ou pela busca do topo.

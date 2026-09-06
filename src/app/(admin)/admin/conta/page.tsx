@@ -51,16 +51,18 @@ export default async function PaginaMinhaConta() {
   // escreve cookie neste App Router), então a tela de entrada resolve.
   if (!pessoa) redirect("/admin/entrar");
 
+  // Linha sem valor sai da lista: telefone em branco não vira "não informado".
+  const telefone = pessoa.phone?.trim();
   const dados: { rotulo: string; valor: string }[] = [
     { rotulo: "Nome", valor: pessoa.name },
     { rotulo: "E-mail", valor: pessoa.email },
-    { rotulo: "Telefone", valor: pessoa.phone?.trim() || "não informado" },
+    ...(telefone ? [{ rotulo: "Telefone", valor: telefone }] : []),
     { rotulo: "Papel", valor: ROTULO_PAPEL[pessoa.role] },
     {
       rotulo: "Último acesso",
       valor: pessoa.lastLoginAt
         ? formatarDataHora(pessoa.lastLoginAt)
-        : "este é o seu primeiro acesso",
+        : "Este é o seu primeiro acesso",
     },
     { rotulo: "Acesso criado em", valor: formatarDataHora(pessoa.createdAt) },
   ];
@@ -90,7 +92,7 @@ export default async function PaginaMinhaConta() {
         </Aviso>
       ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <Cartao>
           <CabecalhoCartao
             titulo={
@@ -115,7 +117,7 @@ export default async function PaginaMinhaConta() {
             ))}
           </dl>
           <div className="border-t border-graf-200 bg-graf-50 px-5 py-3">
-            <p className="text-xs leading-relaxed text-graf-600">
+            <p className="text-[0.8125rem] leading-relaxed text-graf-600">
               <span className="font-semibold text-graf-800">
                 {ROTULO_PAPEL[pessoa.role]}:
               </span>{" "}
@@ -137,7 +139,7 @@ export default async function PaginaMinhaConta() {
           <div className="px-5 py-4">
             <FormularioSenhaStaff />
 
-            <div className="mt-5 space-y-2 border-t border-graf-200 pt-4 text-xs leading-relaxed text-graf-500">
+            <div className="mt-5 space-y-2 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
               <p>
                 A sessão do painel dura 8 horas. Trocar a senha não desconecta os aparelhos
                 onde você já está dentro — se perdeu um celular ou deixou o painel aberto em

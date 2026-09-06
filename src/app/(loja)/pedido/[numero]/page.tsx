@@ -235,9 +235,43 @@ const TOM_DO_STATUS: Record<OrderStatus, Tom> = {
   reembolsado: "neutro",
 };
 
+/**
+ * O que cada etapa quer dizer, em português de quem comprou.
+ *
+ * O rótulo sozinho ("Em separação", "Enviado") é vocabulário de quem trabalha
+ * com pedido o dia inteiro. A frase só entra quando a JB ainda não escreveu
+ * uma nota própria para aquela etapa — recado de quem atende vale mais do que
+ * texto padrão. Nada aqui promete prazo: prazo quem dá é a JB, no chamado.
+ */
+function explicacaoDaEtapa(status: OrderStatus, retirada: boolean): string {
+  switch (status) {
+    case "aguardando_pagamento":
+      return "O pedido está registrado e o equipamento, reservado para você.";
+    case "pago":
+      return "Com o pagamento confirmado, a JB começa a preparar o equipamento.";
+    case "separacao":
+      return retirada
+        ? "A JB separa e confere o equipamento para a retirada."
+        : "A JB separa, confere e embala o equipamento.";
+    case "enviado":
+      return retirada
+        ? "O equipamento fica à sua disposição na loja da JB."
+        : "O equipamento sai da JB para o endereço de entrega.";
+    case "entregue":
+      return retirada
+        ? "Equipamento retirado na JB."
+        : "O equipamento chega ao endereço informado.";
+    case "concluido":
+      return "Pedido encerrado. O histórico continua nesta página.";
+    default:
+      return "";
+  }
+}
+
 function montarLinhaDoTempo(
   statusAtual: OrderStatus,
   eventos: { status: OrderStatus; note: string; createdAt: Date }[],
+  retirada: boolean,
 ): PassoLinha[] {
   const encerrado = statusAtual === "cancelado" || statusAtual === "reembolsado";
 
@@ -265,7 +299,7 @@ function montarLinhaDoTempo(
 
     return {
       titulo: ROTULO_STATUS[status],
-      descricao: detalhe || marco?.note || undefined,
+      descricao: detalhe || marco?.note || explicacaoDaEtapa(status, retirada) || undefined,
       quando: marco ? formatarDataHora(marco.createdAt) : undefined,
       estado:
         i < atual
@@ -415,7 +449,23 @@ export default async function PedidoPage({ params }: Props) {
   const podeTentarDeNovo = !pago && !encerrado;
   const metodosRetentativa = podeTentarDeNovo ? metodosDeRetentativa(simulado) : [];
 
-  const passos = montarLinhaDoTempo(pedido.status, pedido.events);
+  const passos = montarLinhaDoTempo(
+    pedido.status,
+    pedido.events,
+    pedido.shippingKind === "retirada",
+  );
+
+  /* Bairro · Cidade/UF · CEP montados por junção: com o pedaço que falta
+     removido antes, nunca sobra um "·" órfão começando a linha. */
+  const linhaLocalidade = [
+    pedido.shipDistrict,
+    pedido.shipCity && pedido.shipState
+      ? `${pedido.shipCity}/${pedido.shipState}`
+      : pedido.shipCity,
+    pedido.shipZip ? `CEP ${pedido.shipZip}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const telefone = telHref(s.telefone);
   const whatsapp = whatsappHref(
     s.whatsapp,
@@ -498,13 +548,13 @@ export default async function PedidoPage({ params }: Props) {
                 />
               ) : pagamento.status === "em_analise" ? (
                 <Aviso tom="info" titulo="Pagamento em análise">
-                  O banco emissor está conferindo a transação. Costuma levar poucos minutos, e
-                  esta página avisa assim que houver resposta.
+                  O banco está conferindo o pagamento. Costuma levar poucos minutos, e esta
+                  página avisa assim que houver resposta.
                 </Aviso>
               ) : pagamento.status === "recusado" ? (
                 <Aviso tom="erro" titulo="Pagamento recusado">
                   {pagamento.failReason ||
-                    "O banco emissor recusou a transação. Nada foi cobrado — você pode tentar de novo abaixo."}
+                    "O banco recusou o pagamento. Nada foi cobrado — você pode tentar de novo abaixo."}
                 </Aviso>
               ) : expirou || pagamento.status === "expirado" ? (
                 <Aviso tom="atencao" titulo="A cobrança expirou">
@@ -518,8 +568,8 @@ export default async function PedidoPage({ params }: Props) {
                 </Aviso>
               ) : (
                 <Aviso tom="info" titulo="Aguardando a confirmação do pagamento">
-                  A cobrança foi aberta e ainda não houve resposta. Esta página se atualiza
-                  sozinha assim que ela chegar.
+                  A cobrança já foi aberta. A confirmação chega direto do meio de pagamento, e
+                  esta página se atualiza sozinha assim que ela vier.
                 </Aviso>
               )}
             </div>
@@ -585,14 +635,14 @@ export default async function PedidoPage({ params }: Props) {
             <ul className="mt-5 divide-y divide-graf-200">
               {pedido.items.map((item) => (
                 <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-graf-200 bg-graf-50 sm:size-20">
+                  <div className="relative size-20 shrink-0 overflow-hidden rounded-lg border border-graf-200 bg-white sm:size-24">
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
                         alt=""
                         fill
-                        sizes="80px"
-                        className="object-contain p-1.5"
+                        sizes="(min-width: 640px) 96px, 80px"
+                        className="object-contain p-1"
                       />
                     ) : (
                       <span className="flex size-full items-center justify-center text-graf-400">
@@ -603,12 +653,14 @@ export default async function PedidoPage({ params }: Props) {
 
                   <div className="min-w-0 flex-1">
                     {item.brandName ? (
-                      <p className="text-xs font-semibold uppercase tracking-wide text-graf-500">
+                      <p className="text-[0.8125rem] font-semibold uppercase tracking-wide text-graf-500">
                         {item.brandName}
                       </p>
                     ) : null}
-                    <p className="text-sm font-bold leading-snug text-graf-900">{item.name}</p>
-                    <p className="mt-1 text-xs text-graf-500">
+                    <p className="text-[0.9375rem] font-bold leading-snug text-graf-950 sm:text-base">
+                      {item.name}
+                    </p>
+                    <p className="mt-1 text-[0.8125rem] text-graf-500">
                       {item.sku ? <span className="label-mono">{item.sku}</span> : null}
                       {item.sku ? " · " : ""}
                       {item.quantity}× {formatarPreco(item.unitPriceCents)}
@@ -619,7 +671,7 @@ export default async function PedidoPage({ params }: Props) {
                         {item.addons.map((addon) => (
                           <li
                             key={addon.id}
-                            className="flex justify-between gap-3 text-xs text-graf-600"
+                            className="flex justify-between gap-3 text-[0.8125rem] text-graf-600"
                           >
                             <span>+ {addon.name}</span>
                             <span className="tabular">{formatarPreco(addon.totalCents)}</span>
@@ -629,7 +681,7 @@ export default async function PedidoPage({ params }: Props) {
                     ) : null}
                   </div>
 
-                  <p className="shrink-0 text-sm font-extrabold tabular text-graf-950">
+                  <p className="shrink-0 text-base font-extrabold tabular text-graf-950">
                     {formatarPreco(item.totalCents)}
                   </p>
                 </li>
@@ -678,7 +730,7 @@ export default async function PedidoPage({ params }: Props) {
 
             {pedido.customerNote ? (
               <div className="mt-6 rounded-lg border border-graf-200 bg-graf-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-graf-500">
+                <p className="text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500">
                   Sua observação
                 </p>
                 <p className="mt-1.5 text-sm leading-relaxed text-graf-700">
@@ -704,8 +756,10 @@ export default async function PedidoPage({ params }: Props) {
             <div className="mt-3.5 text-sm leading-relaxed text-graf-700">
               {pedido.shippingKind === "retirada" ? (
                 <>
-                  <p className="font-semibold text-graf-900">{s.empresa_nome}</p>
-                  <p className="mt-1">{enderecoCompleto(s)}</p>
+                  {s.empresa_nome ? (
+                    <p className="font-semibold text-graf-900">{s.empresa_nome}</p>
+                  ) : null}
+                  {enderecoCompleto(s) ? <p className="mt-1">{enderecoCompleto(s)}</p> : null}
                   {s.horario ? <p className="mt-1 text-graf-500">{s.horario}</p> : null}
                   {s.retirada_instrucoes ? (
                     <p className="mt-2 text-graf-600">{s.retirada_instrucoes}</p>
@@ -717,11 +771,9 @@ export default async function PedidoPage({ params }: Props) {
                     {pedido.shipStreet}, {pedido.shipNumber || "s/n"}
                     {pedido.shipComplement ? ` — ${pedido.shipComplement}` : ""}
                   </p>
-                  <p className="mt-1 text-graf-500">
-                    {pedido.shipDistrict} · {pedido.shipCity}
-                    {pedido.shipState ? `/${pedido.shipState}` : ""}
-                    {pedido.shipZip ? ` · CEP ${pedido.shipZip}` : ""}
-                  </p>
+                  {linhaLocalidade ? (
+                    <p className="mt-1 text-graf-500">{linhaLocalidade}</p>
+                  ) : null}
                   {pedido.shipReference ? (
                     <p className="mt-1 text-graf-500">Referência: {pedido.shipReference}</p>
                   ) : null}
@@ -745,7 +797,7 @@ export default async function PedidoPage({ params }: Props) {
               <p className="mt-1.5 break-words text-graf-600">{pedido.buyerEmail}</p>
               {pedido.buyerPhone ? <p className="text-graf-600">{pedido.buyerPhone}</p> : null}
             </div>
-            <p className="mt-4 flex items-start gap-2 border-t border-graf-200 pt-4 text-xs leading-relaxed text-graf-500">
+            <p className="mt-4 flex items-start gap-2 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
               <Mail className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
               A confirmação e os avisos deste pedido vão para este e-mail.
             </p>
@@ -782,7 +834,7 @@ export default async function PedidoPage({ params }: Props) {
               </LinkBotao>
             </div>
             {s.horario ? (
-              <p className="mt-4 text-center text-xs leading-relaxed text-graf-500">
+              <p className="mt-4 text-center text-[0.8125rem] leading-relaxed text-graf-500">
                 {s.horario}
               </p>
             ) : null}

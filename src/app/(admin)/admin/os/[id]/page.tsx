@@ -253,11 +253,11 @@ export default async function PaginaOrdem({ params }: { params: Promise<{ id: st
                   {tempoEmAberto}
                 </Dado>
 
-                <Dado rotulo="Mão de obra lançada">
-                  {horasDeServico > 0
-                    ? `${plural(horasDeServico, "hora", "horas")} em itens de serviço`
-                    : null}
-                </Dado>
+                {horasDeServico > 0 ? (
+                  <Dado rotulo="Mão de obra lançada">
+                    {`${plural(horasDeServico, "hora", "horas")} em itens de serviço`}
+                  </Dado>
+                ) : null}
               </Dados>
 
               {ordem.acceptedAt ? (
@@ -265,7 +265,7 @@ export default async function PaginaOrdem({ params }: { params: Promise<{ id: st
                   <ShieldCheck className="size-4 shrink-0" aria-hidden />
                   Recebido por <strong className="font-bold">{ordem.acceptedByName}</strong> em{" "}
                   {formatarData(ordem.acceptedAt)}
-                  {ordem.acceptedIp ? ` · IP ${ordem.acceptedIp}` : ""}
+                  {ordem.acceptedIp ? " · aceite registrado pela Área da Clínica" : ""}
                 </p>
               ) : null}
             </div>
@@ -430,7 +430,7 @@ export default async function PaginaOrdem({ params }: { params: Promise<{ id: st
                 {ordem.documents.map((documento) => (
                   <li key={documento.id} className="py-2.5">
                     <p className="text-sm font-medium text-graf-900">{documento.title}</p>
-                    <p className="text-xs text-graf-500">
+                    <p className="text-[0.8125rem] text-graf-500">
                       {formatarDataHora(documento.createdAt)}
                     </p>
                   </li>
@@ -443,7 +443,9 @@ export default async function PaginaOrdem({ params }: { params: Promise<{ id: st
             <CabecalhoCartao titulo="Histórico" descricao="Registro de tudo que mudou" />
             <div className="px-5 py-5">
               {ordem.events.length === 0 ? (
-                <p className="text-sm text-graf-500">Nenhum registro ainda.</p>
+                <p className="text-sm text-graf-500">
+                  Cada mudança de situação e cada anotação da equipe entram aqui.
+                </p>
               ) : (
                 <ol className="space-y-4">
                   {ordem.events.map((evento) => (
@@ -461,7 +463,7 @@ export default async function PaginaOrdem({ params }: { params: Promise<{ id: st
                             {evento.message}
                           </p>
                         ) : null}
-                        <p className="mt-1 text-xs text-graf-500">
+                        <p className="mt-1 text-[0.8125rem] text-graf-500">
                           {formatarDataHora(evento.createdAt)}
                           {evento.userId && nomeDoAutor.get(evento.userId)
                             ? ` · ${nomeDoAutor.get(evento.userId)}`

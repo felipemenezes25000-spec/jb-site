@@ -18,7 +18,7 @@ import { Etiqueta } from "@/components/ui/data";
 import { Aviso } from "@/components/ui/aviso";
 import { Paginacao } from "@/components/ui/paginacao";
 import { Tabela, type Coluna, type Direcao } from "@/components/ui/tabela";
-import { formatarDataHora, formatarPreco } from "@/lib/format";
+import { formatarDataHora, formatarPreco, plural } from "@/lib/format";
 import { pagamentoEhSimulado } from "@/lib/pagamento";
 import { exigirArea } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
@@ -139,7 +139,9 @@ export default async function PagamentosPage({ searchParams }: { searchParams: B
       renderizar: (linha) => (
         <span className="block min-w-0">
           <span className="tabular block font-semibold">{linha.order.number}</span>
-          <span className="block truncate text-xs text-graf-500">{linha.order.buyerName}</span>
+          <span className="block truncate text-[0.8125rem] text-graf-500">
+            {linha.order.buyerName}
+          </span>
         </span>
       ),
     },
@@ -158,14 +160,16 @@ export default async function PagamentosPage({ searchParams }: { searchParams: B
         <span className="block">
           {ROTULO_METODO[linha.method]}
           {linha.installments > 1 ? (
-            <span className="block text-xs text-graf-500">{linha.installments}x</span>
+            <span className="tabular block text-[0.8125rem] text-graf-500">
+              em {linha.installments}x
+            </span>
           ) : null}
         </span>
       ),
     },
     {
       chave: "provedor",
-      rotulo: "Provedor",
+      rotulo: "Operadora",
       largura: "10rem",
       esconderNoMobile: true,
       renderizar: (linha) => rotuloProvedor(linha.provider),
@@ -209,10 +213,10 @@ export default async function PagamentosPage({ searchParams }: { searchParams: B
       />
 
       {pagamentoEhSimulado() ? (
-        <Aviso tom="atencao" titulo="Provedor de teste em uso">
-          Este ambiente está com o provedor simulado: nenhuma cobrança aqui é real e nenhum valor
-          entrou na conta da JB. Para cobrar de verdade, configure `PAYMENT_PROVIDER` e as
-          credenciais do adquirente.
+        <Aviso tom="atencao" titulo="Meio de pagamento em modo de teste">
+          As cobranças desta tela são simuladas: nenhum valor entrou na conta da JB. Para começar a
+          receber de verdade, o meio de pagamento precisa ser ligado por quem cuida da instalação
+          do sistema.
         </Aviso>
       ) : null}
 
@@ -223,7 +227,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: B
           valor={formatarPreco(aprovado._sum.amountCents ?? 0)}
           icone={Wallet}
           tom="ok"
-          detalhe={`${aprovado._count} cobrança(s) confirmada(s)`}
+          detalhe={plural(aprovado._count, "cobrança confirmada", "cobranças confirmadas")}
         />
         <Indicador
           rotulo="Aguardando"
@@ -245,7 +249,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: B
             tipo: "busca",
             nome: "q",
             rotulo: "Buscar",
-            placeholder: "Número do pedido, comprador ou id do provedor",
+            placeholder: "Número do pedido, comprador ou identificação da cobrança",
           },
           {
             tipo: "selecao",

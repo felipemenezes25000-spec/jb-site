@@ -187,7 +187,7 @@ export function CapaCms({
   return (
     <figure
       className={cn(
-        "overflow-hidden rounded-xl border border-graf-200 bg-graf-50",
+        "overflow-hidden rounded-2xl border border-graf-200 bg-graf-50",
         className,
       )}
     >
@@ -208,19 +208,24 @@ export function GaleriaCms({ imagens }: { imagens: PaginaCms["gallery"] }) {
   if (validas.length === 0) return null;
 
   return (
+    /* A foto manda: moldura clara, proporção 4:3 e nenhuma sobra de padding
+       entre a borda e a imagem. Uma imagem de 208px de altura dentro de um
+       cartão grande fazia o contrário — moldura grande, foto pequena. */
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {validas.map((item) => (
         <li key={item.id}>
-          <figure className="overflow-hidden rounded-xl border border-graf-200 bg-graf-50">
-            <ImagemDoBanco
-              url={item.media.url}
-              alt={item.media.alt || item.caption || ""}
-              largura={item.media.width ?? 800}
-              altura={item.media.height ?? 600}
-              className="h-52 w-full object-cover"
-            />
+          <figure className="h-full overflow-hidden rounded-2xl border border-graf-200 bg-graf-50">
+            <div className="aspect-[4/3]">
+              <ImagemDoBanco
+                url={item.media.url}
+                alt={item.media.alt || item.caption || ""}
+                largura={item.media.width ?? 800}
+                altura={item.media.height ?? 600}
+                className="h-full w-full object-cover"
+              />
+            </div>
             {item.caption ? (
-              <figcaption className="border-t border-graf-200 bg-white px-4 py-3 text-sm text-graf-600">
+              <figcaption className="border-t border-graf-200 bg-white px-4 py-3 text-sm leading-relaxed text-graf-600">
                 {item.caption}
               </figcaption>
             ) : null}
@@ -237,7 +242,7 @@ export function VideoCms({ videoId, titulo }: { videoId: string | null; titulo: 
   if (!id || !/^[A-Za-z0-9_-]{6,20}$/.test(id)) return null;
 
   return (
-    <div className="aspect-video overflow-hidden rounded-xl border border-graf-200 bg-graf-950">
+    <div className="aspect-video overflow-hidden rounded-2xl border border-graf-200 bg-graf-950">
       <iframe
         src={`https://www.youtube-nocookie.com/embed/${id}`}
         title={titulo}

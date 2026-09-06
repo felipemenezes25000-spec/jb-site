@@ -190,7 +190,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Busc
           <span className="block truncate font-medium text-graf-900">
             {linha.companyName || linha.buyerName}
           </span>
-          <span className="block truncate text-xs text-graf-500">{linha.buyerEmail}</span>
+          <span className="block truncate text-[0.8125rem] text-graf-500">{linha.buyerEmail}</span>
         </span>
       ),
     },
@@ -230,7 +230,15 @@ export default async function PedidosPage({ searchParams }: { searchParams: Busc
       esconderNoMobile: true,
       renderizar: (linha) =>
         linha.paidAt ? (
-          <Etiqueta tom="ok">Pago em {formatarData(linha.paidAt)}</Etiqueta>
+          // Etiqueta só com a palavra e a data por fora: "Pago em 12/03/2026"
+          // dentro da pílula quebrava em duas linhas na coluna de 9rem e
+          // deixava o selo com a barriga torta.
+          <span className="block">
+            <Etiqueta tom="ok">Pago</Etiqueta>
+            <span className="tabular mt-1 block text-[0.8125rem] text-graf-500">
+              {formatarData(linha.paidAt)}
+            </span>
+          </span>
         ) : (
           <span className="text-graf-500">Em aberto</span>
         ),

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { ArrowRight, Clock, MapPin } from "lucide-react";
 
 import { FaixaDeContato } from "@/components/institucional/canais";
-import { MolduraInstitucional, SecaoInstitucional } from "@/components/institucional/moldura";
+import {
+  MolduraInstitucional,
+  PilhaDeSecoes,
+  SecaoInstitucional,
+} from "@/components/institucional/moldura";
 import {
   CapaCms,
   CorpoCms,
@@ -87,7 +91,7 @@ export default async function SobrePage() {
       ? {
           chave: "marcas",
           valor: String(marcas),
-          rotulo: "Marcas publicadas",
+          rotulo: "Marcas no catálogo",
           detalhe: "A assistência atende outras marcas também",
           destaque: false,
         }
@@ -129,11 +133,11 @@ export default async function SobrePage() {
           </>
         }
       >
-        <div className="space-y-12">
+        <div className="space-y-12 lg:space-y-16">
           {numeros.length > 0 ? (
             <Estatisticas
               colunas={numeros.length === 2 ? 2 : 3}
-              className="border-y border-graf-200 py-10"
+              className="border-y border-graf-200 py-10 lg:py-12"
             >
               {numeros.map((numero) => (
                 <Estatistica
@@ -145,28 +149,6 @@ export default async function SobrePage() {
                 />
               ))}
             </Estatisticas>
-          ) : null}
-
-          {operacao.length > 0 ? (
-            <ul className="grid gap-4 sm:grid-cols-2">
-              {operacao.map((linha) => (
-                <li key={linha.rotulo}>
-                  <Cartao className="flex h-full gap-3.5 p-5">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-100">
-                      <linha.icone className="size-5" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-graf-500">
-                        {linha.rotulo}
-                      </p>
-                      <p className="mt-1 text-[0.9375rem] font-semibold leading-snug text-graf-900">
-                        {linha.valor}
-                      </p>
-                    </div>
-                  </Cartao>
-                </li>
-              ))}
-            </ul>
           ) : null}
 
           <CapaCms imagem={pagina?.cover ?? null} />
@@ -193,58 +175,86 @@ export default async function SobrePage() {
             )}
           </div>
 
+          {/* Onde e quando, em ficha: dois fatos configurados no painel não
+              precisam de dois cartões com chapa vermelha para serem lidos. */}
+          {operacao.length > 0 ? (
+            <dl className="grid gap-6 rounded-2xl border border-graf-200 bg-surface-muted px-6 py-6 sm:grid-cols-2 sm:gap-8 sm:px-8">
+              {operacao.map((linha) => (
+                /* O HTML só admite UM nível de <div> dentro de <dl>, e com o par
+                   <dt>/<dd> direto dentro dele. A coluna de texto era um segundo
+                   <div> e tirava o par da lista de definição — o axe acusa
+                   `definition-list` e `dlitem`. O ícone agora é posicionado sobre
+                   o recuo, e o <div> tem exatamente o par dentro. */
+                <div key={linha.rotulo} className="relative min-w-0 pl-8">
+                  <dt className="text-[0.8125rem] leading-tight text-graf-500">
+                    <linha.icone
+                      className="absolute left-0 top-0.5 size-5 text-graf-400"
+                      aria-hidden
+                    />
+                    {linha.rotulo}
+                  </dt>
+                  <dd className="mt-1 text-base font-semibold leading-snug text-graf-950">
+                    {linha.valor}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+
           <VideoCms videoId={pagina?.videoId ?? null} titulo={pagina?.title || "Sobre a JB"} />
 
-          {pagina?.gallery?.length ? (
-            <SecaoInstitucional titulo="A JB por dentro">
-              <GaleriaCms imagens={pagina.gallery} />
-            </SecaoInstitucional>
-          ) : null}
+          <PilhaDeSecoes>
+            {pagina?.gallery?.length ? (
+              <SecaoInstitucional titulo="A JB por dentro">
+                <GaleriaCms imagens={pagina.gallery} />
+              </SecaoInstitucional>
+            ) : null}
 
-          {servicos.length > 0 ? (
-            <SecaoInstitucional
-              titulo="O que a JB faz"
-              descricao="Serviços cadastrados no catálogo. O valor sai no orçamento, conforme o equipamento e o deslocamento."
-            >
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {servicos.map((servico) => (
-                  <li key={servico.id}>
-                    <Cartao className="flex h-full flex-col p-5">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <h3 className="text-base font-bold text-graf-950">{servico.name}</h3>
-                        <Etiqueta tom={servico.priceCents ? "ok" : "neutro"}>
-                          {servico.priceCents
-                            ? formatarPreco(servico.priceCents)
-                            : "Sob orçamento"}
-                        </Etiqueta>
-                      </div>
-                      {servico.description ? (
-                        <p className="mt-2 text-sm leading-relaxed text-graf-600">
-                          {servico.description}
-                        </p>
-                      ) : null}
-                    </Cartao>
-                  </li>
-                ))}
-              </ul>
-            </SecaoInstitucional>
-          ) : null}
+            {servicos.length > 0 ? (
+              <SecaoInstitucional
+                titulo="O que a JB faz"
+                descricao="Serviços cadastrados no catálogo. O valor sai no orçamento, conforme o equipamento e o deslocamento."
+              >
+                <ul className="grid gap-4 sm:grid-cols-2">
+                  {servicos.map((servico) => (
+                    <li key={servico.id}>
+                      <Cartao className="flex h-full flex-col p-5 sm:p-6">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <h3 className="text-base font-bold text-graf-950">{servico.name}</h3>
+                          <Etiqueta tom={servico.priceCents ? "ok" : "neutro"}>
+                            {servico.priceCents
+                              ? formatarPreco(servico.priceCents)
+                              : "Sob orçamento"}
+                          </Etiqueta>
+                        </div>
+                        {servico.description ? (
+                          <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-600">
+                            {servico.description}
+                          </p>
+                        ) : null}
+                      </Cartao>
+                    </li>
+                  ))}
+                </ul>
+              </SecaoInstitucional>
+            ) : null}
 
-          {marcas > 0 ? (
-            <SecaoInstitucional
-              titulo="Marcas no catálogo"
-              descricao="A assistência técnica atende equipamentos de outras marcas também — informe marca e modelo ao abrir o chamado."
-            >
-              <div className="flex flex-wrap gap-3">
-                <LinkBotao href="/marcas" variante="secundario">
-                  Ver marcas
-                </LinkBotao>
-                <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario">
-                  Solicitar assistência
-                </LinkBotao>
-              </div>
-            </SecaoInstitucional>
-          ) : null}
+            {marcas > 0 ? (
+              <SecaoInstitucional
+                titulo="Marcas no catálogo"
+                descricao="A assistência técnica atende equipamentos de outras marcas também — informe marca e modelo ao abrir o chamado."
+              >
+                <div className="flex flex-wrap gap-3">
+                  <LinkBotao href="/marcas" variante="secundario">
+                    Ver marcas
+                  </LinkBotao>
+                  <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario">
+                    Solicitar assistência
+                  </LinkBotao>
+                </div>
+              </SecaoInstitucional>
+            ) : null}
+          </PilhaDeSecoes>
 
           <FaixaDeContato s={s} />
         </div>

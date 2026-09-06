@@ -100,18 +100,18 @@ export default async function PaginaEditarUsuario({
         ehUltimoAdmin={pessoa.role === "admin" && pessoa.active && outrosAdmins === 0}
       />
 
-      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <Cartao>
           <CabecalhoCartao
             titulo="Senha"
-            descricao="O painel não consegue mostrar a senha atual — ela é guardada só como hash."
+            descricao="A senha atual não pode ser exibida por ninguém, nem por um administrador."
           />
           <div className="px-5 py-4">
             <BotaoNovaSenha acao={gerarSenhaTemporaria} id={pessoa.id} nome={pessoa.name} />
-            <p className="mt-4 text-xs leading-relaxed text-graf-500">
-              Gerar uma nova senha invalida a anterior na hora. A pessoa entra com a temporária e
-              troca a senha em Minha conta (/admin/conta) — o painel não obriga a troca no
-              primeiro acesso.
+            <p className="mt-4 text-[0.8125rem] leading-relaxed text-graf-500">
+              Gerar uma nova senha invalida a anterior na hora. A pessoa entra com a temporária
+              e troca a senha em Minha conta. O painel não obriga a troca no primeiro acesso, então
+              vale avisar.
             </p>
           </div>
         </Cartao>
@@ -135,9 +135,9 @@ export default async function PaginaEditarUsuario({
                     {linha.user ? ` · por ${linha.user.name}` : ""}
                   </p>
                   {linha.summary ? (
-                    <p className="mt-0.5 text-xs text-graf-500">{linha.summary}</p>
+                    <p className="mt-0.5 text-[0.8125rem] text-graf-500">{linha.summary}</p>
                   ) : null}
-                  <p className="mt-0.5 text-xs text-graf-500">
+                  <p className="mt-0.5 text-[0.8125rem] text-graf-500">
                     {formatarDataHora(linha.createdAt)}
                   </p>
                 </li>
@@ -147,7 +147,7 @@ export default async function PaginaEditarUsuario({
           <div className="border-t border-graf-200 bg-graf-50 px-5 py-3">
             <Link
               href={`/admin/auditoria?busca=${encodeURIComponent(pessoa.id)}`}
-              className="text-sm font-semibold text-jb-700 underline underline-offset-2"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-500"
             >
               Ver tudo na auditoria
             </Link>
@@ -155,7 +155,7 @@ export default async function PaginaEditarUsuario({
         </Cartao>
       </div>
 
-      <p className="text-xs text-graf-500">
+      <p className="text-[0.8125rem] text-graf-500">
         Acesso criado em {formatarDataHora(pessoa.createdAt)}
         {pessoa.lastLoginAt
           ? ` · último acesso em ${formatarDataHora(pessoa.lastLoginAt)}`

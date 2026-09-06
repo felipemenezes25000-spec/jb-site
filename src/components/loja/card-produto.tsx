@@ -15,6 +15,18 @@ import { cn } from "@/lib/utils";
    imagem, condição, marca, nome, preço, parcelamento, disponibilidade e o
    convite para abrir o equipamento.
 
+   Duas decisões de desenho sustentam o resto:
+
+   1. A foto manda. Equipamento de dezenas de milhares de reais não pode
+      aparecer como miniatura no meio de uma caixa cinza — a moldura é 5/4,
+      o respiro interno é pequeno e o fundo é um degradê branco quase
+      imperceptível, que não compete com produto recortado.
+
+   2. O preço é ancorado pela base. O bloco de preço e o rodapé recebem
+      `mt-auto`, e cada linha desse bloco tem altura reservada. Assim o número
+      grande cai exatamente na mesma altura em todos os cartões da linha,
+      tenham eles preço riscado, parcelamento ou nada disso.
+
    Nada aqui é inventado: cada linha só existe quando o campo correspondente
    veio do banco. Sem marca, a linha da marca some; sem estoque controlado,
    não se afirma disponibilidade.
@@ -55,8 +67,10 @@ export const CONDICAO = {
 function disponibilidade(produto: ProdutoCard) {
   if (!produto.trackInventory) return null;
   if (produto.stock <= 0) {
+    // o mesmo texto da tarja sobre a foto: duas palavras diferentes para o
+    // mesmo fato confundem, e a linha do rodapé cabe em uma linha só
     return {
-      texto: produto.unique ? "Unidade já vendida" : "Indisponível no momento",
+      texto: produto.unique ? "Unidade vendida" : "Indisponível",
       classe: "text-graf-500",
       pontoClasse: "bg-graf-400",
     };
@@ -94,11 +108,14 @@ export function CardProduto({
   const condicao = CONDICAO[produto.condition];
   const estado = disponibilidade(produto);
 
+  const precoAnterior =
+    !soOrcamento && produto.compareAtCents && produto.compareAtCents > produto.priceCents
+      ? produto.compareAtCents
+      : null;
+
   const desconto =
-    !semEstoque && produto.compareAtCents && produto.compareAtCents > produto.priceCents
-      ? Math.round(
-          ((produto.compareAtCents - produto.priceCents) / produto.compareAtCents) * 100,
-        )
+    !semEstoque && precoAnterior
+      ? Math.round(((precoAnterior - produto.priceCents) / precoAnterior) * 100)
       : 0;
 
   const chamada = soOrcamento ? "Pedir orçamento" : "Ver detalhes";
@@ -108,12 +125,13 @@ export function CardProduto({
       className={cn(
         "group relative isolate flex flex-col overflow-hidden rounded-xl border border-graf-200 bg-white",
         "transition-[border-color,box-shadow,transform] duration-200 ease-out-quint",
-        "hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-raised",
+        // borda é o padrão; a sombra só aparece quando o cartão é o foco da mão
+        "hover:-translate-y-px hover:border-graf-300 hover:shadow-raised",
         "has-[a:focus-visible]:border-jb-500 has-[a:focus-visible]:shadow-raised",
         className,
       )}
     >
-      <div className="relative aspect-4/3 overflow-hidden bg-graf-50">
+      <div className="relative aspect-5/4 overflow-hidden bg-gradient-to-b from-white to-graf-50">
         {produto.imageUrl ? (
           <Image
             src={produto.imageUrl}
@@ -123,21 +141,21 @@ export function CardProduto({
             loading={prioridade ? undefined : "lazy"}
             sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, (max-width: 1280px) 31vw, 22vw"
             className={cn(
-              "object-contain p-4 transition-transform duration-500 ease-out-quint sm:p-5",
-              "group-hover:scale-[1.04]",
-              semEstoque && "opacity-55 grayscale",
+              "object-contain p-3 transition-transform duration-500 ease-out-quint sm:p-4",
+              "group-hover:scale-[1.03]",
+              semEstoque && "opacity-60 grayscale",
             )}
           />
         ) : (
           <div className="flex size-full flex-col items-center justify-center gap-2 text-graf-400">
             <ImageOff className="size-8" aria-hidden />
-            <span className="text-xs text-graf-500">Sem foto</span>
+            <span className="text-[0.8125rem] text-graf-500">Sem foto</span>
           </div>
         )}
 
+        {/* só a condição fica sobre a foto — o desconto pertence ao preço */}
         <div className="absolute inset-x-3 top-3 flex flex-wrap items-start gap-1.5">
           <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-          {desconto >= 5 ? <Etiqueta tom="ok">−{desconto}%</Etiqueta> : null}
         </div>
 
         {/* a tarja é o aviso visual; quem usa leitor de tela ouve a linha de
@@ -145,21 +163,22 @@ export function CardProduto({
         {semEstoque ? (
           <p
             aria-hidden
-            className="absolute inset-x-0 bottom-0 bg-graf-950/85 py-2 text-center text-xs font-bold uppercase tracking-wide text-white"
+            className="absolute inset-x-0 bottom-0 border-t border-white/15 bg-graf-950/90 py-2 text-center text-[0.8125rem] font-semibold uppercase tracking-[0.16em] text-white"
           >
             {produto.unique ? "Vendido" : "Indisponível"}
           </p>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 border-t border-graf-100 p-4 sm:p-5">
+      <div className="flex flex-1 flex-col border-t border-graf-100 p-4 sm:p-5">
         {produto.brandName ? (
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
+          <p className="mb-1.5 truncate text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
             {produto.brandName}
           </p>
         ) : null}
 
-        <h3 className="line-2 text-[0.9375rem] font-bold leading-snug text-graf-950 sm:text-base">
+        {/* duas linhas fixas: nome curto e nome longo ocupam o mesmo espaço */}
+        <h3 className="line-2 min-h-11 text-base font-bold leading-snug text-graf-950 sm:min-h-[3.125rem] sm:text-lg">
           <Link
             href={`/loja/${produto.slug}`}
             className="rounded-xs after:absolute after:inset-0 after:content-['']"
@@ -169,56 +188,80 @@ export function CardProduto({
         </h3>
 
         {produto.model ? (
-          <p className="truncate text-xs text-graf-500">{produto.model}</p>
+          <p className="mt-1 truncate text-[0.8125rem] text-graf-500">{produto.model}</p>
         ) : null}
 
         <div className="mt-auto pt-4">
+          {/* três alturas reservadas — referência, valor e condição de pagamento */}
+          <div className="flex h-6 items-center gap-2">
+            {precoAnterior ? (
+              <span className="tabular text-[0.8125rem] text-graf-500 line-through">
+                {formatarPreco(precoAnterior)}
+              </span>
+            ) : null}
+            {desconto >= 5 ? (
+              <Etiqueta tom="ok" className="px-2 py-0.5 text-xs">
+                −{desconto}%
+              </Etiqueta>
+            ) : null}
+          </div>
+
           {soOrcamento ? (
-            <>
-              <p className="text-base font-extrabold tracking-tight text-graf-950">
-                Sob orçamento
-              </p>
-              <p className="mt-0.5 text-xs leading-relaxed text-graf-500">
-                A equipe responde com preço e prazo.
-              </p>
-            </>
+            <p className="text-xl font-extrabold leading-8 tracking-tight text-graf-950">
+              Sob orçamento
+            </p>
           ) : (
-            <>
-              {produto.compareAtCents && produto.compareAtCents > produto.priceCents ? (
-                <p className="tabular text-xs text-graf-500 line-through">
-                  {formatarPreco(produto.compareAtCents)}
-                </p>
-              ) : null}
-              <p className="tabular text-xl font-extrabold tracking-tight text-graf-950">
-                {formatarPreco(produto.priceCents)}
-              </p>
-              {parcelas ? (
-                <p className="tabular mt-0.5 text-xs text-graf-500">
-                  em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
-                </p>
-              ) : null}
-            </>
+            <p className="tabular text-2xl font-extrabold leading-8 tracking-tight text-graf-950">
+              {formatarPreco(produto.priceCents)}
+            </p>
           )}
 
-          {estado ? (
-            <p className={cn("mt-3 flex items-center gap-1.5 text-xs font-semibold", estado.classe)}>
-              <span className={cn("size-1.5 shrink-0 rounded-full", estado.pontoClasse)} aria-hidden />
-              {estado.texto}
-            </p>
-          ) : null}
+          <div className="flex h-5 items-center">
+            {soOrcamento ? (
+              <span className="truncate text-[0.8125rem] text-graf-500">
+                A equipe responde com preço e prazo.
+              </span>
+            ) : parcelas ? (
+              <span className="tabular truncate text-[0.8125rem] text-graf-500">
+                em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
+              </span>
+            ) : null}
+          </div>
 
-          <p
-            aria-hidden
-            className={cn(
-              "mt-4 flex h-10 items-center justify-center gap-1.5 rounded-md border text-sm font-semibold",
-              "transition-colors duration-150",
-              "border-graf-300 text-graf-800",
-              "group-hover:border-jb-500 group-hover:bg-jb-500 group-hover:text-white",
-            )}
-          >
-            {chamada}
-            <ArrowRight className="size-4 shrink-0" />
-          </p>
+          {/* rodapé de uma linha só: disponibilidade à esquerda, convite à
+              direita. Altura fixa e sem quebra — é o que mantém a base de
+              todos os cartões da linha no mesmo lugar */}
+          <div className="mt-4 border-t border-graf-100 pt-3">
+            <div className="flex h-6 items-center justify-between gap-3">
+              {estado ? (
+                <span
+                  className={cn(
+                    "flex min-w-0 items-center gap-1.5 text-[0.8125rem] font-semibold",
+                    estado.classe,
+                  )}
+                >
+                  <span
+                    className={cn("size-1.5 shrink-0 rounded-full", estado.pontoClasse)}
+                    aria-hidden
+                  />
+                  <span className="truncate">{estado.texto}</span>
+                </span>
+              ) : (
+                <span aria-hidden />
+              )}
+
+              <span
+                aria-hidden
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 text-[0.8125rem] font-bold text-graf-800",
+                  "transition-colors duration-150 group-hover:text-jb-600",
+                )}
+              >
+                {chamada}
+                <ArrowRight className="size-4 shrink-0 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5" />
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </article>

@@ -309,10 +309,10 @@ export default async function PaginaProduto({
         </Aviso>
       ) : null}
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-graf-950">{produto.name}</h1>
+            <h1 className="text-2xl font-bold leading-tight text-graf-950">{produto.name}</h1>
             <Etiqueta tom={TOM_STATUS[produto.status]}>{ROTULO_STATUS[produto.status]}</Etiqueta>
             {produto.featured ? <Etiqueta tom="marca">Destaque</Etiqueta> : null}
           </div>
@@ -391,7 +391,7 @@ export default async function PaginaProduto({
             />
           </div>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-xs font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
             Somente consulta
           </p>
         )}

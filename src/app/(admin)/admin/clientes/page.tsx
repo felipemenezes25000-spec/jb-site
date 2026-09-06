@@ -144,7 +144,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
           <span className="block truncate font-semibold text-graf-900">
             {linha.companyName || linha.name}
           </span>
-          <span className="block truncate text-xs text-graf-500">{linha.email}</span>
+          <span className="block truncate text-[0.8125rem] text-graf-500">{linha.email}</span>
         </span>
       ),
     },
@@ -152,7 +152,12 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
       chave: "telefone",
       rotulo: "Telefone",
       largura: "10rem",
-      renderizar: (linha) => (linha.phone ? formatarTelefone(linha.phone) : "—"),
+      renderizar: (linha) =>
+        linha.phone ? (
+          <span className="tabular">{formatarTelefone(linha.phone)}</span>
+        ) : (
+          <span className="text-graf-500">Não informado</span>
+        ),
     },
     {
       chave: "documento",
@@ -163,7 +168,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
         linha.document ? (
           <span className="tabular">{formatarDocumento(linha.document)}</span>
         ) : (
-          "—"
+          <span className="text-graf-500">Não informado</span>
         ),
     },
     {
@@ -218,7 +223,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
             </LinkBotao>
             {/* /admin/clientes/novo só era alcançável pela busca da abertura de
                 chamado. O cadastro de cliente pertence à lista de clientes. */}
-            <LinkBotao href="/admin/clientes/novo" tamanho="sm">
+            <LinkBotao href="/admin/clientes/novo">
               <UserPlus className="size-4" aria-hidden />
               Novo cliente
             </LinkBotao>

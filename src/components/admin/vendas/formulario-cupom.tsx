@@ -330,7 +330,7 @@ export function GestorCupons({
                         .join(" · ")}
                     </p>
 
-                    <p className="mt-0.5 text-xs text-graf-500">
+                    <p className="mt-0.5 text-[0.8125rem] text-graf-500">
                       <span className="tabular font-semibold text-graf-700">
                         {cupom.usados}
                       </span>{" "}
@@ -387,7 +387,7 @@ export function GestorCupons({
         aberto={aberto}
         aoFechar={() => setAberto(false)}
         titulo={editando ? `Editar cupom ${editando.codigo}` : "Novo cupom"}
-        descricao="O desconto é sempre recalculado no servidor quando o pedido é fechado."
+        descricao="O desconto é conferido de novo na hora de fechar o pedido."
         tamanho="lg"
       >
         <FormularioCupom

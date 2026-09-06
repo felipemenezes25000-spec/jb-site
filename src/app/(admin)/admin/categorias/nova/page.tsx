@@ -43,7 +43,7 @@ export default async function PaginaNovaCategoria() {
       />
 
       <header>
-        <h1 className="text-2xl font-bold text-graf-950">Nova categoria</h1>
+        <h1 className="text-2xl font-bold leading-tight text-graf-950">Nova categoria</h1>
         <p className="mt-1 text-sm text-graf-500">
           Deixe a categoria mãe vazia para criar um item de primeiro nível.
         </p>

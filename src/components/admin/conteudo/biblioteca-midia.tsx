@@ -154,11 +154,11 @@ export function BibliotecaDeMidia({
                     entrega o nome inteiro a quem passar o mouse. */}
                 <span
                   title={midia.filename}
-                  className="line-2 mt-2 block break-all text-xs font-semibold text-graf-900"
+                  className="line-2 mt-2 block break-all text-[0.8125rem] font-semibold text-graf-900"
                 >
                   {midia.filename}
                 </span>
-                <span className="mt-0.5 flex items-center justify-between gap-2 text-[11px] text-graf-500">
+                <span className="mt-0.5 flex items-center justify-between gap-2 text-xs text-graf-500">
                   <span className="truncate">{formatarTamanho(midia.size)}</span>
                   <span
                     className={cn(
@@ -176,7 +176,7 @@ export function BibliotecaDeMidia({
       )}
 
       {pastas.length > 1 ? (
-        <p className="text-xs text-graf-500">
+        <p className="text-[0.8125rem] text-graf-500">
           Pastas nesta biblioteca: {pastas.join(", ")}. A pasta é definida por quem envia o
           arquivo e serve para separar as origens.
         </p>

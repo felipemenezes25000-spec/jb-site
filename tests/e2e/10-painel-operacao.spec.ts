@@ -165,8 +165,20 @@ test.describe("Atendimento por telefone", () => {
     const numero = titulo.replace(/^Chamado\s+/i, "").trim();
     expect(numero, "o chamado precisa ter número").not.toBe("");
 
-    // e ele está na fila de quem trabalha — sem filtro nenhum, como a fila abre
-    await page.goto("/admin/assistencia");
+    /*
+     * E ele está na fila de quem trabalha.
+     *
+     * A fila abre ordenada por urgência e, dentro dela, do mais antigo para o
+     * mais novo — é uma fila de trabalho, e quem chegou primeiro é atendido
+     * primeiro. Consequência: um chamado recém-aberto é o ÚLTIMO da sua
+     * urgência, e cai fora da primeira página assim que existirem 25 chamados
+     * abertos com a mesma urgência. Este teste chegou a passar por acaso,
+     * enquanto o banco de testes era pequeno.
+     *
+     * Pedir a ordenação por mais recente prova a mesma coisa — o chamado
+     * entrou na fila — sem depender de quantos chamados o banco acumulou.
+     */
+    await page.goto("/admin/assistencia?ordem=criado&dir=desc");
     await expect(page.getByText(numero).first()).toBeVisible();
 
     // a busca da fila também o encontra pelo nome de quem ligou

@@ -142,7 +142,7 @@ export function FormularioProdutoPrecos({
 function Resumo({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-graf-500">{rotulo}</dt>
+      <dt className="text-[0.8125rem] font-semibold uppercase tracking-[0.06em] text-graf-500">{rotulo}</dt>
       <dd className="mt-1 text-sm font-medium text-graf-800">{children}</dd>
     </div>
   );

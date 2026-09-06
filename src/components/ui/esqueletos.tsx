@@ -69,20 +69,26 @@ export function EsqueletoCartaoProduto({ className }: { className?: string }) {
   return (
     <div
       aria-hidden
+      /* Espelha o cartão real: moldura 5/4, borda sem sombra em repouso e o
+         miolo com as mesmas seis linhas — marca, nome em duas linhas, modelo,
+         preço, parcela e rodapé. Esqueleto fora de proporção faz a lista pular
+         quando os dados chegam, que é justamente o que ele existe para evitar. */
       className={cn(
-        "overflow-hidden rounded-xl border border-graf-200 bg-white shadow-card",
+        "overflow-hidden rounded-xl border border-graf-200 bg-white",
         className,
       )}
     >
-      <Esqueleto className="aspect-[4/3] w-full rounded-none" />
-      <div className="space-y-3 p-4">
+      <Esqueleto className="aspect-5/4 w-full rounded-none" />
+      <div className="border-t border-graf-100 p-4 sm:p-5">
         <Esqueleto className="h-3 w-24" />
-        <div className="space-y-2">
+        <div className="mt-2 space-y-2">
           <Esqueleto className="h-4 w-full" />
           <Esqueleto className="h-4 w-3/4" />
         </div>
-        <Esqueleto className="h-6 w-32" />
-        <Esqueleto className="mt-1 h-11 w-full rounded-lg" />
+        <Esqueleto className="mt-2 h-3 w-20" />
+        <Esqueleto className="mt-5 h-7 w-32" />
+        <Esqueleto className="mt-2 h-3 w-40" />
+        <Esqueleto className="mt-4 h-10 w-full rounded-md" />
       </div>
     </div>
   );

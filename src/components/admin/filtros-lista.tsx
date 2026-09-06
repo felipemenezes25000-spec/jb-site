@@ -73,7 +73,7 @@ function EsqueletoFiltros({ className }: { className?: string }) {
     <div
       aria-hidden
       className={cn(
-        "h-[4.75rem] animate-pulse rounded-xl border border-graf-200 bg-white sm:h-[4.25rem]",
+        "h-[5.25rem] animate-pulse rounded-xl border border-graf-200 bg-white sm:h-[4.75rem]",
         className,
       )}
     />
@@ -146,7 +146,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
     <section
       aria-label="Filtros da listagem"
       aria-busy={pendente || undefined}
-      className={cn("rounded-xl border border-graf-200 bg-white p-3 shadow-card", className)}
+      className={cn("rounded-xl border border-graf-200 bg-white p-4", className)}
     >
       <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end">
         {campos.map((campo) => {
@@ -158,7 +158,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
               >
                 <label
                   htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1 block text-xs font-semibold text-graf-600"
+                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
                 >
                   {campo.rotulo}
                 </label>
@@ -192,7 +192,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
               <div key={campo.nome} className="min-w-0 md:w-52">
                 <label
                   htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1 block text-xs font-semibold text-graf-600"
+                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
                 >
                   {campo.rotulo}
                 </label>
@@ -222,7 +222,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
               <div key={campo.nome} className="min-w-0 md:w-44">
                 <label
                   htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1 block text-xs font-semibold text-graf-600"
+                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
                 >
                   {campo.rotulo}
                 </label>
@@ -240,7 +240,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
             // `input[type=date]` não encolhem abaixo da própria largura mínima
             // e empurravam a barra para fora da tela em 360px.
             <fieldset key={campo.nome} className="min-w-0">
-              <legend className="mb-1 text-xs font-semibold text-graf-600">{campo.rotulo}</legend>
+              <legend className="mb-1.5 text-[0.8125rem] font-semibold text-graf-700">{campo.rotulo}</legend>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <EntradaData
                   id={`filtro-${campo.nome}-de`}
@@ -267,16 +267,16 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
         <div className="flex items-center gap-3 md:ml-auto md:pb-0.5">
           <p
             aria-live="polite"
-            className="flex min-h-5 items-center gap-1.5 text-xs font-medium text-graf-500"
+            className="flex min-h-5 items-center gap-1.5 text-[0.8125rem] font-medium text-graf-500"
           >
             {pendente ? (
               <>
-                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                <Loader2 className="size-4 animate-spin" aria-hidden />
                 Atualizando…
               </>
             ) : ativos.length > 0 ? (
               <>
-                <ListFilter className="size-3.5" aria-hidden />
+                <ListFilter className="size-4" aria-hidden />
                 {ativos.length === 1 ? "1 filtro ativo" : `${ativos.length} filtros ativos`}
               </>
             ) : null}

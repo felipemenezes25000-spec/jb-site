@@ -162,15 +162,15 @@ function filtrosAplicados(parametros: ParametrosCatalogo, grupos: GruposFiltro) 
 
 function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <details open className="group border-b border-graf-200 pb-5 last:border-b-0 last:pb-0">
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-md py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500">
-        <span className="text-sm font-bold text-graf-950">{titulo}</span>
+    <details open className="group border-b border-graf-200 pb-6 last:border-b-0 last:pb-0">
+      <summary className="-mx-2 flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500">
+        <span className="text-[0.9375rem] font-bold text-graf-950">{titulo}</span>
         <ChevronDown
           className="size-4 shrink-0 text-graf-400 transition-transform duration-200 group-open:rotate-180"
           aria-hidden
         />
       </summary>
-      <div className="mt-2">{children}</div>
+      <div className="mt-1.5">{children}</div>
     </details>
   );
 }
@@ -194,28 +194,71 @@ function OpcaoLink({
       prefetch={false}
       aria-label={`${marcado ? "Remover filtro" : "Filtrar por"} ${campo}: ${opcao.rotulo}`}
       className={cn(
-        "flex min-h-11 items-center gap-2.5 rounded-lg px-2 text-sm transition-colors",
+        "flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm transition-colors",
         "hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-        marcado && "bg-jb-50/60 hover:bg-jb-50",
+        marcado && "bg-jb-50/70 hover:bg-jb-50",
       )}
     >
       <span
         aria-hidden
         className={cn(
-          "flex size-[18px] shrink-0 items-center justify-center rounded border transition-colors",
+          "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors",
           marcado
             ? "border-jb-500 bg-jb-500 text-white"
             : "border-graf-300 bg-white text-transparent",
         )}
       >
-        <Check className="size-3" strokeWidth={3} />
+        <Check className="size-3.5" strokeWidth={3} />
       </span>
-      <span className={cn("flex-1", marcado ? "font-semibold text-graf-950" : "text-graf-700")}>
+      <span
+        className={cn(
+          "min-w-0 flex-1 truncate",
+          marcado ? "font-semibold text-graf-950" : "text-graf-700",
+        )}
+      >
         {opcao.rotulo}
       </span>
       {opcao.quantidade !== undefined ? (
-        <span className="tabular text-xs text-graf-500">{opcao.quantidade}</span>
+        <span className="tabular shrink-0 text-[0.8125rem] text-graf-500">
+          {opcao.quantidade}
+        </span>
       ) : null}
+    </Link>
+  );
+}
+
+/**
+ * Pastilha para grupo curto de rótulos curtos — voltagem, por exemplo.
+ * Uma coluna de caixas de seleção para "Bivolt / 127 V / 220 V" faz a barra
+ * parecer formulário de sistema; três pastilhas lado a lado ocupam uma linha
+ * e leem como escolha de loja.
+ */
+function OpcaoPastilha({
+  campo,
+  opcao,
+  marcado,
+  href,
+}: {
+  campo: string;
+  opcao: OpcaoFiltro;
+  marcado: boolean;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      scroll={false}
+      prefetch={false}
+      aria-label={`${marcado ? "Remover filtro" : "Filtrar por"} ${campo}: ${opcao.rotulo}`}
+      className={cn(
+        "inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold transition-colors",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+        marcado
+          ? "border-jb-500 bg-jb-50 text-jb-700"
+          : "border-graf-200 bg-white text-graf-700 hover:border-graf-400 hover:bg-graf-50",
+      )}
+    >
+      {opcao.rotulo}
     </Link>
   );
 }
@@ -263,7 +306,7 @@ export function ConteudoFiltros({
   const emEstoque = textoDe(parametros, "estoque") === "1";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* um grupo com uma opção só não filtra nada: ou some, ou engana */}
       {!travarCategoria && grupos.categorias.length > 1 ? (
         <Grupo titulo="Categoria">
@@ -317,9 +360,9 @@ export function ConteudoFiltros({
 
       {grupos.voltagens.length > 1 ? (
         <Grupo titulo="Voltagem">
-          <Lista muitas={false}>
+          <div className="flex flex-wrap gap-2 pt-1">
             {grupos.voltagens.map((opcao) => (
-              <OpcaoLink
+              <OpcaoPastilha
                 key={opcao.valor}
                 campo="Voltagem"
                 opcao={opcao}
@@ -327,7 +370,7 @@ export function ConteudoFiltros({
                 href={enderecoOpcao("voltagem", opcao.valor)}
               />
             ))}
-          </Lista>
+          </div>
         </Grupo>
       ) : null}
 
@@ -348,9 +391,15 @@ export function ConteudoFiltros({
               );
             }}
           >
+            {/* os dois campos dividem a linha e o botão vem embaixo, em toda a
+                largura: numa coluna de 272px o trio lado a lado espremia os
+                campos a ponto de o valor digitado não caber */}
             <div className="flex items-end gap-2">
               <div className="min-w-0 flex-1">
-                <label htmlFor={idMin} className="mb-1 block text-xs font-medium text-graf-600">
+                <label
+                  htmlFor={idMin}
+                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                >
                   De
                 </label>
                 <input
@@ -364,7 +413,10 @@ export function ConteudoFiltros({
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <label htmlFor={idMax} className="mb-1 block text-xs font-medium text-graf-600">
+                <label
+                  htmlFor={idMax}
+                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                >
                   Até
                 </label>
                 <input
@@ -377,12 +429,11 @@ export function ConteudoFiltros({
                   className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
                 />
               </div>
-              <Botao type="submit" variante="secundario" tamanho="md" className="shrink-0 px-4">
-                Aplicar
-                <span className="sr-only"> faixa de preço</span>
-              </Botao>
             </div>
-            <p className="mt-2 text-xs text-graf-500">
+            <Botao type="submit" variante="secundario" tamanho="sm" larguraTotal className="mt-3">
+              Aplicar faixa de preço
+            </Botao>
+            <p className="mt-2.5 text-[0.8125rem] text-graf-500">
               Catálogo de {formatarPreco(grupos.faixaPreco.minCents)} a{" "}
               {formatarPreco(grupos.faixaPreco.maxCents)}.
             </p>
@@ -421,15 +472,25 @@ export function PainelFiltros({
 
   return (
     <div className={cn("lg:sticky lg:top-24", className)}>
-      <div className="mb-4 flex items-center justify-between gap-3 border-b border-graf-200 pb-3">
-        <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-graf-950">Filtros</h2>
+      <div className="mb-5 flex items-center justify-between gap-3 border-b border-graf-200 pb-3">
+        <h2 className="flex items-baseline gap-2 text-base font-bold text-graf-950">
+          Filtros
+          {aplicados.length > 0 ? (
+            <span className="tabular text-[0.8125rem] font-semibold text-graf-500">
+              {aplicados.length} ativo{aplicados.length > 1 ? "s" : ""}
+            </span>
+          ) : null}
+        </h2>
+        {/* o "limpar" precisa ser um alvo visível, não um link perdido:
+            com filtro aplicado é a saída mais procurada da tela */}
         {limpavel ? (
           <Link
             href={caminho}
             scroll={false}
-            className="inline-flex min-h-9 items-center rounded-md px-1.5 text-sm font-semibold text-jb-700 transition-colors hover:bg-jb-50 hover:text-jb-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors pointer-coarse:min-h-11 hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
-            Limpar tudo
+            <X className="size-3.5" aria-hidden />
+            Limpar
           </Link>
         ) : null}
       </div>
@@ -509,19 +570,23 @@ export function BarraCatalogo({
             onClick={() => setAberto(true)}
             aria-haspopup="dialog"
             aria-expanded={aberto}
-            className={classesBotao("secundario", "md", "flex-1 sm:flex-none lg:hidden")}
+            className={classesBotao(
+              "secundario",
+              "md",
+              "flex-1 whitespace-nowrap sm:flex-none lg:hidden",
+            )}
           >
             <SlidersHorizontal className="size-4" aria-hidden />
             Filtros
             {aplicados.length > 0 ? (
-              <span className="tabular ml-1 inline-flex size-5 items-center justify-center rounded-full bg-jb-500 text-[11px] font-bold text-white">
+              <span className="tabular ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-jb-500 text-xs font-bold text-white">
                 {aplicados.length}
               </span>
             ) : null}
           </button>
 
-          <label className="flex min-w-0 flex-1 items-center gap-2 text-sm text-graf-600 sm:flex-none">
-            <span className="hidden shrink-0 sm:inline">Ordenar</span>
+          <label className="flex min-w-0 flex-1 items-center gap-2 text-[0.8125rem] font-semibold text-graf-600 sm:flex-none">
+            <span className="hidden shrink-0 sm:inline">Ordenar por</span>
             <select
               value={ordem}
               onChange={(evento) =>
@@ -533,7 +598,7 @@ export function BarraCatalogo({
                 )
               }
               aria-label="Ordenar resultados"
-              className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base font-medium text-graf-800 transition-colors hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:w-auto sm:text-sm"
+              className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base font-semibold text-graf-800 transition-colors hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:w-auto sm:text-sm"
             >
               {ORDENS.map((opcao) => (
                 <option key={opcao.valor} value={opcao.valor}>
@@ -587,14 +652,22 @@ export function BarraCatalogo({
             className="absolute inset-y-0 right-0 flex w-[min(23rem,92vw)] flex-col bg-white shadow-pop"
           >
             <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-graf-200 px-4">
-              <p className="text-base font-bold text-graf-950">Filtros</p>
+              <p className="flex items-baseline gap-2 text-[1.0625rem] font-bold text-graf-950">
+                Filtros
+                {aplicados.length > 0 ? (
+                  <span className="tabular text-[0.8125rem] font-semibold text-graf-500">
+                    {aplicados.length} ativo{aplicados.length > 1 ? "s" : ""}
+                  </span>
+                ) : null}
+              </p>
               <div className="flex items-center gap-1">
                 {aplicados.length > 0 ? (
                   <Link
                     href={enderecoLimpo}
                     scroll={false}
-                    className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-jb-700 transition-colors hover:bg-jb-50"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                   >
+                    <X className="size-3.5" aria-hidden />
                     Limpar
                   </Link>
                 ) : null}

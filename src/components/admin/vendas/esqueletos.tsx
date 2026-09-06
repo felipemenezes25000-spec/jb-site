@@ -24,18 +24,18 @@ export function EsqueletoLista({
           <Esqueleto className="h-8 w-48" />
           <Esqueleto className="h-4 w-64" />
         </div>
-        <Esqueleto className="h-9 w-40" />
+        <Esqueleto className="h-11 w-40" />
       </div>
 
       {indicadores > 0 ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: indicadores }).map((_, i) => (
             <Esqueleto key={i} className="h-32" />
           ))}
         </div>
       ) : null}
 
-      <Esqueleto className="h-[4.75rem] sm:h-[4.25rem]" />
+      <Esqueleto className="h-[5.25rem] sm:h-[4.75rem]" />
 
       <div className="space-y-2 rounded-xl border border-graf-200 bg-white p-4">
         {Array.from({ length: linhas }).map((_, i) => (

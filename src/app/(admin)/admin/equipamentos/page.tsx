@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { EquipmentStatus, Prisma } from "@prisma/client";
 import { MonitorCog, Plus } from "lucide-react";
 
@@ -187,7 +186,9 @@ export default async function PaginaEquipamentos({
       renderizar: (linha) => (
         <span className="block min-w-0">
           <span className="block truncate font-semibold text-graf-900">{linha.name}</span>
-          <span className="block truncate text-xs text-graf-500">{linha.customer.name}</span>
+          <span className="block truncate text-[0.8125rem] text-graf-500">
+            {linha.customer.name}
+          </span>
         </span>
       ),
     },
@@ -230,7 +231,7 @@ export default async function PaginaEquipamentos({
         linha.nextMaintenanceAt ? (
           <span className="block">
             <span className="block">{formatarData(linha.nextMaintenanceAt)}</span>
-            <span className="block text-xs text-graf-500">
+            <span className="block text-[0.8125rem] text-graf-500">
               {distanciaEmDias(linha.nextMaintenanceAt)}
             </span>
           </span>
@@ -254,7 +255,7 @@ export default async function PaginaEquipamentos({
         descricao="Parque instalado de todos os clientes, com garantia, histórico e próxima preventiva."
         acoes={
           editar ? (
-            <LinkBotao href="/admin/equipamentos/novo" variante="primario" tamanho="md">
+            <LinkBotao href="/admin/equipamentos/novo">
               <Plus className="size-4" aria-hidden />
               Novo equipamento
             </LinkBotao>
@@ -328,16 +329,11 @@ export default async function PaginaEquipamentos({
           descricao:
             "Equipamentos entram aqui por três caminhos: compra na loja, cadastro do cliente na Área da Clínica e cadastro da equipe técnica.",
           acao: editar ? (
-            <LinkBotao href="/admin/equipamentos/novo" variante="primario" tamanho="sm">
-              Cadastrar equipamento
-            </LinkBotao>
+            <LinkBotao href="/admin/equipamentos/novo">Cadastrar equipamento</LinkBotao>
           ) : (
-            <Link
-              href="/admin/equipamentos"
-              className="text-sm font-semibold text-jb-700 hover:text-jb-500"
-            >
+            <LinkBotao href="/admin/equipamentos" variante="secundario">
               Limpar filtros
-            </Link>
+            </LinkBotao>
           ),
         }}
       />

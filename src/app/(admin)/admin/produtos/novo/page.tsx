@@ -52,7 +52,7 @@ export default async function PaginaNovoProduto() {
       />
 
       <header>
-        <h1 className="text-2xl font-bold text-graf-950">Novo produto</h1>
+        <h1 className="text-2xl font-bold leading-tight text-graf-950">Novo produto</h1>
         <p className="mt-1 text-sm text-graf-500">
           Depois de criar, a ficha completa abre com abas para fotos, preços, estoque e ficha
           técnica.

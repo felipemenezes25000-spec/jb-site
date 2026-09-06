@@ -67,7 +67,7 @@ export function AcoesDoAgendamento({
 }) {
   if (status === "concluido" || status === "cancelado") {
     return (
-      <span className="text-xs text-graf-500">
+      <span className="text-[0.8125rem] text-graf-500">
         {status === "concluido" ? "Visita concluída" : "Visita cancelada"}
       </span>
     );

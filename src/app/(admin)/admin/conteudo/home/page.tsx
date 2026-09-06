@@ -51,7 +51,7 @@ export default async function PaginaSecoesDaHome({
   const publicadas = secoes.filter((secao) => secao.published).length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         trilha={[{ rotulo: "Conteúdo", href: "/admin/conteudo" }, { rotulo: "Home" }]}
         titulo="Seções da página inicial"
@@ -144,7 +144,7 @@ export default async function PaginaSecoesDaHome({
                       <p className="mt-0.5 line-2 text-sm text-graf-500">{secao.subtitle}</p>
                     ) : null}
 
-                    <p className="mt-2 text-xs text-graf-500">
+                    <p className="mt-2 text-[0.8125rem] text-graf-500">
                       {tipo?.descricao ?? "Tipo não reconhecido pelo site."}
                       {secao.ctaLabel ? ` · Botão: ${secao.ctaLabel} → ${secao.ctaHref}` : ""}
                       {` · alterada em ${formatarDataHora(secao.updatedAt)}`}

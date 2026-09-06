@@ -6,23 +6,23 @@ import {
   CalendarCheck,
   ClipboardList,
   FileCheck2,
+  LayoutDashboard,
   MapPin,
   MessageCircle,
-  Phone,
   Search,
   ShieldCheck,
   Wrench,
 } from "lucide-react";
 
-import { ComoFunciona } from "@/components/assistencia/como-funciona";
-import { OPCOES_URGENCIA } from "@/components/assistencia/rotulos";
+import { CanaisDiretos } from "@/components/assistencia/apoio";
+import { ETAPAS_PUBLICAS, OPCOES_URGENCIA } from "@/components/assistencia/rotulos";
 import { Acordeao } from "@/components/ui/acordeao";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, Etiqueta, TituloSecao, Trilha } from "@/components/ui/data";
 import { Grade } from "@/components/ui/grade";
 import { IconeCategoria } from "@/components/ui/icone";
 import { Secao } from "@/components/ui/secao";
-import { telHref, whatsappHref } from "@/lib/format";
+import { whatsappHref } from "@/lib/format";
 import { textoDeHtml } from "@/lib/html";
 import { prisma } from "@/lib/prisma";
 import {
@@ -51,7 +51,8 @@ const COMBINADO = [
   {
     icone: ClipboardList,
     titulo: "Chamado com número",
-    texto: "Cada atendimento vira um AT com linha do tempo. O que foi feito fica escrito.",
+    texto:
+      "Cada atendimento nasce com um número e um histórico próprio. O que foi feito fica escrito.",
   },
   {
     icone: ShieldCheck,
@@ -75,13 +76,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AssistenciaTecnicaPage() {
-  const [s, categorias, marcas, faqs, servicos] = await Promise.all([
+  const [s, categorias, marcas, faqs, servicos, vitrine] = await Promise.all([
     getSettings(),
     prisma.category.findMany({
       where: { published: true, parentId: null },
       orderBy: [{ order: "asc" }, { name: "asc" }],
       take: 8,
-      select: { slug: true, name: true, icon: true, description: true },
+      select: {
+        slug: true,
+        name: true,
+        icon: true,
+        description: true,
+        image: { select: { url: true } },
+      },
     }),
     prisma.brand.findMany({
       where: { published: true },
@@ -95,12 +102,37 @@ export default async function AssistenciaTecnicaPage() {
       select: { id: true, question: true, answer: true },
     }),
     prisma.service.count({ where: { published: true } }),
+    /* A foto do topo é de equipamento de verdade, do catálogo da própria JB —
+       é o argumento da página inteira: quem vende é quem conserta. Sem
+       equipamento com foto publicada, o hero fica só com o texto, em coluna
+       única, em vez de abrir espaço para uma imagem que não existe. */
+    prisma.product.findFirst({
+      where: { status: "active", media: { some: {} } },
+      orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+      select: {
+        media: {
+          orderBy: { order: "asc" },
+          take: 1,
+          select: { media: { select: { url: true } } },
+        },
+      },
+    }),
   ]);
 
-  const whatsapp = whatsappHref(
-    s.whatsapp,
-    "Olá! Preciso de assistência técnica para um equipamento odontológico.",
+  const foto = vitrine?.media[0]?.media.url ?? null;
+
+  /* Cartão com foto e cartão sem foto na mesma grade viram uma fileira
+     desalinhada. Ou a JB cadastrou imagem em todas as frentes e a seção é
+     fotográfica, ou ela é uma lista tipográfica — nunca meio a meio. */
+  const ilustradas = categorias.flatMap((categoria) =>
+    categoria.image ? [{ ...categoria, foto: categoria.image.url }] : [],
   );
+  const coberturaFotografica =
+    ilustradas.length === categorias.length ? ilustradas : null;
+
+  const mensagemWhatsapp = "Olá! Preciso de assistência técnica para um equipamento odontológico.";
+  const whatsapp = whatsappHref(s.whatsapp, mensagemWhatsapp);
+  const temContatoDireto = s.telefone.trim() !== "" || s.whatsapp.trim() !== "";
 
   return (
     <>
@@ -133,9 +165,15 @@ export default async function AssistenciaTecnicaPage() {
       >
         <Trilha itens={TRILHA} className="mb-7" />
 
-        <div className="grid gap-12 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
+        <div
+          className={
+            foto
+              ? "grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16"
+              : "max-w-3xl"
+          }
+        >
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-graf-600 shadow-xs">
+            <p className="inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 py-1.5 text-[0.8125rem] font-semibold text-graf-600 shadow-xs">
               <Wrench className="size-3.5 text-jb-600" aria-hidden />
               Equipe técnica própria · {s.endereco_cidade} e região
             </p>
@@ -176,29 +214,46 @@ export default async function AssistenciaTecnicaPage() {
                 href="/minha-jb/assistencia"
                 className="font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-800"
               >
-                Acompanhe pela sua conta
+                Acompanhe pela Área da Clínica
               </Link>{" "}
               ou pelo número que recebeu por e-mail.
             </p>
           </div>
 
-          <Cartao className="p-6 lg:p-8">
-            <p className="label-mono uppercase text-graf-500">O que está combinado</p>
-            <ul className="mt-6 space-y-6">
-              {COMBINADO.map((item) => (
-                <li key={item.titulo} className="flex gap-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-100">
-                    <item.icone className="size-5" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[0.9375rem] font-bold text-graf-950">{item.titulo}</p>
-                    <p className="mt-1 text-sm leading-relaxed text-graf-600">{item.texto}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Cartao>
+          {foto ? (
+            <figure className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
+              <div className="relative aspect-[4/3] bg-gradient-to-b from-white to-graf-50">
+                <Image
+                  src={foto}
+                  alt=""
+                  fill
+                  sizes="(max-width: 1024px) 92vw, 44vw"
+                  /* Moldura enxuta de propósito: quem tem de crescer é o
+                     equipamento, não a margem em volta dele. */
+                  className="object-contain p-5 sm:p-8"
+                  priority
+                />
+              </div>
+              <figcaption className="flex items-start gap-3 border-t border-graf-200 px-5 py-4 text-sm leading-relaxed text-graf-600 sm:px-6">
+                <Wrench className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+                Atendemos o equipamento que saiu da nossa loja e o que a clínica comprou de
+                outro fornecedor.
+              </figcaption>
+            </figure>
+          ) : null}
         </div>
+
+        {/* O que a JB assume ao receber um chamado. Sem cartão em volta: são
+            quatro compromissos, não quatro produtos numa vitrine. */}
+        <ul className="mt-14 grid gap-x-10 gap-y-9 border-t border-graf-200 pt-10 sm:grid-cols-2 lg:grid-cols-4">
+          {COMBINADO.map((item) => (
+            <li key={item.titulo}>
+              <item.icone className="size-5 text-jb-600" aria-hidden />
+              <p className="mt-3.5 text-[0.9375rem] font-bold text-graf-950">{item.titulo}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-graf-600">{item.texto}</p>
+            </li>
+          ))}
+        </ul>
       </Secao>
 
       {/* ======================================================= O QUE ATENDE */}
@@ -211,29 +266,60 @@ export default async function AssistenciaTecnicaPage() {
             className="mb-10"
           />
 
-          <Grade como="ul" colunas={{ base: 1, sm: 2, lg: 3 }} espaco="md">
-            {categorias.map((categoria) => (
-              <li key={categoria.slug}>
-                <Cartao className="h-full p-5">
-                  <span className="flex size-10 items-center justify-center rounded-lg bg-graf-100 text-graf-700">
+          {coberturaFotografica ? (
+            <Grade como="ul" colunas={{ base: 1, sm: 2, lg: 4 }} espaco="md">
+              {coberturaFotografica.map((categoria) => (
+                <li key={categoria.slug}>
+                  <Cartao className="flex h-full flex-col overflow-hidden">
+                    <div className="relative aspect-[5/4] bg-graf-50">
+                      <Image
+                        src={categoria.foto}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 24vw"
+                        className="object-contain p-4"
+                      />
+                    </div>
+                    <div className="border-t border-graf-200 p-5">
+                      <p className="text-[0.9375rem] font-bold text-graf-950">
+                        {categoria.name}
+                      </p>
+                      {textoDeHtml(categoria.description) ? (
+                        <p className="line-2 mt-1.5 text-sm leading-relaxed text-graf-500">
+                          {textoDeHtml(categoria.description)}
+                        </p>
+                      ) : null}
+                    </div>
+                  </Cartao>
+                </li>
+              ))}
+            </Grade>
+          ) : (
+            <ul className="grid border-b border-graf-200 sm:grid-cols-2 sm:gap-x-14">
+              {categorias.map((categoria) => (
+                <li
+                  key={categoria.slug}
+                  className="flex gap-4 border-t border-graf-200 py-6"
+                >
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-graf-100 text-graf-700">
                     <IconeCategoria nome={categoria.icon} className="size-5" />
                   </span>
-                  <p className="mt-4 text-[0.9375rem] font-bold text-graf-950">
-                    {categoria.name}
-                  </p>
-                  {textoDeHtml(categoria.description) ? (
-                    <p className="line-2 mt-1.5 text-sm leading-relaxed text-graf-500">
-                      {textoDeHtml(categoria.description)}
-                    </p>
-                  ) : null}
-                </Cartao>
-              </li>
-            ))}
-          </Grade>
+                  <div className="min-w-0">
+                    <p className="text-base font-bold text-graf-950">{categoria.name}</p>
+                    {textoDeHtml(categoria.description) ? (
+                      <p className="line-2 mt-1 text-sm leading-relaxed text-graf-500">
+                        {textoDeHtml(categoria.description)}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
 
           {servicos > 0 ? (
             <p className="mt-9 text-[0.9375rem] leading-relaxed text-graf-600">
-              Também trabalhamos com serviços avulsos, de instalação a treinamento.{" "}
+              Além do conserto, a equipe também instala, revisa e treina.{" "}
               <Link
                 href="/servicos"
                 className="font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-800"
@@ -248,7 +334,8 @@ export default async function AssistenciaTecnicaPage() {
 
       {/* ====================================================== COMO FUNCIONA */}
       {/* A única faixa grafite da página. É aqui que a assistência se separa da
-          loja: o lado de quem conserta, escrito na ordem em que acontece. */}
+          loja: o caminho do chamado escrito na ordem em que acontece, com o
+          número de cada etapa pendurado fora do fio que liga uma à outra. */}
       <Secao
         id="como-funciona"
         fundo="grafite"
@@ -256,26 +343,82 @@ export default async function AssistenciaTecnicaPage() {
         padraoDeFundo
         className="scroll-mt-24"
       >
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-20">
+        <div className="grid gap-14 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-20">
           <div className="lg:sticky lg:top-24 lg:h-max">
             <TituloSecao
               sobretitulo="Como funciona"
               titulo="Do chamado ao equipamento funcionando"
-              descricao="Seis etapas, na ordem em que acontecem. É o caminho que o seu chamado percorre — e você acompanha cada uma delas pelo número que recebe na abertura."
+              descricao="Seis etapas, na ordem em que acontecem. É o caminho que o seu chamado percorre — e você acompanha todas elas pelo número que recebe na abertura."
             />
 
-            <div className="mt-9 flex flex-wrap items-center gap-4">
+            <div className="mt-9">
               <LinkBotao href="/assistencia-tecnica/solicitar" variante="claro" tamanho="lg">
-                Começar pelo passo 1
+                Começar pela etapa 1
                 <ArrowRight className="size-4" aria-hidden />
               </LinkBotao>
             </div>
             <p className="texto-suave mt-4 text-sm leading-relaxed">
-              Leva poucos minutos e o rascunho fica salvo se você precisar sair.
+              Leva poucos minutos, e o que você preencher fica salvo se precisar sair no
+              meio.
             </p>
           </div>
 
-          <ComoFunciona />
+          <div>
+            {/* O fio que liga as etapas passa entre o número e o texto — mora
+                fora do <ol> porque lista só aceita <li> como filho. */}
+            <div className="relative">
+              <span
+                aria-hidden
+                /* left casa com a largura da coluna do número, abaixo. */
+                className="absolute inset-y-2 left-[3.5rem] w-px bg-white/15 sm:left-[4.5rem]"
+              />
+
+              <ol aria-label="Etapas do atendimento técnico">
+                {ETAPAS_PUBLICAS.map((etapa, indice) => (
+                  <li
+                    key={etapa.titulo}
+                    className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-7 pb-10 last:pb-0 sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:gap-x-9"
+                  >
+                    <span
+                      aria-hidden
+                      className="tabular pr-4 text-right font-mono text-2xl font-extrabold leading-none text-white/30 sm:pr-5 sm:text-[1.75rem]"
+                    >
+                      {String(indice + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold leading-tight text-white sm:text-xl">
+                        {etapa.titulo}
+                      </h3>
+                      <p className="texto-suave mt-2.5 max-w-xl text-[0.9375rem] leading-relaxed">
+                        {etapa.texto}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            {/* Onde o histórico da última etapa fica guardado. */}
+            <div className="mt-12 flex flex-col gap-5 rounded-2xl border border-white/15 bg-white/5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+              <div className="max-w-md">
+                <h3 className="flex items-center gap-2.5 text-base font-bold text-white">
+                  <LayoutDashboard className="size-4.5 shrink-0 text-jb-300" aria-hidden />
+                  O histórico fica na Área da Clínica
+                </h3>
+                <p className="texto-suave mt-2 text-sm leading-relaxed">
+                  Chamados, visitas e peças trocadas ficam na ficha de cada aparelho. No
+                  atendimento seguinte, o técnico já chega sabendo o que foi feito antes.
+                </p>
+              </div>
+              <LinkBotao
+                href="/minha-jb"
+                variante="contorno-claro"
+                className="sm:shrink-0"
+              >
+                Entrar na Área da Clínica
+              </LinkBotao>
+            </div>
+          </div>
         </div>
       </Secao>
 
@@ -325,10 +468,36 @@ export default async function AssistenciaTecnicaPage() {
             </p>
           </div>
 
+          {/* Contato direto e área de atendimento. Telefone e WhatsApp saem das
+              configurações — nunca escritos aqui. */}
           <Cartao className="p-6 lg:p-7">
-            <p className="label-mono uppercase text-graf-500">Onde atendemos</p>
+            <p className="label-mono uppercase text-graf-500">Falar com a equipe</p>
 
-            <ul className="mt-6 space-y-6 text-[0.9375rem]">
+            {temContatoDireto ? (
+              <>
+                <p className="mt-4 text-[0.9375rem] leading-relaxed text-graf-700">
+                  Prefere explicar o defeito falando? A equipe abre o chamado com você.
+                </p>
+                <CanaisDiretos
+                  className="mt-4"
+                  telefone={s.telefone}
+                  whatsapp={s.whatsapp}
+                  mensagem={mensagemWhatsapp}
+                />
+              </>
+            ) : null}
+
+            <ul
+              className={
+                temContatoDireto
+                  ? "mt-6 space-y-6 border-t border-graf-200 pt-6 text-[0.9375rem]"
+                  : "mt-6 space-y-6 text-[0.9375rem]"
+              }
+            >
+              <li className="flex gap-3.5">
+                <CalendarCheck className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
+                <span className="leading-relaxed text-graf-700">{s.horario}</span>
+              </li>
               <li className="flex gap-3.5">
                 <MapPin className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
                 <span className="leading-relaxed text-graf-700">
@@ -337,24 +506,6 @@ export default async function AssistenciaTecnicaPage() {
                   <span className="mt-1 block text-graf-500">{enderecoCompleto(s)}</span>
                 </span>
               </li>
-              <li className="flex gap-3.5">
-                <CalendarCheck className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
-                <span className="leading-relaxed text-graf-700">{s.horario}</span>
-              </li>
-              {s.telefone ? (
-                <li className="flex gap-3.5">
-                  <Phone className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
-                  <a
-                    href={telHref(s.telefone)}
-                    /* Ligar é ação de toque: o `py` sobe a área tocável para
-                       47px e o `-my` devolve o espaço, então a linha continua
-                       alinhada com as irmãs da lista. */
-                    className="-my-3 inline-flex items-center py-3 font-semibold text-graf-900 underline underline-offset-2 hover:text-jb-700"
-                  >
-                    {s.telefone}
-                  </a>
-                </li>
-              ) : null}
               <li className="flex gap-3.5">
                 <Search className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
                 <span className="leading-relaxed text-graf-700">
@@ -382,7 +533,7 @@ export default async function AssistenciaTecnicaPage() {
               <li key={marca.slug}>
                 <Link
                   href={`/marcas/${marca.slug}`}
-                  className="flex h-20 items-center justify-center rounded-xl border border-graf-200 bg-white px-4 transition-[border-color,box-shadow] hover:border-graf-300 hover:shadow-card"
+                  className="flex h-24 items-center justify-center rounded-xl border border-graf-200 bg-white px-4 transition-[border-color,box-shadow] hover:border-graf-300 hover:shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
                   {marca.logo ? (
                     <Image

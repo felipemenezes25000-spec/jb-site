@@ -19,16 +19,16 @@ export function FormularioEntrarStaff({ destino = "/admin" }: { destino?: string
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   return (
-    <form action={acao} className="space-y-4" noValidate>
+    <form action={acao} className="space-y-5" noValidate>
       <input type="hidden" name="destino" value={destino} />
 
       <div aria-live="assertive" className="empty:hidden">
         {estado.erro ? (
           <p
             role="alert"
-            className="flex items-start gap-2 rounded-lg border border-jb-200 bg-jb-50 px-3.5 py-3 text-sm font-medium text-jb-800"
+            className="flex items-start gap-3 rounded-xl bg-jb-50 px-4 py-3.5 text-sm font-medium leading-relaxed text-jb-800 ring-1 ring-inset ring-jb-500/20"
           >
-            <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <TriangleAlert className="mt-0.5 size-5 shrink-0 text-jb-700" aria-hidden />
             <span>{estado.erro}</span>
           </p>
         ) : null}
@@ -65,9 +65,9 @@ export function FormularioEntrarStaff({ destino = "/admin" }: { destino?: string
         {enviando ? "Entrando…" : "Entrar no painel"}
       </Botao>
 
-      <p className="text-center text-xs leading-relaxed text-graf-500">
-        Acesso restrito à equipe da JB. Perdeu a senha? Peça a um administrador para gerar
-        uma nova em Usuários.
+      <p className="border-t border-graf-200 pt-4 text-center text-[0.8125rem] leading-relaxed text-graf-500">
+        Acesso restrito à equipe da JB. Perdeu a senha? Peça a um administrador para
+        gerar uma nova em Usuários.
       </p>
     </form>
   );

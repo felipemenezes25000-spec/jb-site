@@ -213,7 +213,7 @@ export default async function PaginaVisita({ params }: { params: Promise<{ id: s
                   {visita.contract.plan?.name ?? "Sem plano vinculado"}
                 </p>
                 {visita.contract.endsAt ? (
-                  <p className="mt-1 text-xs text-graf-500">
+                  <p className="mt-1 text-[0.8125rem] text-graf-500">
                     Vigência até {formatarData(visita.contract.endsAt)}
                   </p>
                 ) : null}
@@ -234,7 +234,7 @@ export default async function PaginaVisita({ params }: { params: Promise<{ id: s
                   {visita.reminders.map((lembrete) => (
                     <li key={lembrete.id} className="flex items-center justify-between gap-3">
                       <span>{plural(lembrete.daysBefore, "dia antes", "dias antes")}</span>
-                      <span className="text-xs text-graf-500">
+                      <span className="text-[0.8125rem] text-graf-500">
                         {formatarDataHora(lembrete.sentAt)}
                       </span>
                     </li>

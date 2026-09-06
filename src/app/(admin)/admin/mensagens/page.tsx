@@ -98,10 +98,10 @@ export default async function PaginaMensagens({
   const falhas = contagem.falhou ?? 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <CabecalhoDeSecao
         titulo="Fila de mensagens"
-        descricao="Tudo que a plataforma tenta mandar por e-mail passa por aqui: recuperação de senha, confirmação de pedido, orçamento, chamado e lembrete de manutenção. O texto é remontado pelo modelo na hora do envio."
+        descricao="Todo e-mail que o site manda passa por aqui: recuperação de senha, confirmação de pedido, orçamento, chamado e lembrete de manutenção."
         etiqueta={
           <Etiqueta tom={pendentes > 0 ? "aguardando" : "ok"}>
             {plural(pendentes, "mensagem na fila", "mensagens na fila")}
@@ -114,8 +114,8 @@ export default async function PaginaMensagens({
         tom={diagnostico.entrega ? "info" : "atencao"}
         titulo={
           diagnostico.entrega
-            ? `Provedor de envio: ${diagnostico.provedor}`
-            : "Nenhum e-mail está saindo deste ambiente"
+            ? `Envio de e-mail ativo por ${diagnostico.provedor}`
+            : "Nenhum e-mail está saindo daqui"
         }
       >
         <p>{diagnostico.motivo}</p>
@@ -126,10 +126,10 @@ export default async function PaginaMensagens({
         ) : null}
         {!diagnostico.entrega ? (
           <p className="mt-1">
-            As mensagens continuam sendo montadas e ficam marcadas como{" "}
-            <strong>{STATUS_DA_FILA.simulado}</strong> — o conteúdo completo vai para o log do
-            servidor. Configure <span className="label-mono">RESEND_API_KEY</span> e{" "}
-            <span className="label-mono">EMAIL_FROM</span> para o envio começar.
+            As mensagens continuam sendo montadas e ficam guardadas como{" "}
+            <strong>{STATUS_DA_FILA.simulado}</strong>, sem chegar a ninguém. Para o envio
+            começar, o serviço de e-mail precisa ser ligado por quem cuida da instalação do
+            sistema.
           </p>
         ) : null}
       </Aviso>
@@ -144,8 +144,8 @@ export default async function PaginaMensagens({
 
       {falhas > 0 ? (
         <Aviso tom="erro" titulo={plural(falhas, "mensagem falhou", "mensagens falharam")}>
-          Cada linha guarda o motivo. Corrija o que causou a falha e use o botão “Reenviar” da
-          própria linha — a mensagem volta para a fila e é entregue na hora.
+          Cada linha mostra o que deu errado. Resolvido o problema, use o botão “Reenviar” da
+          própria linha: a mensagem volta para a fila e sai na hora.
         </Aviso>
       ) : null}
 
@@ -184,7 +184,7 @@ export default async function PaginaMensagens({
         <Vazio
           icone={Send}
           titulo="Nenhuma mensagem com esses filtros"
-          descricao="A fila recebe uma linha a cada e-mail que a plataforma decide mandar. Se está vazia, nada foi enfileirado ainda — ou os filtros estão estreitos demais."
+          descricao="Cada e-mail que o site manda deixa uma linha aqui. Se não há nenhuma, ou nada foi enviado ainda, ou os filtros estão estreitos demais."
         />
       ) : (
         <ol className="space-y-2">
@@ -231,15 +231,13 @@ export default async function PaginaMensagens({
 
                     {reservada ? (
                       <p className="mt-2 text-sm leading-relaxed text-graf-500">
-                        Reservada por uma execução do worker. Se travar, volta sozinha para a fila
-                        em até 10 minutos.
+                        Está sendo enviada agora. Se algo travar no caminho, ela volta sozinha
+                        para a fila em até dez minutos.
                       </p>
                     ) : null}
 
-                    <p className="mt-2 text-xs text-graf-500">
-                      Enfileirada em {formatarDataHora(linha.createdAt)}
-                      {" · "}
-                      <span className="label-mono">{linha.template}</span>
+                    <p className="mt-2 text-[0.8125rem] text-graf-500">
+                      Entrou na fila em {formatarDataHora(linha.createdAt)}
                     </p>
                   </div>
 
@@ -264,10 +262,9 @@ export default async function PaginaMensagens({
       ) : null}
 
       <p className="text-sm text-graf-500">
-        <MailWarning className="mr-1.5 inline size-4 align-text-bottom" aria-hidden />O cron
-        definido em <span className="label-mono">vercel.json</span> chama{" "}
-        <span className="label-mono">/api/fila</span> a cada dez minutos e processa até{" "}
-        {LIMITE_PADRAO} mensagens por execução. O botão acima faz a mesma coisa, na hora.
+        <MailWarning className="mr-1.5 inline size-4 align-text-bottom" aria-hidden />A fila é
+        processada sozinha a cada dez minutos, em lotes de até {LIMITE_PADRAO} mensagens. O botão
+        acima faz a mesma coisa, na hora.
       </p>
     </div>
   );

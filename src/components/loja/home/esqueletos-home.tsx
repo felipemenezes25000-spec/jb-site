@@ -1,5 +1,5 @@
 import { Esqueleto } from "@/components/ui/data";
-import { Grade, GradeConteudoApoio } from "@/components/ui/grade";
+import { GradeConteudoApoio, TrilhoOuGrade } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 
 /* ============================================================================
@@ -52,11 +52,11 @@ export function EsqueletoCategoriasHome() {
       <Aviso texto="Carregando as categorias do catálogo." />
       <div aria-hidden>
         <CabecalhoFalso />
-        <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="md">
+        <TrilhoOuGrade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="md" como="div">
           {Array.from({ length: 3 }, (_, i) => (
             <CartaoFalso key={i} />
           ))}
-        </Grade>
+        </TrilhoOuGrade>
       </div>
     </Secao>
   );
@@ -70,11 +70,11 @@ export function EsqueletoDestaquesHome() {
         <CabecalhoFalso />
         {/* Quatro, na mesma grade da faixa real: o esqueleto existe para a
             página não pular quando o conteúdo chega. */}
-        <Grade colunas={{ base: 1, sm: 2, xl: 4 }} espaco="md">
+        <TrilhoOuGrade colunas={{ base: 1, sm: 2, xl: 4 }} espaco="md" como="div">
           {Array.from({ length: 4 }, (_, i) => (
             <CartaoFalso key={i} />
           ))}
-        </Grade>
+        </TrilhoOuGrade>
       </div>
     </Secao>
   );
