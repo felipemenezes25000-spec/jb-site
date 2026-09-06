@@ -163,3 +163,106 @@ export function decidirMigracao(
     motivo: "A página está como a migração anterior a deixou e será atualizada.",
   };
 }
+
+
+/* ============================================================================
+   Descrição de categoria — a mesma decisão, com uma trava mais fraca
+
+   `Category` não tem `systemHash`. Sem ele, a única assinatura disponível é o
+   MD5 do texto legado registrado em `scripts/conteudo-categorias.ts`: enquanto
+   a descrição for exatamente aquela, é seguro corrigir; qualquer outra coisa
+   pode ser trabalho de alguém.
+
+   "Qualquer outra coisa" tinha uma exceção que faltava, e ela custou caro: a
+   descrição **vazia**. Categoria criada pelo seed nascia sem texto, e aí o MD5
+   do vazio não batia com o do legado — a migração concluia "alguém editou" e
+   ia embora. O resultado era a faixa "O que a JB vende e atende" em branco,
+   para sempre, com a migração dando um motivo falso para não consertar.
+
+   Vazio não é edição humana: é ausência. Ninguém escreve nada no painel e
+   salva. Preencher o que está vazio não apaga trabalho de ninguém — que é a
+   única coisa que esta camada existe para impedir.
+   ============================================================================ */
+
+/** MD5 do texto. É o que `conteudo-categorias.ts` registra como `md5Legado`. */
+export function md5DeTexto(texto: string): string {
+  return createHash("md5").update(texto ?? "", "utf8").digest("hex");
+}
+
+export type AcaoDeCategoria =
+  /** Já é o texto alvo: nada a fazer. */
+  | "em-dia"
+  /** Sem descrição nenhuma — recebe a nova, sem cópia (não há o que guardar). */
+  | "preencher-vazia"
+  /** Ainda é exatamente o texto do PHP: substitui, guardando cópia. */
+  | "substituir-legado"
+  /** Não é o legado nem está vazia: alguém escreveu. Não mexe. */
+  | "editada-por-humano";
+
+export type DecisaoDeCategoria = {
+  slug: string;
+  acao: AcaoDeCategoria;
+  escreve: boolean;
+  guardaCopia: boolean;
+  motivo: string;
+};
+
+export type AlvoDeCategoria = {
+  slug: string;
+  description: string;
+  /** MD5 do texto legado que esta correção substitui. */
+  md5Legado: string;
+};
+
+/**
+ * O que fazer com a descrição de uma categoria que existe no banco.
+ *
+ * Categoria ausente não chega aqui: quem executa decide se cria, e a migração
+ * institucional escolhe ignorar — criar categoria é decisão de catálogo.
+ */
+export function decidirCategoria(
+  descricaoAtual: string | null,
+  alvo: AlvoDeCategoria,
+): DecisaoDeCategoria {
+  const atual = descricaoAtual ?? "";
+
+  if (md5DeTexto(atual) === md5DeTexto(alvo.description)) {
+    return {
+      slug: alvo.slug,
+      acao: "em-dia",
+      escreve: false,
+      guardaCopia: false,
+      motivo: "A descrição publicada já é a desta migração.",
+    };
+  }
+
+  if (atual.trim() === "") {
+    return {
+      slug: alvo.slug,
+      acao: "preencher-vazia",
+      escreve: true,
+      guardaCopia: false,
+      motivo: "A categoria está sem descrição e receberá a nova.",
+    };
+  }
+
+  if (md5DeTexto(atual) === alvo.md5Legado) {
+    return {
+      slug: alvo.slug,
+      acao: "substituir-legado",
+      escreve: true,
+      guardaCopia: true,
+      motivo: "Descrição herdada do site anterior. Será substituída, com cópia guardada.",
+    };
+  }
+
+  return {
+    slug: alvo.slug,
+    acao: "editada-por-humano",
+    escreve: false,
+    guardaCopia: false,
+    motivo:
+      "A descrição não é a legada nem está vazia: alguém a escreveu. " +
+      "A migração não sobrescreve edição humana.",
+  };
+}

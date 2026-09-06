@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  decidirCategoria,
   decidirMigracao,
   hashDeCorpo,
   MARCA_MANUAL,
+  md5DeTexto,
   type PaginaAtual,
 } from "@/lib/conteudo/migracao";
 
@@ -209,5 +211,69 @@ describe("conteúdo institucional publicado", () => {
       expect(categoria.description).not.toContain("ultrasônica");
       expect(categoria.description).not.toContain("style=");
     }
+  });
+});
+
+/* ============================================================================
+   Descrição de categoria
+
+   O caso que motivou estes testes: as seis categorias do banco de preview
+   estavam com `description` vazia, e a migração as reportava como "alguém
+   editou. Ignorada." — recusando-se a preencher texto público que ninguém
+   havia escrito, com um motivo que não era verdade.
+
+   Vazio é ausência, não autoria. O resto da regra continua conservador.
+   ============================================================================ */
+
+const LEGADO_CAT = '<span style="color: #fd0003;">&bull;</span> Auto claves';
+const NOVA_CAT = "<ul>\n<li>Autoclaves</li>\n</ul>";
+
+const alvoCat = {
+  slug: "bioseguranca",
+  description: NOVA_CAT,
+  md5Legado: md5DeTexto(LEGADO_CAT),
+};
+
+describe("decidirCategoria", () => {
+  it("preenche descrição vazia — vazio não é edição humana", () => {
+    const d = decidirCategoria("", alvoCat);
+    expect(d.acao).toBe("preencher-vazia");
+    expect(d.escreve).toBe(true);
+    // Nada a preservar: cópia de vazio seria ruído no arquivo de backup.
+    expect(d.guardaCopia).toBe(false);
+  });
+
+  it("trata só espaço em branco como vazio", () => {
+    expect(decidirCategoria("   \n  ", alvoCat).acao).toBe("preencher-vazia");
+  });
+
+  it("trata null como vazio", () => {
+    expect(decidirCategoria(null, alvoCat).acao).toBe("preencher-vazia");
+  });
+
+  it("substitui o texto legado, guardando cópia", () => {
+    const d = decidirCategoria(LEGADO_CAT, alvoCat);
+    expect(d.acao).toBe("substituir-legado");
+    expect(d.escreve).toBe(true);
+    expect(d.guardaCopia).toBe(true);
+  });
+
+  it("não toca em descrição escrita por gente", () => {
+    const d = decidirCategoria("<p>Texto que a equipe escreveu no painel.</p>", alvoCat);
+    expect(d.acao).toBe("editada-por-humano");
+    expect(d.escreve).toBe(false);
+  });
+
+  it("é idempotente: rodar de novo não reescreve", () => {
+    const d = decidirCategoria(NOVA_CAT, alvoCat);
+    expect(d.acao).toBe("em-dia");
+    expect(d.escreve).toBe(false);
+  });
+
+  it("descrição vazia vence a comparação com legado vazio", () => {
+    // Se algum dia o legado registrado for a string vazia, "em-dia" tem de
+    // ganhar de "preencher-vazia" — senão a migração escreveria em laço.
+    const alvoVazio = { slug: "x", description: "", md5Legado: md5DeTexto("") };
+    expect(decidirCategoria("", alvoVazio).acao).toBe("em-dia");
   });
 });

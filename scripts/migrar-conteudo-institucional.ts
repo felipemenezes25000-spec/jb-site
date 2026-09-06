@@ -27,13 +27,12 @@
    `tests/unitarios/migracao-conteudo.test.ts`.
    ============================================================================ */
 
-import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { PrismaClient } from "@prisma/client";
 
-import { decidirMigracao, hashDeCorpo } from "../src/lib/conteudo/migracao";
+import { decidirCategoria, decidirMigracao, hashDeCorpo } from "../src/lib/conteudo/migracao";
 import { CONTEUDO_CATEGORIAS } from "./conteudo-categorias";
 import { CONTEUDO_INSTITUCIONAL } from "./conteudo-institucional";
 
@@ -53,17 +52,14 @@ function alvoDoBanco(url: string | undefined) {
   }
 }
 
-function md5(texto: string) {
-  return createHash("md5").update(texto ?? "", "utf8").digest("hex");
-}
-
 /**
  * Descrições de categoria.
  *
- * Sem `systemHash` na tabela, a trava é o hash do texto legado: a linha só é
- * corrigida enquanto ainda for exatamente o que veio do PHP. Editou no
- * painel, a migração para de enxergar aquela linha — para sempre, e de
- * propósito.
+ * A regra vive em `decidirCategoria`, no módulo puro, pelo mesmo motivo que a
+ * das páginas: decisão escrita no meio de um laço com `await` não é testada, e
+ * foi exatamente ali que passou despercebido por semanas que descrição vazia
+ * era classificada como edição humana — a migração se recusava a preencher
+ * categoria que ninguém tinha tocado, alegando que alguém a tinha tocado.
  *
  * A cópia de segurança vai para um arquivo, não para `PageRevision`: aquela
  * tabela é de páginas e tem chave estrangeira para `Page`. Descrição de
@@ -89,23 +85,21 @@ async function migrarCategorias() {
       continue;
     }
 
-    if (md5(atual.description) === md5(alvo.description)) {
-      console.log(`  · /categoria/${alvo.slug} — já corrigida.`);
+    const decisao = decidirCategoria(atual.description, alvo);
+
+    if (!decisao.escreve) {
+      const marca = decisao.acao === "em-dia" ? "·" : "!";
+      console.log(`  ${marca} /categoria/${alvo.slug} — ${decisao.motivo}`);
+      if (decisao.acao === "editada-por-humano") bloqueadas++;
       continue;
     }
 
-    if (md5(atual.description) !== alvo.md5Legado) {
-      bloqueadas++;
-      console.log(
-        `  ! /categoria/${alvo.slug} — a descrição não é mais a legada; alguém editou. Ignorada.`,
-      );
-      continue;
+    if (decisao.guardaCopia) {
+      backup[alvo.slug] = { name: atual.name, description: atual.description };
     }
-
-    backup[alvo.slug] = { name: atual.name, description: atual.description };
 
     if (!aplicar) {
-      console.log(`  → /categoria/${alvo.slug} — seria corrigida.`);
+      console.log(`  → /categoria/${alvo.slug} — ${decisao.motivo}`);
       escritas++;
       continue;
     }
