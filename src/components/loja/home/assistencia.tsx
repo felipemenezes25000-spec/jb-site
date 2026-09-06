@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight, ClipboardCheck, Headphones, MessageCircle, PackageCheck, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
@@ -96,9 +97,9 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
           <div className="relative z-10 mt-8 flex flex-wrap items-center gap-2 border-t border-white/10 pt-5 text-xs text-white/55">
             <Headphones className="size-4 text-jb-300" aria-hidden />
             <span>Precisa só entender qual equipamento faz sentido?</span>
-            <a href="/orcamento" className="inline-flex min-h-9 items-center gap-1 font-extrabold text-white hover:text-jb-200">
+            <Link href="/orcamento" className="inline-flex min-h-9 items-center gap-1 font-extrabold text-white hover:text-jb-200">
               Peça orientação à equipe <ArrowRight className="size-3.5" aria-hidden />
-            </a>
+            </Link>
           </div>
         </div>
       </div>
