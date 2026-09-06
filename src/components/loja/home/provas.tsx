@@ -30,28 +30,28 @@ export function ProvasObjetivas({
       : { icone: Wrench, titulo: "Assistência própria", detalhe: cidade ? `Equipe JB em ${cidade}.` : "Equipe técnica da própria JB." },
     contagemProva("equipamentos", equipamentos)
       ? { icone: Package, titulo: `${equipamentos} equipamentos`, detalhe: "Catálogo com condição e disponibilidade atuais." }
-      : { icone: Package, titulo: "Novo, seminovo e recondicionado", detalhe: "A condição real aparece em cada anúncio." },
+      : { icone: Package, titulo: "Novos, seminovos e recondicionados", detalhe: "A condição real aparece em cada anúncio." },
     { icone: ClipboardList, titulo: "Pós-venda organizado", detalhe: "Compras, chamados e histórico na Área da Clínica." },
   ];
 
   return (
-    <section aria-labelledby="titulo-provas-home" className="border-b border-jb-100 bg-white">
+    <section aria-labelledby="titulo-provas-home" className="bg-jb-500 text-white">
       <h2 id="titulo-provas-home" className="sr-only">Por que escolher a JB</h2>
-      <div className="container-jb max-w-[112rem]">
+      <div className="container-jb max-w-[104rem]">
         <ul className="grid sm:grid-cols-2 lg:grid-cols-4">
           {provas.map((prova, indice) => {
             const Icone = prova.icone;
             return (
               <li
                 key={prova.titulo}
-                className={`flex min-w-0 gap-4 py-5 sm:px-5 sm:py-6 lg:px-7 xl:px-9 ${indice > 0 ? "lg:border-l lg:border-jb-100" : ""}`}
+                className={`flex min-w-0 gap-3 py-5 sm:px-5 lg:px-7 ${indice > 0 ? "lg:border-l lg:border-white/25" : ""}`}
               >
-                <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full bg-jb-500 text-white">
-                  <Icone className="size-5" />
+                <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/45 text-white">
+                  <Icone className="size-4.5" />
                 </span>
                 <div className="min-w-0 self-center">
-                  <p className="text-[1.02rem] font-extrabold leading-tight text-graf-950">{prova.titulo}</p>
-                  <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-graf-500">{prova.detalhe}</p>
+                  <p className="text-[0.95rem] font-extrabold leading-tight text-white">{prova.titulo}</p>
+                  <p className="mt-1 text-[0.78rem] leading-relaxed text-white/78">{prova.detalhe}</p>
                 </div>
               </li>
             );
