@@ -59,7 +59,7 @@ export function SecaoAreaClinica() {
               Criar conta da clínica
               <ArrowRight className="size-4" aria-hidden />
             </LinkBotao>
-            <LinkBotao href="/entrar" variante="claro" tamanho="lg" className="border-white/35 bg-transparent text-white hover:bg-white hover:text-jb-700">
+            <LinkBotao href="/entrar" variante="contorno-claro" tamanho="lg">
               Já tenho conta
             </LinkBotao>
           </div>
