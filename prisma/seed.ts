@@ -1,8 +1,11 @@
 /**
  * Carga base da plataforma.
  *
- * Só conteúdo real: as configurações e o texto institucional vieram do site
- * anterior (prisma/conteudo-legado.json, extraído do MySQL do backup).
+ * Só conteúdo real. As configurações (contato, endereço, redes) vêm do site
+ * anterior, em prisma/conteudo-legado.json, extraído do MySQL do backup. Já o
+ * texto institucional de Sobre e Estrutura vem de
+ * scripts/conteudo-institucional.ts — a mesma fonte da migração, para que um
+ * ambiente novo nasça com o texto certo em vez de com o legado do PHP.
  * Nada de preço, prazo, garantia ou depoimento inventado.
  *
  * Dados de demonstração ficam em prisma/seed-demo.ts, separados de propósito.
@@ -16,7 +19,10 @@ import path from "node:path";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 
+import { hashDeCorpo } from "../src/lib/conteudo/migracao";
 import { SETTING_DEFAULTS, SETTING_FIELDS, type SettingKey } from "../src/lib/settings";
+import { CONTEUDO_CATEGORIAS } from "../scripts/conteudo-categorias";
+import { CONTEUDO_INSTITUCIONAL } from "../scripts/conteudo-institucional";
 
 const prisma = new PrismaClient();
 
@@ -37,6 +43,23 @@ const legado: Legado | null = fs.existsSync(arquivoLegado)
  * do site antigo e a migração as copia para Category. Num banco novo (preview,
  * um ambiente recém-criado) não há o que copiar, então o seed as cria aqui.
  */
+/**
+ * Descrição pública de cada frente, pela mesma fonte que a migração usa.
+ *
+ * Sem isto, as categorias nasciam com `description` vazia — e aí a migração
+ * não as corrigia: sem `systemHash` em `Category`, a trava dela é o hash do
+ * texto legado, e vazio não é o legado. Ela reportava "alguém editou" para
+ * uma linha que ninguém tinha tocado, e a faixa "O que a JB vende e atende"
+ * ficava sem texto para sempre num ambiente novo.
+ *
+ * `pecas-e-acessorios` não está na lista da migração — ela não veio do site
+ * em PHP. Nasce sem descrição, e quem escreve a dela é o painel: inventar
+ * aqui um texto comercial seria exatamente o que o escopo proíbe.
+ */
+const DESCRICAO_DA_CATEGORIA = new Map(
+  CONTEUDO_CATEGORIAS.map((c) => [c.slug, c.description] as const),
+);
+
 const CATEGORIAS = [
   { slug: "bioseguranca", name: "Biossegurança", icon: "ShieldCheck", order: 1 },
   { slug: "profilaxia", name: "Profilaxia", icon: "Sparkles", order: 2 },
@@ -91,22 +114,6 @@ async function main() {
   console.log("→ páginas institucionais");
   const paginas = [
     {
-      slug: "sobre",
-      title: "Sobre a JB",
-      lead: "Empresa familiar de assistência técnica odontológica, em atividade desde 2011.",
-      body: institucional.get(4)?.texto ?? "",
-      seoTitle: "Sobre a JB",
-      seoDescription: legado?.seo.find((s) => s.pagina === "empresa.php")?.descricao ?? "",
-    },
-    {
-      slug: "estrutura",
-      title: "Nossa estrutura",
-      lead: "Bancada técnica, gestão e estoque de peças na capital paulista.",
-      body: institucional.get(5)?.texto ?? "",
-      seoTitle: "Nossa estrutura",
-      seoDescription: legado?.seo.find((s) => s.pagina === "estrutura.php")?.descricao ?? "",
-    },
-    {
       slug: "privacidade",
       title: "Política de privacidade",
       lead: "Como a JB trata os dados de quem usa o site.",
@@ -153,6 +160,48 @@ async function main() {
     });
   }
 
+  /*
+   * Sobre e Estrutura não nascem mais com o texto do site em PHP.
+   *
+   * Até aqui elas eram criadas com `institucional.get(4|5).texto` — o corpo
+   * legado, com erro de grafia, missão/visão/valores e superlativo sem prova.
+   * Um ambiente novo nascia errado e só ficava certo se alguém lembrasse de
+   * rodar `pnpm conteudo:migrar` depois. Instalação correta não pode depender
+   * de memória de operador.
+   *
+   * A fonte agora é a mesma da migração (`scripts/conteudo-institucional.ts`),
+   * uma só, para as duas não divergirem. O legado continua em
+   * `prisma/conteudo-legado.json` e em `PageRevision` — como histórico, que é
+   * o lugar dele, e não como padrão de instalação.
+   *
+   * `systemHash` é gravado na criação para fechar o ciclo com
+   * `decidirMigracao`: a página nasce marcada como escrita por migração e com
+   * o hash do corpo que ela tem. A execução seguinte de `conteudo:migrar` lê
+   * "em-dia" e não escreve nada — sem segunda revisão, sem `updatedAt` novo.
+   *
+   * O `update` não reafirma nada de propósito. Estas duas páginas têm dono: a
+   * migração institucional e o painel. Se o seed reescrevesse título ou SEO
+   * aqui, `db:seed` desfaria em silêncio o que uma pessoa editou — exatamente
+   * o que `src/lib/conteudo/migracao.ts` existe para impedir.
+   */
+  for (const conteudo of CONTEUDO_INSTITUCIONAL) {
+    await prisma.page.upsert({
+      where: { slug: conteudo.slug },
+      update: {},
+      create: {
+        slug: conteudo.slug,
+        title: conteudo.title,
+        eyebrow: conteudo.eyebrow,
+        lead: conteudo.lead,
+        body: conteudo.body,
+        seoTitle: conteudo.seoTitle,
+        seoDescription: conteudo.seoDescription,
+        systemHash: hashDeCorpo(conteudo.body),
+        editable: true,
+      },
+    });
+  }
+
   /* --------------------------------------------------------- categorias */
   console.log("→ categorias");
   for (const categoria of CATEGORIAS) {
@@ -161,7 +210,12 @@ async function main() {
       // o nome e a descrição podem ter sido ajustados no painel; só o ícone
       // e a ordem são reafirmados
       update: { icon: categoria.icon, order: categoria.order },
-      create: { ...categoria, published: true, featured: true },
+      create: {
+        ...categoria,
+        description: DESCRICAO_DA_CATEGORIA.get(categoria.slug) ?? "",
+        published: true,
+        featured: true,
+      },
     });
   }
   console.log(`   ${await prisma.category.count()} categorias no catálogo`);

@@ -146,6 +146,7 @@ jobs:
         run: |
           pnpm db:deploy
           pnpm db:seed
+          pnpm db:demo
           pnpm db:demo:operacao
         env:
           DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
@@ -245,6 +246,7 @@ jobs:
         run: |
           pnpm db:deploy
           pnpm db:seed
+          pnpm db:demo
           pnpm db:demo:operacao
         env:
           DATABASE_URL: postgresql://jb:jb@localhost:5432/jb

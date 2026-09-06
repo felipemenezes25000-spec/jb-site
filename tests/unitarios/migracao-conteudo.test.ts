@@ -7,6 +7,9 @@ import {
   type PaginaAtual,
 } from "@/lib/conteudo/migracao";
 
+import { CONTEUDO_CATEGORIAS } from "../../scripts/conteudo-categorias";
+import { CONTEUDO_INSTITUCIONAL } from "../../scripts/conteudo-institucional";
+
 /* ============================================================================
    Decisão da migração de conteúdo
 
@@ -117,5 +120,94 @@ describe("decidirMigracao", () => {
     const d = decidirMigracao(pagina({ body: NOVO, systemHash: hashDeCorpo(LEGADO) }), NOVO, "sobre");
     expect(d.acao).toBe("em-dia");
     expect(d.escreve).toBe(false);
+  });
+});
+
+
+/* ============================================================================
+   Contrato entre o seed e a migração
+
+   `prisma/seed.ts` cria Sobre e Estrutura a partir de
+   `scripts/conteudo-institucional.ts` e grava `systemHash` na criação. Isso
+   existe para que um ambiente novo (preview, máquina de alguém que acabou de
+   clonar, banco efêmero da CI) nasça com o texto certo — antes ele nascia com
+   o corpo herdado do site em PHP e só ficava correto se alguém lembrasse de
+   rodar `pnpm conteudo:migrar` depois.
+
+   O que estes testes seguram é o encaixe: nascer certo e a migração enxergar
+   isso como "em dia". Se o seed voltar a gravar `systemHash` nulo, ou se o
+   texto do arquivo de conteúdo divergir do que foi semeado, a decisão deixa de
+   ser "em-dia" e um destes casos cai.
+   ============================================================================ */
+
+describe("ambiente novo nasce em dia", () => {
+  it.each(CONTEUDO_INSTITUCIONAL.map((c) => [c.slug, c] as const))(
+    "/%s semeada pelo seed não dá trabalho à migração",
+    (slug, conteudo) => {
+      // Exatamente o que o seed grava no `create`.
+      const semeada: PaginaAtual = {
+        slug,
+        body: conteudo.body,
+        systemHash: hashDeCorpo(conteudo.body),
+      };
+
+      const d = decidirMigracao(semeada, conteudo.body, slug);
+
+      expect(d.acao).toBe("em-dia");
+      expect(d.escreve).toBe(false);
+      expect(d.guardaCopia).toBe(false);
+    },
+  );
+
+  it("semear com systemHash nulo seria a regressão — e ela é visível", () => {
+    // O estado anterior à correção: corpo certo, `systemHash` nulo. A migração
+    // ainda escreveria, e este teste existe para que voltar atrás doa.
+    const [primeira] = CONTEUDO_INSTITUCIONAL;
+    const semHash: PaginaAtual = { slug: primeira.slug, body: primeira.body, systemHash: null };
+
+    expect(decidirMigracao(semHash, primeira.body, primeira.slug).acao).toBe("em-dia");
+
+    const comLegado: PaginaAtual = { slug: primeira.slug, body: LEGADO, systemHash: null };
+    expect(decidirMigracao(comLegado, primeira.body, primeira.slug).acao).toBe(
+      "substituir-legado",
+    );
+  });
+});
+
+describe("conteúdo institucional publicado", () => {
+  // Os termos que a migração existe para tirar do ar. Se um deles reaparecer no
+  // arquivo de conteúdo, ele volta ao site — e agora também ao seed.
+  const PROIBIDOS = [
+    "auto claves",
+    "referencia",
+    "responsavel",
+    "renomados",
+    "vai de encontro",
+    "Gerencia",
+    "100% de qualidade",
+    "Missão",
+    "Visão",
+    "altamente preparados",
+  ];
+
+  it.each(CONTEUDO_INSTITUCIONAL.map((c) => [c.slug, c] as const))(
+    "/%s não carrega nenhum termo do texto legado",
+    (_slug, conteudo) => {
+      const texto = `${conteudo.title} ${conteudo.lead} ${conteudo.body}`;
+      for (const termo of PROIBIDOS) {
+        expect(texto).not.toContain(termo);
+      }
+    },
+  );
+
+  it("nenhuma descrição de categoria repete o texto que ela corrige", () => {
+    // A trava da migração em `Category` é o MD5 do legado. Descrição nova igual
+    // à legada seria uma correção que não corrige nada.
+    for (const categoria of CONTEUDO_CATEGORIAS) {
+      expect(categoria.description.trim().length).toBeGreaterThan(0);
+      expect(categoria.description).not.toContain("Auto claves");
+      expect(categoria.description).not.toContain("ultrasônica");
+      expect(categoria.description).not.toContain("style=");
+    }
   });
 });
