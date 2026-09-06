@@ -11,6 +11,7 @@ import {
   TIPOS_PROBLEMA,
   type Operacao,
 } from "@/components/assistencia/rotulos";
+import { LeitorDeEtiqueta } from "@/components/conta/mj-leitor-etiqueta";
 import { EnvioDeFotos } from "@/components/assistencia/envio-de-fotos";
 import { Verificacao } from "@/components/assistencia/verificacao";
 import { abrirChamadoPublico, type EstadoAssistencia } from "@/app/acoes/assistencia";
@@ -500,6 +501,20 @@ export function AssistenteChamado({
                     ajuda="Costuma ficar em uma etiqueta na traseira ou na base do aparelho."
                     autoComplete="off"
                     className="sm:max-w-sm"
+                  />
+
+                  {/* A mesma leitura de etiqueta do cadastro de equipamento.
+                      Aqui ela poupa digitação de quem está com o aparelho na
+                      frente e o celular na mão — e continua exigindo conferência
+                      antes de preencher qualquer campo. */}
+                  <LeitorDeEtiqueta
+                    aoConfirmar={(campos) =>
+                      alterar({
+                        marca: campos.marca || dados.marca,
+                        modelo: campos.modelo || dados.modelo,
+                        serie: campos.serie || dados.serie,
+                      })
+                    }
                   />
                 </Grupo>
               )}

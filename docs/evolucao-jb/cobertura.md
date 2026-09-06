@@ -366,6 +366,23 @@ de verdade.
 | 20.B | QR público leva à evidência da unidade, sem token privado | implementado — `/admin/estoque/certificados`; só certificação publicada, e o código público já é opaco |
 | 20.A.8 | Cenários de ID trocado, conta errada, sem permissão | validado localmente — os três têm teste; desativado continua visível ao titular |
 
+### Fase 17 — scanner de etiqueta e OCR com confirmação humana (seção 21)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 21.1 | Ação "Fotografe a etiqueta" no cadastro e na assistência | implementado — nos dois formulários, com `capture` da câmera traseira |
+| 21.2 | Reaproveitar captura segura da fase 9 | implementado — tipo real pelos bytes, mesmo `detectarTipo` |
+| 21.3 | Extrair marca, modelo, série e voltagem; preservar o original | validado localmente — 23 testes; o bruto viaja junto e a tela mostra quando diverge |
+| 21.4 | Escolher mecanismo e documentar a decisão | documentado — `docs/evolucao-jb/ocr-etiqueta.md`, três opções avaliadas |
+| 21.5 | Sem credencial: contrato, adaptador, testes e fallback manual | **cumprido** — nenhuma extração fingida; `sem_mecanismo` é dito com todas as letras |
+| 21.6 | Validar e limitar a resposta no servidor; texto é dado | validado localmente — 60 linhas, 200 caracteres, sem controle; resposta fora do formato é recusada |
+| 21.7 | Frase de conferência, campos editáveis, incerteza por campo | implementado — a frase do escopo ao pé da letra; confiança nula é "não sei", não zero |
+| 21.8 | Confirmação antes de persistir; não sobrescrever serial conferido | validado localmente — `podeGravar`, com teste para cada recusa |
+| 21.9 | Marca/modelo ausentes, imagem ruim, O/0 e I/1, várias etiquetas | validado localmente — fixtures sintéticas para os seis casos |
+| 21.10 | OCR não determina defeito, segurança, originalidade ou garantia | implementado — frase em código, exibida em toda leitura, com teste |
+| 21.11 | Limitar requisições e custo; sem processar a cada render | implementado — 6 por minuto; a leitura só roda no clique, e a foto não é guardada |
+| 21.12 | Fixtures de etiqueta boa, ruim, ambígua e falha do provedor | validado localmente — 23 testes |
+
 ---
 
 ## Matriz de cenários obrigatórios (seção 26)
@@ -396,7 +413,7 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | Instalação reenviada | não iniciado |
 | QR privado sem sessão | validado localmente — redireciona para login com retorno construído; nada privado no HTML antes |
 | QR público | implementado — aponta para `/verificar/<código>`; sem série, sem token, sem documento |
-| OCR ambíguo/falha | não iniciado |
+| OCR ambíguo/falha | validado localmente — alternativas em vez de palpite; falha e resposta inválida têm motivo próprio e caem no manual |
 | Busca com rascunho/dado privado | não iniciado |
 | Comparador/TCO com dado faltante | não iniciado |
 | Indicador sem base temporal | validado localmente — parque novo não produz percentual; equipamento sem periodicidade não produz nota |

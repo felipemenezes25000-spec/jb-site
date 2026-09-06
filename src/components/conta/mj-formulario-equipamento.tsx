@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 import {
@@ -9,6 +9,7 @@ import {
   type EstadoMinhaJb,
 } from "@/app/acoes/minha-jb";
 import { Anexos } from "@/components/conta/mj-anexos";
+import { LeitorDeEtiqueta } from "@/components/conta/mj-leitor-etiqueta";
 import { Botao, LinkBotao } from "@/components/ui/button";
 import { Area, Campo, Selecao } from "@/components/ui/form";
 
@@ -82,6 +83,17 @@ export function FormularioEquipamento({
   const erroDe = (campo: string) => (estado.campo === campo ? estado.erro : undefined);
   const erroGeral = estado.erro && !estado.campo ? estado.erro : null;
 
+  /* Os quatro campos que a leitura de etiqueta pode preencher sao controlados;
+     o resto do formulario continua nao-controlado. Foi a mudanca menor que
+     permite a sugestao chegar aos campos sem reescrever o formulario inteiro —
+     e sem `ref`, que faria o valor da tela e o valor do React divergirem. */
+  const [etiqueta, setEtiqueta] = useState({
+    marca: valores.marca,
+    modelo: valores.modelo,
+    serie: valores.serie,
+    voltagem: valores.voltagem,
+  });
+
   return (
     <form action={acao} noValidate className="space-y-6">
       {modo === "editar" && id ? <input type="hidden" name="id" value={id} /> : null}
@@ -110,6 +122,22 @@ export function FormularioEquipamento({
         </p>
       ) : null}
 
+      {/* A leitura da etiqueta preenche os quatro campos abaixo — depois de a
+          pessoa conferir e confirmar. Nada dela vai direto para o cadastro. */}
+      <LeitorDeEtiqueta
+        aoConfirmar={(campos) =>
+          setEtiqueta((atual) => ({
+            /* Sugestao vazia nao apaga o que ja estava preenchido: quem
+               digitou a marca a mao e depois fotografou a etiqueta nao pode
+               perder o que escreveu porque a foto saiu cortada. */
+            marca: campos.marca || atual.marca,
+            modelo: campos.modelo || atual.modelo,
+            serie: campos.serie || atual.serie,
+            voltagem: campos.voltagem || atual.voltagem,
+          }))
+        }
+      />
+
       <fieldset className="rounded-xl border border-graf-200 bg-white p-5 shadow-card">
         <legend className="px-1 text-sm font-bold text-graf-950">Identificação</legend>
 
@@ -130,7 +158,8 @@ export function FormularioEquipamento({
             rotulo="Marca"
             name="marca"
             maxLength={80}
-            defaultValue={valores.marca}
+            value={etiqueta.marca}
+            onChange={(evento) => setEtiqueta({ ...etiqueta, marca: evento.target.value })}
             erro={erroDe("marca")}
           />
 
@@ -138,7 +167,8 @@ export function FormularioEquipamento({
             rotulo="Modelo"
             name="modelo"
             maxLength={80}
-            defaultValue={valores.modelo}
+            value={etiqueta.modelo}
+            onChange={(evento) => setEtiqueta({ ...etiqueta, modelo: evento.target.value })}
             erro={erroDe("modelo")}
           />
 
@@ -146,7 +176,8 @@ export function FormularioEquipamento({
             rotulo="Número de série"
             name="serie"
             maxLength={80}
-            defaultValue={valores.serie}
+            value={etiqueta.serie}
+            onChange={(evento) => setEtiqueta({ ...etiqueta, serie: evento.target.value })}
             ajuda="Costuma estar na etiqueta atrás ou embaixo do equipamento."
             erro={erroDe("serie")}
           />
@@ -168,7 +199,8 @@ export function FormularioEquipamento({
           <Selecao
             rotulo="Voltagem"
             name="voltagem"
-            defaultValue={valores.voltagem}
+            value={etiqueta.voltagem}
+            onChange={(evento) => setEtiqueta({ ...etiqueta, voltagem: evento.target.value })}
             erro={erroDe("voltagem")}
           >
             <option value="">Não sei informar</option>
