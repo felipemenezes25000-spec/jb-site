@@ -63,6 +63,8 @@ export default async function AcessoLayout({ children }: { children: React.React
         telefone={s.telefone}
         whatsapp={s.whatsapp}
         horario={s.horario}
+        desde={s.empresa_desde}
+        cidade={s.endereco_cidade}
       />
       <main id="conteudo" className="flex-1">
         <div className="container-jb py-10 lg:py-16">{children}</div>

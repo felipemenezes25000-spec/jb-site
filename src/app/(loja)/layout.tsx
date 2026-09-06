@@ -38,6 +38,8 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
         telefone={s.telefone}
         whatsapp={s.whatsapp}
         horario={s.horario}
+        desde={s.empresa_desde}
+        cidade={s.endereco_cidade}
       />
       <main id="conteudo" className="flex-1">
         {children}

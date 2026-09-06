@@ -41,9 +41,48 @@ type Props = {
   telefone: string;
   whatsapp: string;
   horario: string;
+  desde: string;
+  cidade: string;
 };
 
+/**
+ * Faixa de recados do topo. O trilho é a lista repetida duas vezes andando
+ * metade da própria largura: a emenda não aparece. Para no hover para quem
+ * quiser ler, e some inteiro para quem pediu menos movimento.
+ */
+const CSS_FAIXA = `
+@keyframes jb-faixa { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+.jb-faixa-trilho { animation: jb-faixa 34s linear infinite; will-change: transform; }
+.jb-faixa:hover .jb-faixa-trilho { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .jb-faixa-trilho { animation: none; } }
+`;
+
 const MENSAGEM_WHATSAPP = "Olá! Vim pelo site da JB.";
+
+/**
+ * Recados da faixa.
+ *
+ * A régua aqui é estreita de propósito: a faixa aparece no topo de toda página,
+ * e no Brasil oferta veiculada vincula quem anuncia (CDC art. 30 e 35). Então
+ * cada frase só descreve o que o site já entrega — uma página que existe, um
+ * dado que está no banco — e nunca promete prazo, cobertura ou serviço que na
+ * verdade é vendido à parte. Instalação, por exemplo, é adicional de pedido:
+ * anunciá-la aqui como se acompanhasse a entrega criaria obrigação.
+ *
+ * Cada recado só entra se o dado que o sustenta existir.
+ */
+function recadosDaFaixa(desde: string, cidade: string) {
+  return [
+    "Equipamentos, assistência e pós-venda no mesmo relacionamento.",
+    "Cada anúncio traz a condição do equipamento.",
+    cidade.trim()
+      ? `Assistência técnica própria — equipe JB em ${cidade}.`
+      : "Assistência técnica com equipe própria.",
+    desde.trim() ? `Em atividade desde ${desde}.` : null,
+    "Compare equipamentos lado a lado antes de decidir.",
+    "Acompanhe seus equipamentos e chamados na Área da Clínica.",
+  ].filter((frase): frase is string => Boolean(frase));
+}
 
 /**
  * Cabeçalho público.
@@ -60,6 +99,8 @@ export function Cabecalho({
   telefone,
   whatsapp,
   horario,
+  desde,
+  cidade,
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
@@ -149,6 +190,7 @@ export function Cabecalho({
     }, 160);
   }
 
+  const recados = recadosDaFaixa(desde, cidade);
   const temBarraUtilidade = Boolean(horario || telefone || whatsapp);
 
   return (
@@ -162,27 +204,46 @@ export function Cabecalho({
 
       {temBarraUtilidade ? (
         <div className="hidden bg-jb-600 text-white lg:block">
-          <div className="mx-auto flex h-9 max-w-[100rem] items-center justify-between gap-8 px-8 text-[0.72rem]">
+          <style>{CSS_FAIXA}</style>
+          <div className="mx-auto flex h-11 max-w-[100rem] items-center gap-8 px-8 text-[0.82rem]">
             {horario ? (
-              <p className="flex items-center gap-2 text-white/85">
-                <Clock className="size-3.5 shrink-0" aria-hidden />
+              <p className="flex shrink-0 items-center gap-2 font-medium text-white/85">
+                <Clock className="size-4 shrink-0" aria-hidden />
                 {horario}
               </p>
             ) : (
               <span />
             )}
 
-            <p className="hidden font-semibold tracking-[-0.01em] text-white/90 2xl:block">
-              Equipamentos, assistência e pós-venda no mesmo relacionamento.
-            </p>
+            <div
+              className="jb-faixa relative hidden min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_5%,#000_95%,transparent)] xl:block"
+              aria-label="Destaques da JB"
+            >
+              <ul className="jb-faixa-trilho flex w-max items-center">
+                {[0, 1].map((copia) =>
+                  recados.map((recado, posicao) => (
+                    <li
+                      key={`${copia}-${posicao}`}
+                      className="flex shrink-0 items-center gap-8 pr-8"
+                      aria-hidden={copia === 1 ? true : undefined}
+                    >
+                      <span className="whitespace-nowrap font-semibold tracking-[-0.01em] text-white/95">
+                        {recado}
+                      </span>
+                      <span className="size-1 shrink-0 rotate-45 bg-white/45" aria-hidden />
+                    </li>
+                  )),
+                )}
+              </ul>
+            </div>
 
-            <div className="flex items-center gap-5">
+            <div className="ml-auto flex shrink-0 items-center gap-5">
               {telefone ? (
                 <a
                   href={telHref(telefone)}
-                  className="flex h-9 items-center gap-2 rounded-xs text-white/90 transition-colors hover:text-white"
+                  className="flex h-11 items-center gap-2 rounded-xs font-medium text-white/90 transition-colors hover:text-white"
                 >
-                  <Phone className="size-3.5 shrink-0" aria-hidden />
+                  <Phone className="size-4 shrink-0" aria-hidden />
                   {telefone}
                 </a>
               ) : null}
@@ -192,7 +253,7 @@ export function Cabecalho({
                   href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-9 items-center gap-2 rounded-xs font-semibold text-white transition-colors hover:text-white/80"
+                  className="flex h-11 items-center gap-2 rounded-xs font-semibold text-white transition-colors hover:text-white/80"
                 >
                   <span className="size-1.5 shrink-0 rounded-full bg-white" aria-hidden />
                   WhatsApp {whatsapp}
