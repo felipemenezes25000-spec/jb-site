@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { ServiceRequestStatus } from "@prisma/client";
 import {
   CalendarPlus,
+  ClipboardCheck,
   ClipboardList,
   Eye,
   EyeOff,
@@ -201,6 +202,18 @@ export default async function PaginaChamado({
             <EtiquetaChamado status={chamado.status} />
             <EtiquetaUrgencia urgencia={chamado.urgency} />
           </>
+        }
+        acoes={
+          /* A tela que o técnico abre no celular antes de sair. Ela não
+             substitui esta: recorta o que importa para a visita e mantém o
+             caminho de volta para o histórico completo. */
+          <Link
+            href={`/admin/assistencia/${chamado.id}/preparo`}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-graf-300 bg-white px-3.5 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+          >
+            <ClipboardCheck className="size-4" aria-hidden />
+            Preparo da visita
+          </Link>
         }
       />
 

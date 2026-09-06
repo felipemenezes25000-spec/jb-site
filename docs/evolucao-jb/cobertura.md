@@ -409,6 +409,28 @@ de verdade.
 | 22.busca.7 | Combobox acessível com autocomplete | **não iniciado** — a busca atual é formulário, sem autocomplete |
 | 22.tco.7 | Integrar orçamentos do usuário com autorização | **não iniciado** — hoje o valor do reparo é digitado |
 
+### Fase 19 — operação do técnico, continuidade e indicadores (seção 23)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 23.1 | Visão de clínica, unidade, sala, equipamento, série, urgência, relato, mídia, garantia e intervenções | implementado — `/admin/assistencia/[id]/preparo` |
+| 23.2 | Reusar timeline e relações; destacar sem esconder o resto | implementado — o preparo recorta e mantém o caminho de volta ao chamado completo |
+| 23.3 | Checklist preparatório com peças registradas | validado localmente — 26 testes; cada item diz por que entrou |
+| 23.4 | Sugestão como interna a confirmar, com origem | validado localmente — `apresentarSugestao` recusa sugestão sem base conferível |
+| 23.5 | Resumo determinístico primeiro; IA opcional | **cumprido** — nenhum resumo automático existe; tudo vem de registro |
+| 23.6 | Texto de cliente e OCR não instruem o sistema | implementado — relato é exibido como texto e não altera nada |
+| 23.7 | Conferir os registros que fundamentam; não esconder conflito | validado localmente — conflito com o histórico vira alerta com a OS anterior citada |
+| 23.crm | Lembretes de preventiva com regra real e fila idempônte | preexistente, conferido — índice único `[visitId, daysBefore]` e `skipDuplicates` |
+| 23.ind.1 | Definições e consultas dos sete indicadores | implementado — `insights.ts` e `insights-consultas.ts` |
+| 23.ind.2 | Janela, população, denominador, exclusões, fuso, volume mínimo | validado localmente — teste percorre as sete definições |
+| 23.ind.3 | Chamados por marca ≠ taxa de falha | validado localmente — a ressalva é testada, e aparece na tela em destaque |
+| 23.ind.4 | Intervalo entre intervenções ≠ MTBF nem vida útil | validado localmente — teste sobre a ressalva |
+| 23.ind.5 | Acesso por papel; isolamento por clínica no cliente | implementado — área `insights` só para admin e gestor |
+| 23.ind.6 | Publicação agregada com proteção contra reidentificação | validado localmente — `podePublicarAgregado`: mínimo de clínicas e nenhuma dominando |
+| 23.ind.7 | "Ainda não há dados suficientes"; sem métrica ilustrativa | validado localmente — abaixo do volume mínimo não há número |
+| 23.crm | Jornada artigo → chamado → equipamento → OS → prontuário | preexistente, reforçado — CTA da Central leva ao chamado; QR leva ao prontuário |
+| 23.1 | Fluxo móvel de visita completo (fotos, checklist, encerramento) | preexistente — a OS já tem checklist, mídia e encerramento |
+
 ---
 
 ## Matriz de cenários obrigatórios (seção 26)

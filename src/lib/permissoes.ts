@@ -47,6 +47,7 @@ export type AreaAdmin =
   | "usuarios"
   | "configuracoes"
   | "mensagens"
+  | "insights"
   | "auditoria";
 
 /** Agrupamento do menu lateral, na ordem em que aparece. */
@@ -279,6 +280,17 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     leitura: ["tecnico"],
     grupo: "conteudo",
     descricao: "Atendimentos publicados, com autorização do cliente",
+  },
+  insights: {
+    rotulo: "JB Insights",
+    icone: "ChartColumn",
+    href: "/admin/insights",
+    /* Análise agregada é de gestão. Ela cruza dados de todas as clínicas, e
+       o escopo pede acesso por papel exatamente por isso. */
+    papeis: ["admin", "gestor"],
+    leitura: [],
+    grupo: "sistema",
+    descricao: "Indicadores do parque atendido, com definição e limite de cada um",
   },
   leads: {
     rotulo: "Leads",
