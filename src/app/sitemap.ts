@@ -46,6 +46,7 @@ const PRIVADAS = [
   /* Cada convite de avaliacao tem endereco proprio, com token. Nenhum deles e
      conteudo, e todos identificam uma transacao. */
   "/avaliar",
+  "/e",
 ];
 
 /**

@@ -350,6 +350,22 @@ de verdade.
 | 19.case | Sem caso autorizado, explicação do processo como prova | implementado — `/cases` mostra as sete etapas; **nenhum nome ou número foi inventado** |
 | Acervo | Nenhuma foto foi produzida | **pendência declarada** — as fotos dependem de câmera e de autorização real |
 
+### Fase 16 — QR por equipamento e verificação de unidade (seção 20)
+
+| # | Requisito | Situação |
+|---|---|---|
+| 20.A.1 | Etiqueta imprimível com QR e código legível | implementado — `/minha-jb/equipamentos/etiquetas`, folha A4, três colunas |
+| 20.A.2 | URL estável com identificador opaco; localizador, não credencial | validado localmente — 12 testes; 15 bytes aleatórios, sem relação com id ou série |
+| 20.A.3 | Sem sessão: login com retorno validado; sem dado privado antes da autorização | validado localmente — o destino é **construído** do localizador, nunca lido de parâmetro; a consulta da ficha só acontece depois da decisão |
+| 20.A.4 | Titularidade conferida a cada acesso | validado localmente — `quemPodeVer` compara `customerId`; transferência remove o dono anterior na hora |
+| 20.A.5 | Papel do técnico, não só existência de sessão staff | validado localmente — teste dedicado: sessão de equipe sem acesso à área de equipamentos é recusada |
+| 20.A.6–20.A.7 | Resumo, garantia, histórico e chamado pré-preenchido | implementado — ação de chamado já leva o equipamento |
+| 20.A.9 | Impressão individual e em lote, contraste e quiet zone | implementado — quiet zone de 4 módulos, correção M, preto sobre branco, decisões documentadas |
+| 20.A.10 | Reimpressão não duplica; transferência sem acesso anterior | implementado — localizador é coluna, gerado uma vez |
+| 20.A.9 | Leitura por câmera real | **não executado** — depende de imprimir e escanear; parâmetros do símbolo escolhidos para isso |
+| 20.B | QR público leva à evidência da unidade, sem token privado | implementado — `/admin/estoque/certificados`; só certificação publicada, e o código público já é opaco |
+| 20.A.8 | Cenários de ID trocado, conta errada, sem permissão | validado localmente — os três têm teste; desativado continua visível ao titular |
+
 ---
 
 ## Matriz de cenários obrigatórios (seção 26)
@@ -375,11 +391,11 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | Assistência guest com mídia | não iniciado |
 | Upload falso/longo/expirado/alheio | validado localmente — 17 testes de tipo real e duração; escopo por sessão |
 | Limpeza e confirmação concorrentes | implementado — condição de estado no WHERE dos dois lados; sem execução simultânea dirigida |
-| Prontuário de outra conta | não iniciado |
+| Prontuário de outra conta | validado localmente — `quemPodeVer` recusa, com teste |
 | Certificação incompleta/revogada | validado localmente — publicação recusada; revogada dita na verificação |
 | Instalação reenviada | não iniciado |
-| QR privado sem sessão | não iniciado |
-| QR público | não iniciado |
+| QR privado sem sessão | validado localmente — redireciona para login com retorno construído; nada privado no HTML antes |
+| QR público | implementado — aponta para `/verificar/<código>`; sem série, sem token, sem documento |
 | OCR ambíguo/falha | não iniciado |
 | Busca com rascunho/dado privado | não iniciado |
 | Comparador/TCO com dado faltante | não iniciado |

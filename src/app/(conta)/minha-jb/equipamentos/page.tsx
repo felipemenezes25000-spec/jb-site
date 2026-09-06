@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { EquipmentStatus } from "@prisma/client";
-import { Plus, Stethoscope } from "lucide-react";
+import { Plus, QrCode, Stethoscope } from "lucide-react";
 
 import { CartaoEquipamento } from "@/components/conta/mj-cartao-equipamento";
 import { Filtros, primeiroValor, type GrupoFiltro } from "@/components/conta/mj-filtros";
@@ -129,10 +129,18 @@ export default async function EquipamentosPage({ searchParams }: { searchParams:
         titulo="Meus equipamentos"
         descricao="O prontuário da clínica: cada equipamento com garantia, histórico de manutenção e chamados. Vale para o que foi comprado na JB e para o que já estava aí."
         acoes={
-          <LinkBotao href="/minha-jb/equipamentos/novo" tamanho="sm">
-            <Plus className="size-4" aria-hidden />
-            Cadastrar equipamento
-          </LinkBotao>
+          <div className="flex flex-wrap gap-2">
+            {todos.length > 0 ? (
+              <LinkBotao href="/minha-jb/equipamentos/etiquetas" tamanho="sm" variante="secundario">
+                <QrCode className="size-4" aria-hidden />
+                Etiquetas
+              </LinkBotao>
+            ) : null}
+            <LinkBotao href="/minha-jb/equipamentos/novo" tamanho="sm">
+              <Plus className="size-4" aria-hidden />
+              Cadastrar equipamento
+            </LinkBotao>
+          </div>
         }
       />
 

@@ -1047,6 +1047,17 @@ model Equipment {
   maintenanceIntervalDays Int?
 
   notes     String   @default("")
+
+  /// Localizador OPACO da etiqueta de QR.
+  ///
+  /// Nao e senha nem credencial: quem abre o link precisa de sessao e de
+  /// titularidade. Ele so diz DE QUE equipamento se trata — e por ser opaco,
+  /// nao revela o serial nem permite varrer o parque de um cliente.
+  ///
+  /// Nulo enquanto ninguem imprimiu etiqueta. Uma vez gerado, permanece: uma
+  /// etiqueta ja colada no aparelho continua valendo depois de reimpressa.
+  locator String? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
