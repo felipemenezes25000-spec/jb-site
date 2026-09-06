@@ -41,7 +41,7 @@ export function Etiqueta({
       )}
     >
       {ponto ? (
-        <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden />
+        <span className="size-1.5 shrink-0 rounded-full bg-current opacity-70" aria-hidden />
       ) : null}
       {children}
     </span>

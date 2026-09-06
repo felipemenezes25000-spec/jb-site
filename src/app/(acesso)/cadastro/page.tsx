@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { FormularioCadastro } from "@/components/conta/formulario-cadastro";
 import { MolduraAutenticacao } from "@/components/conta/moldura-autenticacao";
+import { LinkBotao } from "@/components/ui/button";
 import { sessaoCliente } from "@/lib/auth-cliente";
 
 export const metadata: Metadata = {
@@ -33,18 +33,25 @@ export default async function CadastroPage({ searchParams }: { searchParams: Bus
   return (
     <MolduraAutenticacao
       etapa="Área da Clínica"
+      // são oito campos em três blocos: a coluna larga deixa o par de senhas
+      // caber lado a lado no tablet, em vez de virar uma fila sem fim
+      largura="ampla"
       titulo="Criar sua conta"
       subtitulo="Uma conta guarda seus pedidos, as garantias dos equipamentos e o histórico de cada chamado de assistência."
       rodape={
-        <p>
-          Já tem cadastro?{" "}
-          <Link
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="font-semibold text-graf-900">Já tem cadastro na JB?</p>
+            <p className="mt-1">Use o mesmo e-mail e senha de sempre.</p>
+          </div>
+          <LinkBotao
             href={destino ? `/entrar?destino=${encodeURIComponent(destino)}` : "/entrar"}
-            className="font-semibold text-jb-700 underline-offset-4 hover:underline"
+            variante="secundario"
+            className="sm:shrink-0"
           >
-            Entrar na sua conta
-          </Link>
-        </p>
+            Entrar na minha conta
+          </LinkBotao>
+        </div>
       }
     >
       <FormularioCadastro destino={destino} emailInicial={emailInicial} />

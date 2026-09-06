@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
 
 import { FormularioEntrar } from "@/components/conta/formulario-entrar";
 import { MolduraAutenticacao } from "@/components/conta/moldura-autenticacao";
+import { LinkBotao } from "@/components/ui/button";
 import { sessaoCliente } from "@/lib/auth-cliente";
 
 export const metadata: Metadata = {
@@ -42,21 +42,29 @@ export default async function EntrarPage({ searchParams }: { searchParams: Busca
         destino ? (
           <p className="flex items-start gap-2.5 rounded-lg border border-info-500/25 bg-info-50 px-4 py-3 text-sm leading-relaxed text-graf-700">
             <LockKeyhole className="mt-0.5 size-4 shrink-0 text-info-700" aria-hidden />
-            <span>Esta página é da área do cliente. Entre para continuar de onde parou.</span>
+            <span>
+              Esta página é da Área da Clínica. Entre com a sua conta para continuar de onde parou.
+            </span>
           </p>
         ) : null
       }
       rodape={
-        <p>
-          Ainda não tem conta?{" "}
-          <Link
+        /* O caminho para o cadastro precisa ser visível sem leitura: quem
+           chega aqui sem conta não pode ter de caçar um link no meio da
+           frase. Por isso vira botão, e não texto sublinhado. */
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="font-semibold text-graf-900">Ainda não tem conta?</p>
+            <p className="mt-1">Criar leva menos de um minuto — e dá para comprar sem conta.</p>
+          </div>
+          <LinkBotao
             href={destino ? `/cadastro?destino=${encodeURIComponent(destino)}` : "/cadastro"}
-            className="font-semibold text-jb-700 underline-offset-4 hover:underline"
+            variante="secundario"
+            className="sm:shrink-0"
           >
             Criar minha conta
-          </Link>{" "}
-          — leva menos de um minuto e não é preciso ter conta para comprar.
-        </p>
+          </LinkBotao>
+        </div>
       }
     >
       <FormularioEntrar destino={destino} emailInicial={emailInicial} />

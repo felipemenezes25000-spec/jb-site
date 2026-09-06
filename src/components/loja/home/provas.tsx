@@ -1,28 +1,36 @@
-import { Estatistica, Estatisticas } from "@/components/ui/estatistica";
+import { CalendarClock, ClipboardList, Package, Wrench } from "lucide-react";
+
 import { Secao } from "@/components/ui/secao";
 import type { SettingsMap } from "@/lib/settings";
 
 /* ============================================================================
    Provas objetivas
 
-   Só o que é verificável: o ano em que a JB começou e a cidade em que atende,
-   que vêm das configurações, e a contagem de equipamentos e marcas, que vem
-   do banco. Nenhum número de clientes, nota ou porcentagem — se não está no
-   dado, não existe aqui.
+   Faixa de confiança logo abaixo do hero. Só entra aqui o que é verificável:
+   o ano em que a JB começou e a cidade em que atende, que vêm das
+   configurações, e o que a própria plataforma faz — condição declarada em
+   cada anúncio e prontuário do equipamento na Área da Clínica. Nenhum número
+   de clientes, nota, porcentagem ou selo. Se não está no dado, não existe.
 
-   Cada prova só é renderizada quando tem valor. Faixa sem prova nenhuma
-   também não é renderizada.
-
-   O vermelho fica no ano de início, que é a prova mais forte da faixa e não
-   muda de peso conforme o catálogo cresce ou encolhe. Pôr o destaque na
-   contagem de equipamentos faria o número mais frágil da página ser o mais
-   gritado.
+   Por que a contagem de catálogo não aparece por padrão: "7 equipamentos no
+   catálogo" é um número verdadeiro que trabalha contra quem o publica — a
+   prova vira confissão de vitrine vazia. Ela só entra quando o catálogo tem
+   massa suficiente para o número virar argumento (`MINIMO_PARA_CONTAR`), e
+   some sozinha de novo se encolher. Esconder não é mentir; inventar seria.
    ============================================================================ */
+
+/** Abaixo disso, a contagem de catálogo diminui a JB em vez de provar algo. */
+const MINIMO_PARA_CONTAR = 24;
+
+type Prova = {
+  icone: React.ComponentType<{ className?: string }>;
+  titulo: string;
+  detalhe: string;
+};
 
 export function ProvasObjetivas({
   configuracoes: s,
   equipamentos,
-  marcas,
 }: {
   configuracoes: SettingsMap;
   /** Produtos publicados no catálogo. */
@@ -33,60 +41,72 @@ export function ProvasObjetivas({
   const desde = s.empresa_desde.trim();
   const cidade = s.endereco_cidade.trim();
 
-  const provas: React.ReactNode[] = [];
+  const provas: Prova[] = [];
 
   if (desde) {
-    provas.push(
-      <Estatistica
-        key="desde"
-        valor={desde}
-        rotulo="Em atividade desde"
-        detalhe="Venda e assistência técnica de equipamento odontológico."
-        destaque
-      />,
-    );
+    provas.push({
+      icone: CalendarClock,
+      titulo: `Desde ${desde}`,
+      detalhe: "Venda e assistência técnica de equipamento odontológico.",
+    });
   }
 
-  if (equipamentos > 0) {
-    provas.push(
-      <Estatistica
-        key="equipamentos"
-        valor={equipamentos}
-        rotulo="Equipamentos no catálogo"
-        detalhe="Com ficha técnica e disponibilidade atualizada."
-      />,
-    );
+  provas.push({
+    icone: Wrench,
+    titulo: "Equipe técnica própria",
+    detalhe: cidade
+      ? `Atendimento em ${cidade}. O serviço não é terceirizado.`
+      : "O atendimento técnico não é terceirizado.",
+  });
+
+  if (equipamentos >= MINIMO_PARA_CONTAR) {
+    provas.push({
+      icone: Package,
+      titulo: `${equipamentos} equipamentos no catálogo`,
+      detalhe: "Com ficha técnica, condição e disponibilidade atualizadas.",
+    });
+  } else {
+    provas.push({
+      icone: Package,
+      titulo: "Novos, seminovos e recondicionados",
+      detalhe: "Cada anúncio declara a condição real da unidade anunciada.",
+    });
   }
 
-  if (marcas > 0) {
-    provas.push(
-      <Estatistica key="marcas" valor={marcas} rotulo="Marcas no catálogo" />,
-    );
-  }
-
-  if (cidade) {
-    provas.push(
-      <Estatistica
-        key="cidade"
-        valor={cidade}
-        rotulo="Atendimento em"
-        detalhe="Equipe técnica própria, não terceirizada."
-      />,
-    );
-  }
-
-  if (provas.length < 2) return null;
+  provas.push({
+    icone: ClipboardList,
+    titulo: "Prontuário do equipamento",
+    detalhe: "Compra, manutenção e chamados registrados na Área da Clínica.",
+  });
 
   return (
     <Secao
       fundo="branco"
-      espaco="md"
-      rotulo="A JB em dados"
+      espaco="sm"
+      rotulo="Por que comprar e consertar na JB"
       className="border-b border-graf-200"
     >
-      <Estatisticas colunas={provas.length === 2 ? 2 : provas.length === 3 ? 3 : 4}>
-        {provas}
-      </Estatisticas>
+      <ul className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+        {provas.map((prova) => {
+          const Icone = prova.icone;
+          return (
+            <li key={prova.titulo} className="flex gap-3.5">
+              <span
+                aria-hidden
+                className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-600"
+              >
+                <Icone className="size-4.5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[0.9375rem] font-bold leading-snug text-graf-950">
+                  {prova.titulo}
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed text-graf-500">{prova.detalhe}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </Secao>
   );
 }

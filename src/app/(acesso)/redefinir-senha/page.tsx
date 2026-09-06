@@ -28,6 +28,14 @@ export default async function RedefinirSenhaPage({ searchParams }: { searchParam
         etapa="Área da Clínica"
         titulo="Link de redefinição incompleto"
         subtitulo="O endereço aberto não traz o código de verificação. Isso costuma acontecer quando o link do e-mail é copiado pela metade."
+        rodape={
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="min-w-0">Já lembrou a senha?</p>
+            <LinkBotao href="/entrar" variante="secundario" className="sm:shrink-0">
+              Voltar para entrar
+            </LinkBotao>
+          </div>
+        }
       >
         <Vazio
           icone={Link2Off}

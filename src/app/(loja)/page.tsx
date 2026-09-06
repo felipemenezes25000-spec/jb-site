@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { lerParcelamento, SELECAO_HOME } from "@/components/loja/home/comum";
+import { fotoDe, lerParcelamento, SELECAO_HOME } from "@/components/loja/home/comum";
 import { Hero } from "@/components/loja/home/hero";
 import { ProvasObjetivas } from "@/components/loja/home/provas";
 import { TresCaminhos } from "@/components/loja/home/caminhos";
@@ -42,24 +42,29 @@ const PUBLICADO = { status: "active" } as const;
 export default async function HomePage() {
   const [s, vitrine, equipamentos, marcas] = await Promise.all([
     getSettings(),
-    // só entra no hero o que tem foto: hero de equipamento sem imagem não é hero
+    // só entra no hero o que tem foto: hero de equipamento sem imagem não é
+    // hero. O quarto ilustra a faixa dos três caminhos — repetir ali a foto
+    // que acabou de aparecer no topo faria a página parecer curta.
     prisma.product.findMany({
       where: { ...PUBLICADO, media: { some: {} } },
       orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
-      take: 3,
+      take: 4,
       select: SELECAO_HOME,
     }),
     prisma.product.count({ where: PUBLICADO }),
     prisma.brand.count({ where: { published: true, products: { some: PUBLICADO } } }),
   ]);
 
+  // a quarta foto, quando existe; senão a primeira volta a servir
+  const fotoDaFaixa = vitrine[3] ? fotoDe(vitrine[3]) : (vitrine[0] ? fotoDe(vitrine[0]) : null);
+
   return (
     <>
-      <Hero configuracoes={s} produtos={vitrine} parcelamento={lerParcelamento(s)} />
+      <Hero configuracoes={s} produtos={vitrine.slice(0, 3)} parcelamento={lerParcelamento(s)} />
 
       <ProvasObjetivas configuracoes={s} equipamentos={equipamentos} marcas={marcas} />
 
-      <TresCaminhos />
+      <TresCaminhos foto={fotoDaFaixa} />
 
       <Suspense fallback={<EsqueletoCategoriasHome />}>
         <SecaoCategorias />

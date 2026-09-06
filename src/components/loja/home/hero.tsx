@@ -19,9 +19,15 @@ import { cn } from "@/lib/utils";
    Hero da página principal
 
    Texto à esquerda, catálogo de verdade à direita: a foto do equipamento em
-   destaque, com o nome e o preço reais, e duas outras unidades ao lado. Não
-   há foto de estrutura nem de equipe no acervo da JB — então o hero se apoia
-   no que existe de fato, que é o produto.
+   destaque, com o nome e o preço reais. Não há foto de estrutura nem de
+   equipe no acervo da JB — então o hero se apoia no que existe de fato, que
+   é o produto, e dá a ele a maior área da tela.
+
+   A placa principal é grande de propósito: equipamento odontológico é objeto
+   físico de ticket alto, e miniatura em fundo enorme é o que faz uma loja
+   parecer catálogo improvisado. Os outros equipamentos entram como uma tira
+   fina embaixo — referência, não um segundo grid de cartões disputando o
+   olho com o primeiro.
 
    Sem produto com foto cadastrada, a coluna da direita simplesmente não
    aparece e o texto ocupa a faixa inteira. Nada de imagem de banco.
@@ -49,23 +55,23 @@ export function Hero({
     <section className="relative isolate overflow-hidden border-b border-graf-200 bg-white">
       <span
         aria-hidden
-        className="field-orbit pointer-events-none absolute inset-0 -z-10 opacity-50 [mask-image:radial-gradient(75%_65%_at_75%_10%,#000,transparent)]"
+        className="field-orbit pointer-events-none absolute inset-0 -z-10 opacity-40 [mask-image:radial-gradient(70%_60%_at_78%_8%,#000,transparent)]"
       />
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-gradient-to-b from-graf-50 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b from-graf-50 to-transparent"
       />
 
       <div
         className={cn(
-          "container-jb grid gap-12 py-14 md:py-20 lg:gap-16 lg:py-24",
-          temVitrine && "lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)] lg:items-center",
+          "container-jb grid gap-12 py-14 md:py-18 lg:gap-14 lg:py-22 xl:gap-20",
+          temVitrine && "lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center",
         )}
       >
         {/* --------------------------------------------------------- texto */}
         <div className={cn(!temVitrine && "max-w-3xl")}>
           {desde || cidade ? (
-            <p className="inline-flex max-w-full items-center gap-2.5 rounded-full border border-graf-200 bg-white px-4 py-2 text-xs font-semibold text-graf-600 shadow-xs">
+            <p className="inline-flex max-w-full items-center gap-2.5 rounded-full border border-graf-200 bg-white px-4 py-2 text-[0.8125rem] font-semibold text-graf-600 shadow-xs">
               <span className="size-1.5 shrink-0 rounded-full bg-jb-500" aria-hidden />
               <span>
                 {`Equipe técnica própria${cidade ? ` em ${cidade}` : ""}${
@@ -81,13 +87,14 @@ export function Hero({
           </h1>
 
           <p className="texto-guia mt-6 max-w-xl text-graf-600">
-            Da compra à manutenção, a JB acompanha todo o ciclo dos equipamentos da sua
-            clínica — e deixa registrado o que foi feito em cada um deles.
+            Compra, instalação, manutenção e o histórico de cada máquina no mesmo lugar. A
+            JB continua com o equipamento depois da venda — e deixa registrado o que foi
+            feito em cada um deles.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <LinkBotao href="/loja" tamanho="lg">
-              Comprar equipamentos
+              Ver equipamentos
               <ArrowRight className="size-4 shrink-0" aria-hidden />
             </LinkBotao>
             <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario" tamanho="lg">
@@ -97,7 +104,7 @@ export function Hero({
           </div>
 
           {telefone ? (
-            <p className="mt-7 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-graf-600">
+            <p className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-graf-600">
               <Phone className="size-4 shrink-0 text-graf-400" aria-hidden />
               <span>Prefere falar agora?</span>
               <a
@@ -124,13 +131,20 @@ export function Hero({
             <VitrinePrincipal produto={principal} parcelamento={parcelamento} />
 
             {secundarios.length > 0 ? (
-              <ul className="mt-4 grid grid-cols-2 gap-4">
-                {secundarios.map((produto) => (
-                  <li key={produto.slug} className={cn(secundarios.length === 1 && "col-span-2")}>
-                    <VitrineSecundaria produto={produto} unica={secundarios.length === 1} />
-                  </li>
-                ))}
-              </ul>
+              <>
+                <p className="mt-6 text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
+                  Também no catálogo
+                </p>
+                <ul
+                  className={cn("mt-3 grid gap-3", secundarios.length > 1 && "sm:grid-cols-2")}
+                >
+                  {secundarios.map((produto) => (
+                    <li key={produto.slug}>
+                      <TiraSecundaria produto={produto} />
+                    </li>
+                  ))}
+                </ul>
+              </>
             ) : null}
           </div>
         ) : null}
@@ -139,7 +153,7 @@ export function Hero({
   );
 }
 
-/** Placa grande: foto dominante e a informação que decide a visita. */
+/** Placa grande: a foto ocupa a maior área do hero, sem moldura disputando. */
 function VitrinePrincipal({
   produto,
   parcelamento,
@@ -155,33 +169,31 @@ function VitrinePrincipal({
       href={`/loja/${produto.slug}`}
       className="group block overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-raised transition-[border-color,box-shadow] duration-200 hover:border-graf-300 hover:shadow-pop focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
     >
-      <div className="relative aspect-4/3 overflow-hidden bg-gradient-to-b from-white to-graf-50">
+      <div className="relative aspect-16/11 overflow-hidden bg-gradient-to-b from-white to-graf-50">
         {foto ? (
           <Image
             src={foto.url}
             alt={foto.alt}
             fill
             priority
-            sizes="(max-width: 1024px) 92vw, 44vw"
-            className="object-contain p-8 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03] sm:p-10"
+            sizes="(max-width: 1024px) 92vw, 52vw"
+            className="object-contain p-5 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03] sm:p-7"
           />
         ) : null}
-        <span className="absolute left-4 top-4">
+        <span className="absolute left-5 top-5">
           <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
         </span>
       </div>
 
-      <div className="flex flex-wrap items-end justify-between gap-4 border-t border-graf-200 px-5 py-5 sm:px-6">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-t border-graf-200 px-6 py-6 sm:px-7">
         <div className="min-w-0">
           {produto.brand ? (
             <p className="text-xs font-semibold uppercase tracking-wider text-graf-500">
               {produto.brand.name}
             </p>
           ) : null}
-          <p className="mt-1 line-2 text-lg font-bold leading-snug text-graf-950">
-            {produto.name}
-          </p>
-          <BlocoPreco produto={produto} parcelamento={parcelamento} className="mt-3" />
+          <p className="mt-1 line-2 text-title text-graf-950">{produto.name}</p>
+          <BlocoPreco produto={produto} parcelamento={parcelamento} className="mt-4" />
         </div>
 
         <span className="inline-flex items-center gap-1.5 text-sm font-bold text-jb-700 transition-transform duration-200 group-hover:translate-x-0.5">
@@ -193,40 +205,32 @@ function VitrinePrincipal({
   );
 }
 
-/** Placa menor: foto e nome. O preço fica na página do equipamento. */
-function VitrineSecundaria({ produto, unica }: { produto: ProdutoHome; unica: boolean }) {
+/**
+ * Tira fina: miniatura e nome, na horizontal. O preço fica na página do
+ * equipamento — aqui a peça só existe para dizer que o catálogo continua.
+ */
+function TiraSecundaria({ produto }: { produto: ProdutoHome }) {
   const foto = fotoDe(produto);
   const condicao = CONDICAO_HOME[produto.condition];
 
   return (
     <Link
       href={`/loja/${produto.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-graf-200 bg-white transition-[border-color,box-shadow] duration-200 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+      className="group flex h-full items-center gap-3.5 rounded-xl border border-graf-200 bg-white p-2.5 pr-4 transition-[border-color,background-color] duration-200 hover:border-graf-300 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
     >
-      <div
-        className={cn(
-          "relative overflow-hidden bg-graf-50",
-          unica ? "aspect-16/9" : "aspect-4/3",
-        )}
-      >
+      <span className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-graf-50">
         {foto ? (
-          <Image
-            src={foto.url}
-            alt={foto.alt}
-            fill
-            sizes="(max-width: 1024px) 45vw, 22vw"
-            className="object-contain p-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
-          />
+          <Image src={foto.url} alt={foto.alt} fill sizes="64px" className="object-contain p-1" />
         ) : null}
-      </div>
-      <div className="flex flex-1 flex-col gap-1 px-4 py-3.5">
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-graf-500">
+      </span>
+      <span className="min-w-0">
+        <span className="block text-xs font-bold uppercase tracking-wider text-graf-500">
           {condicao.rotulo}
-        </p>
-        <p className="line-2 text-sm font-bold leading-snug text-graf-900 group-hover:text-jb-700">
+        </span>
+        <span className="mt-0.5 line-2 block text-sm font-bold leading-snug text-graf-900 transition-colors group-hover:text-jb-700">
           {produto.name}
-        </p>
-      </div>
+        </span>
+      </span>
     </Link>
   );
 }

@@ -33,8 +33,8 @@ function CabecalhoFalso() {
 /** Espelha o cartão de categoria e o cartão de destaque, que têm a mesma caixa. */
 function CartaoFalso() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
-      <Esqueleto className="aspect-4/3 w-full rounded-none" />
+    <div className="overflow-hidden rounded-2xl border border-graf-200 bg-white">
+      <Esqueleto className="aspect-5/4 w-full rounded-none" />
       <div className="p-5 sm:p-6">
         <Esqueleto className="h-3 w-20 rounded-full" />
         <Esqueleto className="mt-3 h-6 w-4/5 rounded-md" />
@@ -68,8 +68,10 @@ export function EsqueletoDestaquesHome() {
       <Aviso texto="Carregando os equipamentos em destaque." />
       <div aria-hidden>
         <CabecalhoFalso />
-        <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="md">
-          {Array.from({ length: 3 }, (_, i) => (
+        {/* Quatro, na mesma grade da faixa real: o esqueleto existe para a
+            página não pular quando o conteúdo chega. */}
+        <Grade colunas={{ base: 1, sm: 2, xl: 4 }} espaco="md">
+          {Array.from({ length: 4 }, (_, i) => (
             <CartaoFalso key={i} />
           ))}
         </Grade>
@@ -91,7 +93,7 @@ export function EsqueletoSeminovosHome() {
               {Array.from({ length: 2 }, (_, i) => (
                 <div
                   key={i}
-                  className="grid gap-5 rounded-2xl border border-graf-200 bg-white p-4 shadow-card sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:p-5"
+                  className="grid gap-5 rounded-2xl border border-graf-200 bg-white p-4 sm:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] sm:gap-7 sm:p-5"
                 >
                   <Esqueleto className="aspect-4/3 w-full rounded-xl sm:aspect-square" />
                   <div>
@@ -110,7 +112,7 @@ export function EsqueletoSeminovosHome() {
             </div>
           }
           apoio={
-            <div className="rounded-2xl border border-graf-200 bg-surface-muted p-6 shadow-card">
+            <div className="rounded-2xl border border-graf-200 bg-surface-muted p-6 lg:p-7">
               <Esqueleto className="h-7 w-3/5 rounded-md" />
               <Esqueleto className="mt-4 h-4 w-full rounded-md" />
               <Esqueleto className="mt-2 h-4 w-4/5 rounded-md" />

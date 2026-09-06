@@ -165,7 +165,7 @@ export function Cabecalho({
   // continua logado, só não tem por quem ser chamado
   const temSessao = clienteNome !== null;
   const primeiroNome = clienteNome?.trim().split(/\s+/)[0] ?? "";
-  const saudacao = primeiroNome ? `Olá, ${primeiroNome}` : "Área da clínica";
+  const saudacao = primeiroNome ? `Olá, ${primeiroNome}` : "Entrar";
 
   const temBarraUtilidade = Boolean(horario || telefone || whatsapp);
   const rotuloCarrinho =
@@ -185,7 +185,7 @@ export function Cabecalho({
       {/* ---------------------------------------------- barra de utilidade */}
       {temBarraUtilidade ? (
         <div className="hidden border-b border-graf-200 bg-graf-50 lg:block">
-          <div className="container-jb flex h-10 items-center justify-between gap-6 text-xs">
+          <div className="container-jb flex h-10 items-center justify-between gap-6 text-[0.8125rem]">
             {horario ? (
               <p className="flex items-center gap-2 text-graf-600">
                 <Clock className="size-3.5 shrink-0 text-graf-400" aria-hidden />
@@ -239,7 +239,7 @@ export function Cabecalho({
           <div
             className={cn(
               "flex items-center gap-3 transition-[height] duration-200 sm:gap-5",
-              compacto ? "h-16" : "h-20",
+              compacto ? "h-15" : "h-20",
             )}
           >
             <Link
@@ -249,12 +249,12 @@ export function Cabecalho({
                  tocável no celular sem que a marca cresça junto. */
               className="flex min-h-11 shrink-0 items-center rounded-sm"
             >
-              <Logo altura={compacto ? 34 : 42} prioridade />
+              <Logo altura={compacto ? 32 : 42} prioridade />
             </Link>
 
             {/* Busca — a partir do tablet ela mora no topo, sempre visível */}
             <form onSubmit={buscar} role="search" className="hidden min-w-0 flex-1 md:flex">
-              <CampoBusca id="busca-cabecalho" />
+              <CampoBusca id="busca-cabecalho" compacto={compacto} />
             </form>
 
             <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
@@ -340,7 +340,7 @@ export function Cabecalho({
 
           {/* ------------------------------------------ navegação — desktop */}
           <nav aria-label="Principal" className="hidden lg:block">
-            <ul className="-mb-px flex items-center gap-0.5">
+            <ul className="-mb-px flex items-center gap-1">
               {MENU_PRINCIPAL.map((item) => {
                 const chave = item.megaMenu;
                 const aberto = chave !== undefined && mega === chave;
@@ -368,7 +368,8 @@ export function Cabecalho({
                         href={item.href}
                         aria-current={estaAtivo ? "page" : undefined}
                         className={cn(
-                          "rounded-t-md px-3 py-3.5 text-sm font-semibold transition-colors",
+                          "rounded-t-md px-3 text-[0.9375rem] font-semibold transition-colors",
+                          compacto ? "py-2" : "py-4",
                           estaAtivo ? "text-jb-700" : "text-graf-700 hover:text-graf-950",
                         )}
                       >
@@ -387,7 +388,10 @@ export function Cabecalho({
                           onClick={() => setMega(aberto ? null : chave)}
                           /* 44x44: em 1024px quem navega já está no toque
                              (tablet deitado), e 28px de largura era chute. */
-                          className="-ml-2 flex size-11 items-center justify-center rounded-t-md text-graf-500 transition-colors hover:text-graf-950"
+                          className={cn(
+                            "-ml-2 flex w-11 items-center justify-center rounded-t-md text-graf-500 transition-colors hover:text-graf-950",
+                            compacto ? "h-9" : "h-13",
+                          )}
                         >
                           <ChevronDown
                             className={cn(
@@ -418,7 +422,7 @@ export function Cabecalho({
               className="overflow-hidden border-t border-graf-200 bg-white md:hidden"
             >
               <form onSubmit={buscar} role="search" className="container-jb py-3">
-                <CampoBusca id="busca-celular" ref={campoBuscaMobile} />
+                <CampoBusca id="busca-celular" ref={campoBuscaMobile} compacto />
               </form>
             </motion.div>
           ) : null}
@@ -474,10 +478,26 @@ export function Cabecalho({
  * botão de enviar dentro da caixa e o foco marcado em dois sinais (borda e
  * anel), que é o que sobrevive à rolagem.
  */
-function CampoBusca({ id, ref }: { id: string; ref?: React.Ref<HTMLInputElement> }) {
+function CampoBusca({
+  id,
+  ref,
+  compacto,
+}: {
+  id: string;
+  ref?: React.Ref<HTMLInputElement>;
+  /** No topo já rolado a caixa perde 8px de altura, junto com o cabeçalho. */
+  compacto?: boolean;
+}) {
   return (
-    <div className="mx-auto flex h-12 w-full max-w-2xl items-center rounded-lg border border-graf-450 bg-graf-50 transition-colors hover:border-graf-500 focus-within:border-jb-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-jb-500/15">
-      <Search className="ml-4 hidden size-4.5 shrink-0 text-graf-500 lg:block" aria-hidden />
+    <div
+      className={cn(
+        "mx-auto flex w-full max-w-xl items-center rounded-full border border-graf-450 bg-graf-50",
+        "transition-[height,border-color,background-color] duration-200",
+        "hover:border-graf-500 focus-within:border-jb-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-jb-500/15",
+        compacto ? "h-11" : "h-12",
+      )}
+    >
+      <Search className="ml-4.5 hidden size-4.5 shrink-0 text-graf-500 lg:block" aria-hidden />
       <label htmlFor={id} className="sr-only">
         Buscar no catálogo
       </label>
@@ -491,17 +511,15 @@ function CampoBusca({ id, ref }: { id: string; ref?: React.Ref<HTMLInputElement>
         placeholder="Busque equipamento, marca, modelo ou peça"
         className="h-full min-w-0 flex-1 bg-transparent px-4 text-base text-graf-900 outline-none placeholder:text-graf-500 sm:text-[0.9375rem] lg:pl-3"
       />
+      {/* Alvo de toque de 44px dentro de uma caixa de 44–48: o botão ocupa a
+          altura inteira e o raio acompanha a caixa, sem virar pastilha preta
+          disputando atenção com o CTA vermelho do topo. */}
       <button
         type="submit"
         aria-label="Buscar"
-        /* 44px dentro da caixa de 48: o botão de enviar é alvo de toque, não
-           enfeite. Sobram 2px de folga acima e abaixo. */
-        /* `min-w-11` porque abaixo de lg só o ícone aparece, e `px-3` deixava
-           o botão com 42px de largura — 2px abaixo do alvo mínimo de toque. */
-        className="mr-1 flex h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-md bg-graf-900 px-3 text-sm font-semibold text-white transition-colors hover:bg-graf-800 active:bg-graf-950 lg:px-4"
+        className="mr-1 flex size-10 shrink-0 items-center justify-center rounded-full text-graf-600 transition-colors hover:bg-graf-200 hover:text-graf-950 active:bg-graf-300"
       >
-        <Search className="size-4.5 lg:hidden" aria-hidden />
-        <span className="hidden lg:inline">Buscar</span>
+        <Search className="size-4.5" aria-hidden />
       </button>
     </div>
   );
@@ -753,7 +771,7 @@ function MenuMobile({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-xs font-medium text-graf-500">
-                      Área da clínica
+                      Área da Clínica
                     </span>
                     <span className="block truncate text-base font-bold text-graf-950">
                       {temSessao

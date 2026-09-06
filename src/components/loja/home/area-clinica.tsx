@@ -96,7 +96,7 @@ export function SecaoAreaClinica() {
     <Secao fundo="grafite" espaco="xl" padraoDeFundo rotuladoPor="area-da-clinica">
       <div className="grid gap-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-16">
         <div>
-          <p className="sobretitulo">Área da clínica</p>
+          <p className="sobretitulo">Área da Clínica</p>
           <h2 id="area-da-clinica" className="mt-4 text-display text-white">
             Depois da compra, o equipamento continua tendo dono — e história.
           </h2>
@@ -130,13 +130,13 @@ export function SecaoAreaClinica() {
           </div>
         </div>
 
-        <PainelMinhaJB />
+        <PainelAreaDaClinica />
       </div>
     </Secao>
   );
 }
 
-function PainelMinhaJB() {
+function PainelAreaDaClinica() {
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-pop ring-1 ring-white/10">
       <div className="flex items-center justify-between gap-3 border-b border-graf-200 bg-graf-50 px-4 py-3">
@@ -144,8 +144,11 @@ function PainelMinhaJB() {
           <Simbolo tamanho={22} />
           <span className="text-sm font-bold text-graf-950">Área da Clínica</span>
         </span>
+        {/* A miniatura reproduz a barra real da área: à esquerda a marca e o
+            nome, à direita a volta para a loja. O rótulo que estava aqui
+            repetia o título ao lado dele e não existe na tela de verdade. */}
         <span className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-graf-500 ring-1 ring-inset ring-graf-200">
-          Área da clínica
+          Ir para a loja
         </span>
       </div>
 

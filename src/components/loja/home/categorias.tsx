@@ -26,6 +26,9 @@ import { prisma } from "@/lib/prisma";
 
 const PUBLICADO = { status: "active" } as const;
 
+/** Abaixo disso, a contagem da categoria diminui a JB em vez de informar. */
+const MINIMO_PARA_CONTAR = 4;
+
 async function carregar() {
   return prisma.category.findMany({
     where: {
@@ -91,9 +94,9 @@ export async function SecaoCategorias() {
             <li key={categoria.slug} className="flex">
               <Link
                 href={`/categoria/${categoria.slug}`}
-                className="group flex w-full flex-col overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                className="group flex w-full flex-col overflow-hidden rounded-2xl border border-graf-200 bg-white transition-[border-color,box-shadow] duration-200 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
-                <div className="relative aspect-4/3 overflow-hidden bg-gradient-to-b from-graf-50 to-white">
+                <div className="relative aspect-5/4 overflow-hidden bg-gradient-to-b from-white to-graf-50">
                   {categoria.image ? (
                     <Image
                       src={categoria.image.url}
@@ -108,7 +111,7 @@ export async function SecaoCategorias() {
                       alt=""
                       fill
                       sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 30vw"
-                      className="object-contain p-8 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
+                      className="object-contain p-5 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04] sm:p-6"
                     />
                   ) : (
                     <span
@@ -120,23 +123,28 @@ export async function SecaoCategorias() {
                   )}
                 </div>
 
-                <div className="flex flex-1 flex-col p-5 sm:p-6">
+                <div className="flex flex-1 flex-col border-t border-graf-200 p-5 sm:p-6">
                   <div className="flex items-start justify-between gap-4">
                     <h3 className="text-title text-graf-950 group-hover:text-jb-700">
                       {categoria.name}
                     </h3>
-                    <span className="mt-1 shrink-0 rounded-full bg-graf-100 px-2.5 py-1 text-xs font-semibold text-graf-600">
-                      {plural(total, "item", "itens")}
-                    </span>
+                    {/* A contagem só entra quando é argumento: "1 item" é um
+                        número verdadeiro que anuncia vitrine vazia. Abaixo do
+                        piso, a etiqueta simplesmente não aparece. */}
+                    {total >= MINIMO_PARA_CONTAR ? (
+                      <span className="mt-1.5 shrink-0 rounded-full bg-graf-100 px-2.5 py-1 text-xs font-semibold text-graf-600">
+                        {plural(total, "item", "itens")}
+                      </span>
+                    ) : null}
                   </div>
 
                   {resumo ? (
-                    <p className="mt-3 line-2 text-[0.9375rem] leading-relaxed text-graf-500">
+                    <p className="mt-2.5 line-2 text-[0.9375rem] leading-relaxed text-graf-500">
                       {resumo}
                     </p>
                   ) : null}
 
-                  <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-bold text-jb-700 transition-transform duration-200 group-hover:translate-x-0.5">
+                  <span className="mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-bold text-jb-700 transition-transform duration-200 group-hover:translate-x-0.5">
                     Ver equipamentos
                     <ArrowRight className="size-4 shrink-0" aria-hidden />
                   </span>

@@ -89,9 +89,9 @@ export function Historico({ itens }: { itens: ItemHistorico[] }) {
               </span>
             </div>
 
-            <div className="min-w-0 flex-1 rounded-xl border border-graf-200 bg-white p-4 shadow-card">
+            <div className="min-w-0 flex-1 rounded-xl border border-graf-200 bg-white p-4">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+                <p className="text-xs font-bold uppercase tracking-[0.07em] text-graf-500">
                   {NOME_DO_TIPO[item.tipo]}
                 </p>
                 {item.etiqueta ? <Etiqueta tom="neutro">{item.etiqueta}</Etiqueta> : null}

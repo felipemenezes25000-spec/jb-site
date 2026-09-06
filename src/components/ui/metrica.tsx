@@ -100,7 +100,7 @@ export function CartaoMetrica({
   );
 
   const base = cn(
-    "relative flex h-full flex-col overflow-hidden rounded-xl border border-graf-200 bg-white p-5 shadow-card",
+    "relative flex h-full flex-col overflow-hidden rounded-xl border border-graf-200 bg-white p-5",
     className,
   );
 

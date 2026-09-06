@@ -127,7 +127,7 @@ export async function SecaoSeminovos() {
         <GradeConteudoApoio
           conteudo={<ListaSeminovos produtos={produtos} parcelamento={parcelamento} />}
           apoio={
-            <div className="rounded-2xl border border-graf-200 bg-surface-muted p-6 shadow-card">
+            <div className="rounded-2xl border border-graf-200 bg-surface-muted p-6 lg:p-7">
               <h3 className="text-title text-graf-950">O que fica registrado</h3>
               <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-600">
                 Antes de entrar no catálogo, a unidade passa pela equipe técnica. O que foi
@@ -220,7 +220,12 @@ function CartaoSeminovo({
   return (
     <Link
       href={`/loja/${produto.slug}`}
-      className="group grid gap-5 rounded-2xl border border-graf-200 bg-white p-4 shadow-card transition-[border-color,box-shadow] duration-200 hover:border-jb-200 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:p-5"
+      /* A coluna da foto vale 19rem porque a unidade física é o argumento da
+         faixa: quem compra seminovo compra AQUELA máquina, e uma miniatura de
+         208px com 16px de recuo de cada lado deixava o equipamento do tamanho
+         de um ícone. Sem sombra em repouso — a borda basta, e a sombra fica
+         para o hover. */
+      className="group grid gap-5 rounded-2xl border border-graf-200 bg-white p-4 transition-[border-color,box-shadow] duration-200 hover:border-jb-200 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 sm:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] sm:gap-7 sm:p-5"
     >
       <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-gradient-to-b from-graf-50 to-white sm:aspect-square">
         {foto ? (
@@ -228,8 +233,8 @@ function CartaoSeminovo({
             src={foto.url}
             alt={foto.alt}
             fill
-            sizes="(max-width: 640px) 92vw, 208px"
-            className="object-contain p-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
+            sizes="(max-width: 640px) 92vw, 304px"
+            className="object-contain p-3 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
           />
         ) : (
           <span
@@ -240,7 +245,7 @@ function CartaoSeminovo({
           </span>
         )}
         {foto?.daUnidade ? (
-          <span className="absolute inset-x-0 bottom-0 bg-graf-950/75 py-1.5 text-center text-[0.6875rem] font-semibold uppercase tracking-wider text-white">
+          <span className="absolute inset-x-0 bottom-0 bg-graf-950/75 py-2 text-center text-xs font-semibold uppercase tracking-wider text-white">
             Foto desta unidade
           </span>
         ) : null}

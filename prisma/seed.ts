@@ -278,7 +278,7 @@ async function main() {
     {
       question: "Preciso aprovar o orçamento antes de qualquer troca de peça?",
       answer:
-        "Sim. Nenhuma peça é substituída sem a sua aprovação. O orçamento chega na Minha JB com diagnóstico, peças e mão de obra discriminados.",
+        "Sim. Nenhuma peça é substituída sem a sua aprovação. O orçamento chega na Área da Clínica com diagnóstico, peças e mão de obra discriminados.",
       group: "assistencia",
       order: 2,
     },
@@ -292,7 +292,7 @@ async function main() {
     {
       question: "Como acompanho meu pedido?",
       answer:
-        "Pela Minha JB. Cada pedido tem uma linha do tempo que vai de “pedido realizado” até a instalação, com a data de cada etapa.",
+        "Pela Área da Clínica. Cada pedido tem uma linha do tempo que vai de “pedido realizado” até a instalação, com a data de cada etapa.",
       group: "compra",
       order: 4,
     },
@@ -306,7 +306,7 @@ async function main() {
     {
       question: "Vocês emitem ordem de serviço?",
       answer:
-        "Sim. Toda manutenção gera uma ordem de serviço com o que foi executado, as peças usadas e as medidas necessárias, disponível para download na Minha JB.",
+        "Sim. Toda manutenção gera uma ordem de serviço com o que foi executado, as peças usadas e as medidas necessárias, disponível para download na Área da Clínica.",
       group: "assistencia",
       order: 6,
     },

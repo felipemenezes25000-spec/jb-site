@@ -78,7 +78,7 @@ export function Destaques({
             key={item.rotulo}
             className={cn("relative min-w-0 bg-white p-4", Icone && "pl-16")}
           >
-            <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+            <dt className="text-xs font-bold uppercase tracking-[0.07em] text-graf-500">
               {Icone ? (
                 <span
                   aria-hidden

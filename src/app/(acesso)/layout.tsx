@@ -6,11 +6,17 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 
 /**
- * Shell da área de conta. É o mesmo cabeçalho e o mesmo rodapé da loja —
- * quem entra ou se cadastra continua dentro do site, com o carrinho e o
- * telefone da JB à mão, nunca numa tela solta de login.
+ * Shell das telas de acesso — entrar, cadastro e recuperação de senha.
+ *
+ * É o mesmo cabeçalho e o mesmo rodapé da loja: quem entra ou se cadastra
+ * continua dentro do site, com o carrinho e o telefone da JB à mão, nunca numa
+ * tela solta de login.
+ *
+ * A Área da Clínica, depois do login, tem casca própria — o grupo `(conta)`.
+ * A separação é só de layout: as URLs não mudam, porque grupo de rota entre
+ * parênteses não entra no caminho.
  */
-export default async function ContaLayout({ children }: { children: React.ReactNode }) {
+export default async function AcessoLayout({ children }: { children: React.ReactNode }) {
   const [s, cliente, itensNoCarrinho, categorias] = await Promise.all([
     getSettings(),
     sessaoCliente(),

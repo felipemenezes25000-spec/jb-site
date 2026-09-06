@@ -33,11 +33,18 @@ import { cn } from "@/lib/utils";
 
 const PUBLICADO = { status: "active" } as const;
 
+/*
+ * Quatro, não seis. No desktop fecha uma fileira exata; no celular, onde a
+ * grade vira uma coluna só, cada cartão a mais custa quase 500px de rolagem —
+ * e a faixa existe para dar uma amostra do catálogo, não para substituí-lo.
+ */
+const NA_VITRINE = 4;
+
 async function carregar() {
   const marcados = await prisma.product.findMany({
     where: { ...PUBLICADO, featured: true },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    take: 6,
+    take: NA_VITRINE,
     select: SELECAO_HOME,
   });
 
@@ -46,7 +53,7 @@ async function carregar() {
   const recentes = await prisma.product.findMany({
     where: PUBLICADO,
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    take: 6,
+    take: NA_VITRINE,
     select: SELECAO_HOME,
   });
 
@@ -118,9 +125,9 @@ export function CartaoDestaque({
   return (
     <Link
       href={`/loja/${produto.slug}`}
-      className="group flex w-full flex-col overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+      className="group flex w-full flex-col overflow-hidden rounded-2xl border border-graf-200 bg-white transition-[border-color,box-shadow] duration-200 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
     >
-      <div className="relative aspect-4/3 overflow-hidden bg-gradient-to-b from-white to-graf-50">
+      <div className="relative aspect-5/4 overflow-hidden bg-gradient-to-b from-white to-graf-50">
         {foto ? (
           <Image
             src={foto.url}
@@ -128,7 +135,7 @@ export function CartaoDestaque({
             fill
             sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 30vw"
             className={cn(
-              "object-contain p-7 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04] sm:p-8",
+              "object-contain p-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04] sm:p-5",
               esgotado && "opacity-60 grayscale",
             )}
           />
@@ -147,29 +154,30 @@ export function CartaoDestaque({
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col p-5 sm:p-6">
-        {produto.brand ? (
-          <p className="text-xs font-semibold uppercase tracking-wider text-graf-500">
-            {produto.brand.name}
-          </p>
-        ) : null}
+      <div className="flex flex-1 flex-col border-t border-graf-200 p-5 sm:p-6">
+        {/* Altura reservada nas três linhas de identificação — marca, nome e
+            modelo. Sem isso, um nome de uma linha e outro de duas empurram o
+            preço para alturas diferentes e a fileira inteira desalinha. */}
+        <p className="h-4 text-xs font-semibold uppercase tracking-wider text-graf-500">
+          {produto.brand ? produto.brand.name : null}
+        </p>
 
-        <h3 className="mt-1.5 line-2 text-lg font-bold leading-snug text-graf-950 group-hover:text-jb-700">
+        <h3 className="mt-1.5 line-2 min-h-11 text-lg font-bold leading-snug text-graf-950 group-hover:text-jb-700">
           {produto.name}
         </h3>
 
-        {produto.model ? (
-          <p className="mt-1 truncate text-sm text-graf-500">{produto.model}</p>
-        ) : null}
+        <p className="mt-1 h-5 truncate text-sm text-graf-500">
+          {produto.model ? produto.model : null}
+        </p>
 
         <div className="mt-auto pt-6">
           <BlocoPreco produto={produto} parcelamento={parcelamento} />
 
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-graf-100 pt-4">
-            <Etiqueta tom={estado.tom} ponto>
-              {estado.texto}
+          <div className="mt-5 flex h-11 items-center justify-between gap-3 border-t border-graf-100 pt-4">
+            <Etiqueta tom={estado.tom} ponto className="min-w-0">
+              <span className="min-w-0 truncate">{estado.texto}</span>
             </Etiqueta>
-            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-jb-700 transition-transform duration-200 group-hover:translate-x-0.5">
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-jb-700 transition-transform duration-200 group-hover:translate-x-0.5">
               Ver equipamento
               <ArrowRight className="size-4 shrink-0" aria-hidden />
             </span>

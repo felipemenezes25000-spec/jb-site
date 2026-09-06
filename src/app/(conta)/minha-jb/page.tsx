@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { marcarAvisosComoLidos } from "@/app/acoes/minha-jb";
+import { PrecisaDeAtencao, type Pendencia } from "@/components/conta/mj-atencao";
 import { Topo } from "@/components/conta/mj-topo";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao, Etiqueta, Vazio } from "@/components/ui/data";
@@ -309,6 +310,94 @@ export default async function VisaoGeralPage() {
 
   const proximo = candidatos.sort((a, b) => a.quando.getTime() - b.quando.getTime())[0];
 
+  /* ------------------------------------------- precisa da sua atenção
+
+     Só o que espera uma decisão de quem está lendo. Equipamento em manutenção
+     ou aguardando peça fica de fora de propósito: a bola está com a JB, e
+     listar isso aqui transformaria o bloco em mais um resumo. */
+
+  const pendencias: Pendencia[] = [];
+
+  for (const equipamento of equipamentos) {
+    const identificacao = [equipamento.name, equipamento.brandName, equipamento.modelName]
+      .filter(Boolean)
+      .join(" · ");
+
+    if (equipamento.status === "inoperante") {
+      pendencias.push({
+        chave: `equipamento-parado-${equipamento.id}`,
+        urgencia: "alta",
+        titulo: "Equipamento parado",
+        detalhe: identificacao,
+        href: `/minha-jb/equipamentos/${equipamento.id}`,
+        acao: "Abrir chamado",
+      });
+      continue;
+    }
+
+    if (equipamento.nextMaintenanceAt && equipamento.nextMaintenanceAt < agora) {
+      pendencias.push({
+        chave: `preventiva-vencida-${equipamento.id}`,
+        urgencia: "media",
+        titulo: "Manutenção preventiva vencida",
+        detalhe: `${identificacao} · prevista para ${formatarData(equipamento.nextMaintenanceAt)}`,
+        href: `/minha-jb/equipamentos/${equipamento.id}`,
+        acao: "Ver equipamento",
+      });
+    }
+  }
+
+  for (const orcamento of orcamentos) {
+    if (orcamento.status !== "enviado") continue;
+    pendencias.push({
+      chave: `orcamento-${orcamento.id}`,
+      urgencia: "alta",
+      titulo: "Orçamento esperando a sua decisão",
+      detalhe: [
+        orcamento.number,
+        formatarPreco(orcamento.totalCents),
+        orcamento.validUntil ? `vale até ${formatarData(orcamento.validUntil)}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      href: `/minha-jb/orcamentos/${orcamento.number}`,
+      acao: "Aprovar ou recusar",
+    });
+  }
+
+  for (const chamado of chamados) {
+    if (chamado.status !== "aguardando_cliente") continue;
+    pendencias.push({
+      chave: `chamado-${chamado.id}`,
+      urgencia: "alta",
+      titulo: "Chamado esperando a sua resposta",
+      detalhe: [
+        chamado.number,
+        chamado.equipment?.name ??
+          [chamado.brandName, chamado.modelName].filter(Boolean).join(" "),
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      href: `/minha-jb/assistencia/${chamado.number}`,
+      acao: "Responder",
+    });
+  }
+
+  for (const pedido of pedidos) {
+    if (pedido.status !== "aguardando_pagamento") continue;
+    pendencias.push({
+      chave: `pedido-${pedido.id}`,
+      urgencia: "media",
+      titulo: "Pedido aguardando pagamento",
+      detalhe: `${pedido.number} · ${formatarPreco(pedido.totalCents)}`,
+      href: `/minha-jb/pedidos/${pedido.number}`,
+      acao: "Concluir pagamento",
+    });
+  }
+
+  // urgente primeiro, mantendo a ordem de entrada dentro de cada nível
+  pendencias.sort((a, b) => Number(b.urgencia === "alta") - Number(a.urgencia === "alta"));
+
   const primeiroNome = cliente.name.trim().split(/\s+/)[0] ?? "";
 
   return (
@@ -322,48 +411,10 @@ export default async function VisaoGeralPage() {
         }
       />
 
-      {avisos.length > 0 ? (
-        <Cartao className="mb-6 border-info-500/25 bg-info-50/60">
-          <div className="flex flex-wrap items-start gap-x-4 gap-y-3 p-5">
-            <BellRing className="mt-0.5 size-5 shrink-0 text-info-700" aria-hidden />
-            {/* Sem largura mínima, a coluna do texto encolhia até caber ao lado
-                do botão no celular e cada aviso saía quebrado em três palavras
-                por linha. Com ela, o botão desce para a linha de baixo. */}
-            <div className="min-w-[15rem] flex-1">
-              <p className="text-sm font-bold text-info-700">
-                {plural(avisos.length, "aviso novo", "avisos novos")}
-              </p>
-              <ul className="mt-2 space-y-2">
-                {avisos.map((aviso) => (
-                  <li key={aviso.id} className="text-sm leading-relaxed text-graf-700">
-                    {aviso.href ? (
-                      <Link
-                        href={aviso.href}
-                        className="font-semibold text-graf-900 underline-offset-4 hover:underline"
-                      >
-                        {aviso.title}
-                      </Link>
-                    ) : (
-                      <span className="font-semibold text-graf-900">{aviso.title}</span>
-                    )}
-                    {aviso.body ? <span className="block text-graf-600">{aviso.body}</span> : null}
-                    <span className="block text-xs text-graf-500">
-                      {formatarDataHora(aviso.createdAt)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <form action={marcarAvisosComoLidos}>
-              <button
-                type="submit"
-                className="inline-flex min-h-11 items-center rounded-lg border border-info-500/30 bg-white px-4 text-sm font-semibold text-info-700 transition-colors hover:bg-info-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-              >
-                Marcar como lidos
-              </button>
-            </form>
-          </div>
-        </Cartao>
+      {pendencias.length > 0 ? (
+        <div className="mb-6">
+          <PrecisaDeAtencao pendencias={pendencias} />
+        </div>
       ) : null}
 
       {/* ------------------------------------------------------ números */}
@@ -702,7 +753,7 @@ export default async function VisaoGeralPage() {
             <li key={atalho.href}>
               <Link
                 href={atalho.href}
-                className="flex min-h-11 items-start gap-3 rounded-xl border border-graf-200 bg-white p-4 shadow-card transition-[box-shadow,border-color] hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                className="flex min-h-11 items-start gap-3 rounded-xl border border-graf-200 bg-white p-4 transition-[box-shadow,border-color] hover:border-graf-300 hover:shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
                 <atalho.icone className="mt-0.5 size-5 shrink-0 text-jb-600" aria-hidden />
                 <span className="min-w-0">
@@ -716,6 +767,61 @@ export default async function VisaoGeralPage() {
           ))}
         </ul>
       </section>
+
+      {/* ------------------------------------------------------- avisos
+
+          Os avisos ficam no fim porque são registro do que já aconteceu, não
+          pendência: o que espera decisão está lá em cima. O sino do topo
+          aponta para esta âncora, e `scroll-mt` desconta a altura da barra
+          fixa para o bloco não parar escondido atrás dela. */}
+      {avisos.length > 0 ? (
+        <section id="avisos" aria-labelledby="mj-avisos" className="mt-8 scroll-mt-24">
+          <Cartao className="border-info-500/25 bg-info-50/60">
+            <div className="flex flex-wrap items-start gap-x-4 gap-y-3 p-5">
+              <BellRing className="mt-0.5 size-5 shrink-0 text-info-700" aria-hidden />
+              {/* Sem largura mínima, a coluna do texto encolhia até caber ao
+                  lado do botão no celular e cada aviso saía quebrado em três
+                  palavras por linha. Com ela, o botão desce para a linha de
+                  baixo. */}
+              <div className="min-w-[15rem] flex-1">
+                <h2 id="mj-avisos" className="text-sm font-bold text-info-700">
+                  {plural(avisos.length, "aviso novo", "avisos novos")}
+                </h2>
+                <ul className="mt-2 space-y-2">
+                  {avisos.map((aviso) => (
+                    <li key={aviso.id} className="text-sm leading-relaxed text-graf-700">
+                      {aviso.href ? (
+                        <Link
+                          href={aviso.href}
+                          className="font-semibold text-graf-900 underline-offset-4 hover:underline"
+                        >
+                          {aviso.title}
+                        </Link>
+                      ) : (
+                        <span className="font-semibold text-graf-900">{aviso.title}</span>
+                      )}
+                      {aviso.body ? (
+                        <span className="block text-graf-600">{aviso.body}</span>
+                      ) : null}
+                      <span className="block text-xs text-graf-500">
+                        {formatarDataHora(aviso.createdAt)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <form action={marcarAvisosComoLidos}>
+                <button
+                  type="submit"
+                  className="inline-flex min-h-11 items-center rounded-lg border border-info-500/30 bg-white px-4 text-sm font-semibold text-info-700 transition-colors hover:bg-info-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                >
+                  Marcar como lidos
+                </button>
+              </form>
+            </div>
+          </Cartao>
+        </section>
+      ) : null}
 
       {pedidos.length === 0 && chamados.length === 0 && totalEquipamentos === 0 ? (
         <Vazio

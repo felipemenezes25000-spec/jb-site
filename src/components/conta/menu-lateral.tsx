@@ -128,8 +128,8 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
           "relative flex min-h-11 items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm font-semibold transition-[background-color,color,box-shadow] duration-150",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
           item.ativo
-            ? "bg-white text-graf-950 shadow-card ring-1 ring-graf-200"
-            : "text-graf-700 hover:bg-white/80 hover:text-graf-950",
+            ? "bg-jb-50 text-graf-950"
+            : "text-graf-700 hover:bg-graf-100 hover:text-graf-950",
         )}
       >
         {item.ativo ? (
@@ -155,7 +155,7 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
 /** Cabeçalho de grupo — o degrau que transforma dez links em três assuntos. */
 function TituloGrupo({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-4 pb-1.5 pt-5 text-[0.6875rem] font-bold uppercase tracking-[0.09em] text-graf-500">
+    <p className="px-4 pb-1.5 pt-5 text-[0.75rem] font-bold uppercase tracking-[0.08em] text-graf-500">
       {children}
     </p>
   );
@@ -180,7 +180,7 @@ function Identidade({
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-bold text-graf-950">
-          {nome || "Minha conta"}
+          {nome || "Área da Clínica"}
         </span>
         <span className="block truncate text-xs text-graf-500">{email}</span>
       </span>
@@ -305,24 +305,17 @@ export function MenuLateral({
     <div className={className}>
       {/* ==================================================== desktop */}
       <nav aria-label="Área da Clínica" className="hidden lg:block">
-        <div className="sticky top-28 flex max-h-[calc(100dvh-8rem)] flex-col overflow-y-auto rounded-2xl border border-graf-200 bg-graf-50/70 p-3">
-          <Identidade
-            nome={identidade.nome}
-            email={identidade.email}
-            className="px-1 py-2"
-          />
-
-          <LinkBotao
-            href="/minha-jb/assistencia/novo"
-            tamanho="sm"
-            larguraTotal
-            className="mt-3"
-          >
+        {/* top-20: 64px do topo fixo da área mais 16px de folga. A identidade
+            de quem está logado não se repete aqui — ela já está no topo, e
+            duplicá-la gastava a primeira dobra da coluna com informação que a
+            pessoa acabou de ler. */}
+        <div className="sticky top-20 flex max-h-[calc(100dvh-6.5rem)] flex-col overflow-y-auto rounded-2xl border border-graf-200 bg-white p-3">
+          <LinkBotao href="/minha-jb/assistencia/novo" tamanho="sm" larguraTotal>
             <LifeBuoy className="size-4" aria-hidden />
             Abrir chamado
           </LinkBotao>
 
-          <div className="mt-2 flex-1">{navegacao(false)}</div>
+          <div className="mt-3 flex-1">{navegacao(false)}</div>
 
           {sair ? <div className="mt-5 border-t border-graf-200 pt-3">{sair}</div> : null}
         </div>
@@ -343,7 +336,7 @@ export function MenuLateral({
         >
           <IconeAtual className="size-5 shrink-0 text-jb-600" aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="block text-[0.6875rem] font-bold uppercase tracking-[0.09em] text-graf-500">
+            <span className="block text-[0.75rem] font-bold uppercase tracking-[0.08em] text-graf-500">
               Área da Clínica
             </span>
             <span className="block truncate text-sm font-bold text-graf-950">
