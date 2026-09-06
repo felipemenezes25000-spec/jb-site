@@ -8,31 +8,44 @@ seria bom fazer.
 
 ---
 
-## Última fase concluída
+## Fases concluídas
 
-**Fase 1 — narrativa, home, Sobre, Estrutura e naming.** Validada localmente.
-Os 24 requisitos da matriz estão em `cobertura.md`; as execuções que sustentam
-cada um estão em `validacao.md`.
+| Fase | Situação | Commit |
+|---|---|---|
+| 0 — diagnóstico e baseline | validada localmente | (parte do commit da fase 1) |
+| 1 — narrativa, home, Sobre, Estrutura, naming | validada localmente | `8936118` |
+| 2 — planos e calculadora | validada localmente | `68c9165` |
 
-Portões no fim da fase: `typecheck` ✅ · `test:unit` **213** ✅ · `build` ✅ ·
-`e2e` **48** ✅ · `a11y` 34 medições, 0 problemas ✅ · `responsivo` 102
+Portões no fim da fase 2: `typecheck` ✅ · `test:unit` **249** ✅ · `build` ✅ ·
+`e2e` **48** ✅ · `a11y` 36 medições, 0 problemas ✅ · `responsivo` 108
 medições, 0 problemas ✅.
-
-Antes dela, **fase 0** — diagnóstico, com duas divergências importantes entre a
-auditoria e o código (D2, D3 em `decisoes.md`).
 
 ---
 
 ## Tarefa atual
 
-**Fase 2 — clareza dos planos e calculadora comercial** (seção 6 do prompt
-mestre). Nada foi iniciado ainda além do diagnóstico:
+**Fase 3 — conta obrigatória e checkout integrado** (seção 7 do prompt mestre).
+É a fase que o próprio escopo marca como prioritária, e precisa ser concluída
+no frontend **e** no backend.
 
-- `MaintenancePlan` **não tem** campo de base de cobrança (D4).
-- Os três planos no banco são de demonstração, slug `demo-plano-*` (D3).
+O que já se sabe do código, por leitura de `src/app/acoes/checkout.ts`:
 
-Primeira subtarefa: modelar a base de cobrança com migração versionada e
-controle em `/admin/manutencao/planos`.
+- O checkout hoje aceita compra como convidado: `customerId` fica `null` e o
+  acompanhamento sai pelo cookie assinado `jb_pedidos`.
+- Existe o checkbox `criarConta`; desmarcado, a compra segue sem conta. É o
+  bypass que a fase 3 manda remover.
+- E-mail já cadastrado com `criarConta` marcado devolve erro e sugere
+  **seguir como convidado** — saída que deixa de existir.
+- Cadastro legado com `passwordHash = null` existe no modelo e precisa de
+  recuperação/ativação com prova de controle.
+- `criarPedido` (`src/lib/pedido.ts`) tem outros consumidores além do checkout
+  público — importação e pedidos administrativos. A obrigatoriedade tem de
+  ficar na fronteira certa, não dentro do domínio.
+
+**Atenção ao teste E2E `04-checkout.spec.ts:18`**, "fecha o pedido como
+convidado e chega na página do pedido": ele passa hoje e descreve o
+comportamento que esta fase muda. Precisa ser reescrito para o contrato novo,
+com justificativa — nunca desligado.
 
 ---
 
