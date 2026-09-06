@@ -1,12 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Headphones,
-  PackageCheck,
-  ShoppingCart,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, Headphones, PackageCheck, ShoppingCart, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { Etiqueta } from "@/components/ui/data";
@@ -18,13 +12,29 @@ import {
 } from "@/components/loja/home/comum";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
 import type { SettingsMap } from "@/lib/settings";
-import { cn } from "@/lib/utils";
 
 const ATALHOS = [
   { href: "/novos", rotulo: "Novos", icone: ShoppingCart },
   { href: "/seminovos", rotulo: "Seminovos", icone: PackageCheck },
   { href: "/assistencia-tecnica", rotulo: "Assistência", icone: Wrench },
 ] as const;
+
+/**
+ * Entrada da composição. Fica em CSS puro de propósito: o hero é o LCP da home
+ * e continua sendo componente de servidor — nenhum JavaScript precisa carregar
+ * para o primeiro quadro aparecer.
+ */
+const CSS_HERO = `
+@keyframes jb-hero-sobe { from { opacity: 0; transform: translate3d(0,16px,0); } to { opacity: 1; transform: none; } }
+@keyframes jb-hero-entra { from { opacity: 0; transform: translate3d(30px,0,0); } to { opacity: 1; transform: none; } }
+@keyframes jb-hero-cresce { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+.jb-hero-sobe { animation: jb-hero-sobe 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+.jb-hero-entra { animation: jb-hero-entra 0.85s cubic-bezier(0.22,1,0.36,1) both; }
+.jb-hero-cresce { animation: jb-hero-cresce 0.9s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
+@media (prefers-reduced-motion: reduce) {
+  .jb-hero-sobe, .jb-hero-entra, .jb-hero-cresce { animation: none; }
+}
+`;
 
 export function Hero({
   configuracoes: _configuracoes,
@@ -36,74 +46,168 @@ export function Hero({
   parcelamento: Parcelamento;
 }) {
   return (
-    <section className="relative overflow-hidden border-b border-graf-200 bg-[#f7f7f5]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-jb-300 to-transparent" aria-hidden />
+    <section className="relative isolate overflow-hidden border-b border-graf-200 bg-[#f8f7f6]">
+      <style>{CSS_HERO}</style>
+
+      {/* Fundo: iluminação quente, arcos finos e o consultório entrando pela esquerda. */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(90%_70%_at_74%_18%,rgba(215,25,32,0.07),transparent_58%),radial-gradient(60%_60%_at_8%_86%,rgba(215,25,32,0.05),transparent_60%),linear-gradient(160deg,#fdfcfc_0%,#f6f4f3_100%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -right-[26rem] -top-[34rem] size-[70rem] rounded-full border border-jb-200/60"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -right-[19rem] -top-[27rem] size-[55rem] rounded-full border border-jb-100"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -bottom-[30rem] left-[24%] size-[52rem] rounded-full border border-jb-100/70"
+        aria-hidden
+      />
 
       <div
-        className={cn(
-          "container-jb max-w-[112rem] py-8 sm:py-10 lg:py-12",
-          produto && "lg:grid lg:grid-cols-[minmax(0,0.88fr)_minmax(36rem,1.12fr)] lg:items-stretch lg:gap-8 xl:gap-12",
-        )}
+        className="pointer-events-none absolute inset-y-0 left-0 hidden w-[clamp(11rem,15vw,19rem)] opacity-[0.42] min-[1280px]:block"
+        style={{
+          maskImage:
+            "linear-gradient(to right, #000 0%, #000 42%, transparent 96%), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent)",
+          maskComposite: "intersect",
+          WebkitMaskImage:
+            "linear-gradient(to right, #000 0%, #000 42%, transparent 96%), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent)",
+          WebkitMaskComposite: "source-in",
+        }}
+        aria-hidden
       >
-        <div className="flex min-w-0 flex-col justify-center py-8 sm:py-10 lg:py-12">
-          <div className="flex items-center gap-3">
-            <span className="h-px w-8 bg-jb-600" aria-hidden />
-            <p className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-jb-700">
-              JB Soluções Odontológicas
+        <Image
+          src="/images/hero/ambiente-clinica.webp"
+          alt=""
+          fill
+          sizes="336px"
+          className="object-cover object-left"
+        />
+      </div>
+
+      <p
+        className="pointer-events-none absolute left-[3.5rem] top-[9rem] hidden text-[0.63rem] font-semibold uppercase leading-[2] tracking-[0.28em] text-graf-500 min-[1600px]:block"
+        aria-hidden
+      >
+        Tecnologia
+        <br />
+        que mantém
+        <br />
+        sorrisos
+        <br />
+        em movimento
+        <span className="mt-4 block h-px w-7 bg-jb-500/70" />
+      </p>
+
+      <p
+        className="pointer-events-none absolute bottom-[3.5rem] left-[3.5rem] hidden text-[0.6rem] font-semibold uppercase leading-[2] tracking-[0.26em] text-graf-400 min-[1600px]:block"
+        aria-hidden
+      >
+        Mais
+        <br />
+        que equipamentos.
+        <br />
+        Parceria para
+        <br />
+        ir mais longe.
+      </p>
+
+      <p
+        className="pointer-events-none absolute right-[3.5rem] top-[11rem] hidden text-right text-[0.63rem] font-semibold uppercase leading-[2] tracking-[0.28em] text-graf-400 min-[1600px]:block"
+        aria-hidden
+      >
+        Clínicas
+        <br />
+        mais fortes
+        <br />
+        com a JB
+      </p>
+
+      <div className="relative z-10 mx-auto w-full max-w-[100rem] px-5 py-10 min-[640px]:px-8 min-[1024px]:py-12">
+        <div className="grid items-center gap-10 min-[1024px]:grid-cols-[minmax(0,1.02fr)_minmax(0,1.08fr)] min-[1024px]:gap-x-10 min-[1360px]:grid-cols-[minmax(0,1fr)_minmax(0,1.16fr)] min-[1360px]:gap-x-14">
+          <div className="flex min-w-0 flex-col">
+            <div className="jb-hero-sobe flex items-center gap-3">
+              <span className="h-px w-8 shrink-0 bg-jb-600" aria-hidden />
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.2em] text-jb-700">
+                JB Soluções Odontológicas
+              </p>
+            </div>
+
+            <h1
+              className="jb-hero-sobe mt-5 max-w-[15ch] text-[clamp(2.6rem,3.55vw,4.15rem)] font-black leading-[0.94] tracking-[-0.06em] text-graf-950"
+              style={{ animationDelay: "0.06s" }}
+            >
+              Equipamentos para uma clínica que não pode parar.
+            </h1>
+
+            <p
+              className="jb-hero-sobe mt-5 max-w-[16ch] text-[clamp(1.85rem,2.6vw,3rem)] font-black leading-[0.98] tracking-[-0.05em] text-jb-600"
+              style={{ animationDelay: "0.12s" }}
+            >
+              Compra e pós-venda na mesma JB.
             </p>
+
+            <p
+              className="jb-hero-sobe mt-6 max-w-[34rem] text-base leading-[1.65] text-graf-600 min-[640px]:text-[1.05rem]"
+              style={{ animationDelay: "0.18s" }}
+            >
+              Escolha equipamentos novos ou seminovos com orientação comercial, instalação,
+              assistência técnica e histórico conectados ao mesmo relacionamento.
+            </p>
+
+            <div
+              className="jb-hero-sobe mt-8 flex flex-col gap-3 min-[640px]:flex-row min-[640px]:flex-wrap"
+              style={{ animationDelay: "0.24s" }}
+            >
+              <LinkBotao
+                href="/loja"
+                tamanho="lg"
+                className="group min-w-52 rounded-xl shadow-[0_18px_36px_-18px_rgba(211,17,28,0.6)] hover:-translate-y-0.5"
+              >
+                Explorar catálogo
+                <ArrowRight
+                  className="size-4 transition-transform group-hover:translate-x-1"
+                  aria-hidden
+                />
+              </LinkBotao>
+
+              <LinkBotao
+                href="/assistencia-tecnica/solicitar"
+                variante="secundario"
+                tamanho="lg"
+                className="min-w-52 rounded-xl border-graf-300 bg-white hover:-translate-y-0.5 hover:border-jb-300 hover:text-jb-700"
+              >
+                <Wrench className="size-4" aria-hidden />
+                Solicitar assistência
+              </LinkBotao>
+            </div>
+
+            <nav
+              aria-label="Acessos rápidos"
+              className="jb-hero-sobe mt-7"
+              style={{ animationDelay: "0.3s" }}
+            >
+              <ul className="flex flex-wrap gap-2.5">
+                {ATALHOS.map(({ href, rotulo, icone: Icone }) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="foco-jb group inline-flex min-h-10 items-center gap-2 rounded-full border border-graf-200 bg-white/85 px-4 text-xs font-extrabold text-graf-700 transition-[border-color,color,transform,background-color] hover:-translate-y-0.5 hover:border-jb-200 hover:bg-white hover:text-jb-700"
+                    >
+                      <Icone className="size-3.5 text-jb-600" aria-hidden />
+                      {rotulo}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
 
-          <h1 className="mt-5 max-w-[10.5ch] text-[clamp(3.2rem,5vw,5.7rem)] font-black leading-[0.9] tracking-[-0.065em] text-graf-950">
-            Equipamentos para uma clínica que não pode parar.
-          </h1>
-
-          <p className="mt-5 max-w-[11ch] text-[clamp(2rem,3.3vw,3.6rem)] font-black leading-[0.95] tracking-[-0.055em] text-jb-600">
-            Compra e pós-venda na mesma JB.
-          </p>
-
-          <p className="mt-6 max-w-[38rem] text-base leading-7 text-graf-600 sm:text-[1.05rem]">
-            Escolha equipamentos novos ou seminovos com orientação comercial, instalação, assistência técnica e histórico conectados ao mesmo relacionamento.
-          </p>
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <LinkBotao
-              href="/loja"
-              tamanho="lg"
-              className="min-w-52 rounded-xl shadow-[0_16px_34px_-18px_rgba(211,17,28,0.55)] hover:-translate-y-0.5"
-            >
-              Explorar catálogo
-              <ArrowRight className="size-4" aria-hidden />
-            </LinkBotao>
-
-            <LinkBotao
-              href="/assistencia-tecnica/solicitar"
-              variante="secundario"
-              tamanho="lg"
-              className="min-w-52 rounded-xl border-graf-300 bg-white hover:-translate-y-0.5 hover:border-jb-300 hover:text-jb-700"
-            >
-              <Wrench className="size-4" aria-hidden />
-              Solicitar assistência
-            </LinkBotao>
-          </div>
-
-          <nav aria-label="Acessos rápidos" className="mt-8 border-t border-graf-200 pt-5">
-            <ul className="flex flex-wrap gap-2">
-              {ATALHOS.map(({ href, rotulo, icone: Icone }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className="group inline-flex min-h-10 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 text-xs font-extrabold text-graf-700 transition-[border-color,color,transform] hover:-translate-y-0.5 hover:border-jb-200 hover:text-jb-700"
-                  >
-                    <Icone className="size-3.5 text-jb-600" aria-hidden />
-                    {rotulo}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          {produto ? <VitrineHero produto={produto} parcelamento={parcelamento} /> : null}
         </div>
-
-        {produto ? <VitrineHero produto={produto} parcelamento={parcelamento} /> : null}
       </div>
     </section>
   );
@@ -119,43 +223,99 @@ function VitrineHero({
   const foto = fotoDe(produto);
 
   return (
-    <div className="relative min-h-[31rem] overflow-hidden rounded-[2rem] bg-[#111214] shadow-[0_34px_90px_-48px_rgba(62,0,0,0.48)] sm:min-h-[36rem] lg:min-h-[42rem]">
-      <div className="absolute inset-y-0 right-0 w-[33%] bg-jb-600" aria-hidden />
+    <div className="jb-hero-entra relative min-h-[30rem] overflow-hidden rounded-[2rem] bg-[#0b0b0d] shadow-[0_40px_100px_-52px_rgba(62,0,0,0.55)] min-[640px]:min-h-[34rem] min-[1024px]:min-h-[35rem] min-[1360px]:min-h-[37.5rem]">
+      {/* Profundidade: grafite à esquerda virando vermelho profundo à direita. */}
       <div
-        className="absolute inset-y-0 right-[18%] w-[35%] bg-jb-500/30"
-        style={{ clipPath: "polygon(50% 0,100% 0,50% 100%,0 100%)" }}
+        className="absolute inset-0 bg-[radial-gradient(120%_100%_at_100%_46%,rgba(226,22,30,0.62),transparent_56%),radial-gradient(70%_60%_at_86%_4%,rgba(255,60,68,0.28),transparent_54%),linear-gradient(112deg,#0b0b0d_0%,#161619_42%,#3a070c_100%)]"
         aria-hidden
       />
-      <div className="absolute -right-20 -top-24 size-[24rem] rounded-full border-[4rem] border-white/[0.055]" aria-hidden />
-      <div className="absolute bottom-[-5rem] left-[24%] h-40 w-80 rounded-full bg-jb-500/30 blur-3xl" aria-hidden />
+      <div
+        className="absolute -right-24 -top-28 size-[26rem] rounded-full border border-white/[0.07]"
+        aria-hidden
+      />
+      <div
+        className="absolute -right-10 top-1/2 size-[34rem] -translate-y-1/2 rounded-full border border-white/[0.06]"
+        aria-hidden
+      />
+      <div
+        className="absolute -bottom-24 left-[18%] h-52 w-96 rounded-full bg-jb-500/25 blur-3xl"
+        aria-hidden
+      />
 
-      <div className="absolute left-5 top-5 z-20 sm:left-7 sm:top-7">
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3.5 py-2 text-[0.65rem] font-black uppercase tracking-[0.14em] text-white/80 backdrop-blur-md">
+      <div className="absolute left-5 top-5 z-20 min-[640px]:left-7 min-[640px]:top-7">
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/25 px-3.5 py-2 text-[0.65rem] font-black uppercase tracking-[0.14em] text-white/85 backdrop-blur-md">
           <span className="size-1.5 rounded-full bg-jb-400" aria-hidden />
           Destaque do catálogo
         </span>
       </div>
 
-      <div className="absolute inset-x-[7%] bottom-[23%] top-[10%] z-10 overflow-hidden rounded-[1.8rem] border border-white/60 bg-white shadow-[0_26px_70px_-34px_rgba(0,0,0,0.42)] sm:inset-x-[10%] sm:bottom-[21%]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,#ffffff_0%,#fbfbfb_62%,#f0f0f0_100%)]" aria-hidden />
+      <p
+        className="absolute right-6 top-7 z-20 hidden text-right text-[0.58rem] font-semibold uppercase leading-[1.9] tracking-[0.26em] text-white/45 min-[1024px]:block"
+        aria-hidden
+      >
+        Odontologia
+        <br />
+        sem limites
+        <span className="ml-auto mt-2.5 block h-px w-6 bg-jb-400/70" />
+      </p>
+
+      {/* Painel claro com o produto. */}
+      <div className="absolute inset-x-[7%] bottom-[24%] top-[13%] z-10 overflow-hidden rounded-[1.6rem] border border-white/60 bg-white shadow-[0_30px_74px_-36px_rgba(0,0,0,0.45)] min-[640px]:inset-x-[8%] min-[640px]:bottom-[22%]">
+        <div
+          className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,#fff_0%,#fbfbfb_58%,#efeded_100%)]"
+          aria-hidden
+        />
+        <div
+          className="absolute left-1/2 top-1/2 size-[19rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-jb-100/80"
+          aria-hidden
+        />
+
         {foto ? (
           <Image
             src={foto.url}
             alt={foto.alt}
             fill
             preload
-            sizes="(max-width: 1024px) 88vw, 48vw"
-            className="object-contain p-[9%] drop-shadow-[0_28px_28px_rgba(90,0,0,0.13)] transition-transform duration-700 hover:scale-[1.035]"
+            sizes="(max-width: 1024px) 84vw, 44vw"
+            className="jb-hero-cresce scale-[1.28] object-contain drop-shadow-[0_30px_30px_rgba(90,0,0,0.14)]"
           />
         ) : null}
+
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,transparent_54%,rgba(255,255,255,0.5)_84%,rgba(255,255,255,0.92)_100%)]"
+          aria-hidden
+        />
+
+        <p
+          className="absolute left-5 top-1/2 z-10 hidden -translate-y-1/2 text-[0.55rem] font-semibold uppercase leading-[2] tracking-[0.24em] text-graf-400 min-[1280px]:block"
+          aria-hidden
+        >
+          Alta
+          <br />
+          performance
+          <br />
+          para grandes
+          <br />
+          resultados
+        </p>
+        <p
+          className="absolute right-5 top-[58%] z-10 hidden text-right text-[0.55rem] font-semibold uppercase leading-[2] tracking-[0.24em] text-graf-400 min-[1280px]:block"
+          aria-hidden
+        >
+          Confiança
+          <br />
+          em cada
+          <br />
+          detalhe
+        </p>
       </div>
 
       <ProdutoDestaque produto={produto} parcelamento={parcelamento} />
 
-      <div className="absolute bottom-6 right-6 z-20 hidden items-center gap-2 text-[0.63rem] font-bold uppercase tracking-[0.12em] text-white/65 sm:flex">
+      <p className="absolute bottom-7 right-6 z-20 hidden items-center gap-2 text-[0.6rem] font-bold uppercase tracking-[0.14em] text-white/60 min-[640px]:flex">
         <Headphones className="size-3.5" aria-hidden />
         suporte depois da compra
-      </div>
+      </p>
     </div>
   );
 }
@@ -175,7 +335,7 @@ function ProdutoDestaque({
   return (
     <Link
       href={`/loja/${produto.slug}`}
-      className="group absolute bottom-5 left-5 right-5 z-30 grid gap-4 rounded-[1.35rem] border border-white/70 bg-white/95 p-5 shadow-[0_26px_60px_-34px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform duration-300 hover:-translate-y-1 sm:bottom-7 sm:left-7 sm:right-auto sm:w-[min(34rem,72%)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+      className="foco-jb group absolute bottom-5 left-5 right-5 z-30 grid gap-4 rounded-[1.35rem] border border-white/70 bg-white/95 p-5 shadow-[0_26px_60px_-34px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_34px_70px_-32px_rgba(0,0,0,0.6)] min-[640px]:bottom-7 min-[640px]:left-7 min-[640px]:right-auto min-[640px]:w-[min(31rem,68%)] min-[640px]:grid-cols-[minmax(0,1fr)_auto] min-[640px]:items-end"
     >
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -187,16 +347,18 @@ function ProdutoDestaque({
           ) : null}
         </div>
 
-        <h2 className="mt-2 line-2 text-[1.05rem] font-black leading-[1.1] tracking-[-0.025em] text-graf-950 sm:text-lg">
+        <h2 className="line-2 mt-2 text-[1.05rem] font-black leading-[1.1] tracking-[-0.025em] text-graf-950 min-[640px]:text-lg">
           {produto.name}
         </h2>
 
         {produto.allowDirectPurchase && produto.priceCents > 0 ? (
           <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <p className="text-xl font-black tracking-[-0.025em] text-jb-700">{formatarPreco(produto.priceCents)}</p>
+            <p className="text-xl font-black tracking-[-0.025em] text-jb-700">
+              {formatarPreco(produto.priceCents)}
+            </p>
             {parcelas ? (
-              <p className="text-[0.65rem] text-graf-500">
-                até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
+              <p className="text-[0.68rem] text-graf-500">
+                em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
               </p>
             ) : null}
           </div>
@@ -205,7 +367,10 @@ function ProdutoDestaque({
         )}
       </div>
 
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-jb-600 text-white transition-transform group-hover:translate-x-1" aria-hidden>
+      <span
+        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-jb-600 text-white shadow-[0_14px_26px_-12px_rgba(211,17,28,0.8)] transition-transform group-hover:translate-x-1"
+        aria-hidden
+      >
         <ArrowRight className="size-4" />
       </span>
     </Link>

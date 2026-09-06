@@ -35,27 +35,31 @@ export function ProvasObjetivas({
   ];
 
   return (
-    <section aria-labelledby="titulo-provas-home" className="bg-[#111214] text-white">
+    <section aria-labelledby="titulo-provas-home" className="relative isolate overflow-hidden bg-[#111214] text-white">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_100%_at_88%_50%,rgba(226,22,30,0.16),transparent_62%)]"
+        aria-hidden
+      />
       <h2 id="titulo-provas-home" className="sr-only">Por que escolher a JB</h2>
-      <div className="container-jb max-w-[112rem]">
-        <ul className="grid sm:grid-cols-2 lg:grid-cols-4">
+      <div className="relative z-10 mx-auto w-full max-w-[100rem] px-5 min-[640px]:px-8">
+        <ul className="grid min-[640px]:grid-cols-2 min-[1024px]:grid-cols-4">
           {provas.map((prova, indice) => {
             const Icone = prova.icone;
             return (
               <li
                 key={prova.titulo}
-                className="relative flex min-w-0 items-center gap-4 border-white/10 py-5 sm:px-5 lg:min-h-[6.5rem] lg:border-l lg:px-7 first:lg:border-l-0"
+className="group relative flex min-w-0 items-center gap-4 border-white/10 py-5 min-[640px]:px-5 min-[1024px]:min-h-[7rem] min-[1024px]:border-l min-[1024px]:px-7 first:min-[1024px]:border-l-0 first:min-[1024px]:pl-0"
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.055] text-jb-300">
-                  <Icone className="size-4.5" aria-hidden />
+                <span className="text-[0.62rem] font-black tracking-[0.14em] text-white/25" aria-hidden>
+                  0{indice + 1}
+                </span>
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-jb-500/35 bg-white/[0.04] text-jb-300 transition-[box-shadow,border-color] duration-300 group-hover:border-jb-500/70 group-hover:shadow-[0_0_22px_-4px_rgba(226,22,30,0.55)]">
+                  <Icone className="size-[1.1rem]" aria-hidden />
                 </span>
                 <div className="min-w-0">
                   <p className="text-[0.9rem] font-black tracking-[-0.02em] text-white">{prova.titulo}</p>
                   <p className="mt-1 text-[0.7rem] leading-relaxed text-white/50">{prova.detalhe}</p>
                 </div>
-                <span className="absolute right-3 top-3 text-[0.58rem] font-black tracking-[0.12em] text-white/10" aria-hidden>
-                  0{indice + 1}
-                </span>
               </li>
             );
           })}
