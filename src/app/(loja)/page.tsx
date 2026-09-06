@@ -6,17 +6,12 @@ import { lerParcelamento, SELECAO_HOME } from "@/components/loja/home/comum";
 import { Hero } from "@/components/loja/home/hero";
 import { ProvasObjetivas } from "@/components/loja/home/provas";
 import { SecaoCategorias } from "@/components/loja/home/categorias";
-import { SecaoDestaques } from "@/components/loja/home/destaques";
-import { SecaoSeminovos } from "@/components/loja/home/seminovos";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
-import { SecaoAreaClinica } from "@/components/loja/home/area-clinica";
 import { SecaoMarcas } from "@/components/loja/home/marcas";
 import { ChamadaFinal } from "@/components/loja/home/chamada-final";
 import {
   EsqueletoCategoriasHome,
-  EsqueletoDestaquesHome,
   EsqueletoMarcasHome,
-  EsqueletoSeminovosHome,
 } from "@/components/loja/home/esqueletos-home";
 import { ETIQUETA_CATALOGO, ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { prisma } from "@/lib/prisma";
@@ -38,7 +33,7 @@ async function dadosDoTopo() {
     prisma.product.findMany({
       where: { ...PUBLICADO, media: { some: {} } },
       orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
-      take: 4,
+      take: 1,
       select: SELECAO_HOME,
     }),
     prisma.product.count({ where: PUBLICADO }),
@@ -49,10 +44,9 @@ async function dadosDoTopo() {
 /**
  * Home pública da JB.
  *
- * A página privilegia a intenção de compra logo no topo e deixa a proposta de
- * pós-venda aparecer como diferencial, sem transformar a home em uma sequência
- * de banners institucionais. Conteúdo técnico continua acessível pelo menu e
- * pelas páginas próprias, onde existe contexto para aprofundar.
+ * A página privilegia descoberta rápida do catálogo e conversão, mantendo
+ * assistência e pós-venda como diferenciais sem repetir vitrines ou módulos
+ * que já possuem páginas próprias.
  */
 export default async function HomePage() {
   const [s, vitrine, equipamentos, marcas] = await dadosDoTopo();
@@ -66,16 +60,7 @@ export default async function HomePage() {
         <SecaoCategorias />
       </Suspense>
 
-      <Suspense fallback={<EsqueletoDestaquesHome />}>
-        <SecaoDestaques />
-      </Suspense>
-
-      <Suspense fallback={<EsqueletoSeminovosHome />}>
-        <SecaoSeminovos />
-      </Suspense>
-
       <SecaoAssistencia configuracoes={s} />
-      <SecaoAreaClinica />
 
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
