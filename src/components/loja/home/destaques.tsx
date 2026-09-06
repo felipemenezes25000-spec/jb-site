@@ -46,7 +46,7 @@ export async function SecaoDestaques() {
   const parcelamento = lerParcelamento(s);
 
   return (
-    <Secao fundo="cinza" espaco="lg" separador classNameInterno="max-w-[112rem]">
+    <Secao fundo="clara" espaco="lg" separador classNameInterno="max-w-[112rem]">
       <div className="mb-9 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em] text-jb-700">
