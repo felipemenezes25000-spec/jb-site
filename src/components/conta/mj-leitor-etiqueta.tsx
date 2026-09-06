@@ -91,6 +91,11 @@ export function LeitorDeEtiqueta({
         type="file"
         accept="image/*"
         capture="environment"
+        /* O campo fica escondido e quem dispara é o botão logo abaixo — mas
+           ele continua existindo na árvore, e um campo sem nome acessível é
+           um campo que o leitor de tela anuncia como "arquivo, em branco". */
+        aria-label="Foto da etiqueta do equipamento"
+        tabIndex={-1}
         className="sr-only"
         onChange={(evento) => {
           const arquivo = evento.target.files?.[0];

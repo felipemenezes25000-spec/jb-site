@@ -74,7 +74,8 @@ export default async function DepoimentosPage() {
           {depoimentos.length > 0 ? (
             <Grade colunas={{ base: 1, md: 2 }} como="ul">
               {depoimentos.map((depoimento) => (
-                <Cartao key={depoimento.id} className="flex h-full flex-col gap-4 p-6">
+                <li key={depoimento.id}>
+                  <Cartao className="flex h-full flex-col gap-4 p-6">
                   <Quote className="size-6 shrink-0 text-jb-200" aria-hidden />
                   <blockquote className="text-[1.0625rem] leading-relaxed text-graf-800">
                     {depoimento.comment}
@@ -92,7 +93,8 @@ export default async function DepoimentosPage() {
                         : ""}
                     </span>
                   </footer>
-                </Cartao>
+                  </Cartao>
+                </li>
               ))}
             </Grade>
           ) : (

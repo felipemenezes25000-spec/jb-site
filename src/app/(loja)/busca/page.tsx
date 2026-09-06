@@ -63,7 +63,10 @@ function CabecalhoDoGrupo({
 }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-      <h2 className="text-title texto-forte">
+      {/* O `id` vem daqui e o `aria-labelledby` da seção aponta para ele.
+          Sem esta linha o rótulo da seção referencia um id inexistente, e o
+          leitor de tela anuncia a região sem nome. */}
+      <h2 id={`g-${grupo}`} className="text-title texto-forte">
         {ROTULO_DO_GRUPO[grupo]}
         <span className="tabular ml-2 text-base font-semibold text-graf-500">{quantidade}</span>
       </h2>
@@ -92,7 +95,8 @@ function Grupo({
         />
         <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ul" className="mt-4">
           {resultado.produtos.map((produto) => (
-            <Cartao key={produto.slug} className="h-full">
+            <li key={produto.slug}>
+              <Cartao className="h-full">
               <Link
                 href={`/loja/${produto.slug}`}
                 className="flex h-full items-center gap-4 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -133,7 +137,8 @@ function Grupo({
                   </span>
                 </span>
               </Link>
-            </Cartao>
+              </Cartao>
+            </li>
           ))}
         </Grade>
       </section>
@@ -151,7 +156,8 @@ function Grupo({
         />
         <ul className="mt-4 space-y-3">
           {resultado.conteudo.map((artigo) => (
-            <Cartao key={artigo.slug}>
+            <li key={artigo.slug}>
+              <Cartao>
               <Link
                 href={`/central-tecnica/${artigo.slug}`}
                 className="flex items-start gap-3.5 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -168,7 +174,8 @@ function Grupo({
                   ) : null}
                 </span>
               </Link>
-            </Cartao>
+              </Cartao>
+            </li>
           ))}
         </ul>
       </section>
@@ -186,7 +193,8 @@ function Grupo({
         />
         <ul className="mt-4 space-y-3">
           {resultado.servicos.map((servico) => (
-            <Cartao key={servico.href}>
+            <li key={servico.href}>
+              <Cartao>
               <Link
                 href={servico.href}
                 className="flex items-start gap-3.5 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -203,7 +211,8 @@ function Grupo({
                   ) : null}
                 </span>
               </Link>
-            </Cartao>
+              </Cartao>
+            </li>
           ))}
         </ul>
       </section>
@@ -216,7 +225,7 @@ function Grupo({
   if (resultado.meusEquipamentos.length === 0) return null;
 
   return (
-    <section aria-labelledby="g-meus">
+    <section aria-labelledby="g-meus_equipamentos">
       <CabecalhoDoGrupo
         grupo={grupo}
         intencao={resultado.intencao}
@@ -224,7 +233,8 @@ function Grupo({
       />
       <ul className="mt-4 space-y-3">
         {resultado.meusEquipamentos.map((equipamento) => (
-          <Cartao key={equipamento.id}>
+          <li key={equipamento.id}>
+            <Cartao>
             <Link
               href={`/minha-jb/equipamentos/${equipamento.id}`}
               className="flex items-center justify-between gap-4 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -245,7 +255,8 @@ function Grupo({
                 {ROTULO_EQUIPAMENTO[equipamento.situacao as keyof typeof ROTULO_EQUIPAMENTO]}
               </Etiqueta>
             </Link>
-          </Cartao>
+            </Cartao>
+          </li>
         ))}
       </ul>
     </section>

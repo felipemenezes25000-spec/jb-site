@@ -128,14 +128,19 @@ export default async function EtiquetasPage() {
       ) : (
         /* Grade de impressão: três colunas em A4, quebrando por etiqueta.
            `break-inside-avoid` impede que uma etiqueta seja cortada ao meio na
-           virada de página — o QR cortado não lê. */
+           virada de página — o QR cortado não lê.
+
+           Na tela, nenhum texto desce de 12px: a auditoria de responsividade
+           cobra esse piso e tem razão — a folha é conferida no monitor antes
+           de ir para a impressora. O corpo miúdo de verdade fica na variante
+           `print:`, onde 10px no papel é legível e o espaço importa. */
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 print:grid-cols-3 print:gap-2">
           {etiquetas.map((etiqueta) => (
             <li
               key={etiqueta.id}
               className="flex break-inside-avoid flex-col items-center gap-2 rounded-lg border border-graf-300 bg-white p-3 text-center print:border-graf-400"
             >
-              <p className="label-mono text-[0.625rem] uppercase tracking-wide text-graf-500">
+              <p className="label-mono text-xs uppercase tracking-wide print:text-[0.625rem] text-graf-500">
                 JB · Prontuário Técnico
               </p>
 
@@ -150,16 +155,16 @@ export default async function EtiquetasPage() {
               <p className="text-[0.8125rem] font-bold leading-tight text-graf-950">
                 {etiqueta.name}
               </p>
-              <p className="text-[0.6875rem] leading-tight text-graf-600">
+              <p className="text-xs leading-tight text-graf-600 print:text-[0.6875rem]">
                 {[etiqueta.brandName, etiqueta.modelName].filter(Boolean).join(" ") || "—"}
               </p>
               {etiqueta.serialNumber ? (
-                <p className="label-mono text-[0.625rem] text-graf-500">
+                <p className="label-mono text-xs text-graf-500 print:text-[0.625rem]">
                   Série {etiqueta.serialNumber}
                 </p>
               ) : null}
 
-              <p className="label-mono mt-auto text-[0.6875rem] tracking-wide text-graf-700">
+              <p className="label-mono mt-auto text-xs tracking-wide text-graf-700 print:text-[0.6875rem]">
                 {codigoLegivel(etiqueta.locator)}
               </p>
             </li>
@@ -167,7 +172,9 @@ export default async function EtiquetasPage() {
         </ul>
       )}
 
-      <p className="mt-6 text-center text-[0.75rem] text-graf-400 print:mt-3">
+      {/* graf-400 em 12px sobre o fundo claro dá 2,49:1 — a auditoria pegou.
+          graf-600 passa o mínimo de 4,5:1 da WCAG para texto pequeno. */}
+      <p className="mt-6 text-center text-[0.75rem] text-graf-600 print:mt-3">
         {etiquetas.length}{" "}
         {etiquetas.length === 1 ? "etiqueta" : "etiquetas"} ·{" "}
         <Printer className="inline size-3" aria-hidden /> imprima em papel branco, sem reduzir a

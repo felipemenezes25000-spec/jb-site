@@ -12,6 +12,19 @@ import { prisma } from "@/lib/prisma";
 import { svgDoQr } from "@/lib/qr";
 import { urlAbsoluta } from "@/lib/seo";
 
+/*
+ * Toda tela do painel lê a sessão do staff antes de qualquer outra coisa, e
+ * sessão é dado de requisição: nenhuma delas prerenderiza, nem deveria.
+ *
+ * `instant = false` é a saída documentada, e o guia é explícito em que ela vale
+ * para o SEGMENTO que levanta a validação — não cascateia do layout
+ * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
+ * "Adopting incrementally"). Sem esta linha em cada página, a validação dispara
+ * na compilação sob demanda e o vigia de console do E2E derruba o teste que
+ * estiver rodando na hora.
+ */
+export const instant = false;
+
 export const metadata: Metadata = { title: "Etiquetas de certificação" };
 
 /* ============================================================================
@@ -93,7 +106,7 @@ export default async function PaginaEtiquetasDeCertificacao() {
               key={etiqueta.id}
               className="flex break-inside-avoid flex-col items-center gap-2 rounded-lg border border-graf-300 bg-white p-3 text-center print:border-graf-400"
             >
-              <p className="label-mono text-[0.625rem] uppercase tracking-wide text-jb-700">
+              <p className="label-mono text-xs uppercase tracking-wide print:text-[0.625rem] text-jb-700">
                 Seminovo JB Certificado
               </p>
 
@@ -107,12 +120,12 @@ export default async function PaginaEtiquetasDeCertificacao() {
                 {etiqueta.unit.product.name}
               </p>
               {etiqueta.unit.product.brand ? (
-                <p className="text-[0.6875rem] text-graf-600">
+                <p className="text-xs text-graf-600 print:text-[0.6875rem]">
                   {etiqueta.unit.product.brand.name}
                 </p>
               ) : null}
 
-              <p className="text-[0.625rem] leading-tight text-graf-500">
+              <p className="text-xs leading-tight text-graf-500 print:text-[0.625rem]">
                 {/* Publicada não tem pendente por definição — `podePublicar`
                     recusa checklist pela metade. Os números vieram gravados no
                     fechamento, e recontar aqui daria outro resultado se o
@@ -125,7 +138,7 @@ export default async function PaginaEtiquetasDeCertificacao() {
                 })}
               </p>
 
-              <p className="label-mono mt-auto text-[0.6875rem] tracking-wide text-graf-700">
+              <p className="label-mono mt-auto text-xs tracking-wide text-graf-700 print:text-[0.6875rem]">
                 {etiqueta.publicCode}
               </p>
 
@@ -133,7 +146,7 @@ export default async function PaginaEtiquetasDeCertificacao() {
                 href={`/verificar/${etiqueta.publicCode}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-jb-700 underline underline-offset-2 print:hidden"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-jb-700 underline print:text-[0.6875rem] underline-offset-2 print:hidden"
               >
                 Conferir
                 <ExternalLink className="size-3" aria-hidden />

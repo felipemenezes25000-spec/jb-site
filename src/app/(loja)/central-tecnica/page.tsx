@@ -179,7 +179,12 @@ export default async function CentralTecnicaPage({ searchParams }: Props) {
           {artigos.length > 0 ? (
             <Grade colunas={{ base: 1, sm: 2, lg: 3 }} como="ul">
               {artigos.map((artigo) => (
-                <CartaoArtigo key={artigo.slug} artigo={artigo} />
+                /* `Grade como="ul"` não embrulha sozinha: o `li` é
+                   responsabilidade de quem chama, e sem ele a lista tem filho
+                   `div` — que o axe reprova, com razão. */
+                <li key={artigo.slug}>
+                  <CartaoArtigo artigo={artigo} />
+                </li>
               ))}
             </Grade>
           ) : (

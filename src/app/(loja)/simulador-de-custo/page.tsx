@@ -369,7 +369,9 @@ export default async function SimuladorPage({ searchParams }: Props) {
             </div>
 
             {/* A guarda contra somar duas vezes o mesmo prejuízo. */}
-            <label className="mt-3 flex items-start gap-2.5 text-[0.8125rem] leading-relaxed text-graf-700">
+            {/* `min-h-11`: a caixa é um alvo de toque, e 42px ficava abaixo do
+                mínimo de 44 que a WCAG 2.2 pede — a auditoria mediu em 768px. */}
+            <label className="mt-3 flex min-h-11 items-start gap-2.5 py-1 text-[0.8125rem] leading-relaxed text-graf-700">
               <input
                 type="checkbox"
                 name="paradaIncluida"

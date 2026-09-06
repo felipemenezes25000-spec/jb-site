@@ -225,7 +225,11 @@ export default async function CompararPage({ searchParams }: Props) {
             URL, o que torna a comparação compartilhável e o botão voltar
             previsível. */}
         <form method="get" className="mt-8 rounded-xl border border-graf-200 bg-graf-50 p-5">
-          <fieldset>
+          {/* `min-w-0` no fieldset e em cada rótulo. Sem ele, o item de grade
+              assume largura mínima igual ao conteúdo, e um nome comprido de
+              equipamento empurra a coluna inteira para fora da tela em 320px —
+              que foi exatamente o que a auditoria de responsividade mediu. */}
+          <fieldset className="min-w-0">
             <legend className="text-sm font-bold text-graf-950">
               Escolha até {MAXIMO} equipamentos
             </legend>
@@ -233,7 +237,7 @@ export default async function CompararPage({ searchParams }: Props) {
               {catalogo.map((produto) => (
                 <label
                   key={produto.slug}
-                  className="flex min-h-11 items-center gap-2.5 rounded-lg border border-graf-200 bg-white px-3 py-2 text-[0.875rem] text-graf-800 has-[:checked]:border-jb-500 has-[:checked]:bg-jb-50"
+                  className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-lg border border-graf-200 bg-white px-3 py-2 text-[0.875rem] text-graf-800 has-[:checked]:border-jb-500 has-[:checked]:bg-jb-50"
                 >
                   <input
                     type="checkbox"
@@ -248,7 +252,7 @@ export default async function CompararPage({ searchParams }: Props) {
             </div>
           </fieldset>
 
-          <fieldset className="mt-6">
+          <fieldset className="mt-6 min-w-0">
             <legend className="text-sm font-bold text-graf-950">
               Qual faz sentido para a minha clínica?
             </legend>

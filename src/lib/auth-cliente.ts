@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 
@@ -61,6 +62,19 @@ export async function sessaoCliente(): Promise<ClienteSessao | null> {
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
   if (!token) return null;
+
+  /* `connection()` antes de conferir o token.
+   *
+   * `jwtVerify` compara a expiracao com o relogio, e ler o relogio durante o
+   * prerender e IO sincrono: o Next levanta "unstable value `new Date()`" e
+   * `instant = false` NAO limpa esse erro — o guia de migracao e explicito
+   * nisso ("Fix synchronous IO. It can't be deferred.").
+   *
+   * A saida documentada e a de baixo: uma leitura de dado de requisicao antes
+   * da chamada instavel, o que move o trecho para o tempo de pedido. O caminho
+   * SEM token continua acima desta linha e continua prerenderizavel — visitante
+   * sem sessao nao paga por isto. */
+  await connection();
 
   try {
     const { payload } = await jwtVerify(token, segredo());

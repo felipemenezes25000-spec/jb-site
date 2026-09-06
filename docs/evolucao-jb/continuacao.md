@@ -23,28 +23,53 @@ seria bom fazer.
 | 8 — componentes de domínio e demonstração | validada | `146fb7e` |
 | 9 — mídia de visitante | validada; SOS não iniciado | `6d4af6b`, `15b7741` |
 | 10 — Seminovo Certificado | domínio e verificação validados; painel não iniciado | `6eaceb5` |
+| 11 — produto, pós-compra e instalação | validada; fluxo móvel do técnico foi para a 19 | `7fdfa0a` |
+| 12 — Área da Clínica como centro de operação | validada | `b08742d` |
+| 13 — SEO comercial, Merchant Center e local | validada; conta externa não tocada | `44eba36` |
+| 14 — Central Técnica e arquitetura editorial | validada; 19 rascunhos aguardando gente | `0fb9d7c` |
+| 15 — acervo, reviews e cases | validada; acervo e envio aguardam a JB | `91b2045` |
+| 16 — QR por equipamento e verificação | validada; leitura por câmera real não executada | `2416f12` |
+| 17 — scanner de etiqueta e OCR | contrato e tela prontos; **nenhum provedor configurado, por decisão** | `97bfb29` |
+| 18 — navegação, busca, comparador e TCO | validada | `d1a28a0` |
+| 19 — operação do técnico e indicadores | validada | `bd53697` |
 
-**Portões no fim da fase 10:** `typecheck` ✅ · `test:unit` **321** ✅ ·
-`build` ✅ · `e2e` **52** ✅ · `prova:atomicidade` ✅ · `a11y` 36 medições, 0
-problemas ✅ · `responsivo` 126 medições, 0 problemas ✅.
+**Portões no fim da fase 19:** `typecheck` ✅ · `test:unit` **545** ✅ ·
+`build` ✅ · `e2e` **52** ✅ · `prova:atomicidade` ✅ · `a11y` **94** medições,
+0 problemas ✅ · `responsivo` **294** medições, 0 problemas ✅.
+
+A bateria final encontrou **oito regressões**, todas corrigidas antes deste
+registro. As duas mais instrutivas estão em `validacao.md`: `instant = false`
+precisa estar no segmento que levanta a validação, e ele **não** limpa IO
+síncrono — `jwtVerify` lendo o relógio exigiu `connection()` antes.
 
 ---
 
 ## Próxima tarefa
 
-**Fase 11 — produto, pós-compra e instalação registrada** (seção 15 do prompt
-mestre).
+As vinte fases do prompt mestre (0 a 19) estão entregues. O que resta não é
+fase nova: são buracos declarados na matriz de cobertura e decisões que
+dependem da JB.
 
-Antes dela, três buracos das fases já feitas continuam abertos e estão na
-matriz de cobertura. Eles são pequenos e ficam melhor fechados antes de abrir
-a fase 11:
+**Na ordem em que valem mais:**
 
-1. **Painel da certificação** (14.7) — sem ele, nenhuma inspeção pode ser
-   criada ou publicada pela equipe. O domínio e a página pública existem; falta
-   a tela que os alimenta.
+1. **Painel da certificação** (14.7) — sem ele, nenhuma inspeção é criada ou
+   publicada pela equipe. O domínio, a página pública e a folha de etiquetas
+   existem; falta a tela que os alimenta.
 2. **Selo na página do produto** (14.9) — a verificação existe e ninguém chega
    até ela pelo catálogo.
 3. **SOS Equipamento** (13.3) — a entrada móvel direta.
+4. **Emissão dos 27 eventos de analytics** que faltam — a taxonomia e o
+   limpador existem; falta a chamada em cada tela.
+5. **Combobox de autocomplete na busca** (22.busca.7) — a busca agrupa e
+   ordena; não há sugestão enquanto se digita.
+6. **Orçamento real no TCO** (22.tco.7) — hoje o valor do reparo é digitado;
+   com autorização, ele pode vir do orçamento do próprio cliente.
+7. **ESLint** — 793 erros pré-existentes e config quebrada. Fora dos gates,
+   mas é dívida.
+
+**O que depende da JB, e não de código:** revisor técnico para os 19
+rascunhos, autorização de cliente para o primeiro case, acervo fotográfico,
+decisão sobre provedor de OCR, marco da garantia (P10) e as pendências P1 a P9.
 
 ---
 
@@ -68,6 +93,9 @@ a fase 11:
 | `URL`, `Date` ou classe dentro de `use cache` | build passa, console reclama em toda visita | manter só dados simples no escopo cacheado |
 | `<Activity>` mantém a rota anterior no DOM | localizador de teste vira ambíguo em modo estrito | escopar o localizador, ou `filter({ visible: true })` |
 | `instant = false` no grupo de rota | a validação continua sendo levantada | pôr no segmento que a levanta |
+| `instant = false` e IO síncrono | continua acusando `new Date()` no prerender | o opt-out **não** limpa IO síncrono; use `await connection()` antes da chamada instável |
+| `Grade como="ul"` sem `<li>` | axe reprova "list has direct children that are not allowed" | o `li` é de quem chama; a `Grade` não embrulha |
+| item de grade sem `min-w-0` | conteúdo comprido estoura a tela em 320px | `min-w-0` no contêiner e no rótulo |
 | E2E não sobe com o dev aberto | "Another next dev server is already running" | usar `E2E_BASE_URL` |
 | `.env.local` presente | o dev passa a escrever em produção | conferir `ls .env.local` antes de qualquer comando de banco |
 

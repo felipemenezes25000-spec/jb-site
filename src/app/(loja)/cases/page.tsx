@@ -109,7 +109,8 @@ export default async function CasesPage() {
         {cases.length > 0 ? (
           <Grade colunas={{ base: 1, sm: 2, lg: 3 }} como="ul" className="mt-8">
             {cases.map((caso) => (
-              <Cartao key={caso.slug} className="h-full">
+              <li key={caso.slug}>
+                <Cartao className="h-full">
                 <Link
                   href={`/cases/${caso.slug}`}
                   className="flex h-full flex-col gap-2 p-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -131,7 +132,8 @@ export default async function CasesPage() {
                     </span>
                   ) : null}
                 </Link>
-              </Cartao>
+                </Cartao>
+              </li>
             ))}
           </Grade>
         ) : (
@@ -162,12 +164,14 @@ export default async function CasesPage() {
         />
         <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ol" className="mt-6">
           {ETAPAS.map((etapa) => (
-            <Cartao key={etapa.titulo} className="h-full p-5">
+            <li key={etapa.titulo}>
+              <Cartao className="h-full p-5">
               <h3 className="text-[0.9375rem] font-bold text-graf-950">{etapa.titulo}</h3>
               <p className="mt-1.5 text-[0.875rem] leading-relaxed text-graf-600">
                 {etapa.texto}
               </p>
-            </Cartao>
+              </Cartao>
+            </li>
           ))}
         </Grade>
       </Secao>

@@ -289,3 +289,76 @@ pelos portões de acessibilidade e responsividade — não por leitura de códig
 | Limpeza e vínculo simultâneos | a proteção está nos dois lados (condição de estado no WHERE); falta uma execução concorrente dirigida |
 | Emissão de 27 dos 30 eventos | a camada existe; falta a chamada em cada tela |
 | CI no GitHub | o workflow existe; nunca rodou lá |
+
+---
+
+## Bateria final — fases 11 a 19
+
+Rodada em 06/09/2026, contra o Postgres local (`localhost:5433/jb`). `.env.local`
+ausente e conferido antes de cada comando que toca o banco.
+
+| Comando | Resultado |
+|---|---|
+| `npx tsc --noEmit` | **exit 0** |
+| `pnpm test:unit` | **exit 0** — 192 → **545 testes**, 27 arquivos |
+| `pnpm build` | **exit 0** — todas as rotas novas na tabela |
+| `E2E_BASE_URL=… pnpm e2e` | **exit 0** — **52 testes**, 4,3 min |
+| `BASE_URL=… node scripts/acessibilidade.mjs` | **exit 0** — 94 medições, 0 problemas |
+| `BASE_URL=… node scripts/responsivo.mjs` | **exit 0** — 294 medições, 0 problemas |
+| `pnpm prova:atomicidade` | **exit 0** — os quatro cenários |
+| `pnpm pautas:prever` / `pautas:carregar` | executado — 19 criados; segunda execução: 19 "em dia", 0 criados |
+| `curl /feed/produtos.xml` | 200, `application/xml`, RSS válido |
+
+### Rotas acrescentadas às auditorias
+
+Ambos os scripts passaram a percorrer o que estas fases construíram:
+`/central-tecnica`, `/cases`, `/depoimentos`, `/comparar`,
+`/simulador-de-custo`, `/busca?q=autoclave nao aquece`,
+`/minha-jb/equipamentos/etiquetas`, `/admin/central-tecnica`, `/admin/cases`,
+`/admin/avaliacoes` e `/admin/insights`. Sem isso, a bateria teria dado verde
+sobre código que ela nunca visitou.
+
+### Oito regressões encontradas pela própria validação
+
+Nenhuma estava no roteiro. Todas corrigidas antes deste registro.
+
+| O que quebrou | Onde | Causa | Correção |
+|---|---|---|---|
+| E2E do painel derrubado por erro de console | `/admin/produtos/novo` | `instant = false` estava nos layouts, e o guia é explícito em que ele vale para o **segmento** que levanta a validação | opt-out em cada `page`/`layout` de `(admin)` — 87 arquivos |
+| `new Date()` instável no prerender | `sessaoStaff` / `sessaoCliente` | `jwtVerify` compara a expiração com o relógio, e `instant = false` **não** limpa IO síncrono | `await connection()` antes de conferir o token; o caminho sem token continua prerenderizável |
+| `<ul>` com filho `div` | `/busca`, `/cases`, `/depoimentos`, `/central-tecnica` | `Grade como="ul"` não embrulha sozinha — o `li` é de quem chama | `<li>` em volta de cada cartão |
+| `aria-labelledby` apontando para id inexistente | `/busca` | as seções referenciavam `g-produtos` e o `h2` não tinha id | id gerado a partir do grupo |
+| campo de arquivo sem nome acessível | leitor de etiqueta | o input fica `sr-only` e o botão é quem dispara | `aria-label` e `tabIndex={-1}` |
+| contraste de 2,49:1 | folha de etiquetas | `graf-400` em 12px sobre fundo claro | `graf-600` |
+| texto de 10 e 11px na tela | folhas de etiqueta | corpo de impressão aplicado também ao monitor | `text-xs` na tela, `print:` para o papel |
+| elemento fora da tela em 320px e alvo de toque de 42px | `/comparar` e `/simulador-de-custo` | item de grade sem `min-w-0`; caixa de seleção sem altura mínima | `min-w-0` no fieldset e nos rótulos; `min-h-11` na caixa |
+| feed anunciando o catálogo de demonstração | `/feed/produtos.xml` | a exclusão de demonstração não existia | motivo `demonstracao`, pela mesma convenção de slug do seed |
+
+As duas primeiras são as mais instrutivas: a segunda só apareceu **depois** de
+a primeira ser corrigida. Opt-out de bloqueio e IO síncrono são erros
+diferentes, e o guia de migração diz isso com todas as letras — mas só quem
+roda a suíte descobre que os dois estavam ali.
+
+### ESLint
+
+`npx eslint .` acusa **793 erros**, e nenhum deles vem destas fases: rodado
+sobre os arquivos novos, dá **0 erros**. A configuração tem plugin que não
+resolve (`Definition for rule '@next/next/no-img-element' was not found`) e
+regras que reprovam padrões do próprio projeto (`usarDialogo`,
+`react-refresh/only-export-components` em toda página do App Router, que
+exporta `metadata` por contrato).
+
+Lint **não é** um dos quatro gates declarados em `ci.md`. Arrumar 793 erros
+pré-existentes seria uma mudança grande e sem relação com o escopo destas
+fases, então fica registrado como pendência, não silenciado.
+
+### O que continua sem execução
+
+| Item | Motivo |
+|---|---|
+| Leitura do QR por câmera real | exige imprimir a etiqueta e escanear; os parâmetros do símbolo (quiet zone 4, correção M) foram escolhidos para isso |
+| OCR de etiqueta ponta a ponta | nenhum provedor configurado — decisão registrada em `ocr-etiqueta.md` |
+| Envio de convite de avaliação | desligado por configuração, à espera de autorização da JB |
+| Publicação de artigo e de case | dependem de gente: autor, revisor e autorização do cliente |
+| Indicadores com dado suficiente | o banco local não tem volume; a tela responde "ainda não há dados suficientes", que é o comportamento correto |
+| ESLint limpo | 793 erros pré-existentes, config quebrada, fora dos gates |

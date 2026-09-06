@@ -218,8 +218,8 @@ export default async function ArtigoPage({ params }: Props) {
           />
           <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ul" className="mt-6">
             {artigo.products.map(({ product }) => (
+              <li key={product.slug}>
               <Link
-                key={product.slug}
                 href={`/loja/${product.slug}`}
                 className="flex items-center gap-4 rounded-xl border border-graf-200 bg-white p-4 transition-colors hover:border-graf-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
@@ -243,6 +243,7 @@ export default async function ArtigoPage({ params }: Props) {
                   </span>
                 </span>
               </Link>
+              </li>
             ))}
           </Grade>
         </Secao>
@@ -269,7 +270,8 @@ export default async function ArtigoPage({ params }: Props) {
           <TituloSecao tamanho="titulo" titulo={`Mais sobre ${ROTULO_TEMA[tema].toLowerCase()}`} />
           <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ul" className="mt-6">
             {relacionados.map((outro) => (
-              <Cartao key={outro.slug} className="h-full">
+              <li key={outro.slug}>
+                <Cartao className="h-full">
                 <Link
                   href={`/central-tecnica/${outro.slug}`}
                   className="flex h-full flex-col gap-2 p-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
@@ -287,7 +289,8 @@ export default async function ArtigoPage({ params }: Props) {
                     <ArrowRight className="size-4" aria-hidden />
                   </span>
                 </Link>
-              </Cartao>
+                </Cartao>
+              </li>
             ))}
           </Grade>
         </Secao>
