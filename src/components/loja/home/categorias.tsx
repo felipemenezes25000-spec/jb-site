@@ -9,18 +9,6 @@ import { prisma } from "@/lib/prisma";
 const PUBLICADO = { status: "active" } as const;
 const MINIMO_PARA_CONTAR = 4;
 
-/**
- * Foto curada por categoria, usada quando o painel ainda não subiu uma imagem
- * própria. Vem antes da foto do produto porque é o recorte pensado para este
- * bloco — fundo claro, produto isolado e sombra de contato.
- */
-const FOTO_CURADA: Record<string, string> = {
-  bioseguranca: "/images/categorias/produto-bioseguranca.webp",
-  profilaxia: "/images/categorias/produto-profilaxia.webp",
-  cirurgia: "/images/categorias/produto-cirurgia.webp",
-  "unidade-basica-de-tratamento": "/images/categorias/produto-unidade-basica-de-tratamento.webp",
-};
-
 const VANTAGENS = [
   {
     icone: Boxes,
@@ -73,9 +61,6 @@ function fotoCategoria(categoria: CategoriaHome) {
     return { url: categoria.image.url, alt: categoria.image.alt ?? categoria.name };
   }
 
-  const curada = FOTO_CURADA[categoria.slug];
-  if (curada) return { url: curada, alt: categoria.name };
-
   const fotoProduto = categoria.products[0]?.media[0];
   if (fotoProduto) {
     return {
@@ -120,39 +105,8 @@ export async function SecaoCategorias() {
         aria-hidden
       />
 
-      <p
-        className="pointer-events-none absolute left-[5rem] top-[8.5rem] hidden text-[0.6rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-400 min-[1600px]:block"
-        aria-hidden
-      >
-        Equipamentos
-        <br />
-        para o seu
-        <br />
-        melhor amanhã
-        <span className="mt-4 block h-px w-6 bg-graf-300" />
-      </p>
 
-      <p
-        className="pointer-events-none absolute right-[3.5rem] top-[3rem] hidden text-right text-[0.6rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-400 min-[1600px]:block"
-        aria-hidden
-      >
-        Tecnologia
-        <br />
-        que impulsiona
-        <br />
-        sorrisos
-      </p>
 
-      <p
-        className="pointer-events-none absolute bottom-[4rem] right-[3.5rem] hidden text-right text-[0.6rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-400 min-[1600px]:block"
-        aria-hidden
-      >
-        Parceria
-        <br />
-        em todas
-        <br />
-        as etapas
-      </p>
 
       <div className="container-jb relative z-10 max-w-[115rem]">
         {/* ── Cabeçalho editorial ─────────────────────────────────────────── */}
@@ -247,7 +201,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
       />
       <div className="absolute -left-40 top-1/2 size-[34rem] -translate-y-1/2 rounded-full border border-jb-500/20" aria-hidden />
 
-      <div className="relative z-10 flex min-w-0 flex-col justify-end p-7 min-[640px]:p-8 min-[1024px]:p-10">
+      <div className="relative z-10 flex min-w-0 flex-col justify-center p-7 min-[640px]:p-8 min-[1024px]:p-10">
         <span className="text-[0.64rem] font-black uppercase tracking-[0.2em] text-jb-300">
           Categoria em destaque
         </span>
@@ -294,7 +248,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
         />
 
         <p
-          className="absolute right-6 top-6 z-10 hidden text-right text-[0.55rem] font-semibold uppercase leading-[1.8] tracking-[0.24em] text-graf-400 min-[1280px]:block"
+          className="absolute right-7 top-8 z-10 hidden text-right text-[0.55rem] font-semibold uppercase leading-[1.8] tracking-[0.24em] text-graf-400 min-[1280px]:block"
           aria-hidden
         >
           Clínicas
@@ -304,6 +258,11 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
           sempre
           <span className="ml-auto mt-2.5 block h-px w-5 bg-jb-500" />
         </p>
+
+        <div
+          className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(54%_60%_at_50%_50%,transparent_48%,rgba(249,247,247,0.9)_86%,#f9f7f7_100%)]"
+          aria-hidden
+        />
 
         {foto ? (
           <Image
@@ -352,6 +311,11 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
       </div>
 
       <div className="relative overflow-hidden bg-[#f6f3f4]">
+        <div
+          className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(50%_56%_at_50%_50%,transparent_42%,rgba(246,243,244,0.9)_84%,#f6f3f4_100%)]"
+          aria-hidden
+        />
+
         {foto ? (
           <Image
             src={foto.url}

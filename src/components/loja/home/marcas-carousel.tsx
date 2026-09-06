@@ -141,11 +141,11 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
             <Sparkles className="size-[1.05rem]" aria-hidden />
           </span>
           <p className="whitespace-nowrap text-[0.66rem] font-bold uppercase leading-[1.6] tracking-[0.32em] text-graf-400">
-            Tecnologia
+            Marcas
             <br />
-            que transforma
+            que a equipe
             <br />
-            sorrisos
+            conhece
           </p>
         </div>
 
@@ -206,7 +206,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
               </ul>
             </div>
 
-            <p className="mt-7 flex items-center gap-4 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-graf-400 min-[1024px]:mt-9">
+            <p className="mt-7 flex items-center gap-4 pl-1 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-graf-400 min-[1024px]:mt-9">
               <span className="h-[3px] w-16 shrink-0 rounded-full bg-jb-600" aria-hidden />
               {marcas.length} marcas com equipamentos publicados
             </p>

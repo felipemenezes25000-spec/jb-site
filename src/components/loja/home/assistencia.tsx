@@ -47,28 +47,15 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
       />
 
       <div
-        className="pointer-events-none absolute left-0 top-0 hidden h-[20rem] w-[13rem] opacity-75 min-[1440px]:block"
-        aria-hidden
-      >
-        <Image
-          src="/images/next-step/top-left-dental-arm.webp"
-          alt=""
-          fill
-          sizes="208px"
-          className="object-contain object-left-top"
-        />
-      </div>
-
-      <div
-        className="pointer-events-none absolute bottom-0 left-0 hidden w-[clamp(18rem,22vw,27rem)] opacity-92 min-[1280px]:block"
+        className="pointer-events-none absolute bottom-0 left-0 hidden w-[clamp(11rem,13vw,16rem)] opacity-45 blur-[1.5px] min-[1280px]:block"
         aria-hidden
       >
         <Image
           src="/images/next-step/clinic-chair-left.webp"
           alt=""
-          width={432}
-          height={940}
-          sizes="(min-width: 1600px) 432px, 320px"
+          width={260}
+          height={566}
+          sizes="256px"
           className="h-auto w-full object-contain object-left-bottom"
         />
       </div>
@@ -150,22 +137,16 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
               aria-hidden
             />
             <div
-              className="absolute -right-16 -top-16 size-56 rounded-full border border-jb-200/60"
+              className="absolute -right-16 -top-16 size-56 rounded-full border border-jb-200/60" aria-hidden
+            />
+            <div
+              className="absolute -bottom-40 -right-32 size-[30rem] rounded-full border border-jb-100"
               aria-hidden
             />
-
             <div
-              className="pointer-events-none absolute bottom-0 right-0 hidden h-[88%] w-[17.5rem] min-[640px]:block min-[1440px]:w-[19rem]"
+              className="absolute -bottom-28 -right-20 size-[22rem] rounded-full bg-[radial-gradient(circle,rgba(226,22,30,0.1),transparent_68%)]"
               aria-hidden
-            >
-              <Image
-                src="/images/next-step/buy-card-handpiece.webp"
-                alt=""
-                fill
-                sizes="(min-width: 1440px) 304px, 280px"
-                className="object-contain object-right-bottom"
-              />
-            </div>
+            />
 
             <p
               className="pointer-events-none absolute right-8 top-8 hidden max-w-[8.5rem] text-right text-[0.56rem] font-semibold uppercase leading-[1.8] tracking-[0.25em] text-graf-400 min-[1280px]:block"
@@ -219,19 +200,6 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
               className="absolute inset-0 bg-[linear-gradient(125deg,#111113_0%,#151214_48%,#1d0709_100%)]"
               aria-hidden
             />
-
-            <div
-              className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-[66%] min-[640px]:block"
-              aria-hidden
-            >
-              <Image
-                src="/images/next-step/support-card-device.webp"
-                alt=""
-                fill
-                sizes="(min-width: 1600px) 620px, (min-width: 1024px) 540px, 380px"
-                className="object-cover object-right-bottom"
-              />
-            </div>
 
             <div
               className="absolute inset-0 bg-[radial-gradient(circle_at_86%_44%,rgba(244,25,35,0.3),transparent_27%),radial-gradient(circle_at_68%_4%,rgba(143,5,12,0.25),transparent_34%),linear-gradient(90deg,#101012_0%,rgba(16,16,18,0.94)_34%,transparent_61%)]"
@@ -356,17 +324,6 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
         </div>
       </div>
 
-      <p
-        className="pointer-events-none absolute bottom-[4.8rem] right-[4.8rem] hidden text-right text-[0.56rem] font-semibold uppercase leading-[1.8] tracking-[0.28em] text-graf-400 min-[1600px]:block"
-        aria-hidden
-      >
-        Parceria
-        <br />
-        em todas
-        <br />
-        as etapas
-        <span className="ml-auto mt-3 block h-px w-5 bg-graf-400" />
-      </p>
     </section>
   );
 }

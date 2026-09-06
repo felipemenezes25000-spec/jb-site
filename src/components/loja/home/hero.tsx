@@ -68,7 +68,7 @@ export function Hero({
       />
 
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 hidden w-[clamp(11rem,15vw,19rem)] opacity-[0.42] min-[1280px]:block"
+        className="pointer-events-none absolute inset-y-0 left-0 hidden w-[clamp(10rem,13vw,16rem)] opacity-[0.34] blur-[1.5px] min-[1280px]:block"
         style={{
           maskImage:
             "linear-gradient(to right, #000 0%, #000 42%, transparent 96%), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent)",
@@ -83,7 +83,7 @@ export function Hero({
           src="/images/hero/ambiente-clinica.webp"
           alt=""
           fill
-          sizes="336px"
+          sizes="256px"
           className="object-cover object-left"
         />
       </div>
@@ -100,19 +100,6 @@ export function Hero({
         <br />
         em movimento
         <span className="mt-4 block h-px w-7 bg-jb-500/70" />
-      </p>
-
-      <p
-        className="pointer-events-none absolute bottom-[3.5rem] left-[3.5rem] hidden text-[0.6rem] font-semibold uppercase leading-[2] tracking-[0.26em] text-graf-400 min-[1600px]:block"
-        aria-hidden
-      >
-        Mais
-        <br />
-        que equipamentos.
-        <br />
-        Parceria para
-        <br />
-        ir mais longe.
       </p>
 
       <p
@@ -282,7 +269,7 @@ function VitrineHero({
         ) : null}
 
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,transparent_54%,rgba(255,255,255,0.5)_84%,rgba(255,255,255,0.92)_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(56%_72%_at_50%_48%,transparent_58%,rgba(255,255,255,0.85)_86%,#fff_100%)]"
           aria-hidden
         />
 
