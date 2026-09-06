@@ -8,7 +8,6 @@ import { ProvasObjetivas } from "@/components/loja/home/provas";
 import { SecaoCategorias } from "@/components/loja/home/categorias";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
 import { SecaoMarcas } from "@/components/loja/home/marcas";
-import { ChamadaFinal } from "@/components/loja/home/chamada-final";
 import {
   EsqueletoCategoriasHome,
   EsqueletoMarcasHome,
@@ -44,9 +43,9 @@ async function dadosDoTopo() {
 /**
  * Home pública da JB.
  *
- * A página privilegia descoberta rápida do catálogo e conversão, mantendo
- * assistência e pós-venda como diferenciais sem repetir vitrines ou módulos
- * que já possuem páginas próprias.
+ * Uma jornada curta: posicionamento → prova → descoberta → decisão → marcas.
+ * O restante do conteúdo vive nas páginas próprias, evitando repetição e
+ * mantendo a home focada em orientar a próxima ação.
  */
 export default async function HomePage() {
   const [s, vitrine, equipamentos, marcas] = await dadosDoTopo();
@@ -65,8 +64,6 @@ export default async function HomePage() {
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
       </Suspense>
-
-      <ChamadaFinal configuracoes={s} />
     </>
   );
 }
