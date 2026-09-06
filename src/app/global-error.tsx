@@ -138,6 +138,13 @@ export default function ErroGlobal({
               Tentar de novo
             </button>
 
+            {/*
+              Âncora comum, e não `next/link`: global-error substitui a raiz da
+              aplicação quando ela já falhou, e renderiza o próprio <html>. O
+              roteador do cliente é justamente o que pode estar quebrado —
+              recarregar a página inteira é o comportamento desejado aqui.
+            */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/"
               style={{

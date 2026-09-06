@@ -136,7 +136,7 @@ describe("limitarLinhas — o texto do OCR é dado, não instrução", () => {
 
   it("remove caractere de controle", () => {
     const [linha] = limitarLinhas(["Modelo:\u0007 Vitale 21"]);
-    // eslint-disable-next-line no-control-regex
+     
     expect(linha).not.toMatch(/[\x00-\x1f]/);
     expect(linha).toBe("Modelo: Vitale 21");
   });

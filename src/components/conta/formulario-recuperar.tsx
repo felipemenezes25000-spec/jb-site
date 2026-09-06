@@ -56,6 +56,7 @@ export function FormularioRecuperar({ emailInicial = "" }: { emailInicial?: stri
           </LinkBotao>
           {/* âncora comum de propósito: recarregar a página é o que devolve o
               formulário em branco, já que a ação não tem como ser rebobinada */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/recuperar-senha" className={classesBotao("texto", "md")}>
             Usar outro e-mail
           </a>

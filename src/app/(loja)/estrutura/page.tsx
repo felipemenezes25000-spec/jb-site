@@ -3,7 +3,6 @@ import {
   ArrowRight,
   ClipboardCheck,
   FileText,
-  PackageCheck,
   PackageOpen,
   Receipt,
   ScanLine,

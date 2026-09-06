@@ -8,7 +8,7 @@ import { ExternalLink, X } from "lucide-react";
 import { CabecalhoAdmin } from "@/components/admin/cabecalho-admin";
 import { MenuAdmin } from "@/components/admin/menu-admin";
 import { Logo, Simbolo } from "@/components/ui/logo";
-import { usarDialogo } from "@/components/ui/usar-dialogo";
+import { useDialogo } from "@/components/ui/use-dialogo";
 import { cn } from "@/lib/utils";
 import type { GrupoMenu } from "@/lib/permissoes";
 
@@ -21,7 +21,7 @@ import type { GrupoMenu } from "@/lib/permissoes";
  * hidratação, para o HTML do servidor e o do cliente saírem iguais na primeira
  * pintura.
  *
- * A gaveta do celular usa `usarDialogo` do kit em vez de um efeito próprio:
+ * A gaveta do celular usa `useDialogo` do kit em vez de um efeito próprio:
  * foco para dentro ao abrir, Tab preso no conteúdo, Esc, foco devolvido a quem
  * abriu e fundo sem rolagem. Antes o foco só era movido para o botão de fechar
  * e o Tab seguinte caía nos links da página atrás da gaveta.
@@ -49,7 +49,7 @@ export function Casca({
   const [gaveta, setGaveta] = useState(false);
 
   const fecharGaveta = useCallback(() => setGaveta(false), []);
-  const refGaveta = usarDialogo(gaveta, fecharGaveta);
+  const refGaveta = useDialogo(gaveta, fecharGaveta);
 
   useEffect(() => {
     try {

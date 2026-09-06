@@ -72,7 +72,7 @@ export function limitarLinhas(linhas: readonly string[]): string[] {
     .slice(0, MAXIMO_DE_LINHAS)
     .map((linha) =>
       String(linha ?? "")
-        // eslint-disable-next-line no-control-regex
+         
         .replace(/[\x00-\x1f\x7f]/g, " ")
         .replace(/\s+/g, " ")
         .trim()

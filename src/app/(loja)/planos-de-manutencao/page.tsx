@@ -313,8 +313,8 @@ export default async function PlanosPage({
                 {!escoposHomogeneos ? (
                   <Aviso tom="atencao" titulo="Estes planos não cobram pela mesma coisa">
                     A base de cobrança ou a vigência muda de um plano para o outro, então
-                    os valores da linha "Valor" não são diretamente comparáveis. Confira a
-                    linha "Cobrança" antes de concluir qual sai mais em conta.
+                    os valores da linha “Valor” não são diretamente comparáveis. Confira a
+                    linha “Cobrança” antes de concluir qual sai mais em conta.
                   </Aviso>
                 ) : null}
 

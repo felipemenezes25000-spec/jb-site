@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { DocumentKind, EquipmentOrigin, EquipmentStatus } from "@prisma/client";
+import type { EquipmentOrigin, EquipmentStatus } from "@prisma/client";
 
 import { ROTULO_CHAMADO, STATUS_CHAMADO_ABERTOS } from "@/lib/assistencia";
 import { ROTULO_VISITA } from "@/lib/manutencao";

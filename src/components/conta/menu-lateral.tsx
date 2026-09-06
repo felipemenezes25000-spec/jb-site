@@ -21,7 +21,7 @@ import {
 
 import { LinkBotao } from "@/components/ui/button";
 import { Etiqueta } from "@/components/ui/data";
-import { usarDialogo } from "@/components/ui/usar-dialogo";
+import { useDialogo } from "@/components/ui/use-dialogo";
 import { MENU_CLIENTE } from "@/lib/navegacao";
 import { cn } from "@/lib/utils";
 
@@ -205,7 +205,7 @@ export function MenuLateral({
   const [entrou, setEntrou] = useState(false);
 
   const fechar = useCallback(() => setAberto(false), []);
-  const painelRef = usarDialogo(aberto, fechar);
+  const painelRef = useDialogo(aberto, fechar);
 
   // a gaveta desliza para dentro em vez de aparecer de estalo; quem pede menos
   // movimento recebe a troca direta (motion-reduce zera a transição)

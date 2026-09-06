@@ -131,7 +131,7 @@ function escapar(valor: string) {
  * item a item, é rejeitado de uma vez.
  */
 function limparTexto(valor: string, limite: number) {
-  // eslint-disable-next-line no-control-regex
+   
   const semControle = valor.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, " ");
   const compacto = semControle.replace(/\s+/g, " ").trim();
   return compacto.length > limite ? `${compacto.slice(0, limite - 1).trimEnd()}…` : compacto;

@@ -8,13 +8,31 @@ e a suíte inteira roda em poucos minutos.
 
 | Job | O que responde | Depende de |
 |---|---|---|
-| `estatico` | os tipos fecham e a regra de negócio está certa? | nada |
+| `estatico` | o lint passa, os tipos fecham e a regra de negócio está certa? | nada |
 | `build` | a aplicação compila e prerenderiza? | `estatico` |
 | `ponta-a-ponta` | o fluxo funciona, é acessível e cabe na tela? | `estatico` |
 | `atomicidade` | duas pessoas ao mesmo tempo quebram? | `estatico` |
 
 A ordem é a do custo: o que falha rápido falha primeiro. `typecheck` e
-unitários não precisam de banco nem navegador e derrubam o PR em segundos.
+unitários não precisam de banco nem navegador e derrubam o PR em segundos, e
+`lint` vem antes dos dois pelo mesmo motivo.
+
+## Lint
+
+`pnpm lint` reprova em **erro** e passa em **aviso**. Não é frouxidão: os 49
+avisos de hoje são duas regras do compilador React, documentadas uma a uma em
+`eslint.config.mjs`. Treze são `Date.now()` durante o render em páginas que
+declaram `instant = false` — correto enquanto elas forem request-time, bug no
+dia em que migrarem para Cache Components. Dezoito são o padrão de ler
+`localStorage` num efeito de montagem.
+
+Contadas como aviso, elas permanecem visíveis e viram a lista de tarefas
+daquela migração. Como erro, travariam o portão hoje por nada; desligadas,
+sumiriam da vista. Erro novo, esse sim, entra proibido.
+
+O número de 793 que circulava antes vinha de `npx eslint .` sem configuração
+nenhuma — media o projeto contra regras que ninguém escolheu, num parser que
+não lê TSX. Não havia ESLint instalado no projeto até aqui.
 
 `atomicidade` não roda em todo PR — só em push para as branches principais ou
 quando o PR tem a etiqueta `dominio`. Rodar concorrência real contra o Postgres
@@ -60,8 +78,8 @@ que `estatico`, `build` e `ponta-a-ponta` passem antes do merge — é
 configuração do GitHub e precisa de acesso de administrador ao repositório.
 
 **Passo exato:** Settings › Branches › Add rule para `main` e `plataforma` ›
-"Require status checks to pass before merging" › marcar `Tipos e testes de
-unidade`, `Build de produção` e `E2E, acessibilidade e responsividade`.
+"Require status checks to pass before merging" › marcar `Lint, tipos e testes
+de unidade`, `Build de produção` e `E2E, acessibilidade e responsividade`.
 
 Registrado em `pendencias-externas.md`. Até isso ser feito, o pipeline informa
 mas não impede.

@@ -127,7 +127,7 @@ describe("itemXml", () => {
   it("remove caractere de controle vindo de PDF colado", () => {
     const xml = itemXml({ ...base, descricao: `Autoclave\x00 de bancada\u0007` });
     expect(xml).toContain("Autoclave de bancada");
-    // eslint-disable-next-line no-control-regex
+     
     expect(xml).not.toMatch(/[\x00-\x08]/);
   });
 

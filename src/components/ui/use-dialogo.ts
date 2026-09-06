@@ -17,7 +17,7 @@ import { useEffect, useRef } from "react";
  *
  * Devolve a ref que deve ir no elemento do diálogo.
  */
-export function usarDialogo(aberto: boolean, aoFechar: () => void) {
+export function useDialogo(aberto: boolean, aoFechar: () => void) {
   const referencia = useRef<HTMLDivElement>(null);
   const focoAnterior = useRef<HTMLElement | null>(null);
 

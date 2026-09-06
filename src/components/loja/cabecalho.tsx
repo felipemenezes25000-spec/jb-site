@@ -12,14 +12,13 @@ import {
   MessageCircle,
   Phone,
   Search,
-  ShoppingCart,
   User,
   Wrench,
   X,
 } from "lucide-react";
 
 import { Logo } from "@/components/ui/logo";
-import { usarDialogo } from "@/components/ui/usar-dialogo";
+import { useDialogo } from "@/components/ui/use-dialogo";
 import { classesBotao } from "@/components/ui/button";
 import {
   ATALHOS_CLIENTE,
@@ -91,7 +90,7 @@ export function Cabecalho({
   const botaoBusca = useRef<HTMLButtonElement>(null);
   const campoBuscaMobile = useRef<HTMLInputElement>(null);
 
-  // identidade estável: `usarDialogo` reage à função, e uma nova a cada
+  // identidade estável: `useDialogo` reage à função, e uma nova a cada
   // render devolveria o foco ao topo da gaveta a cada rolagem da página
   const fecharMenu = useCallback(() => setMenuAberto(false), []);
 
@@ -116,7 +115,7 @@ export function Cabecalho({
   useEffect(() => {
     function aoTeclar(evento: KeyboardEvent) {
       if (evento.key !== "Escape") return;
-      // a gaveta tem o próprio Esc, dentro de usarDialogo
+      // a gaveta tem o próprio Esc, dentro de useDialogo
       if (menuAberto) return;
 
       if (mega) {
@@ -667,7 +666,7 @@ function MenuMobile({
   const [secao, setSecao] = useState<ChaveMega | null>(null);
   // foco preso, Esc, devolução do foco e rolagem travada:
   // `role="dialog"` sozinho não faz nada disso
-  const caixa = usarDialogo(aberto, aoFechar);
+  const caixa = useDialogo(aberto, aoFechar);
 
   useEffect(() => {
     if (!aberto) setSecao(null);

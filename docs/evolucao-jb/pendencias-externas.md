@@ -105,7 +105,7 @@ Situação possível: `aberta`, `respondida`, `ativada e verificada`.
 
 ## P7 — Proteção de branch no GitHub
 
-- **O que falta:** marcar `Tipos e testes de unidade`, `Build de produção` e
+- **O que falta:** marcar `Lint, tipos e testes de unidade`, `Build de produção` e
   `E2E, acessibilidade e responsividade` como checks obrigatórios em `main` e
   `plataforma`.
 - **Por que:** o workflow existe e roda, mas workflow criado não é check

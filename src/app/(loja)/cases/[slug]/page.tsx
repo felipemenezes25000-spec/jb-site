@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
-import { Cartao, TituloSecao, Trilha } from "@/components/ui/data";
+import { TituloSecao, Trilha } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
 import { fraseDeDuracao } from "@/lib/cases";
 import { formatarData } from "@/lib/format";

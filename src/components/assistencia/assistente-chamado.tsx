@@ -181,7 +181,7 @@ type Pendencia = { campo?: string; texto: string };
  * o Tab seguinte recomeça do topo da página e o leitor de tela não diz que a
  * etapa mudou. Focar a seção visível resolve os dois.
  */
-function usarFocoNaEtapa(
+function useFocoNaEtapa(
   etapa: number,
   ativo: boolean,
   raiz: React.RefObject<HTMLElement | null>,
@@ -241,7 +241,7 @@ export function AssistenteChamado({
   const [pendencia, setPendencia] = useState<Pendencia | undefined>();
   const refTopo = useRef<HTMLDivElement>(null);
   const refRecado = useRef<HTMLDivElement>(null);
-  usarFocoNaEtapa(etapa, montado, refTopo);
+  useFocoNaEtapa(etapa, montado, refTopo);
 
   /* Hidratação: só aqui o assistente assume e o rascunho volta. */
   useEffect(() => {

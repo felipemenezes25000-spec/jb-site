@@ -36,7 +36,7 @@ env:
 jobs:
   # --------------------------------------------------------------- estático
   estatico:
-    name: Tipos e testes de unidade
+    name: Lint, tipos e testes de unidade
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -53,6 +53,12 @@ jobs:
       # a corrigir silenciosamente durante a instalação.
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
+
+      # Erro reprova; aviso passa. Os avisos de hoje são os 31 pontos do
+      # compilador React documentados em eslint.config.mjs — contados de
+      # propósito, para que a migração para Cache Components tenha lista.
+      - name: Lint
+        run: pnpm lint
 
       # `prisma generate` roda no postinstall, mas depende de DATABASE_URL
       # existir no schema. Um valor local basta: nada é conectado aqui.

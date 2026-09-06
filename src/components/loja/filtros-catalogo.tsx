@@ -7,7 +7,7 @@ import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { Botao, classesBotao } from "@/components/ui/button";
 import { Chip, FiltrosAtivos } from "@/components/ui/chip";
-import { usarDialogo } from "@/components/ui/usar-dialogo";
+import { useDialogo } from "@/components/ui/use-dialogo";
 import { formatarPreco, formatarValor, paraCentavos } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -519,7 +519,7 @@ export function BarraCatalogo({
   const caminho = usePathname();
   const [aberto, setAberto] = useState(false);
   const fechar = useCallback(() => setAberto(false), []);
-  const gaveta = usarDialogo(aberto, fechar);
+  const gaveta = useDialogo(aberto, fechar);
   const idBusca = useId();
 
   const busca = textoDe(parametros, "q");

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ExternalLink, FileText, Lock, Plus } from "lucide-react";
 
 import { CabecalhoDeSecao } from "@/components/admin/conteudo/cabecalho";

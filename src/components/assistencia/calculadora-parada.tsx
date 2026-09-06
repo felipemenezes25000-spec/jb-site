@@ -68,23 +68,26 @@ export function CalculadoraParada({
   const [reparoCents, setReparoCents] = useState(0);
   const [guardado, setGuardado] = useState(false);
 
-  const premissas: PremissasParada = {
-    receitaHoraCents,
-    percentualAfetado: inteiro(percentual, 100),
-    horasPorDia: inteiro(horasPorDia, 24),
-    diasPorOcorrencia: inteiro(diasParados, 365),
-    ocorrenciasPorAno: inteiro(ocorrencias, 52),
-    reparoCents,
-  };
+  /*
+   * O objeto é memoizado, e não só os campos dele na lista do `useMemo`
+   * seguinte. As duas formas calculam a mesma coisa, mas listar campo a campo
+   * deixa a dependência real (`premissas`) invisível para quem lê e para o
+   * linter — e um campo novo no tipo entraria sem ninguém notar que falta
+   * acrescentá-lo em duas listas.
+   */
+  const premissas: PremissasParada = useMemo(
+    () => ({
+      receitaHoraCents,
+      percentualAfetado: inteiro(percentual, 100),
+      horasPorDia: inteiro(horasPorDia, 24),
+      diasPorOcorrencia: inteiro(diasParados, 365),
+      ocorrenciasPorAno: inteiro(ocorrencias, 52),
+      reparoCents,
+    }),
+    [receitaHoraCents, percentual, horasPorDia, diasParados, ocorrencias, reparoCents],
+  );
 
-  const problemas = useMemo(() => conferirPremissas(premissas), [
-    premissas.receitaHoraCents,
-    premissas.percentualAfetado,
-    premissas.horasPorDia,
-    premissas.diasPorOcorrencia,
-    premissas.ocorrenciasPorAno,
-    premissas.reparoCents,
-  ]);
+  const problemas = useMemo(() => conferirPremissas(premissas), [premissas]);
   const conta = calcularExposicao(premissas);
   const completo = problemas.length === 0;
 

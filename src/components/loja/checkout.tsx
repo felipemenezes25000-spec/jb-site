@@ -131,7 +131,7 @@ function rolagemSuave() {
  * o Tab seguinte recomeça do topo da página e o leitor de tela não diz que a
  * etapa mudou. Focar a seção visível resolve os dois.
  */
-function usarFocoNaEtapa(
+function useFocoNaEtapa(
   etapa: number,
   ativo: boolean,
   raiz: React.RefObject<HTMLElement | null>,
@@ -347,7 +347,7 @@ export function Checkout({
   // foco vá até o aviso, senão o erro passa despercebido e o Tab continua de
   // onde estava
   const refAviso = useRef<HTMLDivElement>(null);
-  usarFocoNaEtapa(etapa, true, refFormulario);
+  useFocoNaEtapa(etapa, true, refFormulario);
   const refCampoParaFocar = useRef<string | null>(null);
 
   // identificação
