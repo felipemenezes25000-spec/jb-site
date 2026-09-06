@@ -10,57 +10,59 @@ export function ChamadaFinal({ configuracoes: s }: { configuracoes: SettingsMap 
   const horario = s.horario.trim();
 
   return (
-    <section className="bg-white py-16 md:py-24 lg:py-28">
-      <div className="container-jb max-w-[112rem] border-y-4 border-jb-500 py-10 md:py-14 lg:py-16">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-14">
-          <div className="max-w-5xl">
-            <p className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em] text-jb-700">
-              <span className="h-px w-8 bg-jb-500" aria-hidden />
-              Próximo passo
-            </p>
-            <h2 className="mt-4 text-[clamp(2.8rem,5vw,6rem)] font-extrabold leading-[0.97] tracking-[-0.05em] text-graf-950">
-              Sua clínica precisa de equipamento ou assistência?
-            </h2>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-graf-600 sm:text-lg">
-              Conte o que precisa e a equipe da JB direciona para compra, orçamento ou atendimento técnico.
-            </p>
+    <section className="bg-white py-14 md:py-20">
+      <div className="container-jb max-w-[112rem]">
+        <div className="relative overflow-hidden rounded-[1.8rem] bg-jb-600 px-6 py-8 text-white shadow-[0_28px_70px_-46px_rgba(130,0,0,0.6)] sm:px-8 md:py-10 lg:px-12">
+          <div className="absolute -right-16 -top-28 size-80 rounded-full border-[3.5rem] border-white/[0.07]" aria-hidden />
+          <div className="absolute bottom-0 right-[27%] h-full w-px rotate-[25deg] bg-white/10" aria-hidden />
 
-            {(telefone || horario) ? (
-              <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-graf-500">
-                {telefone ? (
-                  <>
-                    <PhoneCall className="size-4 text-jb-600" aria-hidden />
-                    <a href={telHref(telefone)} className="font-extrabold text-jb-700 hover:text-jb-900">{telefone}</a>
-                  </>
-                ) : null}
-                {horario ? <span className="sm:before:mr-2 sm:before:content-['·']">{horario}</span> : null}
+          <div className="relative z-10 grid gap-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/70">Próximo passo</p>
+              <h2 className="mt-2 max-w-4xl text-[clamp(2rem,3.6vw,3.9rem)] font-black leading-[0.98] tracking-[-0.05em] text-white">
+                Vai equipar a clínica ou precisa resolver um equipamento?
+              </h2>
+              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/70 sm:text-base">
+                A equipe direciona sua necessidade para compra, orçamento ou assistência técnica sem você perder tempo procurando o canal certo.
               </p>
-            ) : null}
-          </div>
 
-          <div className="flex min-w-[16rem] flex-col gap-3 sm:flex-row lg:flex-col">
-            <LinkBotao href="/orcamento" tamanho="lg" className="w-full sm:w-auto lg:w-full">
-              Pedir orçamento
-              <ArrowRight className="size-4" aria-hidden />
-            </LinkBotao>
+              {(telefone || horario) ? (
+                <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/65">
+                  {telefone ? (
+                    <>
+                      <PhoneCall className="size-3.5" aria-hidden />
+                      <a href={telHref(telefone)} className="font-extrabold text-white hover:text-white/80">{telefone}</a>
+                    </>
+                  ) : null}
+                  {horario ? <span className="sm:before:mr-2 sm:before:content-['·']">{horario}</span> : null}
+                </p>
+              ) : null}
+            </div>
 
-            {whatsapp ? (
-              <LinkBotao
-                href={whatsappHref(whatsapp, "Olá! Vim pelo site da JB e gostaria de falar com a equipe.")}
-                target="_blank"
-                rel="noopener noreferrer"
-                variante="perigo"
-                tamanho="lg"
-                className="w-full sm:w-auto lg:w-full"
-              >
-                <MessageCircle className="size-4" aria-hidden />
-                Falar no WhatsApp
+            <div className="flex min-w-[16rem] flex-col gap-3 sm:flex-row lg:flex-col">
+              <LinkBotao href="/orcamento" variante="claro" tamanho="lg" className="w-full text-jb-700 hover:text-jb-900 sm:w-auto lg:w-full">
+                Pedir orçamento
+                <ArrowRight className="size-4" aria-hidden />
               </LinkBotao>
-            ) : (
-              <LinkBotao href="/contato" variante="perigo" tamanho="lg" className="w-full sm:w-auto lg:w-full">
-                Falar com a JB
-              </LinkBotao>
-            )}
+
+              {whatsapp ? (
+                <LinkBotao
+                  href={whatsappHref(whatsapp, "Olá! Vim pelo site da JB e gostaria de falar com a equipe.")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variante="contorno-claro"
+                  tamanho="lg"
+                  className="w-full sm:w-auto lg:w-full"
+                >
+                  <MessageCircle className="size-4" aria-hidden />
+                  Falar no WhatsApp
+                </LinkBotao>
+              ) : (
+                <LinkBotao href="/contato" variante="contorno-claro" tamanho="lg" className="w-full sm:w-auto lg:w-full">
+                  Falar com a JB
+                </LinkBotao>
+              )}
+            </div>
           </div>
         </div>
       </div>

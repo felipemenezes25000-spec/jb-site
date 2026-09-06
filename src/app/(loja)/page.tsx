@@ -10,7 +10,6 @@ import { SecaoDestaques } from "@/components/loja/home/destaques";
 import { SecaoSeminovos } from "@/components/loja/home/seminovos";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
 import { SecaoAreaClinica } from "@/components/loja/home/area-clinica";
-import { SecaoCentralTecnica } from "@/components/loja/home/central-tecnica";
 import { SecaoMarcas } from "@/components/loja/home/marcas";
 import { ChamadaFinal } from "@/components/loja/home/chamada-final";
 import {
@@ -47,6 +46,14 @@ async function dadosDoTopo() {
   ] as const);
 }
 
+/**
+ * Home pública da JB.
+ *
+ * A página privilegia a intenção de compra logo no topo e deixa a proposta de
+ * pós-venda aparecer como diferencial, sem transformar a home em uma sequência
+ * de banners institucionais. Conteúdo técnico continua acessível pelo menu e
+ * pelas páginas próprias, onde existe contexto para aprofundar.
+ */
 export default async function HomePage() {
   const [s, vitrine, equipamentos, marcas] = await dadosDoTopo();
 
@@ -69,10 +76,6 @@ export default async function HomePage() {
 
       <SecaoAssistencia configuracoes={s} />
       <SecaoAreaClinica />
-
-      <Suspense fallback={null}>
-        <SecaoCentralTecnica />
-      </Suspense>
 
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
