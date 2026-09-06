@@ -29,15 +29,6 @@ export const metadata: Metadata = {
 
 const PUBLICADO = { status: "active" } as const;
 
-/**
- * Home pública.
- *
- * A página agora tem uma progressão única, sem repetir três vezes os mesmos
- * caminhos: impacto -> prova -> descoberta -> produto -> seminovo -> serviço ->
- * pós-venda -> autoridade -> marcas -> ação. A Área da Clínica incorpora a
- * demonstração do prontuário, e o antigo bloco "Três caminhos" deixa de ser
- * necessário na home.
- */
 async function dadosDoTopo() {
   "use cache";
   cacheTag(ETIQUETA_CONFIGURACOES, ETIQUETA_CATALOGO);
@@ -60,9 +51,8 @@ export default async function HomePage() {
   const [s, vitrine, equipamentos, marcas] = await dadosDoTopo();
 
   return (
-    <div className="[&_.container-jb]:max-w-[112rem]">
+    <>
       <Hero configuracoes={s} produto={vitrine[0] ?? null} parcelamento={lerParcelamento(s)} />
-
       <ProvasObjetivas configuracoes={s} equipamentos={equipamentos} marcas={marcas} />
 
       <Suspense fallback={<EsqueletoCategoriasHome />}>
@@ -78,7 +68,6 @@ export default async function HomePage() {
       </Suspense>
 
       <SecaoAssistencia configuracoes={s} />
-
       <SecaoAreaClinica />
 
       <Suspense fallback={null}>
@@ -90,6 +79,6 @@ export default async function HomePage() {
       </Suspense>
 
       <ChamadaFinal configuracoes={s} />
-    </div>
+    </>
   );
 }

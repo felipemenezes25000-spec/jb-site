@@ -14,14 +14,6 @@ import { Secao } from "@/components/ui/secao";
 import { formatarData } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/* ============================================================================
-   Demonstração pública do Prontuário Técnico JB
-
-   O painel é exportado separado para poder morar dentro da faixa da Área da
-   Clínica. Isso evita duas seções consecutivas explicando a mesma proposta.
-   Os dados são deliberadamente ilustrativos e o aviso permanece visível.
-   ============================================================================ */
-
 const RESUMO: ResumoDoProntuario = {
   nome: "Autoclave 21 litros",
   marca: "Marca Exemplo",
@@ -35,40 +27,11 @@ const RESUMO: ResumoDoProntuario = {
 };
 
 const HISTORICO: EventoDaTimeline[] = [
-  {
-    id: "compra",
-    titulo: "Compra confirmada",
-    detalhe: "Equipamento registrado com documentos e garantia.",
-    data: new Date("2025-12-02T12:00:00Z"),
-    autor: "Pedido JB-EXEMPLO",
-  },
-  {
-    id: "instalacao",
-    titulo: "Instalação concluída",
-    detalhe: "Ponto elétrico conferido e ciclo de teste executado.",
-    data: new Date("2025-12-09T12:00:00Z"),
-    autor: "Técnico da JB",
-  },
-  {
-    id: "preventiva",
-    titulo: "Preventiva realizada",
-    detalhe: "Inspeção, troca de item de desgaste e teste final registrados.",
-    data: new Date("2026-05-18T12:00:00Z"),
-    autor: "Técnico da JB",
-  },
-  {
-    id: "chamado",
-    titulo: "Chamado atendido",
-    detalhe: "Diagnóstico, orçamento aprovado e serviço concluído.",
-    data: new Date("2026-08-02T12:00:00Z"),
-    autor: "OS-EXEMPLO",
-  },
-  {
-    id: "proxima",
-    titulo: "Próxima preventiva",
-    detalhe: "Programada conforme o cadastro do equipamento.",
-    data: null,
-  },
+  { id: "compra", titulo: "Compra confirmada", detalhe: "Equipamento registrado com documentos e garantia.", data: new Date("2025-12-02T12:00:00Z"), autor: "Pedido JB-EXEMPLO" },
+  { id: "instalacao", titulo: "Instalação concluída", detalhe: "Ponto elétrico conferido e ciclo de teste executado.", data: new Date("2025-12-09T12:00:00Z"), autor: "Técnico da JB" },
+  { id: "preventiva", titulo: "Preventiva realizada", detalhe: "Inspeção, troca de item de desgaste e teste final registrados.", data: new Date("2026-05-18T12:00:00Z"), autor: "Técnico da JB" },
+  { id: "chamado", titulo: "Chamado atendido", detalhe: "Diagnóstico, orçamento aprovado e serviço concluído.", data: new Date("2026-08-02T12:00:00Z"), autor: "OS-EXEMPLO" },
+  { id: "proxima", titulo: "Próxima preventiva", detalhe: "Programada conforme o cadastro do equipamento.", data: null },
 ];
 
 const DOCUMENTOS = [
@@ -90,9 +53,9 @@ export function PainelDemonstracaoProntuario() {
   const [aba, setAba] = useState<Aba>("resumo");
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-graf-200 bg-white shadow-[0_30px_80px_-36px_rgba(0,0,0,0.35)]">
-      <div className="flex flex-col gap-4 border-b border-graf-200 bg-graf-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p className="flex items-center gap-2 text-[0.78rem] font-bold text-warn-700">
+    <div className="overflow-hidden rounded-[1.5rem] border-2 border-jb-100 bg-white shadow-[0_28px_80px_-40px_rgba(112,0,0,0.28)]">
+      <div className="flex flex-col gap-4 border-b border-jb-100 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p className="flex items-center gap-2 text-[0.78rem] font-bold text-jb-700">
           <FlaskConical className="size-4" aria-hidden />
           Demonstração com dados ilustrativos
         </p>
@@ -112,8 +75,8 @@ export function PainelDemonstracaoProntuario() {
                 className={cn(
                   "inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-colors pointer-coarse:min-h-11",
                   aba === item.chave
-                    ? "bg-graf-950 text-white"
-                    : "bg-white text-graf-600 ring-1 ring-inset ring-graf-200 hover:bg-graf-100",
+                    ? "bg-jb-500 text-white"
+                    : "bg-white text-jb-700 ring-1 ring-inset ring-jb-100 hover:bg-jb-50",
                 )}
               >
                 <Icone className="size-3.5" aria-hidden />
@@ -125,31 +88,16 @@ export function PainelDemonstracaoProntuario() {
       </div>
 
       <div className="p-5 sm:p-6 lg:p-7">
-        <div
-          role="tabpanel"
-          id="demo-painel-resumo"
-          aria-labelledby="demo-aba-resumo"
-          hidden={aba !== "resumo"}
-        >
-          <CabecalhoDoProntuario resumo={RESUMO} className="border-graf-200" />
+        <div role="tabpanel" id="demo-painel-resumo" aria-labelledby="demo-aba-resumo" hidden={aba !== "resumo"}>
+          <CabecalhoDoProntuario resumo={RESUMO} className="border-jb-100" />
         </div>
 
-        <div
-          role="tabpanel"
-          id="demo-painel-historico"
-          aria-labelledby="demo-aba-historico"
-          hidden={aba !== "historico"}
-        >
+        <div role="tabpanel" id="demo-painel-historico" aria-labelledby="demo-aba-historico" hidden={aba !== "historico"}>
           <LinhaDoTempo eventos={HISTORICO} />
         </div>
 
-        <div
-          role="tabpanel"
-          id="demo-painel-documentos"
-          aria-labelledby="demo-aba-documentos"
-          hidden={aba !== "documentos"}
-        >
-          <ul className="divide-y divide-graf-100 overflow-hidden rounded-xl border border-graf-200">
+        <div role="tabpanel" id="demo-painel-documentos" aria-labelledby="demo-aba-documentos" hidden={aba !== "documentos"}>
+          <ul className="divide-y divide-jb-100 overflow-hidden rounded-xl border border-jb-100">
             {DOCUMENTOS.map((documento) => (
               <li key={documento.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3.5">
                 <span className="text-sm font-bold text-graf-900">{documento.nome}</span>
@@ -163,22 +111,15 @@ export function PainelDemonstracaoProntuario() {
   );
 }
 
-/** Mantido para páginas/links antigos; na home o painel é incorporado à Área da Clínica. */
 export function DemonstracaoDoProntuario() {
   return (
-    <Secao fundo="clara" espaco="lg" separador>
+    <Secao fundo="branco" espaco="lg" separador>
       <div className="mx-auto max-w-4xl">
         <p className="sobretitulo">Prontuário Técnico JB</p>
         <h2 className="mt-3 text-section text-graf-950">A ficha viva do equipamento</h2>
-        <p className="texto-guia mt-4 max-w-2xl text-graf-600">
-          Um exemplo navegável de como compra, manutenção e documentos ficam ligados à mesma máquina.
-        </p>
-        <div className="mt-8">
-          <PainelDemonstracaoProntuario />
-        </div>
-        <div className="mt-6">
-          <LinkBotao href="/cadastro">Criar conta da clínica</LinkBotao>
-        </div>
+        <p className="texto-guia mt-4 max-w-2xl text-graf-600">Um exemplo navegável de como compra, manutenção e documentos ficam ligados à mesma máquina.</p>
+        <div className="mt-8"><PainelDemonstracaoProntuario /></div>
+        <div className="mt-6"><LinkBotao href="/cadastro">Criar conta da clínica</LinkBotao></div>
       </div>
     </Secao>
   );
