@@ -68,6 +68,24 @@ function diretiva(nome: string, ...fontes: Array<string | false | undefined>) {
 const BLOB = "https://*.public.blob.vercel-storage.com";
 
 /** Domínios do Mercado Pago, usados só quando ele está configurado. */
+/*
+ * Google Analytics 4.
+ *
+ * Duas origens, e só duas: o script sai de `googletagmanager.com`, e os
+ * eventos vão para `google-analytics.com` e `analytics.google.com` — o
+ * segundo é o endpoint regional que o GA4 usa em parte do mundo.
+ *
+ * Elas entram no CSP mesmo quando ninguém aceitou medir, e isso é de
+ * propósito: o CSP é montado em tempo de BUILD (ver o bloco no topo deste
+ * arquivo), e o consentimento é decidido em tempo de execução, por visitante.
+ * Uma política que dependesse da escolha de cada pessoa teria de ser
+ * calculada por requisição, o que obrigaria o site inteiro a renderizar
+ * dinamicamente. Permitir a origem não carrega nada: quem recusou não tem o
+ * script na página.
+ */
+const GA_SCRIPT = "https://www.googletagmanager.com";
+const GA_API = ["https://www.google-analytics.com", "https://analytics.google.com"];
+
 const MP_SCRIPT = "https://sdk.mercadopago.com";
 const MP_API = "https://api.mercadopago.com https://api.mercadolibre.com";
 const MP_FRAME = "https://www.mercadopago.com.br https://www.mercadopago.com";
@@ -112,6 +130,7 @@ const csp = [
     "'unsafe-inline'",
     emDesenvolvimento && "'unsafe-eval'",
     usaMercadoPago && MP_SCRIPT,
+    GA_SCRIPT,
     emPreviewVercel && VERCEL_LIVE,
   ),
 
@@ -145,6 +164,9 @@ const csp = [
     "blob:",
     BLOB,
     usaMercadoPago && MP_IMG,
+    /* O GA4 ainda cai em requisição de imagem quando `sendBeacon` não está
+       disponível; sem esta origem o evento some sem erro visível. */
+    ...GA_API,
     emPreviewVercel && VERCEL_ASSETS,
   ),
 
@@ -168,6 +190,7 @@ const csp = [
     "https://viacep.com.br",
     BLOB,
     usaMercadoPago && MP_API,
+    ...GA_API,
     emPreviewVercel && VERCEL_LIVE,
     emPreviewVercel && "wss://vercel.live",
     emDesenvolvimento && "ws:",

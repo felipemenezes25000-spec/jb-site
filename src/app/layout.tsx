@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
+import { Medicao } from "@/components/analytics/medicao";
 import { SITE_URL } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
@@ -61,7 +62,22 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+/**
+ * O identificador de medição configurado no painel.
+ *
+ * Cacheado com a mesma etiqueta das configurações: ele muda quando alguém
+ * salva `/admin/configuracoes`, e não a cada requisição. Sem ele, ler as
+ * configurações aqui derrubaria o prerender de todas as rotas.
+ */
+async function codigoDeMedicao() {
+  "use cache";
+  cacheTag(ETIQUETA_CONFIGURACOES);
+  cacheLife("hours");
+  const s = await getSettings();
+  return s.codigo_analytics ?? "";
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="pt-BR"
@@ -72,6 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="antialiased">
         {children}
+        <Medicao identificador={await codigoDeMedicao()} />
         <Toaster
           position="bottom-right"
           richColors

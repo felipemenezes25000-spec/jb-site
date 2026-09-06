@@ -9,6 +9,7 @@ import { Aviso } from "@/components/ui/aviso";
 import { Botao, LinkBotao } from "@/components/ui/button";
 import { CampoTelefone } from "@/components/ui/campos-br";
 import { Area, Campo, Marcador, Selecao } from "@/components/ui/form";
+import { medir } from "@/lib/analytics/cliente";
 import { CHAVE_PREMISSAS_PARADA } from "@/lib/premissas-parada";
 
 /**
@@ -69,6 +70,17 @@ export function FormularioPlano({
       /* Nada a fazer: o campo já saiu do formulário, que é o que importa. */
     }
   }
+
+  /*
+   * `maintenance_lead` só depois do sucesso confirmado pelo servidor.
+   *
+   * Clique em "enviar" não é lead: o envio pode ser recusado por validação,
+   * por freio de volume ou por falha. Medir a intenção como se fosse
+   * resultado infla o funil justamente onde ele precisa ser confiável.
+   */
+  useEffect(() => {
+    if (estado.ok) medir("maintenance_lead", { resultado: "registrado" });
+  }, [estado.ok]);
 
   /* Já estamos dentro do cartão da página — nada de cartão dentro de cartão. */
   if (estado.ok) {

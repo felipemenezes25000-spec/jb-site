@@ -14,6 +14,7 @@ import {
   resumoDasPremissas,
   type PremissasParada,
 } from "@/lib/parada";
+import { medir } from "@/lib/analytics/cliente";
 import { CHAVE_PREMISSAS_PARADA } from "@/lib/premissas-parada";
 import { cn } from "@/lib/utils";
 
@@ -98,6 +99,22 @@ export function CalculadoraParada({
    * Aqui o dado não sai desta aba até a pessoa enviar o formulário.
    */
   function levarParaProposta() {
+    /*
+     * `downtime_calculated` sai aqui, no momento em que a pessoa leva o
+     * resultado adiante — e não a cada tecla digitada, que produziria uma
+     * medição por caractere e nenhuma informação.
+     *
+     * O que vai junto é só a forma da simulação: quantas ocorrências, qual
+     * percentual da agenda. **Nada do dinheiro da clínica** — receita por
+     * hora, custo de reparo e exposição anual ficam fora, porque são dado
+     * financeiro identificável de um consultório. Eles seguem para a equipe
+     * pelo lead, que é CRM interno, não métrica de produto.
+     */
+    medir("downtime_calculated", {
+      quantidade: premissas.ocorrenciasPorAno,
+      resultado: `${premissas.percentualAfetado}% da agenda`,
+    });
+
     try {
       window.sessionStorage.setItem(
         CHAVE_PREMISSAS_PARADA,
