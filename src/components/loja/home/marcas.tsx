@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import { Secao } from "@/components/ui/secao";
 import { prisma } from "@/lib/prisma";
 
 const PUBLICADO = { status: "active" } as const;
@@ -21,43 +20,55 @@ export async function SecaoMarcas() {
   if (marcas.length === 0) return null;
 
   return (
-    <Secao fundo="branco" espaco="md" separador classNameInterno="max-w-[112rem]">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em] text-jb-700">
-            <span className="h-px w-8 bg-jb-500" aria-hidden />
-            Marcas no catálogo
-          </p>
-          <h2 className="mt-3 text-section text-graf-950">Equipamentos que a JB vende e acompanha</h2>
-        </div>
-
-        <Link href="/marcas" className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-extrabold text-jb-700 hover:text-jb-900 sm:self-auto">
-          Ver todas as marcas
-          <ArrowRight className="size-4" aria-hidden />
-        </Link>
-      </div>
-
-      <ul className="mt-8 grid overflow-hidden rounded-2xl border-2 border-jb-100 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {marcas.map((marca) => (
-          <li key={marca.slug} className="flex border-b border-r border-jb-100 last:border-r-0 xl:border-b-0">
-            <Link href={`/marcas/${marca.slug}`} className="group flex min-h-28 w-full items-center justify-center bg-white px-5 py-7 transition-colors hover:bg-jb-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500">
-              {marca.logo ? (
-                <Image src={marca.logo.url} alt={marca.logo.alt || marca.name} width={180} height={56} className="h-9 w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]" />
-              ) : (
-                <span className="text-center text-lg font-extrabold tracking-tight text-graf-900 transition-colors group-hover:text-jb-700">{marca.name}</span>
-              )}
+    <section className="bg-white py-14 md:py-16 lg:py-20">
+      <div className="container-jb max-w-[112rem]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-center lg:gap-12">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="h-px w-8 bg-jb-600" aria-hidden />
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-jb-700">Marcas no catálogo</p>
+            </div>
+            <h2 className="mt-4 max-w-[12ch] text-[clamp(2.3rem,3.7vw,4rem)] font-black leading-[0.95] tracking-[-0.05em] text-graf-950">
+              Marcas que fazem parte do dia a dia da JB.
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-graf-500 sm:text-base">
+              Navegue por fabricante para encontrar os equipamentos publicados e os modelos que a equipe acompanha.
+            </p>
+            <Link
+              href="/marcas"
+              className="group mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-extrabold text-jb-700 hover:text-jb-900"
+            >
+              Ver todas as marcas
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
             </Link>
-          </li>
-        ))}
-      </ul>
+          </div>
 
-      <p className="mt-5 text-sm leading-relaxed text-graf-600">
-        Não encontrou a marca?{" "}
-        <Link href="/assistencia-tecnica/solicitar" className="inline-flex min-h-11 items-center font-extrabold text-jb-700 underline-offset-4 hover:underline">
-          Informe marca e modelo ao abrir o chamado
-        </Link>{" "}
-        para a equipe avaliar o atendimento.
-      </p>
-    </Secao>
+          <ul className="grid overflow-hidden rounded-[1.6rem] border border-graf-200 bg-[#fafafa] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {marcas.map((marca) => (
+              <li key={marca.slug} className="flex border-b border-r border-graf-200 last:border-r-0">
+                <Link
+                  href={`/marcas/${marca.slug}`}
+                  className="group flex min-h-24 w-full items-center justify-center bg-white/70 px-5 py-6 transition-[background-color,transform] hover:bg-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
+                >
+                  {marca.logo ? (
+                    <Image
+                      src={marca.logo.url}
+                      alt={marca.logo.alt || marca.name}
+                      width={170}
+                      height={54}
+                      className="h-8 w-auto max-w-full object-contain opacity-80 grayscale transition-[filter,opacity,transform] duration-300 group-hover:scale-[1.04] group-hover:grayscale-0 group-hover:opacity-100"
+                    />
+                  ) : (
+                    <span className="text-center text-base font-black tracking-[-0.02em] text-graf-700 transition-colors group-hover:text-jb-700">
+                      {marca.name}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
   );
 }
