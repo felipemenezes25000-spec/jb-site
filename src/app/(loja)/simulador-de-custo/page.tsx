@@ -100,7 +100,7 @@ function Memoria({ cenario }: { cenario: Cenario }) {
           >
             <dt className="text-graf-600">
               {linha.rotulo}
-              <span className="ml-2 rounded bg-graf-100 px-1.5 py-0.5 text-[0.6875rem] text-graf-600">
+              <span className="ml-2 rounded bg-graf-100 px-1.5 py-0.5 text-[0.75rem] text-graf-600">
                 {ROTULO_DA_ORIGEM[linha.origem]}
               </span>
               {linha.procedencia ? (

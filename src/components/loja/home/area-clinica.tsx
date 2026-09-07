@@ -47,7 +47,7 @@ export function SecaoAreaClinica() {
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-extrabold text-white">{item.titulo}</p>
-                    <p className="mt-0.5 text-[0.72rem] leading-relaxed text-white/65">{item.detalhe}</p>
+                    <p className="mt-0.5 text-[0.75rem] leading-relaxed text-white/65">{item.detalhe}</p>
                   </div>
                 </li>
               );

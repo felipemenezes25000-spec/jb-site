@@ -118,7 +118,7 @@ export async function ContadorDoCarrinho() {
       {itens > 0 ? (
         <span
           aria-hidden
-          className="tabular absolute right-0.5 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jb-500 px-1.5 text-[0.6875rem] font-bold leading-none text-white ring-2 ring-white"
+          className="tabular absolute right-0.5 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jb-500 px-1.5 text-[0.75rem] font-bold leading-none text-white ring-2 ring-white"
         >
           {itens > 99 ? "99+" : itens}
         </span>

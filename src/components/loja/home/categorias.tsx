@@ -258,7 +258,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
         {/* Três atributos em fio fino. Antes eram três blocos de duas linhas
             numa fileira sem quebra: o terceiro saía pela borda do cartão e a
             palavra aparecia cortada ("tranquilidad"). */}
-        <ul className="mt-8 hidden flex-wrap items-center gap-x-5 gap-y-2 text-[0.58rem] font-semibold uppercase tracking-[0.2em] text-graf-500 min-[1024px]:flex">
+        <ul className="mt-8 hidden flex-wrap items-center gap-x-5 gap-y-2 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-graf-500 min-[1024px]:flex">
           <li>Mais segurança</li>
           <li aria-hidden className="h-3 w-px bg-graf-200" />
           <li>Mais eficiência</li>
@@ -302,7 +302,7 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
     >
       <div className="flex min-w-0 flex-col justify-center p-5 min-[640px]:p-7">
         <div className="flex items-center gap-3">
-          <span className="text-[0.62rem] font-black uppercase tracking-[0.16em] text-jb-600">
+          <span className="text-[0.6875rem] font-black uppercase tracking-[0.16em] text-jb-600">
             0{numero}
           </span>
           <span className="h-px w-6 bg-graf-200" aria-hidden />

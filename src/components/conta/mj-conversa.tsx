@@ -55,7 +55,7 @@ export function Fala({
       <span
         aria-hidden
         className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-bold tracking-wide",
+          "flex size-9 shrink-0 items-center justify-center rounded-full text-[0.75rem] font-bold tracking-wide",
           daClinica ? "bg-graf-100 text-graf-600" : "bg-graf-950 text-white",
         )}
       >

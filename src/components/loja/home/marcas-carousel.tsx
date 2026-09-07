@@ -89,7 +89,7 @@ function CartaoMarca({ marca }: { marca: Marca }) {
         )}
       </span>
       <span className="mt-4 block text-[1.02rem] font-bold text-graf-800">{marca.name}</span>
-      <span className="mt-1.5 block text-[0.6rem] font-bold uppercase leading-[1.5] tracking-[0.2em] text-graf-500">
+      <span className="mt-1.5 block text-[0.6875rem] font-bold uppercase leading-[1.5] tracking-[0.2em] text-graf-500">
         {legenda(marca)}
       </span>
     </Link>

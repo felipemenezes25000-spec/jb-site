@@ -202,7 +202,7 @@ export function Hero({
                         className="foco-jb inline-flex min-h-9 items-center gap-1.5 rounded-full border border-graf-200 bg-white/85 px-3.5 text-[0.8125rem] font-bold text-graf-700 transition-[border-color,color,background-color] hover:border-jb-200 hover:bg-white hover:text-jb-700"
                       >
                         {categoria.nome}
-                        <span className="tabular text-[0.6875rem] font-semibold text-graf-500">
+                        <span className="tabular text-[0.75rem] font-semibold text-graf-500">
                           {categoria.total}
                         </span>
                       </Link>
@@ -304,7 +304,7 @@ function VitrineHero({
           Destaque do catálogo
         </span>
 
-        <p className="absolute right-6 top-7 z-10 hidden items-center gap-2 text-[0.6rem] font-bold uppercase tracking-[0.14em] text-graf-500 min-[768px]:flex">
+        <p className="absolute right-6 top-7 z-10 hidden items-center gap-2 text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-graf-500 min-[768px]:flex">
           <Headphones className="size-3.5" aria-hidden />
           suporte depois da compra
         </p>
@@ -330,7 +330,7 @@ function VitrineHero({
           <div className="flex flex-wrap items-center gap-2">
             <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
             {produto.brand ? (
-              <span className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-graf-500">
+              <span className="text-[0.6875rem] font-black uppercase tracking-[0.14em] text-graf-500">
                 {produto.brand.name}
               </span>
             ) : null}
@@ -346,7 +346,7 @@ function VitrineHero({
                 {formatarPreco(produto.priceCents)}
               </p>
               {parcelas ? (
-                <p className="text-[0.72rem] text-graf-500">
+                <p className="text-[0.75rem] text-graf-500">
                   em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
                 </p>
               ) : null}

@@ -183,7 +183,7 @@ function CartaoPrincipal({ produto }: { produto: ProdutoSeminovo }) {
           <dl className="mt-7 grid grid-cols-2 gap-2">
             {fatos.map((fato) => (
               <div key={`${fato.rotulo}-${fato.valor}`} className="rounded-xl border border-white/10 bg-white/[0.045] p-3.5">
-                <dt className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-white/45">{fato.rotulo}</dt>
+                <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/45">{fato.rotulo}</dt>
                 <dd className="mt-1 text-sm font-extrabold text-white">{fato.valor}</dd>
               </div>
             ))}
@@ -233,7 +233,7 @@ function CartaoSecundario({ produto }: { produto: ProdutoSeminovo }) {
         <h3 className="mt-2 line-2 text-lg font-extrabold leading-snug text-graf-950">{produto.name}</h3>
 
         {fatos.length > 0 ? (
-          <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[0.7rem] text-graf-500">
+          <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[0.75rem] text-graf-500">
             {fatos.map((fato) => (
               <li key={`${fato.rotulo}-${fato.valor}`} className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-3.5 shrink-0 text-jb-500" aria-hidden />

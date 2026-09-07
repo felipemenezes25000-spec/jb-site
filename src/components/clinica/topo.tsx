@@ -104,7 +104,7 @@ export function TopoClinica({
               {naoLidas > 0 ? (
                 <span
                   aria-hidden
-                  className="tabular absolute right-1 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-jb-500 px-1.5 text-[0.6875rem] font-bold leading-none text-white ring-2 ring-white"
+                  className="tabular absolute right-1 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-jb-500 px-1.5 text-[0.75rem] font-bold leading-none text-white ring-2 ring-white"
                 >
                   {naoLidas > 99 ? "99+" : naoLidas}
                 </span>

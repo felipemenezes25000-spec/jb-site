@@ -53,7 +53,7 @@ export function ProvasObjetivas({
                 key={prova.titulo}
 className="group relative flex min-w-0 items-center gap-4 border-white/10 py-5 min-[640px]:px-5 min-[1024px]:min-h-[7rem] min-[1024px]:border-l min-[1024px]:px-7 first:min-[1024px]:border-l-0 first:min-[1024px]:pl-0"
               >
-                <span className="text-[0.62rem] font-black tracking-[0.14em] text-white/25" aria-hidden>
+                <span className="text-[0.75rem] font-black tracking-[0.14em] text-white/25" aria-hidden>
                   0{indice + 1}
                 </span>
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-jb-500/35 bg-white/[0.04] text-jb-300 transition-[box-shadow,border-color] duration-300 group-hover:border-jb-500/70 group-hover:shadow-[0_0_22px_-4px_rgba(226,22,30,0.55)]">
@@ -61,7 +61,7 @@ className="group relative flex min-w-0 items-center gap-4 border-white/10 py-5 m
                 </span>
                 <div className="min-w-0">
                   <p className="text-[0.9rem] font-black tracking-[-0.02em] text-white">{prova.titulo}</p>
-                  <p className="mt-1 text-[0.7rem] leading-relaxed text-white/50">{prova.detalhe}</p>
+                  <p className="mt-1 text-[0.75rem] leading-relaxed text-white/50">{prova.detalhe}</p>
                 </div>
               </li>
             );
