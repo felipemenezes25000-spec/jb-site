@@ -114,8 +114,8 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
 
           <div className="min-[1024px]:pb-3">
             <p className="max-w-[34rem] text-[clamp(1rem,1.18vw,1.2rem)] leading-[1.5] text-graf-500">
-              Em vez de obrigar você a descobrir sozinho para onde ir, a home separa as duas
-              intenções principais: comprar melhor ou resolver rápido.
+              Comprar equipamento e resolver equipamento parado são duas conversas
+              diferentes — e as duas terminam com a mesma equipe técnica do outro lado.
             </p>
           </div>
         </div>

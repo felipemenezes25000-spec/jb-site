@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Boxes, Headphones, ListChecks } from "lucide-react";
 
 import { IconeCategoria } from "@/components/ui/icone";
+import { stripTags } from "@/lib/html";
 import { plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
@@ -35,6 +36,7 @@ async function carregar() {
     select: {
       slug: true,
       name: true,
+      description: true,
       icon: true,
       image: { select: { url: true, alt: true } },
       _count: { select: { products: { where: PUBLICADO } } },
@@ -72,11 +74,36 @@ function fotoCategoria(categoria: CategoriaHome) {
   return null;
 }
 
+/**
+ * Os primeiros itens listados na descrição da categoria.
+ *
+ * O cadastro guarda a descrição como lista HTML ("<ul><li>Autoclaves</li>…"),
+ * que é exatamente o que interessa dizer no cartão: o que tem lá dentro.
+ */
+function itensDaCategoria(descricao: string): string[] {
+  const itens = descricao.match(/<li[^>]*>([\s\S]*?)<\/li>/gi);
+  if (!itens) return [];
+
+  return itens
+    .map((item) => stripTags(item).replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
+/**
+ * A linha de apoio do cartão de categoria.
+ *
+ * Antes as quatro categorias repetiam "Explore os equipamentos disponíveis."
+ * sempre que tivessem menos de quatro produtos — quatro cartões, a mesma
+ * frase, nenhuma informação. O cadastro já lista o que cada categoria reúne,
+ * então é isso que aparece; sem lista, a contagem real, que ao menos difere
+ * de uma categoria para outra.
+ */
 function detalheCategoria(categoria: CategoriaHome) {
+  const itens = itensDaCategoria(categoria.description ?? "");
+  if (itens.length) return itens.slice(0, 3).join(" · ");
+
   const total = categoria._count.products;
-  return total >= MINIMO_PARA_CONTAR
-    ? plural(total, "equipamento disponível", "equipamentos disponíveis")
-    : "Explore os equipamentos disponíveis.";
+  return plural(total, "equipamento disponível", "equipamentos disponíveis");
 }
 
 export async function SecaoCategorias() {
