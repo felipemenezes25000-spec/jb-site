@@ -25,15 +25,39 @@ export function formatarValor(centavos: number) {
   });
 }
 
-/** "4.890,00" ou "4890,00" ou "4890.00" → 489000 */
+/**
+ * "4.890,00", "4890,00", "4890.00", "4.000" ou "1.234.567" → centavos.
+ *
+ * O ponto é ambíguo em português: em "4.890,00" ele separa milhar, em
+ * "4890.00" ele separa centavos. A regra da vírgula resolve metade do
+ * problema — quando ela existe, o decimal é ela e todo ponto é milhar.
+ *
+ * O resto é o caso sem vírgula, e é onde estava o erro: "4.000" caía no
+ * `Number()` do JavaScript, que lê o ponto como decimal e devolve 4. Quem
+ * digitava quatro mil no filtro de preço filtrava por R$ 4,00 e recebia uma
+ * lista vazia; no painel, um preço cadastrado como "4.000" virava R$ 4,00.
+ *
+ * Sem vírgula, decide-se pelo tamanho dos grupos: pontos que separam blocos
+ * de exatamente três dígitos são milhar ("4.000", "1.234.567"), qualquer
+ * outra coisa é decimal ("4.5", "4.50"). É a mesma leitura que uma pessoa
+ * faz olhando o número.
+ */
 export function paraCentavos(entrada: string | number): number {
   if (typeof entrada === "number") return Math.round(entrada * 100);
   const limpo = entrada.trim().replace(/[^\d,.-]/g, "");
   if (!limpo) return 0;
-  // com vírgula, o ponto é separador de milhar
-  const normalizado = limpo.includes(",")
-    ? limpo.replace(/\./g, "").replace(",", ".")
-    : limpo;
+
+  let normalizado: string;
+  if (limpo.includes(",")) {
+    // com vírgula, o ponto é separador de milhar
+    normalizado = limpo.replace(/\./g, "").replace(",", ".");
+  } else if (/^-?\d{1,3}(\.\d{3})+$/.test(limpo)) {
+    // só pontos, todos separando grupos de três: milhar
+    normalizado = limpo.replace(/\./g, "");
+  } else {
+    normalizado = limpo;
+  }
+
   const numero = Number(normalizado);
   return Number.isFinite(numero) ? Math.round(numero * 100) : 0;
 }
