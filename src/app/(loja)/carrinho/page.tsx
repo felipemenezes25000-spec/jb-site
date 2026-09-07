@@ -165,9 +165,13 @@ export default async function CarrinhoPage() {
 
               <dl className="mt-5 space-y-3 text-sm">
                 <div className="flex justify-between gap-4">
+                  {/* O espaço é um caractere, não margem. Com `ml-1.5` a tela
+                      ficava certa, mas quem lê por leitor de tela ou copia o
+                      resumo recebia "Subtotal(2 unidades)" — o espaço estava só
+                      no CSS. */}
                   <dt className="text-graf-600">
-                    Subtotal
-                    <span className="ml-1.5 text-graf-500">
+                    Subtotal{" "}
+                    <span className="text-graf-500">
                       ({plural(totais.quantidadeItens, "unidade", "unidades")})
                     </span>
                   </dt>
