@@ -26,6 +26,9 @@ import { resolverOrigem } from "@/lib/site-url";
  */
 export const SITE_URL = resolverOrigem();
 
+/** Rota da imagem de compartilhamento padrão — gerada por `app/opengraph-image.tsx`. */
+const IMAGEM_COMPARTILHAMENTO = "/opengraph-image";
+
 /** Caminho interno vira URL completa; URL que já é absoluta passa direto. */
 export function urlAbsoluta(caminho = "/") {
   const valor = (caminho ?? "").trim();
@@ -69,24 +72,42 @@ export function metadataDePagina(entrada: EntradaMetadata): Metadata {
   const descricao = entrada.descricao ? textoLimpo(entrada.descricao) : undefined;
   const imagem = entrada.imagem ? urlAbsoluta(entrada.imagem) : undefined;
 
+  /* Toda página compartilha com imagem: a própria, quando existe capa, ou a
+     do site.
+
+     A imagem fica declarada aqui, e não só como arquivo de convenção, porque
+     uma página que exporta `openGraph` por `generateMetadata` não recebe de
+     volta a imagem de `app/opengraph-image.tsx` — medido: com a chave
+     ausente, /loja, /contato, /faq e /assistencia-tecnica continuavam sem
+     prévia nenhuma. Apontar para a rota da imagem resolve sem duplicar
+     desenho: quem gera continua sendo aquele arquivo.
+
+     Para um negócio que fecha venda por WhatsApp, link sem prévia é link que
+     ninguém abre. */
+  const imagemFinal = imagem ?? urlAbsoluta(IMAGEM_COMPARTILHAMENTO);
+
+  const og = {
+    type: entrada.tipo ?? "website",
+    locale: "pt_BR",
+    url: entrada.caminho ? urlAbsoluta(entrada.caminho) : undefined,
+    title: titulo,
+    description: descricao,
+    images: [{ url: imagemFinal, alt: titulo, width: 1200, height: 630 }],
+  };
+
+  const twitter = {
+    card: "summary_large_image" as const,
+    title: titulo,
+    description: descricao,
+    images: [imagemFinal],
+  };
+
   return {
     title: titulo,
     description: descricao,
     alternates: entrada.caminho ? { canonical: entrada.caminho } : undefined,
-    openGraph: {
-      type: entrada.tipo ?? "website",
-      locale: "pt_BR",
-      url: entrada.caminho ? urlAbsoluta(entrada.caminho) : undefined,
-      title: titulo,
-      description: descricao,
-      images: imagem ? [{ url: imagem, alt: titulo }] : undefined,
-    },
-    twitter: {
-      card: imagem ? "summary_large_image" : "summary",
-      title: titulo,
-      description: descricao,
-      images: imagem ? [imagem] : undefined,
-    },
+    openGraph: og,
+    twitter,
     robots: entrada.noIndex
       ? { index: false, follow: false, googleBot: { index: false, follow: false } }
       : undefined,

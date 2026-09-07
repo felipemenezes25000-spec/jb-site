@@ -14,6 +14,7 @@ import {
 } from "@/components/loja/home/esqueletos-home";
 import { ETIQUETA_CATALOGO, ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { prisma } from "@/lib/prisma";
+import { JsonLd, localNegocioJsonLd, organizacaoJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
@@ -52,6 +53,18 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* A home era a única página sem dado estruturado: as internas já
+          traziam trilha e FAQ, mas faltava justamente o de maior retorno para
+          quem é local — endereço, telefone e horário de uma empresa de São
+          Paulo, que é o que alimenta o painel do Google e o mapa.
+
+          Os dois blocos existiam em `lib/seo` e já eram usados em /contato,
+          /estrutura e /sobre; aqui é a página que representa a empresa
+          inteira, então entram juntos: a organização (quem é a JB) e o local
+          (onde ela atende). Os `@id` são fixos, então repetir o bloco em
+          outras páginas não cria duas empresas no índice — o Google junta. */}
+      <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
+
       <Hero configuracoes={s} produto={vitrine[0] ?? null} parcelamento={lerParcelamento(s)} />
       <ProvasObjetivas configuracoes={s} equipamentos={equipamentos} marcas={marcas} />
 
