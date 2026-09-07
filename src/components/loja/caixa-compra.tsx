@@ -78,6 +78,20 @@ export function CaixaCompra({
     async (anterior, formData) => {
       const resultado = await adicionarAoCarrinho(anterior, formData);
       if (resultado.ok) {
+        /* Depois de uma ação, o React 19 chama `form.reset()` sozinho. O reset
+           age no DOM e não no estado: os checkboxes de serviço voltavam a
+           desmarcados enquanto `escolhidos` continuava cheio, e como não havia
+           re-render a linha seguia com o fundo destacado e o Total seguia
+           somando serviços que a tela já mostrava desmarcados.
+
+           Voltar o estado ao inicial junto com o reset mantém os dois lados
+           contando a mesma história — e é o que faz sentido depois de mandar o
+           item para o carrinho: a caixa recomeça limpa, com os obrigatórios
+           marcados. O que foi enviado não muda; os campos que o servidor lê são
+           os `hidden` montados a partir deste mesmo estado. */
+        setQuantidade(1);
+        setEscolhidos(addons.filter((a) => a.obrigatorio).map((a) => a.serviceId));
+
         toast.success(resultado.ok, {
           action: { label: "Ver carrinho", onClick: () => router.push("/carrinho") },
         });
