@@ -8,7 +8,7 @@ import {
   ContadorDoCarrinhoEsqueleto,
 } from "@/components/loja/cabecalho-pessoal";
 import { Rodape } from "@/components/loja/rodape";
-import { categoriasDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
+import { categoriasDoMenu, condicoesDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
 
 /**
  * Casca da loja pública.
@@ -19,12 +19,13 @@ import { categoriasDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
  * funcionando normalmente.
  */
 export default async function LojaLayout({ children }: { children: React.ReactNode }) {
-  const [s, categorias] = await Promise.all([configuracoesPublicas(), categoriasDoMenu()]);
+  const [s, categorias, condicoes] = await Promise.all([configuracoesPublicas(), categoriasDoMenu(), condicoesDoMenu()]);
 
   return (
     <div className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]">
       <Cabecalho
         categorias={categorias}
+        condicoes={condicoes}
         acessoDaConta={
           <Suspense fallback={<AcessoDaContaEsqueleto />}>
             <AcessoDaConta />

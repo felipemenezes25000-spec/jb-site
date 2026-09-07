@@ -4,6 +4,7 @@ import { cacheLife, cacheTag } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { getSettings, type SettingsMap } from "@/lib/settings";
+import { CONDICOES } from "@/lib/navegacao";
 
 /* ============================================================================
    Os dados públicos da casca da loja
@@ -60,13 +61,59 @@ export async function configuracoesPublicas(): Promise<SettingsMap> {
  * A contagem entra no cache junto: ela muda quando um produto é publicado ou
  * arquivado, e essas duas ações invalidam a etiqueta.
  */
+/**
+ * As condições que têm equipamento publicado.
+ *
+ * O menu listava as quatro sempre, e "Usados" e "Recondicionados" levavam a
+ * uma página que só sabia dizer "Nada publicado aqui ainda". Menu não é
+ * declaração de intenção: cada item promete que existe algo do outro lado, e
+ * quem clica e não encontra nada aprende a não clicar mais.
+ *
+ * Some por si só quando o estoque acaba, e volta sozinho quando entrar o
+ * primeiro equipamento daquela condição — nada para lembrar de ligar depois.
+ */
+export type CondicaoDoMenu = {
+  slug: string;
+  rotulo: string;
+  valor: string;
+  total: number;
+};
+
+export async function condicoesDoMenu(): Promise<CondicaoDoMenu[]> {
+  "use cache";
+  cacheTag(ETIQUETA_CATALOGO);
+  cacheLife("hours");
+
+  const linhas = await prisma.product.groupBy({
+    by: ["condition"],
+    where: { status: "active" },
+    _count: { _all: true },
+  });
+
+  const comProduto = new Map(linhas.map((linha) => [linha.condition, linha._count._all]));
+
+  return CONDICOES.flatMap((condicao) => {
+    const total = comProduto.get(condicao.valor) ?? 0;
+    return total > 0 ? [{ ...condicao, total }] : [];
+  });
+}
+
 export async function categoriasDoMenu(): Promise<CategoriaDoMenu[]> {
   "use cache";
   cacheTag(ETIQUETA_CATEGORIAS);
   cacheLife("hours");
 
+  /* Só categoria com equipamento publicado. "Estética" e "Outros periféricos"
+     existem no cadastro sem nenhum produto, e apareciam no mega menu levando a
+     uma página que só sabia dizer "Nada publicado aqui ainda" — item de menu
+     promete que existe algo do outro lado. Voltam sozinhas quando entrar o
+     primeiro equipamento delas. */
   const linhas = await prisma.category.findMany({
-    where: { published: true, parentId: null },
+    where: {
+      published: true,
+      parentId: null,
+      products: { some: { status: "active" } },
+    },
     orderBy: [{ order: "asc" }, { name: "asc" }],
     select: {
       slug: true,

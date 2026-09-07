@@ -22,7 +22,6 @@ import { classesBotao } from "@/components/ui/button";
 import { useDialogo } from "@/components/ui/use-dialogo";
 import {
   ATALHOS_CLIENTE,
-  CONDICOES,
   MENU_ASSISTENCIA,
   MENU_PRINCIPAL,
   rotaAtiva,
@@ -34,8 +33,12 @@ import { cn } from "@/lib/utils";
 
 export type CategoriaMenu = { slug: string; name: string; count: number };
 
+export type CondicaoMenu = { slug: string; rotulo: string; total: number };
+
 type Props = {
   categorias: CategoriaMenu[];
+  /** Só as condições que têm equipamento — ver `condicoesDoMenu`. */
+  condicoes: CondicaoMenu[];
   acessoDaConta: React.ReactNode;
   contadorDoCarrinho: React.ReactNode;
   telefone: string;
@@ -94,6 +97,7 @@ function recadosDaFaixa(desde: string, cidade: string) {
  */
 export function Cabecalho({
   categorias,
+  condicoes,
   acessoDaConta,
   contadorDoCarrinho,
   telefone,
@@ -419,7 +423,7 @@ export function Cabecalho({
             >
               <div className="mx-auto max-w-[100rem] px-8 py-9">
                 {mega === "catalogo" ? (
-                  <MegaCatalogo categorias={categorias} />
+                  <MegaCatalogo categorias={categorias} condicoes={condicoes} />
                 ) : (
                   <MegaAssistencia telefone={telefone} whatsapp={whatsapp} horario={horario} />
                 )}
@@ -433,6 +437,7 @@ export function Cabecalho({
         aberto={menuAberto}
         aoFechar={fecharMenu}
         categorias={categorias}
+        condicoes={condicoes}
         telefone={telefone}
         whatsapp={whatsapp}
         ativo={ativo}
@@ -484,7 +489,13 @@ function CampoBusca({
   );
 }
 
-function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
+function MegaCatalogo({
+  categorias,
+  condicoes,
+}: {
+  categorias: CategoriaMenu[];
+  condicoes: CondicaoMenu[];
+}) {
   return (
     <div className="grid gap-10 xl:grid-cols-[1.7fr_1fr]">
       <div>
@@ -531,7 +542,7 @@ function MegaCatalogo({ categorias }: { categorias: CategoriaMenu[] }) {
       <div className="xl:border-l xl:border-jb-100 xl:pl-10">
         <h2 className="text-xs font-bold uppercase tracking-wider text-jb-700">Por condição</h2>
         <ul className="mt-4 grid gap-x-6 sm:grid-cols-2 xl:grid-cols-1">
-          {CONDICOES.map((condicao) => (
+          {condicoes.map((condicao) => (
             <li key={condicao.slug}>
               <Link
                 href={`/${condicao.slug}`}
@@ -625,6 +636,7 @@ function MenuMobile({
   aberto,
   aoFechar,
   categorias,
+  condicoes,
   telefone,
   whatsapp,
   ativo,
@@ -633,6 +645,7 @@ function MenuMobile({
   aberto: boolean;
   aoFechar: () => void;
   categorias: CategoriaMenu[];
+  condicoes: CondicaoMenu[];
   telefone: string;
   whatsapp: string;
   ativo: (href: string) => boolean;
@@ -773,7 +786,7 @@ function MenuMobile({
                             {chave === "catalogo" ? (
                               <li className="mt-1 border-t border-jb-100 pt-1">
                                 <ul>
-                                  {CONDICOES.map((condicao) => (
+                                  {condicoes.map((condicao) => (
                                     <li key={condicao.slug}>
                                       <Link href={`/${condicao.slug}`} className="flex min-h-11 items-center rounded-xl px-3 text-sm text-graf-700 transition-colors hover:bg-jb-50">
                                         {condicao.rotulo}

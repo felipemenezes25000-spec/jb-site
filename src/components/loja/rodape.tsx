@@ -26,12 +26,14 @@ import {
   RODAPE_ASSISTENCIA,
   RODAPE_CLIENTE,
   RODAPE_INSTITUCIONAL,
+  CONDICOES,
   RODAPE_LOJA,
   RODAPE_POLITICAS,
   type ItemMenu,
 } from "@/lib/navegacao";
 import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import { enderecoCompleto, getSettings, redesSociais } from "@/lib/settings";
+import { condicoesDoMenu } from "@/lib/loja-publica";
 
 /**
  * Rodapé da loja — composição horizontal única, em três faixas verticais:
@@ -233,6 +235,23 @@ function CadeiraOdontologica() {
   );
 }
 
+/**
+ * A coluna "Loja" sem as coleções que não têm equipamento.
+ *
+ * O rodapé repetia os mesmos becos sem saída do menu: "Usados" e
+ * "Recondicionados" levavam a uma página que só sabia dizer "Nada publicado
+ * aqui ainda". Some sozinho quando a condição não tem estoque e volta quando
+ * entrar o primeiro equipamento dela.
+ */
+async function lojaDoRodape(): Promise<ItemMenu[]> {
+  const disponiveis = new Set((await condicoesDoMenu()).map((condicao) => `/${condicao.slug}`));
+
+  return RODAPE_LOJA.filter((item) => {
+    const ehColecaoDeCondicao = CONDICOES.some((condicao) => `/${condicao.slug}` === item.href);
+    return !ehColecaoDeCondicao || disponiveis.has(item.href);
+  });
+}
+
 export async function Rodape() {
   "use cache";
   cacheTag(ETIQUETA_CONFIGURACOES);
@@ -420,7 +439,7 @@ export async function Rodape() {
               aria-label="Rodapé"
               className="grid grid-cols-2 gap-x-8 gap-y-9 min-[860px]:grid-cols-4 min-[860px]:gap-x-6 min-[1360px]:grid-cols-[repeat(4,max-content)] min-[1360px]:justify-between min-[1360px]:gap-x-0"
             >
-              <Coluna titulo="Loja" itens={RODAPE_LOJA} icone={ShoppingCart} />
+              <Coluna titulo="Loja" itens={await lojaDoRodape()} icone={ShoppingCart} />
               <Coluna titulo="Assistência" itens={RODAPE_ASSISTENCIA} icone={Wrench} />
               <Coluna titulo="Área da Clínica" itens={RODAPE_CLIENTE} icone={IconeDente} />
               <Coluna titulo="Institucional" itens={RODAPE_INSTITUCIONAL} icone={Building2} />
