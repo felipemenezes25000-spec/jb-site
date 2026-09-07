@@ -80,7 +80,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
 
               <div className="flex min-w-0 flex-1 flex-col gap-4">
                 <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 basis-44">
                     {linha.marca ? (
                       <p className="text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500">
                         {linha.marca}

@@ -84,7 +84,7 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
               setAlternadas({});
             }}
             placeholder="Buscar por palavra — garantia, orçamento, prazo…"
-            className="h-12 w-full rounded-lg border border-graf-450 bg-white pl-11 pr-4 text-[0.9375rem] shadow-xs transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+            className="h-12 w-full rounded-lg border border-graf-450 bg-white pl-11 pr-4 text-base sm:text-[0.9375rem] shadow-xs transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
           />
         </div>
 

@@ -259,7 +259,7 @@ export function EditorOrcamento({
                   id={`${base}-catalogo`}
                   value=""
                   onChange={(evento) => adicionarDoCatalogo(evento.target.value)}
-                  className="h-11 w-full rounded-lg border border-graf-450 bg-white px-3 pr-8 text-sm text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                  className="h-11 w-full rounded-lg border border-graf-450 bg-white px-3 pr-8 text-base sm:text-sm text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
                 >
                   <option value="">Escolha um produto…</option>
                   {produtos.map((produto) => (

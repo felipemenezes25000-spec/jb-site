@@ -285,7 +285,7 @@ export default async function CompararPage({ searchParams }: Props) {
                           ? respostas.infraestrutura
                           : respostas.prioridade
                     }
-                    className="mt-2 min-h-11 w-full rounded-lg border border-graf-300 bg-white px-3 text-[0.875rem] text-graf-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    className="mt-2 min-h-11 w-full rounded-lg border border-graf-300 bg-white px-3 text-base sm:text-[0.875rem] text-graf-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                   >
                     {pergunta.opcoes.map((opcao) => (
                       <option key={opcao.valor} value={opcao.valor}>

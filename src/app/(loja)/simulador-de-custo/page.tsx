@@ -75,7 +75,7 @@ function CampoDinheiro({
         inputMode="decimal"
         defaultValue={valor}
         placeholder="deixe vazio se não souber"
-        className="mt-2 min-h-11 w-full rounded-lg border border-graf-300 bg-white px-3 text-[0.875rem] text-graf-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+        className="mt-2 min-h-11 w-full rounded-lg border border-graf-300 bg-white px-3 text-base sm:text-[0.875rem] text-graf-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
       />
     </div>
   );
@@ -293,7 +293,7 @@ export default async function SimuladorPage({ searchParams }: Props) {
               id="anos"
               name="anos"
               defaultValue={String(anos)}
-              className="mt-2 min-h-11 rounded-lg border border-graf-300 bg-white px-3 text-[0.875rem] text-graf-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+              className="mt-2 min-h-11 rounded-lg border border-graf-300 bg-white px-3 text-base sm:text-[0.875rem] text-graf-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
               {[3, 5, 7, 10].map((opcao) => (
                 <option key={opcao} value={opcao}>

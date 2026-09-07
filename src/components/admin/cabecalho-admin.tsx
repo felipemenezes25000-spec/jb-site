@@ -153,7 +153,7 @@ export function CabecalhoAdmin({
             placeholder="Buscar pedido, cliente, produto, OS…"
             className={cn(
               /* 44px: a busca é o primeiro controle do painel no celular. */
-              "h-11 w-full rounded-lg border border-graf-450 bg-graf-50 pl-9 pr-12 text-sm text-graf-900",
+              "h-11 w-full rounded-lg border border-graf-450 bg-graf-50 pl-9 pr-12 text-base sm:text-sm text-graf-900",
               "placeholder:text-graf-500",
               "hover:border-graf-500 focus:border-jb-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/15",
             )}

@@ -177,7 +177,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                       setTextos((atual) => ({ ...atual, [campo.nome]: evento.target.value }))
                     }
                     className={cn(
-                      "h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-sm text-graf-900",
+                      "h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-base sm:text-sm text-graf-900",
                       "placeholder:text-graf-500 hover:border-graf-500",
                       "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
                     )}
@@ -201,7 +201,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                   value={params.get(campo.nome) ?? ""}
                   onChange={(evento) => aplicar({ [campo.nome]: evento.target.value })}
                   className={cn(
-                    "h-11 w-full rounded-lg border border-graf-450 bg-white px-3 pr-8 text-sm text-graf-900",
+                    "h-11 w-full rounded-lg border border-graf-450 bg-white px-3 pr-8 text-base sm:text-sm text-graf-900",
                     "hover:border-graf-500",
                     "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
                   )}
@@ -328,7 +328,7 @@ function EntradaData({
         value={valor}
         onChange={(evento) => aoMudar(evento.target.value)}
         className={cn(
-          "h-11 rounded-lg border border-graf-450 bg-white px-3 text-sm text-graf-900",
+          "h-11 rounded-lg border border-graf-450 bg-white px-3 text-base sm:text-sm text-graf-900",
           "hover:border-graf-500",
           "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
           className ?? "w-full",

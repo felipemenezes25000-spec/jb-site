@@ -284,7 +284,7 @@ export default async function PaginaAgenda({
                 id="agenda-tecnico"
                 name="tecnico"
                 defaultValue={tecnicoId}
-                className="h-11 rounded-lg border border-graf-450 bg-white px-3 pr-8 text-sm text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                className="h-11 rounded-lg border border-graf-450 bg-white px-3 pr-8 text-base sm:text-sm text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
               >
                 <option value="">Todos os técnicos</option>
                 {tecnicos.map((tecnico) => (

@@ -117,12 +117,6 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
               Em vez de obrigar você a descobrir sozinho para onde ir, a home separa as duas
               intenções principais: comprar melhor ou resolver rápido.
             </p>
-            <div className="mt-8 flex items-center gap-4">
-              <span className="h-[2px] w-20 shrink-0 bg-jb-600" aria-hidden />
-              <span className="h-px flex-1 bg-graf-200" aria-hidden />
-              <span className="text-[0.72rem] font-black tracking-[0.22em] text-jb-700">01</span>
-              <span className="text-[0.72rem] font-bold tracking-[0.18em] text-graf-400">/ 04</span>
-            </div>
           </div>
         </div>
 

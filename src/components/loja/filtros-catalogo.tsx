@@ -598,7 +598,7 @@ export function BarraCatalogo({
                 )
               }
               aria-label="Ordenar resultados"
-              className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base font-semibold text-graf-800 transition-colors hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:w-auto sm:text-sm"
+              className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white pl-3 pr-9 text-base font-semibold text-graf-800 transition-colors hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:w-auto sm:text-sm"
             >
               {ORDENS.map((opcao) => (
                 <option key={opcao.valor} value={opcao.valor}>

@@ -471,7 +471,7 @@ function CampoBusca({
         enterKeyHint="search"
         autoComplete="off"
         placeholder="Busque equipamentos, marcas, modelos ou peças..."
-        className="h-full min-w-0 flex-1 bg-transparent px-3 text-[0.875rem] text-graf-900 outline-none placeholder:text-graf-400"
+        className="h-full min-w-0 flex-1 bg-transparent px-3 text-base text-graf-900 lg:text-[0.875rem] outline-none placeholder:text-graf-400"
       />
       <button
         type="submit"

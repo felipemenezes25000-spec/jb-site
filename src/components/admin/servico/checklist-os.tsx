@@ -100,7 +100,7 @@ export function ChecklistDaOS({
                         evento.currentTarget.form?.requestSubmit();
                       }}
                       className={cn(
-                        "h-11 w-full rounded-lg border border-graf-450 bg-white px-3 text-sm text-graf-900 sm:w-56",
+                        "h-11 w-full rounded-lg border border-graf-450 bg-white px-3 text-base sm:text-sm text-graf-900 sm:w-56",
                         "placeholder:text-graf-500 hover:border-graf-500",
                         "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
                         "disabled:bg-graf-50 disabled:text-graf-500",

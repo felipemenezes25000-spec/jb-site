@@ -470,7 +470,7 @@ export function FormularioRelacionados({
                 onChange={(evento) => setBusca(evento.target.value)}
                 placeholder="Nome ou SKU — pelo menos 2 letras"
                 className={cn(
-                  "h-11 w-full rounded-lg border border-graf-450 bg-white pl-10 pr-3 text-sm text-graf-900 shadow-xs",
+                  "h-11 w-full rounded-lg border border-graf-450 bg-white pl-10 pr-3 text-base sm:text-sm text-graf-900 shadow-xs",
                   "placeholder:text-graf-500 hover:border-graf-500",
                   "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
                 )}
