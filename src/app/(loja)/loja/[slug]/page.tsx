@@ -43,6 +43,8 @@ import {
   ServicosDoProduto,
   type ServicoDoProduto,
 } from "@/components/loja/produto/servicos-do-produto";
+import type { CertificadoDaUnidade } from "@/components/loja/produto/selo-certificado";
+import { SeloCertificado } from "@/components/loja/produto/selo-certificado";
 import { UnidadeFisica } from "@/components/loja/produto/unidade-fisica";
 import {
   RegistrarVisita,
@@ -53,6 +55,11 @@ import { EsqueletoCartaoProduto } from "@/components/ui/esqueletos";
 import { Secao } from "@/components/ui/secao";
 import { sanitizarHtml } from "@/components/admin/conteudo/html-seguro";
 import { paraCard, SELECAO_CARD } from "@/lib/catalogo";
+import {
+  certificacaoPublicada,
+  contarChecklist,
+  frasedaVerificacao,
+} from "@/lib/certificacao";
 import { calcularParcelas, paraCentavos, whatsappHref } from "@/lib/format";
 import {
   faqJsonLd,
@@ -216,6 +223,35 @@ export default async function ProdutoPage({ params }: Props) {
       resultado: item.result,
       nota: item.note,
     })) ?? [];
+
+  /* ------------------------------------------------------ certificação
+
+     A certificação é da UNIDADE, não do produto: duas autoclaves do mesmo
+     modelo têm desgastes diferentes, e um selo no SKU afirmaria sobre a
+     segunda o que só foi verificado na primeira. Por isso a leitura só
+     acontece quando existe uma unidade identificada — e só o estado
+     "publicada" aparece, que é o que `certificacaoPublicada` filtra.
+
+     A contagem NÃO é recontada aqui: `itemsTotal` e `itemsApproved` foram
+     carimbados no fechamento da inspeção, e recontar agora daria outro número
+     se o checklist tivesse mudado de versão desde então. */
+  const certificacao = unidade ? await certificacaoPublicada(unidade.id) : null;
+
+  const certificado: CertificadoDaUnidade | null = certificacao
+    ? {
+        codigoPublico: certificacao.publicCode,
+        /* A contagem sai do MESMO lugar que /verificar usa — os itens do
+           checklist da unidade. As duas telas precisam dizer o mesmo número:
+           ler o carimbo aqui e recontar lá faria a ficha e o certificado
+           discordarem se o checklist tivesse mudado de versão. */
+        frase: frasedaVerificacao(contarChecklist(unidade?.checklist ?? [])),
+        itensAprovados: certificacao.itemsApproved,
+        itensTotal: certificacao.itemsTotal,
+        resumo: certificacao.summary,
+        inspecionadoEm: certificacao.inspectedAt,
+        tecnico: certificacao.technician?.name ?? null,
+      }
+    : null;
 
   const definicao = definicaoDaCondicao(produto.condition, {
     itensDeChecklist: checklist.length,
@@ -531,6 +567,11 @@ export default async function ProdutoPage({ params }: Props) {
                 />
               ) : null}
 
+              {/* O selo fica na coluna que decide, não só na faixa lá
+                  embaixo: quem está olhando o preço de um seminovo está
+                  pesando exatamente o risco que ele responde. */}
+              {certificado ? <SeloCertificado certificado={certificado} /> : null}
+
               <CondicoesDeCompra
                 garantiaMeses={garantiaMeses}
                 garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
@@ -610,6 +651,7 @@ export default async function ProdutoPage({ params }: Props) {
           notasDeEstado={unidade.conditionNotes}
           notasDeInspecao={unidade.inspectionNotes}
           checklist={checklist}
+          certificado={certificado}
           vendida={unidade.status === "vendido"}
         />
       ) : null}

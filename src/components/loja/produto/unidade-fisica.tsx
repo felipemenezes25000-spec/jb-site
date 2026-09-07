@@ -1,6 +1,10 @@
 import { ClipboardCheck } from "lucide-react";
 
 import { CONDICAO_PDP, type CondicaoProduto } from "@/components/loja/produto/condicao";
+import {
+  SeloCertificado,
+  type CertificadoDaUnidade,
+} from "@/components/loja/produto/selo-certificado";
 import { Etiqueta, type Tom } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
 
@@ -58,6 +62,7 @@ export function UnidadeFisica({
   notasDeEstado,
   notasDeInspecao,
   checklist,
+  certificado,
   vendida,
 }: {
   /** Âncora da faixa, para a navegação de seções do equipamento. */
@@ -71,6 +76,8 @@ export function UnidadeFisica({
   notasDeEstado: string;
   notasDeInspecao: string;
   checklist: ItemDeChecklist[];
+  /** Certificação publicada desta unidade, quando existe. */
+  certificado?: CertificadoDaUnidade | null;
   /** A unidade já saiu — a página segue de pé, mas o texto muda de tempo. */
   vendida?: boolean;
 }) {
@@ -117,10 +124,15 @@ export function UnidadeFisica({
   ].filter(Boolean);
 
   const nadaAMostrar =
-    dados.length === 0 && checklist.length === 0 && !notasDeEstado && !notasDeInspecao;
+    dados.length === 0 &&
+    checklist.length === 0 &&
+    !notasDeEstado &&
+    !notasDeInspecao &&
+    !certificado;
   if (nadaAMostrar) return null;
 
-  const temLateral = dados.length > 0 || Boolean(notasDeEstado) || Boolean(notasDeInspecao);
+  const temLateral =
+    dados.length > 0 || Boolean(notasDeEstado) || Boolean(notasDeInspecao) || Boolean(certificado);
 
   return (
     <Secao id={id} espaco="lg" separador className="scroll-mt-32">
@@ -189,6 +201,11 @@ export function UnidadeFisica({
                 : "min-w-0 max-w-3xl space-y-8"
             }
           >
+            {/* O selo abre a coluna: é o que resume o laudo inteiro numa
+                frase conferível, e quem lê esta faixa está exatamente
+                procurando por essa garantia. */}
+            {certificado ? <SeloCertificado certificado={certificado} forma="laudo" /> : null}
+
             {dados.length > 0 ? (
               <div className={`rounded-xl p-5 sm:p-6 ${desenho.faixa}`}>
                 <Rotulo>Dados da unidade</Rotulo>
