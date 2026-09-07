@@ -49,11 +49,19 @@ test.describe("Home", () => {
     await expect(rodape.getByRole("link", { name: /Contato/ }).first()).toBeVisible();
   });
 
-  test("a busca do cabeçalho leva ao resultado", async ({ page }) => {
+  test("a busca do cabeçalho sugere e leva ao resultado", async ({ page }) => {
     await page.goto("/");
 
-    const busca = page.getByRole("searchbox", { name: "Buscar no catálogo" }).first();
+    /* `combobox`, e não `searchbox`: o campo passou a abrir uma lista de
+       sugestões enquanto se digita, e o padrão ARIA disso é o combobox
+       com `listbox`. O papel faz parte do contrato — é o que diz ao
+       leitor de tela que existem opções a percorrer com as setas. */
+    const busca = page.getByRole("combobox", { name: "Buscar no catálogo" }).first();
     await busca.fill("autoclave");
+
+    // o painel abre a partir de três letras, com resultado ou sem ele
+    await expect(page.getByRole("listbox", { name: "Sugestões da busca" })).toBeVisible();
+
     await busca.press("Enter");
 
     await page.waitForURL(/\/busca\?/);

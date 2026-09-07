@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 
+import { BuscaComSugestoes } from "@/components/loja/busca-sugestoes";
 import { Logo } from "@/components/ui/logo";
 import { classesBotao } from "@/components/ui/button";
 import { useDialogo } from "@/components/ui/use-dialogo";
@@ -107,7 +108,6 @@ export function Cabecalho({
   cidade,
 }: Props) {
   const pathname = usePathname();
-  const router = useRouter();
   const reduzido = useReducedMotion();
 
   const [compacto, setCompacto] = useState(false);
@@ -119,7 +119,6 @@ export function Cabecalho({
   const refCabecalho = useRef<HTMLElement>(null);
   const gatilhosMega = useRef<Partial<Record<ChaveMega, HTMLButtonElement | null>>>({});
   const botaoBusca = useRef<HTMLButtonElement>(null);
-  const campoBuscaMobile = useRef<HTMLInputElement>(null);
 
   const fecharMenu = useCallback(() => setMenuAberto(false), []);
 
@@ -135,10 +134,6 @@ export function Cabecalho({
     setMega(null);
     setBuscaAberta(false);
   }, [pathname]);
-
-  useEffect(() => {
-    if (buscaAberta) campoBuscaMobile.current?.focus();
-  }, [buscaAberta]);
 
   useEffect(() => {
     function aoTeclar(evento: KeyboardEvent) {
@@ -169,14 +164,6 @@ export function Cabecalho({
   );
 
   const ativo = (href: string) => rotaAtiva(pathname, href);
-
-  function buscar(evento: React.FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    const dados = new FormData(evento.currentTarget);
-    const termo = String(dados.get("q") ?? "").trim();
-    router.push(termo ? `/busca?q=${encodeURIComponent(termo)}` : "/loja");
-    setBuscaAberta(false);
-  }
 
   function aoPerderFoco(evento: React.FocusEvent<HTMLElement>) {
     if (!evento.currentTarget.contains(evento.relatedTarget)) setMega(null);
@@ -344,13 +331,9 @@ export function Cabecalho({
               })}
             </nav>
 
-            <form
-              onSubmit={buscar}
-              role="search"
-              className="ml-auto hidden min-w-0 max-w-[27rem] flex-1 lg:flex 2xl:ml-2"
-            >
-              <CampoBusca id="busca-cabecalho" compacto={compacto} />
-            </form>
+            <div className="ml-auto hidden min-w-0 max-w-[27rem] flex-1 lg:block 2xl:ml-2">
+              <BuscaComSugestoes id="busca-cabecalho" compacto={compacto} />
+            </div>
 
             <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
               <button
@@ -403,9 +386,9 @@ export function Cabecalho({
               transition={{ duration: reduzido ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
               className="overflow-hidden border-t border-graf-200 bg-white lg:hidden"
             >
-              <form onSubmit={buscar} role="search" className="mx-auto max-w-[100rem] px-5 py-3 sm:px-8">
-                <CampoBusca id="busca-celular" ref={campoBuscaMobile} compacto />
-              </form>
+              <div className="mx-auto max-w-[100rem] px-5 py-3 sm:px-8">
+                <BuscaComSugestoes id="busca-celular" compacto focoInicial />
+              </div>
             </motion.div>
           ) : null}
         </AnimatePresence>
@@ -444,48 +427,6 @@ export function Cabecalho({
         reduzido={Boolean(reduzido)}
       />
     </>
-  );
-}
-
-function CampoBusca({
-  id,
-  ref,
-  compacto,
-}: {
-  id: string;
-  ref?: React.Ref<HTMLInputElement>;
-  compacto?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex w-full items-center rounded-full border border-graf-300 bg-graf-50 transition-[height,border-color,background-color,box-shadow] duration-200",
-        "hover:border-graf-400 hover:bg-white focus-within:border-jb-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-jb-500/8",
-        compacto ? "h-11" : "h-12",
-      )}
-    >
-      <Search className="ml-4 size-4.5 shrink-0 text-jb-600" aria-hidden />
-      <label htmlFor={id} className="sr-only">
-        Buscar no catálogo
-      </label>
-      <input
-        ref={ref}
-        id={id}
-        name="q"
-        type="search"
-        enterKeyHint="search"
-        autoComplete="off"
-        placeholder="Busque equipamentos, marcas, modelos ou peças..."
-        className="h-full min-w-0 flex-1 bg-transparent px-3 text-base text-graf-900 lg:text-[0.875rem] outline-none placeholder:text-graf-500"
-      />
-      <button
-        type="submit"
-        aria-label="Buscar"
-        className="mr-0.5 flex size-11 shrink-0 items-center justify-center rounded-full text-jb-600 transition-colors hover:bg-jb-50 hover:text-jb-800"
-      >
-        <Search className="size-4.5" aria-hidden />
-      </button>
-    </div>
   );
 }
 
