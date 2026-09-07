@@ -491,17 +491,19 @@ export function AssistenteChamado({
                       placeholder="Como está escrito no aparelho"
                       autoComplete="off"
                     />
+                    {/* Série entra na mesma grade, e não solta com largura
+                        própria: os três campos descrevem o mesmo aparelho e
+                        antes a coluna serrilhava — meia largura no tipo, duas
+                        colunas cheias em marca e modelo, meia de novo aqui. */}
+                    <Campo
+                      rotulo="Número de série"
+                      name="serie"
+                      value={dados.serie}
+                      onChange={(evento) => alterar({ serie: evento.target.value })}
+                      ajuda="Costuma ficar em uma etiqueta na traseira ou na base do aparelho."
+                      autoComplete="off"
+                    />
                   </div>
-
-                  <Campo
-                    rotulo="Número de série"
-                    name="serie"
-                    value={dados.serie}
-                    onChange={(evento) => alterar({ serie: evento.target.value })}
-                    ajuda="Costuma ficar em uma etiqueta na traseira ou na base do aparelho."
-                    autoComplete="off"
-                    className="sm:max-w-sm"
-                  />
 
                   {/* A mesma leitura de etiqueta do cadastro de equipamento.
                       Aqui ela poupa digitação de quem está com o aparelho na

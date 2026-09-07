@@ -115,7 +115,12 @@ export function LeitorDeEtiqueta({
         onClick={() => entrada.current?.click()}
       >
         <Camera className="size-4" aria-hidden />
-        Tirar foto da etiqueta
+        {/* "Ler", não "tirar foto": a câmera aqui só extrai marca, modelo e
+            número de série para preencher os campos — a imagem não é enviada
+            nem guardada. Com o rótulo anterior a mesma tela parecia oferecer
+            anexo de foto no primeiro passo e negá-lo no terceiro, onde o aviso
+            de anexar fotos pede conta. São coisas diferentes. */}
+        Ler etiqueta com a câmera
       </Botao>
 
       {resposta && !resposta.ok ? (
