@@ -30,13 +30,29 @@ test.describe("Home", () => {
     expect(vigia.falhas, `respostas 5xx:\n${vigia.falhas.join("\n")}`).toEqual([]);
   });
 
-  test("o menu principal leva ao catálogo", async ({ page }) => {
+  /**
+   * O menu do cabeçalho tem duas formas, e a largura decide qual.
+   *
+   * A barra horizontal com os cinco destinos só aparece a partir de 1536px:
+   * abaixo disso ela espremeria o campo de busca a menos de 100px, e a busca
+   * é o controle mais usado do cabeçalho. Nesta suíte a janela tem 1440px,
+   * então o caminho REAL de quem está aqui é a gaveta — e é ele que o teste
+   * percorre, em vez de exigir uma barra que aquela largura não mostra.
+   *
+   * "Equipamentos" tem mega menu, então na gaveta é um botão que abre a
+   * seção; o link do catálogo inteiro está dentro dela.
+   */
+  test("o menu do cabeçalho leva ao catálogo", async ({ page }) => {
     await page.goto("/");
 
-    const navegacao = page.getByRole("navigation", { name: "Principal" });
-    await expect(navegacao).toBeVisible();
+    await page.getByRole("button", { name: "Abrir o menu" }).click();
 
-    await navegacao.getByRole("link", { name: /Equipamentos/ }).first().click();
+    const gaveta = page.getByRole("dialog", { name: "Menu de navegação" });
+    await expect(gaveta).toBeVisible();
+
+    await gaveta.getByRole("button", { name: /Equipamentos/ }).first().click();
+    await gaveta.getByRole("link", { name: "Ver todos os equipamentos" }).click();
+
     await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
