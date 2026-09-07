@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Package, SearchX, Stethoscope, Wrench } from "lucide-react";
+import { ArrowRight, BookOpen, SearchX, Stethoscope, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
-import { CONDICAO } from "@/components/loja/card-produto";
-import { Grade } from "@/components/ui/grade";
+import { GradeProdutos, type Parcelamento } from "@/components/loja/card-produto";
+import { colunasAte } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import {
   ORDEM_POR_INTENCAO,
@@ -16,9 +15,10 @@ import {
   type GrupoDeResultado,
 } from "@/lib/busca/intencao";
 import { buscarTudo, type ResultadoUniversal } from "@/lib/busca/universal";
-import { formatarPreco } from "@/lib/format";
+import { paraCentavos } from "@/lib/format";
 import { ROTULO_EQUIPAMENTO } from "@/lib/rotulos-equipamento";
 import { metadataDePagina } from "@/lib/seo";
+import { getSettings } from "@/lib/settings";
 
 /*
  * Migração para Cache Components — esta rota ainda não foi migrada.
@@ -81,11 +81,14 @@ function Grupo({
   grupo,
   resultado,
   consulta,
+  parcelamento,
 }: {
   grupo: GrupoDeResultado;
   resultado: ResultadoUniversal;
   /** O termo buscado, para levar junto ao catálogo. */
   consulta: string;
+  /** Regras de parcelamento da loja — as mesmas do catálogo. */
+  parcelamento: Parcelamento;
 }) {
   if (grupo === "produtos") {
     if (resultado.produtos.length === 0) return null;
@@ -99,55 +102,24 @@ function Grupo({
         {/* Esta lista responde "achei isto"; o catálogo é onde se refina por
             condição, marca, voltagem e preço. Os links de "ver o catálogo" da
             página iam para /loja sem o termo, então quem quisesse filtrar
-            recomeçava a busca do zero. */}
-        <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ul" className="mt-4">
-          {resultado.produtos.map((produto) => (
-            <li key={produto.slug}>
-              <Cartao className="h-full">
-              <Link
-                href={`/loja/${produto.slug}`}
-                className="flex h-full items-center gap-4 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-              >
-                {produto.imagem ? (
-                  <Image
-                    src={produto.imagem}
-                    alt=""
-                    width={72}
-                    height={72}
-                    className="size-16 shrink-0 rounded-lg object-cover"
-                  />
-                ) : (
-                  <span
-                    aria-hidden
-                    className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-graf-100 text-graf-500"
-                  >
-                    <Package className="size-6" />
-                  </span>
-                )}
-                <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-semibold leading-snug text-graf-950">
-                    {produto.nome}
-                  </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-2">
-                    <span className="text-[0.875rem] text-graf-600">
-                      {produto.precoCents > 0
-                        ? formatarPreco(produto.precoCents)
-                        : "Sob orçamento"}
-                    </span>
-                    {/* O mesmo rótulo e o mesmo tom do cartão do catálogo:
-                        duas telas com nomes diferentes para a mesma condição
-                        fazem o comprador achar que são coisas diferentes. */}
-                    <Etiqueta tom={CONDICAO[produto.condicao as keyof typeof CONDICAO]?.tom ?? "neutro"}>
-                      {CONDICAO[produto.condicao as keyof typeof CONDICAO]?.rotulo ??
-                        produto.condicao}
-                    </Etiqueta>
-                  </span>
-                </span>
-              </Link>
-              </Cartao>
-            </li>
-          ))}
-        </Grade>
+            recomeçava a busca do zero.
+
+            O cartão é o MESMO da vitrine. Antes esta página desenhava uma
+            linha estreita com miniatura de 64px: o resultado de uma busca por
+            equipamento parecia item de lista de sistema, e não o equipamento
+            que a pessoa está procurando comprar. */}
+        {/* Com um ou dois achados, a grade cheia deixaria cada cartão com
+            700px de largura — o equipamento vira cartaz e a foto some no
+            branco. As colunas acompanham a quantidade e, abaixo de três, a
+            faixa para de esticar. É a mesma regra dos relacionados da ficha. */}
+        <GradeProdutos
+          produtos={resultado.produtos}
+          parcelamento={parcelamento}
+          colunas={colunasAte(resultado.produtos.length, { base: 1, sm: 2, lg: 3, xl: 4 })}
+          className={
+            resultado.produtos.length < 3 ? "mt-6 max-w-3xl" : "mt-6"
+          }
+        />
 
         <p className="mt-4">
           <Link
@@ -318,7 +290,13 @@ export default async function BuscaPage({
     );
   }
 
-  const resultado = await buscarTudo(validada.consulta);
+  /* O parcelamento sai da configuração da loja, igual ao catálogo: prometer
+     12× aqui e 6× na ficha seria mentira de vitrine. */
+  const [resultado, s] = await Promise.all([buscarTudo(validada.consulta), getSettings()]);
+  const parcelamento: Parcelamento = {
+    max: Math.min(12, Math.max(1, Number(s.parcelas_max) || 1)),
+    minimoCents: paraCentavos(s.parcela_minima),
+  };
   const ordem = ORDEM_POR_INTENCAO[resultado.intencao];
 
   return (
@@ -356,7 +334,13 @@ export default async function BuscaPage({
         ) : (
           <div className="mt-8 space-y-10">
             {ordem.map((grupo) => (
-              <Grupo key={grupo} grupo={grupo} resultado={resultado} consulta={validada.consulta} />
+              <Grupo
+                key={grupo}
+                grupo={grupo}
+                resultado={resultado}
+                consulta={validada.consulta}
+                parcelamento={parcelamento}
+              />
             ))}
           </div>
         )}

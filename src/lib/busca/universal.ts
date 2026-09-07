@@ -1,8 +1,9 @@
 import "server-only";
 
 import { sessaoCliente } from "@/lib/auth-cliente";
+import type { ProdutoCard } from "@/components/loja/card-produto";
 import { detectarIntencao, termosDaBusca, type Intencao } from "@/lib/busca/intencao";
-import { PUBLICADO } from "@/lib/catalogo";
+import { paraCard, PUBLICADO, SELECAO_CARD } from "@/lib/catalogo";
 import { prisma } from "@/lib/prisma";
 
 /* ============================================================================
@@ -21,13 +22,17 @@ import { prisma } from "@/lib/prisma";
 
 const TETO_POR_GRUPO = 6;
 
-export type AchadoDeProduto = {
-  slug: string;
-  nome: string;
-  precoCents: number;
-  condicao: string;
-  imagem: string | null;
-};
+/**
+ * O achado de produto É o cartão do catálogo.
+ *
+ * Antes esta busca tinha um recorte próprio — slug, nome, preço, condição e
+ * uma miniatura de 64px — e desenhava uma linha estreita para cada resultado.
+ * Duas telas com dois desenhos para a mesma coisa fazem o comprador achar que
+ * são coisas diferentes: a foto pequena parecia item de lista, não equipamento.
+ * Agora a busca devolve o mesmo `ProdutoCard` da vitrine, e a página usa a
+ * mesma grade.
+ */
+export type AchadoDeProduto = ProdutoCard;
 
 export type AchadoDeConteudo = {
   slug: string;
@@ -81,17 +86,7 @@ export async function buscarTudo(consulta: string): Promise<ResultadoUniversal> 
       },
       orderBy: { featured: "desc" },
       take: TETO_POR_GRUPO,
-      select: {
-        slug: true,
-        name: true,
-        priceCents: true,
-        condition: true,
-        media: {
-          orderBy: { order: "asc" },
-          take: 1,
-          select: { media: { select: { url: true } } },
-        },
-      },
+      select: SELECAO_CARD,
     }),
 
     /* Só publicado. Rascunho da Central não existe para a busca, pelo mesmo
@@ -138,13 +133,7 @@ export async function buscarTudo(consulta: string): Promise<ResultadoUniversal> 
   const resultado: ResultadoUniversal = {
     intencao,
     temSessao,
-    produtos: produtos.map((produto) => ({
-      slug: produto.slug,
-      nome: produto.name,
-      precoCents: produto.priceCents,
-      condicao: produto.condition,
-      imagem: produto.media[0]?.media.url ?? null,
-    })),
+    produtos: produtos.map(paraCard),
     conteudo: artigos.map((artigo) => ({
       slug: artigo.slug,
       titulo: artigo.title,
