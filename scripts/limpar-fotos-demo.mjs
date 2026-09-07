@@ -1,5 +1,5 @@
 /**
- * Limpeza das fotos de demonstração.
+ * Preparo das fotos de demonstração — limpeza e resolução.
  *
  * As cinco fotos de `public/demo` carregam um halo diagonal de recorte — faixas
  * de cinza a 1–3% que sobraram de uma remoção de fundo malfeita. No arquivo elas
@@ -14,7 +14,18 @@
  * Reencoda com qualidade 92 (era ~60): o arquivo cresce, mas some o banding que
  * a compressão criava justamente nas áreas de branco quase uniforme.
  *
- *   node limpar-fotos.mjs [--conferir]
+ * Depois da limpeza, a foto sobe para LADO px no lado maior com reamostragem
+ * lanczos e uma máscara de nitidez leve. Ampliar não inventa detalhe — mas o
+ * palco da ficha chega a ~1050px de largura em monitor grande, e entregar 840px
+ * ali faz o navegador esticar com o filtro barato dele. Com o arquivo já no
+ * tamanho certo, a borda do equipamento continua limpa.
+ *
+ * A LISTA É EXPLÍCITA de propósito. O tratamento só serve para foto recortada
+ * em fundo branco: ele apaga tudo que estiver fora da silhueta. Numa fotografia
+ * de estúdio com fundo real — como a do ultrassom — isso destruiria a imagem.
+ * Arquivo que não estiver aqui não é tocado.
+ *
+ *   node limpar-fotos-demo.mjs [--conferir]
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -23,11 +34,24 @@ import sharp from "sharp";
 
 const PASTA = path.join(process.cwd(), "public", "demo");
 const LIMIAR = 248;
+const LADO = 2200;
+
+/** Recortes em fundo branco. Fotografia de estúdio NÃO entra aqui. */
+const RECORTES = [
+  "aspirador.webp",
+  "autoclave.webp",
+  "bomba-vacuo.webp",
+  "compressor.webp",
+];
+
 const soConferir = process.argv.includes("--conferir");
 
-for (const arquivo of fs.readdirSync(PASTA)) {
-  if (!/\.webp$/i.test(arquivo)) continue;
+for (const arquivo of RECORTES) {
   const origem = path.join(PASTA, arquivo);
+  if (!fs.existsSync(origem)) {
+    console.log(`${arquivo}  (não encontrado — pulado)`);
+    continue;
+  }
 
   /* Lê para memória antes de processar: passar o CAMINHO para o sharp deixa um
      descritor aberto, e no Windows a gravação por cima falha com UNKNOWN. */
@@ -192,9 +216,16 @@ for (const arquivo of fs.readdirSync(PASTA)) {
   if (soConferir) continue;
 
   const saida = await sharp(data, {
-    raw: { width: info.width, height: info.height, channels: info.channels },
+    raw: { width: L, height: A, channels: C },
   })
-    .webp({ quality: 92, effort: 6 })
+    /* `withoutEnlargement: false` é o ponto: a foto de origem tem 840px e o
+       palco da ficha pede mais. A máscara de nitidez vem depois da
+       reamostragem, e é fraca — em recorte de fundo branco, nitidez forte
+       desenha um halo escuro na borda, que é justamente o defeito que a
+       limpeza acabou de tirar. */
+    .resize(LADO, LADO, { fit: "inside", kernel: "lanczos3", withoutEnlargement: false })
+    .sharpen({ sigma: 0.8, m1: 0.4, m2: 0.6 })
+    .webp({ quality: 90, effort: 6 })
     .toBuffer();
 
   fs.writeFileSync(origem, saida);
