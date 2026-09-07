@@ -9,6 +9,7 @@ import { TituloSecao } from "@/components/ui/data";
 import { Grade } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import { PUBLICADO } from "@/lib/catalogo";
+import { logoDaMarca } from "@/lib/marcas";
 import { textoDeHtml } from "@/lib/html";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
@@ -52,10 +53,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /**
  * A parede de marcas que fecha a página.
  *
- * Só entram marcas com logotipo enviado e com equipamento publicado: uma
- * faixa de logotipos precisa ser feita de logotipos, e um monograma solto no
- * meio de seis marcas reais denuncia o cadastro pela metade. Sem material
- * suficiente, a faixa não aparece.
+ * Só entram marcas com arte e com equipamento publicado: uma faixa de
+ * logotipos precisa ser feita de logotipos, e um monograma solto no meio de
+ * seis marcas reais denuncia o cadastro pela metade. Sem material suficiente,
+ * a faixa não aparece.
+ *
+ * O filtro por arte é feito depois da consulta, não no `where`. Filtrar por
+ * `logoId: { not: null }` no banco descartava toda marca cujo logotipo vem do
+ * arquivo local — que hoje são todas elas —, e a faixa nunca aparecia.
  */
 async function outrasMarcas(slugAtual: string): Promise<MarcaVizinha[]> {
   try {
@@ -63,7 +68,6 @@ async function outrasMarcas(slugAtual: string): Promise<MarcaVizinha[]> {
       where: {
         published: true,
         slug: { not: slugAtual },
-        logoId: { not: null },
         products: { some: PUBLICADO },
       },
       orderBy: [{ order: "asc" }, { name: "asc" }],
@@ -71,9 +75,10 @@ async function outrasMarcas(slugAtual: string): Promise<MarcaVizinha[]> {
       select: { slug: true, name: true, logo: { select: { url: true } } },
     });
 
-    return linhas.flatMap((linha) =>
-      linha.logo ? [{ slug: linha.slug, name: linha.name, logo: linha.logo.url }] : [],
-    );
+    return linhas.flatMap((linha) => {
+      const arte = logoDaMarca(linha);
+      return arte ? [{ slug: linha.slug, name: linha.name, logo: arte.url }] : [];
+    });
   } catch {
     return [];
   }
@@ -117,7 +122,7 @@ export default async function MarcaPage({ params, searchParams }: Props) {
         parametros={parametros}
         filtrosFixos={{ marca: marca.slug }}
         // o nome da marca já é o título da página: a logo entra como decoração
-        imagem={marca.logo ? { url: marca.logo.url, alt: "" } : undefined}
+        imagem={logoDaMarca(marca) ? { url: logoDaMarca(marca)!.url, alt: "" } : undefined}
         travarMarca
       />
 

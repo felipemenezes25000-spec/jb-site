@@ -8,6 +8,7 @@ import { TituloSecao, Trilha, Vazio } from "@/components/ui/data";
 import { Grade } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import { PUBLICADO } from "@/lib/catalogo";
+import { logoDaMarca } from "@/lib/marcas";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
@@ -93,9 +94,9 @@ function CartaoMarca({ marca }: { marca: Marca }) {
       className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-graf-200 bg-white transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
     >
       <span className="flex h-28 items-center justify-center px-5 sm:h-32 sm:px-7">
-        {marca.logo ? (
+        {logoDaMarca(marca) ? (
           <Image
-            src={marca.logo.url}
+            src={logoDaMarca(marca)!.url}
             alt=""
             width={240}
             height={96}

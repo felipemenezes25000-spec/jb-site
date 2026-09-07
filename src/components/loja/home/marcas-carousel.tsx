@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Box, ShieldCheck, Sparkles, Star } from "lucide-react";
+import { chaveDaMarca, logoDaMarca } from "@/lib/marcas";
 
 type Marca = {
   slug: string;
@@ -16,13 +17,6 @@ const TAGLINES: Record<string, string> = {
   schuster: "Tradição que evolui",
   suctron: "Aspiração de alto desempenho",
   sugmaster: "Qualidade em cada detalhe",
-};
-
-const LOGOS: Record<string, string> = {
-  alt: "/marcas/logo-alt.png",
-  schuster: "/marcas/logo-schuster.png",
-  suctron: "/marcas/logo-suctron.png",
-  sugmaster: "/marcas/logo-sugmaster.png",
 };
 
 const BENEFICIOS = [
@@ -52,7 +46,7 @@ const CSS_TICKER = `
 `;
 
 function chave(marca: Marca) {
-  return marca.slug.toLowerCase().replace(/^demo-/, "");
+  return chaveDaMarca(marca.slug);
 }
 
 function legenda(marca: Marca) {
@@ -60,9 +54,7 @@ function legenda(marca: Marca) {
 }
 
 function arteDaMarca(marca: Marca) {
-  if (marca.logo) return { url: marca.logo.url, alt: marca.logo.alt || marca.name };
-  const local = LOGOS[chave(marca)];
-  return local ? { url: local, alt: marca.name } : null;
+  return logoDaMarca(marca);
 }
 
 function CartaoMarca({ marca }: { marca: Marca }) {
