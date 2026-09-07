@@ -61,6 +61,10 @@ export function CampoCupom({ aplicado }: { aplicado: string }) {
           spellCheck={false}
           placeholder="Digite o código"
           maxLength={40}
+          /* `key` força um campo novo a cada retorno: sem ela o React mantém o
+             valor do campo já montado e o defaultValue não reaplica. */
+          key={estado.codigo ?? ""}
+          defaultValue={estado.codigo ?? ""}
           aria-invalid={estado.erro ? true : undefined}
           aria-describedby={estado.erro || estado.ok ? "retorno-cupom" : undefined}
           className={cn(

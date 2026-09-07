@@ -7,7 +7,12 @@ import { sessaoCliente } from "@/lib/auth-cliente";
 import { obterOuCriarCarrinho } from "@/lib/carrinho";
 import { prisma } from "@/lib/prisma";
 
-export type EstadoCarrinho = { ok?: string; erro?: string };
+export type EstadoCarrinho = {
+  ok?: string;
+  erro?: string;
+  /** O que a pessoa digitou, devolvido para o campo não voltar vazio no erro. */
+  codigo?: string;
+};
 
 const adicionar = z.object({
   produtoId: z.string().min(1),
@@ -161,7 +166,10 @@ export async function aplicarCupom(
     (cupom.startsAt && cupom.startsAt > agora) ||
     (cupom.maxUses !== null && cupom.usedCount >= cupom.maxUses)
   ) {
-    return { erro: "Cupom inválido ou expirado." };
+    /* Devolve o código junto do erro. Depois de uma ação o React reseta o
+       formulário, e sem isto o campo voltava vazio: quem errou uma letra
+       perdia o que digitou e não tinha como conferir o próprio erro. */
+    return { erro: "Cupom inválido ou expirado.", codigo };
   }
 
   await prisma.cart.update({ where: { id: carrinho.id }, data: { couponId: cupom.id } });
