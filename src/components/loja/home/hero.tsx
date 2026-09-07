@@ -23,16 +23,33 @@ const ATALHOS = [
  * Entrada da composição. Fica em CSS puro de propósito: o hero é o LCP da home
  * e continua sendo componente de servidor — nenhum JavaScript precisa carregar
  * para o primeiro quadro aparecer.
+ *
+ * Duas decisões que parecem detalhe e não são:
+ *
+ * A animação é declarada DENTRO da media query, não fora com um `animation:
+ * none` desfazendo depois. O estado escrito no elemento é o estado final —
+ * visível — e a animação é o acréscimo. Do jeito anterior, `both` segurava
+ * `opacity: 0` como estado de partida: qualquer coisa que impedisse a animação
+ * de rodar (aba aberta em segundo plano, folha de estilo que chega atrasada,
+ * mecanismo que não executa animação) deixava o hero inteiro invisível até um
+ * scroll acordar a página. Agora a falha é o efeito não acontecer, não o texto
+ * sumir.
+ *
+ * E o título não participa do fade. Ele é o maior elemento da primeira dobra,
+ * logo é ele que o navegador cronometra como LCP, e elemento com `opacity: 0`
+ * não conta como pintado: os 0,7s da animação entravam inteiros na métrica.
+ * Ele sobe junto com o resto, só que sólido desde o primeiro quadro.
  */
 const CSS_HERO = `
 @keyframes jb-hero-sobe { from { opacity: 0; transform: translate3d(0,16px,0); } to { opacity: 1; transform: none; } }
 @keyframes jb-hero-entra { from { opacity: 0; transform: translate3d(30px,0,0); } to { opacity: 1; transform: none; } }
 @keyframes jb-hero-cresce { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
-.jb-hero-sobe { animation: jb-hero-sobe 0.7s cubic-bezier(0.22,1,0.36,1) both; }
-.jb-hero-entra { animation: jb-hero-entra 0.85s cubic-bezier(0.22,1,0.36,1) both; }
-.jb-hero-cresce { animation: jb-hero-cresce 0.9s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
-@media (prefers-reduced-motion: reduce) {
-  .jb-hero-sobe, .jb-hero-entra, .jb-hero-cresce { animation: none; }
+@keyframes jb-hero-titulo { from { transform: translate3d(0,16px,0); } to { transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .jb-hero-sobe { animation: jb-hero-sobe 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+  .jb-hero-entra { animation: jb-hero-entra 0.85s cubic-bezier(0.22,1,0.36,1) both; }
+  .jb-hero-cresce { animation: jb-hero-cresce 0.9s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
+  .jb-hero-titulo { animation: jb-hero-titulo 0.7s cubic-bezier(0.22,1,0.36,1) both; }
 }
 `;
 
@@ -124,7 +141,7 @@ export function Hero({
             </div>
 
             <h1
-              className="jb-hero-sobe mt-5 max-w-[15ch] text-[clamp(2.6rem,3.55vw,4.15rem)] font-black leading-[0.94] tracking-[-0.06em] text-graf-950"
+              className="jb-hero-titulo mt-5 max-w-[15ch] text-[clamp(2.6rem,3.55vw,4.15rem)] font-black leading-[0.94] tracking-[-0.06em] text-graf-950"
               style={{ animationDelay: "0.06s" }}
             >
               Equipamentos para uma clínica que não pode parar.
