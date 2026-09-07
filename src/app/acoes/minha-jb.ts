@@ -21,7 +21,7 @@ import {
 } from "@/lib/orcamento";
 import { ErroDeEstoque } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
-import { ipDoPedido } from "@/lib/seguranca";
+import { ipDoPedido, sanitizarDestino } from "@/lib/seguranca";
 
 /**
  * Ações da área do cliente (Área da Clínica).
@@ -763,9 +763,16 @@ export async function editarEquipamento(
 /**
  * Liga e desliga o favorito. O par (cliente, produto) é único no banco, então
  * dois cliques seguidos não criam linha duplicada.
+ *
+ * `voltar` existe porque o botão agora também vive na página do equipamento:
+ * quem não está logado precisa voltar para o equipamento que estava vendo, e
+ * não cair na lista de favoritos vazia. O caminho passa por `sanitizarDestino`
+ * — é um valor de formulário, e valor de formulário não decide para onde o
+ * navegador vai sem ser conferido.
  */
 export async function alternarFavorito(formData: FormData): Promise<void> {
-  const cliente = await exigirCliente("/minha-jb/favoritos");
+  const volta = sanitizarDestino(formData.get("voltar"), "/minha-jb/favoritos");
+  const cliente = await exigirCliente(volta);
   const produtoId = (texto(formData.get("produtoId")) ?? "").trim();
   if (!produtoId) return;
 

@@ -48,6 +48,7 @@ function Rotulo({ children }: { children: React.ReactNode }) {
 }
 
 export function UnidadeFisica({
+  id,
   condicao,
   numeroDeSerie,
   anoDeFabricacao,
@@ -59,6 +60,8 @@ export function UnidadeFisica({
   checklist,
   vendida,
 }: {
+  /** Âncora da faixa, para a navegação de seções do equipamento. */
+  id?: string;
   condicao: CondicaoProduto;
   numeroDeSerie: string | null;
   anoDeFabricacao: number | null;
@@ -120,7 +123,7 @@ export function UnidadeFisica({
   const temLateral = dados.length > 0 || Boolean(notasDeEstado) || Boolean(notasDeInspecao);
 
   return (
-    <Secao espaco="lg" separador>
+    <Secao id={id} espaco="lg" separador className="scroll-mt-32">
       <div className="flex gap-4 sm:gap-5">
         <span
           aria-hidden

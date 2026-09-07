@@ -8,6 +8,10 @@ import { ArrowRight, Wrench } from "lucide-react";
 import { CaixaCompra, type AddonProduto } from "@/components/loja/caixa-compra";
 import { GaleriaProduto, type FotoProduto } from "@/components/loja/galeria-produto";
 import { GradeProdutos } from "@/components/loja/card-produto";
+import {
+  AcoesDoProduto,
+  AcoesDoProdutoEsqueleto,
+} from "@/components/loja/produto/acoes-do-produto";
 import { AjudaDaEquipe } from "@/components/loja/produto/ajuda-da-equipe";
 import {
   AntesDeComprar,
@@ -28,18 +32,28 @@ import {
 import { ForaDeLinha, SemEstoque } from "@/components/loja/produto/estados";
 import { IdentidadeProduto } from "@/components/loja/produto/identidade";
 import { MotivosJB } from "@/components/loja/produto/motivos-jb";
+import {
+  BarraCompraMobile,
+  NavegacaoDoProduto,
+  type AncoraDoProduto,
+} from "@/components/loja/produto/navegacao-do-produto";
+import { PerguntarSobreProduto } from "@/components/loja/produto/perguntar";
 import { PerguntasDoProduto } from "@/components/loja/produto/perguntas";
 import {
   ServicosDoProduto,
   type ServicoDoProduto,
 } from "@/components/loja/produto/servicos-do-produto";
 import { UnidadeFisica } from "@/components/loja/produto/unidade-fisica";
+import {
+  RegistrarVisita,
+  VistosRecentemente,
+} from "@/components/loja/vistos-recentemente";
 import { Trilha, TituloSecao } from "@/components/ui/data";
 import { EsqueletoCartaoProduto } from "@/components/ui/esqueletos";
 import { Secao } from "@/components/ui/secao";
 import { sanitizarHtml } from "@/components/admin/conteudo/html-seguro";
 import { paraCard, SELECAO_CARD } from "@/lib/catalogo";
-import { paraCentavos, whatsappHref } from "@/lib/format";
+import { calcularParcelas, paraCentavos, whatsappHref } from "@/lib/format";
 import {
   faqJsonLd,
   JsonLd,
@@ -360,6 +374,33 @@ export default async function ProdutoPage({ params }: Props) {
     }
   }
 
+  /* ------------------------------------------------------------- âncoras
+
+     A faixa de navegação só lista o que a página realmente tem. Uma âncora
+     para uma seção que não foi renderizada leva a lugar nenhum — e é
+     exatamente o defeito que o menu de abas costuma esconder. A ordem aqui é
+     a ordem do documento, porque é ela que o destaque da seção ativa segue. */
+  const ancoras: AncoraDoProduto[] = [
+    { id: "visao-geral", rotulo: "Visão geral" },
+    ...(unidade ? [{ id: "unidade", rotulo: "Esta unidade" }] : []),
+    ...(temDescricao ? [{ id: "sobre", rotulo: "Sobre" }] : []),
+    { id: "antes-de-comprar", rotulo: "Antes de comprar" },
+    ...(temFichaTecnica ? [{ id: "ficha-tecnica", rotulo: "Ficha técnica" }] : []),
+    ...(servicos.length > 0 && !arquivado
+      ? [{ id: "servicos-jb", rotulo: "Serviços da JB" }]
+      : []),
+    ...(arquivado ? [] : [{ id: "duvidas", rotulo: "Dúvidas" }]),
+    { id: "relacionados", rotulo: "Relacionados" },
+  ];
+
+  /* A barra do celular repete o preço, então repete a MESMA conta de
+     parcelamento da caixa de compra — dois números diferentes para a mesma
+     compra, na mesma tela, seria erro de confiança e não de layout. */
+  const parcelasDaBarra =
+    produto.allowDirectPurchase && produto.priceCents > 0
+      ? calcularParcelas(produto.priceCents, maxParcelas, minParcelaCents)
+      : null;
+
   const estruturados: DadosJsonLd[] = [trilhaJsonLd(trilha), dadosDoProduto];
   if (produto.faqs.length > 0) {
     estruturados.push(
@@ -376,7 +417,12 @@ export default async function ProdutoPage({ params }: Props) {
       {/* ==================================================== PRIMEIRA DOBRA */}
       {/* `espaco="nenhum"` de propósito: o respiro é escrito aqui inteiro, para
           o `pb` não disputar com o `md:py` do preset e perder no desktop. */}
-      <Secao como="div" espaco="nenhum" className="pt-6 pb-16 lg:pt-8 lg:pb-24">
+      <Secao
+        como="div"
+        id="visao-geral"
+        espaco="nenhum"
+        className="scroll-mt-36 pt-6 pb-16 lg:pt-8 lg:pb-24"
+      >
         <Trilha itens={trilha} className="mb-6 lg:mb-8" />
 
         {/* A ordem do DOM é a do celular: nome e condição, depois a foto,
@@ -389,6 +435,9 @@ export default async function ProdutoPage({ params }: Props) {
               nome={produto.name}
               modelo={produto.model}
               sku={produto.sku}
+              codigoDoFabricante={produto.mpn}
+              gtin={produto.gtin}
+              codigoAnvisa={produto.anvisaCode}
               numeroDeSerie={unidade?.serialNumber ?? null}
               condicao={produto.condition}
               definicaoDaCondicao={definicao}
@@ -415,6 +464,22 @@ export default async function ProdutoPage({ params }: Props) {
               }
               resumo={produto.shortDescription}
             />
+
+            {/* Guardar e comparar ficam com a identidade, não com o preço: são
+                gestos de quem ainda está decidindo, e a caixa de compra é de
+                quem já decidiu. O `<Suspense>` mantém a casca prerenderizada —
+                só o estado do favorito depende de sessão. */}
+            {arquivado ? null : (
+              <div className="mt-5">
+                <Suspense fallback={<AcoesDoProdutoEsqueleto />}>
+                  <AcoesDoProduto
+                    produtoId={produto.id}
+                    nome={produto.name}
+                    slug={produto.slug}
+                  />
+                </Suspense>
+              </div>
+            )}
           </div>
 
           {/* A galeria acompanha a leitura da coluna de compra.
@@ -431,7 +496,7 @@ export default async function ProdutoPage({ params }: Props) {
           </div>
 
           <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-2">
-            <div className="space-y-8 lg:sticky lg:top-24">
+            <div id="caixa-de-compra" className="scroll-mt-32 space-y-8 lg:sticky lg:top-24">
               {arquivado ? (
                 <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
               ) : (
@@ -514,6 +579,11 @@ export default async function ProdutoPage({ params }: Props) {
         </div>
       </Secao>
 
+      {/* ============================================ NAVEGAÇÃO DAS SEÇÕES */}
+      {/* Fora de qualquer `Secao`: o `sticky` precisa de um pai que atravesse
+          o resto da página, e cada faixa termina no fim de si mesma. */}
+      <NavegacaoDoProduto ancoras={ancoras} />
+
       {/* ====================================================== POR QUE NA JB */}
       {arquivado ? null : (
         <MotivosJB
@@ -530,6 +600,7 @@ export default async function ProdutoPage({ params }: Props) {
           unidade preenchido ela some inteira, em vez de sobrar uma tira vazia. */}
       {unidade ? (
         <UnidadeFisica
+          id="unidade"
           condicao={produto.condition}
           numeroDeSerie={unidade.serialNumber}
           anoDeFabricacao={unidade.manufactureYear}
@@ -545,7 +616,13 @@ export default async function ProdutoPage({ params }: Props) {
 
       {/* ========================================================== DESCRIÇÃO */}
       {temDescricao ? (
-        <Secao fundo="afundada" espaco={descricaoLonga ? "lg" : "md"} separador>
+        <Secao
+          id="sobre"
+          fundo="afundada"
+          espaco={descricaoLonga ? "lg" : "md"}
+          separador
+          className="scroll-mt-32"
+        >
           {/* Título de um lado, texto do outro em medida curta: texto corrido
               em 1400px de largura ninguém lê. */}
           <div className="grid gap-6 lg:grid-cols-12 lg:gap-16">
@@ -577,7 +654,7 @@ export default async function ProdutoPage({ params }: Props) {
           Cada uma some inteira quando o cadastro está vazio. Uma ficha cheia
           de "não informado" é pior que a ausência da seção — ela ocupa espaço
           para dizer que a JB não sabe. */}
-      <Secao espaco="lg" separador>
+      <Secao id="antes-de-comprar" espaco="lg" separador className="scroll-mt-32">
         <div className="grid max-w-4xl gap-12">
           <AntesDeComprar
             dados={{
@@ -610,7 +687,7 @@ export default async function ProdutoPage({ params }: Props) {
 
       {/* ====================================================== FICHA TÉCNICA */}
       {temFichaTecnica ? (
-        <Secao espaco="lg" separador>
+        <Secao id="ficha-tecnica" espaco="lg" separador className="scroll-mt-32">
           <TituloSecao como="h2" titulo="Ficha técnica" />
 
           <div
@@ -655,7 +732,7 @@ export default async function ProdutoPage({ params }: Props) {
 
       {/* ==================================================== SERVIÇOS DA JB */}
       {servicos.length > 0 && !arquivado ? (
-        <Secao fundo="clara" espaco="lg" separador>
+        <Secao id="servicos-jb" fundo="clara" espaco="lg" separador className="scroll-mt-32">
           <TituloSecao
             sobretitulo="Equipe técnica JB"
             titulo="O que a JB faz neste equipamento"
@@ -668,23 +745,42 @@ export default async function ProdutoPage({ params }: Props) {
       ) : null}
 
       {/* ================================================================ FAQ */}
-      {produto.faqs.length > 0 ? (
-        <Secao espaco="lg" largura="estreita" separador>
-          <TituloSecao como="h2" titulo="Dúvidas sobre este equipamento" />
+      {/* A faixa existe mesmo sem pergunta publicada: sem ela, o equipamento
+          que ainda não acumulou dúvidas seria justamente o que não oferece
+          para onde mandar a sua. Fora de linha é exceção — não faz sentido
+          abrir canal de dúvida sobre o que a JB não vende mais. */}
+      {arquivado ? null : (
+        <Secao id="duvidas" espaco="lg" largura="estreita" separador className="scroll-mt-32">
+          <TituloSecao
+            como="h2"
+            titulo="Dúvidas sobre este equipamento"
+            descricao={
+              produto.faqs.length > 0
+                ? "As perguntas que a equipe da JB já respondeu sobre este equipamento."
+                : undefined
+            }
+          />
+
+          {produto.faqs.length > 0 ? (
+            <div className="mt-8">
+              <PerguntasDoProduto
+                perguntas={produto.faqs.map((faq) => ({
+                  id: faq.id,
+                  pergunta: faq.question,
+                  resposta: faq.answer,
+                }))}
+              />
+            </div>
+          ) : null}
+
           <div className="mt-8">
-            <PerguntasDoProduto
-              perguntas={produto.faqs.map((faq) => ({
-                id: faq.id,
-                pergunta: faq.question,
-                resposta: faq.answer,
-              }))}
-            />
+            <PerguntarSobreProduto produtoId={produto.id} nomeDoProduto={produto.name} />
           </div>
         </Secao>
-      ) : null}
+      )}
 
       {/* ======================================================= RELACIONADOS */}
-      <Secao fundo="clara" espaco="lg" separador>
+      <Secao id="relacionados" fundo="clara" espaco="lg" separador className="scroll-mt-32">
         {/* Título neutro de propósito: a lista mistura relação cadastrada com
             complemento por categoria e marca. Chamar tudo de "substituto"
             afirmaria uma equivalência técnica que ninguém registrou. */}
@@ -703,8 +799,26 @@ export default async function ProdutoPage({ params }: Props) {
         </div>
       </Secao>
 
+      {/* ================================================ VISTOS RECENTEMENTE */}
+      {/* Registro da visita e a tira do que já foi visto. Os dois só existem no
+          navegador de quem está lendo — nenhum histórico de navegação de
+          visitante entra no banco. */}
+      <RegistrarVisita slug={produto.slug} />
+      <VistosRecentemente excluir={produto.slug} />
+
       {/* ========================================================= ASSISTÊNCIA */}
       <AssistenciaRelacionada desde={s.empresa_desde} cidade={s.endereco_cidade} />
+
+      {/* ============================================ BARRA DE COMPRA (CELULAR) */}
+      {/* No desktop a caixa de compra fica grudada e nunca sai da tela; no
+          celular ela sobe com a rolagem. Esta barra devolve preço e caminho de
+          volta — sem duplicar a escolha de serviço e quantidade. */}
+      <BarraCompraMobile
+        precoCents={produto.priceCents}
+        parcelas={parcelasDaBarra}
+        soOrcamento={!produto.allowDirectPurchase || produto.priceCents <= 0}
+        indisponivel={arquivado || semEstoque}
+      />
     </>
   );
 }

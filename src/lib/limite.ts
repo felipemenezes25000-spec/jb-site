@@ -315,6 +315,19 @@ export const LIMITE_ORCAMENTO = {
   porEmail: { limite: 4, janelaMs: JANELA_FORMULARIO_MS },
 } satisfies LimitesDoFormulario;
 
+/**
+ * Pergunta pública sobre um equipamento, na ficha dele.
+ *
+ * Teto por e-mail menor que o do contato: quem pergunta sobre um equipamento
+ * pergunta uma vez, e a mesma pessoa mandando cinco perguntas em quinze
+ * minutos é robô raspando o catálogo. Por IP fica no mesmo patamar do
+ * orçamento — a clínica inteira sai por um endereço só.
+ */
+export const LIMITE_PERGUNTA = {
+  porIp: { limite: 8, janelaMs: JANELA_FORMULARIO_MS },
+  porEmail: { limite: 2, janelaMs: JANELA_FORMULARIO_MS },
+} satisfies LimitesDoFormulario;
+
 /** Resposta do cliente dentro de um chamado já liberado. */
 export const LIMITE_RESPOSTA_CHAMADO = {
   porIp: { limite: 10, janelaMs: JANELA_FORMULARIO_MS },

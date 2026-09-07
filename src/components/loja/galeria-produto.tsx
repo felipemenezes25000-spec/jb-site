@@ -40,6 +40,8 @@ export function GaleriaProduto({
   const [ampliado, setAmpliado] = useState(false);
   const dialogoRef = useRef<HTMLDivElement>(null);
   const fecharRef = useRef<HTMLButtonElement>(null);
+  /* Ponto onde o dedo encostou. `null` enquanto não há gesto em andamento. */
+  const toqueRef = useRef<{ x: number; y: number } | null>(null);
 
   const irPara = useCallback(
     (passo: number) => {
@@ -103,6 +105,36 @@ export function GaleriaProduto({
     };
   }, [ampliado, irPara]);
 
+  /* ------------------------------------------------------------- gesto
+
+     Arrastar a foto para o lado é como se troca de imagem no celular, e a
+     galeria só respondia a botão — alvos de 44px sobre a própria foto, que é
+     justamente o que a pessoa quer ver.
+
+     Duas condições para o gesto contar: percorrer pelo menos 44px na
+     horizontal e ser mais horizontal que vertical. Sem a segunda, rolar a
+     página com o dedo em cima da foto trocaria a imagem sem querer. E como
+     nada aqui chama `preventDefault`, a rolagem vertical continua nativa. */
+  const LIMIAR = 44;
+
+  function aoEncostar(evento: React.TouchEvent) {
+    const toque = evento.touches[0];
+    toqueRef.current = toque ? { x: toque.clientX, y: toque.clientY } : null;
+  }
+
+  function aoSoltar(evento: React.TouchEvent) {
+    const inicio = toqueRef.current;
+    toqueRef.current = null;
+    const fim = evento.changedTouches[0];
+    if (!inicio || !fim) return;
+
+    const dx = fim.clientX - inicio.x;
+    const dy = fim.clientY - inicio.y;
+    if (Math.abs(dx) < LIMIAR || Math.abs(dx) <= Math.abs(dy)) return;
+
+    irPara(dx < 0 ? 1 : -1);
+  }
+
   // Sem foto o palco não precisa ser quadrado: um vazio de 790px de altura no
   // desktop seria mais chamativo que o próprio equipamento.
   if (total === 0) {
@@ -127,6 +159,8 @@ export function GaleriaProduto({
       <div className="relative overflow-hidden rounded-xl border border-graf-200 bg-white shadow-card">
         <div
           className="relative aspect-square"
+          onTouchStart={aoEncostar}
+          onTouchEnd={aoSoltar}
           /* Halo discreto por trás da peça, para o recorte não flutuar num
              branco chapado. Estilo em atributo porque é um valor único desta
              tela — o CSP do projeto libera `style` do React de propósito. */
@@ -269,7 +303,11 @@ export function GaleriaProduto({
                 </button>
               </div>
 
-              <div className="relative min-h-0 flex-1">
+              <div
+                className="relative min-h-0 flex-1"
+                onTouchStart={aoEncostar}
+                onTouchEnd={aoSoltar}
+              >
                 <Image
                   src={foto.url}
                   alt={foto.alt || nome}

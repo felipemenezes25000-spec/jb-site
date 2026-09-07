@@ -1,28 +1,43 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, Minus, Plus, ShoppingCart } from "lucide-react";
+import { CheckCircle2, CreditCard, Minus, Plus, ShoppingCart, Sliders, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { adicionarAoCarrinho, type EstadoCarrinho } from "@/app/acoes/carrinho";
+import { EntregaPorCep } from "@/components/loja/produto/entrega-por-cep";
 import { Botao, LinkBotao } from "@/components/ui/button";
 import { Aviso } from "@/components/ui/aviso";
 import { Etiqueta } from "@/components/ui/data";
 import { calcularParcelas, formatarPreco, plural } from "@/lib/format";
+import { JB_CARE } from "@/lib/jb-care";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
    Caixa de compra
 
    O bloco que decide a venda: disponibilidade, preço, parcelamento, serviços
-   que entram junto, quantidade e o botão. É a ÚNICA moldura da coluna da
-   direita — o resto da coluna corre sem borda, separado por fios. Empilhar
-   quatro cartões diferentes um sobre o outro é o que fazia a página parecer
-   um painel, e não a ficha de um equipamento caro.
+   que entram junto, quantidade, entrega e os botões. É a ÚNICA moldura da
+   coluna da direita — o resto da coluna corre sem borda, separado por fios.
+   Empilhar quatro cartões diferentes um sobre o outro é o que fazia a página
+   parecer um painel, e não a ficha de um equipamento caro.
 
    Dentro da moldura, cada degrau é separado por um fio: estado e preço em
-   cima, serviços e quantidade no meio, ação embaixo.
+   cima, pacote de serviços e quantidade no meio, ação e entrega embaixo.
+
+   OS SERVIÇOS VIRARAM UMA ESCOLHA, NÃO TRÊS CAIXAS SOLTAS
+
+   Instalação, preventiva e orientação são o diferencial da JB, e apareciam
+   como três `checkbox` ao lado do botão — ou seja, como taxa extra. Agora são
+   duas alternativas explícitas: só o equipamento, ou equipamento + JB Care com
+   a lista do que entra e o total já somado. Quem quiser escolher item a item
+   abre "montar do meu jeito" e recebe as mesmas caixas de antes.
+
+   A regra que isso NÃO pode quebrar: **serviço pago nunca vem marcado.** O
+   estado inicial é "só o equipamento" com os adicionais obrigatórios (os que
+   a JB marcou como parte do produto), e nada além disso. Marcar o pacote por
+   padrão seria dark pattern, e o escopo proíbe com todas as letras.
 
    Preço e total aqui são só exibição. Quem soma para valer é o servidor, em
    `calcularTotais` e em `criarPedido` — este componente reproduz a MESMA
@@ -70,14 +85,41 @@ export function CaixaCompra({
 }) {
   const router = useRouter();
   const [quantidade, setQuantidade] = useState(1);
-  const [escolhidos, setEscolhidos] = useState<string[]>(
-    addons.filter((a) => a.obrigatorio).map((a) => a.serviceId),
-  );
+  const obrigatorios = addons.filter((a) => a.obrigatorio).map((a) => a.serviceId);
+  const [escolhidos, setEscolhidos] = useState<string[]>(obrigatorios);
+  const [detalhando, setDetalhando] = useState(false);
+
+  /**
+   * Para onde ir depois de adicionar: carrinho ou pagamento.
+   *
+   * Fica numa `ref`, e não em estado nem em campo escondido. Os dois botões
+   * enviam o MESMO formulário, então o destino precisa estar decidido no
+   * instante em que o navegador serializa os campos — e a primeira versão
+   * disto usava um `<input type="hidden">` atualizado por `setState` no
+   * `onClick`. Não funcionava: o re-render do React não acontece antes da ação
+   * padrão do clique, então "Comprar agora" mandava `destino=carrinho` e a
+   * pessoa acabava com um aviso de item adicionado em vez do checkout.
+   *
+   * `ref` muda no mesmo instante do clique. O estado ao lado existe só para o
+   * botão certo mostrar o carregando.
+   */
+  const destinoRef = useRef<"carrinho" | "checkout">("carrinho");
+  const [irParaPagamento, setIrParaPagamento] = useState(false);
 
   const [estado, acao, enviando] = useActionState<EstadoCarrinho, FormData>(
     async (anterior, formData) => {
+      const direto = destinoRef.current === "checkout";
       const resultado = await adicionarAoCarrinho(anterior, formData);
+
       if (resultado.ok) {
+        if (direto) {
+          /* Comprar agora não recomeça a caixa: a pessoa está saindo da
+             página. Resetar aqui faria a caixa piscar vazia por um quadro
+             antes da navegação. */
+          router.push("/checkout");
+          return resultado;
+        }
+
         /* Depois de uma ação, o React 19 chama `form.reset()` sozinho. O reset
            age no DOM e não no estado: os checkboxes de serviço voltavam a
            desmarcados enquanto `escolhidos` continuava cheio, e como não havia
@@ -90,7 +132,7 @@ export function CaixaCompra({
            marcados. O que foi enviado não muda; os campos que o servidor lê são
            os `hidden` montados a partir deste mesmo estado. */
         setQuantidade(1);
-        setEscolhidos(addons.filter((a) => a.obrigatorio).map((a) => a.serviceId));
+        setEscolhidos(obrigatorios);
 
         toast.success(resultado.ok, {
           action: { label: "Ver carrinho", onClick: () => router.push("/carrinho") },
@@ -128,6 +170,25 @@ export function CaixaCompra({
   const servicosComPreco = selecionados.filter((a) => (a.precoCents ?? 0) > 0).length;
 
   const podeComprar = !soOrcamento && !semEstoque;
+
+  /* ------------------------------------------------------------- JB Care */
+
+  const opcionais = addons.filter((a) => !a.obrigatorio);
+  const pacoteAtivo =
+    opcionais.length > 0 && opcionais.every((a) => escolhidos.includes(a.serviceId));
+  const precoDoPacote = opcionais.reduce((soma, a) => soma + (a.precoCents ?? 0), 0);
+  /* Adicional sem preço cadastrado é "sob orçamento" — é assim que a linha dele
+     já aparecia. Somar zero por ele daria um total menor do que a JB vai
+     cobrar, então o pacote com um desses vira "a partir de" e diz qual item
+     ainda não tem valor. Fingir total fechado aqui é o tipo de número que só
+     é descoberto na fatura. */
+  const semPrecoNoPacote = opcionais.filter((a) => (a.precoCents ?? 0) <= 0);
+
+  function escolherPacote(ligar: boolean) {
+    setEscolhidos(
+      ligar ? [...obrigatorios, ...opcionais.map((a) => a.serviceId)] : obrigatorios,
+    );
+  }
 
   return (
     <div className="overflow-hidden rounded-xl border border-graf-200 bg-white shadow-card">
@@ -210,71 +271,24 @@ export function CaixaCompra({
           ))}
 
           {addons.length > 0 ? (
-            <fieldset>
-              <legend className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
-                Serviços da equipe JB
-              </legend>
-              <p className="mb-3 mt-1.5 text-[0.8125rem] leading-relaxed text-graf-500">
-                Entram no mesmo pedido e são executados pela equipe técnica.
-              </p>
-              {/* Uma moldura só, com fio entre as linhas: três serviços não
-                  podem virar três caixas dentro da caixa de compra. */}
-              <div className="divide-y divide-graf-200 overflow-hidden rounded-lg border border-graf-200">
-                {addons.map((addon) => {
-                  const marcado = escolhidos.includes(addon.serviceId);
-                  const precoAddon = addon.precoCents ?? 0;
-
-                  return (
-                    <label
-                      key={addon.serviceId}
-                      className={cn(
-                        "flex min-h-11 cursor-pointer items-start gap-3 p-3.5",
-                        "transition-[background-color] duration-150",
-                        "has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-jb-500",
-                        "has-[:disabled]:cursor-default",
-                        marcado ? "bg-jb-50/60" : "hover:bg-graf-50",
-                      )}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={marcado}
-                        disabled={addon.obrigatorio}
-                        onChange={() =>
-                          setEscolhidos((atuais) =>
-                            atuais.includes(addon.serviceId)
-                              ? atuais.filter((s) => s !== addon.serviceId)
-                              : [...atuais, addon.serviceId],
-                          )
-                        }
-                        className="mt-0.5 size-[18px] shrink-0 rounded border-graf-450 text-jb-500 focus:outline-none disabled:opacity-60"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                          <span className="text-[0.9375rem] font-semibold text-graf-900">
-                            {addon.nome}
-                          </span>
-                          <span className="text-[0.9375rem] font-bold tabular text-graf-800">
-                            {precoAddon > 0
-                              ? `+ ${formatarPreco(precoAddon)}`
-                              : "sob orçamento"}
-                          </span>
-                        </span>
-                        {addon.descricao ? (
-                          <span className="mt-1 block text-[0.8125rem] leading-relaxed text-graf-500">
-                            {addon.descricao}
-                          </span>
-                        ) : null}
-                        {addon.obrigatorio ? (
-                          <span className="mt-1.5 block text-[0.8125rem] font-semibold text-jb-700">
-                            Incluído obrigatoriamente neste equipamento
-                          </span>
-                        ) : null}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </fieldset>
+            <PacoteDeServicos
+              obrigatorios={addons.filter((a) => a.obrigatorio)}
+              opcionais={opcionais}
+              escolhidos={escolhidos}
+              pacoteAtivo={pacoteAtivo}
+              precoDoPacote={precoDoPacote}
+              semPreco={semPrecoNoPacote.map((a) => a.nome)}
+              detalhando={detalhando}
+              aoDetalhar={() => setDetalhando((v) => !v)}
+              aoEscolherPacote={escolherPacote}
+              aoAlternar={(serviceId) =>
+                setEscolhidos((atuais) =>
+                  atuais.includes(serviceId)
+                    ? atuais.filter((s) => s !== serviceId)
+                    : [...atuais, serviceId],
+                )
+              }
+            />
           ) : null}
 
           {!unico ? (
@@ -332,19 +346,44 @@ export function CaixaCompra({
           {estado.erro ? <Aviso tom="erro">{estado.erro}</Aviso> : null}
 
           <div className="space-y-2.5">
-            <Botao type="submit" tamanho="lg" larguraTotal carregando={enviando}>
+            {/* Comprar agora é o primário; adicionar ao carrinho é a
+                alternativa de quem ainda vai juntar itens. O `onClick` só
+                define o destino — quem envia é o `type="submit"`, para o
+                formulário continuar funcionando sem JavaScript pronto. */}
+            <Botao
+              type="submit"
+              tamanho="lg"
+              larguraTotal
+              disabled={enviando}
+              carregando={enviando && irParaPagamento}
+              onClick={() => {
+                destinoRef.current = "checkout";
+                setIrParaPagamento(true);
+              }}
+            >
+              <Zap className="size-[18px]" aria-hidden />
+              Comprar agora
+            </Botao>
+
+            <Botao
+              type="submit"
+              variante="secundario"
+              tamanho="lg"
+              larguraTotal
+              disabled={enviando}
+              carregando={enviando && !irParaPagamento}
+              onClick={() => {
+                destinoRef.current = "carrinho";
+                setIrParaPagamento(false);
+              }}
+            >
               <ShoppingCart className="size-[18px]" aria-hidden />
               Adicionar ao carrinho
             </Botao>
 
             {permiteOrcamento ? (
               <>
-                <LinkBotao
-                  href={hrefOrcamento}
-                  variante="secundario"
-                  tamanho="lg"
-                  larguraTotal
-                >
+                <LinkBotao href={hrefOrcamento} variante="texto" tamanho="lg" larguraTotal>
                   Solicitar orçamento
                 </LinkBotao>
                 <p className="pt-1 text-center text-[0.8125rem] leading-relaxed text-graf-500">
@@ -372,6 +411,242 @@ export function CaixaCompra({
           </LinkBotao>
         </div>
       )}
+
+      {/* A estimativa fica fora do formulário: consultar o CEP não pode
+          enviar o item para o carrinho por acidente. */}
+      {podeComprar ? <EntregaPorCep produtoId={produtoId} /> : null}
     </div>
+  );
+}
+
+/* ==========================================================================
+   Pacote de serviços (JB Care)
+   ========================================================================== */
+
+function PacoteDeServicos({
+  obrigatorios,
+  opcionais,
+  escolhidos,
+  pacoteAtivo,
+  precoDoPacote,
+  semPreco,
+  detalhando,
+  aoDetalhar,
+  aoEscolherPacote,
+  aoAlternar,
+}: {
+  obrigatorios: AddonProduto[];
+  opcionais: AddonProduto[];
+  escolhidos: string[];
+  pacoteAtivo: boolean;
+  precoDoPacote: number;
+  /** Nomes dos opcionais sem preço cadastrado — o pacote vira "a partir de". */
+  semPreco: string[];
+  detalhando: boolean;
+  aoDetalhar: () => void;
+  aoEscolherPacote: (ligar: boolean) => void;
+  aoAlternar: (serviceId: string) => void;
+}) {
+  /* Com um opcional só, o par de alternativas não ajuda: "só o equipamento"
+     versus "equipamento + instalação" é a mesma caixa de seleção com mais
+     palavras. Nesse caso a lista simples é mais honesta. */
+  const vaiDeAlternativas = opcionais.length >= 2;
+  const mostrarLista = opcionais.length > 0 && (!vaiDeAlternativas || detalhando);
+
+  return (
+    <fieldset>
+      <legend className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+        Serviços da equipe JB
+      </legend>
+      <p className="mb-3 mt-1.5 text-[0.8125rem] leading-relaxed text-graf-500">
+        Entram no mesmo pedido e são executados pela equipe técnica.
+      </p>
+
+      {obrigatorios.length > 0 ? (
+        <ul className="mb-3 space-y-1.5">
+          {obrigatorios.map((addon) => (
+            <li
+              key={addon.serviceId}
+              className="flex items-start gap-2 text-[0.8125rem] leading-relaxed text-graf-600"
+            >
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+              <span>
+                <span className="font-semibold text-graf-800">{addon.nome}</span> — incluído
+                obrigatoriamente neste equipamento
+                {(addon.precoCents ?? 0) > 0
+                  ? ` (+ ${formatarPreco(addon.precoCents ?? 0)})`
+                  : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {vaiDeAlternativas ? (
+        <div className="space-y-2">
+          <AlternativaDoPacote
+            marcada={!pacoteAtivo}
+            titulo={JB_CARE.rotuloSemPacote}
+            descricao={JB_CARE.descricaoSemPacote}
+            valor={null}
+            aoEscolher={() => aoEscolherPacote(false)}
+          />
+          <AlternativaDoPacote
+            marcada={pacoteAtivo}
+            titulo={JB_CARE.rotuloComPacote}
+            descricao={JB_CARE.resumo}
+            valor={precoDoPacote > 0 ? precoDoPacote : null}
+            aPartirDe={semPreco.length > 0}
+            ressalva={
+              semPreco.length > 0
+                ? `${semPreco.join(" e ")} ${semPreco.length > 1 ? "são orçados" : "é orçado"} pela equipe antes da execução.`
+                : undefined
+            }
+            itens={opcionais.map((a) => a.nome)}
+            aoEscolher={() => aoEscolherPacote(true)}
+          />
+
+          <button
+            type="button"
+            onClick={aoDetalhar}
+            aria-expanded={detalhando}
+            className="foco-jb inline-flex min-h-9 items-center gap-1.5 rounded-md text-[0.8125rem] font-semibold text-graf-600 transition-colors hover:text-jb-700"
+          >
+            <Sliders className="size-3.5" aria-hidden />
+            {detalhando ? "Esconder os serviços" : "Escolher serviço por serviço"}
+          </button>
+        </div>
+      ) : null}
+
+      {mostrarLista ? (
+        /* Uma moldura só, com fio entre as linhas: três serviços não podem
+           virar três caixas dentro da caixa de compra. */
+        <div
+          className={cn(
+            "divide-y divide-graf-200 overflow-hidden rounded-lg border border-graf-200",
+            vaiDeAlternativas && "mt-3",
+          )}
+        >
+          {opcionais.map((addon) => {
+            const marcado = escolhidos.includes(addon.serviceId);
+            const precoAddon = addon.precoCents ?? 0;
+
+            return (
+              <label
+                key={addon.serviceId}
+                className={cn(
+                  "flex min-h-11 cursor-pointer items-start gap-3 p-3.5",
+                  "transition-[background-color] duration-150",
+                  "has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-jb-500",
+                  marcado ? "bg-jb-50/60" : "hover:bg-graf-50",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={marcado}
+                  onChange={() => aoAlternar(addon.serviceId)}
+                  className="mt-0.5 size-[18px] shrink-0 rounded border-graf-450 text-jb-500 focus:outline-none"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <span className="text-[0.9375rem] font-semibold text-graf-900">
+                      {addon.nome}
+                    </span>
+                    <span className="text-[0.9375rem] font-bold tabular text-graf-800">
+                      {precoAddon > 0 ? `+ ${formatarPreco(precoAddon)}` : "sob orçamento"}
+                    </span>
+                  </span>
+                  {addon.descricao ? (
+                    <span className="mt-1 block text-[0.8125rem] leading-relaxed text-graf-500">
+                      {addon.descricao}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      ) : null}
+    </fieldset>
+  );
+}
+
+function AlternativaDoPacote({
+  marcada,
+  titulo,
+  descricao,
+  valor,
+  aPartirDe,
+  ressalva,
+  itens,
+  aoEscolher,
+}: {
+  marcada: boolean;
+  titulo: string;
+  descricao: string;
+  /** `null` quando a alternativa não acrescenta nada ao preço fechado. */
+  valor: number | null;
+  /** O valor é um piso, não o total: há item ainda sem preço no pacote. */
+  aPartirDe?: boolean;
+  /** Uma frase dizendo o que ainda será orçado. */
+  ressalva?: string;
+  itens?: string[];
+  aoEscolher: () => void;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-start gap-3 rounded-lg border p-3.5 transition-colors duration-150",
+        "has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-jb-500",
+        marcada ? "border-jb-400 bg-jb-50/60" : "border-graf-200 hover:bg-graf-50",
+      )}
+    >
+      <input
+        type="radio"
+        name="jb-care"
+        checked={marcada}
+        onChange={aoEscolher}
+        className="mt-0.5 size-[18px] shrink-0 border-graf-450 text-jb-500 focus:outline-none"
+      />
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="text-[0.9375rem] font-bold text-graf-900">{titulo}</span>
+          {valor !== null ? (
+            <span className="shrink-0 text-right text-[0.9375rem] font-bold tabular text-graf-800">
+              {aPartirDe ? (
+                <span className="mr-1 text-[0.75rem] font-semibold uppercase tracking-wide text-graf-500">
+                  a partir de
+                </span>
+              ) : null}
+              + {formatarPreco(valor)}
+            </span>
+          ) : aPartirDe ? (
+            <span className="shrink-0 text-[0.8125rem] font-semibold text-graf-500">
+              sob orçamento
+            </span>
+          ) : null}
+        </span>
+        <span className="mt-1 block text-[0.8125rem] leading-relaxed text-graf-500">
+          {descricao}
+        </span>
+        {ressalva ? (
+          <span className="mt-1.5 block text-[0.75rem] leading-relaxed text-graf-500">
+            {ressalva}
+          </span>
+        ) : null}
+        {itens && itens.length > 0 ? (
+          <span className="mt-2 flex flex-wrap gap-1.5">
+            {itens.map((item) => (
+              <span
+                key={item}
+                className="inline-flex items-center rounded-full border border-graf-200 bg-white px-2.5 py-0.5 text-[0.75rem] font-semibold text-graf-700"
+              >
+                {item}
+              </span>
+            ))}
+          </span>
+        ) : null}
+      </span>
+    </label>
   );
 }

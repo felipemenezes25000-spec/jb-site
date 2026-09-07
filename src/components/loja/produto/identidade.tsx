@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { CONDICAO_PDP, type CondicaoProduto } from "@/components/loja/produto/condicao";
 import { Etiqueta } from "@/components/ui/data";
+import { normalizar } from "@/lib/busca/intencao";
 
 /* ============================================================================
    Identidade do equipamento
@@ -30,6 +31,9 @@ export function IdentidadeProduto({
   nome,
   modelo,
   sku,
+  codigoDoFabricante,
+  gtin,
+  codigoAnvisa,
   numeroDeSerie,
   condicao,
   definicaoDaCondicao,
@@ -40,6 +44,12 @@ export function IdentidadeProduto({
   nome: string;
   modelo: string;
   sku: string;
+  /** MPN — o código da peça no fabricante. Nunca é o SKU interno da JB. */
+  codigoDoFabricante?: string | null;
+  /** EAN/GTIN, só dígitos e já conferido no cadastro. */
+  gtin?: string | null;
+  /** Registro na ANVISA, quando o equipamento tem e a JB cadastrou. */
+  codigoAnvisa?: string | null;
   /** Só existe quando a venda é de uma unidade física identificada. */
   numeroDeSerie?: string | null;
   condicao: CondicaoProduto;
@@ -50,9 +60,30 @@ export function IdentidadeProduto({
 }) {
   const desenho = CONDICAO_PDP[condicao];
 
+  /**
+   * "Modelo: Profilaxia" numa página cuja categoria também é Profilaxia não
+   * informa nada — é a categoria repetida no lugar do modelo comercial. Pior:
+   * some com a linha que deveria dizer QUAL equipamento é este, e sem ela
+   * ninguém compara preço com o mercado.
+   *
+   * Não dá para adivinhar o modelo certo, e inventar um está fora de questão.
+   * O que dá para fazer é não afirmar o errado: quando o campo repete a
+   * categoria, a linha não aparece, e a página fica honestamente sem modelo
+   * até alguém cadastrar o de verdade. O aviso para quem cadastra está em
+   * /admin/produtos, não aqui.
+   */
+  const modeloUtil = modelo.trim() && normalizar(modelo) !== normalizar(categoria?.nome ?? "");
+
   const identificadores = [
-    modelo ? { rotulo: "Modelo", valor: modelo, mono: false } : null,
+    modeloUtil ? { rotulo: "Modelo", valor: modelo.trim(), mono: false } : null,
     { rotulo: "SKU", valor: sku, mono: true },
+    codigoDoFabricante?.trim()
+      ? { rotulo: "Cód. fabricante", valor: codigoDoFabricante.trim(), mono: true }
+      : null,
+    gtin?.trim() ? { rotulo: "EAN", valor: gtin.trim(), mono: true } : null,
+    codigoAnvisa?.trim()
+      ? { rotulo: "Registro ANVISA", valor: codigoAnvisa.trim(), mono: true }
+      : null,
     numeroDeSerie ? { rotulo: "Nº de série", valor: numeroDeSerie, mono: true } : null,
   ].filter((linha) => linha !== null);
 
