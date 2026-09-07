@@ -10,6 +10,7 @@ import { SITE_URL } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
 import "./globals.css";
+import "./footer-alignment.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
