@@ -254,7 +254,13 @@ export default async function PaginaAgenda({
             </Link>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Em 320px — o mínimo que a WCAG 1.4.10 manda suportar — o seletor
+              de técnico e o botão de filtrar somavam 292px numa faixa de 270 e
+              a página rolava de lado. O nome do técnico é dado do banco, então
+              não há largura fixa que resolva: o campo precisa poder encolher.
+              `min-w-0` desliga o piso que o flex dá a um controle de formulário
+              pelo conteúdo, e `flex-1` deixa o resto do espaço para ele. */}
+          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
             <div className="flex rounded-lg border border-graf-300 p-0.5" role="group" aria-label="Visão do calendário">
               {(["mes", "semana"] as const).map((opcao) => (
                 <Link
@@ -274,7 +280,11 @@ export default async function PaginaAgenda({
               ))}
             </div>
 
-            <form method="get" action="/admin/agenda" className="flex items-center gap-2">
+            <form
+              method="get"
+              action="/admin/agenda"
+              className="flex w-full items-center gap-2 sm:w-auto"
+            >
               <input type="hidden" name="visao" value={visao} />
               <input type="hidden" name="data" value={ancora} />
               <label htmlFor="agenda-tecnico" className="sr-only">
@@ -284,7 +294,7 @@ export default async function PaginaAgenda({
                 id="agenda-tecnico"
                 name="tecnico"
                 defaultValue={tecnicoId}
-                className="h-11 rounded-lg border border-graf-450 bg-white px-3 pr-8 text-base sm:text-sm text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+                className="h-11 min-w-0 flex-1 rounded-lg border border-graf-450 bg-white px-3 pr-8 text-base text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 sm:flex-none sm:text-sm"
               >
                 <option value="">Todos os técnicos</option>
                 {tecnicos.map((tecnico) => (

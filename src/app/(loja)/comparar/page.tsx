@@ -30,12 +30,34 @@ import { metadataDePagina } from "@/lib/seo";
  */
 export const instant = false;
 
-export const metadata: Metadata = metadataDePagina({
-  titulo: "Comparar equipamentos",
-  descricao:
-    "Capacidade, dimensões, voltagem, infraestrutura, instalação, garantia e preço — lado a lado, com os dados reais do catálogo.",
-  caminho: "/comparar",
-});
+/*
+ * A página vazia é conteúdo; a comparação montada não é.
+ *
+ * `/comparar` sem parâmetro explica o que a ferramenta faz e merece ser
+ * encontrada. Já `/comparar?p=a&p=b` é uma combinação — com algumas dezenas de
+ * equipamentos publicados são milhares de endereços diferentes, todos com o
+ * mesmo texto de apoio e conteúdo montado a partir de fichas que já estão
+ * indexadas por conta própria. Indexar isso não traz ninguém: divide a força
+ * das fichas entre páginas quase iguais.
+ *
+ * `follow: true` mantém a passagem — o robô continua seguindo daqui para as
+ * fichas comparadas, que são o destino que interessa. Mesmo tratamento que
+ * `/busca` já recebe.
+ */
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const parametros = await searchParams;
+  const comparando = [parametros.p ?? []].flat().filter(Boolean).length > 0;
+
+  return {
+    ...metadataDePagina({
+      titulo: "Comparar equipamentos",
+      descricao:
+        "Capacidade, dimensões, voltagem, infraestrutura, instalação, garantia e preço — lado a lado, com os dados reais do catálogo.",
+      caminho: "/comparar",
+    }),
+    ...(comparando ? { robots: { index: false, follow: true } } : null),
+  };
+}
 
 const TRILHA = [{ rotulo: "Início", href: "/" }, { rotulo: "Comparar" }];
 

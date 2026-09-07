@@ -490,6 +490,45 @@ async function percorrer(grupo, rotas, login) {
     return anterior;
   };
 
+  /** Esconde o indicador do modo de desenvolvimento e para transição e animação. */
+  const congelar = async (alvo) => {
+    await alvo
+      .addStyleTag({
+        content:
+          "nextjs-portal{display:none!important}" +
+          "*,*::before,*::after{transition:none!important;animation:none!important}",
+      })
+      .catch(() => {});
+  };
+
+  /**
+   * Mede — e mede de novo se a navegação atropelar a medição.
+   *
+   * `esperarEnderecoParar` olha o endereço a cada 120ms: redirecionamento que
+   * demora mais que isso para começar passa pela peneira — as duas leituras
+   * batem, a espera termina, e a troca de página cai em cima do `evaluate`,
+   * que morre com "Execution context was destroyed". /checkout com carrinho
+   * vazio caía aí, numa largura só, e virava "não abriu" — falso duas vezes:
+   * a página abriu, e o que quebrou foi a régua, não ela. Perguntar de novo,
+   * já do outro lado do redirecionamento, responde.
+   */
+  const CONTEXTO_MORREU =
+    /execution context was destroyed|most likely because of a navigation|target closed|frame was detached/i;
+
+  const medirAgora = async (alvo) => {
+    for (let tentativa = 0; ; tentativa += 1) {
+      try {
+        return await alvo.evaluate(medir);
+      } catch (erro) {
+        if (tentativa >= 2 || !CONTEXTO_MORREU.test(String(erro?.message))) throw erro;
+        await esperarEnderecoParar(alvo);
+        await assentar(alvo);
+        await congelar(alvo);
+        await alvo.waitForTimeout(200);
+      }
+    }
+  };
+
   const pagina = await contexto.newPage();
   const paginaToque = await contextoToque.newPage();
   await pagina.emulateMedia({ reducedMotion: "reduce" });
@@ -515,13 +554,7 @@ async function percorrer(grupo, rotas, login) {
          * acusava rolagem de 286px onde, parado, não há nenhuma. `reducedMotion`
          * não resolve: essa transição não está atrás de uma media query.
          */
-        await alvo
-          .addStyleTag({
-            content:
-              "nextjs-portal{display:none!important}" +
-              "*,*::before,*::after{transition:none!important;animation:none!important}",
-          })
-          .catch(() => {});
+        await congelar(alvo);
         /**
          * Reaplica a largura DEPOIS de carregar.
          *
@@ -564,16 +597,10 @@ async function percorrer(grupo, rotas, login) {
           });
         }
         await assentar(alvo);
-        await alvo
-          .addStyleTag({
-            content:
-              "nextjs-portal{display:none!important}" +
-              "*,*::before,*::after{transition:none!important;animation:none!important}",
-          })
-          .catch(() => {});
+        await congelar(alvo);
         await alvo.waitForTimeout(200);
 
-        const achados = await alvo.evaluate(medir);
+        const achados = await medirAgora(alvo);
         medidas += 1;
 
         /**
