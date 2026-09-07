@@ -21,7 +21,9 @@ const FLUXO = [
   { icone: ClipboardCheck, rotulo: "Histórico" },
 ] as const;
 
-const CURSIVA = { fontFamily: '"Segoe Script", "Brush Script MT", cursive' } as const;
+/* A manuscrita vem carregada em `app/layout` — antes a lista era só de fontes
+   de sistema, e o desenho mudava conforme o aparelho de quem abria o site. */
+const CURSIVA = { fontFamily: "var(--font-manuscrita), cursive" } as const;
 
 export function SecaoAssistencia({ configuracoes: s }: { configuracoes: SettingsMap }) {
   const whatsapp = s.whatsapp.trim();

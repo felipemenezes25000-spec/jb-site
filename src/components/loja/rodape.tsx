@@ -208,6 +208,10 @@ function Prova({
  * a distância até a assinatura editorial não mude com a largura da tela — e
  * sangra além dela, que é o corte da referência.
  *
+ * Reduzida em cerca de um quarto: a 464x414px ela era a maior peça do rodapé
+ * e disputava atenção com os quatro blocos de links e o cartão de contato.
+ * Como assinatura ela funciona; como maior elemento da faixa, atrapalha.
+ *
  * As duas máscaras dissolvem o lado esquerdo (para o texto respirar) e a base
  * (para não invadir a faixa inferior). Duas divs, uma máscara em cada: evita
  * depender de `mask-composite`.
@@ -215,7 +219,7 @@ function Prova({
 function CadeiraOdontologica() {
   return (
     <div
-      className="pointer-events-none absolute top-4 hidden select-none min-[1360px]:-right-[11.5rem] min-[1360px]:top-6 min-[1360px]:block min-[1360px]:h-[25.9rem] min-[1360px]:w-[29rem] min-[1800px]:top-12 min-[1800px]:-right-[18rem] min-[1800px]:h-[31.8rem] min-[1800px]:w-[35.6rem]"
+      className="pointer-events-none absolute top-4 hidden select-none min-[1360px]:-right-[9rem] min-[1360px]:top-6 min-[1360px]:block min-[1360px]:h-[19.5rem] min-[1360px]:w-[21.8rem] min-[1800px]:top-12 min-[1800px]:-right-[14rem] min-[1800px]:h-[24rem] min-[1800px]:w-[26.8rem]"
       style={{ maskImage: "linear-gradient(to right, transparent 0%, #000 9%)" }}
       aria-hidden
     >
@@ -512,7 +516,7 @@ export async function Rodape() {
               <span className="mb-3.5 block h-px w-9 bg-jb-500" aria-hidden />
               <p
                 className="text-[1.3rem] leading-[1.45] text-graf-500 min-[1360px]:text-[1.05rem] min-[1800px]:text-[1.45rem]"
-                style={{ fontFamily: '"Ink Free", "Segoe Script", "Brush Script MT", cursive' }}
+                style={{ fontFamily: "var(--font-manuscrita), cursive" }}
               >
                 Mais que equipamentos, parceria para o seu consultório.
               </p>

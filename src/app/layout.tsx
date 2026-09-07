@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Manrope } from "next/font/google";
+import { Caveat, JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { cacheLife, cacheTag } from "next/cache";
@@ -15,6 +15,24 @@ const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
   display: "swap",
+});
+
+/**
+ * A manuscrita do hero e do rodapé.
+ *
+ * Estava declarada como `"Ink Free", "Segoe Script", "Brush Script MT",
+ * cursive` — nenhuma delas é webfont, todas dependem do que o visitante tem
+ * instalado. No Windows saía Ink Free, no Mac caía em Brush Script e no
+ * Android virava a cursiva genérica do sistema: a assinatura da marca mudava
+ * de desenho conforme o aparelho de quem abria o site.
+ *
+ * Carregada como as outras duas, entra igual em todo lugar.
+ */
+const manuscrita = Caveat({
+  subsets: ["latin"],
+  variable: "--font-manuscrita",
+  display: "swap",
+  weight: ["400", "600"],
 });
 
 const mono = JetBrains_Mono({
@@ -106,7 +124,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       /* o CSS define scroll-behavior: smooth; isto avisa o Next de que a
          escolha é deliberada e não deve ser desligada na troca de rota */
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${mono.variable}`}
+      className={`${manrope.variable} ${mono.variable} ${manuscrita.variable}`}
     >
       <body className="antialiased">
         {children}
