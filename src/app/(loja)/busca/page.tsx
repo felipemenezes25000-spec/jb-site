@@ -80,9 +80,12 @@ function CabecalhoDoGrupo({
 function Grupo({
   grupo,
   resultado,
+  consulta,
 }: {
   grupo: GrupoDeResultado;
   resultado: ResultadoUniversal;
+  /** O termo buscado, para levar junto ao catálogo. */
+  consulta: string;
 }) {
   if (grupo === "produtos") {
     if (resultado.produtos.length === 0) return null;
@@ -93,6 +96,10 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.produtos.length}
         />
+        {/* Esta lista responde "achei isto"; o catálogo é onde se refina por
+            condição, marca, voltagem e preço. Os links de "ver o catálogo" da
+            página iam para /loja sem o termo, então quem quisesse filtrar
+            recomeçava a busca do zero. */}
         <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ul" className="mt-4">
           {resultado.produtos.map((produto) => (
             <li key={produto.slug}>
@@ -141,6 +148,16 @@ function Grupo({
             </li>
           ))}
         </Grade>
+
+        <p className="mt-4">
+          <Link
+            href={`/loja?q=${encodeURIComponent(consulta)}`}
+            className="foco-jb inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
+          >
+            Refinar no catálogo, com filtros
+            <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </p>
       </section>
     );
   }
@@ -339,7 +356,7 @@ export default async function BuscaPage({
         ) : (
           <div className="mt-8 space-y-10">
             {ordem.map((grupo) => (
-              <Grupo key={grupo} grupo={grupo} resultado={resultado} />
+              <Grupo key={grupo} grupo={grupo} resultado={resultado} consulta={validada.consulta} />
             ))}
           </div>
         )}
