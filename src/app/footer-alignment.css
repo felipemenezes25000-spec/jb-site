@@ -254,3 +254,14 @@
     padding-left: 0.5rem;
   }
 }
+
+/*
+ * Alinhamento real do resumo institucional com a primeira linha da coluna Loja.
+ * O aria-labelledby está no <section>, não no <footer>; por isso esta regra
+ * usa a estrutura real do componente e não depende dos seletores editoriais acima.
+ */
+@media (min-width: 1150px) {
+  footer section[aria-labelledby="rodape-contato"] > div.w-fit + p {
+    margin-top: -0.55rem !important;
+  }
+}
