@@ -286,7 +286,7 @@ export async function Rodape() {
           rodapé. Em vez de fundo, davam riscos atravessando o bloco de contato
           e os links. O degradê acima já dá a transição de cor sem cortar nada. */}
 
-      <div className="container-jb relative z-10 max-w-[115rem] pt-9 min-[1800px]:pt-7">
+      <div className="relative z-10 mx-auto w-full max-w-[115rem] px-4 pt-9 min-[400px]:px-5 min-[640px]:px-7 min-[1024px]:px-10 min-[1800px]:pt-7">
         <CadeiraOdontologica />
 
         <div className="relative z-10 grid gap-10 min-[1150px]:grid-cols-[20rem_minmax(0,1fr)] min-[1150px]:gap-x-10 min-[1360px]:grid-cols-[27%_minmax(0,1fr)_17%] min-[1360px]:gap-x-8 min-[1800px]:grid-cols-[25rem_minmax(0,1fr)_19rem] min-[1800px]:gap-x-16">
