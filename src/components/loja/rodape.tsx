@@ -21,6 +21,7 @@ import {
 import { cacheLife, cacheTag } from "next/cache";
 
 import { Logo } from "@/components/ui/logo";
+import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import {
   RODAPE_ASSISTENCIA,
@@ -30,33 +31,14 @@ import {
   RODAPE_POLITICAS,
   type ItemMenu,
 } from "@/lib/navegacao";
-import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import { enderecoCompleto, getSettings, redesSociais } from "@/lib/settings";
-
-/**
- * Rodapé da loja — composição horizontal única, em três faixas verticais:
- * cartão de contato · navegação e ações · assinatura editorial com a cadeira.
- *
- * A cadeira é a fotografia real (`/images/footer-dental-chair.png`), posicionada
- * fora do container para sangrar pela direita. Ela nunca é desenhada em CSS: o
- * que o CSS faz aqui é só o fundo abstrato — arcos finos e gradientes.
- *
- * Três degraus de largura, porque as proporções da referência (400 / 928 / 304)
- * só cabem inteiras a partir de ~1800px:
- *   < 1024px   uma coluna
- *   ≥ 1024px   cartão + navegação, editorial embaixo
- *   ≥ 1360px   as três faixas, tipografia um degrau menor
- *   ≥ 1800px   a referência
- */
 
 type Icone = React.ComponentType<{ className?: string }>;
 
 const CLASSE_LINK =
   "foco-jb flex min-h-[2.1rem] items-center rounded-xs text-[0.97rem] leading-snug text-graf-600 " +
-  "transition-colors hover:text-jb-700 pointer-coarse:min-h-11 " +
-  "min-[1800px]:text-[1.06rem]";
+  "transition-colors hover:text-jb-700 pointer-coarse:min-h-11";
 
-/** Sem dente no lucide: o traço segue a mesma gramática (24px, stroke 2, cantos redondos). */
 function IconeDente({ className }: { className?: string }) {
   return (
     <svg
@@ -74,12 +56,6 @@ function IconeDente({ className }: { className?: string }) {
   );
 }
 
-/**
- * Marca oficial de cada rede, desenhada inteira: o Facebook e o circulo azul
- * com o "f" vazado e o Instagram e o quadrado com o degrade oficial. Nada de
- * glifo generico sobre quadrado colorido — sao marcas registradas e a forma
- * faz parte delas.
- */
 const SOCIAL: Record<string, () => React.ReactNode> = {
   facebook: () => (
     <svg viewBox="0 0 24 24" className="size-full" aria-hidden>
@@ -138,11 +114,11 @@ function Coluna({
 }) {
   return (
     <div className="min-w-0">
-      <h2 className="flex items-center gap-2.5 text-[0.9rem] font-black uppercase tracking-[0.05em] text-jb-600 min-[1800px]:gap-3 min-[1800px]:text-[1rem]">
+      <h2 className="flex items-center gap-2.5 text-[0.9rem] font-black uppercase tracking-[0.05em] text-jb-600">
         <IconeColuna className="size-[1.35rem] shrink-0 stroke-[2.1]" />
         {titulo}
       </h2>
-      <ul className="mt-4 min-[1800px]:mt-5">
+      <ul className="mt-4">
         {itens.map((item) => (
           <li key={item.href}>
             <Link href={item.href} className={CLASSE_LINK}>
@@ -155,16 +131,6 @@ function Coluna({
   );
 }
 
-/**
- * Ícone vermelho à esquerda, valor e apoio à direita.
- *
- * Os links de dentro (telefone, WhatsApp, e-mail) levam
- * `pointer-coarse:min-h-11`: no dedo eles mediam 17 a 28px de altura, abaixo
- * do alvo mínimo da WCAG 2.2 (2.5.8), e são justamente os três atalhos que
- * alguém aperta com pressa no celular. No ponteiro fino a altura continua a
- * da linha de texto — 44px ali afastaria as linhas do bloco de contato sem
- * necessidade.
- */
 function LinhaContato({
   icone: IconeLinha,
   apoio,
@@ -175,7 +141,7 @@ function LinhaContato({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[1.75rem_minmax(0,1fr)] gap-x-3 py-[0.25rem]">
+    <div className="grid grid-cols-[1.75rem_minmax(0,1fr)] gap-x-3 py-1">
       <span className="mt-0.5 flex justify-center text-jb-600" aria-hidden>
         <IconeLinha className="size-[1.2rem] stroke-[1.9]" />
       </span>
@@ -189,7 +155,6 @@ function LinhaContato({
   );
 }
 
-/** Um dos quatro selos da faixa inferior. */
 function Prova({
   icone: IconeProva,
   titulo,
@@ -200,9 +165,9 @@ function Prova({
   detalhe: string;
 }) {
   return (
-    <li className="flex items-center gap-3 px-4 min-[1800px]:px-7">
-      <IconeProva className="size-[1.3rem] shrink-0 stroke-[1.8] text-jb-600" />
-      <p className="whitespace-nowrap text-[0.8rem] leading-[1.35] text-graf-500">
+    <li className="flex min-w-0 items-center gap-2.5 px-3">
+      <IconeProva className="size-[1.2rem] shrink-0 stroke-[1.8] text-jb-600" />
+      <p className="min-w-0 text-[0.78rem] leading-[1.35] text-graf-500">
         <strong className="block font-semibold text-graf-800">{titulo}</strong>
         {detalhe}
       </p>
@@ -210,19 +175,10 @@ function Prova({
   );
 }
 
-/**
- * A cadeira. Fica fora do fluxo, ancorada na borda direita do container para que
- * a distância até a assinatura editorial não mude com a largura da tela — e
- * sangra além dela, que é o corte da referência.
- *
- * As duas máscaras dissolvem o lado esquerdo (para o texto respirar) e a base
- * (para não invadir a faixa inferior). Duas divs, uma máscara em cada: evita
- * depender de `mask-composite`.
- */
 function CadeiraOdontologica() {
   return (
     <div
-      className="pointer-events-none absolute top-4 hidden select-none min-[1360px]:-right-[11.5rem] min-[1360px]:top-6 min-[1360px]:block min-[1360px]:h-[25.9rem] min-[1360px]:w-[29rem] min-[1800px]:top-12 min-[1800px]:-right-[18rem] min-[1800px]:h-[31.8rem] min-[1800px]:w-[35.6rem]"
+      className="pointer-events-none absolute hidden select-none min-[1360px]:-right-[11rem] min-[1360px]:top-5 min-[1360px]:block min-[1360px]:h-[29rem] min-[1360px]:w-[31rem] min-[1800px]:-right-[14rem]"
       style={{ maskImage: "linear-gradient(to right, transparent 0%, #000 9%)" }}
       aria-hidden
     >
@@ -234,8 +190,8 @@ function CadeiraOdontologica() {
           src="/images/footer-dental-chair.png"
           alt=""
           fill
-          sizes="(min-width: 1800px) 570px, 464px"
-          className="object-contain object-right-top opacity-[0.48]"
+          sizes="496px"
+          className="object-contain object-right-top opacity-[0.46]"
         />
       </div>
     </div>
@@ -251,9 +207,6 @@ export async function Rodape() {
   const sociais = redesSociais(s);
   const ano = new Date().getFullYear();
   const endereco = enderecoCompleto(s);
-  /* O cartão quebra o endereço em duas linhas — logradouro em cima, o resto
-     embaixo. A fonte continua sendo `enderecoCompleto`; aqui só se escolhe
-     onde a linha corta, em vez de deixar o navegador partir no meio da rua. */
   const [logradouro, ...restoEndereco] = endereco.split(" — ");
   const complementoEndereco = [
     restoEndereco.join(" — "),
@@ -272,7 +225,6 @@ export async function Rodape() {
 
   return (
     <footer className="relative isolate mt-auto overflow-hidden border-t border-jb-100/70 bg-[#fffdfc] text-graf-900">
-      {/* Fundo: iluminação quase imperceptível e arcos editoriais de 1px. */}
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(90%_80%_at_90%_40%,rgba(224,20,27,0.035),transparent_60%)]"
         aria-hidden
@@ -281,29 +233,13 @@ export async function Rodape() {
         className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[linear-gradient(180deg,rgba(224,20,27,0.02),transparent)]"
         aria-hidden
       />
-      {/* Os arcos decorativos saíram: eram três círculos de 600 a 1024px com
-          borda de 1px, ancorados fora da tela para que só a curva cruzasse o
-          rodapé. Em vez de fundo, davam riscos atravessando o bloco de contato
-          e os links. O degradê acima já dá a transição de cor sem cortar nada. */}
 
-      <div className="relative z-10 mx-auto w-full max-w-[115rem] px-4 pt-9 min-[400px]:px-5 min-[640px]:px-7 min-[1024px]:px-10 min-[1800px]:pt-7">
+      <div className="container-jb relative z-10 pt-9">
         <CadeiraOdontologica />
 
-        <div className="relative z-10 grid gap-10 min-[1150px]:grid-cols-[20rem_minmax(0,1fr)] min-[1150px]:gap-x-10 min-[1360px]:grid-cols-[27%_minmax(0,1fr)_17%] min-[1360px]:gap-x-8 min-[1800px]:grid-cols-[25rem_minmax(0,1fr)_19rem] min-[1800px]:gap-x-16">
-          {/* ── Contato ───────────────────────────────────────────────────── */}
+        <div className="relative z-10 grid gap-10 min-[1150px]:grid-cols-[20rem_minmax(0,1fr)] min-[1150px]:gap-x-10 min-[1360px]:grid-cols-[20rem_minmax(0,1fr)_17rem] min-[1360px]:items-stretch">
           <section
-            /* Sem moldura: nenhum outro bloco do rodapé tem cartão, e este
-               ficava numa placa branca com borda e sombra que o destacava do
-               conjunto sem motivo — parecia um componente de outra página
-               coberto ali dentro. Agora ele fica sobre o mesmo fundo dos
-               demais, e sem o recuo interno o conteúdo alinha com a coluna
-               "Loja" ao lado.
-
-               O teto de largura continua valendo só a partir de 1360px, que é
-               quando a cadeira entra e precisa do espaço. */
-            /* O mesmo recuo de topo das colunas de links: sem ele o logotipo
-               subia 8px acima dos títulos ao lado. */
-            className="flex w-full flex-col self-stretch min-[1150px]:pt-2 min-[1360px]:max-w-[27rem] min-[1800px]:pt-10"
+            className="flex w-full flex-col self-stretch min-[1150px]:pt-2"
             aria-labelledby="rodape-contato"
           >
             <h2 id="rodape-contato" className="sr-only">
@@ -322,12 +258,12 @@ export async function Rodape() {
 
             <div className="mt-4 h-px bg-jb-100" />
 
-            <div className="mt-0.5">
+            <div className="mt-1">
               {s.telefone ? (
                 <LinhaContato icone={Phone} apoio="Fale com nossa equipe">
                   <a
                     href={telHref(s.telefone)}
-                    className="tabular foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[1.3rem] font-extrabold leading-tight text-jb-600 transition-colors hover:text-jb-800"
+                    className="tabular foco-jb inline-flex items-center text-[1.3rem] font-extrabold leading-tight text-jb-600 transition-colors hover:text-jb-800 pointer-coarse:min-h-11"
                   >
                     {formatarTelefone(s.telefone)}
                   </a>
@@ -340,7 +276,7 @@ export async function Rodape() {
                     href={whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="foco-jb inline-flex flex-wrap items-center gap-2.5 pointer-coarse:min-h-11 font-semibold text-graf-800 hover:text-jb-700"
+                    className="foco-jb inline-flex flex-wrap items-center gap-2.5 font-semibold text-graf-800 hover:text-jb-700 pointer-coarse:min-h-11"
                   >
                     <span className="tabular text-[1.02rem]">{formatarTelefone(s.whatsapp)}</span>
                     <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[0.78rem] font-bold text-emerald-700">
@@ -352,7 +288,7 @@ export async function Rodape() {
                 <LinhaContato icone={MessageCircle} apoio="Atendimento rápido">
                   <a
                     href={telHref(s.telefone_alternativo)}
-                    className="tabular foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[1.02rem] font-semibold text-graf-800 hover:text-jb-700"
+                    className="tabular foco-jb inline-flex items-center text-[1.02rem] font-semibold text-graf-800 hover:text-jb-700 pointer-coarse:min-h-11"
                   >
                     {formatarTelefone(s.telefone_alternativo)}
                   </a>
@@ -363,7 +299,7 @@ export async function Rodape() {
                 <LinhaContato icone={Mail} apoio="Envie um e-mail">
                   <a
                     href={`mailto:${s.email}`}
-                    className="foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[0.78rem] text-graf-600 hover:text-jb-700 min-[1800px]:text-[0.85rem]"
+                    className="foco-jb inline-flex items-center text-[0.8rem] text-graf-600 hover:text-jb-700 pointer-coarse:min-h-11"
                   >
                     <span className="[overflow-wrap:anywhere]">{s.email}</span>
                   </a>
@@ -391,14 +327,12 @@ export async function Rodape() {
               ) : null}
             </div>
 
-            {/* As redes ficam lado a lado, com uma legenda só: empilhadas, cada
-                rede nova esticaria o cartão e tiraria o rodapé da altura da
-                referência. */}
             {sociais.length > 0 ? (
-              <div className="mt-auto border-t border-jb-100 pt-2">
+              <div className="mt-4 border-t border-jb-100 pt-3 min-[1360px]:mt-auto">
                 <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
                   {sociais.map((rede) => {
                     const Marca = SOCIAL[rede.chave];
+                    if (!Marca) return null;
                     return (
                       <li key={rede.chave}>
                         <a
@@ -426,11 +360,10 @@ export async function Rodape() {
             ) : null}
           </section>
 
-          {/* ── Navegação e ações ─────────────────────────────────────────── */}
-          <div className="min-w-0 min-[1150px]:pt-2 min-[1800px]:pt-10">
+          <div className="flex min-w-0 flex-col min-[1150px]:pt-2">
             <nav
               aria-label="Rodapé"
-              className="grid grid-cols-2 gap-x-8 gap-y-9 min-[860px]:grid-cols-4 min-[860px]:gap-x-6 min-[1360px]:grid-cols-[repeat(4,max-content)] min-[1360px]:justify-between min-[1360px]:gap-x-0"
+              className="grid grid-cols-2 gap-x-8 gap-y-9 min-[860px]:grid-cols-4 min-[860px]:gap-x-6"
             >
               <Coluna titulo="Loja" itens={RODAPE_LOJA} icone={ShoppingCart} />
               <Coluna titulo="Assistência" itens={RODAPE_ASSISTENCIA} icone={Wrench} />
@@ -438,73 +371,64 @@ export async function Rodape() {
               <Coluna titulo="Institucional" itens={RODAPE_INSTITUCIONAL} icone={Building2} />
             </nav>
 
-            <div className="mt-9 grid gap-6 sm:grid-cols-2 sm:gap-0 min-[1360px]:mt-1 min-[1360px]:ml-[10%] min-[1800px]:ml-[27.5%]">
-              <div className="sm:pr-9">
+            <div className="mt-9 grid gap-6 sm:grid-cols-2 sm:gap-0 min-[1360px]:mt-auto min-[1360px]:pt-8">
+              <div className="sm:pr-7">
                 <Link
                   href="/assistencia-tecnica/solicitar"
-                  className="group foco-jb flex min-h-[3.4rem] items-center justify-between gap-4 rounded-[0.7rem] bg-jb-600 px-6 text-[0.97rem] font-bold text-white shadow-[0_16px_30px_-18px_rgba(164,10,16,0.75)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-700"
+                  className="group foco-jb flex min-h-[3.4rem] items-center justify-between gap-4 rounded-[0.7rem] bg-jb-600 px-5 text-[0.93rem] font-bold text-white shadow-[0_16px_30px_-18px_rgba(164,10,16,0.75)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-700"
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-center gap-2.5">
                     <Wrench className="size-[1.15rem] stroke-[2]" aria-hidden />
                     Solicitar assistência
                   </span>
-                  <ArrowRight
-                    className="size-[1.05rem] transition-transform group-hover:translate-x-1"
-                    aria-hidden
-                  />
+                  <ArrowRight className="size-[1.05rem] shrink-0 transition-transform group-hover:translate-x-1" aria-hidden />
                 </Link>
-                <p className="mt-3.5 text-center text-[0.85rem] leading-[1.45] text-graf-500">
+                <p className="mt-3 text-center text-[0.82rem] leading-[1.45] text-graf-500">
                   Suporte técnico especializado
                   <br />e atendimento ágil.
                 </p>
               </div>
 
-              <div className="sm:border-l sm:border-graf-200 sm:pl-9">
+              <div className="sm:border-l sm:border-graf-200 sm:pl-7">
                 <Link
                   href="/orcamento"
-                  className="group foco-jb flex min-h-[3.4rem] items-center justify-between gap-4 rounded-[0.7rem] border-[1.5px] border-jb-500 bg-white px-6 text-[0.97rem] font-bold text-jb-600 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-50"
+                  className="group foco-jb flex min-h-[3.4rem] items-center justify-between gap-4 rounded-[0.7rem] border-[1.5px] border-jb-500 bg-white px-5 text-[0.93rem] font-bold text-jb-600 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-50"
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-center gap-2.5">
                     <FileText className="size-[1.15rem] stroke-[2]" aria-hidden />
                     Pedir orçamento
                   </span>
-                  <ArrowRight
-                    className="size-[1.05rem] transition-transform group-hover:translate-x-1"
-                    aria-hidden
-                  />
+                  <ArrowRight className="size-[1.05rem] shrink-0 transition-transform group-hover:translate-x-1" aria-hidden />
                 </Link>
-                <p className="mt-3.5 text-center text-[0.85rem] leading-[1.45] text-graf-500">
+                <p className="mt-3 text-center text-[0.82rem] leading-[1.45] text-graf-500">
                   Equipamentos, peças e serviços
-                  <br />
-                  com as melhores condições.
+                  <br />com as melhores condições.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* ── Assinatura editorial ──────────────────────────────────────── */}
-          <div className="relative flex flex-col justify-between min-[1150px]:col-span-2 min-[1150px]:flex-row-reverse min-[1150px]:items-end min-[1150px]:justify-between min-[1360px]:col-span-1 min-[1360px]:flex-col min-[1360px]:min-h-[27rem] min-[1800px]:min-h-[32rem]">
-            <div className="text-right min-[1800px]:pt-[6.4rem]">
-              <p className="text-[0.8rem] font-semibold uppercase leading-[1.6] tracking-[0.34em] text-graf-500">
+          <div className="relative flex flex-col justify-between min-[1150px]:col-span-2 min-[1150px]:flex-row-reverse min-[1150px]:items-end min-[1360px]:col-span-1 min-[1360px]:min-h-[27rem] min-[1360px]:flex-col min-[1360px]:items-stretch">
+            <div className="relative z-10 text-right min-[1360px]:pt-10">
+              <p className="text-[0.76rem] font-semibold uppercase leading-[1.6] tracking-[0.3em] text-graf-500">
                 Tecnologia
-                <br />
-                que move
+                <br />que move
               </p>
-              <p className="mt-2.5 flex items-center justify-end gap-4">
-                <span className="text-[2.15rem] font-light uppercase leading-none tracking-[0.1em] text-jb-600 min-[1800px]:text-[2.35rem]">
+              <p className="mt-2.5 flex items-center justify-end gap-3">
+                <span className="text-[2rem] font-light uppercase leading-none tracking-[0.08em] text-jb-600">
                   Sorrisos
                 </span>
-                <span className="h-px w-9 shrink-0 bg-jb-500" aria-hidden />
+                <span className="h-px w-8 shrink-0 bg-jb-500" aria-hidden />
               </p>
-              <p className="ml-auto mt-3.5 max-w-[10.5rem] text-[0.8rem] font-medium uppercase leading-[1.65] tracking-[0.28em] text-graf-500">
+              <p className="ml-auto mt-3 max-w-[10.5rem] text-[0.74rem] font-medium uppercase leading-[1.65] tracking-[0.23em] text-graf-500">
                 {s.empresa_nome}
               </p>
             </div>
 
-            <div className="mt-10 min-[1150px]:mt-0 min-[1360px]:mt-0 min-[1800px]:pb-5">
-              <span className="mb-3.5 block h-px w-9 bg-jb-500" aria-hidden />
+            <div className="relative z-10 mt-10 max-w-[15rem] min-[1150px]:mt-0 min-[1360px]:pb-2">
+              <span className="mb-3 block h-px w-8 bg-jb-500" aria-hidden />
               <p
-                className="text-[1.3rem] leading-[1.45] text-graf-500 min-[1360px]:text-[1.05rem] min-[1800px]:text-[1.45rem]"
+                className="text-[1.15rem] leading-[1.45] text-graf-500"
                 style={{ fontFamily: "var(--font-manuscrita), cursive" }}
               >
                 Mais que equipamentos, parceria para o seu consultório.
@@ -513,20 +437,19 @@ export async function Rodape() {
           </div>
         </div>
 
-        {/* ── Faixa inferior ──────────────────────────────────────────────── */}
-        <div className="relative z-10 mt-6 border-t border-graf-200/70 py-[1.15rem] min-[1800px]:mt-[1.1rem]">
-          <div className="grid gap-5 min-[960px]:grid-cols-2 min-[960px]:items-center min-[1840px]:grid-cols-[auto_minmax(0,1fr)_auto] min-[1840px]:gap-8">
-            <div className="min-[960px]:order-1 min-[1840px]:order-none">
-              <p className="text-[0.86rem] text-graf-600">
+        <div className="relative z-10 mt-6 border-t border-graf-200/70 py-[1.15rem]">
+          <div className="grid gap-5 min-[960px]:grid-cols-2 min-[960px]:items-center min-[1500px]:grid-cols-[19rem_minmax(0,1fr)_auto] min-[1500px]:gap-6">
+            <div className="min-[960px]:order-1 min-[1500px]:order-none">
+              <p className="text-[0.82rem] text-graf-600">
                 © {ano} {s.empresa_nome}
                 {s.empresa_desde ? <> · Em atividade desde {s.empresa_desde}</> : null}
               </p>
-              <p className="mt-1 text-[0.8rem] text-graf-500">
+              <p className="mt-1 text-[0.76rem] text-graf-500">
                 Qualidade • Confiança • Sempre ao lado do seu consultório
               </p>
             </div>
 
-            <ul className="grid gap-5 min-[640px]:grid-cols-2 min-[960px]:order-3 min-[960px]:col-span-2 min-[960px]:flex min-[1840px]:order-none min-[1840px]:col-span-1 min-[960px]:justify-center min-[960px]:gap-0 min-[960px]:divide-x min-[960px]:divide-graf-200 min-[960px]:border-x min-[960px]:border-graf-200">
+            <ul className="grid gap-4 min-[640px]:grid-cols-2 min-[960px]:order-3 min-[960px]:col-span-2 min-[960px]:flex min-[960px]:justify-center min-[960px]:gap-0 min-[960px]:divide-x min-[960px]:divide-graf-200 min-[1500px]:order-none min-[1500px]:col-span-1 min-[1500px]:border-x min-[1500px]:border-graf-200">
               <Prova
                 icone={Award}
                 titulo={anosExperiencia ? `+${anosExperiencia} anos` : "Experiência"}
@@ -535,9 +458,7 @@ export async function Rodape() {
               <Prova
                 icone={Truck}
                 titulo="Atendimento"
-                detalhe={
-                  s.endereco_cidade ? `em ${s.endereco_cidade} e região` : "especializado"
-                }
+                detalhe={s.endereco_cidade ? `em ${s.endereco_cidade} e região` : "especializado"}
               />
               <Prova
                 icone={ShieldCheck}
@@ -547,12 +468,12 @@ export async function Rodape() {
               <Prova icone={Headphones} titulo="Suporte técnico" detalhe="especializado" />
             </ul>
 
-            <ul className="flex flex-wrap gap-x-6 gap-y-1 min-[960px]:order-2 min-[960px]:justify-end min-[1840px]:order-none">
+            <ul className="flex flex-wrap gap-x-5 gap-y-1 min-[960px]:order-2 min-[960px]:justify-end min-[1500px]:order-none">
               {RODAPE_POLITICAS.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="foco-jb inline-flex min-h-8 items-center rounded-xs text-[0.86rem] text-graf-500 transition-colors hover:text-jb-700 pointer-coarse:min-h-11"
+                    className="foco-jb inline-flex min-h-8 items-center rounded-xs text-[0.8rem] text-graf-500 transition-colors hover:text-jb-700 pointer-coarse:min-h-11"
                   >
                     {item.rotulo}
                   </Link>
