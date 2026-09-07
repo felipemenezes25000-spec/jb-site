@@ -89,7 +89,7 @@ export default function ErroDoPainel({
         ) : null}
 
         <p className="mt-5 flex items-start gap-2.5 text-[0.9375rem] leading-relaxed text-graf-500">
-          <LifeBuoy className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <LifeBuoy className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             Enquanto isso, dá para chegar às outras áreas pelo menu ou pela busca do topo.
           </span>

@@ -75,7 +75,7 @@ export function LeitorDeEtiqueta({
   return (
     <div className={cn("rounded-xl border border-graf-200 bg-graf-50 p-4", className)}>
       <p className="flex items-center gap-2 text-sm font-bold text-graf-950">
-        <Camera className="size-4 shrink-0 text-graf-400" aria-hidden />
+        <Camera className="size-4 shrink-0 text-graf-500" aria-hidden />
         Fotografe a etiqueta do equipamento
       </p>
       <p className="mt-1 text-[0.875rem] leading-relaxed text-graf-600">
@@ -172,7 +172,7 @@ export function LeitorDeEtiqueta({
           {/* O limite do OCR, em toda leitura. Ele muda o que o número
               significa: identificar não é atestar. */}
           <p className="flex gap-2 border-t border-graf-200 pt-3 text-[0.8125rem] leading-relaxed text-graf-500">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+            <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
             <span>{resposta.limite}</span>
           </p>
 

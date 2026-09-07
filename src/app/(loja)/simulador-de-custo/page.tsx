@@ -112,7 +112,7 @@ function Memoria({ cenario }: { cenario: Cenario }) {
             <dd
               className={
                 linha.valorCents === null
-                  ? "italic text-graf-400"
+                  ? "italic text-graf-500"
                   : "tabular font-semibold text-graf-900"
               }
             >
@@ -402,7 +402,7 @@ export default async function SimuladorPage({ searchParams }: Props) {
             <Cartao className="p-5 sm:p-6">
               <h2 className="flex items-center gap-2.5 text-title texto-forte">
                 {comparacao.comparavel ? (
-                  <Calculator className="size-5 shrink-0 text-graf-400" aria-hidden />
+                  <Calculator className="size-5 shrink-0 text-graf-500" aria-hidden />
                 ) : (
                   <AlertTriangle className="size-5 shrink-0 text-amber-500" aria-hidden />
                 )}
@@ -429,7 +429,7 @@ export default async function SimuladorPage({ searchParams }: Props) {
                     ))}
                   </ol>
                   <p className="mt-4 flex gap-2.5 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
-                    <Info className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+                    <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
                     <span>{comparacao.ressalva}</span>
                   </p>
                 </>

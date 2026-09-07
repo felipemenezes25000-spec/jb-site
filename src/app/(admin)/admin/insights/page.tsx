@@ -173,12 +173,12 @@ export default async function PaginaInsights() {
 
       <Cartao className="p-5">
         <h2 className="flex items-center gap-2 text-base font-bold text-graf-950">
-          <ChartColumn className="size-4 text-graf-400" aria-hidden />
+          <ChartColumn className="size-4 text-graf-500" aria-hidden />
           O que estes indicadores não são
         </h2>
         <ul className="mt-3 space-y-2.5 text-[0.875rem] leading-relaxed text-graf-700">
           <li className="flex gap-2.5">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+            <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
             <span>
               <strong>Não são um ranking de qualidade de marca.</strong> Contagem de chamados
               mede quantos equipamentos daquela marca a JB atende. Sem a base instalada e sem
@@ -186,7 +186,7 @@ export default async function PaginaInsights() {
             </span>
           </li>
           <li className="flex gap-2.5">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+            <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
             <span>
               <strong>Não são MTBF nem vida útil.</strong> O intervalo entre intervenções mede
               dias entre duas OS concluídas — com preventiva programada no meio, chamado por
@@ -194,7 +194,7 @@ export default async function PaginaInsights() {
             </span>
           </li>
           <li className="flex gap-2.5">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+            <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
             <span>
               <strong>Não são a visão do cliente.</strong> A clínica vê os próprios
               equipamentos na Área da Clínica, com isolamento por conta. Este painel cruza

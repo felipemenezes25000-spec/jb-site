@@ -147,7 +147,7 @@ export function CardProduto({
             )}
           />
         ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2 text-graf-400">
+          <div className="flex size-full flex-col items-center justify-center gap-2 text-graf-500">
             <ImageOff className="size-8" aria-hidden />
             <span className="text-[0.8125rem] text-graf-500">Sem foto</span>
           </div>

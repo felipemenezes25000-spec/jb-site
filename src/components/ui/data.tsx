@@ -184,7 +184,7 @@ export function Trilha({ itens, className }: { itens: Migalha[]; className?: str
           return (
             <li key={`${item.rotulo}-${i}`} className="flex items-center gap-1">
               {i > 0 ? (
-                <ChevronRight className="size-3.5 shrink-0 text-graf-400" aria-hidden />
+                <ChevronRight className="size-3.5 shrink-0 text-graf-500" aria-hidden />
               ) : null}
               {item.href && !ultimo ? (
                 <Link

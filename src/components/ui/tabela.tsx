@@ -247,7 +247,7 @@ export function Tabela<T>({
                   ))}
                   {href ? (
                     <td className={cn("px-4 text-right", paddingY)}>
-                      <ChevronRight className="ml-auto size-4 text-graf-400" aria-hidden />
+                      <ChevronRight className="ml-auto size-4 text-graf-500" aria-hidden />
                     </td>
                   ) : null}
                 </tr>
@@ -293,7 +293,7 @@ export function Tabela<T>({
                     )}
                   </p>
                   {href ? (
-                    <ChevronRight className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                    <ChevronRight className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                   ) : null}
                 </div>
               ) : null}

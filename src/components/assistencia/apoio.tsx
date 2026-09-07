@@ -63,7 +63,7 @@ export function ListaDeApoio({
     <Lista className={cn("space-y-4 text-sm", className)}>
       {itens.map((item, indice) => (
         <li key={indice} className="flex gap-3">
-          <item.icone className="mt-0.5 size-4.5 shrink-0 text-graf-400" aria-hidden />
+          <item.icone className="mt-0.5 size-4.5 shrink-0 text-graf-500" aria-hidden />
           <span className="leading-relaxed text-graf-600">
             {numerada ? <span className="sr-only">Passo {indice + 1}: </span> : null}
             {item.texto}

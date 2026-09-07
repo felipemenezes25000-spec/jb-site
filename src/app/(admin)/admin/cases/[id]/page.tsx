@@ -141,7 +141,7 @@ export default async function PaginaEditarCase({
         aria-labelledby="autorizacao"
       >
         <h2 id="autorizacao" className="flex items-center gap-2 text-base font-bold text-graf-950">
-          <ShieldCheck className="size-4 text-graf-400" aria-hidden />
+          <ShieldCheck className="size-4 text-graf-500" aria-hidden />
           Autorização do cliente
         </h2>
 

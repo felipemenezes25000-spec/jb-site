@@ -112,7 +112,7 @@ function Grupo({
                 ) : (
                   <span
                     aria-hidden
-                    className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-graf-100 text-graf-400"
+                    className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-graf-100 text-graf-500"
                   >
                     <Package className="size-6" />
                   </span>
@@ -162,7 +162,7 @@ function Grupo({
                 href={`/central-tecnica/${artigo.slug}`}
                 className="flex items-start gap-3.5 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
-                <BookOpen className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                <BookOpen className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
                   <span className="block text-[0.9375rem] font-semibold text-graf-950">
                     {artigo.titulo}
@@ -199,7 +199,7 @@ function Grupo({
                 href={servico.href}
                 className="flex items-start gap-3.5 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
-                <Wrench className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                <Wrench className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
                   <span className="block text-[0.9375rem] font-semibold text-graf-950">
                     {servico.titulo}
@@ -240,7 +240,7 @@ function Grupo({
               className="flex items-center justify-between gap-4 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
               <span className="flex min-w-0 items-start gap-3.5">
-                <Stethoscope className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                <Stethoscope className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
                   <span className="block text-[0.9375rem] font-semibold text-graf-950">
                     {equipamento.nome}

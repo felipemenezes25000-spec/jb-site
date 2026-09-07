@@ -62,7 +62,7 @@ export function MapaDaUnidade({
           className,
         )}
       >
-        <MapPin className="mt-0.5 size-5 shrink-0 text-graf-400" aria-hidden />
+        <MapPin className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
         <div className="min-w-0">
           <p className="text-base font-semibold leading-snug text-graf-950">{endereco}</p>
           <a
@@ -97,7 +97,7 @@ export function MapaDaUnidade({
       {endereco ? (
         <figcaption className="flex flex-wrap items-center justify-between gap-x-8 gap-y-1 border-t border-graf-200 px-5 py-4">
           <div className="flex min-w-0 items-start gap-2.5 text-[0.9375rem] leading-snug text-graf-800">
-            <MapPin className="mt-0.5 size-4.5 shrink-0 text-graf-400" aria-hidden />
+            <MapPin className="mt-0.5 size-4.5 shrink-0 text-graf-500" aria-hidden />
             <address className="not-italic">{endereco}</address>
           </div>
           <a href={buscaNoMaps} target="_blank" rel="noopener noreferrer" className={CLASSE_ATALHO}>

@@ -188,7 +188,7 @@ export function CaixaCompra({
             ) : null}
 
             <p className="mt-1.5 flex items-center gap-2 text-sm text-graf-500">
-              <CreditCard className="size-4 shrink-0 text-graf-400" aria-hidden />
+              <CreditCard className="size-4 shrink-0 text-graf-500" aria-hidden />
               Pix ou cartão de crédito
             </p>
 
@@ -288,7 +288,7 @@ export function CaixaCompra({
                   onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
                   disabled={quantidade <= 1}
                   aria-label="Diminuir quantidade"
-                  className="foco-jb flex size-11 items-center justify-center rounded-l-lg text-graf-700 transition-colors duration-150 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-400 disabled:hover:bg-transparent"
+                  className="foco-jb flex size-11 items-center justify-center rounded-l-lg text-graf-700 transition-colors duration-150 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-500 disabled:hover:bg-transparent"
                 >
                   <Minus className="size-4" aria-hidden />
                 </button>
@@ -304,7 +304,7 @@ export function CaixaCompra({
                   onClick={() => setQuantidade((q) => Math.min(maximo, q + 1))}
                   disabled={quantidade >= maximo}
                   aria-label="Aumentar quantidade"
-                  className="foco-jb flex size-11 items-center justify-center rounded-r-lg text-graf-700 transition-colors duration-150 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-400 disabled:hover:bg-transparent"
+                  className="foco-jb flex size-11 items-center justify-center rounded-r-lg text-graf-700 transition-colors duration-150 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-500 disabled:hover:bg-transparent"
                 >
                   <Plus className="size-4" aria-hidden />
                 </button>

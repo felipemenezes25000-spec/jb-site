@@ -166,7 +166,7 @@ function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode
       <summary className="-mx-2 flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500">
         <span className="text-[0.9375rem] font-bold text-graf-950">{titulo}</span>
         <ChevronDown
-          className="size-4 shrink-0 text-graf-400 transition-transform duration-200 group-open:rotate-180"
+          className="size-4 shrink-0 text-graf-500 transition-transform duration-200 group-open:rotate-180"
           aria-hidden
         />
       </summary>

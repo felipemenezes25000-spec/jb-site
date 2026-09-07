@@ -35,7 +35,7 @@ export function DisponibilidadeDoParque({
     return (
       <Cartao className={cn("p-5", className)}>
         <p className="flex items-center gap-2 text-sm font-bold text-graf-950">
-          <Activity className="size-4 shrink-0 text-graf-400" aria-hidden />
+          <Activity className="size-4 shrink-0 text-graf-500" aria-hidden />
           Disponibilidade do parque
         </p>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">{dados.motivo}</p>
@@ -51,7 +51,7 @@ export function DisponibilidadeDoParque({
   return (
     <Cartao className={cn("p-5", className)}>
       <p className="flex items-center gap-2 text-sm font-bold text-graf-950">
-        <Activity className="size-4 shrink-0 text-graf-400" aria-hidden />
+        <Activity className="size-4 shrink-0 text-graf-500" aria-hidden />
         Disponibilidade do parque
       </p>
 
@@ -156,7 +156,7 @@ export function IndiceDoEquipamento({
         ninguém emitiu.
       */}
       <p className="mt-4 flex gap-2 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
-        <Info className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+        <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
         <span>
           O índice mede se a manutenção está em dia — não a condição nem a segurança do
           equipamento. Os pesos acima são critério da JB, não um modelo validado de risco de

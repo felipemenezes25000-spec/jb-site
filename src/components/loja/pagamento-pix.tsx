@@ -116,7 +116,7 @@ export function ContagemRegressiva({ expiraEm }: { expiraEm: string }) {
   if (ms === null) {
     return (
       <p className="flex items-center gap-2 text-sm text-graf-600">
-        <Clock className="size-4 shrink-0 text-graf-400" aria-hidden />
+        <Clock className="size-4 shrink-0 text-graf-500" aria-hidden />
         Válido até {formatarDataHora(expiraEm)}
       </p>
     );
@@ -138,7 +138,7 @@ export function ContagemRegressiva({ expiraEm }: { expiraEm: string }) {
       className={`flex items-center gap-2 text-sm ${acabando ? "font-semibold text-warn-700" : "text-graf-600"}`}
     >
       <Clock
-        className={`size-4 shrink-0 ${acabando ? "" : "text-graf-400"}`}
+        className={`size-4 shrink-0 ${acabando ? "" : "text-graf-500"}`}
         aria-hidden
       />
       <span>

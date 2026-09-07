@@ -110,7 +110,7 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
               {linha.imagem ? (
                 <Image src={linha.imagem} alt="" fill sizes="64px" className="object-contain p-1" />
               ) : (
-                <span className="flex size-full items-center justify-center text-graf-400">
+                <span className="flex size-full items-center justify-center text-graf-500">
                   <ImageOff className="size-4" aria-hidden />
                 </span>
               )}

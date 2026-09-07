@@ -71,7 +71,7 @@ function Bloco({
   return (
     <Cartao className="p-5">
       <h2 className="flex items-center gap-2 text-base font-bold text-graf-950">
-        <Icone className="size-4 shrink-0 text-graf-400" aria-hidden />
+        <Icone className="size-4 shrink-0 text-graf-500" aria-hidden />
         {titulo}
       </h2>
       <div className="mt-3">{children}</div>
@@ -324,7 +324,7 @@ export default async function PaginaPreparo({ params }: Props) {
         </p>
         {chamado._count.media > 0 ? (
           <p className="mt-3 flex items-center gap-2 text-[0.8125rem] text-graf-600">
-            <ImagemIcone className="size-4 shrink-0 text-graf-400" aria-hidden />
+            <ImagemIcone className="size-4 shrink-0 text-graf-500" aria-hidden />
             {chamado._count.media}{" "}
             {chamado._count.media === 1 ? "arquivo anexado" : "arquivos anexados"} — veja no
             chamado completo antes de sair.
@@ -385,7 +385,7 @@ export default async function PaginaPreparo({ params }: Props) {
         </Aviso>
       ) : (
         <p className="flex gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
-          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
           <span>
             Este preparo é montado a partir dos registros, sem resumo automático. {sugestao.mostrar ? "" : sugestao.motivo}
           </span>

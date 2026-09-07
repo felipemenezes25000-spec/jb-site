@@ -81,7 +81,7 @@ export function Conteudo404({
               href={atalho.href}
               className="group flex h-full items-start gap-3.5 rounded-xl border border-graf-200 bg-white p-5 transition-[border-color,box-shadow] hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
-              <atalho.icone className="mt-0.5 size-5 shrink-0 text-graf-400" aria-hidden />
+              <atalho.icone className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2 text-base font-bold text-graf-950">
                   {atalho.titulo}

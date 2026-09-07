@@ -113,7 +113,7 @@ export function AntesDeComprar({
                 className="rounded-xl border border-graf-200 bg-white px-4 py-3.5"
               >
                 <dt className="flex items-center gap-2 text-[0.8125rem] text-graf-500">
-                  <Icone className="size-4 shrink-0 text-graf-400" aria-hidden />
+                  <Icone className="size-4 shrink-0 text-graf-500" aria-hidden />
                   {ficha.rotulo}
                 </dt>
                 <dd className="tabular mt-1 text-base font-bold text-graf-950">{ficha.valor}</dd>

@@ -143,7 +143,7 @@ export default async function CasesPage() {
              escrito. */
           <div className="mt-8 rounded-xl border border-graf-200 bg-graf-50 p-6 sm:p-8">
             <h2 className="flex items-center gap-2.5 text-title texto-forte">
-              <ClipboardCheck className="size-5 shrink-0 text-graf-400" aria-hidden />
+              <ClipboardCheck className="size-5 shrink-0 text-graf-500" aria-hidden />
               Ainda não há case publicado
             </h2>
             <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600">

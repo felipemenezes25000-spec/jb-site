@@ -215,7 +215,7 @@ export function PassosNumerados({
                   {i + 1}
                 </span>
                 {Icone ? (
-                  <Icone className="size-5 shrink-0 text-graf-400" aria-hidden />
+                  <Icone className="size-5 shrink-0 text-graf-500" aria-hidden />
                 ) : null}
               </div>
               <h3 className="texto-forte mt-5 text-lg font-bold leading-snug">{passo.titulo}</h3>
@@ -252,7 +252,7 @@ export function PassosNumerados({
             </span>
             <div className="min-w-0 flex-1 pt-1.5">
               <h3 className="texto-forte flex items-center gap-2 text-lg font-bold leading-snug">
-                {Icone ? <Icone className="size-5 shrink-0 text-graf-400" aria-hidden /> : null}
+                {Icone ? <Icone className="size-5 shrink-0 text-graf-500" aria-hidden /> : null}
                 {passo.titulo}
               </h3>
               {passo.descricao ? (

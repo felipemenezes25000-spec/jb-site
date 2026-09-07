@@ -72,7 +72,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                     className="object-contain p-1.5"
                   />
                 ) : (
-                  <span className="flex size-full items-center justify-center text-graf-400">
+                  <span className="flex size-full items-center justify-center text-graf-500">
                     <ImageOff className="size-6" aria-hidden />
                   </span>
                 )}
@@ -170,7 +170,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                                 await alterarQuantidade(linha.id, linha.quantidade - 1);
                               })
                             }
-                            className="flex size-11 items-center justify-center rounded-l-lg text-graf-700 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500 disabled:text-graf-400 disabled:hover:bg-transparent"
+                            className="flex size-11 items-center justify-center rounded-l-lg text-graf-700 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500 disabled:text-graf-500 disabled:hover:bg-transparent"
                           >
                             <Minus className="size-4" aria-hidden />
                           </button>
@@ -190,7 +190,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                                 await alterarQuantidade(linha.id, linha.quantidade + 1);
                               })
                             }
-                            className="flex size-11 items-center justify-center rounded-r-lg text-graf-700 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500 disabled:text-graf-400 disabled:hover:bg-transparent"
+                            className="flex size-11 items-center justify-center rounded-r-lg text-graf-700 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500 disabled:text-graf-500 disabled:hover:bg-transparent"
                           >
                             <Plus className="size-4" aria-hidden />
                           </button>

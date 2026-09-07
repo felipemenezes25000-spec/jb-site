@@ -211,7 +211,7 @@ export default async function SobrePage() {
                 <div key={linha.rotulo} className="relative min-w-0 pl-8">
                   <dt className="text-[0.8125rem] leading-tight text-graf-500">
                     <linha.icone
-                      className="absolute left-0 top-0.5 size-5 text-graf-400"
+                      className="absolute left-0 top-0.5 size-5 text-graf-500"
                       aria-hidden
                     />
                     {linha.rotulo}

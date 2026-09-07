@@ -288,7 +288,7 @@ function BlocoRevisao({
     <div className="rounded-xl border border-graf-200 bg-white p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <h3 className="flex items-center gap-2 text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500">
-          <Icone className="size-4 shrink-0 text-graf-400" aria-hidden />
+          <Icone className="size-4 shrink-0 text-graf-500" aria-hidden />
           {titulo}
         </h3>
         <button
@@ -1399,14 +1399,14 @@ export function Checkout({
           o dinheiro e o que acontece com o equipamento */}
       <ul className="mt-5 space-y-2.5 text-sm leading-relaxed text-graf-600">
         <li className="flex items-start gap-2.5">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             <strong className="font-semibold text-graf-900">Pagamento seguro.</strong> Os dados do
             pagamento ficam com o meio de pagamento — a JB não guarda cartão.
           </span>
         </li>
         <li className="flex items-start gap-2.5">
-          <Truck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <Truck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             Ao confirmar, a JB reserva o equipamento e entra em contato por telefone ou WhatsApp
             para acertar a entrega e a instalação.

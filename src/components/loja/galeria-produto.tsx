@@ -108,7 +108,7 @@ export function GaleriaProduto({
   if (total === 0) {
     return (
       <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-graf-300 bg-graf-50 px-6 py-16 text-center lg:min-h-96">
-        <ImageOff className="size-9 text-graf-400" aria-hidden />
+        <ImageOff className="size-9 text-graf-500" aria-hidden />
         <p className="text-sm font-semibold text-graf-700">
           Ainda não há foto deste equipamento
         </p>

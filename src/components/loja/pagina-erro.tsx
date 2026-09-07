@@ -78,7 +78,7 @@ export function ConteudoErro({
       <ul className="mt-10 grid gap-3 sm:grid-cols-2">
         <li>
           <Link href="/loja" className={CLASSE_CARTAO}>
-            <LayoutGrid className="mt-0.5 size-5 shrink-0 text-graf-400" aria-hidden />
+            <LayoutGrid className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2 text-base font-bold text-graf-950">
                 Ver o catálogo
@@ -96,7 +96,7 @@ export function ConteudoErro({
 
         <li>
           <Link href="/assistencia-tecnica/solicitar" className={CLASSE_CARTAO}>
-            <Headset className="mt-0.5 size-5 shrink-0 text-graf-400" aria-hidden />
+            <Headset className="mt-0.5 size-5 shrink-0 text-graf-500" aria-hidden />
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2 text-base font-bold text-graf-950">
                 Solicitar assistência

@@ -378,7 +378,7 @@ export default async function PedidoPage({ params }: Props) {
           </Cartao>
 
           <p className="mt-6 flex flex-wrap items-start gap-x-1.5 gap-y-1 text-sm leading-relaxed text-graf-600">
-            <Lock className="mt-1 size-4 shrink-0 text-graf-400" aria-hidden />
+            <Lock className="mt-1 size-4 shrink-0 text-graf-500" aria-hidden />
             <span>
               Tem conta na JB?{" "}
               <Link
@@ -646,7 +646,7 @@ export default async function PedidoPage({ params }: Props) {
                         className="object-contain p-1"
                       />
                     ) : (
-                      <span className="flex size-full items-center justify-center text-graf-400">
+                      <span className="flex size-full items-center justify-center text-graf-500">
                         <ImageOff className="size-5" aria-hidden />
                       </span>
                     )}
@@ -799,7 +799,7 @@ export default async function PedidoPage({ params }: Props) {
               {pedido.buyerPhone ? <p className="text-graf-600">{pedido.buyerPhone}</p> : null}
             </div>
             <p className="mt-4 flex items-start gap-2 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
-              <Mail className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+              <Mail className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
               A confirmação e os avisos deste pedido vão para este e-mail.
             </p>
           </Cartao>

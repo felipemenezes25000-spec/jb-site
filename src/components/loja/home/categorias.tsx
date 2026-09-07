@@ -275,7 +275,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
         />
 
         <p
-          className="absolute right-7 top-8 z-10 hidden text-right text-[0.55rem] font-semibold uppercase leading-[1.8] tracking-[0.24em] text-graf-400 min-[1280px]:block"
+          className="absolute right-7 top-8 z-10 hidden text-right text-[0.55rem] font-semibold uppercase leading-[1.8] tracking-[0.24em] text-graf-500 min-[1280px]:block"
           aria-hidden
         >
           Clínicas

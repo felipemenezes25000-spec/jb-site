@@ -175,7 +175,7 @@ function LinhaContato({
       <div className="min-w-0">
         <div className="text-[0.95rem] leading-[1.35] text-graf-700">{children}</div>
         {apoio ? (
-          <p className="mt-0.5 text-[0.8rem] leading-snug text-graf-400">{apoio}</p>
+          <p className="mt-0.5 text-[0.8rem] leading-snug text-graf-500">{apoio}</p>
         ) : null}
       </div>
     </div>
@@ -426,7 +426,7 @@ export async function Rodape() {
                     );
                   })}
                 </ul>
-                <p className="pl-[2.375rem] text-[0.8rem] text-graf-400">
+                <p className="pl-[2.375rem] text-[0.8rem] text-graf-500">
                   Acompanhe nossas novidades
                 </p>
               </div>
@@ -528,7 +528,7 @@ export async function Rodape() {
                 © {ano} {s.empresa_nome}
                 {s.empresa_desde ? <> · Em atividade desde {s.empresa_desde}</> : null}
               </p>
-              <p className="mt-1 text-[0.8rem] text-graf-400">
+              <p className="mt-1 text-[0.8rem] text-graf-500">
                 Qualidade • Confiança • Sempre ao lado do seu consultório
               </p>
             </div>

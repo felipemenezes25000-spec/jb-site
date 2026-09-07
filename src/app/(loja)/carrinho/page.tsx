@@ -151,7 +151,7 @@ export default async function CarrinhoPage() {
                 href="/orcamento"
                 className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-graf-700 transition-colors hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
-                <Wrench className="size-4 text-graf-400" aria-hidden />
+                <Wrench className="size-4 text-graf-500" aria-hidden />
                 Precisa de algo que não está no catálogo?
               </Link>
             </div>
@@ -233,7 +233,7 @@ export default async function CarrinhoPage() {
               )}
 
               <p className="mt-4 flex items-start justify-center gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span>
                   Pagamento seguro. Você confere o valor final antes de confirmar, e nada é
                   cobrado até lá.

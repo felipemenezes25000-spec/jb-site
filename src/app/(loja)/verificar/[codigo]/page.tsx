@@ -130,7 +130,7 @@ export default async function VerificarPage({ params }: Props) {
         {/* O selo é da JB, e a página diz isso. Nada aqui insinua certificação
             independente ou regulatória. */}
         <p className="flex items-start gap-2.5 text-sm leading-relaxed text-graf-600">
-          <FlaskConical className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <FlaskConical className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             <strong className="font-semibold text-graf-800">Seminovo JB Certificado</strong> é o
             programa de inspeção da própria JB. Não é certificação de órgão independente nem

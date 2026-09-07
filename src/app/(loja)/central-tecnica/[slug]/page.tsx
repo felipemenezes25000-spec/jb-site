@@ -156,7 +156,7 @@ export default async function ArtigoPage({ params }: Props) {
             chega tarde: quem parou na metade já saiu com a impressão de que
             aquilo vale para o equipamento dele. */}
         <p className="mt-8 flex gap-2.5 rounded-lg border border-graf-200 bg-graf-50 p-4 text-[0.875rem] leading-relaxed text-graf-600">
-          <Info className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <Info className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>{fraseDeAplicabilidade(artigo.appliesTo)}</span>
         </p>
 
@@ -180,7 +180,7 @@ export default async function ArtigoPage({ params }: Props) {
         {artigo.sources.length > 0 ? (
           <section className="mt-10" aria-labelledby="fontes">
             <h2 id="fontes" className="flex items-center gap-2 text-title texto-forte">
-              <BookMarked className="size-5 text-graf-400" aria-hidden />
+              <BookMarked className="size-5 text-graf-500" aria-hidden />
               Fontes
             </h2>
             <ul className="mt-4 space-y-3">

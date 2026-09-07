@@ -141,7 +141,7 @@ export function SituacaoDaGarantia({
     return (
       <div className={className}>
         <p className="flex items-center gap-2 text-sm font-semibold text-graf-700">
-          <ShieldQuestion className="size-4 shrink-0 text-graf-400" aria-hidden />
+          <ShieldQuestion className="size-4 shrink-0 text-graf-500" aria-hidden />
           Garantia não informada
         </p>
         <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-500">
@@ -159,7 +159,7 @@ export function SituacaoDaGarantia({
     <div className={className}>
       <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-graf-800">
         <ShieldQuestion
-          className={cn("size-4 shrink-0", vigente ? "text-ok-700" : "text-graf-400")}
+          className={cn("size-4 shrink-0", vigente ? "text-ok-700" : "text-graf-500")}
           aria-hidden
         />
         {vigente ? "Garantia até" : "Garantia encerrada em"} {formatarData(ate)}
@@ -190,7 +190,7 @@ export function ProximaPreventiva({
   if (!data) {
     return (
       <p className={cn("flex items-center gap-2 text-sm text-graf-500", className)}>
-        <CalendarClock className="size-4 shrink-0 text-graf-400" aria-hidden />
+        <CalendarClock className="size-4 shrink-0 text-graf-500" aria-hidden />
         Próxima preventiva ainda não definida
       </p>
     );
@@ -209,7 +209,7 @@ export function ProximaPreventiva({
       {atrasada ? (
         <CircleAlert className="size-4 shrink-0" aria-hidden />
       ) : (
-        <CalendarClock className="size-4 shrink-0 text-graf-400" aria-hidden />
+        <CalendarClock className="size-4 shrink-0 text-graf-500" aria-hidden />
       )}
       {atrasada ? "Preventiva vencida em" : "Próxima preventiva prevista para"}{" "}
       {formatarData(data)}
@@ -402,11 +402,11 @@ export function AcoesDoProntuario({
 }) {
   return (
     <div className={cn("flex flex-wrap gap-3", className)}>
-      <span className="inline-flex items-center gap-1.5 text-graf-400" aria-hidden>
+      <span className="inline-flex items-center gap-1.5 text-graf-500" aria-hidden>
         <Wrench className="size-4" />
       </span>
       {abrirChamado}
-      <span className="inline-flex items-center gap-1.5 text-graf-400" aria-hidden>
+      <span className="inline-flex items-center gap-1.5 text-graf-500" aria-hidden>
         <FileText className="size-4" />
       </span>
       {verDocumentos}

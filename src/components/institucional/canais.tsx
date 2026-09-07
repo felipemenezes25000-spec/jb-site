@@ -38,7 +38,7 @@ function Linha({
 }) {
   const conteudo = (
     <>
-      <Icone className="mt-1 size-4.5 shrink-0 text-graf-400" aria-hidden />
+      <Icone className="mt-1 size-4.5 shrink-0 text-graf-500" aria-hidden />
       <span className="min-w-0">
         <span className="block text-[0.8125rem] leading-tight text-graf-500">{rotulo}</span>
         {/* E-mail e endereço são palavras longas e sem espaço. Sem quebra

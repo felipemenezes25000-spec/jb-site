@@ -87,7 +87,7 @@ export function AjudaDaEquipe({
 
       {horario ? (
         <p className="mt-3 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
-          <Clock className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+          <Clock className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
           {horario}
         </p>
       ) : null}

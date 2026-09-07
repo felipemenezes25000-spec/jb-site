@@ -106,7 +106,7 @@ export default async function ContatoPage() {
             {aceitaRetirada && s.retirada_instrucoes ? (
               <Cartao className="p-5">
                 <h2 className="flex items-center gap-2 text-base font-bold text-graf-950">
-                  <PackageCheck className="size-4.5 shrink-0 text-graf-400" aria-hidden />
+                  <PackageCheck className="size-4.5 shrink-0 text-graf-500" aria-hidden />
                   Retirada no local
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-graf-600">

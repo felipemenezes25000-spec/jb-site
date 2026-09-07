@@ -503,7 +503,7 @@ export default async function ChamadoPage({ params }: Parametros) {
                 mensagem={mensagemWhatsapp}
               />
               <p className="mt-4 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
-                <CircleCheck className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+                <CircleCheck className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
                 Cite o número {chamado.number} para a equipe achar seu atendimento na hora.
               </p>
             </CartaoApoio>

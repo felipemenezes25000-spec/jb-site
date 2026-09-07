@@ -476,7 +476,7 @@ function CampoBusca({
         enterKeyHint="search"
         autoComplete="off"
         placeholder="Busque equipamentos, marcas, modelos ou peças..."
-        className="h-full min-w-0 flex-1 bg-transparent px-3 text-base text-graf-900 lg:text-[0.875rem] outline-none placeholder:text-graf-400"
+        className="h-full min-w-0 flex-1 bg-transparent px-3 text-base text-graf-900 lg:text-[0.875rem] outline-none placeholder:text-graf-500"
       />
       <button
         type="submit"
@@ -527,7 +527,7 @@ function MegaCatalogo({
                     {categoria.name}
                   </span>
                   {categoria.count > 0 ? (
-                    <span className="tabular shrink-0 text-xs text-graf-400">
+                    <span className="tabular shrink-0 text-xs text-graf-500">
                       {categoria.count}
                       <span className="sr-only"> equipamentos</span>
                     </span>

@@ -63,7 +63,7 @@ function Recusa({
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-5 py-12">
       <Cartao className="p-6">
         <p className="flex items-center gap-2 text-sm font-bold text-graf-950">
-          <ShieldAlert className="size-4 shrink-0 text-graf-400" aria-hidden />
+          <ShieldAlert className="size-4 shrink-0 text-graf-500" aria-hidden />
           {titulo}
         </p>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">{texto}</p>
@@ -235,7 +235,7 @@ export default async function EtiquetaPage({ params }: Props) {
         </Link>
       </div>
 
-      <p className="mt-8 text-center text-[0.75rem] text-graf-400">
+      <p className="mt-8 text-center text-[0.75rem] text-graf-500">
         Código {codigoLegivel(codigo)}
       </p>
     </main>

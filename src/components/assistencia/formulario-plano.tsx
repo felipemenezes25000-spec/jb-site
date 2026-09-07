@@ -144,7 +144,7 @@ export function FormularioPlano({
         <section className="mt-8 rounded-xl border border-graf-200 bg-surface-muted p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <h3 className="flex items-center gap-2 text-[0.9375rem] font-bold text-graf-950">
-              <Calculator className="size-4 shrink-0 text-graf-400" aria-hidden />
+              <Calculator className="size-4 shrink-0 text-graf-500" aria-hidden />
               Da sua simulação
             </h3>
             <button

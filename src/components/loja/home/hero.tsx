@@ -120,7 +120,7 @@ export function Hero({
       </p>
 
       <p
-        className="pointer-events-none absolute right-[3.5rem] top-[11rem] hidden text-right text-[0.63rem] font-semibold uppercase leading-[2] tracking-[0.28em] text-graf-400 min-[1600px]:block"
+        className="pointer-events-none absolute right-[3.5rem] top-[11rem] hidden text-right text-[0.63rem] font-semibold uppercase leading-[2] tracking-[0.28em] text-graf-500 min-[1600px]:block"
         aria-hidden
       >
         Clínicas
@@ -291,7 +291,7 @@ function VitrineHero({
         />
 
         <p
-          className="absolute left-5 top-1/2 z-10 hidden -translate-y-1/2 text-[0.55rem] font-semibold uppercase leading-[2] tracking-[0.24em] text-graf-400 min-[1280px]:block"
+          className="absolute left-5 top-1/2 z-10 hidden -translate-y-1/2 text-[0.55rem] font-semibold uppercase leading-[2] tracking-[0.24em] text-graf-500 min-[1280px]:block"
           aria-hidden
         >
           Alta
@@ -303,7 +303,7 @@ function VitrineHero({
           resultados
         </p>
         <p
-          className="absolute right-5 top-[58%] z-10 hidden text-right text-[0.55rem] font-semibold uppercase leading-[2] tracking-[0.24em] text-graf-400 min-[1280px]:block"
+          className="absolute right-5 top-[58%] z-10 hidden text-right text-[0.55rem] font-semibold uppercase leading-[2] tracking-[0.24em] text-graf-500 min-[1280px]:block"
           aria-hidden
         >
           Confiança
@@ -345,7 +345,7 @@ function ProdutoDestaque({
         <div className="flex flex-wrap items-center gap-2">
           <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
           {produto.brand ? (
-            <span className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-graf-400">
+            <span className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-graf-500">
               {produto.brand.name}
             </span>
           ) : null}

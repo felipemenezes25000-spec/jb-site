@@ -378,7 +378,7 @@ export default async function CompararPage({ searchParams }: Props) {
                         key={lacuna}
                         className="flex gap-2.5 text-[0.8125rem] leading-relaxed text-graf-600"
                       >
-                        <Info className="mt-0.5 size-3.5 shrink-0 text-graf-400" aria-hidden />
+                        <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
                         <span>{lacuna}</span>
                       </li>
                     ))}
@@ -421,7 +421,7 @@ export default async function CompararPage({ searchParams }: Props) {
                         <dd
                           className={
                             linha.valores[indice].tipo === "ausente"
-                              ? "italic text-graf-400"
+                              ? "italic text-graf-500"
                               : "font-semibold text-graf-900"
                           }
                         >
@@ -470,7 +470,7 @@ export default async function CompararPage({ searchParams }: Props) {
                       <th scope="row" className="py-3 pr-4 align-top font-normal text-graf-600">
                         {linha.rotulo}
                         {linha.ajuda ? (
-                          <span className="mt-0.5 block text-[0.75rem] text-graf-400">
+                          <span className="mt-0.5 block text-[0.75rem] text-graf-500">
                             {linha.ajuda}
                           </span>
                         ) : null}
@@ -480,7 +480,7 @@ export default async function CompararPage({ searchParams }: Props) {
                           key={`${linha.chave}-${ordenados[indice].slug}`}
                           className={
                             valor.tipo === "ausente"
-                              ? "py-3 pr-4 align-top italic text-graf-400"
+                              ? "py-3 pr-4 align-top italic text-graf-500"
                               : "py-3 pr-4 align-top font-medium text-graf-900"
                           }
                         >

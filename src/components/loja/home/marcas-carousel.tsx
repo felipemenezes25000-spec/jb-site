@@ -82,7 +82,7 @@ function CartaoMarca({ marca }: { marca: Marca }) {
         )}
       </span>
       <span className="mt-4 block text-[1.02rem] font-bold text-graf-800">{marca.name}</span>
-      <span className="mt-1.5 block text-[0.6rem] font-bold uppercase leading-[1.5] tracking-[0.2em] text-graf-400">
+      <span className="mt-1.5 block text-[0.6rem] font-bold uppercase leading-[1.5] tracking-[0.2em] text-graf-500">
         {legenda(marca)}
       </span>
     </Link>
@@ -132,7 +132,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
           <span className="grid size-[3.15rem] shrink-0 place-items-center rounded-full bg-jb-50/70 text-graf-800">
             <Sparkles className="size-[1.05rem]" aria-hidden />
           </span>
-          <p className="whitespace-nowrap text-[0.66rem] font-bold uppercase leading-[1.6] tracking-[0.32em] text-graf-400">
+          <p className="whitespace-nowrap text-[0.66rem] font-bold uppercase leading-[1.6] tracking-[0.32em] text-graf-500">
             Marcas
             <br />
             que a equipe
@@ -198,7 +198,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
               </ul>
             </div>
 
-            <p className="mt-7 flex items-center gap-4 pl-1 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-graf-400 min-[1024px]:mt-9">
+            <p className="mt-7 flex items-center gap-4 pl-1 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-graf-500 min-[1024px]:mt-9">
               <span className="h-[3px] w-16 shrink-0 rounded-full bg-jb-600" aria-hidden />
               {marcas.length} marcas com equipamentos publicados
             </p>
@@ -223,7 +223,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
                 </span>
                 <p className="text-[0.92rem] font-semibold leading-[1.35] text-graf-700 min-[1840px]:whitespace-nowrap">
                   {titulo}
-                  <span className="mt-0.5 block text-[0.82rem] font-normal text-graf-400">
+                  <span className="mt-0.5 block text-[0.82rem] font-normal text-graf-500">
                     {apoio}
                   </span>
                 </p>

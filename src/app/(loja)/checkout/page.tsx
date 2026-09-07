@@ -123,15 +123,15 @@ export default async function CheckoutPage() {
 
       <ul className="mt-6 flex flex-wrap gap-x-8 gap-y-2.5 text-sm text-graf-600">
         <li className="flex items-center gap-2">
-          <Truck className="size-4 shrink-0 text-graf-400" aria-hidden />
+          <Truck className="size-4 shrink-0 text-graf-500" aria-hidden />
           {ligado(s.retirada_disponivel) ? "Entrega ou retirada na JB" : "Entrega pelo seu CEP"}
         </li>
         <li className="flex items-center gap-2">
-          <Headset className="size-4 shrink-0 text-graf-400" aria-hidden />
+          <Headset className="size-4 shrink-0 text-graf-500" aria-hidden />
           Equipe técnica própria em São Paulo
         </li>
         <li className="flex items-center gap-2">
-          <ShieldCheck className="size-4 shrink-0 text-graf-400" aria-hidden />
+          <ShieldCheck className="size-4 shrink-0 text-graf-500" aria-hidden />
           Acompanhamento do pedido do pagamento à entrega
         </li>
       </ul>

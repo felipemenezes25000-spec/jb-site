@@ -61,7 +61,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
       </div>
 
       <p
-        className="pointer-events-none absolute left-[5.5rem] top-[10.5rem] hidden text-[0.62rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-400 min-[1600px]:block"
+        className="pointer-events-none absolute left-[5.5rem] top-[10.5rem] hidden text-[0.62rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-500 min-[1600px]:block"
         aria-hidden
       >
         Equipamentos
@@ -143,7 +143,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
             />
 
             <p
-              className="pointer-events-none absolute right-8 top-8 hidden max-w-[8.5rem] text-right text-[0.56rem] font-semibold uppercase leading-[1.8] tracking-[0.25em] text-graf-400 min-[1280px]:block"
+              className="pointer-events-none absolute right-8 top-8 hidden max-w-[8.5rem] text-right text-[0.56rem] font-semibold uppercase leading-[1.8] tracking-[0.25em] text-graf-500 min-[1280px]:block"
               aria-hidden
             >
               Equipamentos
@@ -285,7 +285,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
                   <Icone className="size-4" aria-hidden />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[0.6rem] font-black uppercase tracking-[0.15em] text-graf-400">
+                  <p className="text-[0.6rem] font-black uppercase tracking-[0.15em] text-graf-500">
                     0{indice + 1}
                   </p>
                   <p className="mt-0.5 text-[0.92rem] font-black text-graf-900">{rotulo}</p>

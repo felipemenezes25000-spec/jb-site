@@ -159,7 +159,7 @@ export default async function CasePage({ params }: Props) {
         {/* A autorização é dita ao leitor, e não só guardada no banco. Ela é
             parte do que faz este case ser prova, e não anedota. */}
         <p className="mt-10 flex gap-2.5 rounded-lg border border-graf-200 bg-graf-50 p-4 text-[0.875rem] leading-relaxed text-graf-600">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             Este atendimento foi publicado com autorização da clínica atendida. Nenhum dado do
             cliente, valor ou número de ordem de serviço aparece aqui.

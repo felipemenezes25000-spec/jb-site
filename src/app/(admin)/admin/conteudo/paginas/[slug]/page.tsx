@@ -252,7 +252,7 @@ export default async function PaginaEditarPagina({
               >
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-graf-950">
-                    <History className="size-4 shrink-0 text-graf-400" aria-hidden />
+                    <History className="size-4 shrink-0 text-graf-500" aria-hidden />
                     {formatarDataHora(revisao.createdAt)}
                     <Etiqueta tom={revisao.origin === "manual" ? "neutro" : "marca"}>
                       {revisao.origin === "manual" ? "Painel" : "Migração"}

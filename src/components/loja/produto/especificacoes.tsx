@@ -253,7 +253,7 @@ export function Documentacao({ documentos }: { documentos: DocumentoProduto[] })
                   ) : null}
                 </span>
                 <Download
-                  className="size-4 shrink-0 text-graf-400 transition-colors duration-150 group-hover:text-jb-600"
+                  className="size-4 shrink-0 text-graf-500 transition-colors duration-150 group-hover:text-jb-600"
                   aria-hidden
                 />
                 <span className="sr-only">(abre em nova aba)</span>

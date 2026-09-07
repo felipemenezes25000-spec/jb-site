@@ -73,7 +73,7 @@ export function AcompanharChamado({ numero }: { numero: string }) {
         </Botao>
 
         <p className="mt-4 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-400" aria-hidden />
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             Quem tem só o número do chamado não vê os dados do atendimento — nem o
             endereço, nem o contato da clínica.
