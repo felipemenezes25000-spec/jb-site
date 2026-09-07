@@ -272,18 +272,10 @@ export async function Rodape() {
         className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[linear-gradient(180deg,rgba(224,20,27,0.02),transparent)]"
         aria-hidden
       />
-      <div
-        className="pointer-events-none absolute -left-[30rem] top-12 size-[37.5rem] rounded-full border border-jb-300/45"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -left-[35rem] top-2 size-[45rem] rounded-full border border-jb-200/40"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -right-[26rem] -top-[32rem] size-[64rem] rounded-full border border-jb-200/50"
-        aria-hidden
-      />
+      {/* Os arcos decorativos saíram: eram três círculos de 600 a 1024px com
+          borda de 1px, ancorados fora da tela para que só a curva cruzasse o
+          rodapé. Em vez de fundo, davam riscos atravessando o bloco de contato
+          e os links. O degradê acima já dá a transição de cor sem cortar nada. */}
 
       <div className="container-jb relative z-10 max-w-[115rem] pt-9 min-[1800px]:pt-7">
         <CadeiraOdontologica />
@@ -300,7 +292,9 @@ export async function Rodape() {
 
                O teto de largura continua valendo só a partir de 1360px, que é
                quando a cadeira entra e precisa do espaço. */
-            className="w-full self-start min-[1360px]:max-w-[27rem]"
+            /* O mesmo recuo de topo das colunas de links: sem ele o logotipo
+               subia 8px acima dos títulos ao lado. */
+            className="w-full self-start min-[1150px]:pt-2 min-[1360px]:max-w-[27rem] min-[1800px]:pt-10"
             aria-labelledby="rodape-contato"
           >
             <h2 id="rodape-contato" className="sr-only">
