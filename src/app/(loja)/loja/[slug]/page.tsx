@@ -792,7 +792,11 @@ export default async function ProdutoPage({ params }: Props) {
           para onde mandar a sua. Fora de linha é exceção — não faz sentido
           abrir canal de dúvida sobre o que a JB não vende mais. */}
       {arquivado ? null : (
-        <Secao id="duvidas" espaco="lg" largura="estreita" separador className="scroll-mt-32">
+        /* `largura="padrao"` e não "estreita": a medida estreita centrava a
+           faixa e fazia este título começar 190px à direita de todos os
+           outros da ficha. A leitura confortável continua garantida pelo
+           `max-w` do miolo, que é onde ela pertence. */
+        <Secao id="duvidas" espaco="lg" separador className="scroll-mt-32">
           <TituloSecao
             como="h2"
             titulo="Dúvidas sobre este equipamento"
@@ -803,8 +807,11 @@ export default async function ProdutoPage({ params }: Props) {
             }
           />
 
+          {/* Medida de leitura no miolo, não na faixa: pergunta e resposta em
+              1400px de largura ninguém lê, mas a borda da seção precisa bater
+              com a das outras. */}
           {produto.faqs.length > 0 ? (
-            <div className="mt-8">
+            <div className="mt-8 max-w-3xl">
               <PerguntasDoProduto
                 perguntas={produto.faqs.map((faq) => ({
                   id: faq.id,
@@ -815,7 +822,7 @@ export default async function ProdutoPage({ params }: Props) {
             </div>
           ) : null}
 
-          <div className="mt-8">
+          <div className="mt-8 max-w-3xl">
             <PerguntarSobreProduto produtoId={produto.id} nomeDoProduto={produto.name} />
           </div>
         </Secao>

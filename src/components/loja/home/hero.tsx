@@ -104,8 +104,18 @@ export function Hero({
         />
       </div>
 
+      {/* Marginália editorial: só entra quando CABE fora do container.
+
+          O container do hero tem teto de 112rem (1792px). Estes dois rótulos
+          ficam ancorados a 3,5rem das bordas da tela e medem ~110px — ou seja,
+          precisam de 132px de margem de cada lado para não encostar no
+          conteúdo. Isso só acontece a partir de ~2060px. Em 1600–2050 eles
+          entravam mesmo assim: o da esquerda ficava POR BAIXO do título ("uma
+          clínica que" passava por cima de "que mantém sorrisos") e o da direita
+          sumia atrás do cartão do destaque. Decoração que colide com o
+          conteúdo não é decoração — é defeito. */}
       <p
-        className="pointer-events-none absolute left-[3.5rem] top-[9rem] hidden text-[0.63rem] font-semibold uppercase leading-[2] tracking-[0.28em] text-graf-500 min-[1600px]:block"
+        className="pointer-events-none absolute left-[3.5rem] top-[9rem] hidden text-[0.63rem] font-semibold uppercase leading-[2] tracking-[0.28em] text-graf-500 min-[2100px]:block"
         aria-hidden
       >
         Tecnologia
@@ -119,7 +129,7 @@ export function Hero({
       </p>
 
       <p
-        className="pointer-events-none absolute right-[3.5rem] top-[11rem] hidden text-right text-[0.63rem] font-semibold uppercase leading-[2] tracking-[0.28em] text-graf-500 min-[1600px]:block"
+        className="pointer-events-none absolute right-[3.5rem] top-[11rem] hidden text-right text-[0.63rem] font-semibold uppercase leading-[2] tracking-[0.28em] text-graf-500 min-[2100px]:block"
         aria-hidden
       >
         Clínicas
@@ -179,7 +189,10 @@ export function Hero({
                 style={{ animationDelay: "0.26s" }}
               >
                 <ul className="flex flex-wrap items-center gap-2">
-                  <li className="text-[0.68rem] font-black uppercase tracking-[0.16em] text-graf-500">
+                  {/* Linha própria no celular: junto das pastilhas, o rótulo
+                      empurrava a primeira categoria para o fim da linha e a
+                      fileira ficava com um degrau logo na abertura. */}
+                  <li className="w-full text-[0.68rem] font-black uppercase tracking-[0.16em] text-graf-500 sm:w-auto">
                     Buscado agora
                   </li>
                   {categorias.map((categoria) => (

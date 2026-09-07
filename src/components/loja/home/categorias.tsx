@@ -134,7 +134,7 @@ export async function SecaoCategorias() {
 
 
 
-      <div className="container-jb relative z-10 max-w-[115rem]">
+      <div className="container-jb relative z-10 max-w-[112rem]">
         {/* ── Cabeçalho editorial ─────────────────────────────────────────── */}
         <div className="grid gap-7 min-[1024px]:grid-cols-[minmax(0,1fr)_auto] min-[1024px]:items-end">
           <div>

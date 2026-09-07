@@ -62,8 +62,16 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
         />
       </div>
 
+      {/* Marginália: entra só onde sobra margem fora do container.
+
+          Ela nasceu para a malha antiga desta faixa, que empurrava o conteúdo
+          14vw para a direita acima de 1600px. Com a faixa alinhada às outras,
+          o container passa a começar em 57px num monitor de 1920 — e este
+          rótulo, ancorado a 5,5rem da borda, ficava por baixo do título. A
+          régua é a mesma do hero: 2100px, que é onde a margem lateral passa de
+          130px. */}
       <p
-        className="pointer-events-none absolute left-[5.5rem] top-[10.5rem] hidden text-[0.62rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-500 min-[1600px]:block"
+        className="pointer-events-none absolute left-[5.5rem] top-[10.5rem] hidden text-[0.62rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-500 min-[2100px]:block"
         aria-hidden
       >
         Equipamentos
@@ -76,7 +84,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
       </p>
 
       <div
-        className="pointer-events-none absolute right-[4.5rem] top-[3.1rem] hidden -rotate-[7deg] text-right text-[1.35rem] leading-[1.08] text-graf-500 min-[1600px]:block"
+        className="pointer-events-none absolute right-[4.5rem] top-[3.1rem] hidden -rotate-[7deg] text-right text-[1.35rem] leading-[1.08] text-graf-500 min-[1800px]:block"
         style={CURSIVA}
         aria-hidden
       >
@@ -89,15 +97,18 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
       </div>
 
       {/*
-        Esta seção não usa container-jb no desktop largo.
-        O container global é limitado a 90rem e fazia a composição ficar estreita,
-        quebrando o título em quatro linhas e deixando um vazio enorme à direita.
-        A partir de 1600px a malha replica a referência: margem editorial maior à
-        esquerda para a cadeira e apenas um respiro curto à direita.
+        Mesma medida das outras faixas da home: `container-jb` com o teto de
+        112rem. Antes esta seção tinha malha própria — 90rem até 1600px e, acima
+        disso, margem editorial de 14vw à esquerda. Era composição deliberada,
+        mas custava o alinhamento: em 1920 o título começava em 301px enquanto o
+        hero e as marcas começavam em 97px, e a página inteira parecia
+        desencaixada num monitor largo. O motivo original do desvio — 90rem
+        quebrava o título em quatro linhas — deixa de existir com 112rem, que é
+        mais largo, não mais estreito.
       */}
-      <div className="relative z-10 mx-auto w-full max-w-[90rem] px-5 min-[640px]:px-7 min-[1024px]:px-10 min-[1600px]:mx-0 min-[1600px]:ml-[14vw] min-[1600px]:mr-[3vw] min-[1600px]:w-auto min-[1600px]:max-w-none min-[1600px]:px-0">
+      <div className="container-jb relative z-10 max-w-[112rem]">
         <div className="grid gap-8 min-[1024px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] min-[1024px]:items-end min-[1024px]:gap-x-14 min-[1440px]:gap-x-16">
-          <div className="min-[1600px]:pl-8">
+          <div>
             <div className="flex items-center gap-3">
               <span className="h-px w-8 shrink-0 bg-jb-600" aria-hidden />
               <p className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-jb-700">

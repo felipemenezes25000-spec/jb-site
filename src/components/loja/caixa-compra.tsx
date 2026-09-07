@@ -613,8 +613,11 @@ function AlternativaDoPacote({
           <span className="text-[0.9375rem] font-bold text-graf-900">{titulo}</span>
           {valor !== null ? (
             <span className="shrink-0 text-right text-[0.9375rem] font-bold tabular text-graf-800">
+              {/* "a partir de" numa linha própria: colado ao valor virava
+                  "A PARTIR DE + R$ 770,00", em que o sinal de mais parece parte
+                  da frase e não do preço. */}
               {aPartirDe ? (
-                <span className="mr-1 text-[0.75rem] font-semibold uppercase tracking-wide text-graf-500">
+                <span className="block text-[0.75rem] font-semibold uppercase tracking-wide text-graf-500">
                   a partir de
                 </span>
               ) : null}

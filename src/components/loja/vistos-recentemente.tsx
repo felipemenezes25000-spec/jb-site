@@ -64,10 +64,21 @@ export function RegistrarVisita({ slug }: { slug: string }) {
 export function VistosRecentemente({
   excluir,
   titulo = "Você viu recentemente",
+  larguraInterna,
 }: {
   /** Slug da página atual, que não deve aparecer na própria lista. */
   excluir?: string;
   titulo?: string;
+  /**
+   * Teto do container desta faixa.
+   *
+   * A faixa é a mesma peça em páginas de medidas diferentes: na ficha do
+   * equipamento as seções vizinhas usam o `container-jb` padrão (90rem), e na
+   * home todas usam 112rem. Sem este parâmetro, a tira entrava na home 190px
+   * mais para dentro que a faixa de cima — o tipo de desencaixe que só aparece
+   * em monitor largo e faz a página parecer montada por pedaços.
+   */
+  larguraInterna?: string;
 }) {
   const [dados, setDados] = useState<VistosRecentes | null>(null);
 
@@ -89,7 +100,7 @@ export function VistosRecentemente({
   if (!dados || dados.produtos.length < 2) return null;
 
   return (
-    <Secao espaco="md" separador>
+    <Secao espaco="md" separador classNameInterno={larguraInterna}>
       <TituloSecao
         como="h2"
         titulo={titulo}

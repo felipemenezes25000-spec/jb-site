@@ -85,7 +85,7 @@ export default async function HomePage() {
 
       {/* Continua de onde parou. Some inteiro para quem chega pela primeira
           vez — a home não abre um buraco para dizer que não sabe nada. */}
-      <VistosRecentemente titulo="Continue de onde parou" />
+      <VistosRecentemente titulo="Continue de onde parou" larguraInterna="max-w-[112rem]" />
 
       <SecaoAssistencia configuracoes={s} />
 

@@ -136,28 +136,33 @@ export function UnidadeFisica({
 
   return (
     <Secao id={id} espaco="lg" separador className="scroll-mt-32">
-      <div className="flex gap-4 sm:gap-5">
+      {/* O ícone fica ACIMA do título, não ao lado.
+
+          Ao lado, ele empurrava o `h2` 64px para a direita, e esta era a única
+          faixa da ficha cujo título não começava na borda do container — numa
+          página com sete faixas, o degrau aparece. Acima, o selo continua
+          marcando a seção e o título volta para a mesma linha vertical de
+          "Ficha técnica", "Antes de comprar" e todas as outras. */}
+      <div className="min-w-0 max-w-2xl">
         <span
           aria-hidden
-          className={`flex size-11 shrink-0 items-center justify-center rounded-lg ${desenho.selo}`}
+          className={`mb-4 flex size-11 items-center justify-center rounded-lg ${desenho.selo}`}
         >
           <ClipboardCheck className="size-5" />
         </span>
-        <div className="min-w-0">
-          <h2 className="text-section texto-forte">
-            {vendida ? "A unidade que foi vendida" : "Esta unidade, item por item"}
-          </h2>
-          <p className="texto-guia mt-3 max-w-2xl text-graf-600">
-            {checklist.length > 0
-              ? "O laudo abaixo é da unidade que está à venda — não é a descrição do modelo."
-              : "Os dados abaixo são da unidade que está à venda — não são a descrição do modelo."}
+        <h2 className="text-section texto-forte">
+          {vendida ? "A unidade que foi vendida" : "Esta unidade, item por item"}
+        </h2>
+        <p className="texto-guia mt-3 text-graf-600">
+          {checklist.length > 0
+            ? "O laudo abaixo é da unidade que está à venda — não é a descrição do modelo."
+            : "Os dados abaixo são da unidade que está à venda — não são a descrição do modelo."}
+        </p>
+        {resumo.length > 0 ? (
+          <p className="mt-3 text-[0.9375rem] font-semibold text-graf-800">
+            {resumo.join(" · ")}
           </p>
-          {resumo.length > 0 ? (
-            <p className="mt-3 text-[0.9375rem] font-semibold text-graf-800">
-              {resumo.join(" · ")}
-            </p>
-          ) : null}
-        </div>
+        ) : null}
       </div>
 
       <div
