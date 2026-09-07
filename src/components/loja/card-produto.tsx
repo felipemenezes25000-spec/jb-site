@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ImageOff } from "lucide-react";
 
+import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import { Etiqueta } from "@/components/ui/data";
 import { Grade, type ColunasPorTela } from "@/components/ui/grade";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
@@ -153,9 +154,15 @@ export function CardProduto({
           </div>
         )}
 
-        {/* só a condição fica sobre a foto — o desconto pertence ao preço */}
-        <div className="absolute inset-x-3 top-3 flex flex-wrap items-start gap-1.5">
-          <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
+        {/* só a condição fica sobre a foto — o desconto pertence ao preço.
+            À direita, na mesma linha, o único controle do cartão: marcar para
+            comparar. Ele fica acima do link que cobre o cartão (`z-10`) e para
+            a propagação do clique, senão abriria o equipamento. */}
+        <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+          <span className="flex flex-wrap items-start gap-1.5">
+            <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
+          </span>
+          <BotaoComparar slug={produto.slug} nome={produto.name} />
         </div>
 
         {/* a tarja é o aviso visual; quem usa leitor de tela ouve a linha de

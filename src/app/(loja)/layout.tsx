@@ -7,6 +7,7 @@ import {
   ContadorDoCarrinho,
   ContadorDoCarrinhoEsqueleto,
 } from "@/components/loja/cabecalho-pessoal";
+import { BarraComparar, ComparadorProvider } from "@/components/loja/comparador-cliente";
 import { Rodape } from "@/components/loja/rodape";
 import { categoriasDoMenu, condicoesDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
 
@@ -22,30 +23,33 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
   const [s, categorias, condicoes] = await Promise.all([configuracoesPublicas(), categoriasDoMenu(), condicoesDoMenu()]);
 
   return (
-    <div className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]">
-      <Cabecalho
-        categorias={categorias}
-        condicoes={condicoes}
-        acessoDaConta={
-          <Suspense fallback={<AcessoDaContaEsqueleto />}>
-            <AcessoDaConta />
-          </Suspense>
-        }
-        contadorDoCarrinho={
-          <Suspense fallback={<ContadorDoCarrinhoEsqueleto />}>
-            <ContadorDoCarrinho />
-          </Suspense>
-        }
-        telefone={s.telefone}
-        whatsapp={s.whatsapp}
-        horario={s.horario}
-        desde={s.empresa_desde}
-        cidade={s.endereco_cidade}
-      />
-      <main id="conteudo" className="flex-1">
-        {children}
-      </main>
-      <Rodape />
-    </div>
+    <ComparadorProvider>
+      <div className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]">
+        <Cabecalho
+          categorias={categorias}
+          condicoes={condicoes}
+          acessoDaConta={
+            <Suspense fallback={<AcessoDaContaEsqueleto />}>
+              <AcessoDaConta />
+            </Suspense>
+          }
+          contadorDoCarrinho={
+            <Suspense fallback={<ContadorDoCarrinhoEsqueleto />}>
+              <ContadorDoCarrinho />
+            </Suspense>
+          }
+          telefone={s.telefone}
+          whatsapp={s.whatsapp}
+          horario={s.horario}
+          desde={s.empresa_desde}
+          cidade={s.endereco_cidade}
+        />
+        <main id="conteudo" className="flex-1">
+          {children}
+        </main>
+        <Rodape />
+        <BarraComparar />
+      </div>
+    </ComparadorProvider>
   );
 }
