@@ -220,7 +220,7 @@ export function Cabecalho({
             )}
 
             <div
-              className="jb-faixa relative hidden min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_5%,#000_95%,transparent)] xl:block"
+              className="jb-faixa relative hidden min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_5%,#000_95%,transparent)] lg:block"
               aria-label="Destaques da JB"
             >
               <ul className="jb-faixa-trilho flex w-max items-center">

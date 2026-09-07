@@ -26,14 +26,12 @@ import {
   RODAPE_ASSISTENCIA,
   RODAPE_CLIENTE,
   RODAPE_INSTITUCIONAL,
-  CONDICOES,
   RODAPE_LOJA,
   RODAPE_POLITICAS,
   type ItemMenu,
 } from "@/lib/navegacao";
 import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import { enderecoCompleto, getSettings, redesSociais } from "@/lib/settings";
-import { condicoesDoMenu } from "@/lib/loja-publica";
 
 /**
  * Rodapé da loja — composição horizontal única, em três faixas verticais:
@@ -208,10 +206,6 @@ function Prova({
  * a distância até a assinatura editorial não mude com a largura da tela — e
  * sangra além dela, que é o corte da referência.
  *
- * Reduzida em cerca de um quarto: a 464x414px ela era a maior peça do rodapé
- * e disputava atenção com os quatro blocos de links e o cartão de contato.
- * Como assinatura ela funciona; como maior elemento da faixa, atrapalha.
- *
  * As duas máscaras dissolvem o lado esquerdo (para o texto respirar) e a base
  * (para não invadir a faixa inferior). Duas divs, uma máscara em cada: evita
  * depender de `mask-composite`.
@@ -219,7 +213,7 @@ function Prova({
 function CadeiraOdontologica() {
   return (
     <div
-      className="pointer-events-none absolute top-4 hidden select-none min-[1360px]:-right-[9rem] min-[1360px]:top-6 min-[1360px]:block min-[1360px]:h-[19.5rem] min-[1360px]:w-[21.8rem] min-[1800px]:top-12 min-[1800px]:-right-[14rem] min-[1800px]:h-[24rem] min-[1800px]:w-[26.8rem]"
+      className="pointer-events-none absolute top-4 hidden select-none min-[1360px]:-right-[11.5rem] min-[1360px]:top-6 min-[1360px]:block min-[1360px]:h-[25.9rem] min-[1360px]:w-[29rem] min-[1800px]:top-12 min-[1800px]:-right-[18rem] min-[1800px]:h-[31.8rem] min-[1800px]:w-[35.6rem]"
       style={{ maskImage: "linear-gradient(to right, transparent 0%, #000 9%)" }}
       aria-hidden
     >
@@ -237,23 +231,6 @@ function CadeiraOdontologica() {
       </div>
     </div>
   );
-}
-
-/**
- * A coluna "Loja" sem as coleções que não têm equipamento.
- *
- * O rodapé repetia os mesmos becos sem saída do menu: "Usados" e
- * "Recondicionados" levavam a uma página que só sabia dizer "Nada publicado
- * aqui ainda". Some sozinho quando a condição não tem estoque e volta quando
- * entrar o primeiro equipamento dela.
- */
-async function lojaDoRodape(): Promise<ItemMenu[]> {
-  const disponiveis = new Set((await condicoesDoMenu()).map((condicao) => `/${condicao.slug}`));
-
-  return RODAPE_LOJA.filter((item) => {
-    const ehColecaoDeCondicao = CONDICOES.some((condicao) => `/${condicao.slug}` === item.href);
-    return !ehColecaoDeCondicao || disponiveis.has(item.href);
-  });
 }
 
 export async function Rodape() {
@@ -443,7 +420,7 @@ export async function Rodape() {
               aria-label="Rodapé"
               className="grid grid-cols-2 gap-x-8 gap-y-9 min-[860px]:grid-cols-4 min-[860px]:gap-x-6 min-[1360px]:grid-cols-[repeat(4,max-content)] min-[1360px]:justify-between min-[1360px]:gap-x-0"
             >
-              <Coluna titulo="Loja" itens={await lojaDoRodape()} icone={ShoppingCart} />
+              <Coluna titulo="Loja" itens={RODAPE_LOJA} icone={ShoppingCart} />
               <Coluna titulo="Assistência" itens={RODAPE_ASSISTENCIA} icone={Wrench} />
               <Coluna titulo="Área da Clínica" itens={RODAPE_CLIENTE} icone={IconeDente} />
               <Coluna titulo="Institucional" itens={RODAPE_INSTITUCIONAL} icone={Building2} />
