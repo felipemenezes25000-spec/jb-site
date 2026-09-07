@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { CabecalhoPagina } from "@/components/admin/vendas/comuns";
-import { EditorOrcamento, linhaVazia } from "@/components/admin/vendas/editor-orcamento";
+import { EditorOrcamento } from "@/components/admin/vendas/editor-orcamento";
 import { Trilha } from "@/components/ui/data";
 import { paraInputDate } from "@/lib/format";
 import { exigirEdicao } from "@/lib/permissoes";
@@ -96,7 +96,19 @@ export default async function NovoOrcamentoPage({ searchParams }: { searchParams
           validoAte: paraInputDate(emSeteDias),
           desconto: "",
           frete: "",
-          itens: [linhaVazia()],
+          /* Lista vazia, e não `[linhaVazia()]`.
+           *
+           * `linhaVazia` é exportada de um módulo `"use client"`. Passar uma
+           * função dessas como prop funciona; CHAMÁ-LA aqui, no servidor, não
+           * — o React recusa com "Attempted to call linhaVazia() from the
+           * server", a tela inteira cai no error boundary e a pessoa vê
+           * "Esta tela não carregou". Era o único caminho para criar um
+           * orçamento pelo painel, e ele nunca chegou a abrir.
+           *
+           * Não precisa de nada além disto: o `EditorOrcamento` já começa com
+           * uma linha em branco quando recebe a lista vazia — a chamada aqui
+           * era redundante além de proibida. */
+          itens: [],
         }}
       />
     </div>
