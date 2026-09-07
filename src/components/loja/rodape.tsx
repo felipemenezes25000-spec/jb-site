@@ -155,7 +155,16 @@ function Coluna({
   );
 }
 
-/** Ícone vermelho à esquerda, valor e apoio à direita. */
+/**
+ * Ícone vermelho à esquerda, valor e apoio à direita.
+ *
+ * Os links de dentro (telefone, WhatsApp, e-mail) levam
+ * `pointer-coarse:min-h-11`: no dedo eles mediam 17 a 28px de altura, abaixo
+ * do alvo mínimo da WCAG 2.2 (2.5.8), e são justamente os três atalhos que
+ * alguém aperta com pressa no celular. No ponteiro fino a altura continua a
+ * da linha de texto — 44px ali afastaria as linhas do bloco de contato sem
+ * necessidade.
+ */
 function LinhaContato({
   icone: IconeLinha,
   apoio,
@@ -318,7 +327,7 @@ export async function Rodape() {
                 <LinhaContato icone={Phone} apoio="Fale com nossa equipe">
                   <a
                     href={telHref(s.telefone)}
-                    className="tabular foco-jb text-[1.3rem] font-extrabold leading-tight text-jb-600 transition-colors hover:text-jb-800"
+                    className="tabular foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[1.3rem] font-extrabold leading-tight text-jb-600 transition-colors hover:text-jb-800"
                   >
                     {formatarTelefone(s.telefone)}
                   </a>
@@ -331,7 +340,7 @@ export async function Rodape() {
                     href={whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="foco-jb inline-flex flex-wrap items-center gap-2.5 font-semibold text-graf-800 hover:text-jb-700"
+                    className="foco-jb inline-flex flex-wrap items-center gap-2.5 pointer-coarse:min-h-11 font-semibold text-graf-800 hover:text-jb-700"
                   >
                     <span className="tabular text-[1.02rem]">{formatarTelefone(s.whatsapp)}</span>
                     <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[0.78rem] font-bold text-emerald-700">
@@ -343,7 +352,7 @@ export async function Rodape() {
                 <LinhaContato icone={MessageCircle} apoio="Atendimento rápido">
                   <a
                     href={telHref(s.telefone_alternativo)}
-                    className="tabular foco-jb text-[1.02rem] font-semibold text-graf-800 hover:text-jb-700"
+                    className="tabular foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[1.02rem] font-semibold text-graf-800 hover:text-jb-700"
                   >
                     {formatarTelefone(s.telefone_alternativo)}
                   </a>
@@ -354,7 +363,7 @@ export async function Rodape() {
                 <LinhaContato icone={Mail} apoio="Envie um e-mail">
                   <a
                     href={`mailto:${s.email}`}
-                    className="foco-jb text-[0.78rem] text-graf-600 hover:text-jb-700 min-[1800px]:text-[0.85rem]"
+                    className="foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[0.78rem] text-graf-600 hover:text-jb-700 min-[1800px]:text-[0.85rem]"
                   >
                     <span className="[overflow-wrap:anywhere]">{s.email}</span>
                   </a>
