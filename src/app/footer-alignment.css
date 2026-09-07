@@ -32,15 +32,20 @@
 
 @media (min-width: 1800px) {
   /*
-   * Em telas largas o recuo original do componente deixa o bloco baixo demais.
-   * O deslocamento é visual e exclusivo da coluna institucional: cadeira,
-   * navegação, CTAs e barra inferior permanecem exatamente onde estavam.
+   * Em telas largas, o bloco da esquerda precisa começar mais alto para que:
+   * 1) a marca JB fique claramente acima dos títulos da navegação;
+   * 2) a primeira linha do resumo institucional fique na mesma linha visual
+   *    de "Todos os equipamentos".
+   *
+   * O deslocamento é aplicado à coluna inteira para preservar todos os
+   * espaçamentos internos de telefone, WhatsApp, endereço, horário e redes.
+   * As demais colunas, CTAs, cadeira e barra inferior não são alteradas.
    */
   footer section[aria-labelledby="rodape-contato"] {
-    transform: translateY(-1.75rem);
+    transform: translateY(-3.375rem);
   }
 
-  /* O resumo usa a mesma escala tipográfica dos links da navegação. */
+  /* Mesma escala tipográfica dos links da navegação principal do rodapé. */
   footer section[aria-labelledby="rodape-contato"] > p:first-of-type {
     max-width: 20rem !important;
     font-size: 1.06rem !important;
