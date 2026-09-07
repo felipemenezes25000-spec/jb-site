@@ -167,7 +167,30 @@ const GRUPOS_VAZIOS: GruposFiltro = {
   faixaPreco: { minCents: 0, maxCents: 0 },
 };
 
-async function montarGrupos(base: Prisma.ProductWhereInput): Promise<GruposFiltro> {
+/**
+ * Um `where` por grupo, cada um sem o filtro do próprio grupo.
+ *
+ * Contar tudo com o mesmo filtro daria números que se contradizem com a
+ * lista: as contagens da barra lateral vinham do escopo inteiro da coleção e
+ * seguiam iguais depois de filtrar — a lista mostrava 5 itens e a lateral
+ * somava 6, e numa busca sem resultado as facetas ainda ofereciam
+ * "Biossegurança 2", prometendo itens que o clique não entregava.
+ *
+ * Contar com TODOS os filtros ativos também não serve: o grupo que a pessoa
+ * acabou de usar zeraria as próprias alternativas, e marcar uma segunda
+ * marca deixaria de ser possível. Cada grupo ignora só o que ele mesmo
+ * filtra — é o que faz "ALT 2" significar "marcando ALT junto do que já está
+ * marcado, sobram 2".
+ */
+type BasesDeFaceta = {
+  semCategoria: Prisma.ProductWhereInput;
+  semMarca: Prisma.ProductWhereInput;
+  semCondicao: Prisma.ProductWhereInput;
+  semVoltagem: Prisma.ProductWhereInput;
+  semPreco: Prisma.ProductWhereInput;
+};
+
+async function montarGrupos(bases: BasesDeFaceta): Promise<GruposFiltro> {
   const [categorias, marcas, condicoes, voltagens, faixa] = await Promise.all([
     prisma.category.findMany({
       where: { published: true },
@@ -175,7 +198,7 @@ async function montarGrupos(base: Prisma.ProductWhereInput): Promise<GruposFiltr
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: base } } },
+        _count: { select: { products: { where: bases.semCategoria } } },
       },
     }),
     prisma.brand.findMany({
@@ -184,22 +207,22 @@ async function montarGrupos(base: Prisma.ProductWhereInput): Promise<GruposFiltr
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: base } } },
+        _count: { select: { products: { where: bases.semMarca } } },
       },
     }),
     prisma.product.groupBy({
       by: ["condition"],
-      where: base,
+      where: bases.semCondicao,
       _count: { _all: true },
     }),
     prisma.product.findMany({
-      where: { ...base, voltage: { not: null } },
+      where: { ...bases.semVoltagem, voltage: { not: null } },
       distinct: ["voltage"],
       orderBy: { voltage: "asc" },
       select: { voltage: true },
     }),
     prisma.product.aggregate({
-      where: { ...base, priceCents: { gt: 0 } },
+      where: { ...bases.semPreco, priceCents: { gt: 0 } },
       _min: { priceCents: true },
       _max: { priceCents: true },
     }),
@@ -554,7 +577,16 @@ export async function Vitrine({
     .catch(() => ({ ok: false as const }));
 
   const [grupos, configuracoes] = await Promise.all([
-    montarGrupos(montarFiltro(filtrosFixos ?? {})).catch(() => GRUPOS_VAZIOS),
+    /* O filtro fixo da coleção continua valendo em todo grupo: em /seminovos a
+       condição é o escopo da página, não uma escolha que a pessoa possa
+       desmarcar. Só o que veio da barra de filtros sai da conta do seu grupo. */
+    montarGrupos({
+      semCategoria: montarFiltro({ ...filtros, categoria: filtrosFixos?.categoria }),
+      semMarca: montarFiltro({ ...filtros, marca: filtrosFixos?.marca }),
+      semCondicao: montarFiltro({ ...filtros, condicao: filtrosFixos?.condicao }),
+      semVoltagem: montarFiltro({ ...filtros, voltagem: undefined }),
+      semPreco: montarFiltro({ ...filtros, precoMin: undefined, precoMax: undefined }),
+    }).catch(() => GRUPOS_VAZIOS),
     getSettings().catch(() => null),
   ]);
 

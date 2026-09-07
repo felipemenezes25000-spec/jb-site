@@ -492,16 +492,20 @@ export function PainelFiltros({
 } & Travas) {
   const caminho = usePathname();
   const aplicados = filtrosAplicados(parametros, grupos);
-  const limpavel = aplicados.length > 0 || Boolean(textoDe(parametros, "q"));
+  /* A busca entra na conta junto com os outros. Ela vira ficha removível na
+     mesma fileira e o "Limpar" já a levava embora — só o contador a deixava
+     de fora, e a tela mostrava duas fichas dizendo "1 ativo". */
+  const ativos = aplicados.length + (textoDe(parametros, "q") ? 1 : 0);
+  const limpavel = ativos > 0;
 
   return (
     <div className={cn("lg:sticky lg:top-24", className)}>
       <div className="mb-5 flex items-center justify-between gap-3 border-b border-graf-200 pb-3">
         <h2 className="flex items-baseline gap-2 text-base font-bold text-graf-950">
           Filtros
-          {aplicados.length > 0 ? (
+          {ativos > 0 ? (
             <span className="tabular text-[0.8125rem] font-semibold text-graf-500">
-              {aplicados.length} ativo{aplicados.length > 1 ? "s" : ""}
+              {ativos} ativo{ativos > 1 ? "s" : ""}
             </span>
           ) : null}
         </h2>
@@ -549,6 +553,10 @@ export function BarraCatalogo({
   const busca = textoDe(parametros, "q");
   const ordem = textoDe(parametros, "ordem") || "relevancia";
   const aplicados = filtrosAplicados(parametros, grupos);
+  /* A busca entra na conta junto com os outros. Ela vira ficha removível na
+     mesma fileira e o "Limpar" já a levava embora — só o contador a deixava
+     de fora, e a tela mostrava duas fichas dizendo "1 ativo". */
+  const ativos = aplicados.length + (busca ? 1 : 0);
   // sem nenhuma consulta: a coleção inteira, do jeito que a rota a define
   const enderecoLimpo = caminho;
 
@@ -602,9 +610,9 @@ export function BarraCatalogo({
           >
             <SlidersHorizontal className="size-4" aria-hidden />
             Filtros
-            {aplicados.length > 0 ? (
+            {ativos > 0 ? (
               <span className="tabular ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-jb-500 text-xs font-bold text-white">
-                {aplicados.length}
+                {ativos}
               </span>
             ) : null}
           </button>
@@ -678,14 +686,14 @@ export function BarraCatalogo({
             <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-graf-200 px-4">
               <p className="flex items-baseline gap-2 text-[1.0625rem] font-bold text-graf-950">
                 Filtros
-                {aplicados.length > 0 ? (
+                {ativos > 0 ? (
                   <span className="tabular text-[0.8125rem] font-semibold text-graf-500">
-                    {aplicados.length} ativo{aplicados.length > 1 ? "s" : ""}
+                    {ativos} ativo{ativos > 1 ? "s" : ""}
                   </span>
                 ) : null}
               </p>
               <div className="flex items-center gap-1">
-                {aplicados.length > 0 ? (
+                {ativos > 0 ? (
                   <Link
                     href={enderecoLimpo}
                     scroll={false}
