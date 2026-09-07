@@ -293,6 +293,8 @@ export function ConteudoFiltros({
   const caminho = usePathname();
   const idMin = useId();
   const idMax = useId();
+  const idErroFaixa = useId();
+  const [erroFaixa, setErroFaixa] = useState("");
 
   const marcado = (chave: string, valor: string) =>
     valoresDe(parametros, chave).includes(valor);
@@ -382,6 +384,17 @@ export function ConteudoFiltros({
               const dados = new FormData(evento.currentTarget);
               const de = String(dados.get("min") ?? "").trim();
               const ate = String(dados.get("max") ?? "").trim();
+
+              /* Faixa invertida ("de 10.000 ate 4.000") seguia para a URL e o
+                 catalogo respondia com a lista vazia, sem dizer por que. Quem
+                 digita assim quase sempre trocou os campos de lugar, entao a
+                 tela diz isso em vez de devolver nada. */
+              if (de && ate && paraCentavos(de) > paraCentavos(ate)) {
+                setErroFaixa("O valor final precisa ser maior que o inicial.");
+                return;
+              }
+
+              setErroFaixa("");
               router.push(
                 enderecoCom(caminho, parametros, {
                   preco_min: de ? String(paraCentavos(de)) : null,
@@ -407,6 +420,8 @@ export function ConteudoFiltros({
                   name="min"
                   inputMode="decimal"
                   autoComplete="off"
+                  aria-invalid={erroFaixa ? true : undefined}
+                  aria-describedby={erroFaixa ? idErroFaixa : undefined}
                   placeholder={formatarValor(grupos.faixaPreco.minCents)}
                   defaultValue={min ? formatarValor(Number(min)) : ""}
                   className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
@@ -424,6 +439,8 @@ export function ConteudoFiltros({
                   name="max"
                   inputMode="decimal"
                   autoComplete="off"
+                  aria-invalid={erroFaixa ? true : undefined}
+                  aria-describedby={erroFaixa ? idErroFaixa : undefined}
                   placeholder={formatarValor(grupos.faixaPreco.maxCents)}
                   defaultValue={max ? formatarValor(Number(max)) : ""}
                   className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
@@ -433,6 +450,13 @@ export function ConteudoFiltros({
             <Botao type="submit" variante="secundario" tamanho="sm" larguraTotal className="mt-3">
               Aplicar faixa de preço
             </Botao>
+            <p
+              id={idErroFaixa}
+              aria-live="polite"
+              className="mt-2 text-[0.8125rem] font-semibold text-jb-700 empty:mt-0"
+            >
+              {erroFaixa}
+            </p>
             <p className="mt-2.5 text-[0.8125rem] text-graf-500">
               Catálogo de {formatarPreco(grupos.faixaPreco.minCents)} a{" "}
               {formatarPreco(grupos.faixaPreco.maxCents)}.
