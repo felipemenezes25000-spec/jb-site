@@ -69,6 +69,7 @@
     display: flex;
     min-width: 0;
     flex-direction: column;
+    padding-top: 2.5rem !important;
   }
 
   footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] {
