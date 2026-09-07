@@ -80,7 +80,13 @@ export function MolduraInstitucional({
             <aside className="lg:sticky lg:top-24 lg:h-max">{lateral}</aside>
           </div>
         ) : (
-          <div className="max-w-4xl">{children}</div>
+          /* `mx-auto`: sem ele a coluna de leitura encostava à esquerda e o
+             vazio ia todo para um lado — em 1440px eram 40px de margem à
+             esquerda contra 489px à direita, e a página parecia ter perdido
+             metade do conteúdo. A medida de leitura continua a mesma; o que
+             muda é ela ficar centrada, como já acontece quando há barra
+             lateral. */
+          <div className="mx-auto max-w-4xl">{children}</div>
         )}
       </div>
     </div>
