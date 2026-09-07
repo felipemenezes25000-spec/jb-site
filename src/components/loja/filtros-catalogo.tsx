@@ -564,7 +564,7 @@ export function BarraCatalogo({
           </button>
         </form>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setAberto(true)}
@@ -573,7 +573,7 @@ export function BarraCatalogo({
             className={classesBotao(
               "secundario",
               "md",
-              "flex-1 whitespace-nowrap sm:flex-none lg:hidden",
+              "whitespace-nowrap lg:hidden",
             )}
           >
             <SlidersHorizontal className="size-4" aria-hidden />
@@ -585,7 +585,7 @@ export function BarraCatalogo({
             ) : null}
           </button>
 
-          <label className="flex min-w-0 flex-1 items-center gap-2 text-[0.8125rem] font-semibold text-graf-600 sm:flex-none">
+          <label className="flex min-w-0 flex-1 basis-44 items-center gap-2 text-[0.8125rem] font-semibold text-graf-600 sm:basis-auto sm:flex-none">
             <span className="hidden shrink-0 sm:inline">Ordenar por</span>
             <select
               value={ordem}
