@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { CABECALHO_CAMINHO } from "@/middleware";
 import { connection } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
@@ -96,10 +97,29 @@ export async function sessaoCliente(): Promise<ClienteSessao | null> {
 export async function exigirCliente(destino?: string): Promise<ClienteSessao> {
   const cliente = await sessaoCliente();
   if (!cliente) {
-    const volta = destino ? `?voltar=${encodeURIComponent(destino)}` : "";
+    /* Sem destino explícito, usa o caminho que o middleware carregou. É o que
+       faz um link direto para /minha-jb/pedidos voltar para os pedidos depois
+       do login: o layout da área é quem barra primeiro, e ele não tem como
+       saber qual página foi pedida. */
+    const alvo = destino ?? (await caminhoPedido());
+    const volta = alvo ? `?voltar=${encodeURIComponent(alvo)}` : "";
     redirect(`/entrar${volta}`);
   }
   return cliente;
+}
+
+/**
+ * Caminho da requisição, vindo do middleware.
+ *
+ * Só aceita endereço interno: `//outro.site` é caminho para o navegador e
+ * destino externo para quem lê depressa — a tela de login revalida isso, e
+ * barrar aqui também evita que a volta saia do site.
+ */
+async function caminhoPedido(): Promise<string | undefined> {
+  const h = await headers();
+  const bruto = h.get(CABECALHO_CAMINHO);
+  if (!bruto || !bruto.startsWith("/") || bruto.startsWith("//")) return undefined;
+  return bruto;
 }
 
 /* ---------------------------------------------------------------- login */

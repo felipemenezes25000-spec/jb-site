@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
+import { cacheLife, cacheTag } from "next/cache";
+
 import { Conteudo404 } from "@/components/loja/pagina-404";
+import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { SETTING_DEFAULTS, getSettings, type SettingsMap } from "@/lib/settings";
 
 /**
@@ -20,7 +23,33 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
+/**
+ * Configurações desta página, com rede de proteção e cache.
+ *
+ * Cacheado pelo mesmo motivo do 404 da raiz, que já nascia assim: a tela é
+ * igual para todo mundo e não precisa de uma consulta ao banco por visita.
+ * Aqui o ganho é maior do que parece — cada endereço inexistente passava por
+ * `getSettings()`, então uma varredura de URLs virava uma consulta por
+ * tentativa.
+ *
+ * O que isto NÃO resolve é o status. Endereço inexistente sob `(loja)` ainda
+ * responde 200 e não 404: com `cacheComponents`, estas rotas são Partial
+ * Prerender e o shell parte com o status já definido, antes de `notFound()`
+ * ser alcançado no conteúdo transmitido depois. Medido em build de produção —
+ * uma rota igual fora do grupo, que sai estática, responde 404 certinho.
+ * `export const dynamic` é recusado junto de `cacheComponents` e `connection()`
+ * não muda o resultado; sair do Partial Prerender nas rotas de catálogo custa
+ * o cache das páginas mais visitadas do site. A indexação, que é o risco real,
+ * já está barrada pelo `noindex` que o próprio Next injeta e pelos metadados
+ * das rotas.
+ *
+ * A rede de proteção continua: banco fora do ar não pode derrubar a própria
+ * página de erro, então a falha cai nos valores padrão.
+ */
 async function configuracoes(): Promise<SettingsMap> {
+  "use cache";
+  cacheTag(ETIQUETA_CONFIGURACOES);
+  cacheLife("hours");
   try {
     return await getSettings();
   } catch (erro) {

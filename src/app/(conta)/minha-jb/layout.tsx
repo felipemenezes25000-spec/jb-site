@@ -63,7 +63,9 @@ const PEDIDOS_ENCERRADOS = ["concluido", "cancelado", "reembolsado"] as const;
 const EQUIPAMENTOS_EM_ALERTA = ["em_manutencao", "aguardando_peca", "inoperante"] as const;
 
 export default async function MinhaJbLayout({ children }: { children: React.ReactNode }) {
-  const cliente = await exigirCliente("/minha-jb");
+  /* Sem destino fixo: o layout barra antes da página e não sabe qual delas foi
+     pedida, então quem responde é o caminho da requisição. */
+  const cliente = await exigirCliente();
 
   const [pedidos, chamados, orcamentos, visitas, equipamentos, avisos, s] = await Promise.all([
     prisma.order.count({
