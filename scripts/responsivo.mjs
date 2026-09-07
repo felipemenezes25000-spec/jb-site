@@ -412,6 +412,42 @@ async function percorrer(grupo, rotas, login) {
     storageState: await contexto.storageState(),
   });
 
+  /**
+   * Espera o layout assentar — sem `networkidle`.
+   *
+   * `waitForLoadState("networkidle")` NUNCA dispara contra `next dev`: o HMR
+   * mantém um websocket aberto, a rede nunca fica ociosa, e a chamada queima o
+   * timeout inteiro. Eram duas por rota e por largura, de 8s cada — 16s de
+   * espera pura em cada medição. Com 70 rotas e 5 larguras isso é mais de uma
+   * hora só esperando, e foi o que matou o job de responsividade da CI no teto
+   * de 45 minutos, com E2E e acessibilidade já verdes.
+   *
+   * O que interessa para medir layout não é a rede ociosa: é fonte carregada e
+   * imagem com dimensão. As duas coisas terminam, e rápido.
+   */
+  const assentar = async (alvo) => {
+    await alvo.waitForLoadState("load", { timeout: 20000 }).catch(() => {});
+    await alvo
+      .evaluate(async () => {
+        await document.fonts?.ready;
+        const pendentes = Array.from(document.images).filter((img) => !img.complete);
+        if (pendentes.length === 0) return;
+        await Promise.race([
+          Promise.all(
+            pendentes.map(
+              (img) =>
+                new Promise((pronto) => {
+                  img.addEventListener("load", pronto, { once: true });
+                  img.addEventListener("error", pronto, { once: true });
+                }),
+            ),
+          ),
+          new Promise((pronto) => setTimeout(pronto, 2500)),
+        ]);
+      })
+      .catch(() => {});
+  };
+
   const pagina = await contexto.newPage();
   const paginaToque = await contextoToque.newPage();
   await pagina.emulateMedia({ reducedMotion: "reduce" });
@@ -425,7 +461,7 @@ async function percorrer(grupo, rotas, login) {
       await alvo.setViewportSize({ width: tela.w, height: tela.h });
       try {
         await alvo.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 45000 });
-        await alvo.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
+        await assentar(alvo);
         // o indicador do modo de desenvolvimento não é do produto
         /**
          * Congela transição e animação antes de medir.
@@ -462,7 +498,7 @@ async function percorrer(grupo, rotas, login) {
          * da aba.
          */
         await alvo.reload({ waitUntil: "domcontentloaded" });
-        await alvo.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
+        await assentar(alvo);
         await alvo
           .addStyleTag({
             content:
@@ -495,7 +531,8 @@ async function percorrer(grupo, rotas, login) {
           });
           const conferencia = await limpo.newPage();
           try {
-            await conferencia.goto(BASE + rota, { waitUntil: "networkidle", timeout: 45000 });
+            await conferencia.goto(BASE + rota, { waitUntil: "load", timeout: 45000 });
+            await assentar(conferencia);
             const rolouMesmo = await conferencia.evaluate(() => {
               window.scrollTo(9999, 0);
               const x = Math.round(window.scrollX);
