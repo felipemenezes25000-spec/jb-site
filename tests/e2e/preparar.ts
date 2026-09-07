@@ -83,6 +83,73 @@ const FAIXA = {
 const CEP_COM_FAIXA = "01310-100";
 const CEP_SEM_FAIXA = "90010-000";
 
+/* ------------------------------------------------------- trava do banco */
+
+/**
+ * Máquinas onde a suíte pode escrever à vontade.
+ *
+ * O `docker-compose.yml` deste repositório sobe o Postgres em
+ * `localhost:5433`, e é contra ele que a suíte foi escrita. Qualquer outro
+ * endereço é banco de outra pessoa até prova em contrário.
+ */
+const HOSTS_LOCAIS = new Set(["localhost", "127.0.0.1", "::1", "[::1]", "0.0.0.0", "db"]);
+
+/** Escotilha para quem realmente quer rodar contra um banco remoto. */
+const VARIAVEL_ESCAPE = "E2E_PERMITIR_BANCO_REMOTO";
+
+/**
+ * Recusa rodar contra banco que não seja local.
+ *
+ * Esta suíte não é leitora: ela cria marca, produto, perfil de frete e dois
+ * usuários de equipe com senha conhecida — e os testes que vêm depois emitem
+ * pedido, pagamento e chamado de verdade. Feito contra o banco errado, o
+ * estrago não aparece como teste vermelho: aparece como catálogo com
+ * "Equipamento de teste com frete" publicado e uma conta admin cuja senha
+ * está versionada neste diretório.
+ *
+ * O perigo concreto tem nome e está documentado em `docs/operacao.md`:
+ * `vercel env pull .env.local` escreve as variáveis de PRODUÇÃO num arquivo
+ * que o `carregarEnv()` logo acima lê ANTES do `.env`. A mesma página avisa
+ * que isso já aconteceu neste projeto — mas a lista de comandos perigosos
+ * dela cita `pnpm dev`, `db:seed`, `db:demo` e `db:reset`, e não cita
+ * `pnpm e2e`, que é o que escreve mais.
+ *
+ * A escotilha existe porque um banco de staging descartável é caso legítimo.
+ * Ela é explícita de propósito: quem digita a variável sabe o que vai
+ * acontecer, e um `.env.local` esquecido nunca a define sozinho.
+ */
+export function exigirBancoLocal(url: string) {
+  if (process.env[VARIAVEL_ESCAPE] === "1") return;
+
+  let host: string;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    throw new Error(`DATABASE_URL não é uma URL válida. Confira o .env.`);
+  }
+
+  if (HOSTS_LOCAIS.has(host)) return;
+
+  throw new Error(
+    [
+      `A suíte de ponta a ponta se recusou a rodar contra "${host}".`,
+      "",
+      "Ela SEMEIA E ESCREVE no banco: cria marca e produto de teste, um usuário",
+      "admin com senha conhecida, e emite pedidos reais. Isso só pode acontecer",
+      "num banco descartável.",
+      "",
+      "Rode contra o Postgres local do repositório:",
+      "",
+      "  docker compose up -d",
+      '  DATABASE_URL="postgresql://jb:jb@localhost:5433/jb?schema=public" pnpm e2e',
+      "",
+      "Ou ponha essa URL num .env.local, que tem precedência sobre o .env.",
+      "",
+      `Se o banco remoto é mesmo descartável, use ${VARIAVEL_ESCAPE}=1.`,
+    ].join("\n"),
+  );
+}
+
 export default async function preparar() {
   carregarEnv();
 
@@ -91,6 +158,8 @@ export default async function preparar() {
       "DATABASE_URL não encontrada. Suba o banco com `docker compose up -d` e confira o .env.",
     );
   }
+
+  exigirBancoLocal(process.env.DATABASE_URL);
 
   const prisma = new PrismaClient();
 
