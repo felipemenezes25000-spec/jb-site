@@ -1,20 +1,18 @@
 /*
  * Rodapé editorial premium — composição alinhada ao mockup aprovado.
  *
- * O JSX já contém os mesmos blocos do conceito (marca/contato, quatro colunas,
- * CTAs, assinatura editorial, cadeira e barra de confiança). Este arquivo
- * concentra o acabamento desktop para que o resultado real mantenha os dados
- * dinâmicos e as rotas do projeto sem transformar o rodapé em uma imagem.
+ * IMPORTANTE: o aria-labelledby="rodape-contato" pertence à section interna,
+ * não ao footer. Por isso o escopo usa :has(section[aria-labelledby=...]).
  */
 
 @media (min-width: 1360px) {
-  footer[aria-labelledby="rodape-contato"] {
+  footer:has(section[aria-labelledby="rodape-contato"]) {
     background:
       radial-gradient(circle at 84% 8%, rgb(255 241 241 / 0.82), transparent 31%),
       linear-gradient(180deg, #ffffff 0%, #fffafa 54%, #ffffff 100%) !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]::after {
+  footer:has(section[aria-labelledby="rodape-contato"])::after {
     content: "";
     position: absolute;
     right: -7%;
@@ -31,12 +29,12 @@
     pointer-events: none;
   }
 
-  footer[aria-labelledby="rodape-contato"] .container-jb {
+  footer:has(section[aria-labelledby="rodape-contato"]) .container-jb {
     max-width: 128rem !important;
     padding-inline: clamp(2rem, 3.8vw, 5.5rem) !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div:has(> section[aria-labelledby="rodape-contato"]) {
     grid-template-columns:
@@ -49,7 +47,11 @@
     padding-bottom: 2rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  /*
+   * A marca fica propositalmente ACIMA da navegação. O resumo começa na mesma
+   * linha visual do primeiro item das colunas (ex.: "Todos os equipamentos").
+   */
+  footer:has(section[aria-labelledby="rodape-contato"])
     section[aria-labelledby="rodape-contato"] {
     align-self: stretch;
     display: flex;
@@ -59,25 +61,34 @@
     border-right: 1px solid var(--color-graf-200);
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
+    section[aria-labelledby="rodape-contato"]
+    > p:first-of-type {
+    max-width: 20.5rem !important;
+    font-size: 0.95rem !important;
+    line-height: 1.42 !important;
+  }
+
+  footer:has(section[aria-labelledby="rodape-contato"])
     section[aria-labelledby="rodape-contato"]
     > div:last-child {
     margin-top: auto;
   }
 
-  footer[aria-labelledby="rodape-contato"] div:has(> nav[aria-label="Rodapé"]) {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    div:has(> nav[aria-label="Rodapé"]) {
     display: flex;
     min-width: 0;
     flex-direction: column;
     padding-top: 2.5rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] {
+  footer:has(section[aria-labelledby="rodape-contato"]) nav[aria-label="Rodapé"] {
     column-gap: clamp(1.35rem, 1.8vw, 2.5rem) !important;
     row-gap: 2rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     nav[aria-label="Rodapé"]
     > div
     > h2 {
@@ -88,7 +99,7 @@
     letter-spacing: 0.075em !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     nav[aria-label="Rodapé"]
     > div
     > ul {
@@ -97,19 +108,25 @@
     margin-top: 0.85rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] li a {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    nav[aria-label="Rodapé"]
+    li
+    a {
     position: relative;
     display: flex !important;
-    min-height: 1.75rem;
+    min-height: 1.9rem;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
     color: var(--color-graf-700) !important;
-    font-size: 0.84rem !important;
+    font-size: 0.95rem !important;
     line-height: 1.4 !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] li a::after {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    nav[aria-label="Rodapé"]
+    li
+    a::after {
     content: "›";
     flex: 0 0 auto;
     color: var(--color-graf-400);
@@ -119,28 +136,39 @@
       color 0.15s ease;
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] li a:hover {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    nav[aria-label="Rodapé"]
+    li
+    a:hover {
     color: var(--color-jb-700) !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] li a:hover::after {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    nav[aria-label="Rodapé"]
+    li
+    a:hover::after {
     transform: translateX(3px);
     color: var(--color-jb-600);
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] + div {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    nav[aria-label="Rodapé"]
+    + div {
     margin-top: auto !important;
     padding-top: 1.5rem !important;
     border-top: 0 !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] + div a {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    nav[aria-label="Rodapé"]
+    + div
+    a {
     min-height: 3.65rem !important;
     border-radius: 0.8rem !important;
     font-size: 0.94rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div[aria-hidden="true"]:has(img[src*="footer-dental-chair"]) {
     right: -2rem !important;
@@ -149,12 +177,13 @@
     height: 34rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] img[src*="footer-dental-chair"] {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    img[src*="footer-dental-chair"] {
     opacity: 0.76 !important;
     filter: saturate(0.95) contrast(1.02);
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div[aria-hidden="true"]:has(img[src*="footer-dental-chair"])
     > div:nth-last-child(2) {
@@ -167,7 +196,7 @@
     ) !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div[aria-hidden="true"]:has(img[src*="footer-dental-chair"])
     > div:last-child {
@@ -175,7 +204,7 @@
     background: linear-gradient(to top, #ffffff, transparent) !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div:has(> section[aria-labelledby="rodape-contato"])
     > div:last-child {
@@ -184,7 +213,7 @@
     min-height: 29rem;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div:has(> section[aria-labelledby="rodape-contato"])
     > div:last-child
@@ -193,7 +222,7 @@
     text-align: center !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div:has(> section[aria-labelledby="rodape-contato"])
     + div {
@@ -206,7 +235,7 @@
 }
 
 @media (min-width: 1800px) {
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div:has(> section[aria-labelledby="rodape-contato"]) {
     grid-template-columns:
@@ -219,12 +248,19 @@
     padding-bottom: 2.3rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     section[aria-labelledby="rodape-contato"] {
     padding-top: 0 !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
+    section[aria-labelledby="rodape-contato"]
+    > p:first-of-type {
+    max-width: 21rem !important;
+    font-size: 0.97rem !important;
+  }
+
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div[aria-hidden="true"]:has(img[src*="footer-dental-chair"]) {
     right: -2.75rem !important;
@@ -233,35 +269,29 @@
     height: 37rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] img[src*="footer-dental-chair"] {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    img[src*="footer-dental-chair"] {
     opacity: 0.84 !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] {
+  footer:has(section[aria-labelledby="rodape-contato"])
+    nav[aria-label="Rodapé"] {
     column-gap: 2.55rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"] nav[aria-label="Rodapé"] li a {
-    font-size: 0.875rem !important;
+  footer:has(section[aria-labelledby="rodape-contato"])
+    nav[aria-label="Rodapé"]
+    li
+    a {
+    font-size: 0.97rem !important;
   }
 
-  footer[aria-labelledby="rodape-contato"]
+  footer:has(section[aria-labelledby="rodape-contato"])
     .container-jb
     > div:has(> section[aria-labelledby="rodape-contato"])
     > div:last-child {
     min-height: 32rem;
     padding-right: 19rem;
     padding-left: 0.5rem;
-  }
-}
-
-/*
- * Alinhamento real do resumo institucional com a primeira linha da coluna Loja.
- * O aria-labelledby está no <section>, não no <footer>; por isso esta regra
- * usa a estrutura real do componente e não depende dos seletores editoriais acima.
- */
-@media (min-width: 1150px) {
-  footer section[aria-labelledby="rodape-contato"] > div.w-fit + p {
-    margin-top: -0.55rem !important;
   }
 }
