@@ -303,7 +303,7 @@ export async function Rodape() {
                quando a cadeira entra e precisa do espaço. */
             /* O mesmo recuo de topo das colunas de links: sem ele o logotipo
                subia 8px acima dos títulos ao lado. */
-            className="w-full self-start min-[1150px]:pt-2 min-[1360px]:max-w-[27rem] min-[1800px]:pt-10"
+            className="flex w-full flex-col self-stretch min-[1150px]:pt-2 min-[1360px]:max-w-[27rem] min-[1800px]:pt-10"
             aria-labelledby="rodape-contato"
           >
             <h2 id="rodape-contato" className="sr-only">
@@ -395,7 +395,7 @@ export async function Rodape() {
                 rede nova esticaria o cartão e tiraria o rodapé da altura da
                 referência. */}
             {sociais.length > 0 ? (
-              <div className="mt-2 border-t border-jb-100 pt-2">
+              <div className="mt-auto border-t border-jb-100 pt-2">
                 <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
                   {sociais.map((rede) => {
                     const Marca = SOCIAL[rede.chave];
