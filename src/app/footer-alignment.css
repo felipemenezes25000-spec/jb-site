@@ -1,0 +1,20 @@
+@media (min-width: 1360px) {
+  footer section[aria-labelledby="rodape-contato"] {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+
+  footer section[aria-labelledby="rodape-contato"] > div:last-child {
+    margin-top: auto;
+  }
+
+  footer div:has(> nav[aria-label="Rodapé"]) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  footer nav[aria-label="Rodapé"] + div {
+    margin-top: auto;
+  }
+}
