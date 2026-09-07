@@ -302,8 +302,16 @@ export async function Rodape() {
                O teto de largura continua valendo só a partir de 1360px, que é
                quando a cadeira entra e precisa do espaço. */
             /* O mesmo recuo de topo das colunas de links: sem ele o logotipo
-               subia 8px acima dos títulos ao lado. */
-            className="w-full self-start min-[1150px]:pt-2 min-[1360px]:max-w-[27rem] min-[1800px]:pt-10"
+               subia 8px acima dos títulos ao lado.
+
+               A partir de 1800px o recuo é MENOR que o das colunas de links
+               (pt-6 contra pt-10), e é de propósito: o logotipo tem altura
+               própria e, com o mesmo recuo, descia demais em relação aos
+               títulos ao lado. Dezesseis pixels a menos deixam ele pouco acima
+               da linha dos títulos, que é onde a marca deve ficar. A base
+               continua fechando junto — quem resolve isso é o `margin-top:auto`
+               de `footer-alignment.css`, não este recuo. */
+            className="w-full self-start min-[1150px]:pt-2 min-[1360px]:max-w-[27rem] min-[1800px]:pt-6"
             aria-labelledby="rodape-contato"
           >
             <h2 id="rodape-contato" className="sr-only">
