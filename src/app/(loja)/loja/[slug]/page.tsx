@@ -532,7 +532,12 @@ export default async function ProdutoPage({ params }: Props) {
           </div>
 
           <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-2">
-            <div id="caixa-de-compra" className="scroll-mt-32 space-y-8 lg:sticky lg:top-24">
+            {/* Só a GALERIA gruda. As duas colunas grudavam ao mesmo tempo, e
+                o efeito era a primeira dobra inteira parecer congelada: a
+                pessoa rolava e nada se movia até a faixa acabar. Com a coluna
+                de compra rolando, a foto acompanha cada decisão que ela pede —
+                que era a intenção do grudado desde o começo. */}
+            <div id="caixa-de-compra" className="scroll-mt-32 space-y-8">
               {arquivado ? (
                 <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
               ) : (

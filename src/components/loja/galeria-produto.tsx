@@ -42,6 +42,9 @@ export function GaleriaProduto({
   const fecharRef = useRef<HTMLButtonElement>(null);
   /* Ponto onde o dedo encostou. `null` enquanto não há gesto em andamento. */
   const toqueRef = useRef<{ x: number; y: number } | null>(null);
+  /* Posição do cursor sobre o palco, em %. `null` = lupa desligada. */
+  const [lente, setLente] = useState<{ x: number; y: number } | null>(null);
+  const [temMouse, setTemMouse] = useState(false);
 
   const irPara = useCallback(
     (passo: number) => {
@@ -50,6 +53,18 @@ export function GaleriaProduto({
     },
     [total],
   );
+
+  /* A lupa é para ponteiro fino.
+     No toque não existe "passar o mouse": tentar ampliar no `touchmove` roubaria
+     o gesto de arrastar, que é como se troca de foto no celular. Lá o caminho é
+     tocar e abrir em tela cheia. */
+  useEffect(() => {
+    const consulta = window.matchMedia("(pointer: fine)");
+    const aplicar = () => setTemMouse(consulta.matches);
+    aplicar();
+    consulta.addEventListener("change", aplicar);
+    return () => consulta.removeEventListener("change", aplicar);
+  }, []);
 
   useEffect(() => {
     if (!ampliado) return;
@@ -164,9 +179,18 @@ export function GaleriaProduto({
     <div className="flex flex-col gap-4 lg:flex-row-reverse lg:items-start lg:gap-4">
       <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
         <div
-          className="relative aspect-square"
+          className="group/palco relative aspect-square"
           onTouchStart={aoEncostar}
           onTouchEnd={aoSoltar}
+          onMouseMove={(evento) => {
+            if (!temMouse) return;
+            const caixa = evento.currentTarget.getBoundingClientRect();
+            setLente({
+              x: ((evento.clientX - caixa.left) / caixa.width) * 100,
+              y: ((evento.clientY - caixa.top) / caixa.height) * 100,
+            });
+          }}
+          onMouseLeave={() => setLente(null)}
           /* Fundo quase branco, com o cinza só na base.
 
              Antes era um degradê radial de branco ao cinza-claro. A intenção
@@ -190,7 +214,16 @@ export function GaleriaProduto({
             sizes="(max-width: 1023px) 100vw, 54vw"
             /* Respiro curto de propósito: a foto é o argumento da página, e
                cada pixel de moldura sai do equipamento. */
-            className="object-contain p-4 sm:p-6 lg:p-8"
+            className="object-contain p-4 transition-transform duration-100 ease-out sm:p-6 lg:p-8"
+            /* A lupa amplia 2,2× com a origem no cursor: o detalhe que a
+               pessoa está apontando fica sob o ponteiro em vez de fugir para
+               o centro. 100ms de transição é curto o bastante para acompanhar
+               o movimento e longo o bastante para a entrada não dar tranco. */
+            style={
+              lente
+                ? { transform: "scale(2.2)", transformOrigin: `${lente.x}% ${lente.y}%` }
+                : undefined
+            }
           />
 
           <button
@@ -201,6 +234,13 @@ export function GaleriaProduto({
           >
             <span className="flex size-11 items-center justify-center rounded-lg border border-graf-200 bg-white/85 text-graf-600 shadow-card backdrop-blur transition-colors duration-150 hover:text-jb-700">
               <ZoomIn className="size-[18px]" aria-hidden />
+            </span>
+            {/* Dica só para quem tem mouse: no toque a lupa não existe. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute bottom-3 left-3 hidden rounded-full bg-white/85 px-3 py-1.5 text-[0.75rem] font-semibold text-graf-600 opacity-0 shadow-card backdrop-blur transition-opacity duration-200 group-hover/palco:opacity-100 lg:block"
+            >
+              Passe o mouse para ampliar · clique para tela cheia
             </span>
           </button>
         </div>

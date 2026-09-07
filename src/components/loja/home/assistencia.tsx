@@ -202,14 +202,18 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
             </div>
           </article>
 
-          <article className="relative min-h-[24rem] overflow-hidden rounded-[2rem] bg-[#101012] text-white shadow-[0_34px_78px_-42px_rgba(31,0,0,0.7)]">
+          <article className="relative min-h-[24rem] overflow-hidden rounded-[2rem] bg-[#141518] text-white shadow-[0_34px_78px_-46px_rgba(26,28,30,0.6)]">
             <div
-              className="absolute inset-0 bg-[linear-gradient(125deg,#111113_0%,#151214_48%,#1d0709_100%)]"
+              /* Grafite de ponta a ponta. Antes o degradê terminava em #1d0709 —
+                 vermelho quase preto — e duas lavagens vermelhas por cima
+                 deixavam o cartão com aspecto de fundo sujo em vez de escuro
+                 deliberado. O vermelho voltou para onde ele age: o botão. */
+              className="absolute inset-0 bg-[linear-gradient(125deg,#141518_0%,#1a1c1e_52%,#212429_100%)]"
               aria-hidden
             />
 
             <div
-              className="absolute inset-0 bg-[radial-gradient(circle_at_86%_44%,rgba(244,25,35,0.3),transparent_27%),radial-gradient(circle_at_68%_4%,rgba(143,5,12,0.25),transparent_34%),linear-gradient(90deg,#101012_0%,rgba(16,16,18,0.94)_34%,transparent_61%)]"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_86%_44%,rgba(244,25,35,0.1),transparent_30%),linear-gradient(90deg,#141518_0%,rgba(20,21,24,0.94)_34%,transparent_61%)]"
               aria-hidden
             />
             <div

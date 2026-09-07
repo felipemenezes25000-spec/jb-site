@@ -37,7 +37,10 @@ export function ProvasObjetivas({
   return (
     <section aria-labelledby="titulo-provas-home" className="relative isolate overflow-hidden bg-[#111214] text-white">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_100%_at_88%_50%,rgba(226,22,30,0.16),transparent_62%)]"
+        /* Lavagem vermelha em 6%, não 16%: acima disso a faixa deixa de ser
+           grafite e vira "preto avermelhado", que é exatamente o que a régua
+           da marca não quer — vermelho é sinal, não banho de fundo. */
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_100%_at_88%_50%,rgba(226,22,30,0.06),transparent_62%)]"
         aria-hidden
       />
       <h2 id="titulo-provas-home" className="sr-only">Por que escolher a JB</h2>
