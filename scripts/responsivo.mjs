@@ -207,11 +207,31 @@ function medir() {
      * categorias) passa da viewport POR DESENHO: o usuário arrasta. O defeito
      * seria a PÁGINA rolar, e isso já é medido em separado, lá em cima.
      */
-    const emRoladorHorizontal = (() => {
+    const emContainerQueCorta = (() => {
       let pai = el.parentElement;
       for (let i = 0; pai && i < 6; i += 1) {
-        const ov = getComputedStyle(pai).overflowX;
+        const estilo = getComputedStyle(pai);
+        const ov = estilo.overflowX;
+        // rolador: passa da viewport por desenho, e quem arrasta é o usuário
         if (ov === "auto" || ov === "scroll") return true;
+        /**
+         * Cortado por um ancestral também não é "fora da tela".
+         *
+         * `overflow: hidden` recorta o que passa da caixa: o excesso não é
+         * pintado e não rola a página. É como funciona a faixa de recados do
+         * cabeçalho — um trilho do dobro da largura, com máscara, andando por
+         * baixo de um contêiner que corta — e como funcionam os círculos
+         * decorativos ancorados nas quinas dos cartões.
+         *
+         * Sem esta saída, a régua acusava 102 elementos "fora da tela" que
+         * ninguém consegue ver: 72 do mesmo trilho, repetido em toda rota, e
+         * 26 de dois cartões. Alarme falso em auditoria é pior que auditoria
+         * nenhuma — ensina a ignorar o relatório.
+         *
+         * O defeito de verdade continua coberto: se o corte não existir e a
+         * PÁGINA rolar na horizontal, isso é medido em separado, lá em cima.
+         */
+        if (ov === "hidden" || ov === "clip") return true;
         pai = pai.parentElement;
       }
       return false;
@@ -220,7 +240,7 @@ function medir() {
     const semPonteiro = getComputedStyle(el).pointerEvents === "none";
 
     // 2px de folga: arredondamento de subpixel não é defeito
-    if ((caixa.right > viewport + 2 || caixa.left < -2) && !emRoladorHorizontal && !semPonteiro) {
+    if ((caixa.right > viewport + 2 || caixa.left < -2) && !emContainerQueCorta && !semPonteiro) {
       const pai = el.parentElement;
       const paiTransborda =
         pai && (pai.getBoundingClientRect().right > viewport + 2 || pai.getBoundingClientRect().left < -2);
@@ -448,6 +468,28 @@ async function percorrer(grupo, rotas, login) {
       .catch(() => {});
   };
 
+  /**
+   * Espera o endereço parar de mudar.
+   *
+   * `redirect()` num Server Component não chega como 3xx: o servidor responde
+   * a rota pedida e manda o cliente navegar. `goto()` resolve ANTES disso, e a
+   * navegação seguinte estourava em cima — "Navigation is interrupted by
+   * another navigation", "Execution context was destroyed". /checkout com
+   * carrinho vazio manda para /carrinho e caía exatamente aí, nas sete
+   * larguras, registrado como "não abriu" — o que é falso: a página abriu,
+   * só não era a pedida.
+   */
+  const esperarEnderecoParar = async (alvo) => {
+    let anterior = alvo.url();
+    for (let i = 0; i < 12; i += 1) {
+      await alvo.waitForTimeout(120);
+      const agora = alvo.url();
+      if (agora === anterior) return agora;
+      anterior = agora;
+    }
+    return anterior;
+  };
+
   const pagina = await contexto.newPage();
   const paginaToque = await contextoToque.newPage();
   await pagina.emulateMedia({ reducedMotion: "reduce" });
@@ -461,6 +503,7 @@ async function percorrer(grupo, rotas, login) {
       await alvo.setViewportSize({ width: tela.w, height: tela.h });
       try {
         await alvo.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 45000 });
+        await esperarEnderecoParar(alvo);
         await assentar(alvo);
         // o indicador do modo de desenvolvimento não é do produto
         /**
@@ -497,7 +540,29 @@ async function percorrer(grupo, rotas, login) {
          * segundos e é a diferença entre medir a página e medir o histórico
          * da aba.
          */
-        await alvo.reload({ waitUntil: "domcontentloaded" });
+        /**
+         * Recarrega o ENDEREÇO EM QUE A PÁGINA PAROU, não a rota pedida.
+         *
+         * Rota que redireciona — /checkout com carrinho vazio manda para
+         * /carrinho — deixava `reload()` estourar com "Not attached to an
+         * active page": o alvo do navegador tinha trocado no meio do caminho.
+         * A auditoria registrava isso como "não abriu", que é falso: a página
+         * abriu, só não era a que foi pedida.
+         *
+         * Navegar para `alvo.url()` é a mesma recarga e sobrevive ao
+         * redirecionamento. A segunda tentativa cobre a corrida em que o
+         * endereço ainda estava mudando quando foi lido.
+         */
+        const enderecoAtual = await esperarEnderecoParar(alvo);
+        try {
+          await alvo.goto(enderecoAtual, { waitUntil: "domcontentloaded", timeout: 45000 });
+          await esperarEnderecoParar(alvo);
+        } catch {
+          await alvo.goto(await esperarEnderecoParar(alvo), {
+            waitUntil: "domcontentloaded",
+            timeout: 45000,
+          });
+        }
         await assentar(alvo);
         await alvo
           .addStyleTag({

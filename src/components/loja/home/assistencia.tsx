@@ -323,7 +323,11 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
           <span>A mesma relação acompanha a clínica antes e depois da entrega.</span>
           <Link
             href="/assistencia-tecnica"
-            className="group foco-jb inline-flex items-center gap-1.5 rounded-xs font-black text-jb-700 underline-offset-4 hover:underline"
+            /* 44px de altura no dedo. O link fecha a faixa de caminhos e mede
+               20px de altura — é a linha de texto —, abaixo do alvo mínimo da
+               WCAG 2.2 (2.5.8). No ponteiro fino ele continua sendo uma frase
+               dentro do parágrafo. */
+            className="group foco-jb inline-flex items-center gap-1.5 rounded-xs font-black text-jb-700 underline-offset-4 hover:underline pointer-coarse:min-h-11"
           >
             Conheça a assistência técnica JB.
             <ArrowRight
