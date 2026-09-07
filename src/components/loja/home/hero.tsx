@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Headphones, PackageCheck, ShoppingCart, Wrench } from "lucide-react";
+import { ArrowRight, Headphones, Wrench } from "lucide-react";
 
+import { BuscaHero } from "@/components/loja/busca-hero";
 import { LinkBotao } from "@/components/ui/button";
 import { Etiqueta } from "@/components/ui/data";
 import {
@@ -10,14 +11,9 @@ import {
   type Parcelamento,
   type ProdutoHome,
 } from "@/components/loja/home/comum";
+import type { SugestaoDeTaxonomia } from "@/lib/busca/sugestoes";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
 import type { SettingsMap } from "@/lib/settings";
-
-const ATALHOS = [
-  { href: "/novos", rotulo: "Novos", icone: ShoppingCart },
-  { href: "/seminovos", rotulo: "Seminovos", icone: PackageCheck },
-  { href: "/assistencia-tecnica", rotulo: "Assistência", icone: Wrench },
-] as const;
 
 /**
  * Entrada da composição. Fica em CSS puro de propósito: o hero é o LCP da home
@@ -57,10 +53,13 @@ export function Hero({
   configuracoes: _configuracoes,
   produto,
   parcelamento,
+  categorias,
 }: {
   configuracoes: SettingsMap;
   produto: ProdutoHome | null;
   parcelamento: Parcelamento;
+  /** Categorias com mais equipamentos publicados. Vazio esconde a fileira. */
+  categorias: SugestaoDeTaxonomia[];
 }) {
   return (
     <section className="relative isolate overflow-hidden border-b border-graf-200 bg-[#f8f7f6]">
@@ -162,9 +161,47 @@ export function Hero({
               assistência técnica e histórico conectados ao mesmo relacionamento.
             </p>
 
+            {/* A busca entra ANTES dos botões, e é essa a mudança de ordem que
+                importa: quem chega sabendo o que quer não deveria ter de achar
+                o catálogo para depois procurar dentro dele. Os dois caminhos
+                continuam existindo logo abaixo — explorar e pedir assistência. */}
             <div
-              className="jb-hero-sobe mt-8 flex flex-col gap-3 min-[640px]:flex-row min-[640px]:flex-wrap"
-              style={{ animationDelay: "0.24s" }}
+              className="jb-hero-sobe mt-7 max-w-[34rem]"
+              style={{ animationDelay: "0.22s" }}
+            >
+              <BuscaHero rotulo="Buscar equipamento no catálogo da JB" />
+            </div>
+
+            {categorias.length > 0 ? (
+              <nav
+                aria-label="Categorias do catálogo"
+                className="jb-hero-sobe mt-4"
+                style={{ animationDelay: "0.26s" }}
+              >
+                <ul className="flex flex-wrap items-center gap-2">
+                  <li className="text-[0.68rem] font-black uppercase tracking-[0.16em] text-graf-500">
+                    Buscado agora
+                  </li>
+                  {categorias.map((categoria) => (
+                    <li key={categoria.slug}>
+                      <Link
+                        href={`/categoria/${categoria.slug}`}
+                        className="foco-jb inline-flex min-h-9 items-center gap-1.5 rounded-full border border-graf-200 bg-white/85 px-3.5 text-[0.8125rem] font-bold text-graf-700 transition-[border-color,color,background-color] hover:border-jb-200 hover:bg-white hover:text-jb-700"
+                      >
+                        {categoria.nome}
+                        <span className="tabular text-[0.6875rem] font-semibold text-graf-500">
+                          {categoria.total}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
+
+            <div
+              className="jb-hero-sobe mt-7 flex flex-col gap-3 min-[640px]:flex-row min-[640px]:flex-wrap"
+              style={{ animationDelay: "0.3s" }}
             >
               <LinkBotao
                 href="/loja"
@@ -188,26 +225,6 @@ export function Hero({
                 Solicitar assistência
               </LinkBotao>
             </div>
-
-            <nav
-              aria-label="Acessos rápidos"
-              className="jb-hero-sobe mt-7"
-              style={{ animationDelay: "0.3s" }}
-            >
-              <ul className="flex flex-wrap gap-2.5">
-                {ATALHOS.map(({ href, rotulo, icone: Icone }) => (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      className="foco-jb group inline-flex min-h-10 items-center gap-2 rounded-full border border-graf-200 bg-white/85 px-4 text-xs font-extrabold text-graf-700 transition-[border-color,color,transform,background-color] hover:-translate-y-0.5 hover:border-jb-200 hover:bg-white hover:text-jb-700"
-                    >
-                      <Icone className="size-3.5 text-jb-600" aria-hidden />
-                      {rotulo}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
           </div>
 
           {produto ? <VitrineHero produto={produto} parcelamento={parcelamento} /> : null}

@@ -8,10 +8,12 @@ import { ProvasObjetivas } from "@/components/loja/home/provas";
 import { SecaoCategorias } from "@/components/loja/home/categorias";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
 import { SecaoMarcas } from "@/components/loja/home/marcas";
+import { VistosRecentemente } from "@/components/loja/vistos-recentemente";
 import {
   EsqueletoCategoriasHome,
   EsqueletoMarcasHome,
 } from "@/components/loja/home/esqueletos-home";
+import { atalhosDaBusca } from "@/lib/busca/sugestoes";
 import { ETIQUETA_CATALOGO, ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, localNegocioJsonLd, organizacaoJsonLd } from "@/lib/seo";
@@ -38,6 +40,10 @@ async function dadosDoTopo() {
     }),
     prisma.product.count({ where: PUBLICADO }),
     prisma.brand.count({ where: { published: true, products: { some: PUBLICADO } } }),
+    /* As categorias com mais equipamentos publicados. Saem do catálogo, não de
+       uma lista escrita à mão: quando a JB publicar uma linha nova, ela
+       aparece no hero sozinha — e uma categoria que esvaziar sai. */
+    atalhosDaBusca(6),
   ] as const);
 }
 
@@ -49,7 +55,7 @@ async function dadosDoTopo() {
  * mantendo a home focada em orientar a próxima ação.
  */
 export default async function HomePage() {
-  const [s, vitrine, equipamentos, marcas] = await dadosDoTopo();
+  const [s, vitrine, equipamentos, marcas, atalhos] = await dadosDoTopo();
 
   return (
     <>
@@ -65,12 +71,21 @@ export default async function HomePage() {
           outras páginas não cria duas empresas no índice — o Google junta. */}
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
-      <Hero configuracoes={s} produto={vitrine[0] ?? null} parcelamento={lerParcelamento(s)} />
+      <Hero
+        configuracoes={s}
+        produto={vitrine[0] ?? null}
+        parcelamento={lerParcelamento(s)}
+        categorias={atalhos.categorias}
+      />
       <ProvasObjetivas configuracoes={s} equipamentos={equipamentos} marcas={marcas} />
 
       <Suspense fallback={<EsqueletoCategoriasHome />}>
         <SecaoCategorias />
       </Suspense>
+
+      {/* Continua de onde parou. Some inteiro para quem chega pela primeira
+          vez — a home não abre um buraco para dizer que não sabe nada. */}
+      <VistosRecentemente titulo="Continue de onde parou" />
 
       <SecaoAssistencia configuracoes={s} />
 

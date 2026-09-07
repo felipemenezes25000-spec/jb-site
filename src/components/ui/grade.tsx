@@ -21,6 +21,9 @@ export type ColunasPorTela = {
   md?: Colunas;
   lg?: Colunas;
   xl?: Colunas;
+  /** `2xl` (1536px). Existe para o catálogo respirar em monitor largo sem
+      esticar o cartão até a foto do equipamento virar cartaz. */
+  xxl?: Colunas;
 };
 
 /**
@@ -45,6 +48,7 @@ export function colunasAte(itens: number, teto: ColunasPorTela): ColunasPorTela 
     md: limitar(teto.md),
     lg: limitar(teto.lg),
     xl: limitar(teto.xl),
+    xxl: limitar(teto.xxl),
   };
 }
 
@@ -93,6 +97,15 @@ const XL: Record<Colunas, string> = {
   6: "xl:grid-cols-6",
 };
 
+const XXL: Record<Colunas, string> = {
+  1: "2xl:grid-cols-1",
+  2: "2xl:grid-cols-2",
+  3: "2xl:grid-cols-3",
+  4: "2xl:grid-cols-4",
+  5: "2xl:grid-cols-5",
+  6: "2xl:grid-cols-6",
+};
+
 export type EspacoGrade = "sm" | "md" | "lg";
 
 const ESPACOS: Record<EspacoGrade, string> = {
@@ -134,7 +147,7 @@ export function Grade({
   children: React.ReactNode;
 }) {
   const Elemento = como;
-  const { base = 1, sm, md, lg, xl } = colunas ?? {};
+  const { base = 1, sm, md, lg, xl, xxl } = colunas ?? {};
 
   return (
     <Elemento
@@ -145,6 +158,7 @@ export function Grade({
         md && MD[md],
         lg && LG[lg],
         xl && XL[xl],
+        xxl && XXL[xxl],
         ESPACOS[espaco],
         como !== "div" && "list-none p-0",
         className,
@@ -221,7 +235,7 @@ export function TrilhoOuGrade({
   children: React.ReactNode;
 }) {
   const Elemento = como;
-  const { base = 1, sm, md, lg, xl } = colunas ?? {};
+  const { base = 1, sm, md, lg, xl, xxl } = colunas ?? {};
 
   return (
     <Elemento
@@ -240,6 +254,7 @@ export function TrilhoOuGrade({
         md && MD[md],
         lg && LG[lg],
         xl && XL[xl],
+        xxl && XXL[xxl],
         ESPACOS[espaco],
         como !== "div" && "list-none p-0",
         className,

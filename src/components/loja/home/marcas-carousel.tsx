@@ -196,7 +196,14 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
                   fila.map((marca, posicao) => (
                     <li
                       key={`${copia}-${posicao}-${marca.slug}`}
+                      /* A segunda cópia existe só para a emenda do laço não
+                         aparecer. `aria-hidden` sozinho a escondia do leitor de
+                         tela e deixava os links dela na ordem de tabulação —
+                         o Tab parava num cartão que ninguém consegue ouvir. O
+                         `inert` tira o ramo inteiro do foco e do apontador
+                         junto, que é o que ele foi feito para fazer. */
                       aria-hidden={copia === 1 ? true : undefined}
+                      inert={copia === 1}
                     >
                       <CartaoMarca marca={marca} />
                     </li>

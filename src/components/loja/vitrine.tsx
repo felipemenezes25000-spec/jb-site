@@ -275,7 +275,7 @@ function EsqueletoResultados() {
       </div>
       <EsqueletoGradeProdutos
         quantidade={6}
-        className="mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        className="mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
       />
     </div>
   );
@@ -474,7 +474,7 @@ async function Resultados({
       <GradeProdutos
         produtos={dados.produtos}
         parcelamento={parcelamento}
-        colunas={{ base: 1, sm: 2, lg: 2, xl: 3 }}
+        colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
         className="mt-6"
       />
 

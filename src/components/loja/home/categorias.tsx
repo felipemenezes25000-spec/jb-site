@@ -8,7 +8,6 @@ import { plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 const PUBLICADO = { status: "active" } as const;
-const MINIMO_PARA_CONTAR = 4;
 
 const VANTAGENS = [
   {
