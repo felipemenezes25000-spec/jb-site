@@ -130,7 +130,7 @@ export function Hero({
         com a JB
       </p>
 
-      <div className="relative z-10 mx-auto w-full max-w-[100rem] px-5 py-10 min-[640px]:px-8 min-[1024px]:py-12">
+      <div className="container-jb relative z-10 max-w-[112rem] py-10 min-[1024px]:py-12">
         <div className="grid items-center gap-10 min-[1024px]:grid-cols-[minmax(0,1.02fr)_minmax(0,1.08fr)] min-[1024px]:gap-x-10 min-[1360px]:grid-cols-[minmax(0,1fr)_minmax(0,1.16fr)] min-[1360px]:gap-x-14">
           <div className="flex min-w-0 flex-col">
             <div className="jb-hero-sobe flex items-center gap-3">

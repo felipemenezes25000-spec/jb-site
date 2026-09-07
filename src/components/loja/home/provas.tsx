@@ -41,7 +41,7 @@ export function ProvasObjetivas({
         aria-hidden
       />
       <h2 id="titulo-provas-home" className="sr-only">Por que escolher a JB</h2>
-      <div className="relative z-10 mx-auto w-full max-w-[100rem] px-5 min-[640px]:px-8">
+      <div className="container-jb relative z-10 max-w-[112rem]">
         <ul className="grid min-[640px]:grid-cols-2 min-[1024px]:grid-cols-4">
           {provas.map((prova, indice) => {
             const Icone = prova.icone;

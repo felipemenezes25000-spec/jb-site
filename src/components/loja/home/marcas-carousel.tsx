@@ -134,7 +134,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
         <span className="absolute left-32 top-2 h-[26rem] w-11 rounded-full bg-gradient-to-b from-transparent via-graf-200/70 to-transparent" />
       </div>
 
-      <div className="container-jb relative z-10 max-w-[110rem] min-[1024px]:pt-12">
+      <div className="container-jb relative z-10 max-w-[112rem] min-[1024px]:pt-12">
         <div className="pointer-events-none absolute top-0 hidden w-max items-center gap-5 min-[1024px]:right-10 min-[1024px]:flex min-[1840px]:-right-10">
           <span className="grid size-[3.15rem] shrink-0 place-items-center rounded-full bg-jb-50/70 text-graf-800">
             <Sparkles className="size-[1.05rem]" aria-hidden />
