@@ -44,6 +44,19 @@ const RECORTES = [
   "compressor.webp",
 ];
 
+/**
+ * Fotografia de estúdio, com fundo real.
+ *
+ * Não pode passar pela limpeza — ela apaga tudo fora da silhueta, e aqui não
+ * há silhueta: o corpo do aparelho é branco e o fundo é cinza claríssimo, na
+ * mesma faixa de luminância. O que essas fotos recebem é outra coisa: um véu
+ * radial que dissolve a BORDA em branco. Sem ele, a foto entra na moldura como
+ * um retângulo cinza colado num palco branco, e o recorte da moldura aparece.
+ * Com ele, a peça continua com a sombra natural dela e a imagem se funde ao
+ * cartão.
+ */
+const ESTUDIO = ["ultrassom.webp"];
+
 const soConferir = process.argv.includes("--conferir");
 
 for (const arquivo of RECORTES) {
@@ -226,6 +239,41 @@ for (const arquivo of RECORTES) {
     .resize(LADO, LADO, { fit: "inside", kernel: "lanczos3", withoutEnlargement: false })
     .sharpen({ sigma: 0.8, m1: 0.4, m2: 0.6 })
     .webp({ quality: 90, effort: 6 })
+    .toBuffer();
+
+  fs.writeFileSync(origem, saida);
+}
+
+/* ------------------------------------------------------------------ véu */
+
+for (const arquivo of ESTUDIO) {
+  const origem = path.join(PASTA, arquivo);
+  if (!fs.existsSync(origem)) {
+    console.log(`${arquivo}  (não encontrado — pulado)`);
+    continue;
+  }
+
+  const bruto = fs.readFileSync(origem);
+  const { width: L, height: A } = await sharp(bruto).metadata();
+
+  /* O véu começa a 55% do raio: a peça ocupa o miolo, e nada dela é tocado.
+     Daí para fora o branco entra até cobrir por completo na quina. */
+  const veu = Buffer.from(
+    `<svg width='${L}' height='${A}' xmlns='http://www.w3.org/2000/svg'>` +
+      `<defs><radialGradient id='v' cx='50%' cy='52%' r='72%'>` +
+      `<stop offset='55%' stop-color='#ffffff' stop-opacity='0'/>` +
+      `<stop offset='78%' stop-color='#ffffff' stop-opacity='0.55'/>` +
+      `<stop offset='100%' stop-color='#ffffff' stop-opacity='1'/>` +
+      `</radialGradient></defs>` +
+      `<rect width='${L}' height='${A}' fill='url(#v)'/></svg>`,
+  );
+
+  console.log(`${arquivo}  ${L}x${A}  véu radial aplicado`);
+  if (soConferir) continue;
+
+  const saida = await sharp(bruto)
+    .composite([{ input: veu, blend: "over" }])
+    .webp({ quality: 88, effort: 6 })
     .toBuffer();
 
   fs.writeFileSync(origem, saida);

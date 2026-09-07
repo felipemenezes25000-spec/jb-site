@@ -247,6 +247,31 @@ export function Hero({
   );
 }
 
+/* ============================================================================
+   O destaque do catálogo
+
+   Era um bloco preto virando vermelho profundo, com o equipamento num painel
+   claro flutuando dentro. Duas coisas quebraram:
+
+   1. **A régua da marca.** `docs/evolucao-jb/direcao-visual.md` fixa interface
+      clara e vermelho como SINAL — "nunca preenchimento de fundo em área
+      grande" —, e grafite como área estratégica, uma ou duas faixas por
+      página. A faixa de provas, logo abaixo, já gasta a cota de escuro. O
+      slab do hero era uma terceira camada pesada na primeira dobra.
+
+   2. **A moldura só servia para recorte.** O painel aplicava `scale-[1.28]` e
+      uma máscara radial que apagava as bordas em branco. Isso funciona com
+      equipamento recortado sobre branco; com fotografia de estúdio, amplia a
+      foto até ela transbordar e come as bordas — o equipamento aparecia
+      cortado em cima e escondido embaixo.
+
+   O desenho agora é o de um cartão de produto grande: fundo claro, peça
+   inteira em `object-contain` com respiro, e a informação numa faixa própria
+   embaixo — não flutuando por cima da foto. Vermelho fica onde ele é sinal: no
+   ponto do selo e no botão redondo. Serve igualmente para recorte e para
+   fotografia, porque não deforma nem mascara nada.
+   ============================================================================ */
+
 function VitrineHero({
   produto,
   parcelamento,
@@ -255,112 +280,6 @@ function VitrineHero({
   parcelamento: Parcelamento;
 }) {
   const foto = fotoDe(produto);
-
-  return (
-    <div className="jb-hero-entra relative min-h-[30rem] overflow-hidden rounded-[2rem] bg-[#0b0b0d] shadow-[0_40px_100px_-52px_rgba(62,0,0,0.55)] min-[640px]:min-h-[34rem] min-[1024px]:min-h-[35rem] min-[1360px]:min-h-[37.5rem]">
-      {/* Profundidade: grafite à esquerda virando vermelho profundo à direita. */}
-      <div
-        className="absolute inset-0 bg-[radial-gradient(120%_100%_at_100%_46%,rgba(226,22,30,0.62),transparent_56%),radial-gradient(70%_60%_at_86%_4%,rgba(255,60,68,0.28),transparent_54%),linear-gradient(112deg,#0b0b0d_0%,#161619_42%,#3a070c_100%)]"
-        aria-hidden
-      />
-      <div
-        className="absolute -right-24 -top-28 size-[26rem] rounded-full border border-white/[0.07]"
-        aria-hidden
-      />
-      <div
-        className="absolute -right-10 top-1/2 size-[34rem] -translate-y-1/2 rounded-full border border-white/[0.06]"
-        aria-hidden
-      />
-      <div
-        className="absolute -bottom-24 left-[18%] h-52 w-96 rounded-full bg-jb-500/25 blur-3xl"
-        aria-hidden
-      />
-
-      <div className="absolute left-5 top-5 z-20 min-[640px]:left-7 min-[640px]:top-7">
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/25 px-3.5 py-2 text-[0.65rem] font-black uppercase tracking-[0.14em] text-white/85 backdrop-blur-md">
-          <span className="size-1.5 rounded-full bg-jb-400" aria-hidden />
-          Destaque do catálogo
-        </span>
-      </div>
-
-      <p
-        className="absolute right-6 top-7 z-20 hidden text-right text-[0.58rem] font-semibold uppercase leading-[1.9] tracking-[0.26em] text-white/45 min-[1024px]:block"
-        aria-hidden
-      >
-        Odontologia
-        <br />
-        sem limites
-        <span className="ml-auto mt-2.5 block h-px w-6 bg-jb-400/70" />
-      </p>
-
-      {/* Painel claro com o produto. */}
-      <div className="absolute inset-x-[7%] bottom-[24%] top-[13%] z-10 overflow-hidden rounded-[1.6rem] border border-white/60 bg-white shadow-[0_30px_74px_-36px_rgba(0,0,0,0.45)] min-[640px]:inset-x-[8%] min-[640px]:bottom-[22%]">
-        <div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,#fff_0%,#fbfbfb_58%,#efeded_100%)]"
-          aria-hidden
-        />
-        <div
-          className="absolute left-1/2 top-1/2 size-[19rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-jb-100/80"
-          aria-hidden
-        />
-
-        {foto ? (
-          <Image
-            src={foto.url}
-            alt={foto.alt}
-            fill
-            preload
-            sizes="(max-width: 1024px) 84vw, 44vw"
-            className="jb-hero-cresce scale-[1.28] object-contain drop-shadow-[0_30px_30px_rgba(90,0,0,0.14)]"
-          />
-        ) : null}
-
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(56%_72%_at_50%_48%,transparent_58%,rgba(255,255,255,0.85)_86%,#fff_100%)]"
-          aria-hidden
-        />
-
-        <p
-          className="absolute left-5 top-1/2 z-10 hidden -translate-y-1/2 text-[0.55rem] font-semibold uppercase leading-[2] tracking-[0.24em] text-graf-500 min-[1280px]:block"
-          aria-hidden
-        >
-          Alta
-          <br />
-          performance
-          <br />
-          para grandes
-          <br />
-          resultados
-        </p>
-        <p
-          className="absolute right-5 top-[58%] z-10 hidden text-right text-[0.55rem] font-semibold uppercase leading-[2] tracking-[0.24em] text-graf-500 min-[1280px]:block"
-          aria-hidden
-        >
-          Confiança
-          <br />
-          em cada
-          <br />
-          detalhe
-        </p>
-      </div>
-
-      <ProdutoDestaque produto={produto} parcelamento={parcelamento} />
-
-      <p className="absolute bottom-7 right-6 z-20 hidden items-center gap-2 text-[0.6rem] font-bold uppercase tracking-[0.14em] text-white/60 min-[640px]:flex">
-        <Headphones className="size-3.5" aria-hidden />
-        suporte depois da compra
-      </p>
-    </div>
-  );
-}
-
-function ProdutoDestaque({
-  produto,
-  parcelamento,
-}: {
-  produto: ProdutoHome;
-  parcelamento: Parcelamento;
-}) {
   const condicao = CONDICAO_HOME[produto.condition];
   const parcelas = produto.allowDirectPurchase
     ? calcularParcelas(produto.priceCents, parcelamento.max, parcelamento.minimaCents)
@@ -369,44 +288,81 @@ function ProdutoDestaque({
   return (
     <Link
       href={`/loja/${produto.slug}`}
-      className="foco-jb group absolute bottom-5 left-5 right-5 z-30 grid gap-4 rounded-[1.35rem] border border-white/70 bg-white/95 p-5 shadow-[0_26px_60px_-34px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_34px_70px_-32px_rgba(0,0,0,0.6)] min-[640px]:bottom-7 min-[640px]:left-7 min-[640px]:right-auto min-[640px]:w-[min(31rem,68%)] min-[640px]:grid-cols-[minmax(0,1fr)_auto] min-[640px]:items-end"
+      className="jb-hero-entra foco-jb group relative flex min-h-[30rem] flex-col overflow-hidden rounded-[2rem] border border-graf-200 bg-white shadow-[0_28px_64px_-44px_rgba(26,28,30,0.4)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-graf-300 hover:shadow-[0_36px_78px_-40px_rgba(26,28,30,0.45)] min-[640px]:min-h-[32rem] min-[1024px]:min-h-[34rem] min-[1360px]:min-h-[37rem]"
     >
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-          {produto.brand ? (
-            <span className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-graf-500">
-              {produto.brand.name}
-            </span>
-          ) : null}
-        </div>
+      {/* Palco. O degradê vertical é o mesmo da galeria da ficha: assenta a
+          peça sem acender resíduo de recorte, como o campo radial acendia. */}
+      <div
+        className="relative min-h-0 flex-1"
+        style={{
+          background:
+            "linear-gradient(180deg, #ffffff 0%, #ffffff 58%, var(--color-graf-50) 100%)",
+        }}
+      >
+        <span className="absolute left-5 top-5 z-10 inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white/90 px-3.5 py-2 text-[0.65rem] font-black uppercase tracking-[0.14em] text-graf-700 backdrop-blur min-[640px]:left-6 min-[640px]:top-6">
+          <span className="size-1.5 rounded-full bg-jb-500" aria-hidden />
+          Destaque do catálogo
+        </span>
 
-        <h2 className="line-2 mt-2 text-[1.05rem] font-black leading-[1.1] tracking-[-0.025em] text-graf-950 min-[640px]:text-lg">
-          {produto.name}
-        </h2>
+        <p className="absolute right-6 top-7 z-10 hidden items-center gap-2 text-[0.6rem] font-bold uppercase tracking-[0.14em] text-graf-500 min-[768px]:flex">
+          <Headphones className="size-3.5" aria-hidden />
+          suporte depois da compra
+        </p>
 
-        {produto.allowDirectPurchase && produto.priceCents > 0 ? (
-          <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <p className="text-xl font-black tracking-[-0.025em] text-jb-700">
-              {formatarPreco(produto.priceCents)}
-            </p>
-            {parcelas ? (
-              <p className="text-[0.68rem] text-graf-500">
-                em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
-              </p>
-            ) : null}
-          </div>
-        ) : (
-          <p className="mt-3 text-sm font-black text-jb-700">Sob orçamento</p>
-        )}
+        {foto ? (
+          <Image
+            src={foto.url}
+            alt={foto.alt}
+            fill
+            preload
+            sizes="(max-width: 1024px) 92vw, 46vw"
+            /* Respiro maior no topo: é onde o selo e a linha de suporte moram,
+               e a peça não pode passar por baixo deles. */
+            className="jb-hero-cresce object-contain px-4 pb-4 pt-12 min-[640px]:px-8 min-[640px]:pb-7 min-[640px]:pt-16"
+          />
+        ) : null}
       </div>
 
-      <span
-        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-jb-600 text-white shadow-[0_14px_26px_-12px_rgba(211,17,28,0.8)] transition-transform group-hover:translate-x-1"
-        aria-hidden
-      >
-        <ArrowRight className="size-4" />
-      </span>
+      {/* A informação em faixa própria, não sobre a foto: o cartão flutuante
+          cobria justamente a base do equipamento. */}
+      <div className="relative z-10 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-t border-graf-200 bg-white p-5 min-[640px]:p-6">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
+            {produto.brand ? (
+              <span className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-graf-500">
+                {produto.brand.name}
+              </span>
+            ) : null}
+          </div>
+
+          <h2 className="line-2 mt-2 text-[1.05rem] font-black leading-[1.1] tracking-[-0.025em] text-graf-950 min-[640px]:text-lg">
+            {produto.name}
+          </h2>
+
+          {produto.allowDirectPurchase && produto.priceCents > 0 ? (
+            <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <p className="text-xl font-black tracking-[-0.025em] text-graf-950">
+                {formatarPreco(produto.priceCents)}
+              </p>
+              {parcelas ? (
+                <p className="text-[0.72rem] text-graf-500">
+                  em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <p className="mt-2.5 text-sm font-black text-graf-950">Sob orçamento</p>
+          )}
+        </div>
+
+        <span
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-jb-500 text-white shadow-[0_14px_26px_-12px_rgba(211,17,28,0.8)] transition-transform duration-200 group-hover:translate-x-1"
+          aria-hidden
+        >
+          <ArrowRight className="size-4" />
+        </span>
+      </div>
     </Link>
   );
 }
