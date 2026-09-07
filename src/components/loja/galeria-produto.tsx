@@ -155,18 +155,28 @@ export function GaleriaProduto({
   const foto = fotos[atual];
 
   return (
-    <div>
-      <div className="relative overflow-hidden rounded-xl border border-graf-200 bg-white shadow-card">
+    /* Trilha de miniaturas à esquerda no desktop, embaixo no celular.
+
+       `flex-row-reverse` mantém o palco em PRIMEIRO no DOM — quem lê por
+       teclado ou leitor de tela chega à foto principal antes da tira de
+       miniaturas, que é uma lista de atalhos para ela. No celular a tira volta
+       para baixo, onde o polegar alcança. */
+    <div className="flex flex-col gap-4 lg:flex-row-reverse lg:items-start lg:gap-4">
+      <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
         <div
           className="relative aspect-square"
           onTouchStart={aoEncostar}
           onTouchEnd={aoSoltar}
-          /* Halo discreto por trás da peça, para o recorte não flutuar num
-             branco chapado. Estilo em atributo porque é um valor único desta
-             tela — o CSP do projeto libera `style` do React de propósito. */
+          /* Fundo quase branco, com o cinza só na base.
+
+             Antes era um degradê radial de branco ao cinza-claro. A intenção
+             era dar volume, mas equipamento odontológico é fotografado
+             recortado em branco — e o campo radial acendia cada resíduo de
+             recorte da foto como um halo em volta da peça. Um degradê vertical
+             curtíssimo faz o mesmo trabalho de assentar a peça sem revelar o
+             que a foto tem de imperfeito. */
           style={{
-            background:
-              "radial-gradient(circle at 50% 38%, #ffffff 0%, var(--color-graf-100) 100%)",
+            background: "linear-gradient(180deg, #ffffff 0%, #ffffff 62%, var(--color-graf-50) 100%)",
           }}
         >
           <Image
@@ -174,10 +184,10 @@ export function GaleriaProduto({
             alt={foto.alt || nome}
             fill
             priority
-            /* No desktop a galeria ocupa 7 das 12 colunas do container de
-               1440px — cerca de 58vw. Pedir menos entregaria imagem borrada
-               justamente na peça que a pessoa está avaliando. */
-            sizes="(max-width: 1023px) 100vw, 58vw"
+            /* No desktop a galeria ocupa 7 das 12 colunas do container, menos
+               a coluna de miniaturas — cerca de 54vw. Pedir menos entregaria
+               imagem borrada justamente na peça que a pessoa está avaliando. */
+            sizes="(max-width: 1023px) 100vw, 54vw"
             /* Respiro curto de propósito: a foto é o argumento da página, e
                cada pixel de moldura sai do equipamento. */
             className="object-contain p-4 sm:p-6 lg:p-8"
@@ -233,10 +243,15 @@ export function GaleriaProduto({
       {total > 1 ? (
         <ul
           aria-label={`Imagens de ${nome}`}
-          className="scrollbar-none mt-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1"
+          className={cn(
+            "scrollbar-none flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1",
+            "lg:w-[4.75rem] lg:shrink-0 lg:snap-none lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0",
+            // teto na coluna para uma dúzia de fotos não esticar a página
+            "lg:max-h-[34rem]",
+          )}
         >
           {fotos.map((imagem, indice) => (
-            <li key={`${imagem.url}-${indice}`} className="shrink-0 snap-start">
+            <li key={`${imagem.url}-${indice}`} className="shrink-0 snap-start lg:w-full">
               <button
                 type="button"
                 onClick={() => setAtual(indice)}
@@ -244,6 +259,7 @@ export function GaleriaProduto({
                 aria-current={indice === atual ? "true" : undefined}
                 className={cn(
                   "foco-jb relative block size-16 overflow-hidden rounded-lg border bg-white transition-colors duration-150 sm:size-18",
+                  "lg:aspect-square lg:size-auto lg:w-full",
                   indice === atual
                     ? "border-jb-500 ring-1 ring-inset ring-jb-500"
                     : "border-graf-200 hover:border-graf-400",
