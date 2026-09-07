@@ -63,6 +63,13 @@ function CartaoMarca({ marca }: { marca: Marca }) {
   return (
     <Link
       href={`/marcas/${marca.slug}`}
+      /* Sem prefetch: o trilho repete a fila inteira duas vezes para a emenda
+         do laço não aparecer, então cada marca vira dois links e o Next pedia
+         a mesma rota uma vez por cópia — medido, nove chamadas idênticas a
+         /marcas/demo-alt numa só visita à home. É uma faixa de logotipos que
+         passa andando, não o caminho por onde se navega; quem clica aceita
+         esperar o carregamento normal. */
+      prefetch={false}
       className="group foco-jb flex h-[12rem] w-[16.4rem] shrink-0 flex-col items-center justify-center rounded-[1.4rem] border border-graf-100 bg-white/85 px-5 text-center shadow-[0_18px_44px_-34px_rgba(17,24,39,0.32)] transition-[transform,border-color,box-shadow,background-color] duration-300 hover:-translate-y-[6px] hover:border-jb-300 hover:bg-white hover:shadow-[0_28px_50px_-26px_rgba(202,20,30,0.42)]"
     >
       <span className="flex h-[4.4rem] w-full items-center justify-center">

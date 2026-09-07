@@ -4,7 +4,7 @@ import { ArrowRight, ClipboardCheck, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, TituloSecao, Trilha } from "@/components/ui/data";
-import { Grade } from "@/components/ui/grade";
+import { colunasAte, Grade } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import { formatarData } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -107,7 +107,7 @@ export default async function CasesPage() {
         />
 
         {cases.length > 0 ? (
-          <Grade colunas={{ base: 1, sm: 2, lg: 3 }} como="ul" className="mt-8">
+          <Grade colunas={colunasAte(cases.length, { base: 1, sm: 2, lg: 3 })} como="ul" className="mt-8">
             {cases.map((caso) => (
               <li key={caso.slug}>
                 <Cartao className="h-full">

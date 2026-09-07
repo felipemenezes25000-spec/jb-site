@@ -5,7 +5,7 @@ import { ArrowRight, BookOpen, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { TituloSecao, Trilha, Vazio } from "@/components/ui/data";
-import { Grade } from "@/components/ui/grade";
+import { colunasAte, Grade } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import {
   ROTULO_TEMA,
@@ -177,7 +177,7 @@ export default async function CentralTecnicaPage({ searchParams }: Props) {
 
         <div className="mt-8">
           {artigos.length > 0 ? (
-            <Grade colunas={{ base: 1, sm: 2, lg: 3 }} como="ul">
+            <Grade colunas={colunasAte(artigos.length, { base: 1, sm: 2, lg: 3 })} como="ul">
               {artigos.map((artigo) => (
                 /* `Grade como="ul"` não embrulha sozinha: o `li` é
                    responsabilidade de quem chama, e sem ele a lista tem filho
