@@ -67,6 +67,23 @@ export type EntradaMetadata = {
  * Metadados de uma página. O `metadataBase`, o título padrão e o template
  * ficam no layout raiz — aqui entra só o que é da página.
  */
+/**
+ * O nome da empresa, como aparece no template de título do layout raiz.
+ *
+ * O layout monta "%s · JB Soluções Odontológicas". Quando o título da página
+ * já traz o nome — o que acontece sempre que ele vem do campo de SEO do
+ * painel, onde é natural escrever o nome inteiro — a aba terminava com
+ * "Sobre a JB Soluções Odontológicas · JB Soluções Odontológicas": 68
+ * caracteres para dizer duas vezes a mesma coisa, num espaço em que o Google
+ * mostra uns 60.
+ */
+const EMPRESA_NO_TITULO = "JB Soluções Odontológicas";
+
+/** O título já diz o nome da empresa? Então o template não deve repeti-lo. */
+function jaTemAMarca(titulo: string) {
+  return titulo.toLowerCase().includes(EMPRESA_NO_TITULO.toLowerCase());
+}
+
 export function metadataDePagina(entrada: EntradaMetadata): Metadata {
   const titulo = entrada.titulo.trim();
   const descricao = entrada.descricao ? textoLimpo(entrada.descricao) : undefined;
@@ -103,7 +120,9 @@ export function metadataDePagina(entrada: EntradaMetadata): Metadata {
   };
 
   return {
-    title: titulo,
+    /* `absolute` desliga o template do layout para esta página — só quando o
+       título já carrega o nome da empresa, para não dizer duas vezes. */
+    title: jaTemAMarca(titulo) ? { absolute: titulo } : titulo,
     description: descricao,
     alternates: entrada.caminho ? { canonical: entrada.caminho } : undefined,
     openGraph: og,

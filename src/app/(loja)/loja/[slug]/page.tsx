@@ -52,6 +52,7 @@ import {
 } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { getSettings, ligado } from "@/lib/settings";
+import { colunasAte } from "@/components/ui/grade";
 
 /*
  * Migração para Cache Components — esta rota ainda não foi migrada.
@@ -758,7 +759,17 @@ async function Relacionados({
     );
   }
 
-  return <GradeProdutos produtos={produtos} />;
+  /* Com um relacionado só, o grid de quatro colunas deixava o cartão sozinho
+     ao lado de três buracos. As colunas acompanham a quantidade, e abaixo de
+     três a faixa para de esticar — cartão de produto com a largura da seção
+     inteira não parece destaque, parece erro. */
+  return (
+    <GradeProdutos
+      produtos={produtos}
+      colunas={colunasAte(produtos.length, { base: 1, sm: 2, lg: 3, xl: 4 })}
+      className={produtos.length < 3 ? "max-w-3xl" : undefined}
+    />
+  );
 }
 
 function EsqueletoRelacionados() {

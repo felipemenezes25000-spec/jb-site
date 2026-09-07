@@ -71,7 +71,7 @@ const CONFRONTO = [
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   return metadataDePagina({
-    titulo: "Manutenção preventiva de equipamentos odontológicos",
+    titulo: "Manutenção preventiva de equipamentos",
     descricao: `Revisão programada de cadeiras, autoclaves, compressores e demais equipamentos da clínica em ${s.endereco_cidade} e região, com registro no histórico de cada aparelho.`,
     caminho: CAMINHO,
   });

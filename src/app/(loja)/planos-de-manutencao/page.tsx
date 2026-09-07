@@ -163,7 +163,7 @@ const LINHAS_COMPARATIVO: {
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   return metadataDePagina({
-    titulo: "Planos de manutenção para clínicas odontológicas",
+    titulo: "Planos de manutenção para clínicas",
     descricao: `Cobertura contínua de manutenção preventiva para os equipamentos da clínica em ${s.endereco_cidade} e região, com visitas programadas e histórico por aparelho.`,
     caminho: CAMINHO,
   });

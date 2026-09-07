@@ -23,6 +23,31 @@ export type ColunasPorTela = {
   xl?: Colunas;
 };
 
+/**
+ * Teto de colunas ajustado à quantidade de itens.
+ *
+ * Um grid de quatro colunas com um item só não é um grid: é um cartão órfão
+ * com três buracos ao lado. Acontece sempre que a quantidade vem do banco —
+ * relacionados de um produto, serviços publicados, cases — e o layout foi
+ * escrito para o caso cheio.
+ *
+ * Limitar as colunas ao número de itens fecha a fileira. Quem chama continua
+ * declarando o teto que quer no caso cheio; aqui só se corta o excesso.
+ */
+export function colunasAte(itens: number, teto: ColunasPorTela): ColunasPorTela {
+  const cabem = Math.max(1, itens) as Colunas;
+  const limitar = (valor?: Colunas) =>
+    valor === undefined ? undefined : (Math.min(valor, cabem) as Colunas);
+
+  return {
+    base: limitar(teto.base),
+    sm: limitar(teto.sm),
+    md: limitar(teto.md),
+    lg: limitar(teto.lg),
+    xl: limitar(teto.xl),
+  };
+}
+
 const BASE: Record<Colunas, string> = {
   1: "grid-cols-1",
   2: "grid-cols-2",

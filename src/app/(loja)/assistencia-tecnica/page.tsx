@@ -85,7 +85,7 @@ const COMBINADO = [
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   return metadataDePagina({
-    titulo: "Assistência técnica de equipamentos odontológicos",
+    titulo: "Assistência técnica odontológica",
     descricao: `Conserto, diagnóstico e manutenção de equipamentos odontológicos em ${s.endereco_cidade} e região. Chamado com número, orçamento antes da troca de peça e acompanhamento do começo ao fim.`,
     caminho: CAMINHO,
   });
