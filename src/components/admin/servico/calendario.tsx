@@ -384,7 +384,11 @@ function VisitasParaRemarcar({
               <span className="min-w-[14rem] flex-1">
                 <Link
                   href={visita.href}
-                  className="block truncate text-sm font-semibold text-graf-900 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  /* `block` deixava o alvo com a altura da linha: 316x20 no
+                     dedo. `flex items-center` com altura mínima no toque dá
+                     os 44px sem alterar a densidade no mouse, que é o que a
+                     lista de operação precisa. */
+                  className="flex items-center truncate text-sm font-semibold text-graf-900 pointer-coarse:min-h-11 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
                   {formatoDiaLongo.format(visita.quando)} ·{" "}
                   {formatoHora.format(visita.quando)} — {visita.titulo}
@@ -428,7 +432,11 @@ function ItemDoDia({
         "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-jb-500",
         ESTILO_TIPO[compromisso.tipo],
         compromisso.cancelado && "opacity-55 line-through decoration-1",
-        detalhado ? "min-h-11 px-3 py-2.5" : "hover:brightness-[0.97]",
+        /* No mouse a grade do mês fica densa de propósito — é uma tela de
+           operação, e altura sobrando ali custa dias visíveis. No toque o
+           mesmo item cresce para 44px, que é a convenção que `ui/button.tsx`
+           já usa. Media 316x20 no dedo. */
+        detalhado ? "min-h-11 px-3 py-2.5" : "pointer-coarse:min-h-11 hover:brightness-[0.97]",
       )}
     >
       <span className="flex items-center gap-1.5">
@@ -443,8 +451,12 @@ function ItemDoDia({
         <span className="line-2 min-w-0 flex-1 text-xs font-semibold">{compromisso.titulo}</span>
       </span>
 
+      {/* Sem `opacity-90` na linha de apoio. O texto já é `text-ok-700` sobre
+          `bg-ok-50`, que dá 4,83:1; a opacidade derrubava para 4,33:1 e
+          reprovava o mínimo de 4,5:1 da WCAG 1.4.3. A hierarquia entre as
+          duas linhas vem do peso da fonte, que não mexe em contraste. */}
       {detalhado ? (
-        <span className="mt-1 block text-xs opacity-90">
+        <span className="mt-1 block text-xs font-normal">
           {ROTULO_TIPO_AGENDA[compromisso.tipo]}
           {compromisso.detalhe ? ` · ${compromisso.detalhe}` : ""}
           {compromisso.tecnico ? ` · ${compromisso.tecnico}` : " · sem técnico"}

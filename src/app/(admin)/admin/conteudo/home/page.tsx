@@ -68,11 +68,11 @@ export default async function PaginaSecoesDaHome({
       <CabecalhoDeSecao
         trilha={[{ rotulo: "Conteúdo", href: "/admin/conteudo" }, { rotulo: "Home" }]}
         titulo="Seções da página inicial"
-        descricao="A home é montada nesta ordem, de cima para baixo. Esconder uma seção não apaga o que está escrito nela."
+        descricao="Rascunhos de blocos da home. Hoje eles não são publicados automaticamente — a página inicial é montada em código."
         etiqueta={
           secoes.length > 0 ? (
-            <Etiqueta tom={publicadas > 0 ? "ok" : "aguardando"}>
-              {publicadas} de {secoes.length} no ar
+            <Etiqueta tom="aguardando">
+              {publicadas} de {secoes.length} marcadas para publicar
             </Etiqueta>
           ) : undefined
         }
@@ -88,11 +88,36 @@ export default async function PaginaSecoesDaHome({
 
       {ok && AVISOS[ok] ? <Aviso tom="sucesso">{AVISOS[ok]}</Aviso> : null}
 
+      {/* Um controle que não controla nada é pior que controle nenhum: quem
+          publica uma seção aqui e não a vê no site conclui que o site está
+          quebrado. A divergência é anterior a esta tela ter sido revista — a
+          home pública nunca leu `HomeSection`: conferido no commit 5ecdd55,
+          nem a página nem nenhum componente dela consultam a tabela.
+
+          Até a ligação existir, esta página é um rascunho útil: guarda texto,
+          ordem e mídia de cada bloco, e é de onde a migração vai partir. O
+          que ela não pode fazer é fingir. */}
+      {secoes.length > 0 ? (
+        <Aviso tom="atencao" titulo="Estas seções ainda não aparecem no site">
+          A página inicial pública é montada em código, com dados do catálogo, e não lê
+          esta tabela. Publicar uma seção aqui guarda o conteúdo, mas não altera a home.
+          Para mudar textos que estão no ar, use{" "}
+          <Link href="/admin/conteudo/paginas" className="font-semibold underline underline-offset-4">
+            Páginas
+          </Link>{" "}
+          e{" "}
+          <Link href="/admin/configuracoes" className="font-semibold underline underline-offset-4">
+            Configurações
+          </Link>
+          , que a home lê de verdade.
+        </Aviso>
+      ) : null}
+
       {secoes.length === 0 ? (
         <Vazio
           icone={LayoutTemplate}
-          titulo="A home ainda não tem seções"
-          descricao="Sem seções cadastradas, a página inicial fica sem blocos editáveis. Comece pela abertura."
+          titulo="Nenhum rascunho de seção"
+          descricao="Esta tela guarda blocos de conteúdo para a home. Ela ainda não publica no site — a página inicial é montada em código."
           acao={
             podeEscrever ? (
               <LinkBotao href="/admin/conteudo/home/nova">
