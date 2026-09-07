@@ -1,3 +1,9 @@
+/*
+ * Ajuste cirúrgico do rodapé desktop.
+ * Mantém a composição, larguras, tipografia e posicionamento originais;
+ * apenas usa a altura já existente da linha principal para fechar os blocos
+ * de contato e CTAs na mesma base visual.
+ */
 @media (min-width: 1360px) {
   footer section[aria-labelledby="rodape-contato"] {
     align-self: stretch;
@@ -5,7 +11,7 @@
     flex-direction: column;
   }
 
-  footer section[aria-labelledby="rodape-contato"] > div:last-child {
+  footer section[aria-labelledby="rodape-contato"] > div.border-t {
     margin-top: auto;
   }
 
