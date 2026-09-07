@@ -291,7 +291,13 @@ export async function Rodape() {
         <div className="relative z-10 grid gap-10 min-[1150px]:grid-cols-[20rem_minmax(0,1fr)] min-[1150px]:gap-x-10 min-[1360px]:grid-cols-[27%_minmax(0,1fr)_17%] min-[1360px]:gap-x-8 min-[1800px]:grid-cols-[25rem_minmax(0,1fr)_19rem] min-[1800px]:gap-x-16">
           {/* ── Cartão de contato ─────────────────────────────────────────── */}
           <section
-            className="w-full max-w-[27rem] self-start rounded-[1.9rem] border border-white/90 bg-white/85 px-7 pb-4 pt-7 shadow-[0_26px_64px_-40px_rgba(120,10,10,0.22)] backdrop-blur-sm min-[1800px]:rounded-[2.1rem] min-[1800px]:px-[2.15rem]"
+            /* O teto de largura existe para abrir espaço à cadeira, que só entra a
+               partir de 1360px. Abaixo disso ele deixava o cartão parando em
+               460px enquanto as colunas de links seguiam até 937px — 505px de
+               buraco ao lado, sem nada para ocupá-lo. Agora o limite vale só
+               onde a cadeira aparece; antes disso o cartão acompanha a largura
+               do resto do rodapé. */
+            className="w-full self-start rounded-[1.9rem] min-[1360px]:max-w-[27rem] border border-white/90 bg-white/85 px-7 pb-4 pt-7 shadow-[0_26px_64px_-40px_rgba(120,10,10,0.22)] backdrop-blur-sm min-[1800px]:rounded-[2.1rem] min-[1800px]:px-[2.15rem]"
             aria-labelledby="rodape-contato"
           >
             <h2 id="rodape-contato" className="sr-only">
