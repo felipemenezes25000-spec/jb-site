@@ -286,7 +286,13 @@ export default async function ProdutoPage({ params }: Props) {
   const descricao = produto.description.trim();
   // `<p></p>` vindo do editor tem comprimento, mas não tem conteúdo: sem tirar
   // a marcação, a página abriria um título "Sobre este equipamento" vazio.
-  const temDescricao = textoLimpo(descricao, 4000).length > 0;
+  const tamanhoDaDescricao = textoLimpo(descricao, 4000).length;
+  const temDescricao = tamanhoDaDescricao > 0;
+  /* O espaçamento grande foi feito para uma descrição de verdade. Com uma ou
+     duas frases — que é o que boa parte do catálogo tem hoje — sobravam 224px
+     de respiro para 105px de conteúdo, e a seção virava um vão no meio da
+     página. Descrição curta usa o passo menor da mesma escala. */
+  const descricaoLonga = tamanhoDaDescricao >= 400;
 
   // A faixa da ficha técnica tem duas colunas — especificações à esquerda,
   // medidas, regulatório e documentos à direita. Quando só um dos lados tem
@@ -539,7 +545,7 @@ export default async function ProdutoPage({ params }: Props) {
 
       {/* ========================================================== DESCRIÇÃO */}
       {temDescricao ? (
-        <Secao fundo="afundada" espaco="lg" separador>
+        <Secao fundo="afundada" espaco={descricaoLonga ? "lg" : "md"} separador>
           {/* Título de um lado, texto do outro em medida curta: texto corrido
               em 1400px de largura ninguém lê. */}
           <div className="grid gap-6 lg:grid-cols-12 lg:gap-16">
