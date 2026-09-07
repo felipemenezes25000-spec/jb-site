@@ -12,6 +12,8 @@
     align-self: stretch;
     display: flex;
     flex-direction: column;
+    /* Sobe o bloco inteiro sem mexer no grid nem empurrar as outras colunas. */
+    transform: translateY(-1rem);
   }
 
   footer section[aria-labelledby="rodape-contato"] > div.border-t {
@@ -29,9 +31,13 @@
 }
 
 @media (min-width: 1800px) {
-  /* A logo sobe visualmente, sem deslocar o resumo nem o restante do bloco. */
-  footer section[aria-labelledby="rodape-contato"] > div.w-fit:first-of-type {
-    transform: translateY(-0.7rem);
+  /*
+   * Em telas largas o recuo original do componente deixa o bloco baixo demais.
+   * O deslocamento é visual e exclusivo da coluna institucional: cadeira,
+   * navegação, CTAs e barra inferior permanecem exatamente onde estavam.
+   */
+  footer section[aria-labelledby="rodape-contato"] {
+    transform: translateY(-1.75rem);
   }
 
   /* O resumo usa a mesma escala tipográfica dos links da navegação. */
