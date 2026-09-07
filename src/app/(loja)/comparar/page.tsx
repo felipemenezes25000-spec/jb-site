@@ -58,14 +58,33 @@ function primeiro(valor: string | string[] | undefined) {
   return (Array.isArray(valor) ? valor[0] : valor) ?? "";
 }
 
+/**
+ * Lê o parâmetro `p` nos dois formatos possíveis.
+ *
+ * O formulário desta página tem uma caixa por equipamento, todas com
+ * `name="p"`, então o navegador envia um par por marcação: `?p=a&p=b&p=c`.
+ * A leitura anterior usava `primeiro()`, que devolve só `valor[0]` de um
+ * array — marcar três equipamentos chegava aqui como um só, e a página
+ * respondia "falta o segundo equipamento" em cima de uma seleção válida.
+ *
+ * A forma com vírgula (`?p=a,b`) continua aceita: nenhum link do site a
+ * gera hoje, mas endereços montados à mão ou compartilhados usam ela.
+ */
+function slugsDe(valor: string | string[] | undefined) {
+  const bruto = Array.isArray(valor) ? valor : valor ? [valor] : [];
+  const slugs = bruto
+    .flatMap((item) => item.split(","))
+    .map((slug) => slug.trim())
+    .filter(Boolean);
+
+  // Dedupe: `?p=a&p=a` não deve gastar duas das três vagas.
+  return [...new Set(slugs)];
+}
+
 export default async function CompararPage({ searchParams }: Props) {
   const params = await searchParams;
 
-  const escolhidos = primeiro(params.p)
-    .split(",")
-    .map((slug) => slug.trim())
-    .filter(Boolean)
-    .slice(0, MAXIMO);
+  const escolhidos = slugsDe(params.p).slice(0, MAXIMO);
 
   const respostas: RespostasDaClinica = {
     volume: (primeiro(params.volume) || "nao_sei") as RespostasDaClinica["volume"],
