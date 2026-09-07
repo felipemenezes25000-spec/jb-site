@@ -30,10 +30,21 @@ painel, ou (b) compressor industrial em oficina. As duas opções são piores do
 que a foto certa — a primeira anuncia a marca errada na página, a segunda
 anuncia outro tipo de máquina.
 
-O que essas quatro ganharam foi resolução: `scripts/limpar-fotos-demo.mjs`
-limpa o halo do recorte e reamostra de 840 para 2200px (lanczos + máscara de
-nitidez fraca). Ampliar não cria detalhe, mas evita que o navegador estique
-840px num palco de ~1050px com o filtro barato dele.
+O que essas quatro ganharam foi resolução e uma limpeza parcial:
+`scripts/limpar-fotos-demo.mjs` esmaece o halo do recorte e reamostra de 840
+para 2200px (lanczos + máscara de nitidez fraca). Ampliar não cria detalhe, mas
+evita que o navegador estique 840px num palco de ~1050px com o filtro barato
+dele.
+
+**Parcial é a palavra.** O arquivo original traz dois defeitos: um "X" diagonal
+claro atravessando o quadro e um fantasma escuro colado na silhueta. O X sai por
+completo. O fantasma não — ele encosta no contorno do equipamento e vive na
+mesma faixa de luminância que ele, então separar os dois exigiria um algoritmo
+de matting de verdade. O que a ferramenta faz é rebaixá-lo até virar sombra
+suave. O cabeçalho do script registra os três caminhos que foram tentados e por
+que cada um falhou, para ninguém repetir.
+
+Isso é remendo, não conserto. O conserto é a JB mandar a foto.
 
 ## O que NÃO pode virar banco de imagens
 

@@ -93,6 +93,17 @@ test.describe("Carrinho", () => {
   test("o carrinho vazio não deixa entrar no checkout", async ({ page }) => {
     await page.goto("/checkout");
     await page.waitForURL(/\/carrinho$/);
-    await expect(page.getByText("Seu carrinho está vazio")).toBeVisible();
+
+    /* Escopado em `#conteudo` porque aqui se chega por REDIRECIONAMENTO.
+       `redirect()` num Server Component não vem como 3xx: o servidor responde a
+       rota pedida e manda o cliente navegar. Durante essa troca o React mantém
+       no documento a cópia escondida do fluxo anterior, e a mesma frase casa
+       duas vezes — uma no conteúdo e uma no `<div hidden>`. Modo estrito trata
+       isso como erro e para de tentar, então a espera nem chega a acontecer.
+       Não é defeito da página: é a busca perguntando ao documento inteiro em
+       vez de perguntar ao conteúdo. */
+    await expect(
+      page.locator("#conteudo").getByText("Seu carrinho está vazio"),
+    ).toBeVisible();
   });
 });

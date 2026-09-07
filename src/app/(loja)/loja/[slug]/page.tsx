@@ -518,25 +518,26 @@ export default async function ProdutoPage({ params }: Props) {
             )}
           </div>
 
-          {/* A galeria acompanha a leitura da coluna de compra.
+          {/* NADA gruda nesta página.
 
-              Sem isso, a célula da foto ocupa as duas linhas da grade e fica
-              tão alta quanto a coluna da direita — que tem preço, serviços,
-              condições e atalhos. O resultado era meia tela branca à esquerda
-              enquanto a pessoa lia as condições de compra. Grudando a galeria
-              (`self-start` é obrigatório: o `stretch` padrão de item de grade
-              anula o sticky), a foto do equipamento fica ao lado de cada
-              decisão que a coluna pede. */}
-          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start lg:sticky lg:top-24">
+              A galeria já foi `sticky`, com o argumento de que a foto deve
+              acompanhar cada decisão que a coluna de compra pede. O argumento é
+              bom no papel e ruim na tela: a pessoa rola, o texto anda e a foto
+              não, e a página inteira dá a impressão de estar travada. Foi a
+              primeira coisa que apareceu na revisão, duas vezes.
+
+              `self-start` fica: sem ele o `stretch` padrão de item de grade
+              estica a célula da foto até a altura da coluna da direita, e sobra
+              meia tela branca embaixo da imagem. */}
+          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start">
             <GaleriaProduto fotos={fotos} nome={produto.name} />
           </div>
 
           <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-2">
-            {/* Só a GALERIA gruda. As duas colunas grudavam ao mesmo tempo, e
-                o efeito era a primeira dobra inteira parecer congelada: a
-                pessoa rolava e nada se movia até a faixa acabar. Com a coluna
-                de compra rolando, a foto acompanha cada decisão que ela pede —
-                que era a intenção do grudado desde o começo. */}
+            {/* Esta coluna também rola. Antes as duas grudavam, e a primeira
+                dobra inteira parecia congelada; depois só a galeria grudou, e
+                a foto continuava parada enquanto o texto andava. As duas
+                rolando, a página se move como página. */}
             <div id="caixa-de-compra" className="scroll-mt-32 space-y-8">
               {arquivado ? (
                 <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
