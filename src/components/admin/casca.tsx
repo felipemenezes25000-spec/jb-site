@@ -62,7 +62,7 @@ export function Casca({
   }, [pathname]);
 
   return (
-    <div className={cn("admin-shell min-h-dvh bg-[#f6f7f9] text-graf-900", styles.shell)}>
+    <div className={cn("admin-shell min-h-dvh bg-[#f8f9fb] text-graf-900", styles.shell)}>
       <a
         href="#conteudo-admin"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-white focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-jb-700 focus:shadow-raised"
@@ -72,23 +72,34 @@ export function Casca({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-graf-200/80 bg-white/95 shadow-[1px_0_0_rgba(20,24,32,0.02)] backdrop-blur-xl lg:flex",
+          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-graf-200/80 bg-white lg:flex",
           "transition-[width] duration-200 ease-out",
-          colapsado ? "w-[4.75rem]" : "w-[15.5rem]",
+          colapsado ? "w-[4.5rem]" : "w-[13.25rem]",
         )}
       >
         <div
           className={cn(
-            "flex h-16 shrink-0 items-center border-b border-graf-200/70",
-            colapsado ? "justify-center px-2" : "px-5",
+            "flex h-14 shrink-0 items-center border-b border-graf-200/70",
+            colapsado ? "justify-center px-2" : "px-4",
           )}
         >
           <Link
             href="/admin"
             aria-label="Painel JB Soluções Odontológicas"
-            className="flex items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            className="flex min-w-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
-            {colapsado ? <Simbolo tamanho={30} /> : <Logo altura={28} />}
+            {colapsado ? (
+              <Simbolo tamanho={29} />
+            ) : (
+              <>
+                <Logo altura={27} />
+                <span className="min-w-0 border-l border-graf-200 pl-2.5 text-[0.62rem] font-medium leading-[1.25] text-graf-500">
+                  Soluções que mantêm
+                  <br />
+                  seu mundo em movimento
+                </span>
+              </>
+            )}
           </Link>
         </div>
 
@@ -96,7 +107,7 @@ export function Casca({
           <MenuAdmin grupos={grupos} colapsado={colapsado} />
         </div>
 
-        <div className="shrink-0 border-t border-graf-200/70 bg-white/90 p-2.5">
+        <div className="shrink-0 border-t border-graf-200/70 bg-white p-2">
           <LinkVerSite colapsado={colapsado} />
         </div>
       </aside>
@@ -133,8 +144,15 @@ export function Casca({
             gaveta ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-graf-200/70 pl-5 pr-2.5">
-            <Logo altura={28} />
+          <div className="flex h-14 shrink-0 items-center justify-between border-b border-graf-200/70 pl-4 pr-2">
+            <div className="flex items-center gap-2.5">
+              <Logo altura={27} />
+              <span className="border-l border-graf-200 pl-2.5 text-[0.62rem] font-medium leading-[1.25] text-graf-500">
+                Soluções que mantêm
+                <br />
+                seu mundo em movimento
+              </span>
+            </div>
             <button
               type="button"
               aria-label="Fechar menu"
@@ -155,7 +173,7 @@ export function Casca({
 
           <div className="shrink-0 border-t border-graf-200/70 bg-white p-2.5">
             <LinkVerSite />
-            <div className="px-3.5 pb-1 pt-2.5">
+            <div className="px-3 pb-1 pt-2.5">
               <p className="truncate text-[0.9375rem] font-semibold text-graf-900">
                 {usuario.nome}
               </p>
@@ -168,7 +186,7 @@ export function Casca({
       <div
         className={cn(
           "min-w-0 transition-[padding] duration-200 ease-out",
-          colapsado ? "lg:pl-[4.75rem]" : "lg:pl-[15.5rem]",
+          colapsado ? "lg:pl-[4.5rem]" : "lg:pl-[13.25rem]",
         )}
       >
         <CabecalhoAdmin
@@ -182,9 +200,9 @@ export function Casca({
 
         <main
           id="conteudo-admin"
-          className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-9 xl:px-10"
+          className="min-w-0 px-4 py-5 sm:px-6 sm:py-6 lg:px-7 lg:py-6 xl:px-8"
         >
-          <div className="mx-auto min-w-0 max-w-[96rem]">{children}</div>
+          <div className="mx-auto min-w-0 max-w-[108rem]">{children}</div>
         </main>
       </div>
     </div>
@@ -197,13 +215,13 @@ function LinkVerSite({ colapsado = false }: { colapsado?: boolean }) {
       href="/"
       title={colapsado ? "Ver o site" : undefined}
       className={cn(
-        "flex h-11 items-center gap-3 rounded-xl text-[0.9375rem] font-medium text-graf-600 transition-all",
+        "flex h-10 items-center gap-2.5 rounded-lg text-[0.8125rem] font-medium text-graf-600 transition-colors",
         "hover:bg-graf-100 hover:text-graf-950",
         "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
-        colapsado ? "justify-center px-0" : "pl-3 pr-2.5",
+        colapsado ? "justify-center px-0" : "pl-2.5 pr-2",
       )}
     >
-      <ExternalLink className="size-[18px] shrink-0 text-graf-500" aria-hidden />
+      <ExternalLink className="size-4 shrink-0 text-graf-500" aria-hidden />
       {colapsado ? <span className="sr-only">Ver o site</span> : <span>Ver o site</span>}
     </Link>
   );
