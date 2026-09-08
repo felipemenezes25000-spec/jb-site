@@ -1,6 +1,7 @@
 import { LogOut } from "lucide-react";
 
 import { sairCliente } from "@/app/acoes/conta";
+import styles from "@/app/(conta)/minha-jb/area-clinica.module.css";
 import { BotaoSairTopo, RodapeClinica, TopoClinica } from "@/components/clinica/topo";
 import { MenuLateral } from "@/components/conta/menu-lateral";
 import { STATUS_CHAMADO_ABERTOS } from "@/lib/assistencia";
@@ -29,33 +30,6 @@ import { getSettings } from "@/lib/settings";
  */
 export const instant = false;
 
-
-/**
- * Casca da Área da Clínica.
- *
- * Depois do login, a área deixa de ser uma página da loja e passa a ser uma
- * aplicação: topo próprio (marca, nome da área, avisos, identidade, saída e a
- * volta para a loja), navegação lateral fixa e um rodapé de três linhas. O
- * cabeçalho de compra — busca de catálogo, mega menu, carrinho e o botão de
- * pedir assistência — não entra aqui: quem está nesta tela já comprou, e
- * aquela barra faz a ferramenta parecer de novo uma página do site.
- *
- * A troca é só de layout. As URLs continuam as mesmas (`/minha-jb/...`), porque
- * `(conta)` é grupo de rota e não aparece no caminho. As telas de entrar,
- * cadastro e recuperação de senha ficaram no grupo `(acesso)`, que continua
- * usando o cabeçalho e o rodapé da loja — quem ainda não entrou está decidindo
- * confiar na JB, e nessa hora o site inteiro precisa estar à mão.
- *
- * A sessão é exigida aqui, uma vez, para todas as rotas de /minha-jb — e cada
- * página volta a filtrar pelo `customerId` da sessão nas próprias consultas.
- * São duas camadas de propósito: o layout impede o acesso, o filtro impede a
- * troca de id.
- *
- * Os contadores do menu saem de uma leva só de `count` em paralelo. Eles
- * mostram pendência — o que ainda espera alguém —, nunca o total: "12" em
- * Pedidos seria informação inútil para quem só quer saber o que falta.
- */
-
 /** Um pedido some da contagem quando não há mais nada a acompanhar. */
 const PEDIDOS_ENCERRADOS = ["concluido", "cancelado", "reembolsado"] as const;
 
@@ -63,8 +37,6 @@ const PEDIDOS_ENCERRADOS = ["concluido", "cancelado", "reembolsado"] as const;
 const EQUIPAMENTOS_EM_ALERTA = ["em_manutencao", "aguardando_peca", "inoperante"] as const;
 
 export default async function MinhaJbLayout({ children }: { children: React.ReactNode }) {
-  /* Sem destino fixo: o layout barra antes da página e não sabe qual delas foi
-     pedida, então quem responde é o caminho da requisição. */
   const cliente = await exigirCliente();
 
   const [pedidos, chamados, orcamentos, visitas, equipamentos, avisos, s] = await Promise.all([
@@ -99,7 +71,7 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface-muted">
+    <div className={`flex min-h-dvh flex-col text-graf-900 ${styles.shell}`}>
       <TopoClinica
         nome={cliente.name}
         email={cliente.email}
@@ -111,17 +83,17 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
         }
       />
 
-      <div className="container-jb w-full flex-1 py-6 lg:py-9">
-        <div className="lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-9">
+      <div className="mx-auto w-full max-w-[112rem] flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 xl:px-10 2xl:px-12">
+        <div className="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[16.5rem_minmax(0,1fr)] xl:gap-10">
           <MenuLateral
             contadores={contadores}
             identidade={{ nome: cliente.name, email: cliente.email }}
-            className="mb-6 lg:mb-0"
+            className="mb-5 lg:mb-0"
             sair={
               <form action={sairCliente}>
                 <button
                   type="submit"
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-graf-300 bg-white px-4 text-sm font-semibold text-graf-700 transition-colors hover:border-graf-400 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-graf-200 bg-white px-4 text-sm font-semibold text-graf-700 transition-all hover:border-graf-300 hover:bg-graf-50 hover:text-graf-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
                   <LogOut className="size-4" aria-hidden />
                   Sair da conta
@@ -130,7 +102,7 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
             }
           />
 
-          <main id="conteudo" className="min-w-0">
+          <main id="conteudo" className="min-w-0 pb-5">
             {children}
           </main>
         </div>

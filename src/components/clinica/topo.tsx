@@ -1,26 +1,9 @@
 import Link from "next/link";
-import { Bell, LogOut, Store } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Store } from "lucide-react";
 
 import { Logo } from "@/components/ui/logo";
 import { telHref, whatsappHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-/* ============================================================================
-   Topo da Área da Clínica
-
-   A área do cliente deixou de usar o cabeçalho da loja. O motivo é de produto,
-   não de estética: quem entrou já comprou. Busca de catálogo, mega menu de
-   categorias, carrinho e o botão de pedir assistência são a barra de quem está
-   escolhendo o que comprar — dentro da área, eles competem com o trabalho da
-   clínica e fazem a ferramenta parecer uma página do site.
-
-   O que fica aqui é o que a área precisa: a marca, o nome da área, o aviso do
-   que mudou, a identidade de quem está logado, a saída da conta e a volta para
-   a loja. Uma linha, 64px, sem sombra — a casca não disputa com o conteúdo.
-
-   É Server Component de propósito: nada aqui tem estado. O menu de navegação,
-   que tem (a gaveta do celular), é outro componente.
-   ============================================================================ */
 
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/).filter(Boolean);
@@ -38,42 +21,43 @@ export function TopoClinica({
 }: {
   nome: string;
   email: string;
-  /** Avisos ainda não lidos. Zero não desenha marcador nenhum. */
   naoLidas: number;
-  /** Formulário de sair, montado no servidor — a ação é uma Server Action. */
   sair: React.ReactNode;
 }) {
   return (
     <>
       <a
         href="#conteudo"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-graf-950 focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-xl focus:bg-graf-950 focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
       >
         Pular para o conteúdo
       </a>
 
-      <header className="sticky top-0 z-50 border-b border-graf-200 bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-graf-200/70 bg-white/90 shadow-[0_1px_0_rgba(18,24,35,0.025)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/82">
         <div className="container-jb flex h-16 items-center gap-3 sm:gap-4">
           <Link
             href="/minha-jb"
             aria-label="Área da Clínica — visão geral"
-            className="flex min-h-11 shrink-0 items-center rounded-sm"
+            className="flex min-h-11 shrink-0 items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
             <Logo altura={30} />
           </Link>
 
-          <span aria-hidden className="hidden h-6 w-px bg-graf-200 sm:block" />
+          <span aria-hidden className="hidden h-7 w-px bg-graf-200/80 sm:block" />
 
           <p className="hidden min-w-0 sm:block">
             <span className="block truncate text-[0.9375rem] font-bold leading-tight text-graf-950">
               Área da Clínica
             </span>
+            <span className="mt-0.5 block truncate text-[0.6875rem] font-medium text-graf-500">
+              Tecnologia que cuida
+            </span>
           </p>
 
-          <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
+          <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
             <Link
               href="/loja"
-              className="hidden h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-100 hover:text-graf-950 md:inline-flex"
+              className="hidden h-10 items-center gap-2 rounded-xl border border-graf-200 bg-graf-50/80 px-3 text-sm font-semibold text-graf-700 transition-all hover:border-graf-300 hover:bg-white hover:text-graf-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 md:inline-flex"
             >
               <Store className="size-4 shrink-0" aria-hidden />
               Ir para a loja
@@ -82,15 +66,11 @@ export function TopoClinica({
             <Link
               href="/loja"
               aria-label="Ir para a loja"
-              className="flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 md:hidden"
+              className="flex size-11 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-graf-100 md:hidden"
             >
               <Store className="size-5" aria-hidden />
             </Link>
 
-            {/* O sino leva ao bloco de avisos do painel: é onde eles moram de
-                verdade. Um painel flutuante duplicaria a mesma lista em dois
-                lugares e obrigaria a área inteira a virar componente de
-                cliente por causa de um contador. */}
             <Link
               href="/minha-jb#avisos"
               aria-label={
@@ -98,7 +78,7 @@ export function TopoClinica({
                   ? `Avisos — ${naoLidas} ${naoLidas === 1 ? "não lido" : "não lidos"}`
                   : "Avisos"
               }
-              className="relative flex size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100"
+              className="relative flex size-11 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-graf-100"
             >
               <Bell className="size-5" aria-hidden />
               {naoLidas > 0 ? (
@@ -111,18 +91,18 @@ export function TopoClinica({
               ) : null}
             </Link>
 
-            <span aria-hidden className="mx-1 hidden h-6 w-px bg-graf-200 lg:block" />
+            <span aria-hidden className="mx-0.5 hidden h-7 w-px bg-graf-200/80 lg:block" />
 
             <Link
               href="/minha-jb/perfil"
               className={cn(
-                "flex h-11 items-center gap-2.5 rounded-lg px-2 transition-colors hover:bg-graf-100",
-                "lg:pr-3",
+                "flex h-11 items-center gap-2.5 rounded-xl border border-transparent px-1.5 transition-all hover:border-graf-200 hover:bg-graf-50/90",
+                "lg:pr-2.5",
               )}
             >
               <span
                 aria-hidden
-                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-graf-950 text-xs font-bold tracking-wide text-white"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-graf-800 to-graf-950 text-xs font-bold tracking-wide text-white shadow-sm ring-1 ring-inset ring-white/10"
               >
                 {iniciais(nome)}
               </span>
@@ -130,8 +110,9 @@ export function TopoClinica({
                 <span className="block truncate text-sm font-bold text-graf-950">
                   {nome || "Minha conta"}
                 </span>
-                <span className="block truncate text-xs text-graf-500">{email}</span>
+                <span className="block truncate text-[0.6875rem] text-graf-500">{email}</span>
               </span>
+              <ChevronDown className="hidden size-4 text-graf-400 xl:block" aria-hidden />
               <span className="sr-only">Meus dados</span>
             </Link>
 
@@ -143,36 +124,19 @@ export function TopoClinica({
   );
 }
 
-/**
- * O botão de sair do topo. Só o ícone — o rótulo por extenso vive no menu
- * lateral, que é a saída que a pessoa encontra procurando.
- *
- * O nome acessível é deliberadamente diferente do "Sair da conta" do menu: dois
- * controles com o MESMO nome acessível na mesma tela são ambíguos para quem
- * navega por voz ou por lista de elementos — e quebram qualquer seletor por
- * papel e nome, inclusive os da suíte de ponta a ponta.
- */
 export function BotaoSairTopo() {
   return (
     <button
       type="submit"
       aria-label="Sair da Área da Clínica"
       title="Sair da Área da Clínica"
-      className="flex size-11 items-center justify-center rounded-lg text-graf-600 transition-colors hover:bg-graf-100 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+      className="flex size-11 items-center justify-center rounded-xl text-graf-600 transition-colors hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
     >
       <LogOut className="size-5" aria-hidden />
     </button>
   );
 }
 
-/**
- * Rodapé da área — três linhas, não as cinco colunas da loja.
- *
- * Dentro de uma ferramenta de trabalho, o rodapé da loja (catálogo inteiro,
- * assistência, institucional, políticas e redes) empurra o conteúdo para cima
- * e some com a sensação de aplicação. Aqui sobra o que a clínica pode precisar
- * enquanto trabalha: como falar com a JB, a volta para a loja e as políticas.
- */
 export function RodapeClinica({
   telefone,
   whatsapp,
@@ -181,11 +145,9 @@ export function RodapeClinica({
   whatsapp: string;
 }) {
   return (
-    <footer className="mt-auto border-t border-graf-200 bg-white">
+    <footer className="mt-auto border-t border-graf-200/80 bg-white/95">
       <div className="container-jb flex flex-col gap-3 py-6 text-sm sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-graf-500">
-          JB Soluções Odontológicas · Área da Clínica
-        </p>
+        <p className="text-graf-500">JB Soluções Odontológicas · Área da Clínica</p>
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           {telefone ? (
