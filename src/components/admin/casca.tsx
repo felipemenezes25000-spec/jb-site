@@ -200,9 +200,9 @@ export function Casca({
 
         <main
           id="conteudo-admin"
-          className="min-w-0 px-4 py-5 sm:px-6 sm:py-6 lg:px-7 lg:py-6 xl:px-8"
+          className="min-w-0 px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8 xl:px-10 2xl:px-12"
         >
-          <div className="mx-auto min-w-0 max-w-[108rem]">{children}</div>
+          <div className="mx-auto min-w-0 w-full max-w-[104rem]">{children}</div>
         </main>
       </div>
     </div>
