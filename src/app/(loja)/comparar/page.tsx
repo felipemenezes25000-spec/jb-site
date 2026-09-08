@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Info, Scale } from "lucide-react";
+import { ArrowRight, ImageOff, Info, Scale } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
@@ -141,6 +142,13 @@ export default async function CompararPage({ searchParams }: Props) {
             boxContents: true,
             installationPolicy: true,
             brand: { select: { name: true } },
+            /* A foto entra porque comparar equipamento sem ver o equipamento é
+               comparar nome. Uma só: a comparação é tabela, não galeria. */
+            media: {
+              orderBy: { order: "asc" },
+              take: 1,
+              select: { alt: true, media: { select: { url: true, alt: true } } },
+            },
           },
         })
       : Promise.resolve([]),
@@ -432,7 +440,23 @@ export default async function CompararPage({ searchParams }: Props) {
             <div className="mt-4 space-y-4 lg:hidden">
               {ordenados.map((produto, indice) => (
                 <Cartao key={produto.slug} className="p-5">
-                  <h3 className="text-[1.0625rem] font-bold text-graf-950">{produto.name}</h3>
+                  <div className="flex items-center gap-4">
+                    <span className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-graf-200 bg-white p-1.5">
+                      {produto.media[0] ? (
+                        <Image
+                          src={produto.media[0].media.url}
+                          alt={produto.media[0].alt || produto.media[0].media.alt || produto.name}
+                          width={160}
+                          height={160}
+                          unoptimized={produto.media[0].media.url.startsWith("/")}
+                          className="h-full w-auto object-contain"
+                        />
+                      ) : (
+                        <ImageOff className="size-5 text-graf-400" aria-hidden />
+                      )}
+                    </span>
+                    <h3 className="min-w-0 text-[1.0625rem] font-bold text-graf-950">{produto.name}</h3>
+                  </div>
                   <dl className="mt-3 space-y-2 text-[0.875rem]">
                     {linhas.map((linha) => (
                       <div
@@ -479,7 +503,31 @@ export default async function CompararPage({ searchParams }: Props) {
                         scope="col"
                         className="py-3 pr-4 align-bottom text-graf-950"
                       >
-                        <Link href={`/loja/${produto.slug}`} className="hover:text-jb-700">
+                        {/* A foto abre a coluna. Comparar equipamento sem ver
+                            o equipamento é comparar nome — e é justamente a
+                            foto que faz a pessoa reconhecer o que já viu. */}
+                        <Link
+                          href={`/loja/${produto.slug}`}
+                          className="group block hover:text-jb-700"
+                        >
+                          <span className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-lg border border-graf-200 bg-white p-2">
+                            {produto.media[0] ? (
+                              <Image
+                                src={produto.media[0].media.url}
+                                alt={
+                                  produto.media[0].alt ||
+                                  produto.media[0].media.alt ||
+                                  produto.name
+                                }
+                                width={220}
+                                height={220}
+                                unoptimized={produto.media[0].media.url.startsWith("/")}
+                                className="h-full w-auto object-contain transition-transform duration-300 ease-out-quint group-hover:scale-105"
+                              />
+                            ) : (
+                              <ImageOff className="size-6 text-graf-400" aria-hidden />
+                            )}
+                          </span>
                           {produto.name}
                         </Link>
                       </th>

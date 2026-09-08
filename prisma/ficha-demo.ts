@@ -336,3 +336,75 @@ export const FICHA_DEMO: Record<string, FichaDemo> = {
     ],
   },
 };
+
+/**
+ * Como a instalação é oferecida em cada equipamento.
+ *
+ * Sem isso a linha "Instalação" aparece como "não informado" na ficha e na
+ * comparação — que é o pior dos dois mundos: ocupa a linha e não responde.
+ * A política acompanha o porte: o que precisa de ponto de água, dreno ou
+ * fixação em parede sai com equipe; o de bancada é ligar na tomada.
+ */
+export type InstalacaoDemo = {
+  politica: "inclusa" | "opcional" | "nao_oferecida" | "sob_consulta";
+  observacao: string;
+};
+
+export const INSTALACAO_DEMO: Record<string, InstalacaoDemo> = {
+  "cadeira-equipo-completo-pro": {
+    politica: "inclusa",
+    observacao:
+      "Instalação e treinamento de uso pela equipe da JB, agendados junto com a entrega. A conferência dos pontos de água, esgoto, ar e energia é feita antes de marcar a data.",
+  },
+  "raio-x-intraoral-parede": {
+    politica: "inclusa",
+    observacao:
+      "Fixação, alinhamento e teste de disparo pela equipe da JB. O laudo de radioproteção da sala é de física médica e não acompanha o equipamento.",
+  },
+  "autoclave-vertical-18l-classe-b": {
+    politica: "inclusa",
+    observacao:
+      "A equipe entrega, confere o ponto elétrico, roda o primeiro ciclo de validação e treina a rotina de carga.",
+  },
+  "compressor-isento-de-oleo-40l": {
+    politica: "inclusa",
+    observacao:
+      "Inclui posicionamento, ligação à linha de ar e teste de pressão com o equipo em funcionamento.",
+  },
+  "autoclave-12l-revisada": {
+    politica: "opcional",
+    observacao:
+      "A unidade sai revisada e testada. Se a clínica preferir, a equipe entrega, roda o ciclo de validação no local e treina a rotina — orçado à parte.",
+  },
+  "motor-de-implante-35ncm": {
+    politica: "opcional",
+    observacao: "Entrega com configuração e treinamento de uso, quando a clínica pedir.",
+  },
+  "aspirador-cirurgico-movel": {
+    politica: "opcional",
+    observacao: "Entrega com demonstração de uso e troca de frasco, quando a clínica pedir.",
+  },
+  "cuba-lavadora-ultrassonica-7l": {
+    politica: "opcional",
+    observacao:
+      "Equipamento de bancada. A equipe pode entregar e demonstrar o ciclo de limpeza junto com a rotina de esterilização.",
+  },
+  "seladora-de-embalagens-30cm": {
+    politica: "opcional",
+    observacao: "Entrega com ajuste de temperatura e teste de selagem na bobina da clínica.",
+  },
+  "ultrassom-jato-bicarbonato": {
+    politica: "opcional",
+    observacao:
+      "Ligação ao ponto de ar comprimido e teste com a equipe, quando a clínica pedir.",
+  },
+  "fotopolimerizador-led-1200": {
+    politica: "nao_oferecida",
+    observacao: "Sem fio: carrega na base e está pronto para uso. Não há instalação a fazer.",
+  },
+  "camera-intraoral-hd-usb": {
+    politica: "nao_oferecida",
+    observacao:
+      "Liga na porta USB do computador. A equipe confere a compatibilidade com o seu software antes da entrega.",
+  },
+};

@@ -28,7 +28,7 @@ import { join } from "node:path";
 
 import { PrismaClient, type ProductCondition } from "@prisma/client";
 
-import { FICHA_DEMO } from "./ficha-demo";
+import { FICHA_DEMO, INSTALACAO_DEMO } from "./ficha-demo";
 
 const prisma = new PrismaClient();
 
@@ -179,6 +179,8 @@ async function main() {
       depthMm: ficha?.profundidadeMm ?? null,
       boxContents: ficha?.naCaixa ?? [],
       infrastructureNotes: ficha?.requisitos ?? [],
+      installationPolicy: INSTALACAO_DEMO[produto.slug]?.politica ?? "nao_informada",
+      installationNote: INSTALACAO_DEMO[produto.slug]?.observacao ?? "",
       description: descricao,
       status: "active" as const,
       condition: produto.condition as ProductCondition,
