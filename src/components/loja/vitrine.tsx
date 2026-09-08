@@ -583,9 +583,10 @@ export async function Vitrine({
   travarCondicao?: boolean;
   travarMarca?: boolean;
   /**
-   * `"colecao"` para /loja e /seminovos, que abrem com o próprio
-   * `CabecalhoColecao`: a vitrine entra só como lista — sem repetir trilha,
-   * título e atalhos — e os cartões ganham o botão cheio.
+   * `"colecao"` e `"vitrine"` para as páginas que trazem o próprio cabeçalho:
+   * a vitrine entra só como lista, sem repetir trilha, título e atalhos. Em
+   * `"colecao"` o cartão ganha o botão cheio; em `"vitrine"` ele troca de
+   * desenho inteiro (`CardVitrine`).
    *
    * Antes esse recorte era feito por CSS, escondendo o cabeçalho já
    * renderizado. Escondido ele continuava no HTML, com dois `h1` na mesma

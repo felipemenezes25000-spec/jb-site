@@ -154,7 +154,7 @@ export function GaleriaProduto({
   // desktop seria mais chamativo que o próprio equipamento.
   if (total === 0) {
     return (
-      <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-graf-300 bg-graf-50 px-6 py-16 text-center lg:min-h-96">
+      <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-xs border border-dashed border-graf-300 bg-graf-50 px-6 py-16 text-center lg:min-h-96">
         <ImageOff className="size-9 text-graf-500" aria-hidden />
         <p className="text-sm font-semibold text-graf-700">
           Ainda não há foto deste equipamento
@@ -177,7 +177,7 @@ export function GaleriaProduto({
        miniaturas, que é uma lista de atalhos para ela. No celular a tira volta
        para baixo, onde o polegar alcança. */
     <div className="flex flex-col gap-4 lg:flex-row-reverse lg:items-start lg:gap-4">
-      <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
+      <div className="placa relative min-w-0 flex-1 overflow-hidden">
         <div
           className="group/palco relative aspect-square"
           onTouchStart={aoEncostar}

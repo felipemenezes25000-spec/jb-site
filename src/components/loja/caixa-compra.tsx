@@ -191,7 +191,7 @@ export function CaixaCompra({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-graf-200 bg-white shadow-card">
+    <div className="placa overflow-hidden">
       <div className="p-5 sm:p-6">
         <div className="mb-4">
           {semEstoque ? (
@@ -234,7 +234,7 @@ export function CaixaCompra({
 
             {/* 44px só a partir de `xl`: em 1024px a coluna tem ~345px úteis,
                 e um preço de seis dígitos nesse corpo não caberia na linha. */}
-            <p className="text-4xl font-extrabold tracking-tight tabular text-graf-950 sm:text-[2.5rem] xl:text-[2.75rem]">
+            <p className="numero text-[2.5rem] leading-none text-graf-950 xl:text-[2.875rem]">
               {formatarPreco(precoCents)}
             </p>
 

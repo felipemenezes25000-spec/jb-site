@@ -219,12 +219,18 @@ export function Trilha({ itens, className }: { itens: Migalha[]; className?: str
    envolver com `.on-dark` — as cores se invertem sozinhas.
    ============================================================================ */
 
-export type TamanhoTitulo = "secao" | "titulo" | "display";
+export type TamanhoTitulo = "secao" | "titulo" | "display" | "vitrine";
 
+/**
+ * `vitrine` é o degrau das telas de catálogo: condensada em caixa alta, no
+ * mesmo desenho do título da coleção. É variante declarada aqui, e não classe
+ * jogada por cima em CSS de página — quem lê a chamada vê qual desenho pediu.
+ */
 const TAMANHO_TITULO: Record<TamanhoTitulo, string> = {
   secao: "text-section",
   titulo: "text-title",
   display: "text-display",
+  vitrine: "manchete text-[clamp(1.5rem,1.2rem+1.1vw,2rem)]",
 };
 
 export function TituloSecao({
@@ -261,7 +267,11 @@ export function TituloSecao({
       {/* `min-w-0`: sem ele o item de flex tem largura mínima igual ao seu
           conteúdo, e um título com palavra longa alarga a seção inteira. */}
       <div className={cn("min-w-0 max-w-2xl", centralizado && "mx-auto")}>
-        {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
+        {sobretitulo ? (
+          <p className={cn(tamanho === "vitrine" ? "micro text-jb-600" : "sobretitulo", "mb-3")}>
+            {sobretitulo}
+          </p>
+        ) : null}
         <Heading className={cn(TAMANHO_TITULO[tamanho], "texto-forte")}>{titulo}</Heading>
         {descricao ? (
           <p className="texto-guia texto-suave mt-4 max-w-prose">{descricao}</p>

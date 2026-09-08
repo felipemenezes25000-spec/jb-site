@@ -675,7 +675,7 @@ export default async function ProdutoPage({ params }: Props) {
               em 1400px de largura ninguém lê. */}
           <div className="grid gap-6 lg:grid-cols-12 lg:gap-16">
             <div className="lg:col-span-4">
-              <h2 className="text-section texto-forte">Sobre este equipamento</h2>
+              <h2 className="manchete text-[clamp(1.5rem,1.2rem+1.1vw,2rem)] text-graf-950">Sobre este equipamento</h2>
             </div>
             <div className="min-w-0 lg:col-span-8">
               <div
@@ -736,7 +736,7 @@ export default async function ProdutoPage({ params }: Props) {
       {/* ====================================================== FICHA TÉCNICA */}
       {temFichaTecnica ? (
         <Secao id="ficha-tecnica" espaco="lg" separador className="scroll-mt-32">
-          <TituloSecao como="h2" titulo="Ficha técnica" />
+          <TituloSecao como="h2" tamanho="vitrine" titulo="Ficha técnica" />
 
           <div
             className={
@@ -782,6 +782,7 @@ export default async function ProdutoPage({ params }: Props) {
       {servicos.length > 0 && !arquivado ? (
         <Secao id="servicos-jb" fundo="clara" espaco="lg" separador className="scroll-mt-32">
           <TituloSecao
+            tamanho="vitrine"
             sobretitulo="Equipe técnica JB"
             titulo="O que a JB faz neste equipamento"
             descricao="Cada serviço é executado pela equipe da própria JB e entra no mesmo pedido do equipamento — é só marcar antes de adicionar ao carrinho."
@@ -805,6 +806,7 @@ export default async function ProdutoPage({ params }: Props) {
         <Secao id="duvidas" espaco="lg" separador className="scroll-mt-32">
           <TituloSecao
             como="h2"
+            tamanho="vitrine"
             titulo="Dúvidas sobre este equipamento"
             descricao={
               produto.faqs.length > 0
@@ -839,7 +841,7 @@ export default async function ProdutoPage({ params }: Props) {
         {/* Título neutro de propósito: a lista mistura relação cadastrada com
             complemento por categoria e marca. Chamar tudo de "substituto"
             afirmaria uma equivalência técnica que ninguém registrou. */}
-        <TituloSecao como="h2" titulo="Equipamentos relacionados" />
+        <TituloSecao como="h2" tamanho="vitrine" titulo="Equipamentos relacionados" />
         <div className="mt-8 lg:mt-10">
           <Suspense fallback={<EsqueletoRelacionados />}>
             <Relacionados

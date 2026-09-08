@@ -212,8 +212,66 @@ async function main() {
       })),
     });
 
+    /* ------------------------------------------------- a unidade do seminovo
+
+       Seminovo sem unidade cadastrada deixa a coleção muda: a página de
+       /seminovos só promete o que encontra registrado, e a ficha só mostra
+       "esta unidade" quando existe uma peça identificada. Sem isso o catálogo
+       de demonstração exibiria a coleção com o discurso todo desligado.
+
+       Os números são de demonstração, como o resto deste seed — o que não é
+       de demonstração é a regra: eles moram na unidade, não no produto. */
+    if (seminovo) {
+      const unidadeExistente = await prisma.inventoryUnit.findFirst({
+        where: { productId: criado.id },
+        select: { id: true },
+      });
+
+      const serie = `JB-${produto.sku.replace(/[^A-Z0-9]/gi, "").slice(-6).toUpperCase()}-01`;
+
+      const dadosDaUnidade = {
+        serialNumber: serie,
+        status: "disponivel" as const,
+        manufactureYear: 2021,
+        usageCycles: 1840,
+        conditionNotes:
+          "Marcas leves de uso na lateral direita, sem trinca nem oxidação. Painel e vedação sem intercorrência.",
+        inspectionNotes:
+          "Revisado na bancada da JB: teste de ciclo completo, conferência de vedação e calibração antes de voltar ao catálogo.",
+        warrantyMonths: 6,
+        acquiredFrom: "Troca por equipamento novo em clínica de São Paulo",
+      };
+
+      const unidade = unidadeExistente
+        ? await prisma.inventoryUnit.update({
+            where: { id: unidadeExistente.id },
+            data: dadosDaUnidade,
+          })
+        : await prisma.inventoryUnit.create({
+            data: { ...dadosDaUnidade, productId: criado.id },
+          });
+
+      const checklist = [
+        ["Ciclo completo de teste", "verificado"],
+        ["Vedação da câmara", "substituido"],
+        ["Calibração de temperatura", "verificado"],
+        ["Painel e comandos", "verificado"],
+        ["Cabo e plugue", "verificado"],
+      ] as const;
+
+      await prisma.inventoryCheckItem.deleteMany({ where: { unitId: unidade.id } });
+      await prisma.inventoryCheckItem.createMany({
+        data: checklist.map(([label, result], indice) => ({
+          unitId: unidade.id,
+          label,
+          result,
+          order: indice,
+        })),
+      });
+    }
+
     slugsNovos.push(produto.slug);
-    console.log(`  · ${produto.slug}`);
+    console.log(`  · ${produto.slug}${seminovo ? " (com unidade e checklist)" : ""}`);
   }
 
   /* -------------------------------------------------- catálogo antigo sai do ar */

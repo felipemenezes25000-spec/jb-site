@@ -106,7 +106,7 @@ export function IdentidadeProduto({
         ) : marca ? (
           <Link
             href={`/marcas/${marca.slug}`}
-            className="foco-jb inline-flex min-h-11 items-center rounded-md text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-600 transition-colors hover:text-jb-700"
+            className="foco-jb micro inline-flex min-h-11 items-center rounded-xs text-graf-600 transition-colors hover:text-jb-700"
           >
             {marca.nome}
           </Link>
@@ -115,12 +115,17 @@ export function IdentidadeProduto({
         <Etiqueta tom={desenho.tom}>{desenho.rotulo}</Etiqueta>
       </div>
 
-      <h1 className="mt-3 text-display texto-forte lg:text-title">{nome}</h1>
+      {/* Condensada em caixa alta, como o título da coleção: a ficha e a
+          vitrine precisam soar como a mesma casa. O tamanho é fluido para o
+          nome longo de equipamento caber em duas linhas sem encolher. */}
+      <h1 className="manchete mt-3 text-[clamp(1.75rem,1.3rem+1.8vw,2.5rem)] text-graf-950">
+        {nome}
+      </h1>
 
       <dl className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.8125rem]">
         {identificadores.map((linha) => (
           <div key={linha.rotulo} className="flex items-baseline gap-1.5">
-            <dt className="text-graf-500">{linha.rotulo}</dt>
+            <dt className="micro text-graf-400">{linha.rotulo}</dt>
             <dd
               className={
                 linha.mono ? "label-mono text-graf-800" : "font-semibold text-graf-800"
@@ -133,7 +138,7 @@ export function IdentidadeProduto({
 
         {categoria ? (
           <div className="flex items-baseline gap-1.5">
-            <dt className="text-graf-500">Categoria</dt>
+            <dt className="micro text-graf-400">Categoria</dt>
             <dd>
               <Link
                 href={`/categoria/${categoria.slug}`}
