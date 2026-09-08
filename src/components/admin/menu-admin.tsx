@@ -85,21 +85,21 @@ export function MenuAdmin({
   return (
     <nav
       aria-label="Áreas do painel"
-      className={cn("flex flex-col gap-5 pb-6 pt-3", className)}
+      className={cn("flex flex-col gap-3.5 pb-5 pt-2", className)}
     >
       {grupos.map((grupo, indice) => (
         <div key={grupo.grupo}>
           {colapsado ? (
             indice > 0 ? (
-              <div className="mx-4 mb-3 h-px bg-graf-200/80" role="presentation" />
+              <div className="mx-4 mb-2.5 h-px bg-graf-200/80" role="presentation" />
             ) : null
           ) : (
-            <p className="sticky top-0 z-10 bg-white/95 px-4 pb-2 pt-1 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-graf-500 backdrop-blur-sm">
+            <p className="sticky top-0 z-10 bg-white/95 px-4 pb-1.5 pt-1 text-[0.625rem] font-bold uppercase tracking-[0.14em] text-graf-500 backdrop-blur-sm">
               {grupo.rotulo}
             </p>
           )}
 
-          <ul className="space-y-1 px-2.5">
+          <ul className="space-y-0.5 px-2">
             {grupo.itens.map((item) => {
               const Icone = ICONES[item.icone] ?? LayoutDashboard;
               const ativo = estaAtivo(pathname, item.href);
@@ -112,32 +112,28 @@ export function MenuAdmin({
                     aria-current={ativo ? "page" : undefined}
                     title={colapsado ? item.rotulo : undefined}
                     className={cn(
-                      "group relative flex h-10 items-center gap-3 rounded-xl text-[0.875rem] font-medium transition-all duration-150",
+                      "group relative flex h-9 items-center gap-2.5 rounded-lg text-[0.8125rem] font-medium transition-[background-color,color,box-shadow] duration-150",
                       "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
-                      colapsado ? "justify-center px-0" : "pl-3 pr-2.5",
+                      colapsado ? "justify-center px-0" : "pl-2.5 pr-2",
                       ativo
-                        ? "bg-gradient-to-r from-jb-50 to-[#fff7f7] font-semibold text-jb-800 shadow-[inset_0_0_0_1px_rgba(224,20,27,0.06)]"
-                        : "text-graf-700 hover:bg-graf-100/80 hover:text-graf-950",
+                        ? "bg-gradient-to-r from-jb-50 via-[#fff1f2] to-[#fff5f5] font-semibold text-jb-800 shadow-[inset_0_0_0_1px_rgba(224,20,27,0.045)]"
+                        : "text-graf-700 hover:bg-graf-100/85 hover:text-graf-950",
                     )}
                   >
                     {ativo ? (
                       <span
                         aria-hidden
-                        className="absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-jb-500"
+                        className="absolute inset-y-1.5 left-0 w-[2.5px] rounded-r-full bg-jb-500"
                       />
                     ) : null}
 
-                    <span
-                      aria-hidden
+                    <Icone
                       className={cn(
-                        "flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors",
-                        ativo
-                          ? "bg-white/80 text-jb-600 shadow-sm ring-1 ring-inset ring-jb-500/10"
-                          : "text-graf-500 group-hover:bg-white group-hover:text-graf-700 group-hover:shadow-sm",
+                        "size-[16px] shrink-0 transition-colors",
+                        ativo ? "text-jb-600" : "text-graf-500 group-hover:text-graf-700",
                       )}
-                    >
-                      <Icone className="size-[17px]" />
-                    </span>
+                      aria-hidden
+                    />
 
                     {colapsado ? (
                       <span className="sr-only">{item.rotulo}</span>
@@ -148,7 +144,7 @@ export function MenuAdmin({
                           <>
                             <span
                               aria-hidden
-                              className="ml-auto shrink-0 rounded-full bg-graf-100 px-2 py-0.5 text-[0.6875rem] font-semibold text-graf-600"
+                              className="ml-auto shrink-0 rounded-full bg-graf-100 px-1.5 py-0.5 text-[0.6rem] font-semibold text-graf-600"
                             >
                               leitura
                             </span>
