@@ -16,21 +16,9 @@ import { cn } from "@/lib/utils";
    imagem, condição, marca, nome, preço, parcelamento, disponibilidade e o
    convite para abrir o equipamento.
 
-   Duas decisões de desenho sustentam o resto:
-
-   1. A foto manda. Equipamento de dezenas de milhares de reais não pode
-      aparecer como miniatura no meio de uma caixa cinza — a moldura é 5/4,
-      o respiro interno é pequeno e o fundo é um degradê branco quase
-      imperceptível, que não compete com produto recortado.
-
-   2. O preço é ancorado pela base. O bloco de preço e o rodapé recebem
-      `mt-auto`, e cada linha desse bloco tem altura reservada. Assim o número
-      grande cai exatamente na mesma altura em todos os cartões da linha,
-      tenham eles preço riscado, parcelamento ou nada disso.
-
-   Nada aqui é inventado: cada linha só existe quando o campo correspondente
-   veio do banco. Sem marca, a linha da marca some; sem estoque controlado,
-   não se afirma disponibilidade.
+   A foto manda. Equipamento de alto valor não pode aparecer como miniatura no
+   meio de uma caixa vazia: a moldura mantém proporção estável e a imagem usa o
+   máximo da área disponível sem cortar o equipamento.
    ============================================================================ */
 
 export type ProdutoCard = {
@@ -68,8 +56,6 @@ export const CONDICAO = {
 function disponibilidade(produto: ProdutoCard) {
   if (!produto.trackInventory) return null;
   if (produto.stock <= 0) {
-    // o mesmo texto da tarja sobre a foto: duas palavras diferentes para o
-    // mesmo fato confundem, e a linha do rodapé cabe em uma linha só
     return {
       texto: produto.unique ? "Unidade vendida" : "Indisponível",
       classe: "text-graf-500",
@@ -108,6 +94,7 @@ export function CardProduto({
     : calcularParcelas(produto.priceCents, parcelamento?.max, parcelamento?.minimoCents);
   const condicao = CONDICAO[produto.condition];
   const estado = disponibilidade(produto);
+  const imagemLocal = Boolean(produto.imageUrl?.startsWith("/"));
 
   const precoAnterior =
     !soOrcamento && produto.compareAtCents && produto.compareAtCents > produto.priceCents
@@ -126,7 +113,6 @@ export function CardProduto({
       className={cn(
         "group relative isolate flex flex-col overflow-hidden rounded-xl border border-graf-200 bg-white",
         "transition-[border-color,box-shadow,transform] duration-200 ease-out-quint",
-        // borda é o padrão; a sombra só aparece quando o cartão é o foco da mão
         "hover:-translate-y-px hover:border-graf-300 hover:shadow-raised",
         "has-[a:focus-visible]:border-jb-500 has-[a:focus-visible]:shadow-raised",
         className,
@@ -138,12 +124,13 @@ export function CardProduto({
             src={produto.imageUrl}
             alt={produto.imageAlt || produto.name}
             fill
-            priority={prioridade}
+            preload={prioridade}
             loading={prioridade ? undefined : "lazy"}
-            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, (max-width: 1280px) 31vw, 22vw"
+            unoptimized={imagemLocal}
+            sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, (max-width: 1536px) 30vw, 25vw"
             className={cn(
-              "object-contain p-3 transition-transform duration-500 ease-out-quint sm:p-4",
-              "group-hover:scale-[1.03]",
+              "object-contain p-1 transition-transform duration-500 ease-out-quint sm:p-1.5",
+              "group-hover:scale-[1.025]",
               semEstoque && "opacity-60 grayscale",
             )}
           />
@@ -154,23 +141,17 @@ export function CardProduto({
           </div>
         )}
 
-        {/* só a condição fica sobre a foto — o desconto pertence ao preço.
-            À direita, na mesma linha, o único controle do cartão: marcar para
-            comparar. Ele fica acima do link que cobre o cartão (`z-10`) e para
-            a propagação do clique, senão abriria o equipamento. */}
-        <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+        <div className="absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-2">
           <span className="flex flex-wrap items-start gap-1.5">
             <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
           </span>
           <BotaoComparar slug={produto.slug} nome={produto.name} />
         </div>
 
-        {/* a tarja é o aviso visual; quem usa leitor de tela ouve a linha de
-            disponibilidade logo abaixo, sem repetir a mesma informação */}
         {semEstoque ? (
           <p
             aria-hidden
-            className="absolute inset-x-0 bottom-0 border-t border-white/15 bg-graf-950/90 py-2 text-center text-[0.8125rem] font-semibold uppercase tracking-[0.16em] text-white"
+            className="absolute inset-x-0 bottom-0 z-10 border-t border-white/15 bg-graf-950/90 py-2 text-center text-[0.8125rem] font-semibold uppercase tracking-[0.16em] text-white"
           >
             {produto.unique ? "Vendido" : "Indisponível"}
           </p>
@@ -184,7 +165,6 @@ export function CardProduto({
           </p>
         ) : null}
 
-        {/* duas linhas fixas: nome curto e nome longo ocupam o mesmo espaço */}
         <h3 className="line-2 min-h-11 text-base font-bold leading-snug text-graf-950 sm:min-h-[3.125rem] sm:text-lg">
           <Link
             href={`/loja/${produto.slug}`}
@@ -199,7 +179,6 @@ export function CardProduto({
         ) : null}
 
         <div className="mt-auto pt-4">
-          {/* três alturas reservadas — referência, valor e condição de pagamento */}
           <div className="flex h-6 items-center gap-2">
             {precoAnterior ? (
               <span className="tabular text-[0.8125rem] text-graf-500 line-through">
@@ -235,9 +214,6 @@ export function CardProduto({
             ) : null}
           </div>
 
-          {/* rodapé de uma linha só: disponibilidade à esquerda, convite à
-              direita. Altura fixa e sem quebra — é o que mantém a base de
-              todos os cartões da linha no mesmo lugar */}
           <div className="mt-4 border-t border-graf-100 pt-3">
             <div className="flex h-6 items-center justify-between gap-3">
               {estado ? (
