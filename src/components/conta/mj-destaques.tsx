@@ -1,34 +1,15 @@
 import { cn } from "@/lib/utils";
 
-/**
- * Faixa de fatos de um registro — o cabeçalho de leitura rápida do prontuário,
- * do pedido ou da ordem de serviço.
- *
- * Não é métrica de painel (aquilo é `CartaoMetrica`, com número grande e
- * clique): aqui cada célula responde a uma pergunta objetiva sobre ESTE
- * registro — em que estado está, até quando vale a garantia, quando é a próxima
- * visita.
- *
- * Célula sem dado não entra na lista: campo vazio repetido em cinza não informa
- * nada e ainda faz a tela parecer quebrada. Por isso a grade é escolhida pela
- * quantidade de itens — até quatro, nunca sobra coluna vazia.
- *
- * A separação entre as células é o próprio vão da grade sobre o fundo grafite
- * claro: uma linha de 1px que continua certa em qualquer ponto de quebra, sem
- * borda que sobra no fim da fila.
- */
-
 export type TomDestaque = "neutro" | "ok" | "atencao" | "alerta" | "info";
 
 const TONS: Record<TomDestaque, { valor: string; selo: string }> = {
-  neutro: { valor: "text-graf-950", selo: "bg-graf-100 text-graf-600" },
-  ok: { valor: "text-ok-700", selo: "bg-ok-50 text-ok-700" },
-  atencao: { valor: "text-warn-700", selo: "bg-warn-50 text-warn-700" },
-  alerta: { valor: "text-jb-700", selo: "bg-jb-50 text-jb-700" },
-  info: { valor: "text-info-700", selo: "bg-info-50 text-info-700" },
+  neutro: { valor: "text-graf-950", selo: "bg-graf-100 text-graf-600 ring-graf-500/10" },
+  ok: { valor: "text-ok-700", selo: "bg-ok-50 text-ok-700 ring-ok-500/10" },
+  atencao: { valor: "text-warn-700", selo: "bg-warn-50 text-warn-700 ring-warn-500/10" },
+  alerta: { valor: "text-jb-700", selo: "bg-jb-50 text-jb-700 ring-jb-500/10" },
+  info: { valor: "text-info-700", selo: "bg-info-50 text-info-700 ring-info-500/10" },
 };
 
-/** Colunas por quantidade — o que garante que nenhuma célula fique vazia. */
 const GRADE = [
   "grid-cols-1",
   "grid-cols-1",
@@ -39,7 +20,6 @@ const GRADE = [
 
 export type Destaque = {
   rotulo: string;
-  /** Já formatado — data, contagem, rótulo de estado. */
   valor: React.ReactNode;
   detalhe?: string;
   icone?: React.ComponentType<{ className?: string }>;
@@ -50,7 +30,6 @@ export function Destaques({
   itens,
   className,
 }: {
-  /** Até quatro. O que passar disso fica de fora da faixa. */
   itens: Destaque[];
   className?: string;
 }) {
@@ -60,7 +39,7 @@ export function Destaques({
   return (
     <dl
       className={cn(
-        "grid gap-px overflow-hidden rounded-xl border border-graf-200 bg-graf-200 shadow-card",
+        "grid gap-px overflow-hidden rounded-2xl border border-graf-200/90 bg-graf-200/80 shadow-[0_1px_2px_rgba(18,24,35,0.025),0_18px_46px_-36px_rgba(18,24,35,0.34)]",
         GRADE[lista.length],
         className,
       )}
@@ -70,34 +49,33 @@ export function Destaques({
         const Icone = item.icone;
 
         return (
-          /* O HTML só admite um nível de <div> dentro de <dl>, e só com <dt> e
-             <dd> dentro dele. A coluna de texto era um segundo <div> e tirava
-             o par da lista de definição. Agora o selo é posicionado sobre o
-             recuo do cartão, e o <div> tem exatamente o par dentro. */
           <div
             key={item.rotulo}
-            className={cn("relative min-w-0 bg-white p-4", Icone && "pl-16")}
+            className={cn(
+              "relative min-w-0 bg-white p-4.5 transition-colors hover:bg-graf-50/45",
+              Icone && "pl-[4.35rem]",
+            )}
           >
-            <dt className="text-xs font-bold uppercase tracking-[0.07em] text-graf-500">
+            <dt className="text-[0.69rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
               {Icone ? (
                 <span
                   aria-hidden
                   className={cn(
-                    "absolute left-4 top-4 flex size-9 items-center justify-center rounded-lg",
+                    "absolute left-4 top-4 flex size-9 items-center justify-center rounded-xl shadow-sm ring-1 ring-inset",
                     cores.selo,
                   )}
                 >
-                  <Icone className="size-[18px]" />
+                  <Icone className="size-[17px]" />
                 </span>
               ) : null}
               {item.rotulo}
             </dt>
-            <dd>
-              <span className={cn("block text-[0.9375rem] font-bold leading-snug", cores.valor)}>
+            <dd className="mt-1">
+              <span className={cn("block text-[0.96rem] font-extrabold leading-snug tracking-[-0.012em]", cores.valor)}>
                 {item.valor}
               </span>
               {item.detalhe ? (
-                <span className="mt-0.5 block text-xs leading-relaxed text-graf-500">
+                <span className="mt-1 block text-xs leading-relaxed text-graf-500">
                   {item.detalhe}
                 </span>
               ) : null}
