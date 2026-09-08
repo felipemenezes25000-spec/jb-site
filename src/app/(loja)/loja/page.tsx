@@ -165,8 +165,7 @@ export default async function LojaPage({
                       src={foto.media.url}
                       alt={foto.alt || produtoDestaque?.name || "Equipamento odontológico"}
                       fill
-                      priority
-                      quality={90}
+                      preload
                       sizes="(max-width: 1024px) 100vw, 42vw"
                       className="object-contain p-5 sm:p-7 lg:p-8 xl:p-10"
                     />
@@ -207,10 +206,10 @@ export default async function LojaPage({
                   Categorias em destaque
                 </p>
                 <Link
-                  href="/categorias"
+                  href="/marcas"
                   className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-bold text-jb-700 transition-colors hover:bg-jb-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
-                  Ver todas
+                  Ver marcas
                   <ArrowRight className="size-4" aria-hidden />
                 </Link>
               </div>
