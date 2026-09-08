@@ -1,20 +1,21 @@
-import { Download, FileText } from "lucide-react";
+import {
+  Download,
+  FileText,
+  Ruler,
+  ShieldCheck,
+  SlidersHorizontal,
+} from "lucide-react";
 
 /* ============================================================================
-   Ficha técnica, medidas, regulatório e documentação
+   Ficha técnica do produto
 
-   Quatro blocos com o mesmo desenho de lista de definição, porque são a mesma
-   natureza de informação: rótulo à esquerda, valor à direita, fio fino entre
-   as linhas. Todos vêm do cadastro do produto.
+   A ficha pública precisa ser escaneável em segundos. Em vez de espalhar
+   rótulo e valor em linhas longas e soltas, todos os blocos usam o mesmo
+   padrão visual: cartão, título claro e grade de dados. Assim especificações,
+   medidas, regulatório e documentos parecem partes da mesma ficha — não quatro
+   pedaços diferentes da página.
 
-   Sem moldura em nenhum deles: empilhados, quatro cartões com borda viram
-   aquela pilha de retângulos iguais que faz a página parecer template. Quem
-   separa um bloco do outro é o rótulo em caixa alta e o respiro.
-
-   Valor em 15px e rótulo em 14px — ficha técnica longa lida em 11px é o
-   caminho mais curto para ninguém ler. Nenhum bloco aparece vazio, e nenhum
-   deles inventa unidade, registro ou documento: campo em branco não vira
-   linha.
+   Campo vazio nunca vira linha. A ordem cadastrada continua sendo respeitada.
    ============================================================================ */
 
 export type EspecificacaoAgrupada = {
@@ -22,10 +23,6 @@ export type EspecificacaoAgrupada = {
   itens: { id: string; rotulo: string; valor: string }[];
 };
 
-/**
- * Agrupa as especificações preservando a ordem cadastrada — tanto a dos grupos
- * (pela primeira aparição) quanto a dos itens dentro de cada grupo.
- */
 export function agruparEspecificacoes(
   specs: readonly { id: string; group: string; label: string; value: string }[],
 ): EspecificacaoAgrupada[] {
@@ -33,38 +30,84 @@ export function agruparEspecificacoes(
 
   for (const spec of specs) {
     if (!spec.label.trim() || !spec.value.trim()) continue;
-    const nome = spec.group.trim() || "Ficha técnica";
+
+    const nome = spec.group.trim() || "Especificações técnicas";
     let grupo = grupos.find((g) => g.grupo === nome);
+
     if (!grupo) {
       grupo = { grupo: nome, itens: [] };
       grupos.push(grupo);
     }
-    grupo.itens.push({ id: spec.id, rotulo: spec.label, valor: spec.value });
+
+    grupo.itens.push({
+      id: spec.id,
+      rotulo: spec.label,
+      valor: spec.value,
+    });
   }
 
   return grupos.filter((grupo) => grupo.itens.length > 0);
 }
 
-/** Rótulo em caixa alta que abre cada bloco de dados. */
-function Rotulo({ children }: { children: React.ReactNode }) {
+type Icone = React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+
+function CartaoFicha({
+  titulo,
+  subtitulo,
+  icone: Icone,
+  children,
+}: {
+  titulo: string;
+  subtitulo?: string;
+  icone: Icone;
+  children: React.ReactNode;
+}) {
   return (
-    <h3 className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+    <section className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+      <header className="flex items-start gap-3 border-b border-graf-200 bg-graf-50/70 px-5 py-4 sm:px-6">
+        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white text-jb-700 shadow-sm">
+          <Icone className="size-[18px]" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-[0.9375rem] font-bold leading-5 text-graf-950">{titulo}</h3>
+          {subtitulo ? (
+            <p className="mt-0.5 text-[0.8125rem] leading-5 text-graf-500">{subtitulo}</p>
+          ) : null}
+        </div>
+      </header>
+
       {children}
-    </h3>
+    </section>
   );
 }
 
-function Linha({ rotulo, valor, mono }: { rotulo: string; valor: string; mono?: boolean }) {
+function GradeDados({ children }: { children: React.ReactNode }) {
   return (
-    /* Duas colunas a partir de `sm`, empilhado abaixo disso: em 360px, rótulo
-       e valor lado a lado deixariam duas colunas de três palavras cada. */
-    <div className="grid gap-x-8 gap-y-0.5 py-3 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
-      <dt className="text-sm text-graf-500">{rotulo}</dt>
+    <dl className="grid grid-cols-1 sm:grid-cols-2 [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l sm:[&>*:nth-child(n+3)]:border-t">
+      {children}
+    </dl>
+  );
+}
+
+function Dado({
+  rotulo,
+  valor,
+  mono,
+}: {
+  rotulo: string;
+  valor: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="min-w-0 border-graf-200 px-5 py-4 sm:px-6 sm:py-5">
+      <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+        {rotulo}
+      </dt>
       <dd
         className={
           mono
-            ? "label-mono text-graf-900"
-            : "text-[0.9375rem] font-semibold text-graf-900"
+            ? "label-mono mt-1.5 break-words text-[0.9375rem] text-graf-950"
+            : "mt-1.5 break-words text-[1rem] font-semibold leading-6 text-graf-950"
         }
       >
         {valor}
@@ -73,33 +116,32 @@ function Linha({ rotulo, valor, mono }: { rotulo: string; valor: string; mono?: 
   );
 }
 
-function Lista({ children }: { children: React.ReactNode }) {
-  return (
-    <dl className="mt-3 divide-y divide-graf-200 border-t border-graf-200">{children}</dl>
-  );
-}
-
 export function FichaTecnica({ grupos }: { grupos: EspecificacaoAgrupada[] }) {
   if (grupos.length === 0) return null;
 
   return (
-    <div className="space-y-8">
-      {grupos.map((grupo) => (
-        <div key={grupo.grupo}>
-          {grupos.length > 1 ? <Rotulo>{grupo.grupo}</Rotulo> : null}
-          <dl
-            className={
-              grupos.length > 1
-                ? "mt-3 divide-y divide-graf-200 border-t border-graf-200"
-                : "divide-y divide-graf-200 border-t border-graf-200"
-            }
+    <div className="space-y-5">
+      {grupos.map((grupo, indice) => {
+        const titulo =
+          grupos.length === 1 && grupo.grupo.toLowerCase() === "ficha técnica"
+            ? "Especificações técnicas"
+            : grupo.grupo;
+
+        return (
+          <CartaoFicha
+            key={grupo.grupo}
+            titulo={titulo}
+            subtitulo={indice === 0 ? "Principais dados do equipamento" : undefined}
+            icone={SlidersHorizontal}
           >
-            {grupo.itens.map((item) => (
-              <Linha key={item.id} rotulo={item.rotulo} valor={item.valor} />
-            ))}
-          </dl>
-        </div>
-      ))}
+            <GradeDados>
+              {grupo.itens.map((item) => (
+                <Dado key={item.id} rotulo={item.rotulo} valor={item.valor} />
+              ))}
+            </GradeDados>
+          </CartaoFicha>
+        );
+      })}
     </div>
   );
 }
@@ -129,7 +171,7 @@ export function MedidasEPeso({
 
   if (larguraMm && alturaMm && profundidadeMm) {
     linhas.push({
-      rotulo: "Largura × altura × profundidade",
+      rotulo: "Dimensões (L × A × P)",
       valor: `${emCentimetros(larguraMm)} × ${emCentimetros(alturaMm)} × ${emCentimetros(profundidadeMm)}`,
     });
   } else {
@@ -145,14 +187,17 @@ export function MedidasEPeso({
   if (linhas.length === 0) return null;
 
   return (
-    <div>
-      <Rotulo>Medidas e peso</Rotulo>
-      <Lista>
+    <CartaoFicha
+      titulo="Dimensões e peso"
+      subtitulo="Confira o espaço necessário antes da instalação"
+      icone={Ruler}
+    >
+      <GradeDados>
         {linhas.map((linha) => (
-          <Linha key={linha.rotulo} rotulo={linha.rotulo} valor={linha.valor} />
+          <Dado key={linha.rotulo} rotulo={linha.rotulo} valor={linha.valor} />
         ))}
-      </Lista>
-    </div>
+      </GradeDados>
+    </CartaoFicha>
   );
 }
 
@@ -171,7 +216,7 @@ export function Regulatorio({
 }) {
   const linhas = [
     codigoAnvisa
-      ? { rotulo: "Registro/notificação", valor: codigoAnvisa, mono: true }
+      ? { rotulo: "Registro / notificação", valor: codigoAnvisa, mono: true }
       : null,
     fabricante ? { rotulo: "Fabricante", valor: fabricante, mono: false } : null,
     detentor ? { rotulo: "Detentor do registro", valor: detentor, mono: false } : null,
@@ -180,30 +225,33 @@ export function Regulatorio({
   if (linhas.length === 0 && !observacao) return null;
 
   return (
-    <div>
-      <Rotulo>Informações regulatórias</Rotulo>
+    <CartaoFicha
+      titulo="Informações regulatórias"
+      subtitulo="Identificação sanitária e responsabilidade do produto"
+      icone={ShieldCheck}
+    >
       {linhas.length > 0 ? (
-        <Lista>
+        <GradeDados>
           {linhas.map((linha) => (
-            <Linha
+            <Dado
               key={linha.rotulo}
               rotulo={linha.rotulo}
               valor={linha.valor}
               mono={linha.mono}
             />
           ))}
-        </Lista>
+        </GradeDados>
       ) : null}
+
       {observacao ? (
-        <p
-          className={`text-sm leading-relaxed text-graf-600 ${
-            linhas.length > 0 ? "mt-4" : "mt-3 border-t border-graf-200 pt-4"
-          }`}
-        >
-          {observacao}
-        </p>
+        <div className={linhas.length > 0 ? "border-t border-graf-200 px-5 py-4 sm:px-6" : "px-5 py-4 sm:px-6"}>
+          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+            Observação
+          </p>
+          <p className="mt-1.5 text-sm leading-6 text-graf-700">{observacao}</p>
+        </div>
       ) : null}
-    </div>
+    </CartaoFicha>
   );
 }
 
@@ -228,32 +276,38 @@ export function Documentacao({ documentos }: { documentos: DocumentoProduto[] })
   if (documentos.length === 0) return null;
 
   return (
-    <div>
-      <Rotulo>Documentação do equipamento</Rotulo>
-      <ul className="mt-3 divide-y divide-graf-200 border-t border-graf-200">
+    <CartaoFicha
+      titulo="Documentos do equipamento"
+      subtitulo="Manuais, certificados e arquivos disponibilizados pelo cadastro"
+      icone={FileText}
+    >
+      <ul className="divide-y divide-graf-200">
         {documentos.map((documento) => {
           const tipo = TIPO_DE_DOCUMENTO[documento.tipo];
+
           return (
             <li key={documento.id}>
               <a
                 href={documento.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="foco-jb group flex min-h-11 items-center gap-3 py-3.5 transition-colors duration-150 hover:text-jb-700"
+                className="foco-jb group flex min-h-14 items-center gap-3 px-5 py-3.5 transition-colors duration-150 hover:bg-graf-50 sm:px-6"
               >
-                <FileText className="size-[18px] shrink-0 text-graf-500" aria-hidden />
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-graf-200 bg-white text-graf-500">
+                  <FileText className="size-4" aria-hidden />
+                </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[0.9375rem] font-semibold text-graf-900 transition-colors duration-150 group-hover:text-jb-700">
+                  <span className="block text-[0.9375rem] font-semibold text-graf-950 transition-colors duration-150 group-hover:text-jb-700">
                     {documento.titulo}
                   </span>
                   {tipo ? (
-                    <span className="mt-0.5 block text-[0.8125rem] text-graf-500">
+                    <span className="mt-0.5 block text-[0.75rem] font-medium uppercase tracking-[0.06em] text-graf-500">
                       {tipo}
                     </span>
                   ) : null}
                 </span>
                 <Download
-                  className="size-4 shrink-0 text-graf-500 transition-colors duration-150 group-hover:text-jb-600"
+                  className="size-[18px] shrink-0 text-graf-400 transition-colors duration-150 group-hover:text-jb-600"
                   aria-hidden
                 />
                 <span className="sr-only">(abre em nova aba)</span>
@@ -262,6 +316,6 @@ export function Documentacao({ documentos }: { documentos: DocumentoProduto[] })
           );
         })}
       </ul>
-    </div>
+    </CartaoFicha>
   );
 }
