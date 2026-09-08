@@ -11,6 +11,8 @@ import { BarraComparar, ComparadorProvider } from "@/components/loja/comparador-
 import { Rodape } from "@/components/loja/rodape";
 import { categoriasDoMenu, condicoesDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
 
+import "./catalogo-premium.css";
+
 /**
  * Casca da loja pública.
  *
