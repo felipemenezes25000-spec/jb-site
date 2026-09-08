@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ListFilter, Loader2, Search, X } from "lucide-react";
+import { ListFilter, Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -47,7 +47,7 @@ function EsqueletoFiltros({ className }: { className?: string }) {
     <div
       aria-hidden
       className={cn(
-        "h-[5.5rem] animate-pulse rounded-2xl border border-graf-200/80 bg-white shadow-[0_1px_2px_rgba(20,24,32,0.03)] sm:h-[5rem]",
+        "h-[6.5rem] animate-pulse rounded-2xl border border-graf-200/80 bg-white shadow-[0_1px_2px_rgba(20,24,32,0.025),0_18px_46px_-36px_rgba(20,24,32,0.34)] sm:h-[6rem]",
         className,
       )}
     />
@@ -119,160 +119,193 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
       aria-label="Filtros da listagem"
       aria-busy={pendente || undefined}
       className={cn(
-        "rounded-2xl border border-graf-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(20,24,32,0.03)] sm:p-5",
+        "overflow-hidden rounded-2xl border border-graf-200/90 bg-white shadow-[0_1px_2px_rgba(20,24,32,0.025),0_18px_46px_-36px_rgba(20,24,32,0.34)]",
         className,
       )}
     >
-      <div className="flex flex-col gap-3.5 md:flex-row md:flex-wrap md:items-end">
-        {campos.map((campo) => {
-          if (campo.tipo === "busca") {
-            return (
-              <div
-                key={campo.nome}
-                className={cn(
-                  "min-w-0",
-                  campo.largo === false ? "md:w-56" : "md:min-w-64 md:flex-1",
-                )}
-              >
-                <label
-                  htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[0.055em] text-graf-600"
-                >
-                  {campo.rotulo}
-                </label>
-                <div className="relative">
-                  <Search
-                    className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-500"
-                    aria-hidden
-                  />
-                  <input
-                    id={`filtro-${campo.nome}`}
-                    type="search"
-                    autoComplete="off"
-                    value={textos[campo.nome] ?? ""}
-                    placeholder={campo.placeholder}
-                    onChange={(evento) =>
-                      setTextos((atual) => ({ ...atual, [campo.nome]: evento.target.value }))
-                    }
-                    className={cn(
-                      "h-11 w-full rounded-xl border border-graf-300 bg-graf-50/70 pl-10 pr-3 text-base text-graf-900 sm:text-sm",
-                      "placeholder:text-graf-500 transition-[background-color,border-color,box-shadow] hover:border-graf-400 hover:bg-white",
-                      "focus:border-jb-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/10",
-                    )}
-                  />
-                </div>
-              </div>
-            );
-          }
+      <div className="flex items-center justify-between gap-4 border-b border-graf-100 bg-gradient-to-b from-white to-graf-50/55 px-4 py-3.5 sm:px-5">
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-500/10">
+            <SlidersHorizontal className="size-4" aria-hidden />
+          </span>
+          <div>
+            <p className="text-sm font-bold text-graf-950">Filtros</p>
+            <p className="text-[0.75rem] text-graf-500">Refine a lista sem perder o contexto.</p>
+          </div>
+        </div>
 
-          if (campo.tipo === "selecao") {
-            return (
-              <div key={campo.nome} className="min-w-0 md:w-52">
-                <label
-                  htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[0.055em] text-graf-600"
-                >
-                  {campo.rotulo}
-                </label>
-                <select
-                  id={`filtro-${campo.nome}`}
-                  value={params.get(campo.nome) ?? ""}
-                  onChange={(evento) => aplicar({ [campo.nome]: evento.target.value })}
+        <p
+          aria-live="polite"
+          className="hidden min-h-5 items-center gap-1.5 text-[0.8rem] font-medium text-graf-500 sm:flex"
+        >
+          {pendente ? (
+            <>
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+              Atualizando…
+            </>
+          ) : ativos.length > 0 ? (
+            <>
+              <ListFilter className="size-4" aria-hidden />
+              {ativos.length === 1 ? "1 filtro ativo" : `${ativos.length} filtros ativos`}
+            </>
+          ) : (
+            "Todos os registros"
+          )}
+        </p>
+      </div>
+
+      <div className="p-4 sm:p-5">
+        <div className="flex flex-col gap-3.5 md:flex-row md:flex-wrap md:items-end">
+          {campos.map((campo) => {
+            if (campo.tipo === "busca") {
+              return (
+                <div
+                  key={campo.nome}
                   className={cn(
-                    "h-11 w-full rounded-xl border border-graf-300 bg-graf-50/70 px-3 pr-8 text-base text-graf-900 sm:text-sm",
-                    "transition-[background-color,border-color,box-shadow] hover:border-graf-400 hover:bg-white",
-                    "focus:border-jb-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/10",
+                    "min-w-0",
+                    campo.largo === false ? "md:w-56" : "md:min-w-64 md:flex-1",
                   )}
                 >
-                  <option value="">{campo.todos ?? "Todos"}</option>
-                  {campo.opcoes.map((opcao) => (
-                    <option key={opcao.valor} value={opcao.valor}>
-                      {opcao.rotulo}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            );
-          }
+                  <label
+                    htmlFor={`filtro-${campo.nome}`}
+                    className="mb-1.5 block text-[0.72rem] font-bold uppercase tracking-[0.055em] text-graf-600"
+                  >
+                    {campo.rotulo}
+                  </label>
+                  <div className="relative">
+                    <Search
+                      className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-500"
+                      aria-hidden
+                    />
+                    <input
+                      id={`filtro-${campo.nome}`}
+                      type="search"
+                      autoComplete="off"
+                      value={textos[campo.nome] ?? ""}
+                      placeholder={campo.placeholder}
+                      onChange={(evento) =>
+                        setTextos((atual) => ({ ...atual, [campo.nome]: evento.target.value }))
+                      }
+                      className={cn(
+                        "h-11 w-full rounded-xl border border-graf-300 bg-graf-50/70 pl-10 pr-3 text-base text-graf-900 sm:text-sm",
+                        "placeholder:text-graf-500 transition-[background-color,border-color,box-shadow] hover:border-graf-400 hover:bg-white",
+                        "focus:border-jb-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/10",
+                      )}
+                    />
+                  </div>
+                </div>
+              );
+            }
 
-          if (campo.tipo === "data") {
+            if (campo.tipo === "selecao") {
+              return (
+                <div key={campo.nome} className="min-w-0 md:w-52">
+                  <label
+                    htmlFor={`filtro-${campo.nome}`}
+                    className="mb-1.5 block text-[0.72rem] font-bold uppercase tracking-[0.055em] text-graf-600"
+                  >
+                    {campo.rotulo}
+                  </label>
+                  <select
+                    id={`filtro-${campo.nome}`}
+                    value={params.get(campo.nome) ?? ""}
+                    onChange={(evento) => aplicar({ [campo.nome]: evento.target.value })}
+                    className={cn(
+                      "h-11 w-full rounded-xl border border-graf-300 bg-graf-50/70 px-3 pr-8 text-base text-graf-900 sm:text-sm",
+                      "transition-[background-color,border-color,box-shadow] hover:border-graf-400 hover:bg-white",
+                      "focus:border-jb-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/10",
+                    )}
+                  >
+                    <option value="">{campo.todos ?? "Todos"}</option>
+                    {campo.opcoes.map((opcao) => (
+                      <option key={opcao.valor} value={opcao.valor}>
+                        {opcao.rotulo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            }
+
+            if (campo.tipo === "data") {
+              return (
+                <div key={campo.nome} className="min-w-0 md:w-44">
+                  <label
+                    htmlFor={`filtro-${campo.nome}`}
+                    className="mb-1.5 block text-[0.72rem] font-bold uppercase tracking-[0.055em] text-graf-600"
+                  >
+                    {campo.rotulo}
+                  </label>
+                  <EntradaData
+                    id={`filtro-${campo.nome}`}
+                    valor={params.get(campo.nome) ?? ""}
+                    aoMudar={(valor) => aplicar({ [campo.nome]: valor })}
+                  />
+                </div>
+              );
+            }
+
             return (
-              <div key={campo.nome} className="min-w-0 md:w-44">
-                <label
-                  htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[0.055em] text-graf-600"
-                >
+              <fieldset key={campo.nome} className="min-w-0">
+                <legend className="mb-1.5 text-[0.72rem] font-bold uppercase tracking-[0.055em] text-graf-600">
                   {campo.rotulo}
-                </label>
-                <EntradaData
-                  id={`filtro-${campo.nome}`}
-                  valor={params.get(campo.nome) ?? ""}
-                  aoMudar={(valor) => aplicar({ [campo.nome]: valor })}
-                />
-              </div>
+                </legend>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <EntradaData
+                    id={`filtro-${campo.nome}-de`}
+                    rotuloOculto={`${campo.rotulo} — de`}
+                    valor={params.get(`${campo.nome}_de`) ?? ""}
+                    aoMudar={(valor) => aplicar({ [`${campo.nome}_de`]: valor })}
+                    className="w-full min-w-0 sm:w-40"
+                  />
+                  <span className="shrink-0 text-sm font-medium text-graf-500" aria-hidden>
+                    até
+                  </span>
+                  <EntradaData
+                    id={`filtro-${campo.nome}-ate`}
+                    rotuloOculto={`${campo.rotulo} — até`}
+                    valor={params.get(`${campo.nome}_ate`) ?? ""}
+                    aoMudar={(valor) => aplicar({ [`${campo.nome}_ate`]: valor })}
+                    className="w-full min-w-0 sm:w-40"
+                  />
+                </div>
+              </fieldset>
             );
-          }
+          })}
 
-          return (
-            <fieldset key={campo.nome} className="min-w-0">
-              <legend className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.055em] text-graf-600">
-                {campo.rotulo}
-              </legend>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <EntradaData
-                  id={`filtro-${campo.nome}-de`}
-                  rotuloOculto={`${campo.rotulo} — de`}
-                  valor={params.get(`${campo.nome}_de`) ?? ""}
-                  aoMudar={(valor) => aplicar({ [`${campo.nome}_de`]: valor })}
-                  className="w-full min-w-0 sm:w-40"
-                />
-                <span className="shrink-0 text-sm font-medium text-graf-500" aria-hidden>
-                  até
-                </span>
-                <EntradaData
-                  id={`filtro-${campo.nome}-ate`}
-                  rotuloOculto={`${campo.rotulo} — até`}
-                  valor={params.get(`${campo.nome}_ate`) ?? ""}
-                  aoMudar={(valor) => aplicar({ [`${campo.nome}_ate`]: valor })}
-                  className="w-full min-w-0 sm:w-40"
-                />
-              </div>
-            </fieldset>
-          );
-        })}
-
-        <div className="flex items-center gap-3 md:ml-auto md:pb-0.5">
-          <p
-            aria-live="polite"
-            className="flex min-h-5 items-center gap-1.5 text-[0.8125rem] font-medium text-graf-500"
-          >
-            {pendente ? (
-              <>
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-                Atualizando…
-              </>
-            ) : ativos.length > 0 ? (
-              <>
-                <ListFilter className="size-4" aria-hidden />
-                {ativos.length === 1 ? "1 filtro ativo" : `${ativos.length} filtros ativos`}
-              </>
-            ) : null}
-          </p>
-
-          {ativos.length > 0 ? (
-            <button
-              type="button"
-              onClick={limpar}
-              className={cn(
-                "inline-flex h-11 items-center gap-1.5 rounded-xl border border-graf-300 bg-white px-3.5 text-sm font-semibold text-graf-700 shadow-sm",
-                "transition-all hover:border-graf-400 hover:bg-graf-50",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-              )}
+          <div className="flex items-center gap-3 md:ml-auto md:pb-0.5">
+            <p
+              aria-live="polite"
+              className="flex min-h-5 items-center gap-1.5 text-[0.8125rem] font-medium text-graf-500 sm:hidden"
             >
-              <X className="size-4" aria-hidden />
-              Limpar
-            </button>
-          ) : null}
+              {pendente ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  Atualizando…
+                </>
+              ) : ativos.length > 0 ? (
+                <>
+                  <ListFilter className="size-4" aria-hidden />
+                  {ativos.length === 1 ? "1 filtro ativo" : `${ativos.length} filtros ativos`}
+                </>
+              ) : null}
+            </p>
+
+            {ativos.length > 0 ? (
+              <button
+                type="button"
+                onClick={limpar}
+                className={cn(
+                  "inline-flex h-11 items-center gap-1.5 rounded-xl border border-graf-300 bg-white px-3.5 text-sm font-semibold text-graf-700 shadow-sm",
+                  "transition-all hover:border-graf-400 hover:bg-graf-50 hover:shadow-[0_6px_16px_-12px_rgba(20,24,32,0.32)]",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+                )}
+              >
+                <X className="size-4" aria-hidden />
+                Limpar
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
     </section>
