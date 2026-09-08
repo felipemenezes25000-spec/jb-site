@@ -65,7 +65,7 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
       />
 
       <div className="w-full flex-1 lg:pl-[16rem]">
-        <div className="mx-auto w-full max-w-[94rem] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7 xl:px-10 2xl:px-12">
+        <div className="mx-auto w-full max-w-[140rem] px-4 py-5 sm:px-5 sm:py-6 lg:px-6 lg:py-7 xl:px-7 2xl:px-8">
           <MenuLateral
             contadores={contadores}
             identidade={{ nome: cliente.name, email: cliente.email }}
