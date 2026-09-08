@@ -92,7 +92,7 @@ export function CabecalhoAdmin({
 
   return (
     <header className="sticky top-0 z-30 border-b border-graf-200/80 bg-white/95 backdrop-blur-xl supports-[backdrop-filter]:bg-white/88">
-      <div className="flex h-14 items-center gap-2 px-3 sm:px-5 lg:px-6">
+      <div className="flex h-14 items-center gap-2 px-3 sm:px-5 lg:px-6 xl:px-7 2xl:px-8">
         <BotaoIcone
           rotulo="Abrir menu"
           onClick={aoAbrirGaveta}
@@ -129,7 +129,7 @@ export function CabecalhoAdmin({
             }
             router.push(`/admin/busca?q=${encodeURIComponent(valor)}`);
           }}
-          className="relative min-w-0 flex-1 sm:max-w-[36rem]"
+          className="relative min-w-0 flex-1 sm:max-w-[38rem]"
         >
           <label htmlFor="busca-admin" className="sr-only">
             Buscar em pedidos, clientes, produtos, chamados e ordens de serviço
