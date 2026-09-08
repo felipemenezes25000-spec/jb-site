@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowRight,
   Circle,
   ClipboardList,
   FileText,
   Heart,
+  HeartHandshake,
   LayoutDashboard,
   LifeBuoy,
   MapPin,
@@ -21,26 +23,10 @@ import {
 
 import { LinkBotao } from "@/components/ui/button";
 import { Etiqueta } from "@/components/ui/data";
+import { Logo } from "@/components/ui/logo";
 import { useDialogo } from "@/components/ui/use-dialogo";
 import { MENU_CLIENTE } from "@/lib/navegacao";
 import { cn } from "@/lib/utils";
-
-/**
- * Navegação da Área da Clínica.
- *
- * Duas formas para o mesmo conteúdo, porque as duas telas pedem coisas
- * diferentes: no desktop uma coluna que fica na tela o tempo todo, com o rosto
- * da conta em cima e as áreas agrupadas por assunto; no celular um seletor de
- * área que abre uma gaveta inteira — barra rolável horizontal esconde metade
- * dos destinos e obriga a arrastar para descobrir o que existe.
- *
- * Só um dos dois blocos fica visível por vez, então o leitor de tela nunca
- * ouve a lista duas vezes.
- *
- * `contadores` é indexado pelo href do item, exatamente como está em
- * MENU_CLIENTE. Ex.: `{ "/minha-jb/pedidos": 2 }` marca 2 pedidos em aberto.
- * Contador ausente, zero ou negativo não desenha etiqueta nenhuma.
- */
 
 export type ContadoresMenuCliente = Partial<Record<string, number>>;
 
@@ -59,11 +45,6 @@ const ICONES: Record<string, Icone> = {
   "/minha-jb/perfil": UserRound,
 };
 
-/**
- * Agrupamento por assunto. A ordem de MENU_CLIENTE é a da loja inteira e não
- * muda aqui; o que muda é a leitura: quem entra procura "a clínica" ou "a
- * compra", não uma lista de dez itens sem degrau.
- */
 const GRUPOS: { titulo: string; hrefs: string[] }[] = [
   {
     titulo: "A clínica",
@@ -90,7 +71,6 @@ type ItemMontado = {
 };
 
 function estaAtivo(href: string, caminho: string) {
-  // a visão geral é a raiz da área: só casa exata, senão fica sempre acesa
   if (href === "/minha-jb") return caminho === href;
   return caminho === href || caminho.startsWith(`${href}/`);
 }
@@ -106,15 +86,12 @@ function iniciais(nome: string) {
 function Contador({ valor }: { valor: number }) {
   return (
     <Etiqueta tom="alerta" className="ml-auto shrink-0">
-      <span className="tabular" aria-hidden>
-        {valor}
-      </span>
+      <span className="tabular" aria-hidden>{valor}</span>
       <span className="sr-only">{valor} em aberto</span>
     </Etiqueta>
   );
 }
 
-/** Uma linha da navegação. O mesmo desenho na coluna e na gaveta. */
 function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => void }) {
   const Icone = item.icone;
 
@@ -125,26 +102,22 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
         onClick={aoNavegar}
         aria-current={item.ativo ? "page" : undefined}
         className={cn(
-          "relative flex min-h-11 items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm font-semibold transition-[background-color,color,box-shadow] duration-150",
+          "group relative flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-[0.875rem] font-semibold transition-all duration-150",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
           item.ativo
-            ? "bg-jb-50 text-graf-950"
-            : "text-graf-700 hover:bg-graf-100 hover:text-graf-950",
+            ? "bg-gradient-to-r from-jb-50 to-[#fff6f6] text-jb-700 shadow-[inset_3px_0_0_#e51b23]"
+            : "text-graf-700 hover:bg-graf-50 hover:text-graf-950",
         )}
       >
-        {item.ativo ? (
-          <span
-            aria-hidden
-            className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-jb-500"
-          />
-        ) : null}
-        <Icone
-          className={cn(
-            "size-[18px] shrink-0",
-            item.ativo ? "text-jb-600" : "text-graf-500",
-          )}
+        <span
           aria-hidden
-        />
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+            item.ativo ? "bg-white/90 text-jb-600 shadow-sm" : "text-graf-500 group-hover:bg-white",
+          )}
+        >
+          <Icone className="size-[17px]" />
+        </span>
         <span className="min-w-0 truncate">{item.rotulo}</span>
         {item.quantidade !== null ? <Contador valor={item.quantidade} /> : null}
       </Link>
@@ -152,24 +125,15 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
   );
 }
 
-/** Cabeçalho de grupo — o degrau que transforma dez links em três assuntos. */
 function TituloGrupo({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-4 pb-1.5 pt-5 text-[0.75rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+    <p className="px-3.5 pb-1.5 pt-5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-graf-500">
       {children}
     </p>
   );
 }
 
-function Identidade({
-  nome,
-  email,
-  className,
-}: {
-  nome: string;
-  email: string;
-  className?: string;
-}) {
+function Identidade({ nome, email, className }: { nome: string; email: string; className?: string }) {
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <span
@@ -179,9 +143,7 @@ function Identidade({
         {iniciais(nome)}
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-sm font-bold text-graf-950">
-          {nome || "Área da Clínica"}
-        </span>
+        <span className="block truncate text-sm font-bold text-graf-950">{nome || "Área da Clínica"}</span>
         <span className="block truncate text-xs text-graf-500">{email}</span>
       </span>
     </div>
@@ -196,7 +158,6 @@ export function MenuLateral({
 }: {
   contadores?: ContadoresMenuCliente;
   identidade: { nome: string; email: string };
-  /** Formulário de sair, montado no servidor e desenhado nos dois formatos. */
   sair?: React.ReactNode;
   className?: string;
 }) {
@@ -207,8 +168,6 @@ export function MenuLateral({
   const fechar = useCallback(() => setAberto(false), []);
   const painelRef = useDialogo(aberto, fechar);
 
-  // a gaveta desliza para dentro em vez de aparecer de estalo; quem pede menos
-  // movimento recebe a troca direta (motion-reduce zera a transição)
   useEffect(() => {
     if (!aberto) {
       setEntrou(false);
@@ -218,16 +177,10 @@ export function MenuLateral({
     return () => cancelAnimationFrame(quadro);
   }, [aberto]);
 
-  // trocar de página fecha a gaveta — senão ela cobre a tela que acabou de abrir
   useEffect(() => {
     setAberto(false);
   }, [caminho]);
 
-  /*
-   * Girar o tablet com a gaveta aberta esconde a gaveta (ela é `lg:hidden`) mas
-   * deixaria a trava de rolagem ligada — a página ficaria presa sem nada na
-   * frente. Ao cruzar para o desktop, a gaveta se fecha de verdade.
-   */
   useEffect(() => {
     if (!aberto) return;
     const consulta = window.matchMedia("(min-width: 64rem)");
@@ -265,7 +218,6 @@ export function MenuLateral({
     return { titulo: grupo.titulo, itens: lista };
   }).filter((grupo) => grupo.itens.length > 0);
 
-  // item novo em MENU_CLIENTE não pode sumir da navegação por não estar mapeado
   const restantes = itens.filter((item) => !agrupados.has(item.href));
   if (restantes.length > 0) grupos.push({ titulo: "Mais", itens: restantes });
 
@@ -277,10 +229,7 @@ export function MenuLateral({
     <>
       {visaoGeral ? (
         <ul className="space-y-1">
-          <ItemMenu
-            item={visaoGeral}
-            aoNavegar={dentroDaGaveta ? fechar : undefined}
-          />
+          <ItemMenu item={visaoGeral} aoNavegar={dentroDaGaveta ? fechar : undefined} />
         </ul>
       ) : null}
 
@@ -289,11 +238,7 @@ export function MenuLateral({
           <TituloGrupo>{grupo.titulo}</TituloGrupo>
           <ul className="space-y-1">
             {grupo.itens.map((item) => (
-              <ItemMenu
-                key={item.href}
-                item={item}
-                aoNavegar={dentroDaGaveta ? fechar : undefined}
-              />
+              <ItemMenu key={item.href} item={item} aoNavegar={dentroDaGaveta ? fechar : undefined} />
             ))}
           </ul>
         </div>
@@ -303,58 +248,72 @@ export function MenuLateral({
 
   return (
     <div className={className}>
-      {/* ==================================================== desktop */}
-      <nav aria-label="Área da Clínica" className="hidden lg:block">
-        {/* top-20: 64px do topo fixo da área mais 16px de folga. A identidade
-            de quem está logado não se repete aqui — ela já está no topo, e
-            duplicá-la gastava a primeira dobra da coluna com informação que a
-            pessoa acabou de ler. */}
-        <div className="sticky top-20 flex max-h-[calc(100dvh-6.5rem)] flex-col overflow-y-auto rounded-2xl border border-graf-200 bg-white p-3">
-          <LinkBotao href="/minha-jb/assistencia/novo" tamanho="sm" larguraTotal>
-            <LifeBuoy className="size-4" aria-hidden />
+      <nav
+        aria-label="Área da Clínica"
+        className="fixed inset-y-0 left-0 z-[60] hidden w-[17.25rem] border-r border-graf-200/80 bg-white lg:block"
+      >
+        <div className="flex h-dvh flex-col overflow-hidden px-5 pb-4 pt-4">
+          <Link
+            href="/minha-jb"
+            className="mb-5 flex min-h-12 items-center gap-3 rounded-xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+          >
+            <Logo altura={34} />
+            <span className="min-w-0 border-l border-graf-200 pl-3">
+              <span className="block truncate text-sm font-extrabold tracking-[-0.015em] text-graf-950">Área da Clínica</span>
+              <span className="mt-0.5 block truncate text-[0.68rem] font-medium text-graf-500">Tecnologia que cuida</span>
+            </span>
+          </Link>
+
+          <Link
+            href="/minha-jb/assistencia/novo"
+            className="mb-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-jb-500 px-4 text-sm font-bold text-white shadow-[0_8px_20px_-10px_rgba(229,27,35,0.65)] transition-all hover:bg-jb-600 hover:shadow-[0_10px_24px_-10px_rgba(229,27,35,0.7)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+          >
+            <span className="text-lg leading-none">+</span>
             Abrir chamado
-          </LinkBotao>
+          </Link>
 
-          <div className="mt-3 flex-1">{navegacao(false)}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">{navegacao(false)}</div>
 
-          {sair ? <div className="mt-5 border-t border-graf-200 pt-3">{sair}</div> : null}
+          <div className="mt-4 rounded-2xl border border-graf-200 bg-gradient-to-br from-graf-50 to-white p-3.5 shadow-[0_12px_35px_-28px_rgba(18,24,35,0.4)]">
+            <span className="mb-2.5 flex size-10 items-center justify-center rounded-full bg-jb-50 text-jb-600">
+              <HeartHandshake className="size-5" aria-hidden />
+            </span>
+            <p className="text-sm font-extrabold text-graf-950">Conte com a JB</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-graf-500">Soluções completas para o seu consultório.</p>
+            <Link
+              href="/contato"
+              className="mt-2.5 inline-flex min-h-8 items-center gap-1.5 text-xs font-bold text-jb-700 hover:text-jb-800"
+            >
+              Falar com um especialista
+              <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          </div>
+
+          {sair ? <div className="mt-3 border-t border-graf-200 pt-3">{sair}</div> : null}
         </div>
       </nav>
 
-      {/* ===================================================== celular */}
       <div className="lg:hidden">
         <button
           type="button"
           onClick={() => setAberto(true)}
           aria-haspopup="dialog"
           aria-expanded={aberto}
-          /* enquanto fechada a gaveta não está no DOM: apontar para um id
-             inexistente é pior do que não apontar. `aria-haspopup` e
-             `aria-expanded` já dizem o essencial. */
           aria-controls={aberto ? "mj-gaveta" : undefined}
           className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-graf-200 bg-white px-4 py-2 text-left shadow-card transition-colors hover:border-graf-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
         >
           <IconeAtual className="size-5 shrink-0 text-jb-600" aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="block text-[0.75rem] font-bold uppercase tracking-[0.08em] text-graf-500">
-              Área da Clínica
-            </span>
-            <span className="block truncate text-sm font-bold text-graf-950">
-              {atual?.rotulo ?? "Visão geral"}
-            </span>
+            <span className="block text-[0.75rem] font-bold uppercase tracking-[0.08em] text-graf-500">Área da Clínica</span>
+            <span className="block truncate text-sm font-bold text-graf-950">{atual?.rotulo ?? "Visão geral"}</span>
           </span>
           {pendencias > 0 ? (
             <Etiqueta tom="alerta" className="shrink-0">
-              <span className="tabular" aria-hidden>
-                {pendencias}
-              </span>
+              <span className="tabular" aria-hidden>{pendencias}</span>
               <span className="sr-only">{pendencias} itens em aberto</span>
             </Etiqueta>
           ) : null}
-          <span
-            aria-hidden
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-graf-100 text-graf-700"
-          >
+          <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-graf-100 text-graf-700">
             <Menu className="size-[18px]" />
           </span>
           <span className="sr-only">Abrir o menu da área do cliente</span>
@@ -386,14 +345,8 @@ export function MenuLateral({
             >
               <div className="flex items-start justify-between gap-3 border-b border-graf-200 px-4 py-3.5">
                 <div className="min-w-0">
-                  <h2 id="mj-gaveta-titulo" className="text-sm font-bold text-graf-950">
-                    Área da Clínica
-                  </h2>
-                  <Identidade
-                    nome={identidade.nome}
-                    email={identidade.email}
-                    className="mt-2.5"
-                  />
+                  <h2 id="mj-gaveta-titulo" className="text-sm font-bold text-graf-950">Área da Clínica</h2>
+                  <Identidade nome={identidade.nome} email={identidade.email} className="mt-2.5" />
                 </div>
                 <button
                   type="button"
@@ -405,19 +358,12 @@ export function MenuLateral({
                 </button>
               </div>
 
-              <nav
-                aria-label="Área da Clínica"
-                className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-1"
-              >
+              <nav aria-label="Área da Clínica" className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-1">
                 {navegacao(true)}
               </nav>
 
               <div className="space-y-3 border-t border-graf-200 px-4 py-4">
-                <LinkBotao
-                  href="/minha-jb/assistencia/novo"
-                  larguraTotal
-                  onClick={fechar}
-                >
+                <LinkBotao href="/minha-jb/assistencia/novo" larguraTotal onClick={fechar}>
                   <LifeBuoy className="size-4" aria-hidden />
                   Abrir chamado
                 </LinkBotao>
