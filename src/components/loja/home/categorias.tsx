@@ -144,7 +144,7 @@ export async function SecaoCategorias() {
                 Compre por categoria
               </p>
             </div>
-            <h2 className="mt-4 max-w-[19ch] text-[clamp(2.5rem,3.8vw,4.4rem)] font-black leading-[0.96] tracking-[-0.055em] text-graf-950">
+            <h2 className="manchete mt-4 max-w-[19ch] text-[clamp(2rem,3vw,3.25rem)] text-graf-950">
               <span className="block">Menos procura.</span>
               <span className="block">
                 <span className="text-jb-700">Mais clareza</span> para escolher.

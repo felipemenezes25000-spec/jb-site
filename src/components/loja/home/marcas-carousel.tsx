@@ -157,7 +157,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
               </p>
             </div>
 
-            <h2 className="mt-6 max-w-[32rem] text-[clamp(2.75rem,4.35vw,4.45rem)] font-black leading-[0.96] tracking-[-0.055em] text-graf-950">
+            <h2 className="manchete mt-6 max-w-[32rem] text-[clamp(2rem,3.2vw,3.25rem)] text-graf-950">
               Marcas que <span className="text-jb-700">fazem parte do</span> dia a dia da JB.
             </h2>
 

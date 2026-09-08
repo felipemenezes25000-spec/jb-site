@@ -116,7 +116,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
               </p>
             </div>
 
-            <h2 className="mt-4 max-w-none text-[clamp(2.75rem,4.25vw,5.25rem)] font-black leading-[0.89] tracking-[-0.062em] text-graf-950">
+            <h2 className="manchete mt-4 max-w-none text-[clamp(2rem,3.2vw,3.5rem)] text-graf-950">
               <span className="block min-[1024px]:whitespace-nowrap">O próximo passo</span>
               <span className="block text-jb-700 min-[1024px]:whitespace-nowrap">
                 depende do que sua

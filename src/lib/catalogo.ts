@@ -282,3 +282,74 @@ export async function dadosDaColecao(
     totalSeminovos,
   };
 }
+
+/* ============================================================================
+   Home — o catálogo visto da porta de entrada
+
+   Três listas e três números, todos do catálogo publicado. Nenhum valor é
+   escrito à mão: quando a JB publica ou tira um equipamento, a home muda
+   sozinha. É o mesmo princípio das coleções — a página só diz o que o banco
+   sustenta.
+   ============================================================================ */
+
+export type DadosDaHome = {
+  destaque: ProdutoCard | null;
+  ofertas: ProdutoCard[];
+  seminovos: ProdutoCard[];
+  procurados: ProdutoCard[];
+  totalPublicado: number;
+  totalMarcas: number;
+  menorPrecoCents: number | null;
+};
+
+export async function dadosDaHome(): Promise<DadosDaHome> {
+  const [destaque, ofertas, seminovos, procurados, totalPublicado, totalMarcas, menorPreco] =
+    await Promise.all([
+      prisma.product.findFirst({
+        where: { ...PUBLICADO, media: { some: {} } },
+        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+        select: SELECAO_CARD,
+      }),
+      /* Oferta é desconto real: `compareAtCents` acima do preço atual. Sem
+         isso a faixa viraria "todo mundo em promoção", que é a promoção que
+         ninguém acredita. */
+      prisma.product.findMany({
+        where: { ...PUBLICADO, compareAtCents: { not: null } },
+        orderBy: [{ publishedAt: "desc" }],
+        take: 8,
+        select: SELECAO_CARD,
+      }),
+      prisma.product.findMany({
+        where: { ...PUBLICADO, condition: "seminovo" },
+        orderBy: [{ publishedAt: "desc" }],
+        take: 4,
+        select: SELECAO_CARD,
+      }),
+      prisma.product.findMany({
+        where: { ...PUBLICADO, condition: "novo" },
+        orderBy: [{ featured: "desc" }, { stock: "desc" }, { publishedAt: "desc" }],
+        take: 8,
+        select: SELECAO_CARD,
+      }),
+      prisma.product.count({ where: PUBLICADO }),
+      prisma.brand.count({ where: { published: true, products: { some: PUBLICADO } } }),
+      prisma.product.aggregate({
+        where: { ...PUBLICADO, priceCents: { gt: 0 } },
+        _min: { priceCents: true },
+      }),
+    ]);
+
+  const emOferta = ofertas
+    .map(paraCard)
+    .filter((produto) => produto.compareAtCents && produto.compareAtCents > produto.priceCents);
+
+  return {
+    destaque: destaque ? paraCard(destaque) : null,
+    ofertas: emOferta,
+    seminovos: seminovos.map(paraCard),
+    procurados: procurados.map(paraCard),
+    totalPublicado,
+    totalMarcas,
+    menorPrecoCents: menorPreco._min.priceCents ?? null,
+  };
+}
