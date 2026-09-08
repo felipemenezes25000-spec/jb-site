@@ -58,14 +58,23 @@ type Registro = {
   slug: string;
   name: string;
   order: number;
+  published: boolean;
   createdAt: Date;
   produtos: number;
 };
 
-/** Grupos de mesmo nome com mais de um cadastro. */
+/**
+ * Grupos de mesmo nome com mais de um cadastro PUBLICADO.
+ *
+ * Despublicado não conta: é exatamente o estado em que este script deixa a
+ * duplicata depois de unificar. Contando os dois, uma segunda prévia voltaria
+ * a listar o mesmo par para sempre, e a saída deixaria de responder a
+ * pergunta que ela existe para responder — "ainda tem duplicata?".
+ */
 function duplicados(registros: Registro[]): Registro[][] {
   const porNome = new Map<string, Registro[]>();
   for (const registro of registros) {
+    if (!registro.published) continue;
     const chave = chaveDeNome(registro.name);
     porNome.set(chave, [...(porNome.get(chave) ?? []), registro]);
   }
@@ -97,6 +106,7 @@ async function categorias() {
       slug: true,
       name: true,
       order: true,
+      published: true,
       createdAt: true,
       _count: { select: { products: { where: { status: "active" } } } },
     },
@@ -158,6 +168,7 @@ async function marcas() {
       slug: true,
       name: true,
       order: true,
+      published: true,
       createdAt: true,
       _count: { select: { products: { where: { status: "active" } } } },
     },
