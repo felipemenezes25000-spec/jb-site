@@ -54,6 +54,17 @@
   --color-surface-muted: #fafafa;
   --color-surface-sunken: #f4f4f5;
 
+  /* — Cromo escuro —
+
+     Cabeçalho, faixas de serviço e rodapé do catálogo. Preto quase absoluto,
+     não o grafite do texto: a diferença é o que faz o vermelho da marca
+     acender em cima em vez de esmaecer. O filete claro de 1px separa cartão
+     de cartão na vitrine — é a alternativa à sombra. */
+  --color-chrome: #121315;
+  --color-chrome-soft: #1f2124;
+  --color-chrome-line: #2b2d31;
+  --color-hairline: #dcdde1;
+
   /* — Estados — */
   --color-ok-50: #ecfdf5;
   --color-ok-500: #10b981;
@@ -66,6 +77,8 @@
   --color-info-700: #1d4ed8;
 
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  /* A condensada das manchetes de catálogo — ver o comentário em layout.tsx. */
+  --font-display: var(--font-oswald), "Arial Narrow", ui-sans-serif, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
 
   --radius-xs: 4px;
@@ -500,4 +513,67 @@
 @utility texto-apoio {
   font-size: 0.8125rem;
   line-height: 1.55;
+}
+
+/* ============================================================================
+   Vitrine — a camada de apresentação do catálogo
+
+   Estas utilidades desenham o catálogo como vitrine, e não como página de
+   texto: manchete condensada, rótulo técnico em monoespaçada, número tabular
+   e superfície de filete no lugar da sombra.
+
+   Elas existem soltas, sem classe de página em volta, porque a intenção é
+   que valham para o site inteiro conforme cada tela for migrando — o
+   catálogo é só a primeira.
+   ============================================================================ */
+
+/* Manchete condensada em caixa alta. A altura de linha abaixo de 1 é
+   deliberada: em duas linhas o bloco fecha como um letreiro. */
+@utility manchete {
+  font-family: var(--font-display);
+  font-weight: 600;
+  /* Abaixo de 1,1 as duas linhas de uma manchete em português se encostam: a
+     cedilha de "INSTALAÇÃO" desce sobre o acento de "ASSISTÊNCIA" da linha
+     seguinte. É o mesmo motivo pelo qual `micro` não usa 1. */
+  line-height: 1.1;
+  letter-spacing: -0.012em;
+  text-transform: uppercase;
+}
+
+/* Micro-rótulo: categoria, contagem, estado, kicker de seção. Monoespaçada e
+   espaçada, para ser lida como etiqueta e não como texto. */
+@utility micro {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  /* 1.25, e não 1. Em caixa alta o português acentua a maiúscula — Ê, Ã, Ó — e
+     o acento sobe acima da caixa do em. Com altura de linha 1, qualquer
+     ancestral que role na horizontal (`overflow-x: auto` implica corte no
+     eixo vertical) decepa o acento: a faixa de avisos exibia "ASSISTENCIA
+     TECNICA PROPRIA EM SAO PAULO" com o texto certo no HTML. */
+  line-height: 1.25;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Número de vitrine — preço, parcela, contagem. */
+@utility numero {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
+}
+
+/* Superfície de catálogo: branco, filete de 1px, canto de 4px. */
+@utility placa {
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-xs);
+}
+
+/* Malha de fundo do cromo escuro — dá profundidade sem imagem. */
+@utility malha-escura {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
 }

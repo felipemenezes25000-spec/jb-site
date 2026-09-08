@@ -5,6 +5,7 @@ import type { Prisma, ProductCondition } from "@prisma/client";
 import { ArrowRight, PackageSearch, SearchX, TriangleAlert } from "lucide-react";
 
 import { GradeProdutos, type Parcelamento } from "@/components/loja/card-produto";
+import { GradeVitrine } from "@/components/loja/card-vitrine";
 import {
   BarraCatalogo,
   PainelFiltros,
@@ -449,6 +450,7 @@ async function Resultados({
   endereco,
   pagina,
   chamadaDestacada,
+  daVitrine,
 }: {
   consulta: Promise<Resposta>;
   parcelamento: Parcelamento;
@@ -458,6 +460,8 @@ async function Resultados({
   endereco: string;
   pagina: number;
   chamadaDestacada?: boolean;
+  /** Cartão da vitrine, com a apresentação preta e condensada. */
+  daVitrine?: boolean;
 }) {
   const resposta = await consulta;
   if (!resposta.ok) return <ErroCatalogo caminho={caminho} />;
@@ -506,14 +510,24 @@ async function Resultados({
         ) : null}
       </div>
 
-      <GradeProdutos
-        produtos={dados.produtos}
-        parcelamento={parcelamento}
-        colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
-        chamadaDestacada={chamadaDestacada}
-        extra={listaCurta ? <ConviteNaGrade /> : null}
-        className="mt-6"
-      />
+      {daVitrine ? (
+        <GradeVitrine
+          produtos={dados.produtos}
+          parcelamento={parcelamento}
+          colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
+          extra={listaCurta ? <ConviteNaGrade /> : null}
+          className="mt-5"
+        />
+      ) : (
+        <GradeProdutos
+          produtos={dados.produtos}
+          parcelamento={parcelamento}
+          colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
+          chamadaDestacada={chamadaDestacada}
+          extra={listaCurta ? <ConviteNaGrade /> : null}
+          className="mt-6"
+        />
+      )}
 
       {dados.total > POR_PAGINA ? (
         <Paginacao
@@ -550,6 +564,7 @@ export async function Vitrine({
   travarCondicao,
   travarMarca,
   variante = "padrao",
+  apoioNoFiltro,
 }: {
   /** Degrau acima do título — "Catálogo", "Por condição", "Marca". */
   sobretitulo?: string;
@@ -576,7 +591,9 @@ export async function Vitrine({
    * renderizado. Escondido ele continuava no HTML, com dois `h1` na mesma
    * página e um título anunciado a quem navega por leitor de tela.
    */
-  variante?: "padrao" | "colecao";
+  variante?: "padrao" | "colecao" | "vitrine";
+  /** Bloco extra no pé da coluna de filtros — apoio, não filtro. */
+  apoioNoFiltro?: React.ReactNode;
 }) {
   const pagina = Math.max(1, Number(texto(parametros.pagina) ?? 1) || 1);
   const ordem = (texto(parametros.ordem) as Ordenacao | undefined) ?? "relevancia";
@@ -657,7 +674,9 @@ export async function Vitrine({
     return consultaTexto ? `${caminho}?${consultaTexto}` : caminho;
   })();
 
-  const daColecao = variante === "colecao";
+  const daVitrine = variante === "vitrine";
+  /* As duas variantes tiram o cabeçalho interno: a página traz o seu. */
+  const daColecao = variante === "colecao" || daVitrine;
 
   return (
     <div className={cn("container-jb", daColecao ? "pb-10 lg:pb-14" : "py-8 lg:py-12")}>
@@ -730,6 +749,7 @@ export async function Vitrine({
       >
         <aside className="hidden lg:block" aria-label="Filtros do catálogo">
           <PainelFiltros grupos={grupos} parametros={parametros} {...travas} />
+          {apoioNoFiltro}
         </aside>
 
         <div className="min-w-0">
@@ -744,7 +764,8 @@ export async function Vitrine({
               caminho={caminho}
               endereco={enderecoPrimeiraPagina}
               pagina={pagina}
-              chamadaDestacada={daColecao}
+              chamadaDestacada={daColecao && !daVitrine}
+              daVitrine={daVitrine}
             />
           </Suspense>
         </div>

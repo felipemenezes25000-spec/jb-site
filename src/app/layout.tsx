@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, JetBrains_Mono, Manrope } from "next/font/google";
+import { Caveat, JetBrains_Mono, Manrope, Oswald } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { cacheLife, cacheTag } from "next/cache";
@@ -35,6 +35,21 @@ const manuscrita = Caveat({
   variable: "--font-manuscrita",
   display: "swap",
   weight: ["400", "600"],
+});
+
+/**
+ * A condensada dos títulos do catálogo.
+ *
+ * Manrope é ótima para leitura corrida e ruim para manchete: em caixa alta
+ * ela ocupa largura demais e o título de uma coleção não cabe em duas
+ * linhas sem encolher. Oswald resolve o mesmo texto em menos espaço, e é
+ * ela que dá ao catálogo o ar de vitrine em vez de página de texto.
+ */
+const condensada = Oswald({
+  subsets: ["latin"],
+  variable: "--font-oswald",
+  display: "swap",
+  weight: ["500", "600", "700"],
 });
 
 const mono = JetBrains_Mono({
@@ -126,7 +141,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       /* o CSS define scroll-behavior: smooth; isto avisa o Next de que a
          escolha é deliberada e não deve ser desligada na troca de rota */
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${mono.variable} ${manuscrita.variable}`}
+      className={`${manrope.variable} ${mono.variable} ${manuscrita.variable} ${condensada.variable}`}
     >
       <body className="antialiased">
         {children}

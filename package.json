@@ -30,7 +30,8 @@
     "conteudo:prever": "tsx scripts/migrar-conteudo-institucional.ts",
     "conteudo:migrar": "tsx scripts/migrar-conteudo-institucional.ts --aplicar",
     "pautas:prever": "tsx scripts/carregar-pautas.ts",
-    "pautas:carregar": "tsx scripts/carregar-pautas.ts --aplicar"
+    "pautas:carregar": "tsx scripts/carregar-pautas.ts --aplicar",
+    "db:vitrine": "tsx prisma/seed-vitrine.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

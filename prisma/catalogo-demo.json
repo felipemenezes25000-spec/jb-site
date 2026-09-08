@@ -1,0 +1,667 @@
+{
+  "categories": [
+    {
+      "slug": "biosseguranca",
+      "name": "Biossegurança",
+      "blurb": "Autoclaves, cuba ultrassônica e seladoras",
+      "icon": "ShieldCheck"
+    },
+    {
+      "slug": "profilaxia",
+      "name": "Profilaxia",
+      "blurb": "Ultrassom, jato de bicarbonato e periodontia",
+      "icon": "Sparkles"
+    },
+    {
+      "slug": "cirurgia",
+      "name": "Cirurgia e implante",
+      "blurb": "Motores, aspiração cirúrgica e instrumental",
+      "icon": "Stethoscope"
+    },
+    {
+      "slug": "unidade-basica",
+      "name": "Unidade básica",
+      "blurb": "Cadeira, equipo, compressor e sugadores",
+      "icon": "Armchair"
+    },
+    {
+      "slug": "imagem",
+      "name": "Imagem e diagnóstico",
+      "blurb": "Raio-x, câmera intraoral e sensores",
+      "icon": "ScanLine"
+    }
+  ],
+  "brands": [
+    "Schuster",
+    "Kavo",
+    "Gnatus",
+    "Dabi Atlante",
+    "Olsen",
+    "Cristófoli"
+  ],
+  "products": [
+    {
+      "slug": "autoclave-vertical-18l-classe-b",
+      "name": "Autoclave vertical 18 L — Classe B",
+      "short": "Ciclo B com secagem a vácuo e registro de carga.",
+      "brand": "Cristófoli",
+      "category": "biosseguranca",
+      "sku": "JB-AUT-18B",
+      "price": 14980,
+      "listPrice": 16490,
+      "condition": "novo",
+      "stock": 12,
+      "leadTime": "Envio em 2 dias úteis",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\autoclave.jpg",
+      "rating": 4.9,
+      "reviews": 38,
+      "warranty": "12 meses de garantia de fábrica",
+      "installedBy": "Instalação e validação pela equipe JB",
+      "specs": [
+        {
+          "label": "Capacidade",
+          "value": "18 litros"
+        },
+        {
+          "label": "Ciclo",
+          "value": "134 °C · Classe B"
+        },
+        {
+          "label": "Secagem",
+          "value": "A vácuo, 20 min"
+        },
+        {
+          "label": "Bandejas",
+          "value": "4 inox"
+        },
+        {
+          "label": "Tensão",
+          "value": "220 V"
+        },
+        {
+          "label": "Consumo",
+          "value": "1.800 W"
+        }
+      ],
+      "highlights": [
+        "Registro de ciclo impresso para auditoria da vigilância",
+        "Reservatório separado de água limpa e residual",
+        "Assistência técnica própria JB em São Paulo"
+      ],
+      "tags": [
+        "mais vendido",
+        "12x sem juros"
+      ]
+    },
+    {
+      "slug": "ultrassom-jato-bicarbonato",
+      "name": "Ultrassom com jato de bicarbonato",
+      "short": "Profilaxia completa em um só equipamento.",
+      "brand": "Schuster",
+      "category": "profilaxia",
+      "sku": "JB-ULT-JB2",
+      "price": 5290,
+      "listPrice": 5990,
+      "condition": "novo",
+      "stock": 9,
+      "leadTime": "Envio em 1 dia útil",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\ultrassom.jpg",
+      "rating": 4.8,
+      "reviews": 52,
+      "warranty": "12 meses de garantia de fábrica",
+      "installedBy": "Treinamento de uso incluído",
+      "specs": [
+        {
+          "label": "Frequência",
+          "value": "28 kHz ± 3"
+        },
+        {
+          "label": "Insertos",
+          "value": "3 pontas inclusas"
+        },
+        {
+          "label": "Reservatório",
+          "value": "300 ml"
+        },
+        {
+          "label": "Pedal",
+          "value": "Progressivo"
+        },
+        {
+          "label": "Tensão",
+          "value": "Bivolt automático"
+        },
+        {
+          "label": "Peso",
+          "value": "2,4 kg"
+        }
+      ],
+      "highlights": [
+        "Peça de mão autoclavável",
+        "Controle independente de água e potência",
+        "Pontas de reposição sempre em estoque na JB"
+      ],
+      "tags": [
+        "destaque",
+        "pronta entrega"
+      ]
+    },
+    {
+      "slug": "cadeira-equipo-completo-pro",
+      "name": "Cadeira com equipo completo Pro",
+      "short": "Unidade de tratamento com refletor LED e sugadores.",
+      "brand": "Gnatus",
+      "category": "unidade-basica",
+      "sku": "JB-CAD-PRO",
+      "price": 34500,
+      "condition": "novo",
+      "stock": 3,
+      "leadTime": "Entrega agendada em 10 dias",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\cadeira.jpg",
+      "rating": 5,
+      "reviews": 17,
+      "warranty": "24 meses de garantia de fábrica",
+      "installedBy": "Montagem no consultório pela equipe JB",
+      "specs": [
+        {
+          "label": "Refletor",
+          "value": "LED 30.000 lux"
+        },
+        {
+          "label": "Equipo",
+          "value": "3 terminais + seringa"
+        },
+        {
+          "label": "Sugadores",
+          "value": "Venturi duplo"
+        },
+        {
+          "label": "Estofado",
+          "value": "Preto premium"
+        },
+        {
+          "label": "Movimentos",
+          "value": "4 posições programáveis"
+        },
+        {
+          "label": "Tensão",
+          "value": "220 V"
+        }
+      ],
+      "highlights": [
+        "Montagem, nivelamento e teste hidráulico inclusos",
+        "Estofado com costura reforçada e sem emendas",
+        "Peças de reposição com estoque nacional"
+      ],
+      "tags": [
+        "montagem inclusa"
+      ]
+    },
+    {
+      "slug": "compressor-isento-de-oleo-40l",
+      "name": "Compressor isento de óleo 40 L",
+      "short": "Ar limpo e silencioso para dois consultórios.",
+      "brand": "Olsen",
+      "category": "unidade-basica",
+      "sku": "JB-CMP-40",
+      "price": 5200,
+      "listPrice": 5740,
+      "condition": "novo",
+      "stock": 15,
+      "leadTime": "Envio em 3 dias úteis",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\compressor.jpg",
+      "rating": 4.7,
+      "reviews": 44,
+      "warranty": "12 meses de garantia de fábrica",
+      "installedBy": "Orientação de instalação por vídeo",
+      "specs": [
+        {
+          "label": "Reservatório",
+          "value": "40 litros"
+        },
+        {
+          "label": "Pressão",
+          "value": "8 bar"
+        },
+        {
+          "label": "Ruído",
+          "value": "58 dB"
+        },
+        {
+          "label": "Consultórios",
+          "value": "Até 2"
+        },
+        {
+          "label": "Motor",
+          "value": "1 HP isento de óleo"
+        },
+        {
+          "label": "Tensão",
+          "value": "Bivolt"
+        }
+      ],
+      "highlights": [
+        "Sem óleo: ar seco direto na peça de mão",
+        "Filtro coalescente incluso",
+        "Baixa vibração — pode ficar próximo à sala clínica"
+      ],
+      "tags": [
+        "silencioso"
+      ]
+    },
+    {
+      "slug": "aspirador-cirurgico-movel",
+      "name": "Aspirador cirúrgico móvel",
+      "short": "Sucção contínua para cirurgia e implante.",
+      "brand": "Dabi Atlante",
+      "category": "cirurgia",
+      "sku": "JB-ASP-MOV",
+      "price": 6840,
+      "condition": "novo",
+      "stock": 8,
+      "leadTime": "Envio em 2 dias úteis",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\aspirador.jpg",
+      "rating": 4.6,
+      "reviews": 23,
+      "warranty": "12 meses de garantia de fábrica",
+      "installedBy": "Pronto para uso ao receber",
+      "specs": [
+        {
+          "label": "Vazão",
+          "value": "40 L/min"
+        },
+        {
+          "label": "Reservatório",
+          "value": "2 litros"
+        },
+        {
+          "label": "Rodízios",
+          "value": "4 com travas"
+        },
+        {
+          "label": "Filtro",
+          "value": "Bacteriológico"
+        },
+        {
+          "label": "Ruído",
+          "value": "62 dB"
+        },
+        {
+          "label": "Tensão",
+          "value": "Bivolt"
+        }
+      ],
+      "highlights": [
+        "Frasco transparente com escala visível",
+        "Pedal opcional para cirurgia a quatro mãos",
+        "Manutenção preventiva pela JB a cada 12 meses"
+      ],
+      "tags": [
+        "cirurgia"
+      ]
+    },
+    {
+      "slug": "motor-de-implante-35ncm",
+      "name": "Motor de implante 35 N·cm",
+      "short": "Torque calibrado com pedal e irrigação.",
+      "brand": "Kavo",
+      "category": "cirurgia",
+      "sku": "JB-MTR-35",
+      "price": 9750,
+      "listPrice": 11200,
+      "condition": "seminovo",
+      "stock": 4,
+      "leadTime": "Envio em 1 dia útil",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\motor-implante.jpg",
+      "rating": 4.8,
+      "reviews": 12,
+      "warranty": "6 meses de garantia JB",
+      "installedBy": "Revisado e calibrado no laboratório JB",
+      "specs": [
+        {
+          "label": "Torque",
+          "value": "5 a 35 N·cm"
+        },
+        {
+          "label": "Rotação",
+          "value": "300 a 40.000 rpm"
+        },
+        {
+          "label": "Redução",
+          "value": "20:1 inclusa"
+        },
+        {
+          "label": "Irrigação",
+          "value": "Bomba peristáltica"
+        },
+        {
+          "label": "Pedal",
+          "value": "Multifunção"
+        },
+        {
+          "label": "Tensão",
+          "value": "Bivolt"
+        }
+      ],
+      "highlights": [
+        "Laudo de calibração de torque emitido pela JB",
+        "Contra-ângulo 20:1 revisado e testado",
+        "Condição de seminovo descrita item por item"
+      ],
+      "tags": [
+        "seminovo revisado",
+        "laudo JB"
+      ]
+    },
+    {
+      "slug": "fotopolimerizador-led-1200",
+      "name": "Fotopolimerizador LED 1200 mW",
+      "short": "Sem fio, cinco modos e base de carga.",
+      "brand": "Schuster",
+      "category": "profilaxia",
+      "sku": "JB-FOT-1200",
+      "price": 1480,
+      "listPrice": 1690,
+      "condition": "novo",
+      "stock": 22,
+      "leadTime": "Envio no mesmo dia",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\fotopolimerizador.jpg",
+      "rating": 4.7,
+      "reviews": 61,
+      "warranty": "12 meses de garantia de fábrica",
+      "installedBy": "Pronto para uso ao receber",
+      "specs": [
+        {
+          "label": "Intensidade",
+          "value": "1.200 mW/cm²"
+        },
+        {
+          "label": "Modos",
+          "value": "5 programas"
+        },
+        {
+          "label": "Bateria",
+          "value": "Lítio, 300 ciclos"
+        },
+        {
+          "label": "Ponteira",
+          "value": "Fibra óptica 8 mm"
+        },
+        {
+          "label": "Radiômetro",
+          "value": "Integrado na base"
+        },
+        {
+          "label": "Peso",
+          "value": "180 g"
+        }
+      ],
+      "highlights": [
+        "Radiômetro na base para conferir a potência real",
+        "Corpo em alumínio anodizado",
+        "Ponteira autoclavável"
+      ],
+      "tags": [
+        "envio hoje"
+      ]
+    },
+    {
+      "slug": "seladora-de-embalagens-30cm",
+      "name": "Seladora de embalagens 30 cm",
+      "short": "Selagem contínua para grau cirúrgico.",
+      "brand": "Cristófoli",
+      "category": "biosseguranca",
+      "sku": "JB-SEL-30",
+      "price": 2190,
+      "condition": "novo",
+      "stock": 18,
+      "leadTime": "Envio em 2 dias úteis",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\seladora.jpg",
+      "rating": 4.5,
+      "reviews": 27,
+      "warranty": "12 meses de garantia de fábrica",
+      "installedBy": "Pronto para uso ao receber",
+      "specs": [
+        {
+          "label": "Barra de selagem",
+          "value": "30 cm"
+        },
+        {
+          "label": "Temperatura",
+          "value": "Ajustável 0-8"
+        },
+        {
+          "label": "Ciclo",
+          "value": "1,5 s"
+        },
+        {
+          "label": "Corpo",
+          "value": "Aço pintado"
+        },
+        {
+          "label": "Consumo",
+          "value": "300 W"
+        },
+        {
+          "label": "Tensão",
+          "value": "Bivolt"
+        }
+      ],
+      "highlights": [
+        "Selagem uniforme em papel grau cirúrgico",
+        "Resistência de reposição em estoque",
+        "Pés antiderrapantes para bancada"
+      ],
+      "tags": [
+        "biossegurança"
+      ]
+    },
+    {
+      "slug": "raio-x-intraoral-parede",
+      "name": "Raio-x intraoral de parede",
+      "short": "Braço articulado com disparo digital.",
+      "brand": "Dabi Atlante",
+      "category": "imagem",
+      "sku": "JB-RX-INT",
+      "price": 18900,
+      "condition": "novo",
+      "stock": 2,
+      "leadTime": "Entrega agendada em 12 dias",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\raio-x.jpg",
+      "rating": 4.9,
+      "reviews": 9,
+      "warranty": "24 meses de garantia de fábrica",
+      "installedBy": "Instalação e laudo de radioproteção pela JB",
+      "specs": [
+        {
+          "label": "Tensão de tubo",
+          "value": "70 kVp"
+        },
+        {
+          "label": "Corrente",
+          "value": "8 mA"
+        },
+        {
+          "label": "Braço",
+          "value": "Articulado 1,8 m"
+        },
+        {
+          "label": "Disparo",
+          "value": "Digital com memória"
+        },
+        {
+          "label": "Foco",
+          "value": "0,8 mm"
+        },
+        {
+          "label": "Tensão",
+          "value": "220 V"
+        }
+      ],
+      "highlights": [
+        "Documentação para licenciamento sanitário",
+        "Compatível com sensor digital e placa de fósforo",
+        "Instalação com teste de vazamento"
+      ],
+      "tags": [
+        "instalação técnica"
+      ]
+    },
+    {
+      "slug": "cuba-lavadora-ultrassonica-7l",
+      "name": "Cuba lavadora ultrassônica 7 L",
+      "short": "Limpeza por cavitação antes da autoclave.",
+      "brand": "Cristófoli",
+      "category": "biosseguranca",
+      "sku": "JB-CUB-7",
+      "price": 3480,
+      "listPrice": 3890,
+      "condition": "novo",
+      "stock": 11,
+      "leadTime": "Envio em 2 dias úteis",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\cuba-ultrassonica.jpg",
+      "rating": 4.6,
+      "reviews": 31,
+      "warranty": "12 meses de garantia de fábrica",
+      "installedBy": "Pronto para uso ao receber",
+      "specs": [
+        {
+          "label": "Capacidade",
+          "value": "7 litros"
+        },
+        {
+          "label": "Frequência",
+          "value": "40 kHz"
+        },
+        {
+          "label": "Timer",
+          "value": "1 a 30 min"
+        },
+        {
+          "label": "Aquecimento",
+          "value": "Até 60 °C"
+        },
+        {
+          "label": "Cesto",
+          "value": "Inox incluso"
+        },
+        {
+          "label": "Tensão",
+          "value": "Bivolt"
+        }
+      ],
+      "highlights": [
+        "Remove resíduo de dentro de brocas e limas",
+        "Tampa e cesto em inox 304",
+        "Degas automático para solução nova"
+      ],
+      "tags": [
+        "esterilização"
+      ]
+    },
+    {
+      "slug": "camera-intraoral-hd-usb",
+      "name": "Câmera intraoral HD USB",
+      "short": "Imagem em tempo real para o plano de tratamento.",
+      "brand": "Kavo",
+      "category": "imagem",
+      "sku": "JB-CAM-HD",
+      "price": 2650,
+      "condition": "novo",
+      "stock": 14,
+      "leadTime": "Envio no mesmo dia",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\camera-intraoral.jpg",
+      "rating": 4.4,
+      "reviews": 19,
+      "warranty": "12 meses de garantia de fábrica",
+      "installedBy": "Configuração remota do software inclusa",
+      "specs": [
+        {
+          "label": "Sensor",
+          "value": "1/4\" CMOS HD"
+        },
+        {
+          "label": "Foco",
+          "value": "Automático 5-50 mm"
+        },
+        {
+          "label": "LED",
+          "value": "6 brancos"
+        },
+        {
+          "label": "Conexão",
+          "value": "USB 2.0 plug & play"
+        },
+        {
+          "label": "Captura",
+          "value": "Botão na peça"
+        },
+        {
+          "label": "Capas",
+          "value": "50 descartáveis"
+        }
+      ],
+      "highlights": [
+        "Aumenta a aceitação de orçamento na cadeira",
+        "Compatível com os principais softwares de clínica",
+        "Configuração remota feita pela equipe JB"
+      ],
+      "tags": [
+        "envio hoje"
+      ]
+    },
+    {
+      "slug": "autoclave-12l-revisada",
+      "name": "Autoclave 12 L revisada",
+      "short": "Seminovo com laudo de ciclo e garantia JB.",
+      "brand": "Cristófoli",
+      "category": "biosseguranca",
+      "sku": "JB-AUT-12R",
+      "price": 7490,
+      "listPrice": 9200,
+      "condition": "seminovo",
+      "stock": 5,
+      "leadTime": "Envio em 1 dia útil",
+      "image": "C:\\Users\\Felipe\\AppData\\Local\\Temp\\claude\\C--Users-Felipe-Documents-site-de--vendas-JB\\3b1147d2-0404-4e02-83a9-a29cc8cbf538\\scratchpad\\pinnacle-marketplace\\src\\assets\\autoclave.jpg",
+      "rating": 4.5,
+      "reviews": 14,
+      "warranty": "6 meses de garantia JB",
+      "installedBy": "Revisada no laboratório JB",
+      "specs": [
+        {
+          "label": "Capacidade",
+          "value": "12 litros"
+        },
+        {
+          "label": "Ciclo",
+          "value": "121 °C e 134 °C"
+        },
+        {
+          "label": "Bandejas",
+          "value": "3 inox"
+        },
+        {
+          "label": "Revisão",
+          "value": "Selo e resistência novos"
+        },
+        {
+          "label": "Teste",
+          "value": "3 ciclos aprovados"
+        },
+        {
+          "label": "Tensão",
+          "value": "220 V"
+        }
+      ],
+      "highlights": [
+        "Selo de porta e resistência substituídos",
+        "Laudo com registro dos três ciclos de teste",
+        "Fotos reais do equipamento antes do envio"
+      ],
+      "tags": [
+        "seminovo revisado",
+        "economia de 18%"
+      ]
+    }
+  ]
+}
