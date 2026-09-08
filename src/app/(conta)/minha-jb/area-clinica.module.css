@@ -1,6 +1,6 @@
 .shell {
   --clinic-sidebar: 16rem;
-  --clinic-content: 94rem;
+  --clinic-content: 140rem;
   --clinic-canvas: #f7f8fa;
   --clinic-surface: #ffffff;
   --clinic-surface-soft: #fbfbfc;
@@ -40,8 +40,8 @@
   width: 100%;
   max-width: var(--clinic-content);
   margin-inline: auto;
-  padding-left: clamp(1rem, 2vw, 2.5rem);
-  padding-right: clamp(1rem, 2vw, 2.5rem);
+  padding-left: clamp(1rem, 1.5vw, 2rem);
+  padding-right: clamp(1rem, 1.5vw, 2rem);
 }
 
 .shell :global(.clinic-search) input::-webkit-search-cancel-button {
