@@ -1,23 +1,69 @@
 .shell {
-  --admin-canvas: #f8f9fb;
+  --admin-canvas: #f7f8fa;
   --admin-surface: #ffffff;
-  --admin-border: rgba(221, 224, 229, 0.9);
-  --admin-border-soft: rgba(236, 238, 241, 0.96);
-  --admin-shadow: 0 1px 2px rgba(20, 24, 32, 0.025), 0 12px 34px -30px rgba(20, 24, 32, 0.24);
+  --admin-border: rgba(219, 223, 228, 0.92);
+  --admin-border-strong: rgba(198, 203, 210, 0.98);
+  --admin-border-soft: rgba(235, 237, 240, 0.98);
+  --admin-shadow: 0 1px 2px rgba(20, 24, 32, 0.025), 0 18px 46px -36px rgba(20, 24, 32, 0.34);
+  --admin-shadow-hover: 0 7px 20px rgba(20, 24, 32, 0.045), 0 26px 56px -34px rgba(20, 24, 32, 0.3);
+
   background:
-    radial-gradient(circle at 66% 0%, rgba(229, 27, 35, 0.035), transparent 34rem),
-    linear-gradient(180deg, #fafbfc 0, var(--admin-canvas) 34rem, #f8f9fb 100%);
+    radial-gradient(circle at 66% -3%, rgba(229, 27, 35, 0.045), transparent 36rem),
+    radial-gradient(circle at 98% 42%, rgba(229, 27, 35, 0.022), transparent 29rem),
+    linear-gradient(180deg, #fbfbfc 0, var(--admin-canvas) 34rem, #f8f9fb 100%);
 }
 
-.shell :global(.rounded-xl.border.border-graf-200.bg-white) {
+/* Ritmo global: todas as páginas partem da mesma largura e eixo visual. */
+.shell :global(#conteudo-admin > div) {
+  width: 100%;
+}
+
+.shell :global(#conteudo-admin > div > header:first-child) {
+  margin-bottom: 1.55rem;
+}
+
+/* Superfícies padrão do backoffice. */
+.shell :global(main .rounded-xl.border.border-graf-200.bg-white),
+.shell :global(main .rounded-2xl.border.border-graf-200.bg-white),
+.shell :global(main .rounded-2xl.border.border-graf-200\/90.bg-white),
+.shell :global(main .rounded-xl.border.border-graf-200\/90.bg-white) {
   border-color: var(--admin-border);
   box-shadow: var(--admin-shadow);
 }
 
-.shell :global(.rounded-xl.border.border-graf-200.bg-white):has(a:hover) {
-  border-color: rgba(198, 202, 208, 0.98);
+.shell :global(main a.rounded-xl.border.bg-white),
+.shell :global(main a.rounded-2xl.border.bg-white),
+.shell :global(main article.rounded-xl.border.bg-white),
+.shell :global(main article.rounded-2xl.border.bg-white) {
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
 }
 
+.shell :global(main a.rounded-xl.border.bg-white:hover),
+.shell :global(main a.rounded-2xl.border.bg-white:hover),
+.shell :global(main article.rounded-xl.border.bg-white:hover),
+.shell :global(main article.rounded-2xl.border.bg-white:hover) {
+  transform: translateY(-1px);
+  border-color: var(--admin-border-strong);
+  box-shadow: var(--admin-shadow-hover);
+}
+
+/* Cabeçalho interno de cards: mesma linha, mesma densidade, mesma hierarquia. */
+.shell :global(main .rounded-xl.border.bg-white > .border-b:first-child),
+.shell :global(main .rounded-2xl.border.bg-white > .border-b:first-child) {
+  border-bottom-color: var(--admin-border-soft);
+  background: linear-gradient(180deg, rgba(252, 252, 253, 0.98), rgba(249, 250, 251, 0.82));
+}
+
+.shell :global(main .border-b.border-graf-200),
+.shell :global(main .border-t.border-graf-200) {
+  border-color: var(--admin-border-soft);
+}
+
+/* Tabelas: leitura de ERP sem cara de planilha crua. */
 .shell :global(table) {
   width: 100%;
   border-collapse: separate;
@@ -25,19 +71,24 @@
 }
 
 .shell :global(thead) {
-  background: rgba(248, 249, 251, 0.96);
+  background: rgba(247, 248, 250, 0.96);
 }
 
 .shell :global(th) {
-  color: #69717c;
-  font-size: 0.675rem;
+  color: #66707c;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.025em;
-  text-transform: none;
 }
 
 .shell :global(td) {
-  font-size: 0.75rem;
+  color: #303743;
+  font-size: 0.79rem;
+}
+
+.shell :global(th),
+.shell :global(td) {
+  border-bottom-color: rgba(235, 237, 240, 0.98);
 }
 
 .shell :global(tbody tr) {
@@ -45,21 +96,84 @@
 }
 
 .shell :global(tbody tr:hover) {
-  background: rgba(248, 249, 251, 0.84);
+  background: rgba(247, 249, 251, 0.92);
 }
 
+.shell :global(tbody tr:last-child td) {
+  border-bottom-color: transparent;
+}
+
+/* Formulários, busca e filtros. */
 .shell :global(input:not([type="checkbox"]):not([type="radio"])),
 .shell :global(select),
 .shell :global(textarea) {
-  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+  border-radius: 0.75rem;
+  border-color: rgba(203, 208, 215, 0.98);
+  background-color: rgba(255, 255, 255, 0.99);
+  box-shadow: inset 0 1px 0 rgba(20, 24, 32, 0.012);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .shell :global(input:not([type="checkbox"]):not([type="radio"]):hover),
 .shell :global(select:hover),
 .shell :global(textarea:hover) {
-  border-color: #aab0b8;
+  border-color: #a8afb8;
 }
 
+.shell :global(input:not([type="checkbox"]):not([type="radio"]):focus),
+.shell :global(select:focus),
+.shell :global(textarea:focus) {
+  border-color: #e51b23;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(229, 27, 35, 0.085);
+}
+
+.shell :global(main form label) {
+  color: #59616c;
+}
+
+/* Estados vazios e blocos auxiliares passam a parecer parte do mesmo sistema. */
+.shell :global(main .border-dashed) {
+  border-color: rgba(202, 207, 214, 0.92);
+  background: linear-gradient(180deg, rgba(251, 252, 253, 0.98), rgba(247, 249, 251, 0.82));
+}
+
+.shell :global(main .border-dashed > .rounded-full) {
+  box-shadow: 0 8px 22px -17px rgba(20, 24, 32, 0.38);
+}
+
+.shell :global(main .bg-graf-50) {
+  background-color: #f8f9fb;
+}
+
+/* Badges/status: compactos e consistentes em lista, detalhe e dashboard. */
+.shell :global(main [class*="rounded-full"][class*="ring-1"]) {
+  box-shadow: 0 1px 1px rgba(20, 24, 32, 0.02);
+}
+
+/* Botões e links de ação ganham resposta visual sem aumentar ruído. */
+.shell :global(main button),
+.shell :global(main a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shell :global(main button:not(:disabled)) {
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.shell :global(main button:not(:disabled):active) {
+  transform: translateY(1px);
+}
+
+/* Definições e divisores. */
 .shell :global(dl) {
   min-width: 0;
 }
@@ -68,6 +182,14 @@
   border-color: var(--admin-border-soft);
 }
 
+/* Subnavs/tabs e paginação ficam com superfície própria sem pesar. */
+.shell :global(main nav ul.rounded-xl.border) {
+  border-color: rgba(217, 221, 226, 0.94);
+  background: rgba(243, 245, 247, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+/* Rolagem da navegação lateral mais discreta. */
 .shell :global(aside)::-webkit-scrollbar,
 .shell :global(aside *)::-webkit-scrollbar {
   width: 7px;
@@ -77,8 +199,14 @@
 .shell :global(aside *)::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: rgba(155, 161, 168, 0.4);
+  background: rgba(155, 161, 168, 0.38);
   background-clip: padding-box;
+}
+
+@media (max-width: 1023px) {
+  .shell :global(#conteudo-admin > div > header:first-child) {
+    margin-bottom: 1.35rem;
+  }
 }
 
 @media (max-width: 639px) {
@@ -86,8 +214,16 @@
     background: #f8f9fb;
   }
 
-  .shell :global(.rounded-xl.border.border-graf-200.bg-white) {
+  .shell :global(main .rounded-xl.border.border-graf-200.bg-white),
+  .shell :global(main .rounded-2xl.border.border-graf-200.bg-white) {
     border-radius: 0.875rem;
     box-shadow: 0 1px 2px rgba(20, 24, 32, 0.025);
+  }
+
+  .shell :global(main a.rounded-xl.border.bg-white:hover),
+  .shell :global(main a.rounded-2xl.border.bg-white:hover),
+  .shell :global(main article.rounded-xl.border.bg-white:hover),
+  .shell :global(main article.rounded-2xl.border.bg-white:hover) {
+    transform: none;
   }
 }
