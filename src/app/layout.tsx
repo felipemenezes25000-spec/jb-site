@@ -14,6 +14,7 @@ import "./globals.css";
 import "./footer-alignment.css";
 import "./header-search.css";
 import "./header-premium.css";
+import "./header-premium-runtime.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
