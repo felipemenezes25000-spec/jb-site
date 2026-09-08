@@ -102,21 +102,23 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
         onClick={aoNavegar}
         aria-current={item.ativo ? "page" : undefined}
         className={cn(
-          "group relative flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-[0.875rem] font-semibold transition-all duration-150",
+          "group relative flex min-h-10 items-center gap-2.5 rounded-xl px-3 py-2 text-[0.84rem] font-semibold transition-all duration-150",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
           item.ativo
-            ? "bg-gradient-to-r from-jb-50 to-[#fff6f6] text-jb-700 shadow-[inset_3px_0_0_#e51b23]"
+            ? "bg-gradient-to-r from-jb-50 via-[#fff7f7] to-white text-jb-700 shadow-[inset_3px_0_0_#e51b23,0_1px_2px_rgba(18,24,35,0.025)]"
             : "text-graf-700 hover:bg-graf-50 hover:text-graf-950",
         )}
       >
         <span
           aria-hidden
           className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-            item.ativo ? "bg-white/90 text-jb-600 shadow-sm" : "text-graf-500 group-hover:bg-white",
+            "flex size-7 shrink-0 items-center justify-center rounded-lg transition-all",
+            item.ativo
+              ? "bg-white text-jb-600 shadow-sm ring-1 ring-inset ring-jb-500/10"
+              : "text-graf-500 group-hover:bg-white group-hover:shadow-sm",
           )}
         >
-          <Icone className="size-[17px]" />
+          <Icone className="size-4" />
         </span>
         <span className="min-w-0 truncate">{item.rotulo}</span>
         {item.quantidade !== null ? <Contador valor={item.quantidade} /> : null}
@@ -127,7 +129,7 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
 
 function TituloGrupo({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3.5 pb-1.5 pt-5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-graf-500">
+    <p className="px-3 pb-1.5 pt-4 text-[0.66rem] font-extrabold uppercase tracking-[0.15em] text-graf-500">
       {children}
     </p>
   );
@@ -250,23 +252,23 @@ export function MenuLateral({
     <div className={className}>
       <nav
         aria-label="Área da Clínica"
-        className="fixed inset-y-0 left-0 z-[60] hidden w-[17.25rem] border-r border-graf-200/80 bg-white lg:block"
+        className="fixed inset-y-0 left-0 z-[60] hidden w-[16rem] border-r border-graf-200/80 bg-white shadow-[8px_0_32px_-28px_rgba(18,24,35,0.28)] lg:block"
       >
-        <div className="flex h-dvh flex-col overflow-hidden px-5 pb-4 pt-4">
+        <div className="flex h-dvh flex-col overflow-hidden px-4 pb-4 pt-4">
           <Link
             href="/minha-jb"
-            className="mb-5 flex min-h-12 items-center gap-3 rounded-xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            className="mb-4 flex min-h-12 items-center gap-3 rounded-xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
-            <Logo altura={34} />
+            <Logo altura={32} />
             <span className="min-w-0 border-l border-graf-200 pl-3">
-              <span className="block truncate text-sm font-extrabold tracking-[-0.015em] text-graf-950">Área da Clínica</span>
-              <span className="mt-0.5 block truncate text-[0.68rem] font-medium text-graf-500">Tecnologia que cuida</span>
+              <span className="block truncate text-[0.86rem] font-extrabold tracking-[-0.015em] text-graf-950">Área da Clínica</span>
+              <span className="mt-0.5 block truncate text-[0.66rem] font-medium text-graf-500">Tecnologia que cuida</span>
             </span>
           </Link>
 
           <Link
             href="/minha-jb/assistencia/novo"
-            className="mb-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-jb-500 px-4 text-sm font-bold text-white shadow-[0_8px_20px_-10px_rgba(229,27,35,0.65)] transition-all hover:bg-jb-600 hover:shadow-[0_10px_24px_-10px_rgba(229,27,35,0.7)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            className="mb-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-jb-500 px-4 text-sm font-bold text-white shadow-[0_9px_22px_-12px_rgba(229,27,35,0.72)] transition-all hover:-translate-y-px hover:bg-jb-600 hover:shadow-[0_12px_26px_-12px_rgba(229,27,35,0.78)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
             <span className="text-lg leading-none">+</span>
             Abrir chamado
@@ -274,15 +276,15 @@ export function MenuLateral({
 
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">{navegacao(false)}</div>
 
-          <div className="mt-4 rounded-2xl border border-graf-200 bg-gradient-to-br from-graf-50 to-white p-3.5 shadow-[0_12px_35px_-28px_rgba(18,24,35,0.4)]">
-            <span className="mb-2.5 flex size-10 items-center justify-center rounded-full bg-jb-50 text-jb-600">
-              <HeartHandshake className="size-5" aria-hidden />
+          <div className="mt-4 rounded-2xl border border-graf-200/90 bg-gradient-to-br from-[#fffafa] via-white to-graf-50 p-3.5 shadow-[0_14px_38px_-30px_rgba(18,24,35,0.38)]">
+            <span className="mb-2.5 flex size-9 items-center justify-center rounded-full bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-500/10">
+              <HeartHandshake className="size-[18px]" aria-hidden />
             </span>
             <p className="text-sm font-extrabold text-graf-950">Conte com a JB</p>
             <p className="mt-0.5 text-xs leading-relaxed text-graf-500">Soluções completas para o seu consultório.</p>
             <Link
               href="/contato"
-              className="mt-2.5 inline-flex min-h-8 items-center gap-1.5 text-xs font-bold text-jb-700 hover:text-jb-800"
+              className="mt-2.5 inline-flex min-h-8 items-center gap-1.5 text-xs font-bold text-jb-700 transition-colors hover:text-jb-800"
             >
               Falar com um especialista
               <ArrowRight className="size-3.5" aria-hidden />
@@ -300,11 +302,11 @@ export function MenuLateral({
           aria-haspopup="dialog"
           aria-expanded={aberto}
           aria-controls={aberto ? "mj-gaveta" : undefined}
-          className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-graf-200 bg-white px-4 py-2 text-left shadow-card transition-colors hover:border-graf-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+          className="flex min-h-14 w-full items-center gap-3 rounded-2xl border border-graf-200/90 bg-white px-4 py-2 text-left shadow-[0_10px_28px_-24px_rgba(18,24,35,0.35)] transition-all hover:border-graf-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
         >
           <IconeAtual className="size-5 shrink-0 text-jb-600" aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="block text-[0.75rem] font-bold uppercase tracking-[0.08em] text-graf-500">Área da Clínica</span>
+            <span className="block text-[0.72rem] font-bold uppercase tracking-[0.1em] text-graf-500">Área da Clínica</span>
             <span className="block truncate text-sm font-bold text-graf-950">{atual?.rotulo ?? "Visão geral"}</span>
           </span>
           {pendencias > 0 ? (
@@ -323,7 +325,7 @@ export function MenuLateral({
           <>
             <div
               className={cn(
-                "fixed inset-0 z-60 bg-graf-950/40 transition-opacity duration-200 motion-reduce:transition-none",
+                "fixed inset-0 z-60 bg-graf-950/40 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none",
                 entrou ? "opacity-100" : "opacity-0",
               )}
               onClick={fechar}
@@ -338,7 +340,7 @@ export function MenuLateral({
               aria-labelledby="mj-gaveta-titulo"
               tabIndex={-1}
               className={cn(
-                "fixed inset-x-0 bottom-0 z-70 flex max-h-[88dvh] flex-col rounded-t-2xl bg-white shadow-pop",
+                "fixed inset-x-0 bottom-0 z-70 flex max-h-[88dvh] flex-col rounded-t-[1.5rem] bg-white shadow-pop",
                 "transition-transform duration-200 ease-out motion-reduce:transition-none",
                 entrou ? "translate-y-0" : "translate-y-full",
               )}
@@ -351,7 +353,7 @@ export function MenuLateral({
                 <button
                   type="button"
                   onClick={fechar}
-                  className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-graf-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
                   <X className="size-5" aria-hidden />
                   <span className="sr-only">Fechar o menu</span>
