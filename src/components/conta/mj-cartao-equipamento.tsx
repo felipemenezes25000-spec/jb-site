@@ -1,20 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { EquipmentStatus } from "@prisma/client";
-import { CalendarClock, LifeBuoy, MapPin, ShieldCheck } from "lucide-react";
+import { ArrowRight, CalendarClock, LifeBuoy, MapPin, ShieldCheck } from "lucide-react";
 
 import { Etiqueta, type Tom } from "@/components/ui/data";
 import { ROTULO_EQUIPAMENTO } from "@/lib/equipamento";
 import { distanciaEmDias, formatarData, plural } from "@/lib/format";
-
-/**
- * Cartão de um equipamento do prontuário.
- *
- * Mostra o que decide alguma coisa: em que estado ele está, se a garantia
- * ainda vale, quando é a próxima preventiva e se já existe chamado aberto.
- * Nada é calculado no olho — garantia vencida aparece como vencida, e
- * equipamento sem data de garantia não ganha data nenhuma.
- */
 
 const TOM_STATUS: Record<EquipmentStatus, Tom> = {
   operacional: "ok",
@@ -65,66 +56,70 @@ export function CartaoEquipamento({ equipamento }: { equipamento: EquipamentoDoC
   );
 
   return (
-    <article className="relative flex w-full flex-col overflow-hidden rounded-xl border border-graf-200 bg-white shadow-card transition-[box-shadow,border-color] duration-200 hover:border-graf-300 hover:shadow-raised">
-      {/* A maior parte do prontuário é equipamento que a clínica cadastrou sem
-          foto. Reservar a placa de 4:3 para todos deixava um retângulo cinza
-          com ícone de imagem quebrada ocupando metade do cartão — o estado
-          normal parecia defeito. Sem foto, as etiquetas viram a faixa de topo. */}
+    <article className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-graf-200/90 bg-white shadow-[0_1px_2px_rgba(18,24,35,0.025),0_18px_46px_-36px_rgba(18,24,35,0.34)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-[0_8px_22px_rgba(18,24,35,0.045),0_28px_58px_-34px_rgba(18,24,35,0.3)]">
       {equipamento.imagemUrl ? (
-        <div className="relative aspect-4/3 bg-graf-50">
+        <div className="relative aspect-[16/10] overflow-hidden bg-graf-50">
           <Image
             src={equipamento.imagemUrl}
             alt={equipamento.imagemAlt}
             fill
             sizes="(max-width: 640px) 90vw, (max-width: 1280px) 45vw, 30vw"
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.015]"
           />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-graf-950/12 to-transparent" aria-hidden />
           <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">{etiquetas}</div>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-1.5 border-b border-graf-100 bg-graf-50/70 px-4 py-3">
+        <div className="flex min-h-14 flex-wrap items-center gap-1.5 border-b border-graf-100 bg-gradient-to-r from-graf-50 via-white to-jb-50/35 px-4 py-3">
           {etiquetas}
         </div>
       )}
 
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-[0.9375rem] font-bold leading-snug text-graf-950">
-          <Link
-            href={`/minha-jb/equipamentos/${equipamento.id}`}
-            className="rounded-sm after:absolute after:inset-0 after:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-          >
-            {equipamento.name}
-          </Link>
-        </h3>
-
-        <p className="mt-0.5 line-2 text-sm text-graf-600">
-          {[equipamento.brandName, equipamento.modelName].filter(Boolean).join(" ") ||
-            "Marca e modelo não informados"}
-        </p>
+      <div className="flex flex-1 flex-col p-4.5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-[0.96rem] font-extrabold leading-snug tracking-[-0.015em] text-graf-950">
+              <Link
+                href={`/minha-jb/equipamentos/${equipamento.id}`}
+                className="rounded-sm after:absolute after:inset-0 after:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+              >
+                {equipamento.name}
+              </Link>
+            </h3>
+            <p className="mt-0.5 line-2 text-sm leading-relaxed text-graf-600">
+              {[equipamento.brandName, equipamento.modelName].filter(Boolean).join(" ") ||
+                "Marca e modelo não informados"}
+            </p>
+          </div>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-inset ring-jb-500/10">
+            <LifeBuoy className="size-[17px]" aria-hidden />
+          </span>
+        </div>
 
         {equipamento.serialNumber ? (
-          <p className="mt-1 text-xs text-graf-500">
-            Série <span className="tabular">{equipamento.serialNumber}</span>
+          <p className="mt-2 text-xs text-graf-500">
+            Série <span className="tabular font-medium text-graf-600">{equipamento.serialNumber}</span>
           </p>
         ) : null}
 
-        <dl className="mt-3 space-y-1.5 border-t border-graf-100 pt-3 text-xs">
+        <dl className="mt-4 space-y-2 border-t border-graf-100 pt-3.5 text-xs">
           {lugar ? (
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-2.5">
               <dt className="sr-only">Local</dt>
-              <MapPin className="mt-px size-3.5 shrink-0 text-graf-500" aria-hidden />
-              <dd className="min-w-0 text-graf-600">{lugar}</dd>
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-graf-500">
+                <MapPin className="size-3.5" aria-hidden />
+              </span>
+              <dd className="min-w-0 pt-1 text-graf-600">{lugar}</dd>
             </div>
           ) : null}
 
           {equipamento.warrantyUntil ? (
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-2.5">
               <dt className="sr-only">Garantia</dt>
-              <ShieldCheck
-                className={`mt-px size-3.5 shrink-0 ${garantiaValida ? "text-ok-700" : "text-graf-500"}`}
-                aria-hidden
-              />
-              <dd className={garantiaValida ? "text-ok-700" : "text-graf-500"}>
+              <span className={`flex size-6 shrink-0 items-center justify-center rounded-lg ${garantiaValida ? "bg-ok-50 text-ok-700" : "bg-graf-50 text-graf-500"}`}>
+                <ShieldCheck className="size-3.5" aria-hidden />
+              </span>
+              <dd className={`pt-1 ${garantiaValida ? "text-ok-700" : "text-graf-500"}`}>
                 {garantiaValida ? "Garantia até " : "Garantia venceu em "}
                 {formatarData(equipamento.warrantyUntil)}
               </dd>
@@ -132,24 +127,22 @@ export function CartaoEquipamento({ equipamento }: { equipamento: EquipamentoDoC
           ) : null}
 
           {equipamento.nextMaintenanceAt ? (
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-2.5">
               <dt className="sr-only">Próxima manutenção</dt>
-              <CalendarClock
-                className={`mt-px size-3.5 shrink-0 ${preventivaAtrasada ? "text-jb-600" : "text-graf-500"}`}
-                aria-hidden
-              />
-              <dd className={preventivaAtrasada ? "font-semibold text-jb-700" : "text-graf-600"}>
+              <span className={`flex size-6 shrink-0 items-center justify-center rounded-lg ${preventivaAtrasada ? "bg-jb-50 text-jb-600" : "bg-graf-50 text-graf-500"}`}>
+                <CalendarClock className="size-3.5" aria-hidden />
+              </span>
+              <dd className={`pt-1 ${preventivaAtrasada ? "font-semibold text-jb-700" : "text-graf-600"}`}>
                 {preventivaAtrasada ? "Preventiva atrasada — " : "Preventiva "}
-                {distanciaEmDias(equipamento.nextMaintenanceAt)} (
-                {formatarData(equipamento.nextMaintenanceAt)})
+                {distanciaEmDias(equipamento.nextMaintenanceAt)} ({formatarData(equipamento.nextMaintenanceAt)})
               </dd>
             </div>
           ) : null}
         </dl>
 
-        <p className="mt-3 flex items-center gap-1.5 pt-1 text-xs font-semibold text-jb-700">
-          <LifeBuoy className="size-3.5" aria-hidden />
+        <p className="mt-auto flex items-center gap-1.5 pt-4 text-xs font-bold text-jb-700">
           Ver prontuário
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
         </p>
       </div>
     </article>
