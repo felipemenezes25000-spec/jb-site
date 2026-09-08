@@ -4,7 +4,7 @@ import { ArrowRight, ImageOff } from "lucide-react";
 
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import { Etiqueta } from "@/components/ui/data";
-import { Grade, type ColunasPorTela } from "@/components/ui/grade";
+import { Grade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -79,12 +79,23 @@ export function CardProduto({
   produto,
   prioridade,
   parcelamento,
+  chamadaDestacada,
   className,
 }: {
   produto: ProdutoCard;
   /** Carrega a imagem sem esperar — só nos primeiros cartões da primeira dobra. */
   prioridade?: boolean;
   parcelamento?: Parcelamento;
+  /**
+   * Transforma o convite do rodapé em botão cheio.
+   *
+   * Nas coleções comerciais (/loja e /seminovos) o cartão é o produto inteiro
+   * na tela e o botão fecha a leitura; nas faixas de apoio — relacionados,
+   * vistos recentemente, favoritos — ele competiria com o botão real da
+   * página. O texto do botão é sempre `chamada`, então produto sob orçamento
+   * continua convidando a pedir orçamento, e não a "ver detalhes".
+   */
+  chamadaDestacada?: boolean;
   className?: string;
 }) {
   const semEstoque = produto.trackInventory && produto.stock <= 0;
@@ -118,7 +129,7 @@ export function CardProduto({
         className,
       )}
     >
-      <div className="relative aspect-5/4 overflow-hidden bg-gradient-to-b from-white to-graf-50">
+      <div className="relative aspect-5/4 max-h-72 overflow-hidden bg-white">
         {produto.imageUrl ? (
           <Image
             src={produto.imageUrl}
@@ -135,9 +146,15 @@ export function CardProduto({
             )}
           />
         ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2 text-graf-500">
-            <ImageOff className="size-8" aria-hidden />
-            <span className="text-[0.8125rem] text-graf-500">Sem foto</span>
+          /* Produto sem foto não pode virar um buraco no meio da grade. A
+             moldura mantém a mesma altura dos outros cartões e diz o que
+             falta — quadro vazio parece imagem quebrada, e o cartão inteiro
+             passa a parecer desligado. */
+          <div className="flex size-full flex-col items-center justify-center gap-2.5 text-graf-500">
+            <span className="flex size-12 items-center justify-center rounded-full border border-graf-200 bg-white/70 text-graf-400">
+              <ImageOff className="size-5" aria-hidden />
+            </span>
+            <span className="text-[0.8125rem] font-semibold text-graf-500">Foto em cadastro</span>
           </div>
         )}
 
@@ -233,17 +250,35 @@ export function CardProduto({
                 <span aria-hidden />
               )}
 
+              {chamadaDestacada ? null : (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 text-[0.8125rem] font-bold text-graf-800",
+                    "transition-colors duration-150 group-hover:text-jb-600",
+                  )}
+                >
+                  {chamada}
+                  <ArrowRight className="size-4 shrink-0 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5" />
+                </span>
+              )}
+            </div>
+
+            {chamadaDestacada ? (
               <span
                 aria-hidden
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 text-[0.8125rem] font-bold text-graf-800",
-                  "transition-colors duration-150 group-hover:text-jb-600",
+                  "mt-3 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3",
+                  "bg-gradient-to-b from-jb-500 to-jb-600 text-[0.8125rem] font-extrabold text-white",
+                  "shadow-[0_10px_20px_-14px_rgb(196_14_21_/_0.65)] transition-colors duration-150",
+                  "group-hover:from-jb-600 group-hover:to-jb-700",
+                  semEstoque && "from-graf-400 to-graf-500 shadow-none",
                 )}
               >
                 {chamada}
                 <ArrowRight className="size-4 shrink-0 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5" />
               </span>
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -251,24 +286,50 @@ export function CardProduto({
   );
 }
 
+/**
+ * Larguras máximas para lista curta.
+ *
+ * Fechar a fileira resolve o buraco ao lado do cartão órfão, mas sozinho cria
+ * outro: um único produto ocupando a coluna inteira vira cartaz, com a foto
+ * ampliada muito além do que o arquivo aguenta. O teto devolve ao cartão a
+ * largura que ele teria numa grade cheia.
+ */
+const LARGURA_LISTA_CURTA: Record<number, string> = {
+  1: "sm:max-w-sm",
+  2: "sm:max-w-3xl",
+};
+
 /** Vitrine de cartões. Uma coluna no celular — equipamento caro pede leitura confortável. */
 export function GradeProdutos({
   produtos,
   colunas,
   parcelamento,
+  chamadaDestacada,
+  extra,
   className,
 }: {
   produtos: ProdutoCard[];
   colunas?: ColunasPorTela;
   parcelamento?: Parcelamento;
+  /** Repassado a cada cartão — ver `CardProduto`. */
+  chamadaDestacada?: boolean;
+  /** Célula final da grade — entra na conta das colunas, como um cartão. */
+  extra?: React.ReactNode;
   className?: string;
 }) {
+  const teto = colunas ?? { base: 1, sm: 2, lg: 3, xl: 4 };
+  const celulas = produtos.length + (extra ? 1 : 0);
+
   return (
     <Grade
       como="ul"
       espaco="md"
-      colunas={colunas ?? { base: 1, sm: 2, lg: 3, xl: 4 }}
-      className={className}
+      /* A quantidade que veio do banco escolhe a grade: catálogo pequeno não
+         pode desenhar colunas vazias ao lado do único produto publicado. */
+      colunas={colunasAte(celulas, teto)}
+      /* Com a célula extra a fileira já fecha sozinha: limitar a largura aí
+         só devolveria, à direita, o vazio que a célula veio tapar. */
+      className={cn(extra ? undefined : LARGURA_LISTA_CURTA[celulas], className)}
     >
       {produtos.map((produto, indice) => (
         <li key={produto.slug} className="flex">
@@ -276,10 +337,13 @@ export function GradeProdutos({
             produto={produto}
             parcelamento={parcelamento}
             prioridade={indice < 4}
+            chamadaDestacada={chamadaDestacada}
             className="w-full"
           />
         </li>
       ))}
+
+      {extra ? <li className="flex">{extra}</li> : null}
     </Grade>
   );
 }

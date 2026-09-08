@@ -11,15 +11,15 @@ import {
 } from "lucide-react";
 
 import {
-  Vitrine,
-  atalhosDeCondicao,
-  type ParametrosVitrine,
-} from "@/components/loja/vitrine";
+  CabecalhoColecao,
+  type PontoDeColecao,
+} from "@/components/loja/cabecalho-colecao";
+import { Vitrine, type ParametrosVitrine } from "@/components/loja/vitrine";
 import { LinkBotao } from "@/components/ui/button";
-import { TituloSecao } from "@/components/ui/data";
+import { Trilha, TituloSecao } from "@/components/ui/data";
 import { Grade, colunasParaTotal } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
-import { PUBLICADO } from "@/lib/catalogo";
+import { PUBLICADO, dadosDaColecao } from "@/lib/catalogo";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
@@ -175,27 +175,47 @@ export default async function Pagina({
 }: {
   searchParams: Promise<ParametrosVitrine>;
 }) {
-  const [parametros, atalhos, fatos] = await Promise.all([
+  const [parametros, colecao, fatos] = await Promise.all([
     searchParams,
-    atalhosDeCondicao("seminovo"),
+    dadosDaColecao("seminovo"),
     fatosDaRevisao(),
   ]);
+
+  /* As três garantias do topo saem da mesma apuração que monta a faixa lá
+     embaixo: o cabeçalho não promete nada que não esteja registrado nas
+     unidades publicadas. Sem seminovo no catálogo, a fileira some. */
+  const pontos: PontoDeColecao[] = fatos
+    .slice(0, 3)
+    .map((fato) => ({ icone: fato.icone, texto: fato.titulo }));
 
   return (
     <>
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
+      <div className="container-jb pt-5 sm:pt-7 lg:pt-8">
+        <Trilha itens={TRILHA} className="mb-3 sm:mb-4" />
+
+        <CabecalhoColecao
+          sobretitulo="Seminovo JB"
+          titulo="Seminovos revisados pela JB"
+          descricao="Aqui cada anúncio é uma unidade específica, não um modelo de catálogo. O equipamento passa pela bancada da JB antes de ser publicado, e o que a equipe verificou fica escrito na página dele."
+          pontos={pontos}
+          destaque={colecao.destaque}
+          categorias={colecao.categorias}
+          colecao="seminovo"
+          totalNovos={colecao.totalNovos}
+          totalSeminovos={colecao.totalSeminovos}
+        />
+      </div>
+
       <Vitrine
-        sobretitulo="Seminovo JB"
         titulo="Seminovos revisados pela JB"
-        descricao="Aqui cada anúncio é uma unidade específica, não um modelo de catálogo. O equipamento passa pela bancada da JB antes de ser publicado, e o que a equipe verificou fica escrito na página dele."
         trilha={TRILHA}
         caminho={CAMINHO}
         parametros={parametros}
         filtrosFixos={{ condicao: "seminovo" }}
-        atalhos={atalhos}
-        rotuloAtalhos="Outras condições"
         travarCondicao
+        variante="colecao"
       />
 
       {/* A faixa só existe quando há o que mostrar: ela é montada a partir dos

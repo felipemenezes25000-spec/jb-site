@@ -200,3 +200,85 @@ export async function produtosPorCondicao(
   });
   return linhas.map(paraCard);
 }
+
+/* ============================================================================
+   Abertura das coleções comerciais — /loja (novos) e /seminovos
+
+   As duas páginas abrem com o mesmo cabeçalho e precisam exatamente das
+   mesmas quatro respostas. Buscá-las aqui mantém as duas coleções coerentes:
+   o que aparece em "Novos 5" na página do seminovo é a mesma contagem que a
+   própria /loja publica.
+   ============================================================================ */
+
+export type DadosDaColecao = {
+  /** Foto real de um equipamento publicado — nunca imagem de ilustração. */
+  destaque: {
+    url: string;
+    alt: string;
+    nome: string;
+    marca: string | null;
+  } | null;
+  categorias: { slug: string; nome: string; quantidade: number; href: string }[];
+  totalNovos: number;
+  totalSeminovos: number;
+};
+
+export async function dadosDaColecao(
+  condicao: ProductCondition,
+  limiteCategorias = 6,
+): Promise<DadosDaColecao> {
+  const [destaque, categorias, totalNovos, totalSeminovos] = await Promise.all([
+    /* `media: { some: {} }` é o que impede o painel de abrir com um quadro
+       vazio: o destaque é escolhido entre os equipamentos que têm foto. */
+    prisma.product.findFirst({
+      where: { ...PUBLICADO, condition: condicao, media: { some: {} } },
+      orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+      select: {
+        name: true,
+        brand: { select: { name: true } },
+        media: {
+          take: 1,
+          orderBy: { order: "asc" },
+          select: { alt: true, media: { select: { url: true, alt: true } } },
+        },
+      },
+    }),
+    prisma.category.findMany({
+      where: { published: true, parentId: null },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: {
+        slug: true,
+        name: true,
+        _count: { select: { products: { where: { ...PUBLICADO, condition: condicao } } } },
+      },
+    }),
+    prisma.product.count({ where: { ...PUBLICADO, condition: "novo" } }),
+    prisma.product.count({ where: { ...PUBLICADO, condition: "seminovo" } }),
+  ]);
+
+  const foto = destaque?.media[0];
+
+  return {
+    destaque: foto
+      ? {
+          url: foto.media.url,
+          alt: foto.alt || foto.media.alt || destaque.name,
+          nome: destaque.name,
+          marca: destaque.brand?.name ?? null,
+        }
+      : null,
+    /* Categoria sem equipamento naquela condição não vira pastilha: a fileira
+       só oferece caminho que chega a uma lista com produto do outro lado. */
+    categorias: categorias
+      .filter((categoria) => categoria._count.products > 0)
+      .slice(0, limiteCategorias)
+      .map((categoria) => ({
+        slug: categoria.slug,
+        nome: categoria.name,
+        quantidade: categoria._count.products,
+        href: `/categoria/${categoria.slug}?condicao=${condicao}`,
+      })),
+    totalNovos,
+    totalSeminovos,
+  };
+}

@@ -25,6 +25,7 @@ import {
 import { paraCentavos } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
+import { cn } from "@/lib/utils";
 
 /* ============================================================================
    Vitrine
@@ -404,6 +405,34 @@ function ChamadaCatalogo() {
   );
 }
 
+/**
+ * O mesmo convite, mas como célula da grade.
+ *
+ * Coleção com um ou dois equipamentos publicados deixava metade da fileira em
+ * branco — o vazio ao lado do cartão parecia carregamento que não terminou.
+ * Aqui o convite ocupa a coluna que sobrou e vira o próximo passo de quem não
+ * encontrou o equipamento na lista curta. A borda tracejada e a ausência de
+ * preço deixam claro que não é produto.
+ */
+function ConviteNaGrade() {
+  return (
+    <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-jb-200 bg-jb-50/40 p-6 text-center sm:p-7">
+      <span className="flex size-11 items-center justify-center rounded-full bg-white text-jb-600 shadow-card">
+        <PackageSearch className="size-5" aria-hidden />
+      </span>
+      <h3 className="mt-4 text-lg font-bold text-graf-950">Não é o que você procura?</h3>
+      <p className="mt-2 max-w-xs text-[0.9375rem] leading-relaxed text-graf-600">
+        O catálogo publicado é uma parte do que a JB fornece. Diga o equipamento, a marca e o
+        modelo e a equipe responde com preço e prazo.
+      </p>
+      <LinkBotao href="/orcamento" className="mt-5">
+        Pedir orçamento
+        <ArrowRight className="size-4" aria-hidden />
+      </LinkBotao>
+    </div>
+  );
+}
+
 /* ============================================================================
    Resultados — o bloco que muda a cada filtro
    ============================================================================ */
@@ -419,6 +448,7 @@ async function Resultados({
   caminho,
   endereco,
   pagina,
+  chamadaDestacada,
 }: {
   consulta: Promise<Resposta>;
   parcelamento: Parcelamento;
@@ -427,6 +457,7 @@ async function Resultados({
   caminho: string;
   endereco: string;
   pagina: number;
+  chamadaDestacada?: boolean;
 }) {
   const resposta = await consulta;
   if (!resposta.ok) return <ErroCatalogo caminho={caminho} />;
@@ -446,6 +477,10 @@ async function Resultados({
   }
 
   const paginas = Math.ceil(dados.total / POR_PAGINA);
+
+  /* Lista curta: o convite entra na grade, no lugar da coluna vazia, e a
+     faixa de baixo sai — senão o mesmo pedido apareceria duas vezes. */
+  const listaCurta = dados.total > 0 && dados.total < 3;
 
   return (
     <div>
@@ -475,6 +510,8 @@ async function Resultados({
         produtos={dados.produtos}
         parcelamento={parcelamento}
         colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
+        chamadaDestacada={chamadaDestacada}
+        extra={listaCurta ? <ConviteNaGrade /> : null}
         className="mt-6"
       />
 
@@ -489,7 +526,7 @@ async function Resultados({
         />
       ) : null}
 
-      <ChamadaCatalogo />
+      {listaCurta ? null : <ChamadaCatalogo />}
     </div>
   );
 }
@@ -512,6 +549,7 @@ export async function Vitrine({
   travarCategoria,
   travarCondicao,
   travarMarca,
+  variante = "padrao",
 }: {
   /** Degrau acima do título — "Catálogo", "Por condição", "Marca". */
   sobretitulo?: string;
@@ -529,6 +567,16 @@ export async function Vitrine({
   travarCategoria?: boolean;
   travarCondicao?: boolean;
   travarMarca?: boolean;
+  /**
+   * `"colecao"` para /loja e /seminovos, que abrem com o próprio
+   * `CabecalhoColecao`: a vitrine entra só como lista — sem repetir trilha,
+   * título e atalhos — e os cartões ganham o botão cheio.
+   *
+   * Antes esse recorte era feito por CSS, escondendo o cabeçalho já
+   * renderizado. Escondido ele continuava no HTML, com dois `h1` na mesma
+   * página e um título anunciado a quem navega por leitor de tela.
+   */
+  variante?: "padrao" | "colecao";
 }) {
   const pagina = Math.max(1, Number(texto(parametros.pagina) ?? 1) || 1);
   const ordem = (texto(parametros.ordem) as Ordenacao | undefined) ?? "relevancia";
@@ -609,66 +657,77 @@ export async function Vitrine({
     return consultaTexto ? `${caminho}?${consultaTexto}` : caminho;
   })();
 
+  const daColecao = variante === "colecao";
+
   return (
-    <div className="container-jb py-8 lg:py-12">
-      <Trilha itens={trilha} className="mb-5" />
+    <div className={cn("container-jb", daColecao ? "pb-10 lg:pb-14" : "py-8 lg:py-12")}>
+      {daColecao ? null : (
+        <>
+          <Trilha itens={trilha} className="mb-5" />
 
-      <header className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
-        <div className="max-w-2xl">
-          {/* `text-section`, não `text-display`: numa listagem o título nomeia
-              a coleção, não abre a marca. O degrau de hero fica reservado para
-              a página principal, e o sobretítulo devolve a hierarquia que o
-              título sozinho perdia. */}
-          {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
-          <h1 className="text-section text-graf-950">{titulo}</h1>
-          {descricao ? <p className="texto-guia mt-4 text-graf-600">{descricao}</p> : null}
-        </div>
+          <header className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
+            <div className="max-w-2xl">
+              {/* `text-section`, não `text-display`: numa listagem o título nomeia
+                  a coleção, não abre a marca. O degrau de hero fica reservado para
+                  a página principal, e o sobretítulo devolve a hierarquia que o
+                  título sozinho perdia. */}
+              {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
+              <h1 className="text-section text-graf-950">{titulo}</h1>
+              {descricao ? <p className="texto-guia mt-4 text-graf-600">{descricao}</p> : null}
+            </div>
 
-        {imagem ? (
-          <div className="flex h-22 w-44 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white p-5">
-            <Image
-              src={imagem.url}
-              alt={imagem.alt}
-              width={176}
-              height={72}
-              className="h-full w-auto object-contain"
-            />
-          </div>
-        ) : null}
-      </header>
+            {imagem ? (
+              <div className="flex h-22 w-44 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white p-5">
+                <Image
+                  src={imagem.url}
+                  alt={imagem.alt}
+                  width={176}
+                  height={72}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+            ) : null}
+          </header>
 
-      {atalhos && atalhos.length > 0 ? (
-        <nav aria-labelledby={ID_ATALHOS} className="mt-8">
-          {/* o rótulo da fileira vira texto na tela: sem ele, uma linha de
-              pastilhas soltas embaixo do título não explica o que é. O mesmo
-              texto serve de nome acessível da navegação, sem repetição */}
-          <p
-            id={ID_ATALHOS}
-            className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
-          >
-            {rotuloAtalhos}
-          </p>
-          <ul className="scrollbar-none -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-            {atalhos.map((atalho) => (
-              <li key={atalho.href} className="shrink-0">
-                <Link
-                  href={atalho.href}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-                >
-                  {atalho.rotulo}
-                  {atalho.quantidade !== undefined ? (
-                    <span className="tabular text-[0.8125rem] font-medium text-graf-500">
-                      {atalho.quantidade}
-                    </span>
-                  ) : null}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ) : null}
+          {atalhos && atalhos.length > 0 ? (
+            <nav aria-labelledby={ID_ATALHOS} className="mt-8">
+              {/* o rótulo da fileira vira texto na tela: sem ele, uma linha de
+                  pastilhas soltas embaixo do título não explica o que é. O mesmo
+                  texto serve de nome acessível da navegação, sem repetição */}
+              <p
+                id={ID_ATALHOS}
+                className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
+              >
+                {rotuloAtalhos}
+              </p>
+              <ul className="scrollbar-none -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+                {atalhos.map((atalho) => (
+                  <li key={atalho.href} className="shrink-0">
+                    <Link
+                      href={atalho.href}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    >
+                      {atalho.rotulo}
+                      {atalho.quantidade !== undefined ? (
+                        <span className="tabular text-[0.8125rem] font-medium text-graf-500">
+                          {atalho.quantidade}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : null}
+        </>
+      )}
 
-      <div className="mt-8 grid gap-x-12 gap-y-8 lg:mt-10 lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <div
+        className={cn(
+          "grid gap-x-12 gap-y-8 lg:grid-cols-[17rem_minmax(0,1fr)]",
+          daColecao ? "mt-6 lg:mt-7" : "mt-8 lg:mt-10",
+        )}
+      >
         <aside className="hidden lg:block" aria-label="Filtros do catálogo">
           <PainelFiltros grupos={grupos} parametros={parametros} {...travas} />
         </aside>
@@ -685,6 +744,7 @@ export async function Vitrine({
               caminho={caminho}
               endereco={enderecoPrimeiraPagina}
               pagina={pagina}
+              chamadaDestacada={daColecao}
             />
           </Suspense>
         </div>
