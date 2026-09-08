@@ -1,57 +1,65 @@
 import { Suspense } from "react";
 
+import { Cabecalho } from "@/components/loja/cabecalho";
 import {
   AcessoDaConta,
   AcessoDaContaEsqueleto,
   ContadorDoCarrinho,
   ContadorDoCarrinhoEsqueleto,
 } from "@/components/loja/cabecalho-pessoal";
-import { CabecalhoVitrine, RodapeVitrine } from "@/components/loja/chrome-vitrine";
 import { BarraComparar, ComparadorProvider } from "@/components/loja/comparador-cliente";
-import { categoriasDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
+import { Rodape } from "@/components/loja/rodape";
+import { categoriasDoMenu, condicoesDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
 
 import "./vitrine.css";
 
 /**
- * Casca da vitrine.
+ * Casca das telas de catálogo.
  *
- * É a mesma casca da loja — comparador, conta, carrinho, categorias reais do
- * banco — vestida com o cromo preto. Existe como grupo de rota próprio, e não
- * como classe CSS por cima do cabeçalho branco, porque cabeçalho é componente:
- * trocar a cor dele por sobrescrita deixaria a marcação antiga no HTML e a
- * regra nova brigando com ela em cada botão.
+ * É a MESMA casca da loja — mesmo cabeçalho, mesmo rodapé, mesmo comparador.
+ * O grupo de rota existe pelo acabamento das listas (`vitrine.css`) e pela
+ * densidade do catálogo, não para uma segunda identidade visual.
  *
- * Enquanto a migração acontece, só o catálogo mora aqui. As demais páginas
- * públicas seguem na casca clara, e as duas convivem sem se ver.
+ * Ele já teve cromo próprio, preto, copiado de um protótipo. Durou pouco: numa
+ * tela inteira, fundo escuro com texto branco cansa e ainda briga com a foto
+ * do equipamento, que é clara sobre branco. O preto voltou a ser o que o
+ * design system sempre disse — bloco pontual, nunca a moldura do site.
  */
 export default async function VitrineLayout({ children }: { children: React.ReactNode }) {
-  const [s, categorias] = await Promise.all([configuracoesPublicas(), categoriasDoMenu()]);
+  const [s, categorias, condicoes] = await Promise.all([
+    configuracoesPublicas(),
+    categoriasDoMenu(),
+    condicoesDoMenu(),
+  ]);
 
   return (
     <ComparadorProvider>
-      <div className="flex min-h-dvh flex-col bg-surface-muted">
-        <CabecalhoVitrine
+      <div className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]">
+        <Cabecalho
           categorias={categorias}
-          telefone={s.telefone}
-          whatsapp={s.whatsapp}
-          horario={s.horario}
+          condicoes={condicoes}
           acessoDaConta={
-            <Suspense fallback={<AcessoDaContaEsqueleto tom="escuro" />}>
-              <AcessoDaConta tom="escuro" />
+            <Suspense fallback={<AcessoDaContaEsqueleto />}>
+              <AcessoDaConta />
             </Suspense>
           }
           contadorDoCarrinho={
-            <Suspense fallback={<ContadorDoCarrinhoEsqueleto tom="escuro" />}>
-              <ContadorDoCarrinho tom="escuro" />
+            <Suspense fallback={<ContadorDoCarrinhoEsqueleto />}>
+              <ContadorDoCarrinho />
             </Suspense>
           }
+          telefone={s.telefone}
+          whatsapp={s.whatsapp}
+          horario={s.horario}
+          desde={s.empresa_desde}
+          cidade={s.endereco_cidade}
         />
 
         <main id="conteudo" className="flex-1">
           {children}
         </main>
 
-        <RodapeVitrine />
+        <Rodape />
         <BarraComparar />
       </div>
     </ComparadorProvider>

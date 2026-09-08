@@ -106,7 +106,7 @@ export function IdentidadeProduto({
         ) : marca ? (
           <Link
             href={`/marcas/${marca.slug}`}
-            className="foco-jb micro inline-flex min-h-11 items-center rounded-xs text-graf-600 transition-colors hover:text-jb-700"
+            className="foco-jb micro inline-flex min-h-11 items-center rounded-lg text-graf-600 transition-colors hover:text-jb-700"
           >
             {marca.nome}
           </Link>

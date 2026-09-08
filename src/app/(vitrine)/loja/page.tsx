@@ -38,15 +38,15 @@ export const metadata: Metadata = metadataDePagina({
  */
 function ApoioDaAssistencia() {
   return (
-    <div className="on-dark mt-4 rounded-xs bg-chrome p-5 text-white">
-      <p className="micro text-jb-400">Assistência JB</p>
-      <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/75">
+    <div className="mt-4 rounded-lg border border-jb-200 bg-jb-50/60 p-5">
+      <p className="micro text-jb-700">Assistência JB</p>
+      <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-700">
         Equipamento parado? A equipe técnica assume a triagem e diz o que é antes de qualquer
         orçamento.
       </p>
       <Link
         href="/assistencia-tecnica/solicitar"
-        className="micro mt-4 flex h-11 items-center justify-center gap-2 rounded-xs bg-jb-500 text-white transition-colors hover:bg-jb-600"
+        className="micro mt-4 flex h-11 items-center justify-center gap-2 rounded-lg bg-jb-500 text-white transition-colors hover:bg-jb-600"
       >
         <Wrench className="size-3.5" aria-hidden />
         Abrir chamado
@@ -74,9 +74,9 @@ function AbaDeColecao({
       href={href}
       aria-current={ativa ? "page" : undefined}
       className={cn(
-        "micro flex h-11 items-center gap-2 rounded-xs px-4 transition-colors",
+        "micro flex h-11 items-center gap-2 rounded-lg px-4 transition-colors",
         ativa
-          ? "bg-graf-950 text-white"
+          ? "bg-jb-500 text-white"
           : "border border-hairline bg-white text-graf-600 hover:border-graf-400 hover:text-graf-950",
       )}
     >
@@ -158,7 +158,7 @@ export default async function LojaPage({
               <Link
                 key={categoria.slug}
                 href={categoria.href}
-                className="micro flex h-11 shrink-0 items-center gap-2 rounded-xs border border-hairline bg-white px-4 text-graf-700 transition-colors hover:border-graf-400 hover:text-graf-950"
+                className="micro flex h-11 shrink-0 items-center gap-2 rounded-lg border border-hairline bg-white px-4 text-graf-700 transition-colors hover:border-graf-400 hover:text-graf-950"
               >
                 {categoria.nome}
                 <span className="tabular text-graf-400">{categoria.quantidade}</span>
@@ -183,6 +183,7 @@ export default async function LojaPage({
         filtrosFixos={{ condicao: "novo" }}
         travarCondicao
         variante="vitrine"
+        semCabecalho
         apoioNoFiltro={<ApoioDaAssistencia />}
       />
     </div>

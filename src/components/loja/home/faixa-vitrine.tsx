@@ -74,8 +74,8 @@ export function FaixaVitrine({
   );
 }
 
-/** Faixa preta de uma frase só — o convite que separa duas listas. */
-export function ChamadaEscura({
+/** Faixa de uma frase só — o convite que separa duas listas. */
+export function ChamadaDestacada({
   sobretitulo,
   titulo,
   texto,
@@ -89,19 +89,19 @@ export function ChamadaEscura({
   rotulo: string;
 }) {
   return (
-    <section className="on-dark bg-chrome text-white">
+    <section className="border-y border-jb-100 bg-jb-50/50">
       <div className="container-jb flex flex-wrap items-center justify-between gap-x-10 gap-y-6 py-10 lg:py-12">
         <div className="max-w-2xl">
-          <p className="micro text-jb-400">{sobretitulo}</p>
-          <h2 className="manchete mt-3 text-[clamp(1.375rem,1.1rem+1.1vw,1.875rem)] text-white">
+          <p className="micro text-jb-700">{sobretitulo}</p>
+          <h2 className="manchete mt-3 text-[clamp(1.375rem,1.1rem+1.1vw,1.875rem)] text-graf-950">
             {titulo}
           </h2>
-          <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/65">{texto}</p>
+          <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-600">{texto}</p>
         </div>
 
         <Link
           href={href}
-          className="micro flex h-12 shrink-0 items-center gap-2 rounded-xs bg-jb-500 px-6 text-white transition-colors hover:bg-jb-600"
+          className="foco-jb flex h-12 shrink-0 items-center gap-2 rounded-lg bg-jb-500 px-6 text-[0.9375rem] font-bold text-white transition-colors hover:bg-jb-600"
         >
           {rotulo}
           <ArrowRight className="size-3.5" aria-hidden />

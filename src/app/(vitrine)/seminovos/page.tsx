@@ -167,15 +167,15 @@ async function fatosDaRevisao(): Promise<Fato[]> {
 /** O mesmo apoio da /loja: a saída de quem chegou com equipamento parado. */
 function ApoioDaAssistencia() {
   return (
-    <div className="on-dark mt-4 rounded-xs bg-chrome p-5 text-white">
-      <p className="micro text-jb-400">Assistência JB</p>
-      <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/75">
+    <div className="mt-4 rounded-lg border border-jb-200 bg-jb-50/60 p-5">
+      <p className="micro text-jb-700">Assistência JB</p>
+      <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-700">
         Tem um equipamento parado para dar de entrada ou consertar? A equipe técnica faz a
         triagem antes de qualquer orçamento.
       </p>
       <Link
         href="/assistencia-tecnica/solicitar"
-        className="micro mt-4 flex h-11 items-center justify-center gap-2 rounded-xs bg-jb-500 text-white transition-colors hover:bg-jb-600"
+        className="micro mt-4 flex h-11 items-center justify-center gap-2 rounded-lg bg-jb-500 text-white transition-colors hover:bg-jb-600"
       >
         <Wrench className="size-3.5" aria-hidden />
         Abrir chamado
@@ -202,9 +202,9 @@ function AbaDeColecao({
       href={href}
       aria-current={ativa ? "page" : undefined}
       className={cn(
-        "micro flex h-11 items-center gap-2 rounded-xs px-4 transition-colors",
+        "micro flex h-11 items-center gap-2 rounded-lg px-4 transition-colors",
         ativa
-          ? "bg-graf-950 text-white"
+          ? "bg-jb-500 text-white"
           : "border border-hairline bg-white text-graf-600 hover:border-graf-400 hover:text-graf-950",
       )}
     >
@@ -292,7 +292,7 @@ export default async function Pagina({
               <Link
                 key={categoria.slug}
                 href={categoria.href}
-                className="micro flex h-11 shrink-0 items-center gap-2 rounded-xs border border-hairline bg-white px-4 text-graf-700 transition-colors hover:border-graf-400 hover:text-graf-950"
+                className="micro flex h-11 shrink-0 items-center gap-2 rounded-lg border border-hairline bg-white px-4 text-graf-700 transition-colors hover:border-graf-400 hover:text-graf-950"
               >
                 {categoria.nome}
                 <span className="tabular text-graf-400">{categoria.quantidade}</span>
@@ -317,25 +317,22 @@ export default async function Pagina({
         filtrosFixos={{ condicao: "seminovo" }}
         travarCondicao
         variante="vitrine"
+        semCabecalho
         apoioNoFiltro={<ApoioDaAssistencia />}
       />
 
       {/* A faixa só existe quando há o que mostrar: ela é montada a partir dos
           campos realmente preenchidos nas unidades publicadas. */}
       {fatos.length >= 2 ? (
-        <section className="on-dark relative isolate overflow-hidden bg-chrome text-white">
-          <div
-            aria-hidden
-            className="malha-escura pointer-events-none absolute inset-0 -z-10 opacity-60"
-          />
+        <section className="border-t border-graf-200 bg-surface-muted">
           <div className="container-jb py-14 lg:py-20">
             <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
               <div className="max-w-2xl">
-                <p className="micro text-jb-400">Antes de entrar no catálogo</p>
-                <h2 className="manchete mt-4 text-[clamp(1.75rem,1.3rem+1.9vw,2.75rem)] text-white">
+                <p className="micro text-jb-600">Antes de entrar no catálogo</p>
+                <h2 className="manchete mt-4 text-[clamp(1.75rem,1.3rem+1.9vw,2.5rem)] text-graf-950">
                   O que fica registrado em cada unidade
                 </h2>
-                <p className="mt-4 text-[0.9375rem] leading-relaxed text-white/65">
+                <p className="mt-4 text-[0.9375rem] leading-relaxed text-graf-600">
                   Comprar seminovo é uma decisão técnica, e decisão técnica precisa de
                   informação por escrito. É por isso que a revisão de cada equipamento vira
                   registro — e o que não foi registrado não vira promessa.
@@ -344,7 +341,7 @@ export default async function Pagina({
 
               <Link
                 href="/assistencia-tecnica"
-                className="micro flex h-12 items-center gap-2 rounded-xs border border-white/25 px-5 text-white transition-colors hover:bg-white/10"
+                className="micro flex h-12 items-center gap-2 rounded-lg border border-graf-300 bg-white px-5 text-graf-800 transition-colors hover:border-graf-450 hover:bg-graf-50"
               >
                 Conheça a assistência técnica
                 <ArrowRight className="size-3.5" aria-hidden />
@@ -353,10 +350,10 @@ export default async function Pagina({
 
             <ul className="mt-12 grid gap-x-10 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
               {fatos.map((fato) => (
-                <li key={fato.titulo} className="border-t border-white/15 pt-5">
-                  <fato.icone className="size-5 text-jb-400" aria-hidden />
-                  <h3 className="mt-4 text-base font-bold text-white">{fato.titulo}</h3>
-                  <p className="mt-2 text-[0.9375rem] leading-relaxed text-white/65">
+                <li key={fato.titulo} className="border-t border-graf-200 pt-5">
+                  <fato.icone className="size-5 text-jb-600" aria-hidden />
+                  <h3 className="mt-4 text-base font-bold text-graf-950">{fato.titulo}</h3>
+                  <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
                     {fato.texto}
                   </p>
                 </li>

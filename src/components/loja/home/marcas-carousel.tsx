@@ -70,7 +70,7 @@ function CartaoMarca({ marca }: { marca: Marca }) {
          passa andando, não o caminho por onde se navega; quem clica aceita
          esperar o carregamento normal. */
       prefetch={false}
-      className="group foco-jb flex h-[12rem] w-[16.4rem] shrink-0 flex-col items-center justify-center rounded-[1.4rem] border border-graf-100 bg-white/85 px-5 text-center shadow-[0_18px_44px_-34px_rgba(17,24,39,0.32)] transition-[transform,border-color,box-shadow,background-color] duration-300 hover:-translate-y-[6px] hover:border-jb-300 hover:bg-white hover:shadow-[0_28px_50px_-26px_rgba(202,20,30,0.42)]"
+      className="group foco-jb flex h-[12rem] w-[16.4rem] shrink-0 flex-col items-center justify-center placa px-5 text-center transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-graf-400 hover:shadow-raised"
     >
       <span className="flex h-[4.4rem] w-full items-center justify-center">
         {arte ? (
@@ -169,7 +169,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
             <div className="mt-9 flex flex-col gap-6 min-[640px]:flex-row min-[640px]:items-center min-[640px]:gap-6">
               <Link
                 href="/marcas"
-                className="group foco-jb inline-flex min-h-[3.6rem] w-fit shrink-0 items-center gap-6 whitespace-nowrap rounded-full bg-gradient-to-b from-jb-500 to-jb-700 py-2 pl-8 pr-3 text-[0.95rem] font-bold text-white shadow-[0_20px_38px_-18px_rgba(196,16,26,0.7)] transition-transform hover:-translate-y-0.5"
+                className="group foco-jb micro inline-flex min-h-12 w-fit shrink-0 items-center gap-6 whitespace-nowrap rounded-lg bg-jb-500 py-2 pl-7 pr-3 text-white transition-colors hover:bg-jb-600"
               >
                 Ver todas as marcas
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white/15 transition-transform group-hover:translate-x-1">
@@ -219,7 +219,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
           </div>
         </div>
 
-        <div className="mt-14 rounded-[1.6rem] border border-graf-100 bg-white/70 px-6 py-5 shadow-[0_22px_58px_-44px_rgba(17,24,39,0.32)] backdrop-blur-sm min-[640px]:px-8 min-[1024px]:mt-6 min-[1024px]:ml-[16%] min-[1024px]:max-w-[70%]">
+        <div className="placa mt-14 px-6 py-5 min-[640px]:px-8 min-[1024px]:mt-6 min-[1024px]:ml-[16%] min-[1024px]:max-w-[70%]">
           <div className="grid gap-6 min-[640px]:grid-cols-3 min-[640px]:divide-x min-[640px]:divide-graf-200/80">
             {BENEFICIOS.map(({ icone: IconeBeneficio, titulo, apoio }, posicao) => (
               <div

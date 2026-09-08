@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { lerParcelamento } from "@/components/loja/home/comum";
-import { ChamadaEscura, FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
+import { ChamadaDestacada, FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
 import { HeroVitrine, type NumeroDaHome } from "@/components/loja/home/hero-vitrine";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
 import { SecaoCategorias } from "@/components/loja/home/categorias";
@@ -87,7 +87,7 @@ export default async function HomePage() {
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
       />
 
-      <ChamadaEscura
+      <ChamadaDestacada
         sobretitulo="Ferramenta de comparação"
         titulo="Coloque até 3 equipamentos frente a frente"
         texto="Preço, potência, capacidade, garantia, prazo e instalação na mesma tabela — sem abrir cinco abas."

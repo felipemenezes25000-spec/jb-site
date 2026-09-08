@@ -134,7 +134,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
         </div>
 
         <div className="mt-7 grid gap-4 min-[1024px]:grid-cols-[minmax(0,0.88fr)_minmax(0,1fr)] min-[1024px]:gap-5">
-          <article className="relative min-h-[24rem] overflow-hidden rounded-[2rem] border border-graf-200 bg-white shadow-[0_30px_70px_-50px_rgba(70,0,0,0.38)]">
+          <article className="placa relative min-h-[24rem] overflow-hidden">
             <div
               className="absolute inset-0 bg-[radial-gradient(circle_at_88%_22%,rgba(227,24,32,0.09),transparent_34%),linear-gradient(135deg,#fff_0%,#fff_56%,#fff7f6_100%)]"
               aria-hidden
@@ -168,7 +168,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
             </p>
 
             <div className="relative z-10 flex min-h-[24rem] max-w-[66%] flex-col p-7 min-[640px]:p-9 min-[1024px]:p-10">
-              <span className="flex size-12 items-center justify-center rounded-xl bg-jb-50 text-jb-700 shadow-[0_12px_24px_-15px_rgba(220,20,28,0.45)]">
+              <span className="flex size-12 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
                 <ShoppingCart className="size-5" aria-hidden />
               </span>
               <p className="mt-6 text-[0.67rem] font-black uppercase tracking-[0.18em] text-jb-700">
@@ -185,7 +185,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
                 <LinkBotao
                   href="/loja"
                   tamanho="lg"
-                  className="rounded-xl shadow-[0_13px_28px_-16px_rgba(220,20,28,0.8)]"
+                  className="rounded-lg"
                 >
                   Ver equipamentos
                   <ArrowRight className="size-4" aria-hidden />
@@ -202,7 +202,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
             </div>
           </article>
 
-          <article className="relative min-h-[24rem] overflow-hidden rounded-[2rem] bg-[#141518] text-white shadow-[0_34px_78px_-46px_rgba(26,28,30,0.6)]">
+          <article className="relative min-h-[24rem] overflow-hidden rounded-lg bg-chrome text-white">
             <div
               /* Grafite de ponta a ponta. Antes o degradê terminava em #1d0709 —
                  vermelho quase preto — e duas lavagens vermelhas por cima
@@ -238,7 +238,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
             </p>
 
             <div className="relative z-10 flex min-h-[24rem] max-w-[60%] flex-col p-7 min-[640px]:p-9 min-[1024px]:p-10">
-              <span className="flex size-12 items-center justify-center rounded-xl bg-jb-600 text-white shadow-[0_12px_30px_-10px_rgba(235,20,29,0.68)]">
+              <span className="flex size-12 items-center justify-center rounded-lg bg-jb-600 text-white">
                 <Wrench className="size-5" aria-hidden />
               </span>
               <p className="mt-6 text-[0.67rem] font-black uppercase tracking-[0.18em] text-jb-300">
@@ -255,7 +255,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
                 <LinkBotao
                   href="/assistencia-tecnica/solicitar"
                   tamanho="lg"
-                  className="rounded-xl shadow-[0_14px_35px_-12px_rgba(235,20,29,0.7)]"
+                  className="rounded-lg"
                 >
                   Solicitar assistência
                   <ArrowRight className="size-4" aria-hidden />
@@ -291,14 +291,14 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
           </article>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-[1.35rem] border border-graf-200 bg-white/95 shadow-[0_15px_45px_-38px_rgba(70,0,0,0.3)] backdrop-blur-sm">
+        <div className="placa mt-4 overflow-hidden">
           <div className="grid min-[640px]:grid-cols-2 min-[1024px]:grid-cols-4">
             {FLUXO.map(({ icone: Icone, rotulo }, indice) => (
               <div
                 key={rotulo}
                 className="relative flex min-h-[5rem] items-center gap-4 border-graf-100 px-5 py-4 min-[640px]:border-l first:min-[640px]:border-l-0 min-[1024px]:px-6"
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-jb-50 text-jb-700">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
                   <Icone className="size-4" aria-hidden />
                 </span>
                 <div className="min-w-0">
@@ -327,7 +327,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
                20px de altura — é a linha de texto —, abaixo do alvo mínimo da
                WCAG 2.2 (2.5.8). No ponteiro fino ele continua sendo uma frase
                dentro do parágrafo. */
-            className="group foco-jb inline-flex items-center gap-1.5 rounded-xs font-black text-jb-700 underline-offset-4 hover:underline pointer-coarse:min-h-11"
+            className="group foco-jb inline-flex items-center gap-1.5 rounded-lg font-black text-jb-700 underline-offset-4 hover:underline pointer-coarse:min-h-11"
           >
             Conheça a assistência técnica JB.
             <ArrowRight

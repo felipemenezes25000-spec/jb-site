@@ -81,7 +81,9 @@ export default async function CategoriaPage({ params, searchParams }: Props) {
   ];
 
   return (
-    <>
+    /* `vitrine` liga o acabamento do painel de filtros e da barra de busca —
+       a mesma camada de passagem que /loja e /seminovos usam. */
+    <div className="vitrine">
       <JsonLd dados={trilhaJsonLd(trilha)} />
 
       <Vitrine
@@ -95,7 +97,11 @@ export default async function CategoriaPage({ params, searchParams }: Props) {
         atalhos={atalhos}
         rotuloAtalhos={`Subcategorias de ${categoria.name}`}
         travarCategoria
+        /* Sem `semCabecalho`: aqui quem escreve o título é a própria vitrine,
+           porque o nome da coleção vem do cadastro da categoria. O que muda é
+           só o desenho — manchete condensada e rótulo técnico. */
+        variante="vitrine"
       />
-    </>
+    </div>
   );
 }

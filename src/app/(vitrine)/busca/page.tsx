@@ -4,7 +4,8 @@ import { ArrowRight, BookOpen, SearchX, Stethoscope, Wrench } from "lucide-react
 
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
-import { GradeProdutos, type Parcelamento } from "@/components/loja/card-produto";
+import { type Parcelamento } from "@/components/loja/card-produto";
+import { GradeVitrine } from "@/components/loja/card-vitrine";
 import { colunasAte } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import {
@@ -112,7 +113,7 @@ function Grupo({
             700px de largura — o equipamento vira cartaz e a foto some no
             branco. As colunas acompanham a quantidade e, abaixo de três, a
             faixa para de esticar. É a mesma regra dos relacionados da ficha. */}
-        <GradeProdutos
+        <GradeVitrine
           produtos={resultado.produtos}
           parcelamento={parcelamento}
           colunas={colunasAte(resultado.produtos.length, { base: 1, sm: 2, lg: 3, xl: 4 })}

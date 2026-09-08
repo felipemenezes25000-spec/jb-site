@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    Cartão de vitrine
 
-   O mesmo dado do `CardProduto`, com a apresentação da vitrine: filete de 1px
-   no lugar da sombra, canto de 4px, foto em fundo branco chapado, nome em
-   peso médio e preço em condensada tabular.
+   O mesmo dado do `CardProduto`, com a apresentação da vitrine: foto em
+   fundo branco chapado, etiqueta de condição no canto, preço tabular e o
+   convite com peso de botão.
 
    O que este cartão NÃO mostra, de propósito: nota e número de avaliações. A
    referência que inspirou o desenho exibe "4.9 · 38 avaliações" em todo
@@ -23,10 +23,10 @@ import { cn } from "@/lib/utils";
    ============================================================================ */
 
 const CONDICAO_ETIQUETA = {
-  novo: { rotulo: "Novo", classe: "bg-graf-950 text-white" },
+  novo: { rotulo: "Novo", classe: "bg-white text-graf-700 ring-1 ring-graf-200" },
   seminovo: { rotulo: "Seminovo JB", classe: "bg-white text-jb-600 ring-1 ring-jb-500" },
-  usado: { rotulo: "Usado", classe: "bg-graf-950 text-white" },
-  recondicionado: { rotulo: "Recondicionado JB", classe: "bg-graf-950 text-white" },
+  usado: { rotulo: "Usado", classe: "bg-white text-graf-700 ring-1 ring-graf-200" },
+  recondicionado: { rotulo: "Recondicionado JB", classe: "bg-white text-warn-700 ring-1 ring-warn-500" },
 } as const;
 
 function disponibilidade(produto: ProdutoCard) {
@@ -116,11 +116,11 @@ export function CardVitrine({
         {/* Etiquetas em coluna, sempre no mesmo canto: condição primeiro,
             desconto embaixo. Quem varre a grade lê as duas na vertical. */}
         <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
-          <span className={cn("micro rounded-xs px-2 py-1.5", condicao.classe)}>
+          <span className={cn("micro rounded-lg px-2 py-1.5", condicao.classe)}>
             {condicao.rotulo}
           </span>
           {desconto >= 5 ? (
-            <span className="micro rounded-xs bg-jb-500 px-2 py-1.5 text-white">−{desconto}%</span>
+            <span className="micro rounded-lg bg-jb-500 px-2 py-1.5 text-white">−{desconto}%</span>
           ) : null}
         </div>
 
@@ -142,7 +142,7 @@ export function CardVitrine({
         <h3 className="mt-2 line-2 min-h-10 text-[0.9375rem] font-semibold leading-snug text-graf-950">
           <Link
             href={`/loja/${produto.slug}`}
-            className="rounded-xs after:absolute after:inset-0 after:content-['']"
+            className="rounded-lg after:absolute after:inset-0 after:content-['']"
           >
             {produto.name}
           </Link>
@@ -194,8 +194,8 @@ export function CardVitrine({
             <span
               aria-hidden
               className={cn(
-                "micro flex h-11 flex-1 items-center justify-center gap-2 rounded-xs px-3",
-                "bg-graf-950 text-white transition-colors group-hover:bg-jb-500",
+                "micro flex h-11 flex-1 items-center justify-center gap-2 rounded-lg px-3",
+                "bg-jb-500 text-white transition-colors group-hover:bg-jb-600",
                 semEstoque && "bg-graf-400 group-hover:bg-graf-400",
               )}
             >
@@ -206,7 +206,7 @@ export function CardVitrine({
             <BotaoComparar
               slug={produto.slug}
               nome={produto.name}
-              className="size-11 rounded-xs border-hairline bg-white"
+              className="size-11 rounded-lg border-hairline bg-white"
             />
           </div>
         </div>

@@ -158,7 +158,7 @@ export async function SecaoCategorias() {
 
           <Link
             href="/loja"
-            className="group foco-jb inline-flex min-h-11 items-center gap-2 self-start rounded-xs text-sm font-extrabold text-jb-700 transition-colors hover:text-jb-900 min-[1024px]:self-end"
+            className="group foco-jb inline-flex min-h-11 items-center gap-2 self-start rounded-lg text-sm font-extrabold text-jb-700 transition-colors hover:text-jb-900 min-[1024px]:self-end"
           >
             Ver catálogo completo
             <ArrowRight
@@ -236,7 +236,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
   return (
     <Link
       href={`/categoria/${categoria.slug}`}
-      className="group relative grid min-h-[30rem] overflow-hidden rounded-[2rem] border border-graf-200 bg-white shadow-[0_26px_60px_-46px_rgba(26,28,30,0.4)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-graf-300 hover:shadow-[0_32px_70px_-42px_rgba(26,28,30,0.45)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-jb-500 min-[640px]:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] min-[1024px]:min-h-[24.5rem]"
+      className="group relative grid min-h-[30rem] placa overflow-hidden transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-graf-400 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-jb-500 min-[640px]:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] min-[1024px]:min-h-[24.5rem]"
     >
       <div className="relative z-10 flex min-w-0 flex-col justify-center p-7 min-[640px]:p-8 min-[1024px]:p-10">
         <span className="text-[0.64rem] font-black uppercase tracking-[0.2em] text-jb-700">
@@ -248,7 +248,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
         <p className="mt-4 max-w-sm text-sm leading-relaxed text-graf-500">
           {detalheCategoria(categoria)}
         </p>
-        <span className="mt-7 inline-flex min-h-[3.25rem] w-fit items-center gap-4 rounded-full bg-jb-500 py-2 pl-7 pr-2.5 text-sm font-bold text-white shadow-[0_18px_36px_-18px_rgba(235,20,29,0.7)] transition-[transform,background-color] duration-200 group-hover:-translate-y-0.5 group-hover:bg-jb-600">
+        <span className="mt-7 micro inline-flex min-h-12 w-fit items-center gap-4 rounded-lg bg-jb-500 py-2 pl-6 pr-2.5 text-white transition-[transform,background-color] duration-200 group-hover:-translate-y-0.5 group-hover:bg-jb-600">
           Explorar categoria
           <span className="flex size-9 items-center justify-center rounded-full bg-white/20 transition-transform duration-200 group-hover:translate-x-1">
             <ArrowRight className="size-4" aria-hidden />
@@ -298,7 +298,7 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
   return (
     <Link
       href={`/categoria/${categoria.slug}`}
-      className="group grid h-full min-h-[8.4rem] grid-cols-[minmax(0,1fr)_9.5rem] overflow-hidden rounded-[1.5rem] border border-graf-100 bg-white shadow-[0_18px_50px_-44px_rgba(70,0,0,0.35)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-jb-200 hover:shadow-[0_24px_54px_-38px_rgba(80,0,0,0.42)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 min-[640px]:grid-cols-[minmax(0,1fr)_14.5rem]"
+      className="group grid h-full min-h-[8.4rem] grid-cols-[minmax(0,1fr)_9.5rem] placa overflow-hidden transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-graf-400 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 min-[640px]:grid-cols-[minmax(0,1fr)_14.5rem]"
     >
       <div className="flex min-w-0 flex-col justify-center p-5 min-[640px]:p-7">
         <div className="flex items-center gap-3">
@@ -311,7 +311,7 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
           <h3 className="min-w-0 text-xl font-black leading-[1.1] tracking-[-0.038em] text-graf-950 transition-colors group-hover:text-jb-700 [overflow-wrap:normal] hyphens-none min-[640px]:text-[1.55rem]">
             {categoria.name}
           </h3>
-          <span className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-full border border-graf-100 bg-white text-jb-600 shadow-[0_10px_22px_-16px_rgba(17,24,39,0.5)] transition-[transform,border-color] duration-300 group-hover:translate-x-1 group-hover:border-jb-200">
+          <span className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-lg border border-hairline bg-white text-jb-600 transition-[transform,border-color] duration-300 group-hover:translate-x-1 group-hover:border-jb-200">
             <ArrowRight className="size-4" aria-hidden />
           </span>
         </div>

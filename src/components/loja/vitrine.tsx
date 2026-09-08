@@ -564,6 +564,7 @@ export async function Vitrine({
   travarCondicao,
   travarMarca,
   variante = "padrao",
+  semCabecalho,
   apoioNoFiltro,
 }: {
   /** Degrau acima do título — "Catálogo", "Por condição", "Marca". */
@@ -593,6 +594,14 @@ export async function Vitrine({
    * página e um título anunciado a quem navega por leitor de tela.
    */
   variante?: "padrao" | "colecao" | "vitrine";
+  /**
+   * A página traz o próprio cabeçalho e a vitrine entra só como lista.
+   *
+   * É separado de  de propósito: /loja e /seminovos abrem com um
+   * cabeçalho de coleção escrito na página, enquanto /categoria e /busca usam
+   * o cabeçalho daqui — as quatro querem o MESMO desenho de cartão.
+   */
+  semCabecalho?: boolean;
   /** Bloco extra no pé da coluna de filtros — apoio, não filtro. */
   apoioNoFiltro?: React.ReactNode;
 }) {
@@ -677,11 +686,11 @@ export async function Vitrine({
 
   const daVitrine = variante === "vitrine";
   /* As duas variantes tiram o cabeçalho interno: a página traz o seu. */
-  const daColecao = variante === "colecao" || daVitrine;
+  const semCabecalhoInterno = semCabecalho || variante === "colecao";
 
   return (
-    <div className={cn("container-jb", daColecao ? "pb-10 lg:pb-14" : "py-8 lg:py-12")}>
-      {daColecao ? null : (
+    <div className={cn("container-jb", semCabecalhoInterno ? "pb-10 lg:pb-14" : "py-8 lg:py-12")}>
+      {semCabecalhoInterno ? null : (
         <>
           <Trilha itens={trilha} className="mb-5" />
 
@@ -691,8 +700,19 @@ export async function Vitrine({
                   a coleção, não abre a marca. O degrau de hero fica reservado para
                   a página principal, e o sobretítulo devolve a hierarquia que o
                   título sozinho perdia. */}
-              {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
-              <h1 className="text-section text-graf-950">{titulo}</h1>
+              {sobretitulo ? (
+                <p className={cn(daVitrine ? "micro text-jb-600" : "sobretitulo", "mb-3")}>
+                  {sobretitulo}
+                </p>
+              ) : null}
+              <h1
+                className={cn(
+                  daVitrine ? "manchete text-[clamp(2rem,1.4rem+2.6vw,3.25rem)]" : "text-section",
+                  "text-graf-950",
+                )}
+              >
+                {titulo}
+              </h1>
               {descricao ? <p className="texto-guia mt-4 text-graf-600">{descricao}</p> : null}
             </div>
 
@@ -745,7 +765,7 @@ export async function Vitrine({
       <div
         className={cn(
           "grid gap-x-12 gap-y-8 lg:grid-cols-[17rem_minmax(0,1fr)]",
-          daColecao ? "mt-6 lg:mt-7" : "mt-8 lg:mt-10",
+          semCabecalhoInterno ? "mt-6 lg:mt-7" : "mt-8 lg:mt-10",
         )}
       >
         <aside className="hidden lg:block" aria-label="Filtros do catálogo">
@@ -765,7 +785,7 @@ export async function Vitrine({
               caminho={caminho}
               endereco={enderecoPrimeiraPagina}
               pagina={pagina}
-              chamadaDestacada={daColecao && !daVitrine}
+              chamadaDestacada={variante === "colecao"}
               daVitrine={daVitrine}
             />
           </Suspense>
