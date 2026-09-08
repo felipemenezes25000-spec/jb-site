@@ -11,21 +11,7 @@ import { Logo, Simbolo } from "@/components/ui/logo";
 import { useDialogo } from "@/components/ui/use-dialogo";
 import { cn } from "@/lib/utils";
 import type { GrupoMenu } from "@/lib/permissoes";
-
-/**
- * Casca do backoffice: trilho lateral no desktop, gaveta no mobile e barra
- * superior fixa. Só isto — nenhuma regra de permissão mora aqui; o layout do
- * servidor já entrega o menu filtrado.
- *
- * O estado recolhido do menu fica em localStorage e é lido depois da
- * hidratação, para o HTML do servidor e o do cliente saírem iguais na primeira
- * pintura.
- *
- * A gaveta do celular usa `useDialogo` do kit em vez de um efeito próprio:
- * foco para dentro ao abrir, Tab preso no conteúdo, Esc, foco devolvido a quem
- * abriu e fundo sem rolagem. Antes o foco só era movido para o botão de fechar
- * e o Tab seguinte caía nos links da página atrás da gaveta.
- */
+import styles from "./casca.module.css";
 
 const CHAVE_COLAPSO = "jb:admin:menu-colapsado";
 
@@ -71,55 +57,50 @@ export function Casca({
     });
   }, []);
 
-  // trocar de página fecha a gaveta
   useEffect(() => {
     setGaveta(false);
   }, [pathname]);
 
   return (
-    <div className="min-h-dvh bg-graf-50">
+    <div className={cn("admin-shell min-h-dvh bg-[#f6f7f9] text-graf-900", styles.shell)}>
       <a
         href="#conteudo-admin"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-jb-700 focus:shadow-raised"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-white focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-jb-700 focus:shadow-raised"
       >
         Ir para o conteúdo
       </a>
 
-      {/* ---------------------------------------------------------- desktop */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-graf-200 bg-white lg:flex",
+          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-graf-200/80 bg-white/95 shadow-[1px_0_0_rgba(20,24,32,0.02)] backdrop-blur-xl lg:flex",
           "transition-[width] duration-200 ease-out",
-          colapsado ? "w-[4.5rem]" : "w-64",
+          colapsado ? "w-[4.75rem]" : "w-[15.5rem]",
         )}
       >
         <div
           className={cn(
-            "flex h-14 shrink-0 items-center border-b border-graf-200",
-            colapsado ? "justify-center px-2" : "px-4",
+            "flex h-16 shrink-0 items-center border-b border-graf-200/70",
+            colapsado ? "justify-center px-2" : "px-5",
           )}
         >
           <Link
             href="/admin"
             aria-label="Painel JB Soluções Odontológicas"
-            className="flex items-center rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            className="flex items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
-            {colapsado ? <Simbolo tamanho={28} /> : <Logo altura={26} />}
+            {colapsado ? <Simbolo tamanho={30} /> : <Logo altura={28} />}
           </Link>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1">
           <MenuAdmin grupos={grupos} colapsado={colapsado} />
         </div>
 
-        {/* O pé do trilho não é assinatura: é a única saída do painel para a
-            loja, que antes só existia no topo e sumia abaixo de 768px. */}
-        <div className="shrink-0 border-t border-graf-200 p-2">
+        <div className="shrink-0 border-t border-graf-200/70 bg-white/90 p-2.5">
           <LinkVerSite colapsado={colapsado} />
         </div>
       </aside>
 
-      {/* ----------------------------------------------------------- gaveta */}
       <div
         className={cn(
           "fixed inset-0 z-50 lg:hidden",
@@ -133,7 +114,7 @@ export function Casca({
           aria-hidden={!gaveta}
           onClick={fecharGaveta}
           className={cn(
-            "absolute inset-0 bg-graf-950/40 transition-opacity duration-200",
+            "absolute inset-0 bg-graf-950/45 backdrop-blur-[2px] transition-opacity duration-200",
             gaveta ? "opacity-100" : "opacity-0",
           )}
         >
@@ -147,19 +128,19 @@ export function Casca({
           aria-label="Menu do painel"
           tabIndex={-1}
           className={cn(
-            "absolute inset-y-0 left-0 flex w-[17rem] max-w-[85vw] flex-col bg-white shadow-pop",
+            "absolute inset-y-0 left-0 flex w-[18rem] max-w-[88vw] flex-col border-r border-graf-200/70 bg-white shadow-pop",
             "transition-transform duration-200 ease-out",
             gaveta ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-graf-200 pl-4 pr-2">
-            <Logo altura={26} />
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-graf-200/70 pl-5 pr-2.5">
+            <Logo altura={28} />
             <button
               type="button"
               aria-label="Fechar menu"
               onClick={fecharGaveta}
               className={cn(
-                "inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-graf-700 transition-colors",
+                "inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-graf-700 transition-colors",
                 "hover:bg-graf-100 hover:text-graf-950",
                 "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
               )}
@@ -168,13 +149,13 @@ export function Casca({
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1">
             <MenuAdmin grupos={grupos} aoNavegar={fecharGaveta} />
           </div>
 
-          <div className="shrink-0 border-t border-graf-200 p-2">
+          <div className="shrink-0 border-t border-graf-200/70 bg-white p-2.5">
             <LinkVerSite />
-            <div className="px-3.5 pb-1 pt-2">
+            <div className="px-3.5 pb-1 pt-2.5">
               <p className="truncate text-[0.9375rem] font-semibold text-graf-900">
                 {usuario.nome}
               </p>
@@ -184,11 +165,10 @@ export function Casca({
         </div>
       </div>
 
-      {/* --------------------------------------------------------- conteúdo */}
       <div
         className={cn(
-          "transition-[padding] duration-200 ease-out",
-          colapsado ? "lg:pl-[4.5rem]" : "lg:pl-64",
+          "min-w-0 transition-[padding] duration-200 ease-out",
+          colapsado ? "lg:pl-[4.75rem]" : "lg:pl-[15.5rem]",
         )}
       >
         <CabecalhoAdmin
@@ -200,32 +180,27 @@ export function Casca({
           aoAbrirGaveta={() => setGaveta(true)}
         />
 
-        {/* `min-w-0` no eixo do conteúdo: sem ele, um filho largo (tabela,
-            faixa de filtros) cresce em vez de rolar dentro da própria caixa. */}
-        <main id="conteudo-admin" className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div className="mx-auto min-w-0 max-w-[100rem]">{children}</div>
+        <main
+          id="conteudo-admin"
+          className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-9 xl:px-10"
+        >
+          <div className="mx-auto min-w-0 max-w-[96rem]">{children}</div>
         </main>
       </div>
     </div>
   );
 }
 
-/**
- * Saída para a loja, no pé do menu.
- *
- * Desenhado como item de menu de propósito: é navegação, não comando, e no
- * trilho recolhido vira só o ícone com o nome dito ao leitor de tela.
- */
 function LinkVerSite({ colapsado = false }: { colapsado?: boolean }) {
   return (
     <Link
       href="/"
       title={colapsado ? "Ver o site" : undefined}
       className={cn(
-        "flex h-11 items-center gap-3 rounded-lg text-[0.9375rem] font-medium text-graf-600 transition-colors",
+        "flex h-11 items-center gap-3 rounded-xl text-[0.9375rem] font-medium text-graf-600 transition-all",
         "hover:bg-graf-100 hover:text-graf-950",
         "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
-        colapsado ? "justify-center px-0" : "pl-3.5 pr-2.5",
+        colapsado ? "justify-center px-0" : "pl-3 pr-2.5",
       )}
     >
       <ExternalLink className="size-[18px] shrink-0 text-graf-500" aria-hidden />
