@@ -115,7 +115,7 @@ export default async function CheckoutPage() {
       />
 
       <header className="max-w-2xl">
-        <h1 className="text-display texto-forte">Fechar pedido</h1>
+        <h1 className="manchete text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">Fechar pedido</h1>
         <p className="texto-guia mt-3 text-graf-600">
           Cinco etapas curtas. Você confere tudo antes de confirmar, e nada é cobrado até lá.
         </p>

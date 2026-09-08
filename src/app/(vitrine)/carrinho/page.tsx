@@ -73,7 +73,7 @@ export default async function CarrinhoPage() {
       <Trilha itens={[{ rotulo: "Início", href: "/" }, { rotulo: "Carrinho" }]} className="mb-5" />
 
       <header className="max-w-2xl">
-        <h1 className="text-display texto-forte">Seu carrinho</h1>
+        <h1 className="manchete text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">Seu carrinho</h1>
         {totais.linhas.length > 0 ? (
           <p className="texto-guia mt-3 text-graf-600">
             Confira os equipamentos, ajuste as quantidades e siga para o fechamento. O frete é
@@ -113,7 +113,7 @@ export default async function CarrinhoPage() {
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start lg:gap-10">
           <section aria-labelledby="titulo-itens" className="min-w-0">
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-              <h2 id="titulo-itens" className="text-title texto-forte">
+              <h2 id="titulo-itens" className="manchete text-[clamp(1.25rem,1.1rem+0.7vw,1.5rem)] text-graf-950">
                 Itens
               </h2>
               <p className="text-sm text-graf-500">
