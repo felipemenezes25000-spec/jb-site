@@ -5,17 +5,10 @@ import { formatarPreco } from "@/lib/format";
 /* ============================================================================
    Condições desta compra
 
-   O que muda de equipamento para equipamento: garantia, frete, retirada,
-   voltagem. Cada linha existe apenas se o campo correspondente está
-   preenchido no cadastro ou na configuração da loja — a lista encolhe em vez
-   de exibir travessão.
-
-   Sem moldura de propósito: este bloco corre logo abaixo da caixa de compra,
-   e uma segunda borda ali dentro faria a coluna virar uma pilha de cartões.
-   Fio fino entre as linhas basta.
-
-   A única linha fixa é a assistência própria, porque é fato da JB: quem vende
-   é a mesma equipe técnica que atende depois.
+   O bloco funciona como um resumo operacional da compra. Em vez de uma lista
+   longa, cada condição vira uma célula curta e comparável: garantia, frete,
+   retirada, alimentação e assistência. Isso deixa a primeira dobra mais
+   escaneável e cria um padrão visual único para todo o catálogo.
    ============================================================================ */
 
 export type PerfilDeFrete = {
@@ -25,7 +18,6 @@ export type PerfilDeFrete = {
   gratisAcimaCents: number | null;
 };
 
-/** Leitura em português de cada tipo de perfil de frete cadastrado. */
 const TIPO_DE_FRETE: Record<string, string> = {
   retirada: "Retirada no endereço da JB.",
   entrega_local: "Entrega feita pela própria equipe da JB.",
@@ -49,10 +41,8 @@ export function CondicoesDeCompra({
   voltagem,
 }: {
   garantiaMeses: number | null;
-  /** `true` quando a garantia veio da unidade física, não do modelo. */
   garantiaDaUnidade?: boolean;
   frete: PerfilDeFrete | null;
-  /** Instruções de retirada, quando a JB aceita retirada no local. */
   retirada: string | null;
   voltagem: string | null;
 }) {
@@ -61,10 +51,10 @@ export function CondicoesDeCompra({
   if (garantiaMeses && garantiaMeses > 0) {
     linhas.push({
       icone: ShieldCheck,
-      titulo: `Garantia de ${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"}`,
+      titulo: `${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"} de garantia`,
       detalhe: garantiaDaUnidade
-        ? "Registrada para esta unidade específica."
-        : undefined,
+        ? "Cobertura registrada para esta unidade."
+        : "Prazo informado para este equipamento.",
     });
   }
 
@@ -76,7 +66,7 @@ export function CondicoesDeCompra({
       detalhe: [
         explicacao,
         frete.gratisAcimaCents && frete.gratisAcimaCents > 0
-          ? `Frete incluído em pedidos acima de ${formatarPreco(frete.gratisAcimaCents)}.`
+          ? `Frete incluído acima de ${formatarPreco(frete.gratisAcimaCents)}.`
           : "",
       ]
         .filter(Boolean)
@@ -84,12 +74,10 @@ export function CondicoesDeCompra({
     });
   }
 
-  // Quando o próprio perfil de frete já é "retirada", a linha da configuração
-  // repetiria o mesmo recado com outras palavras.
   if (retirada && frete?.tipo !== "retirada") {
     linhas.push({
       icone: PackageCheck,
-      titulo: "Retirada no local",
+      titulo: "Retirada disponível",
       detalhe: retirada,
     });
   }
@@ -97,39 +85,50 @@ export function CondicoesDeCompra({
   if (voltagem) {
     linhas.push({
       icone: Plug,
-      titulo: voltagem === "bivolt" ? "Bivolt" : `Alimentação em ${voltagem} V`,
-      detalhe: "Confira a rede elétrica da sala antes de fechar o pedido.",
+      titulo: voltagem === "bivolt" ? "Bivolt" : `${voltagem} V`,
+      detalhe: "Confira a rede elétrica da sala antes da compra.",
     });
   }
 
   linhas.push({
     icone: Wrench,
     titulo: "Assistência técnica própria",
-    detalhe: "A mesma equipe que vende é a que atende o equipamento depois.",
+    detalhe: "Venda e suporte técnico com a mesma equipe JB.",
   });
 
   return (
-    <section aria-labelledby="condicoes-desta-compra">
-      <h2
-        id="condicoes-desta-compra"
-        className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
-      >
-        Condições desta compra
-      </h2>
-      <ul className="mt-3 divide-y divide-graf-200 border-t border-graf-200">
-        {linhas.map((linha) => {
+    <section
+      aria-labelledby="condicoes-desta-compra"
+      className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
+    >
+      <header className="border-b border-graf-200 bg-graf-50/70 px-5 py-4">
+        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-jb-700">
+          Compra segura
+        </p>
+        <h2 id="condicoes-desta-compra" className="mt-1 text-[0.9375rem] font-bold text-graf-950">
+          Condições deste equipamento
+        </h2>
+      </header>
+
+      <ul className="grid sm:grid-cols-2">
+        {linhas.map((linha, indice) => {
           const Icone = linha.icone;
           return (
-            <li key={linha.titulo} className="flex gap-3 py-3.5">
-              <Icone className="mt-0.5 size-[18px] shrink-0 text-graf-500" aria-hidden />
+            <li
+              key={linha.titulo}
+              className={`flex min-w-0 gap-3 border-graf-200 px-5 py-4 ${
+                indice >= 2 ? "border-t" : ""
+              } ${indice % 2 === 1 ? "sm:border-l" : ""} ${
+                indice === 1 ? "border-t sm:border-t-0" : ""
+              }`}
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700">
+                <Icone className="size-[17px]" aria-hidden />
+              </span>
               <div className="min-w-0">
-                <p className="text-[0.9375rem] font-semibold text-graf-900">
-                  {linha.titulo}
-                </p>
+                <p className="text-[0.875rem] font-bold leading-5 text-graf-950">{linha.titulo}</p>
                 {linha.detalhe ? (
-                  <p className="mt-0.5 text-sm leading-relaxed text-graf-500">
-                    {linha.detalhe}
-                  </p>
+                  <p className="mt-1 text-[0.8125rem] leading-5 text-graf-500">{linha.detalhe}</p>
                 ) : null}
               </div>
             </li>
