@@ -28,6 +28,8 @@ import { join } from "node:path";
 
 import { PrismaClient, type ProductCondition } from "@prisma/client";
 
+import { FICHA_DEMO } from "./ficha-demo";
+
 const prisma = new PrismaClient();
 
 const RAIZ = process.cwd();
@@ -162,9 +164,21 @@ async function main() {
       "</ul>",
     ].join("");
 
+    /* O resto da ficha — medida, peso, o que vem na caixa e o que a clínica
+       precisa ter pronto. Sem isso três seções da página abrem vazias, e a
+       ficha parece pela metade num site que existe para apresentar. */
+    const ficha = FICHA_DEMO[produto.slug];
+
     const dados = {
       name: produto.name,
       shortDescription: produto.short,
+      manufacturer: ficha?.fabricante ?? null,
+      weightGrams: ficha?.pesoGramas ?? null,
+      widthMm: ficha?.larguraMm ?? null,
+      heightMm: ficha?.alturaMm ?? null,
+      depthMm: ficha?.profundidadeMm ?? null,
+      boxContents: ficha?.naCaixa ?? [],
+      infrastructureNotes: ficha?.requisitos ?? [],
       description: descricao,
       status: "active" as const,
       condition: produto.condition as ProductCondition,
@@ -211,6 +225,23 @@ async function main() {
         order: indice,
       })),
     });
+
+    /* As dúvidas frequentes do equipamento. A seção existe mesmo sem elas —
+       ela oferece o formulário —, mas com pergunta respondida ela deixa de
+       ser um campo em branco e passa a adiantar a conversa. */
+    await prisma.faq.deleteMany({ where: { productId: criado.id } });
+    if (ficha?.duvidas.length) {
+      await prisma.faq.createMany({
+        data: ficha.duvidas.map((duvida, indice) => ({
+          productId: criado.id,
+          question: duvida.pergunta,
+          answer: duvida.resposta,
+          group: "produto",
+          order: indice,
+          published: true,
+        })),
+      });
+    }
 
     /* ------------------------------------------------- a unidade do seminovo
 
