@@ -1,0 +1,323 @@
+/* ============================================================================
+   Catálogos premium — Equipamentos e Seminovos
+
+   Escopo deliberadamente fechado em `.catalogo-premium`: o cabeçalho e o
+   rodapé públicos continuam intocados. A mesma vitrine/dados/filtros da loja
+   seguem funcionando; aqui muda apenas a apresentação das duas coleções mais
+   comerciais.
+   ============================================================================ */
+
+.catalogo-premium {
+  --catalog-red: var(--color-jb-600);
+  --catalog-red-deep: var(--color-jb-700);
+  --catalog-line: color-mix(in srgb, var(--color-graf-200) 82%, white);
+  background:
+    radial-gradient(circle at 88% 5%, rgb(224 20 27 / 0.035), transparent 24rem),
+    linear-gradient(180deg, #fff 0%, #fff 70%, #fbfbfc 100%);
+}
+
+.catalogo-premium > .container-jb {
+  max-width: 96rem;
+  padding-top: 1.75rem;
+  padding-bottom: 4rem;
+}
+
+/* ------------------------------------------------------------------ hero */
+.catalogo-premium > .container-jb > header {
+  position: relative;
+  isolation: isolate;
+  min-height: 15rem;
+  overflow: hidden;
+  align-items: center;
+  border: 1px solid var(--catalog-line);
+  border-radius: 1.75rem;
+  padding: 2rem 2rem 2.15rem;
+  background:
+    radial-gradient(circle at 78% 50%, rgb(224 20 27 / 0.055), transparent 22rem),
+    linear-gradient(112deg, #fff 0%, #fff 54%, #f8f8f9 100%);
+  box-shadow: 0 1px 2px rgb(26 28 30 / 0.03), 0 18px 50px -34px rgb(26 28 30 / 0.22);
+}
+
+.catalogo-premium > .container-jb > header > div:first-child {
+  position: relative;
+  z-index: 2;
+  max-width: 44rem;
+}
+
+.catalogo-premium > .container-jb > header h1 {
+  font-size: clamp(2rem, 1.58rem + 1.55vw, 3.15rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+
+.catalogo-premium > .container-jb > header p.texto-guia {
+  max-width: 43rem;
+  font-size: 1rem;
+  line-height: 1.68;
+}
+
+.catalogo-premium > .container-jb > header::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 0 auto;
+  width: min(42%, 38rem);
+  background:
+    linear-gradient(90deg, #fff 0%, rgb(255 255 255 / 0.4) 22%, transparent 58%),
+    linear-gradient(135deg, transparent 40%, rgb(224 20 27 / 0.035));
+  pointer-events: none;
+}
+
+.catalogo-premium > .container-jb > header::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0.85rem;
+  right: 1.25rem;
+  bottom: 0.85rem;
+  width: min(39%, 34rem);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  filter: drop-shadow(0 20px 22px rgb(26 28 30 / 0.08));
+  pointer-events: none;
+}
+
+.catalogo-equipamentos > .container-jb > header::after {
+  background-image: url('/images/catalogo-ficticio/autoclave-vita23.jpg');
+}
+
+.catalogo-seminovos > .container-jb > header::after {
+  background-image: url('/images/catalogo-ficticio/compressor-airpro50.jpg');
+  opacity: 0.94;
+}
+
+/* ---------------------------------------------------------- atalhos/chips */
+.catalogo-premium nav[aria-labelledby="atalhos-da-colecao"] {
+  margin-top: 1.35rem;
+}
+
+.catalogo-premium nav[aria-labelledby="atalhos-da-colecao"] > p {
+  margin-bottom: 0.6rem;
+  color: var(--color-graf-500);
+  font-size: 0.68rem;
+  letter-spacing: 0.11em;
+}
+
+.catalogo-premium nav[aria-labelledby="atalhos-da-colecao"] ul {
+  gap: 0.55rem;
+}
+
+.catalogo-premium nav[aria-labelledby="atalhos-da-colecao"] a {
+  min-height: 2.65rem;
+  border-color: var(--color-graf-200);
+  padding-inline: 1rem;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 1px 2px rgb(26 28 30 / 0.025);
+}
+
+.catalogo-premium nav[aria-labelledby="atalhos-da-colecao"] a:hover {
+  border-color: var(--color-jb-200);
+  background: var(--color-jb-50);
+  box-shadow: 0 8px 20px -15px rgb(165 9 12 / 0.36);
+}
+
+/* ---------------------------------------------------------- grid principal */
+.catalogo-premium > .container-jb > div.grid {
+  margin-top: 1.55rem;
+  row-gap: 1.25rem;
+}
+
+.catalogo-premium aside > div {
+  border: 1px solid var(--catalog-line);
+  border-radius: 1.35rem;
+  padding: 1.15rem 1.1rem 1.25rem;
+  background: rgb(255 255 255 / 0.97);
+  box-shadow: 0 12px 38px -30px rgb(26 28 30 / 0.22);
+}
+
+.catalogo-premium aside details {
+  padding-bottom: 1.15rem;
+}
+
+.catalogo-premium aside summary {
+  border-radius: 0.75rem;
+}
+
+.catalogo-premium aside a {
+  border-radius: 0.75rem;
+}
+
+.catalogo-premium aside + div > div:first-child {
+  border: 1px solid var(--catalog-line);
+  border-radius: 1.25rem;
+  padding: 0.8rem;
+  background: rgb(255 255 255 / 0.97);
+  box-shadow: 0 12px 36px -31px rgb(26 28 30 / 0.24);
+}
+
+.catalogo-premium aside + div > div:first-child input,
+.catalogo-premium aside + div > div:first-child select {
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+/* ------------------------------------------------------------- cards */
+.catalogo-premium ul:has(> li > article) {
+  gap: 1rem !important;
+}
+
+.catalogo-premium article {
+  border-color: var(--color-graf-200);
+  border-radius: 1.3rem;
+  box-shadow: 0 1px 2px rgb(26 28 30 / 0.025), 0 12px 30px -28px rgb(26 28 30 / 0.25);
+  transition: transform 180ms cubic-bezier(.22,1,.36,1), border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.catalogo-premium article:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-jb-200);
+  box-shadow: 0 18px 40px -27px rgb(26 28 30 / 0.32), 0 7px 22px -17px rgb(196 14 21 / 0.18);
+}
+
+/* Nas duas vitrines comerciais, as fotos do banco dão lugar às imagens
+   demonstrativas usadas no conceito. Os dados do produto, links, preço,
+   estoque e filtros continuam sendo os reais do catálogo. */
+.catalogo-premium article > div:first-child {
+  aspect-ratio: 4 / 3 !important;
+  background-color: #fafafb !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+}
+
+.catalogo-premium article > div:first-child img {
+  opacity: 0 !important;
+}
+
+.catalogo-premium ul:has(> li > article) > li:nth-child(6n + 1) article > div:first-child {
+  background-image: url('/images/catalogo-ficticio/autoclave-vita23.jpg') !important;
+}
+.catalogo-premium ul:has(> li > article) > li:nth-child(6n + 2) article > div:first-child {
+  background-image: url('/images/catalogo-ficticio/ultrassom-clean500.jpg') !important;
+}
+.catalogo-premium ul:has(> li > article) > li:nth-child(6n + 3) article > div:first-child {
+  background-image: url('/images/catalogo-ficticio/compressor-airpro50.jpg') !important;
+}
+.catalogo-premium ul:has(> li > article) > li:nth-child(6n + 4) article > div:first-child {
+  background-image: url('/images/catalogo-ficticio/aspirador-pro300.jpg') !important;
+}
+.catalogo-premium ul:has(> li > article) > li:nth-child(6n + 5) article > div:first-child {
+  background-image: url('/images/catalogo-ficticio/raiox-rx70.jpg') !important;
+}
+.catalogo-premium ul:has(> li > article) > li:nth-child(6n + 6) article > div:first-child {
+  background-image: url('/images/catalogo-ficticio/fotopolimerizador-lumix1.jpg') !important;
+}
+
+.catalogo-premium article > div:last-child {
+  padding: 1.05rem 1.05rem 1rem;
+}
+
+.catalogo-premium article h3 {
+  font-size: 1.02rem;
+  line-height: 1.28;
+  letter-spacing: -0.018em;
+}
+
+.catalogo-premium article > div:last-child::after {
+  content: "Ver detalhes  →";
+  display: flex;
+  min-height: 2.7rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.85rem;
+  border-radius: 0.78rem;
+  background: linear-gradient(180deg, var(--color-jb-500), var(--color-jb-600));
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  box-shadow: 0 10px 20px -14px rgb(196 14 21 / 0.65);
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.catalogo-premium article:hover > div:last-child::after {
+  background: linear-gradient(180deg, var(--color-jb-600), var(--color-jb-700));
+}
+
+/* O convite inline antigo continua acessível pelo cartão inteiro, mas sai da
+   leitura visual para o CTA vermelho não aparecer duplicado. */
+.catalogo-premium article > div:last-child > div:last-child > div:last-child > div > span:last-child {
+  visibility: hidden;
+  width: 0;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------- CTA fim da lista */
+.catalogo-premium ul:has(> li > article) ~ div[class*="rounded-xl"] {
+  border-color: var(--color-jb-100) !important;
+  border-radius: 1.4rem !important;
+  background:
+    radial-gradient(circle at 3rem 50%, rgb(224 20 27 / 0.09), transparent 9rem),
+    linear-gradient(110deg, #fff7f7, #fff 64%) !important;
+  box-shadow: 0 18px 44px -36px rgb(196 14 21 / 0.32);
+}
+
+/* ------------------------------------------------------------ responsivo */
+@media (min-width: 64rem) {
+  .catalogo-premium > .container-jb > div.grid {
+    grid-template-columns: 17.75rem minmax(0, 1fr) !important;
+    column-gap: 1.35rem !important;
+  }
+
+  .catalogo-premium aside > div {
+    top: 7.25rem !important;
+  }
+}
+
+@media (min-width: 80rem) {
+  .catalogo-premium ul:has(> li > article) {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 63.999rem) {
+  .catalogo-premium > .container-jb > header {
+    min-height: 0;
+    padding: 1.5rem;
+  }
+
+  .catalogo-premium > .container-jb > header::before,
+  .catalogo-premium > .container-jb > header::after {
+    display: none;
+  }
+
+  .catalogo-premium > .container-jb > header > div:first-child {
+    max-width: none;
+  }
+}
+
+@media (max-width: 39.999rem) {
+  .catalogo-premium > .container-jb {
+    padding-top: 1rem;
+  }
+
+  .catalogo-premium > .container-jb > header {
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+  }
+
+  .catalogo-premium article {
+    border-radius: 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalogo-premium article,
+  .catalogo-premium article > div:last-child::after {
+    transition: none;
+  }
+  .catalogo-premium article:hover {
+    transform: none;
+  }
+}
