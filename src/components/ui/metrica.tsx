@@ -16,7 +16,7 @@ const TONS: Record<TomMetrica, { valor: string; selo: string; barra: string; fun
     valor: "text-graf-950",
     selo: "bg-jb-50 text-jb-700 ring-jb-500/10",
     barra: "bg-jb-500",
-    fundo: "bg-gradient-to-br from-white via-white to-jb-50/70",
+    fundo: "bg-gradient-to-br from-white via-white to-jb-50/65",
   },
   ok: {
     valor: "text-ok-700",
@@ -32,7 +32,7 @@ const TONS: Record<TomMetrica, { valor: string; selo: string; barra: string; fun
   },
   info: {
     valor: "text-graf-950",
-    selo: "bg-graf-100 text-graf-800 ring-graf-500/10",
+    selo: "bg-info-50 text-info-700 ring-info-500/10",
     barra: "bg-info-500",
     fundo: "bg-white",
   },
@@ -74,26 +74,26 @@ export function CartaoMetrica({
           <span
             aria-hidden
             className={cn(
-              "flex size-12 shrink-0 items-center justify-center rounded-full ring-1 ring-inset",
+              "flex size-11 shrink-0 items-center justify-center rounded-full shadow-[0_3px_10px_-8px_rgba(18,24,35,0.35)] ring-1 ring-inset",
               cores.selo,
             )}
           >
-            <Icone className="size-[22px]" />
+            <Icone className="size-5" />
           </span>
         ) : null}
 
         <div className="min-w-0 flex-1">
-          <p className="text-[0.82rem] font-semibold leading-snug text-graf-600">{rotulo}</p>
+          <p className="text-[0.8rem] font-semibold leading-snug text-graf-600">{rotulo}</p>
           <p className={cn("tabular mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-1", cores.valor)}>
-            <span className="text-[1.8rem] font-extrabold leading-none tracking-[-0.04em]">{valor}</span>
-            {unidade ? <span className="text-[0.8rem] font-semibold text-graf-500">{unidade}</span> : null}
+            <span className="text-[1.72rem] font-extrabold leading-none tracking-[-0.045em]">{valor}</span>
+            {unidade ? <span className="text-[0.78rem] font-semibold text-graf-500">{unidade}</span> : null}
           </p>
-          {detalhe ? <p className="mt-2 text-[0.8rem] leading-relaxed text-graf-500">{detalhe}</p> : null}
+          {detalhe ? <p className="mt-2 text-[0.78rem] leading-relaxed text-graf-500">{detalhe}</p> : null}
         </div>
       </div>
 
       {href ? (
-        <p className="mt-auto flex items-center gap-1.5 pt-4 text-[0.8rem] font-bold text-jb-700 transition-colors group-hover:text-jb-600">
+        <p className="mt-auto flex items-center gap-1.5 pt-4 text-[0.78rem] font-bold text-jb-700 transition-colors group-hover:text-jb-600">
           {hrefRotulo ?? "Ver detalhes"}
           <ArrowRight className="size-3.5 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />
         </p>
@@ -102,7 +102,7 @@ export function CartaoMetrica({
   );
 
   const base = cn(
-    "relative flex h-full min-h-[10.25rem] flex-col overflow-hidden rounded-2xl border border-graf-200/90 p-4.5 shadow-[0_1px_2px_rgba(18,24,35,0.025),0_16px_40px_-34px_rgba(18,24,35,0.35)]",
+    "relative flex h-full min-h-[10rem] flex-col overflow-hidden rounded-2xl border border-graf-200/90 p-[1.125rem] shadow-[0_1px_2px_rgba(18,24,35,0.025),0_18px_46px_-36px_rgba(18,24,35,0.34)]",
     cores.fundo,
     destaque && "pl-5",
     className,
@@ -116,7 +116,7 @@ export function CartaoMetrica({
       className={cn(
         base,
         "group transition-[transform,box-shadow,border-color] duration-200",
-        "hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-[0_7px_18px_rgba(18,24,35,0.045),0_24px_52px_-32px_rgba(18,24,35,0.28)]",
+        "hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-[0_7px_18px_rgba(18,24,35,0.045),0_24px_52px_-32px_rgba(18,24,35,0.3)]",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
       )}
     >
