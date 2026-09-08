@@ -69,7 +69,7 @@ export function AjudaDaEquipe({
           {linkTelefone ? (
             <a
               href={linkTelefone}
-              className="foco-jb flex min-h-12 items-center gap-2.5 rounded-xl border border-white/15 bg-white/7 px-4 text-[0.9375rem] font-semibold text-white transition-colors hover:bg-white/12"
+              className="foco-jb flex min-h-12 items-center gap-2.5 rounded-xl border border-white/15 bg-white/[0.07] px-4 text-[0.9375rem] font-semibold text-white transition-colors hover:bg-white/[0.12]"
             >
               <Phone className="size-[18px] shrink-0 text-white/70" aria-hidden />
               {telefone}
