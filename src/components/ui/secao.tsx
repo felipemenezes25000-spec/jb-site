@@ -12,12 +12,13 @@ import { cn } from "@/lib/utils";
          …
        </Secao>
 
-   Em `fundo="grafite"` a faixa ganha `.on-dark`: título fica branco, o texto
-   secundário de `texto-suave` clareia sozinho e o anel de foco vira branco.
-   Grafite é área estratégica — uma, no máximo duas faixas por página.
+   Não existe fundo escuro entre as opções, de propósito. A variante grafite
+   existiu e foi removida: texto branco em área grande cansa a leitura e ainda
+   briga com a foto do equipamento, que é clara sobre branco. O contraste da
+   página vem do vermelho da marca no botão, não do fundo.
    ============================================================================ */
 
-export type FundoSecao = "branco" | "clara" | "afundada" | "grafite" | "marca";
+export type FundoSecao = "branco" | "clara" | "afundada" | "marca";
 export type EspacoSecao = "sm" | "md" | "lg" | "xl" | "nenhum";
 export type LarguraSecao = "padrao" | "estreita" | "cheia";
 
@@ -25,7 +26,6 @@ const FUNDOS: Record<FundoSecao, string> = {
   branco: "bg-white",
   clara: "bg-surface-muted",
   afundada: "bg-surface-sunken",
-  grafite: "on-dark bg-graf-950 text-graf-200",
   marca: "bg-jb-50",
 };
 
@@ -87,7 +87,7 @@ export function Secao({
         "relative isolate",
         FUNDOS[fundo],
         ESPACOS[espaco],
-        separador && (fundo === "grafite" ? "border-t border-white/10" : "border-t border-graf-200"),
+        separador && "border-t border-graf-200",
         className,
       )}
     >
@@ -96,7 +96,7 @@ export function Secao({
           aria-hidden
           className={cn(
             "field-orbit pointer-events-none absolute inset-0 -z-10",
-            fundo === "grafite" ? "opacity-100" : "opacity-40",
+            "opacity-40",
             "[mask-image:radial-gradient(70%_60%_at_50%_0%,#000,transparent)]",
           )}
         />
@@ -110,23 +110,24 @@ export function Secao({
  * Faixa de destaque — o convite ao próximo passo no fim de uma página.
  *
  * Não inventa conteúdo: título, apoio e ações vêm de quem usa. Só garante o
- * desenho — grafite com o vermelho no botão, ou vermelho pleno quando a
+ * desenho — faixa clara com o vermelho no botão, ou vermelho pleno quando a
  * chamada é a única da tela.
  */
 export function FaixaChamada({
   titulo,
   descricao,
   acoes,
-  fundo = "grafite",
+  fundo = "clara",
   className,
 }: {
   titulo: React.ReactNode;
   descricao?: React.ReactNode;
   acoes?: React.ReactNode;
-  fundo?: Extract<FundoSecao, "grafite" | "marca" | "clara">;
+  fundo?: Extract<FundoSecao, "marca" | "clara" | "afundada">;
   className?: string;
 }) {
-  const escuro = fundo === "grafite";
+  /* Só a faixa vermelha pede texto claro; as demais são claras. */
+  const escuro = fundo === "marca";
 
   return (
     <Secao fundo={fundo} espaco="lg" className={className}>

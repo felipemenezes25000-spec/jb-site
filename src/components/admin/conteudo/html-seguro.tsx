@@ -323,7 +323,7 @@ const TIPOGRAFIA = [
   "[&_hr]:my-6 [&_hr]:border-graf-200",
   "[&_img]:my-4 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg",
   "[&_code]:rounded [&_code]:bg-graf-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em]",
-  "[&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-graf-950 [&_pre]:p-4 [&_pre]:text-graf-50",
+  "[&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-graf-200 [&_pre]:bg-graf-50 [&_pre]:p-4 [&_pre]:text-graf-800",
   "[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit",
   "[&_figcaption]:mt-1 [&_figcaption]:text-xs [&_figcaption]:text-graf-500",
 ].join(" ");

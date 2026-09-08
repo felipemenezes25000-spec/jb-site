@@ -176,7 +176,7 @@ export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: s
   return (
     <section
       className={cn(
-        "on-dark relative isolate overflow-hidden rounded-2xl bg-graf-950 px-6 py-10 sm:px-10 sm:py-12",
+        "relative isolate overflow-hidden rounded-2xl border border-graf-200 bg-surface-muted px-6 py-10 sm:px-10 sm:py-12",
         className,
       )}
     >
@@ -187,7 +187,7 @@ export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: s
 
       <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-7">
         <div className="max-w-lg">
-          <h2 className="text-title text-white">Fale com a JB</h2>
+          <h2 className="text-title text-graf-950">Fale com a JB</h2>
           <p className="texto-suave mt-3 text-base leading-relaxed">
             {s.horario
               ? `Atendimento ${s.horario.charAt(0).toLowerCase()}${s.horario.slice(1)}.`

@@ -1303,14 +1303,14 @@ export function Checkout({
             </BlocoRevisao>
           </div>
 
-          <div className="rounded-xl bg-graf-950 px-5 py-4 text-white">
+          <div className="rounded-xl border border-jb-200 bg-jb-50 px-5 py-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-              <span className="text-base font-bold">Total a pagar</span>
-              <span className="text-2xl font-extrabold tabular tracking-tight">
+              <span className="text-base font-bold text-graf-950">Total a pagar</span>
+              <span className="text-2xl font-extrabold tabular tracking-tight text-jb-700">
                 {formatarPreco(totalComFreteCents)}
               </span>
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-graf-300">
+            <p className="mt-2 text-sm leading-relaxed text-graf-600">
               {entrega === "retirada"
                 ? "Retirada na JB, sem custo de frete."
                 : freteEntrega && !freteEntrega.orcadoDepois

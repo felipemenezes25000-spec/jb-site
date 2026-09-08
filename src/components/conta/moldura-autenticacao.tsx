@@ -113,15 +113,15 @@ function ItemRecurso({ recurso }: { recurso: Recurso }) {
   return (
     <li className="flex gap-3.5">
       <span
-        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-jb-300"
+        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-jb-600 ring-1 ring-jb-100"
         aria-hidden
       >
         <Icone className="size-4" />
       </span>
 
       <span className="min-w-0">
-        <span className="block text-[0.9375rem] font-semibold text-white">{titulo}</span>
-        <span className="mt-1 block text-[0.8125rem] leading-relaxed texto-suave">{descricao}</span>
+        <span className="block text-[0.9375rem] font-semibold text-graf-900">{titulo}</span>
+        <span className="mt-1 block text-[0.8125rem] leading-relaxed text-graf-600">{descricao}</span>
       </span>
     </li>
   );
@@ -138,12 +138,12 @@ function ItemCanal({ canal }: { canal: Canal }) {
         <a
           href={href}
           aria-label={`${rotulo}: ${valor}`}
-          className="flex min-h-11 items-center text-sm font-semibold text-white underline-offset-4 hover:underline [overflow-wrap:anywhere]"
+          className="flex min-h-11 items-center text-sm font-semibold text-graf-900 underline-offset-4 hover:underline [overflow-wrap:anywhere]"
         >
           {valor}
         </a>
       ) : (
-        <span className="flex min-h-11 items-center text-sm leading-relaxed texto-suave [overflow-wrap:anywhere]">
+        <span className="flex min-h-11 items-center text-sm leading-relaxed text-graf-600 [overflow-wrap:anywhere]">
           {valor}
         </span>
       )}
@@ -209,27 +209,27 @@ export async function MolduraAutenticacao({
       </div>
 
       <aside
-        className="on-dark bg-graf-950 px-5 py-9 sm:px-8 sm:py-10 lg:w-[21.5rem] lg:shrink-0 lg:px-8 lg:py-14"
+        className="border-t border-graf-200 bg-surface-muted px-5 py-9 sm:px-8 sm:py-10 lg:w-[21.5rem] lg:shrink-0 lg:border-l lg:border-t-0 lg:px-8 lg:py-14"
         aria-labelledby="painel-area-clinica"
       >
         {/* sem sobretítulo aqui: "Área da Clínica" já está no degrau acima do
             título, a dois palmos de distância — repetir seria eco */}
-        <h2 id="painel-area-clinica" className="text-xl font-bold leading-snug text-white">
+        <h2 id="painel-area-clinica" className="text-xl font-bold leading-snug text-graf-950">
           O que fica guardado na Área da Clínica
         </h2>
-        <p className="mt-2.5 text-sm leading-relaxed texto-suave">
+        <p className="mt-2.5 text-sm leading-relaxed text-graf-600">
           A mesma conta serve para a compra e para a assistência.
         </p>
 
-        <ul className="mt-8 space-y-5 border-t border-white/10 pt-7">
+        <ul className="mt-8 space-y-5 border-t border-graf-200 pt-7">
           {RECURSOS.map((recurso) => (
             <ItemRecurso key={recurso.titulo} recurso={recurso} />
           ))}
         </ul>
 
         {canais.length ? (
-          <div className="mt-8 border-t border-white/10 pt-6">
-            <p className="text-[0.8125rem] font-semibold text-white">
+          <div className="mt-8 border-t border-graf-200 pt-6">
+            <p className="text-[0.8125rem] font-semibold text-graf-900">
               Dificuldade para entrar? Fale com a equipe
             </p>
             <ul className="mt-2">
@@ -240,8 +240,8 @@ export async function MolduraAutenticacao({
           </div>
         ) : null}
 
-        <p className="mt-7 flex gap-3 border-t border-white/10 pt-6 text-[0.8125rem] leading-relaxed texto-suave">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-white" aria-hidden />
+        <p className="mt-7 flex gap-3 border-t border-graf-200 pt-6 text-[0.8125rem] leading-relaxed text-graf-600">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-900" aria-hidden />
           <span>A JB nunca pede sua senha por telefone, e-mail ou WhatsApp.</span>
         </p>
       </aside>

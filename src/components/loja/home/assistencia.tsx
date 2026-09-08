@@ -194,7 +194,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
                   href="/orcamento"
                   variante="secundario"
                   tamanho="lg"
-                  className="rounded-xl bg-white/80"
+                  className="rounded-xl"
                 >
                   Pedir orientação
                 </LinkBotao>
@@ -269,9 +269,9 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
-                    variante="contorno-claro"
+                    variante="secundario"
                     tamanho="lg"
-                    className="rounded-xl bg-black/25"
+                    className="rounded-xl"
                   >
                     <MessageCircle className="size-4" aria-hidden />
                     WhatsApp
@@ -279,9 +279,9 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
                 ) : (
                   <LinkBotao
                     href="/contato"
-                    variante="contorno-claro"
+                    variante="secundario"
                     tamanho="lg"
-                    className="rounded-xl bg-black/25"
+                    className="rounded-xl"
                   >
                     Falar com a JB
                   </LinkBotao>
