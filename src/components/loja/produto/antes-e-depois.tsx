@@ -4,39 +4,25 @@ import {
   FileText,
   History,
   Package,
+  PackageOpen,
   PlugZap,
   Ruler,
+  ShieldCheck,
   Wrench,
 } from "lucide-react";
 import type { InstallationPolicy } from "@prisma/client";
 
-import { Cartao } from "@/components/ui/data";
 import { formatarPreco } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
-   O que vem antes e o que vem depois da compra
+   Preparação, conteúdo da caixa, instalação e pós-compra
 
-   Três seções que faltavam na página do produto, e as três respondem a
-   perguntas que fazem a pessoa desistir quando ficam sem resposta:
-
-     "Cabe na minha sala?"          → Antes de comprar
-     "Preciso comprar mais alguma
-      coisa para usar?"             → O que vem na caixa
-     "Quem instala?"                → Instalação
-     "E se der problema depois?"    → Depois da compra
-
-   Nenhuma delas inventa dado. Cada bloco some inteiro quando o cadastro está
-   vazio — o contrário produziria uma ficha cheia de "não informado", que é
-   pior do que não ter a seção: ela ocupa espaço para dizer que a JB não sabe.
-
-   O bloco "Depois da compra" é o único que não depende de cadastro, porque
-   descreve o que a plataforma faz com TODA compra de equipamento. Ainda assim
-   ele fala no futuro e sem ícone de confirmação: nada disso aconteceu ainda
-   para esta unidade. Ver docs/evolucao-jb/direcao-visual.md, seção 3.
+   Os quatro blocos usam a mesma linguagem visual da ficha técnica: título
+   forte, explicação curta, dados escaneáveis e uma única moldura. Isso elimina
+   a sensação de vários widgets independentes e transforma a área em uma
+   sequência lógica de decisão.
    ============================================================================ */
-
-/* -------------------------------------------------------- antes de comprar */
 
 export type DadosDeInfraestrutura = {
   voltagem: string | null;
@@ -61,13 +47,38 @@ function rotuloDeVoltagem(bruto: string | null) {
   return bruto;
 }
 
-/**
- * O que a clínica precisa conferir antes de comprar.
- *
- * Dimensões viram uma linha só, no formato largura × altura × profundidade,
- * porque é assim que alguém mede uma sala — três linhas separadas obrigam a
- * pessoa a remontar a caixa de cabeça.
- */
+function Cabecalho({
+  icone: Icone,
+  sobretitulo,
+  titulo,
+  descricao,
+}: {
+  icone: React.ComponentType<{ className?: string }>;
+  sobretitulo: string;
+  titulo: string;
+  descricao?: string;
+}) {
+  return (
+    <header className="flex items-start gap-3 border-b border-graf-200 bg-graf-50/70 px-5 py-4 sm:px-6">
+      <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white text-jb-700 shadow-sm">
+        <Icone className="size-[18px]" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-jb-700">
+          {sobretitulo}
+        </p>
+        <h2 className="mt-1 text-base font-bold tracking-[-0.01em] text-graf-950">{titulo}</h2>
+        {descricao ? <p className="mt-1 text-sm leading-5 text-graf-500">{descricao}</p> : null}
+      </div>
+    </header>
+  );
+}
+
+const MOLDURA =
+  "overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]";
+
+/* -------------------------------------------------------- antes de comprar */
+
 export function AntesDeComprar({
   dados,
   className,
@@ -87,36 +98,41 @@ export function AntesDeComprar({
 
   const fichas = [
     voltagem ? { icone: PlugZap, rotulo: "Alimentação", valor: voltagem } : null,
-    dimensoes ? { icone: Ruler, rotulo: "Largura × altura × profundidade", valor: dimensoes } : null,
+    dimensoes ? { icone: Ruler, rotulo: "Dimensões (L × A × P)", valor: dimensoes } : null,
     peso ? { icone: Package, rotulo: "Peso", valor: peso } : null,
   ].filter((f) => f !== null);
 
-  // seção inteira some quando não há nada cadastrado
   if (fichas.length === 0 && dados.requisitos.length === 0) return null;
 
   return (
-    <section className={className} aria-labelledby="antes-de-comprar">
-      <h2 id="antes-de-comprar" className="text-title texto-forte">
-        Antes de comprar
-      </h2>
-      <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
-        Confira se a sala e a instalação da clínica atendem ao equipamento.
-      </p>
+    <section className={cn(MOLDURA, className)} aria-labelledby="antes-de-comprar">
+      <div id="antes-de-comprar">
+        <Cabecalho
+          icone={Ruler}
+          sobretitulo="Prepare a clínica"
+          titulo="Antes de comprar"
+          descricao="O essencial para saber se o equipamento cabe e pode ser instalado no local."
+        />
+      </div>
 
       {fichas.length > 0 ? (
-        <dl className="mt-5 grid gap-4 sm:grid-cols-3">
-          {fichas.map((ficha) => {
+        <dl className="grid sm:grid-cols-3">
+          {fichas.map((ficha, indice) => {
             const Icone = ficha.icone;
             return (
               <div
                 key={ficha.rotulo}
-                className="rounded-xl border border-graf-200 bg-white px-4 py-3.5"
+                className={`min-w-0 border-graf-200 px-5 py-4 sm:px-6 ${
+                  indice > 0 ? "border-t sm:border-l sm:border-t-0" : ""
+                }`}
               >
-                <dt className="flex items-center gap-2 text-[0.8125rem] text-graf-500">
-                  <Icone className="size-4 shrink-0 text-graf-500" aria-hidden />
+                <dt className="flex items-center gap-2 text-[0.6875rem] font-bold uppercase tracking-[0.075em] text-graf-500">
+                  <Icone className="size-3.5 shrink-0" aria-hidden />
                   {ficha.rotulo}
                 </dt>
-                <dd className="tabular mt-1 text-base font-bold text-graf-950">{ficha.valor}</dd>
+                <dd className="tabular mt-1.5 break-words text-[0.9375rem] font-bold text-graf-950">
+                  {ficha.valor}
+                </dd>
               </div>
             );
           })}
@@ -124,19 +140,19 @@ export function AntesDeComprar({
       ) : null}
 
       {dados.requisitos.length > 0 ? (
-        <>
-          <p className="mt-6 text-sm font-bold text-graf-950">
+        <div className="border-t border-graf-200 px-5 py-5 sm:px-6">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.08em] text-graf-500">
             O que precisa estar pronto no local
           </p>
-          <ul className="mt-2.5 space-y-2">
+          <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
             {dados.requisitos.map((item) => (
-              <li key={item} className="flex gap-2.5 text-[0.9375rem] leading-relaxed text-graf-700">
-                <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-graf-400" />
+              <li key={item} className="flex gap-2.5 text-sm leading-6 text-graf-700">
+                <ShieldCheck className="mt-1 size-4 shrink-0 text-jb-600" aria-hidden />
                 <span>{item}</span>
               </li>
             ))}
           </ul>
-        </>
+        </div>
       ) : null}
     </section>
   );
@@ -154,20 +170,29 @@ export function OQueVemNaCaixa({
   if (itens.length === 0) return null;
 
   return (
-    <section className={className} aria-labelledby="o-que-vem-na-caixa">
-      <h2 id="o-que-vem-na-caixa" className="text-title texto-forte">
-        O que vem na caixa
-      </h2>
-      <ul className="mt-4 divide-y divide-graf-100 rounded-xl border border-graf-200">
-        {itens.map((item) => (
-          <li key={item} className="px-4 py-3 text-[0.9375rem] leading-relaxed text-graf-700">
-            {item}
+    <section className={cn(MOLDURA, className)} aria-labelledby="o-que-vem-na-caixa">
+      <div id="o-que-vem-na-caixa">
+        <Cabecalho
+          icone={PackageOpen}
+          sobretitulo="Conteúdo confirmado"
+          titulo="O que vem na caixa"
+          descricao="Itens incluídos no fornecimento deste equipamento."
+        />
+      </div>
+
+      <ul className="divide-y divide-graf-100 px-5 sm:px-6">
+        {itens.map((item, indice) => (
+          <li key={item} className="flex gap-3 py-3.5 text-[0.9375rem] leading-6 text-graf-700">
+            <span className="tabular flex size-6 shrink-0 items-center justify-center rounded-full bg-graf-100 text-[0.6875rem] font-bold text-graf-500">
+              {String(indice + 1).padStart(2, "0")}
+            </span>
+            <span>{item}</span>
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-[0.8125rem] leading-relaxed text-graf-500">
-        O que não estiver nesta lista é vendido à parte. Em dúvida, fale com a equipe antes de
-        comprar.
+
+      <p className="border-t border-graf-100 bg-graf-50/55 px-5 py-3.5 text-[0.75rem] leading-5 text-graf-500 sm:px-6">
+        O que não estiver nesta lista é vendido à parte. Em dúvida, confirme com a equipe antes da compra.
       </p>
     </section>
   );
@@ -178,24 +203,21 @@ export function OQueVemNaCaixa({
 const TEXTO_DA_POLITICA: Record<InstallationPolicy, { titulo: string; texto: string } | null> = {
   nao_informada: null,
   nao_oferecida: {
-    titulo: "A JB não instala este equipamento",
+    titulo: "Instalação não oferecida pela JB",
     texto:
-      "Ele é entregue pronto para uso ou depende de instalação por quem já cuida da " +
-      "infraestrutura da clínica.",
+      "O equipamento é entregue pronto para uso ou depende de instalação por quem cuida da infraestrutura da clínica.",
   },
   opcional: {
     titulo: "Instalação disponível como serviço",
-    texto: "Pode ser contratada junto com a compra. O valor aparece no resumo do pedido.",
+    texto: "Pode ser contratada junto com a compra e aparece separada no resumo do pedido.",
   },
   inclusa: {
     titulo: "Instalação inclusa",
-    texto: "Já está no preço deste equipamento. A visita é agendada depois da confirmação.",
+    texto: "Já está no preço deste equipamento. A visita é agendada depois da confirmação da compra.",
   },
   sob_consulta: {
     titulo: "Instalação disponível sob consulta",
-    texto:
-      "Depende do local, da distância e do que precisa ser preparado. A equipe avalia e " +
-      "informa antes de qualquer cobrança.",
+    texto: "A equipe avalia local, distância e infraestrutura antes de informar qualquer cobrança.",
   },
 };
 
@@ -207,48 +229,46 @@ export function Instalacao({
 }: {
   politica: InstallationPolicy;
   observacao: string;
-  /** Preço do adicional de instalação, quando existe um cadastrado. */
   precoCents: number | null;
   className?: string;
 }) {
   const base = TEXTO_DA_POLITICA[politica];
-
-  // ninguém declarou: a seção não existe, em vez de afirmar por omissão
   if (!base) return null;
 
   return (
-    <section className={className} aria-labelledby="instalacao">
-      <h2 id="instalacao" className="text-title texto-forte">
-        Instalação
-      </h2>
+    <section className={cn(MOLDURA, className)} aria-labelledby="instalacao">
+      <div id="instalacao">
+        <Cabecalho
+          icone={Wrench}
+          sobretitulo="Implantação"
+          titulo="Instalação"
+          descricao="Como este equipamento entra em operação na clínica."
+        />
+      </div>
 
-      <Cartao className="mt-4 flex items-start gap-3.5 p-5">
-        <span
-          aria-hidden
-          className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-graf-100 text-graf-600"
-        >
-          <Wrench className="size-5" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-base font-bold text-graf-950">{base.titulo}</p>
-          <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-graf-600">{base.texto}</p>
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start gap-3.5">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700">
+            <Wrench className="size-[18px]" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="text-base font-bold text-graf-950">{base.titulo}</p>
+            <p className="mt-1.5 text-[0.9375rem] leading-6 text-graf-600">{base.texto}</p>
 
-          {/* O preço só aparece quando é `opcional` E existe adicional
-              cadastrado. Em `sob_consulta`, mostrar valor contradiria a
-              própria política. */}
-          {politica === "opcional" && precoCents && precoCents > 0 ? (
-            <p className="tabular mt-3 text-sm font-semibold text-graf-900">
-              {formatarPreco(precoCents)}
-            </p>
-          ) : null}
-
-          {observacao ? (
-            <p className="mt-3 border-t border-graf-200 pt-3 text-[0.9375rem] leading-relaxed text-graf-600">
-              {observacao}
-            </p>
-          ) : null}
+            {politica === "opcional" && precoCents && precoCents > 0 ? (
+              <p className="tabular mt-3 inline-flex rounded-full bg-graf-100 px-3 py-1.5 text-sm font-bold text-graf-900">
+                {formatarPreco(precoCents)}
+              </p>
+            ) : null}
+          </div>
         </div>
-      </Cartao>
+
+        {observacao ? (
+          <p className="mt-5 border-t border-graf-200 pt-4 text-[0.875rem] leading-6 text-graf-600">
+            {observacao}
+          </p>
+        ) : null}
+      </div>
     </section>
   );
 }
@@ -261,41 +281,23 @@ type Passo = {
   detalhe: string;
 };
 
-/**
- * O que a plataforma faz com este equipamento depois da compra.
- *
- * Não depende de cadastro: descreve o que acontece com toda compra de
- * equipamento. Mas fala no FUTURO e sem ícone de confirmação — nada disso
- * aconteceu ainda para esta unidade, e um check aqui afirmaria instalação ou
- * inspeção que ninguém fez.
- *
- * A garantia é a única linha que varia, e ela só aparece com prazo cadastrado.
- * Prometer "12 meses" por padrão seria inventar cobertura.
- */
 export function DepoisDaCompraNoProduto({
   garantiaMeses,
   geraEquipamento,
   className,
 }: {
   garantiaMeses: number | null;
-  /**
-   * Serviço, peça e acessório não viram equipamento no prontuário. Dizer que
-   * viram encheria a Área da Clínica de linhas que não são máquina nenhuma.
-   */
   geraEquipamento: boolean;
   className?: string;
 }) {
   if (!geraEquipamento) return null;
 
   const meses = garantiaMeses ?? 0;
-
   const passos: Passo[] = [
     {
       icone: ClipboardList,
-      titulo: "Entra no Prontuário Técnico JB",
-      detalhe:
-        "Assim que o pagamento é confirmado, o equipamento aparece na Área da Clínica com " +
-        "origem, data e histórico próprio.",
+      titulo: "Prontuário Técnico JB",
+      detalhe: "Depois da confirmação, o equipamento passa a ter origem, data e histórico próprios.",
     },
     meses > 0
       ? {
@@ -306,46 +308,49 @@ export function DepoisDaCompraNoProduto({
       : {
           icone: FileText,
           titulo: "Documentos reunidos",
-          detalhe: "Nota, manual e certificados ficam disponíveis para download na ficha.",
+          detalhe: "Nota, manual e certificados ficam concentrados na ficha do equipamento.",
         },
     {
       icone: History,
       titulo: "Histórico técnico",
-      detalhe: "Cada chamado, orçamento e reparo fica registrado na ficha do aparelho.",
+      detalhe: "Chamados, orçamentos e reparos ficam registrados na mesma linha do tempo.",
     },
     {
       icone: CalendarClock,
       titulo: "Preventiva acompanhada",
-      detalhe:
-        "A próxima revisão é definida no cadastro do equipamento, conforme a periodicidade.",
+      detalhe: "A próxima revisão pode ser acompanhada conforme a periodicidade cadastrada.",
     },
   ];
 
   return (
-    <section className={className} aria-labelledby="depois-da-compra">
-      <h2 id="depois-da-compra" className="text-title texto-forte">
-        Depois da compra
-      </h2>
-      <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
-        O que a JB registra sobre este equipamento a partir do momento em que ele é seu.
-      </p>
+    <section className={cn(MOLDURA, className)} aria-labelledby="depois-da-compra">
+      <div id="depois-da-compra">
+        <Cabecalho
+          icone={ClipboardList}
+          sobretitulo="Continuidade"
+          titulo="Depois da compra"
+          descricao="A relação com o equipamento continua organizada depois da entrega."
+        />
+      </div>
 
-      <ul className={cn("mt-5 grid gap-5 sm:grid-cols-2")}>
-        {passos.map((passo) => {
+      <ul className="grid sm:grid-cols-2">
+        {passos.map((passo, indice) => {
           const Icone = passo.icone;
           return (
-            <li key={passo.titulo} className="flex gap-3">
-              <span
-                aria-hidden
-                className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-graf-200 bg-white text-graf-600"
-              >
-                <Icone className="size-4" />
+            <li
+              key={passo.titulo}
+              className={`flex min-w-0 gap-3.5 border-graf-200 px-5 py-4 sm:px-6 ${
+                indice >= 2 ? "border-t" : ""
+              } ${indice % 2 === 1 ? "sm:border-l" : ""} ${
+                indice === 1 ? "border-t sm:border-t-0" : ""
+              }`}
+            >
+              <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-graf-100 text-graf-600">
+                <Icone className="size-4" aria-hidden />
               </span>
               <div className="min-w-0">
-                <p className="text-[0.9375rem] font-bold leading-snug text-graf-950">
-                  {passo.titulo}
-                </p>
-                <p className="mt-1 text-sm leading-relaxed text-graf-600">{passo.detalhe}</p>
+                <p className="text-[0.875rem] font-bold leading-5 text-graf-950">{passo.titulo}</p>
+                <p className="mt-1 text-[0.8125rem] leading-5 text-graf-500">{passo.detalhe}</p>
               </div>
             </li>
           );
