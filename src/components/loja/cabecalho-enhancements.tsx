@@ -59,7 +59,7 @@ export function CabecalhoEnhancements() {
 
       encontrado.dataset.jbPremiumHeader = "true";
       const faixaUtilidade = encontrado.previousElementSibling;
-      if (faixaUtilidade instanceof HTMLElement) {
+      if (faixaUtilidade instanceof HTMLDivElement) {
         faixaUtilidade.dataset.jbUtilityBar = "true";
       }
 
@@ -82,6 +82,18 @@ export function CabecalhoEnhancements() {
   useEffect(() => {
     if (!cabecalho) return;
 
+    const atualizarCompacto = () => {
+      cabecalho.dataset.jbCompact = window.scrollY > 12 ? "true" : "false";
+    };
+
+    atualizarCompacto();
+    window.addEventListener("scroll", atualizarCompacto, { passive: true });
+    return () => window.removeEventListener("scroll", atualizarCompacto);
+  }, [cabecalho]);
+
+  useEffect(() => {
+    if (!cabecalho) return;
+
     let temporizador: number | null = null;
 
     const cancelar = () => {
@@ -92,14 +104,16 @@ export function CabecalhoEnhancements() {
     const fecharMegaAoSair = () => {
       cancelar();
       temporizador = window.setTimeout(() => {
-        if (cabecalho.matches(":hover") || cabecalho.matches(":focus-within")) return;
+        if (cabecalho.matches(":hover")) return;
 
         const gatilhoAberto = Array.from(
           cabecalho.querySelectorAll<HTMLButtonElement>('button[aria-expanded="true"]'),
         ).find((botao) => botao.getAttribute("aria-label")?.startsWith("Fechar o menu de"));
 
         // Usa o próprio gatilho do componente: fecha pelo mesmo estado React
-        // do mega menu, sem manter um segundo estado paralelo.
+        // do mega menu, sem manter um segundo estado paralelo. Não bloqueamos
+        // pelo focus-within aqui: um clique deixa foco no gatilho e era isso
+        // que fazia o painel poder continuar aberto depois da saída do mouse.
         gatilhoAberto?.click();
       }, 70);
     };
