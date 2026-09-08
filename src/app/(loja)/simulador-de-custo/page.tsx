@@ -177,6 +177,17 @@ export default async function SimuladorPage({ searchParams }: Props) {
 
   const simulou = [reparo, seminovo, novo].some((valor) => valor !== null);
 
+  /* O bloco de refinamento abre sozinho para quem já informou alguma daquelas
+     premissas — voltar a uma simulação compartilhada e não ver o que a
+     produziu seria pior do que o formulário longo que este bloco resolveu. */
+  const temRefinamento = [
+    manutencaoReparo,
+    manutencaoSeminovo,
+    manutencaoNovo,
+    instalacao,
+    parada,
+  ].some((valor) => valor !== null);
+
   const decisaoDaParada = custoDeParada({
     cents: parada,
     jaIncluidoEmOutraPremissa: paradaJaIncluida,
@@ -303,88 +314,112 @@ export default async function SimuladorPage({ searchParams }: Props) {
             </select>
           </div>
 
+          {/* Um campo por caminho, os três lado a lado.
+
+              A ferramenta abria com oito caixas numéricas vazias antes de
+              dizer o que ela responde — parecia formulário de sistema, e quem
+              não tinha os oito números na mão desistia na primeira. Agora a
+              primeira tela pede só o que a pessoa REALMENTE tem em mãos
+              (o orçamento do reparo e os dois preços) e o refinamento fica
+              guardado logo abaixo, aberto sozinho para quem já preencheu. */}
           <fieldset className="mt-6">
-            <legend className="text-sm font-bold text-graf-950">Reparar o que está aí</legend>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <legend className="text-sm font-bold text-graf-950">
+              Quanto custa cada caminho
+            </legend>
+            <p className="mt-0.5 text-[0.75rem] text-graf-500">
+              Preencha o que você já tem. Campo vazio fica declarado como não informado — nunca
+              vira zero na conta.
+            </p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-3">
               <CampoDinheiro
                 nome="reparo"
-                rotulo="Valor do orçamento do reparo"
-                ajuda="Do orçamento da JB ou de outra assistência. Vazio não significa gratuito."
+                rotulo="Reparar o que está aí"
+                ajuda="Do orçamento da JB ou de outra assistência."
                 valor={primeiro(params.reparo)}
               />
               <CampoDinheiro
-                nome="manutencaoReparo"
-                rotulo="Manutenção por ano, depois do reparo"
-                valor={primeiro(params.manutencaoReparo)}
-              />
-            </div>
-          </fieldset>
-
-          <fieldset className="mt-6">
-            <legend className="text-sm font-bold text-graf-950">Seminovo</legend>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <CampoDinheiro
                 nome="seminovo"
                 rotulo="Preço do seminovo"
+                ajuda="O anunciado na página da unidade."
                 valor={primeiro(params.seminovo)}
               />
               <CampoDinheiro
-                nome="manutencaoSeminovo"
-                rotulo="Manutenção por ano"
-                valor={primeiro(params.manutencaoSeminovo)}
-              />
-            </div>
-          </fieldset>
-
-          <fieldset className="mt-6">
-            <legend className="text-sm font-bold text-graf-950">Novo</legend>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <CampoDinheiro
                 nome="novo"
                 rotulo="Preço do equipamento novo"
+                ajuda="O do catálogo, sem parcelamento."
                 valor={primeiro(params.novo)}
               />
-              <CampoDinheiro
-                nome="manutencaoNovo"
-                rotulo="Manutenção por ano"
-                valor={primeiro(params.manutencaoNovo)}
-              />
             </div>
           </fieldset>
 
-          <fieldset className="mt-6">
-            <legend className="text-sm font-bold text-graf-950">Comuns aos dois</legend>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <CampoDinheiro
-                nome="instalacao"
-                rotulo="Instalação e adequação do local"
-                valor={primeiro(params.instalacao)}
-              />
-              <CampoDinheiro
-                nome="parada"
-                rotulo="Custo dos dias parados"
-                ajuda="Se você já estimou isso na calculadora de parada, use aquele número."
-                valor={primeiro(params.parada)}
-              />
-            </div>
-
-            {/* A guarda contra somar duas vezes o mesmo prejuízo. */}
-            {/* `min-h-11`: a caixa é um alvo de toque, e 42px ficava abaixo do
-                mínimo de 44 que a WCAG 2.2 pede — a auditoria mediu em 768px. */}
-            <label className="mt-3 flex min-h-11 items-start gap-2.5 py-1 text-[0.8125rem] leading-relaxed text-graf-700">
-              <input
-                type="checkbox"
-                name="paradaIncluida"
-                value="sim"
-                defaultChecked={paradaJaIncluida}
-                className="mt-0.5 size-4 accent-jb-600"
-              />
-              <span>
-                O custo dos dias parados já está embutido em outra premissa que informei acima.
-                Marcando isto, ele não é somado de novo.
+          <details
+            open={temRefinamento}
+            className="group mt-6 rounded-lg border border-graf-200 bg-white"
+          >
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-bold text-graf-950">
+              Refinar com manutenção, instalação e parada
+              <span className="text-[0.75rem] font-semibold text-graf-500 group-open:hidden">
+                opcional
               </span>
-            </label>
-          </fieldset>
+            </summary>
+
+            <div className="border-t border-graf-200 p-4">
+              <p className="text-[0.75rem] leading-relaxed text-graf-500">
+                Estes quatro campos afinam a comparação. Sem eles a simulação continua
+                valendo — ela só declara que a manutenção e a parada não foram informadas.
+              </p>
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                <CampoDinheiro
+                  nome="manutencaoReparo"
+                  rotulo="Manutenção por ano, depois do reparo"
+                  valor={primeiro(params.manutencaoReparo)}
+                />
+                <CampoDinheiro
+                  nome="manutencaoSeminovo"
+                  rotulo="Manutenção por ano do seminovo"
+                  valor={primeiro(params.manutencaoSeminovo)}
+                />
+                <CampoDinheiro
+                  nome="manutencaoNovo"
+                  rotulo="Manutenção por ano do novo"
+                  valor={primeiro(params.manutencaoNovo)}
+                />
+              </div>
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <CampoDinheiro
+                  nome="instalacao"
+                  rotulo="Instalação e adequação do local"
+                  ajuda="Vale para o seminovo e para o novo."
+                  valor={primeiro(params.instalacao)}
+                />
+                <CampoDinheiro
+                  nome="parada"
+                  rotulo="Custo dos dias parados"
+                  ajuda="Se você já estimou isso na calculadora de parada, use aquele número."
+                  valor={primeiro(params.parada)}
+                />
+              </div>
+
+              {/* A guarda contra somar duas vezes o mesmo prejuízo. */}
+              {/* `min-h-11`: a caixa é um alvo de toque, e 42px ficava abaixo do
+                  mínimo de 44 que a WCAG 2.2 pede — a auditoria mediu em 768px. */}
+              <label className="mt-3 flex min-h-11 items-start gap-2.5 py-1 text-[0.8125rem] leading-relaxed text-graf-700">
+                <input
+                  type="checkbox"
+                  name="paradaIncluida"
+                  value="sim"
+                  defaultChecked={paradaJaIncluida}
+                  className="mt-0.5 size-4 accent-jb-600"
+                />
+                <span>
+                  O custo dos dias parados já está embutido em outra premissa que informei
+                  acima. Marcando isto, ele não é somado de novo.
+                </span>
+              </label>
+            </div>
+          </details>
 
           <button
             type="submit"

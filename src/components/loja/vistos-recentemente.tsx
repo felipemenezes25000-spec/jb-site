@@ -66,8 +66,16 @@ export function VistosRecentemente({
   titulo = "Você viu recentemente",
   larguraInterna,
 }: {
-  /** Slug da página atual, que não deve aparecer na própria lista. */
-  excluir?: string;
+  /**
+   * O que não deve aparecer nesta lista.
+   *
+   * Na ficha, é o slug da própria página. Na home, é tudo o que as vitrines
+   * acima já mostraram: a tira repetia os mesmos equipamentos das faixas de
+   * oferta e de seminovos, e a página terminava dizendo três vezes a mesma
+   * coisa. "Continue de onde parou" só vale a pena quando traz algo que a
+   * rolagem ainda não trouxe.
+   */
+  excluir?: string | string[];
   titulo?: string;
   /**
    * Teto do container desta faixa.
@@ -82,8 +90,13 @@ export function VistosRecentemente({
 }) {
   const [dados, setDados] = useState<VistosRecentes | null>(null);
 
+  /* Serializado para o efeito não redisparar a cada renderização por causa de
+     um array novo com o mesmo conteúdo. */
+  const foraDaLista = Array.isArray(excluir) ? excluir.join(",") : (excluir ?? "");
+
   useEffect(() => {
-    const slugs = ler().filter((slug) => slug !== excluir);
+    const fora = new Set(foraDaLista.split(",").filter(Boolean));
+    const slugs = ler().filter((slug) => !fora.has(slug));
     if (slugs.length === 0) return;
 
     let vivo = true;
@@ -93,7 +106,7 @@ export function VistosRecentemente({
     return () => {
       vivo = false;
     };
-  }, [excluir]);
+  }, [foraDaLista]);
 
   // Com menos de dois, a tira é só o equipamento que a pessoa está vendo de
   // novo — não ajuda a comparar nada.

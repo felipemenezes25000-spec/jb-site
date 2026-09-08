@@ -18,12 +18,16 @@ import { EsqueletoGradeProdutos } from "@/components/ui/esqueletos";
 import { Paginacao } from "@/components/ui/paginacao";
 import {
   buscarProdutos,
+  expandirCategorias,
+  expandirMarcas,
   montarFiltro,
   PUBLICADO,
+  UNIDADE_VENDIDA,
   type FiltrosCatalogo as Filtros,
   type Ordenacao,
 } from "@/lib/catalogo";
 import { paraCentavos } from "@/lib/format";
+import { unificarPorNome } from "@/lib/homonimos";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
@@ -88,7 +92,9 @@ export async function atalhosDeCondicao(atual?: ProductCondition): Promise<Atalh
   try {
     const linhas = await prisma.product.groupBy({
       by: ["condition"],
-      where: PUBLICADO,
+      /* A contagem do atalho tem que ser a da lista que ele abre — e a lista
+         não mostra unidade já vendida. */
+      where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA },
       _count: { _all: true },
     });
     const mapa = new Map(linhas.map((linha) => [linha.condition, linha._count._all]));
@@ -112,20 +118,40 @@ export async function atalhosDeSubcategorias(slugPai: string): Promise<Atalho[]>
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: PUBLICADO } } },
+        _count: { select: { products: { where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA } } } },
       },
     });
 
-    return filhas
-      .filter((filha) => filha._count.products > 0)
-      .map((filha) => ({
-        rotulo: filha.name,
-        href: `/categoria/${filha.slug}`,
-        quantidade: filha._count.products,
-      }));
+    return paraAtalhos(filhas);
   } catch {
     return [];
   }
+}
+
+/**
+ * Categorias viram atalhos, com os cadastros de mesmo nome já juntos.
+ *
+ * Duas pastilhas escritas "Biossegurança", uma ao lado da outra, levando a
+ * listas diferentes, é a mesma pergunta sem resposta que a barra de filtros
+ * fazia. Aqui vira uma pastilha com a soma; a lista do outro lado abre os
+ * dois cadastros (ver `expandirCategorias`).
+ */
+function paraAtalhos(
+  linhas: { slug: string; name: string; _count: { products: number } }[],
+): Atalho[] {
+  return unificarPorNome(
+    linhas
+      .filter((linha) => linha._count.products > 0)
+      .map((linha) => ({
+        slug: linha.slug,
+        nome: linha.name,
+        quantidade: linha._count.products,
+      })),
+  ).map((item) => ({
+    rotulo: item.nome,
+    href: `/categoria/${item.slug}`,
+    quantidade: item.quantidade,
+  }));
 }
 
 /** Categorias de primeiro nível com produto ativo — a entrada da loja. */
@@ -137,18 +163,11 @@ export async function atalhosDeCategorias(limite = 10): Promise<Atalho[]> {
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: PUBLICADO } } },
+        _count: { select: { products: { where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA } } } },
       },
     });
 
-    return categorias
-      .filter((categoria) => categoria._count.products > 0)
-      .slice(0, limite)
-      .map((categoria) => ({
-        rotulo: categoria.name,
-        href: `/categoria/${categoria.slug}`,
-        quantidade: categoria._count.products,
-      }));
+    return paraAtalhos(categorias).slice(0, limite);
   } catch {
     return [];
   }
@@ -230,21 +249,24 @@ async function montarGrupos(bases: BasesDeFaceta): Promise<GruposFiltro> {
     }),
   ]);
 
+  /* Duas linhas "Biossegurança" com 1 ao lado de cada uma não são duas
+     escolhas: são a mesma escolha partida em duas por um acidente de carga de
+     dados. Viram uma opção, com a soma — e o filtro abre os dois cadastros
+     (ver `expandirCategorias` em `src/lib/catalogo.ts`). */
+  const opcoes = (linhas: { slug: string; name: string; _count: { products: number } }[]) =>
+    unificarPorNome(
+      linhas
+        .filter((linha) => linha._count.products > 0)
+        .map((linha) => ({
+          slug: linha.slug,
+          nome: linha.name,
+          quantidade: linha._count.products,
+        })),
+    ).map((item) => ({ valor: item.slug, rotulo: item.nome, quantidade: item.quantidade }));
+
   return {
-    categorias: categorias
-      .filter((categoria) => categoria._count.products > 0)
-      .map((categoria) => ({
-        valor: categoria.slug,
-        rotulo: categoria.name,
-        quantidade: categoria._count.products,
-      })),
-    marcas: marcas
-      .filter((marca) => marca._count.products > 0)
-      .map((marca) => ({
-        valor: marca.slug,
-        rotulo: marca.name,
-        quantidade: marca._count.products,
-      })),
+    categorias: opcoes(categorias),
+    marcas: opcoes(marcas),
     condicoes: ORDEM_CONDICAO.flatMap((condicao) => {
       const linha = condicoes.find((c) => c.condition === condicao);
       if (!linha) return [];
@@ -514,7 +536,7 @@ async function Resultados({
         <GradeVitrine
           produtos={dados.produtos}
           parcelamento={parcelamento}
-          colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
+          colunas={{ base: 1, sm: 2, lg: 2, xl: 3 }}
           extra={listaCurta ? <ConviteNaGrade /> : null}
           className="mt-5"
         />
@@ -522,7 +544,7 @@ async function Resultados({
         <GradeProdutos
           produtos={dados.produtos}
           parcelamento={parcelamento}
-          colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
+          colunas={{ base: 1, sm: 2, lg: 2, xl: 3 }}
           chamadaDestacada={chamadaDestacada}
           extra={listaCurta ? <ConviteNaGrade /> : null}
           className="mt-6"
@@ -616,12 +638,32 @@ export async function Vitrine({
   const precoMin = texto(parametros.preco_min);
   const precoMax = texto(parametros.preco_max);
   const emEstoque = texto(parametros.estoque) === "1";
+  const incluirVendidos = texto(parametros.vendidos) === "1";
+
+  /* Cadastros de mesmo nome viram um filtro só, e um filtro só precisa
+     alcançar todos eles. O endereço continua com um slug — `/categoria/
+     biosseguranca` — e a consulta é que abre o slug nos irmãos homônimos.
+     Sem isto, a pastilha "Biossegurança 2" abriria uma lista de 1. */
+  const emLista = (valor: string | string[] | undefined) =>
+    valor === undefined ? [] : Array.isArray(valor) ? valor : [valor];
+
+  const [categoriaAberta, marcaAberta] = await Promise.all([
+    expandirCategorias(emLista(filtrosFixos?.categoria ?? categorias)),
+    expandirMarcas(emLista(filtrosFixos?.marca ?? marcas)),
+  ]);
+
+  /* Quando a coleção fixa a categoria — `/categoria/[slug]` — a lista aberta
+     JÁ é a dela, porque o `??` acima escolheu a fixa. É o que as facetas
+     precisam para tirar da conta só o que veio da barra. */
+  const categoriaFixaAberta = filtrosFixos?.categoria ? categoriaAberta : undefined;
+  const marcaFixaAberta = filtrosFixos?.marca ? marcaAberta : undefined;
 
   const filtros: Filtros = {
     busca,
     // listas inteiras, não só o primeiro item: a barra marca vários valores
-    categoria: filtrosFixos?.categoria ?? (categorias.length ? categorias : undefined),
-    marca: filtrosFixos?.marca ?? (marcas.length ? marcas : undefined),
+    categoria: categoriaAberta.length ? categoriaAberta : undefined,
+    marca: marcaAberta.length ? marcaAberta : undefined,
+    incluirVendidos,
     condicao:
       filtrosFixos?.condicao ??
       (condicoes.length ? (condicoes as Filtros["condicao"]) : undefined),
@@ -656,8 +698,8 @@ export async function Vitrine({
        condição é o escopo da página, não uma escolha que a pessoa possa
        desmarcar. Só o que veio da barra de filtros sai da conta do seu grupo. */
     montarGrupos({
-      semCategoria: montarFiltro({ ...filtros, categoria: filtrosFixos?.categoria }),
-      semMarca: montarFiltro({ ...filtros, marca: filtrosFixos?.marca }),
+      semCategoria: montarFiltro({ ...filtros, categoria: categoriaFixaAberta }),
+      semMarca: montarFiltro({ ...filtros, marca: marcaFixaAberta }),
       semCondicao: montarFiltro({ ...filtros, condicao: filtrosFixos?.condicao }),
       semVoltagem: montarFiltro({ ...filtros, voltagem: undefined }),
       semPreco: montarFiltro({ ...filtros, precoMin: undefined, precoMax: undefined }),

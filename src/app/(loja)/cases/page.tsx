@@ -152,6 +152,18 @@ export default async function CasesPage() {
               atendimento reúne as três coisas, esta página mostra o que a JB pode afirmar sem
               depender de autorização de ninguém: <strong>como o atendimento funciona</strong>.
             </p>
+
+            {/* Página vazia precisa de saída, não só de explicação. As outras
+                duas áreas sem publicação — Central Técnica e depoimentos — já
+                ofereciam o próximo passo; esta terminava no ponto final. */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <LinkBotao href="/assistencia-tecnica/solicitar" tamanho="sm">
+                Abrir chamado
+              </LinkBotao>
+              <LinkBotao href="/assistencia-tecnica" variante="secundario" tamanho="sm">
+                Conhecer a assistência
+              </LinkBotao>
+            </div>
           </div>
         )}
       </Secao>

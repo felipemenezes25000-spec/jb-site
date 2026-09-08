@@ -210,7 +210,13 @@ function AbaDeColecao({
     >
       <Icone className="size-3.5" aria-hidden />
       {rotulo}
-      <span className={cn("tabular", ativa ? "text-white/50" : "text-graf-400")}>{quantidade}</span>
+      {/* Na pastilha ativa o número é branco cheio: branco a 50% sobre o
+          vermelho da marca dá 2,2:1 e a 70% dá 2,9:1 — os dois reprovam o
+          4,5:1 da WCAG para texto de 12px. A hierarquia continua existindo
+          pelo peso, que é o do rótulo ao lado. */}
+      <span className={cn("tabular font-normal", ativa ? "text-white" : "text-graf-500")}>
+        {quantidade}
+      </span>
     </Link>
   );
 }
@@ -235,30 +241,74 @@ export default async function Pagina({
     <div className="vitrine">
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
-      <div className="container-jb pt-6">
-        <nav aria-label="Trilha" className="micro flex items-center gap-2 text-graf-400">
-          <Link href="/" className="transition-colors hover:text-graf-700">
-            Início
-          </Link>
-          <ChevronRight className="size-3" aria-hidden />
-          <Link href="/loja" className="transition-colors hover:text-graf-700">
-            Equipamentos
-          </Link>
-          <ChevronRight className="size-3" aria-hidden />
-          <span className="text-graf-700">Seminovos</span>
+      <div className="container-jb pt-2 lg:pt-3">
+        {/* Trilha em lista de verdade, como a do componente `Trilha`
+            compartilhado: os links soltos dentro do `<nav>` não eram só um
+            deslize semântico — eram 42x16px de alvo de toque, reprovados pelo
+            portão de responsividade em 320, 360, 390 e 768. Em `<li>`, com
+            44px de altura, a fileira fica tocável e o respiro em volta
+            encolhe na mesma medida, sem empurrar o catálogo para baixo. */}
+        <nav aria-label="Trilha" className="micro text-graf-500">
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link
+                href="/"
+                className="inline-flex min-h-11 items-center rounded-sm transition-colors hover:text-graf-700"
+              >
+                Início
+              </Link>
+            </li>
+            <li className="flex items-center gap-2">
+              <ChevronRight className="size-3" aria-hidden />
+              <Link
+                href="/loja"
+                className="inline-flex min-h-11 items-center rounded-sm transition-colors hover:text-graf-700"
+              >
+                Equipamentos
+              </Link>
+            </li>
+            <li className="flex items-center gap-2">
+              <ChevronRight className="size-3" aria-hidden />
+              <span className="text-graf-700" aria-current="page">
+                Seminovos
+              </span>
+            </li>
+          </ol>
         </nav>
 
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-x-10 gap-y-5 border-b border-hairline pb-5">
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-x-10 gap-y-4 border-b border-hairline pb-4 lg:mt-3 lg:gap-y-5 lg:pb-5">
           <div className="max-w-3xl">
             <h1 className="manchete text-[clamp(2rem,1.4rem+2.6vw,3.25rem)] text-graf-950">
               Seminovos revisados pela JB
             </h1>
             <p className="micro mt-3 text-graf-500">
               {colecao.totalSeminovos}{" "}
-              {colecao.totalSeminovos === 1 ? "unidade publicada" : "unidades publicadas"}
+              {colecao.totalSeminovos === 1 ? "unidade disponível" : "unidades disponíveis"}
               {promessas.length > 0 ? ` · ${promessas.join(" · ")}` : ""}
             </p>
-            <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600">
+
+            {/* A unidade vendida saiu da lista, e a página diz isso em vez de
+                deixar a contagem encolher em silêncio. O histórico continua
+                a um clique: é prova de bancada, não estoque. */}
+            {colecao.vendidos > 0 ? (
+              <p className="mt-2 text-[0.8125rem] text-graf-500">
+                {colecao.vendidos}{" "}
+                {colecao.vendidos === 1
+                  ? "unidade já foi vendida e saiu da lista."
+                  : "unidades já foram vendidas e saíram da lista."}{" "}
+                <Link
+                  href="/seminovos?vendidos=1"
+                  className="font-semibold text-jb-600 underline-offset-4 transition-colors hover:text-jb-700 hover:underline"
+                >
+                  Ver o que a JB já revisou e vendeu
+                </Link>
+              </p>
+            ) : null}
+            {/* Some no celular: a linha técnica logo acima já diz o essencial,
+                e três linhas de apoio antes do primeiro cartão são o pedágio
+                que a auditoria pediu para tirar do topo do catálogo. O texto
+                continua no HTML para leitor de tela e busca. */}
+            <p className="mt-4 hidden max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600 sm:block">
               Aqui cada anúncio é uma unidade específica, não um modelo de catálogo. O
               equipamento passa pela bancada da JB antes de ser publicado, e o que a equipe
               verificou fica escrito na página dele.
@@ -295,7 +345,7 @@ export default async function Pagina({
                 className="micro flex h-11 shrink-0 items-center gap-2 rounded-lg border border-hairline bg-white px-4 text-graf-700 transition-colors hover:border-graf-400 hover:text-graf-950"
               >
                 {categoria.nome}
-                <span className="tabular text-graf-400">{categoria.quantidade}</span>
+                <span className="tabular text-graf-500">{categoria.quantidade}</span>
               </Link>
             ))}
             <Link

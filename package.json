@@ -31,7 +31,9 @@
     "conteudo:migrar": "tsx scripts/migrar-conteudo-institucional.ts --aplicar",
     "pautas:prever": "tsx scripts/carregar-pautas.ts",
     "pautas:carregar": "tsx scripts/carregar-pautas.ts --aplicar",
-    "db:vitrine": "tsx prisma/seed-vitrine.ts"
+    "db:vitrine": "tsx prisma/seed-vitrine.ts",
+    "duplicatas:prever": "tsx scripts/unificar-duplicatas.ts",
+    "duplicatas:unificar": "tsx scripts/unificar-duplicatas.ts --aplicar"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

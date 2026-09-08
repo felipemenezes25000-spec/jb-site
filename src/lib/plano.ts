@@ -196,6 +196,30 @@ export type PlanoPublico = {
   exclusoes: string[];
 };
 
+/**
+ * O que o plano promete sobre um assunto, venha de onde vier.
+ *
+ * O cartão do plano lista `benefits`, escrito pela equipe; a tabela
+ * comparativa lê os campos próprios (`travelPolicy`, `partsPolicy`). Quando o
+ * campo próprio está vazio e o benefício não está, as duas peças da MESMA
+ * página passam a dizer coisas diferentes: o cartão do Avançado anunciava
+ * "Deslocamento incluso na região metropolitana" enquanto a linha
+ * "Deslocamento" da tabela dizia "A combinar". Quem lê não tem como saber
+ * qual vale.
+ *
+ * A saída não é inventar um valor: é procurar a regra na outra fonte que a
+ * própria JB cadastrou. Sem nenhuma das duas, aí sim a condição real é "a
+ * combinar".
+ */
+export function regraDoPlano(
+  plano: Pick<PlanoPublico, "beneficios">,
+  campoProprio: string,
+  assunto: RegExp,
+): string | null {
+  if (campoProprio.trim()) return campoProprio.trim();
+  return plano.beneficios.find((beneficio) => assunto.test(beneficio))?.trim() ?? null;
+}
+
 /** Exatamente os campos que a tela pública de plano precisa, e nada além. */
 export const SELECAO_PLANO_PUBLICO = {
   slug: true,

@@ -2,6 +2,7 @@ import "server-only";
 
 import { cacheLife, cacheTag } from "next/cache";
 
+import { unificarPorNome } from "@/lib/homonimos";
 import { prisma } from "@/lib/prisma";
 import { getSettings, type SettingsMap } from "@/lib/settings";
 import { CONDICOES } from "@/lib/navegacao";
@@ -33,6 +34,8 @@ export const ETIQUETA_CONFIGURACOES = "configuracoes";
 export const ETIQUETA_CATEGORIAS = "categorias";
 /** Produto, marca e vitrine — tudo que muda quando o catálogo muda. */
 export const ETIQUETA_CATALOGO = "catalogo";
+/** Publicações da Central Técnica. */
+export const ETIQUETA_CENTRAL = "central-tecnica";
 
 export type CategoriaDoMenu = {
   slug: string;
@@ -122,5 +125,37 @@ export async function categoriasDoMenu(): Promise<CategoriaDoMenu[]> {
     },
   });
 
-  return linhas.map((c) => ({ slug: c.slug, name: c.name, count: c._count.products }));
+  /* O mega menu mostrava "Biossegurança" duas vezes, uma abaixo da outra,
+     porque o catálogo tem dois cadastros com o mesmo nome. Vira um item, com
+     a soma — o mesmo tratamento da barra de filtros e da home. */
+  return unificarPorNome(
+    linhas.map((c) => ({ slug: c.slug, nome: c.name, quantidade: c._count.products })),
+  ).map((c) => ({ slug: c.slug, name: c.nome, count: c.quantidade ?? 0 }));
+}
+
+/**
+ * A Central Técnica tem texto no ar?
+ *
+ * O menu do cabeçalho reserva um dos cinco lugares para ela, e a auditoria de
+ * 08/09/2026 encontrou a página sem nenhuma publicação: o item prometia
+ * conteúdo e entregava um aviso de que ainda não há conteúdo — exatamente o
+ * que `categoriasDoMenu` já evita fazer com categoria sem equipamento.
+ *
+ * Enquanto estiver vazia, ela sai da direção principal e continua no rodapé,
+ * onde é referência e não promessa. Volta sozinha na primeira publicação.
+ */
+export async function centralTemPublicacao(): Promise<boolean> {
+  "use cache";
+  cacheTag(ETIQUETA_CENTRAL);
+  cacheLife("hours");
+
+  try {
+    const publicados = await prisma.article.count({ where: { status: "publicado" } });
+    return publicados > 0;
+  } catch {
+    /* Sem banco, o menu segue como sempre foi. Esconder um item por causa de
+       uma falha de leitura seria trocar um problema de conteúdo por um de
+       navegação. */
+    return true;
+  }
 }

@@ -9,7 +9,12 @@ import {
 } from "@/components/loja/cabecalho-pessoal";
 import { BarraComparar, ComparadorProvider } from "@/components/loja/comparador-cliente";
 import { Rodape } from "@/components/loja/rodape";
-import { categoriasDoMenu, condicoesDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
+import {
+  categoriasDoMenu,
+  centralTemPublicacao,
+  condicoesDoMenu,
+  configuracoesPublicas,
+} from "@/lib/loja-publica";
 
 import "./vitrine.css";
 
@@ -26,10 +31,11 @@ import "./vitrine.css";
  * design system sempre disse — bloco pontual, nunca a moldura do site.
  */
 export default async function VitrineLayout({ children }: { children: React.ReactNode }) {
-  const [s, categorias, condicoes] = await Promise.all([
+  const [s, categorias, condicoes, centralPublicada] = await Promise.all([
     configuracoesPublicas(),
     categoriasDoMenu(),
     condicoesDoMenu(),
+    centralTemPublicacao(),
   ]);
 
   return (
@@ -38,6 +44,7 @@ export default async function VitrineLayout({ children }: { children: React.Reac
         <Cabecalho
           categorias={categorias}
           condicoes={condicoes}
+          centralPublicada={centralPublicada}
           acessoDaConta={
             <Suspense fallback={<AcessoDaContaEsqueleto />}>
               <AcessoDaConta />

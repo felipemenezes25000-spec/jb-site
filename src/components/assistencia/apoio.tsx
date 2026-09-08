@@ -157,6 +157,7 @@ export function CabecalhoAssistencia({
   titulo,
   resumo,
   acoes,
+  compacto,
 }: {
   /** Já montada pela página — normalmente o componente `Trilha`. */
   trilha?: React.ReactNode;
@@ -164,6 +165,19 @@ export function CabecalhoAssistencia({
   titulo: string;
   resumo?: React.ReactNode;
   acoes?: React.ReactNode;
+  /**
+   * Tela de tarefa: encolhe a abertura no celular.
+   *
+   * Numa página que explica um serviço, a abertura é o conteúdo. Numa página
+   * que PEDE alguma coisa — abrir chamado, pedir orçamento — ela é o pedágio
+   * antes do primeiro campo: em 390 × 844 a apresentação da abertura de
+   * chamado terminava depois do fim da tela, e quem chegou com um equipamento
+   * parado rolava a página inteira antes de começar a resolver.
+   *
+   * No desktop nada muda: lá a abertura e o formulário convivem na mesma
+   * tela, e encolher o título só deixaria a página menor sem devolver nada.
+   */
+  compacto?: boolean;
 }) {
   return (
     <header className="relative isolate overflow-hidden border-b border-graf-200 bg-surface-muted">
@@ -171,13 +185,30 @@ export function CabecalhoAssistencia({
         aria-hidden
         className="field-orbit pointer-events-none absolute inset-0 -z-10 opacity-40 [mask-image:radial-gradient(65%_70%_at_80%_0%,#000,transparent)]"
       />
-      <div className="container-jb py-10 lg:py-16">
-        {trilha ? <div className="mb-7">{trilha}</div> : null}
+      <div className={cn("container-jb lg:py-16", compacto ? "py-6" : "py-10")}>
+        {trilha ? <div className={cn("lg:mb-7", compacto ? "mb-4" : "mb-7")}>{trilha}</div> : null}
         <div className="max-w-3xl">
-          {sobretitulo ? <p className="sobretitulo mb-3">{sobretitulo}</p> : null}
-          <h1 className="text-display texto-forte">{titulo}</h1>
-          {resumo ? <p className="texto-guia texto-suave mt-5 max-w-2xl">{resumo}</p> : null}
-          {acoes ? <div className="mt-8 flex flex-wrap gap-3">{acoes}</div> : null}
+          {sobretitulo ? (
+            <p className={cn("sobretitulo lg:mb-3", compacto ? "mb-2" : "mb-3")}>{sobretitulo}</p>
+          ) : null}
+          <h1 className={cn("texto-forte", compacto ? "text-section lg:text-display" : "text-display")}>
+            {titulo}
+          </h1>
+          {resumo ? (
+            <p
+              className={cn(
+                "texto-suave max-w-2xl lg:texto-guia lg:mt-5",
+                compacto ? "mt-3 text-[0.9375rem] leading-relaxed" : "texto-guia mt-5",
+              )}
+            >
+              {resumo}
+            </p>
+          ) : null}
+          {acoes ? (
+            <div className={cn("flex flex-wrap gap-3 lg:mt-8", compacto ? "mt-5" : "mt-8")}>
+              {acoes}
+            </div>
+          ) : null}
         </div>
       </div>
     </header>

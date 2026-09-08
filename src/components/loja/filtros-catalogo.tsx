@@ -154,6 +154,12 @@ function filtrosAplicados(parametros: ParametrosCatalogo, grupos: GruposFiltro) 
   if (textoDe(parametros, "estoque") === "1") {
     fichas.push({ chave: "estoque", valor: null, rotulo: "Somente em estoque" });
   }
+  /* Este alarga a lista em vez de estreitar, mas é a mesma promessa: o que
+     mudou o resultado aparece escrito e sai com um clique. Sem a ficha, a
+     unidade vendida voltava à lista sem nada na tela explicando por quê. */
+  if (textoDe(parametros, "vendidos") === "1") {
+    fichas.push({ chave: "vendidos", valor: null, rotulo: "Incluindo unidades já vendidas" });
+  }
 
   return fichas;
 }
@@ -306,6 +312,7 @@ export function ConteudoFiltros({
   const max = textoDe(parametros, "preco_max");
   const temFaixa = grupos.faixaPreco.maxCents > grupos.faixaPreco.minCents;
   const emEstoque = textoDe(parametros, "estoque") === "1";
+  const comVendidos = textoDe(parametros, "vendidos") === "1";
 
   return (
     <div className="space-y-6">
@@ -471,7 +478,25 @@ export function ConteudoFiltros({
             campo="Disponibilidade"
             opcao={{ valor: "1", rotulo: "Somente em estoque" }}
             marcado={emEstoque}
-            href={enderecoCom(caminho, parametros, { estoque: emEstoque ? null : "1" })}
+            href={enderecoCom(caminho, parametros, {
+              estoque: emEstoque ? null : "1",
+              vendidos: null,
+            })}
+          />
+          {/* Seminovo é unidade, não modelo: a que já saiu não volta, e por
+              isso a lista não a mostra por padrão. Quem quer ver o que a JB
+              já revisou e vendeu — histórico, link antigo, curiosidade
+              legítima de quem está avaliando a bancada — pede aqui. As duas
+              opções se desmarcam: "só em estoque" e "com vendidos" pedem
+              coisas opostas. */}
+          <OpcaoLink
+            campo="Disponibilidade"
+            opcao={{ valor: "1", rotulo: "Incluir unidades já vendidas" }}
+            marcado={comVendidos}
+            href={enderecoCom(caminho, parametros, {
+              vendidos: comVendidos ? null : "1",
+              estoque: null,
+            })}
           />
         </Lista>
       </Grupo>

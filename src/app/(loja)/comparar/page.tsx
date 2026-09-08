@@ -20,7 +20,8 @@ import {
   type RespostasDaClinica,
   type ValorDoAtributo,
 } from "@/lib/comparador";
-import { PUBLICADO } from "@/lib/catalogo";
+import { PUBLICADO, UNIDADE_VENDIDA } from "@/lib/catalogo";
+import { chaveDeNome } from "@/lib/homonimos";
 import { formatarPreco } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { metadataDePagina } from "@/lib/seo";
@@ -73,6 +74,15 @@ const ROTULO_INSTALACAO: Record<string, string> = {
   sob_consulta: "Sob consulta",
 };
 
+/** Uma opção da fileira de escolha — o suficiente para reconhecer o aparelho. */
+type OpcaoDeComparacao = {
+  slug: string;
+  nome: string;
+  marca: string | null;
+  preco: string;
+  foto: string | null;
+};
+
 type Props = {
   searchParams: Promise<{ [chave: string]: string | string[] | undefined }>;
 };
@@ -118,11 +128,29 @@ export default async function CompararPage({ searchParams }: Props) {
   };
 
   const [catalogo, produtos] = await Promise.all([
+    /* A lista de escolha deixou de ser só `slug` e `name`: comparar
+       equipamento de dez mil reais escolhendo numa lista de caixas de texto
+       era pedir que a pessoa reconhecesse o aparelho pelo nome de cadastro.
+       Agora cada opção mostra foto, marca, nome e preço — e a fileira é
+       agrupada por categoria, para o comparador oferecer o que de fato se
+       compara entre si. */
     prisma.product.findMany({
-      where: PUBLICADO,
-      orderBy: { name: "asc" },
+      where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA },
+      orderBy: [{ category: { order: "asc" } }, { name: "asc" }],
       take: 60,
-      select: { slug: true, name: true },
+      select: {
+        slug: true,
+        name: true,
+        priceCents: true,
+        allowDirectPurchase: true,
+        brand: { select: { name: true } },
+        category: { select: { name: true } },
+        media: {
+          orderBy: { order: "asc" },
+          take: 1,
+          select: { alt: true, media: { select: { url: true, alt: true } } },
+        },
+      },
     }),
     escolhidos.length > 0
       ? prisma.product.findMany({
@@ -244,6 +272,36 @@ export default async function CompararPage({ searchParams }: Props) {
           },
         ];
 
+  /* Agrupamento da escolha, por categoria e na ordem editorial do painel.
+     Categorias homônimas — o catálogo tem duas chamadas "Biossegurança" —
+     entram no mesmo grupo, senão a fileira ofereceria duas prateleiras com o
+     mesmo nome, que é o defeito que a auditoria apontou nos filtros. */
+  const grupos = (() => {
+    const ordem: string[] = [];
+    const porChave = new Map<string, { nome: string; produtos: OpcaoDeComparacao[] }>();
+
+    for (const produto of catalogo) {
+      const nome = produto.category?.name ?? "Outros equipamentos";
+      const chave = chaveDeNome(nome);
+      if (!porChave.has(chave)) {
+        porChave.set(chave, { nome, produtos: [] });
+        ordem.push(chave);
+      }
+      porChave.get(chave)!.produtos.push({
+        slug: produto.slug,
+        nome: produto.name,
+        marca: produto.brand?.name ?? null,
+        preco:
+          produto.allowDirectPurchase && produto.priceCents > 0
+            ? formatarPreco(produto.priceCents)
+            : "Sob orçamento",
+        foto: produto.media[0]?.media.url ?? null,
+      });
+    }
+
+    return ordem.map((chave) => porChave.get(chave)!);
+  })();
+
   const recomendacao = recomendar(
     ordenados.map((produto) => ({
       slug: produto.slug,
@@ -282,23 +340,56 @@ export default async function CompararPage({ searchParams }: Props) {
             <legend className="text-sm font-bold text-graf-950">
               Escolha até {MAXIMO} equipamentos
             </legend>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {catalogo.map((produto) => (
-                <label
-                  key={produto.slug}
-                  className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-lg border border-graf-200 bg-white px-3 py-2 text-[0.875rem] text-graf-800 has-[:checked]:border-jb-500 has-[:checked]:bg-jb-50"
-                >
-                  <input
-                    type="checkbox"
-                    name="p"
-                    value={produto.slug}
-                    defaultChecked={escolhidos.includes(produto.slug)}
-                    className="size-4 accent-jb-600"
-                  />
-                  <span className="min-w-0 truncate">{produto.name}</span>
-                </label>
-              ))}
-            </div>
+            {grupos.map((grupo) => (
+              <div key={grupo.nome} className="mt-4 min-w-0">
+                <p className="micro text-graf-500">{grupo.nome}</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {grupo.produtos.map((produto) => (
+                    <label
+                      key={produto.slug}
+                      className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg border border-graf-200 bg-white p-2 text-[0.875rem] text-graf-800 transition-colors hover:border-graf-400 has-[:checked]:border-jb-500 has-[:checked]:bg-jb-50"
+                    >
+                      <input
+                        type="checkbox"
+                        name="p"
+                        value={produto.slug}
+                        defaultChecked={escolhidos.includes(produto.slug)}
+                        className="size-4 shrink-0 accent-jb-600"
+                      />
+                      <span className="relative size-12 shrink-0 overflow-hidden rounded-md bg-white">
+                        {produto.foto ? (
+                          <Image
+                            src={produto.foto}
+                            alt=""
+                            fill
+                            unoptimized={produto.foto.startsWith("/")}
+                            sizes="48px"
+                            className="object-contain p-0.5"
+                          />
+                        ) : (
+                          <span className="flex size-full items-center justify-center text-graf-300">
+                            <ImageOff className="size-4" aria-hidden />
+                          </span>
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        {produto.marca ? (
+                          <span className="block truncate text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+                            {produto.marca}
+                          </span>
+                        ) : null}
+                        <span className="block truncate font-semibold text-graf-950">
+                          {produto.nome}
+                        </span>
+                        <span className="tabular block truncate text-[0.8125rem] text-graf-600">
+                          {produto.preco}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
           </fieldset>
 
           <fieldset className="mt-6 min-w-0">

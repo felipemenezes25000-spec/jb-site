@@ -20,6 +20,12 @@ import { cn } from "@/lib/utils";
    produto, e aquilo é dado inventado do protótipo. Aqui a avaliação só entra
    quando existir avaliação de verdade no banco — foi exatamente por anunciar
    o que não se tem que o catálogo já precisou ser consertado uma vez.
+
+   Modelo e preço anterior usam `graf-500`, e não `graf-400`. O próprio design
+   system escreve em `globals.css` que graf-400 é borda, ícone decorativo e
+   divisor — nunca texto: sobre branco ele dá 2,6:1, abaixo do 4,5:1 que a
+   WCAG pede. A auditoria de acessibilidade acusava esses dois campos em toda
+   fileira da home e do catálogo, 66 ocorrências.
    ============================================================================ */
 
 const CONDICAO_ETIQUETA = {
@@ -90,7 +96,12 @@ export function CardVitrine({
         className,
       )}
     >
-      <div className="relative aspect-4/3 max-h-72 overflow-hidden bg-white">
+      {/* Em coluna única de 390px, a moldura 4:3 dava 268px só de foto e o
+          cartão passava de 450px: dois equipamentos por tela inteira. O 3:2 do
+          celular tira ~30px por cartão sem apertar a fotografia, e do `sm`
+          para cima — onde a grade tem duas ou três colunas — a proporção
+          cheia volta. */}
+      <div className="relative aspect-3/2 max-h-72 overflow-hidden bg-white sm:aspect-4/3">
         {produto.imageUrl ? (
           <Image
             src={produto.imageUrl}
@@ -149,13 +160,13 @@ export function CardVitrine({
         </h3>
 
         {produto.model ? (
-          <p className="micro mt-1.5 truncate text-graf-400">{produto.model}</p>
+          <p className="micro mt-1.5 truncate text-graf-500">{produto.model}</p>
         ) : null}
 
         <div className="mt-auto pt-4">
           <div className="flex h-4 items-center gap-2">
             {precoAnterior ? (
-              <span className="micro text-graf-400 line-through">
+              <span className="micro text-graf-500 line-through">
                 {formatarPreco(precoAnterior)}
               </span>
             ) : null}
@@ -194,8 +205,16 @@ export function CardVitrine({
             <span
               aria-hidden
               className={cn(
-                "micro flex h-11 flex-1 items-center justify-center gap-2 rounded-lg px-3",
-                "bg-jb-500 text-white transition-colors group-hover:bg-jb-600",
+                /* `whitespace-nowrap`: em caixa alta com espaçamento de letra,
+                   "VER EQUIPAMENTO" passava da coluna e quebrava em duas
+                   linhas com a seta sobrando à direita — o acabamento do
+                   cartão inteiro caía por causa de dois pixels. A largura da
+                   coluna também foi corrigida (ver `Vitrine`): em monitor
+                   largo a grade ia a 4 colunas dentro de um contêiner que
+                   para de crescer em 1440px, e o cartão ficava MENOR do que
+                   em telas menores. */
+                "micro flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap px-3",
+                "rounded-lg bg-jb-500 text-white transition-colors group-hover:bg-jb-600",
                 semEstoque && "bg-graf-400 group-hover:bg-graf-400",
               )}
             >

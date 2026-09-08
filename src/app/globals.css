@@ -555,3 +555,75 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+
+/* ============================================================================
+   Entrada da abertura
+
+   A direção visual de 08/09/2026 pede uma entrada coordenada de título,
+   produto e chamada na primeira dobra, entre 600 e 900 ms, com uma condição:
+   o conteúdo continua acessível sem esperar pela animação.
+
+   Por isso é CSS, e não biblioteca. Não depende de hidratação, não observa
+   rolagem e não tem estado: o navegador pinta o HTML que o servidor mandou e
+   a animação apenas acompanha. Se o CSS falhar, tudo aparece — que é o
+   oposto do que acontece com revelação controlada por script, onde a falha
+   deixa a página em branco.
+
+   O deslocamento é curto (12px) e só no eixo Y: nada de escala nem de
+   desfoque, que é o que faz abertura animada parecer apresentação de slides.
+   O `both` segura o estado inicial durante o atraso do escalonamento.
+   ============================================================================ */
+
+@keyframes jb-entrada {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility entrada {
+  animation: jb-entrada 620ms var(--ease-out-quint) both;
+
+  /* O bloco global de movimento reduzido já corta a duração, mas não o
+     atraso: sem isto, quem pediu menos movimento esperaria o escalonamento
+     inteiro olhando para um espaço vazio. */
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  /* Papel não roda animação, e `both` seguraria o estado inicial: a abertura
+     sairia transparente na impressão. */
+  @media print {
+    animation: none;
+  }
+}
+
+/* Revelação ao entrar na tela — faixas de marca e de categoria.
+
+   Animação guiada pela rolagem, sem JavaScript e sem observador: quem
+   controla o tempo é a posição do elemento na tela (`animation-timeline:
+   view()`). Fica inteira dentro de `@supports` de propósito — em navegador
+   sem suporte a linha do tempo de rolagem não existe animação nenhuma, e a
+   seção aparece pintada como sempre. É a diferença entre um efeito que
+   degrada para "sem efeito" e um que degrada para "conteúdo invisível". */
+@utility revelar {
+  @supports (animation-timeline: view()) {
+    animation: jb-entrada 460ms var(--ease-out-quint) both;
+    animation-timeline: view();
+    animation-range: entry 8% cover 24%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  /* Papel não roda animação: sem isto, a página impressa sairia com a seção
+     no estado inicial, que é transparente. */
+  @media print {
+    animation: none;
+  }
+}

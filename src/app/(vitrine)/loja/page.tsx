@@ -82,7 +82,13 @@ function AbaDeColecao({
     >
       <Icone className="size-3.5" aria-hidden />
       {rotulo}
-      <span className={cn("tabular", ativa ? "text-white/50" : "text-graf-400")}>{quantidade}</span>
+      {/* Na pastilha ativa o número é branco cheio: branco a 50% sobre o
+          vermelho da marca dá 2,2:1 e a 70% dá 2,9:1 — os dois reprovam o
+          4,5:1 da WCAG para texto de 12px. A hierarquia continua existindo
+          pelo peso, que é o do rótulo ao lado. */}
+      <span className={cn("tabular font-normal", ativa ? "text-white" : "text-graf-500")}>
+        {quantidade}
+      </span>
     </Link>
   );
 }
@@ -107,26 +113,50 @@ export default async function LojaPage({
     <div className="vitrine">
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
-      <div className="container-jb pt-6">
-        <nav aria-label="Trilha" className="micro flex items-center gap-2 text-graf-400">
-          <Link href="/" className="transition-colors hover:text-graf-700">
-            Início
-          </Link>
-          <ChevronRight className="size-3" aria-hidden />
-          <span className="text-graf-700">Equipamentos</span>
+      <div className="container-jb pt-2 lg:pt-3">
+        {/* Trilha em lista de verdade, como a do componente `Trilha`
+            compartilhado: os links soltos dentro do `<nav>` não eram só um
+            deslize semântico — eram 42x16px de alvo de toque, reprovados pelo
+            portão de responsividade em 320, 360, 390 e 768. Em `<li>`, com
+            44px de altura, a fileira fica tocável e o respiro em volta
+            encolhe na mesma medida, sem empurrar o catálogo para baixo. */}
+        <nav aria-label="Trilha" className="micro text-graf-500">
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link
+                href="/"
+                className="inline-flex min-h-11 items-center rounded-sm transition-colors hover:text-graf-700"
+              >
+                Início
+              </Link>
+            </li>
+            <li className="flex items-center gap-2">
+              <ChevronRight className="size-3" aria-hidden />
+              <span className="text-graf-700" aria-current="page">
+                Equipamentos
+              </span>
+            </li>
+          </ol>
         </nav>
 
         {/* O título é letreiro, não parágrafo: condensada, caixa alta, sem
             texto de apoio embaixo. A linha técnica que segue diz o que o
             visitante precisa saber antes de olhar preço. */}
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-x-10 gap-y-5 border-b border-hairline pb-5">
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-x-10 gap-y-4 border-b border-hairline pb-4 lg:mt-3 lg:gap-y-5 lg:pb-5">
           <div>
             <h1 className="manchete text-[clamp(2rem,1.4rem+2.6vw,3.25rem)] text-graf-950">
               Equipamentos odontológicos
             </h1>
+            {/* Quatro afirmações em caixa alta ocupavam três linhas em 390px e
+                empurravam os cartões para baixo — o topo do catálogo custava
+                mais tela do que o primeiro equipamento. No celular ficam duas;
+                do tablet para cima, a linha inteira. */}
             <p className="micro mt-3 text-graf-500">
-              {colecao.totalNovos} equipamentos novos · nota fiscal e garantia · 12x sem juros ·
-              instalação por equipe própria
+              {colecao.totalNovos} equipamentos novos · nota fiscal e garantia
+              <span className="hidden sm:inline">
+                {" "}
+                · 12x sem juros · instalação por equipe própria
+              </span>
             </p>
           </div>
 
@@ -161,7 +191,7 @@ export default async function LojaPage({
                 className="micro flex h-11 shrink-0 items-center gap-2 rounded-lg border border-hairline bg-white px-4 text-graf-700 transition-colors hover:border-graf-400 hover:text-graf-950"
               >
                 {categoria.nome}
-                <span className="tabular text-graf-400">{categoria.quantidade}</span>
+                <span className="tabular text-graf-500">{categoria.quantidade}</span>
               </Link>
             ))}
             <Link

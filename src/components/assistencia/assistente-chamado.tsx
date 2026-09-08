@@ -375,7 +375,11 @@ export function AssistenteChamado({
           passos={ETAPAS}
           atual={etapa}
           rotulo="Etapas do chamado"
-          className="mb-9 border-b border-graf-200 pb-8"
+          /* No celular a descrição da etapa repetiria o título logo abaixo. A
+             régua fica só com "Etapa 1 de 5", o nome e a barra — o progresso
+             continua inteiro e o primeiro campo sobe uma linha. */
+          descricaoNoCelular={false}
+          className="mb-6 border-b border-graf-200 pb-6 lg:mb-9 lg:pb-8"
         />
       ) : null}
 

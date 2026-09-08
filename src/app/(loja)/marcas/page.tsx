@@ -7,7 +7,8 @@ import { LinkBotao } from "@/components/ui/button";
 import { TituloSecao, Trilha, Vazio } from "@/components/ui/data";
 import { Grade } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
-import { PUBLICADO } from "@/lib/catalogo";
+import { PUBLICADO, UNIDADE_VENDIDA } from "@/lib/catalogo";
+import { unificarPorNome } from "@/lib/homonimos";
 import { logoDaMarca } from "@/lib/marcas";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
@@ -36,18 +37,6 @@ export const metadata: Metadata = metadataDePagina({
   caminho: "/marcas",
 });
 
-/** Iniciais da marca — a placa do cartão quando não há logotipo enviado. */
-function monograma(nome: string) {
-  const palavras = nome
-    .split(/\s+/)
-    .map((parte) => parte.replace(/[^\p{L}\p{N}]/gu, ""))
-    .filter(Boolean);
-
-  if (palavras.length === 0) return "?";
-  if (palavras.length === 1) return palavras[0].slice(0, 3).toUpperCase();
-  return (palavras[0][0] + palavras[1][0]).toUpperCase();
-}
-
 type Marca = {
   slug: string;
   name: string;
@@ -64,15 +53,33 @@ async function buscarMarcas(): Promise<Marca[] | null> {
         slug: true,
         name: true,
         logo: { select: { url: true, alt: true } },
-        _count: { select: { products: { where: PUBLICADO } } },
+        /* "3 itens no catálogo" precisa bater com a lista da marca, e a lista
+           não mostra unidade já vendida. */
+        _count: { select: { products: { where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA } } } },
       },
     });
 
-    return linhas.map((linha) => ({
-      slug: linha.slug,
-      name: linha.name,
-      logo: linha.logo ? { url: linha.logo.url, alt: linha.logo.alt || linha.name } : null,
-      itens: linha._count.products,
+    /* A parede mostrava "Schuster" duas vezes — uma com 3 equipamentos e
+       outra sob consulta — porque o banco tem dois cadastros com o mesmo
+       nome, herdados de cargas diferentes. Para quem visita não existe um
+       cadastro certo: existem duas placas iguais, e escolher a errada leva a
+       uma prateleira vazia. Aqui vira uma placa só, a do cadastro que tem os
+       equipamentos. A limpeza definitiva é no banco:
+       `pnpm duplicatas:prever`. */
+    const unificadas = unificarPorNome(
+      linhas.map((linha) => ({
+        slug: linha.slug,
+        nome: linha.name,
+        quantidade: linha._count.products,
+        logo: linha.logo ? { url: linha.logo.url, alt: linha.logo.alt || linha.name } : null,
+      })),
+    );
+
+    return unificadas.map((marca) => ({
+      slug: marca.slug,
+      name: marca.nome,
+      logo: marca.logo,
+      itens: marca.quantidade ?? 0,
     }));
   } catch {
     return null;
@@ -83,9 +90,16 @@ async function buscarMarcas(): Promise<Marca[] | null> {
  * Painel de marca.
  *
  * A placa branca ocupa a maior parte do cartão e o logotipo é o que se vê
- * primeiro — uma parede de marcas, não uma lista de links. Sem logotipo
- * enviado entra o monograma: repetir o nome na placa e na linha de baixo
- * fazia o cartão dizer a mesma coisa duas vezes, com dois pesos diferentes.
+ * primeiro — uma parede de marcas, não uma lista de links.
+ *
+ * Sem logotipo enviado, a placa mostra o NOME por extenso, em caixa alta,
+ * como uma marca-palavra. Antes mostrava as iniciais, e a parede exibia
+ * "KAV", "GNA", "DA", "OLS", "CRI" — cinco siglas que ninguém reconhece, ao
+ * lado de dois logotipos de verdade. Sigla parece imagem que não carregou;
+ * "CRISTÓFOLI" escrito é uma marca sem arte enviada, que é o que de fato é.
+ * A repetição com a linha de baixo se resolve pelo peso: placa em cinza
+ * médio, nome do cartão em preto — e o nome do cartão continua sendo o que
+ * o leitor de tela anuncia.
  */
 function CartaoMarca({ marca }: { marca: Marca }) {
   return (
@@ -95,19 +109,22 @@ function CartaoMarca({ marca }: { marca: Marca }) {
     >
       <span className="flex h-28 items-center justify-center px-5 sm:h-32 sm:px-7">
         {logoDaMarca(marca) ? (
+          /* Caixa óptica igual para todos: um logotipo largo e um compacto
+             pesavam diferente na parede porque só a altura estava limitada.
+             Com teto nos dois eixos, ALT e Sugmaster ocupam a mesma área. */
           <Image
             src={logoDaMarca(marca)!.url}
             alt=""
             width={240}
             height={96}
-            className="max-h-14 w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03] sm:max-h-16"
+            className="max-h-12 w-auto max-w-[80%] object-contain transition-transform duration-300 group-hover:scale-[1.03] sm:max-h-14"
           />
         ) : (
           <span
             aria-hidden
-            className="text-2xl font-extrabold tracking-tight text-graf-500 sm:text-3xl"
+            className="text-pretty text-center text-lg font-extrabold uppercase leading-tight tracking-[0.02em] text-graf-500 sm:text-xl"
           >
-            {monograma(marca.name)}
+            {marca.name}
           </span>
         )}
       </span>

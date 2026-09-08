@@ -9,7 +9,12 @@ import {
 } from "@/components/loja/cabecalho-pessoal";
 import { BarraComparar, ComparadorProvider } from "@/components/loja/comparador-cliente";
 import { Rodape } from "@/components/loja/rodape";
-import { categoriasDoMenu, condicoesDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
+import {
+  categoriasDoMenu,
+  centralTemPublicacao,
+  condicoesDoMenu,
+  configuracoesPublicas,
+} from "@/lib/loja-publica";
 
 import "./catalogo-premium.css";
 
@@ -22,7 +27,12 @@ import "./catalogo-premium.css";
  * funcionando normalmente.
  */
 export default async function LojaLayout({ children }: { children: React.ReactNode }) {
-  const [s, categorias, condicoes] = await Promise.all([configuracoesPublicas(), categoriasDoMenu(), condicoesDoMenu()]);
+  const [s, categorias, condicoes, centralPublicada] = await Promise.all([
+    configuracoesPublicas(),
+    categoriasDoMenu(),
+    condicoesDoMenu(),
+    centralTemPublicacao(),
+  ]);
 
   return (
     <ComparadorProvider>
@@ -30,6 +40,7 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
         <Cabecalho
           categorias={categorias}
           condicoes={condicoes}
+          centralPublicada={centralPublicada}
           acessoDaConta={
             <Suspense fallback={<AcessoDaContaEsqueleto />}>
               <AcessoDaConta />

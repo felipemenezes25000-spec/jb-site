@@ -5,6 +5,7 @@ import { ArrowRight, Boxes, Headphones, ListChecks } from "lucide-react";
 import { IconeCategoria } from "@/components/ui/icone";
 import { stripTags } from "@/lib/html";
 import { plural } from "@/lib/format";
+import { unificarPorNome } from "@/lib/homonimos";
 import { prisma } from "@/lib/prisma";
 
 const PUBLICADO = { status: "active" } as const;
@@ -31,7 +32,9 @@ async function carregar() {
   return prisma.category.findMany({
     where: { published: true, parentId: null, products: { some: PUBLICADO } },
     orderBy: [{ featured: "desc" }, { order: "asc" }, { name: "asc" }],
-    take: 4,
+    /* Oito para escolher quatro: cadastros de mesmo nome são juntados depois
+       da consulta, e sem folga a fileira poderia terminar com três. */
+    take: 8,
     select: {
       slug: true,
       name: true,
@@ -106,7 +109,13 @@ function detalheCategoria(categoria: CategoriaHome) {
 }
 
 export async function SecaoCategorias() {
-  const categorias = await carregar();
+  const linhas = await carregar();
+  /* Duas categorias chamadas "Biossegurança" viravam dois cartões iguais
+     lado a lado. Aqui viram um, com a soma dos equipamentos — o mesmo
+     tratamento que a barra de filtros e os atalhos da coleção dão. */
+  const categorias = unificarPorNome(
+    linhas.map((linha) => ({ ...linha, nome: linha.name, quantidade: linha._count.products })),
+  ).slice(0, 4);
   if (categorias.length === 0) return null;
 
   const [principal, ...outras] = categorias;
@@ -134,7 +143,7 @@ export async function SecaoCategorias() {
 
 
 
-      <div className="container-jb relative z-10 max-w-[112rem]">
+      <div className="revelar container-jb relative z-10 max-w-[112rem]">
         {/* ── Cabeçalho editorial ─────────────────────────────────────────── */}
         <div className="grid gap-7 min-[1024px]:grid-cols-[minmax(0,1fr)_auto] min-[1024px]:items-end">
           <div>

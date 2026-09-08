@@ -24,12 +24,23 @@ export function Passos({
   passos,
   atual,
   rotulo = "Progresso",
+  descricaoNoCelular = true,
   className,
 }: {
   passos: Passo[];
   /** Índice da etapa corrente, começando em 0. */
   atual: number;
   rotulo?: string;
+  /**
+   * A linha de apoio da etapa no bloco compacto.
+   *
+   * Desligue quando o título da etapa logo abaixo já diz a mesma coisa: na
+   * abertura de chamado a régua anunciava "Qual aparelho precisa de
+   * atendimento" e o título seguinte perguntava "Qual equipamento precisa de
+   * atendimento?" — duas linhas para a mesma frase, empurrando o primeiro
+   * campo para fora da primeira tela do celular.
+   */
+  descricaoNoCelular?: boolean;
   className?: string;
 }) {
   if (passos.length === 0) return null;
@@ -139,7 +150,7 @@ export function Passos({
           Etapa {indice + 1} de {passos.length}
         </p>
         <p className="mt-1 text-base font-bold leading-tight text-graf-950">{corrente.rotulo}</p>
-        {corrente.descricao ? (
+        {corrente.descricao && descricaoNoCelular ? (
           <p className="mt-1 text-sm leading-relaxed text-graf-500">{corrente.descricao}</p>
         ) : null}
         <div

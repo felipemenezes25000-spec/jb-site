@@ -33,16 +33,37 @@ test.describe("Home", () => {
   /**
    * O menu do cabeçalho tem duas formas, e a largura decide qual.
    *
-   * A barra horizontal com os cinco destinos só aparece a partir de 1536px:
-   * abaixo disso ela espremeria o campo de busca a menos de 100px, e a busca
-   * é o controle mais usado do cabeçalho. Nesta suíte a janela tem 1440px,
-   * então o caminho REAL de quem está aqui é a gaveta — e é ele que o teste
-   * percorre, em vez de exigir uma barra que aquela largura não mostra.
+   * A direção do catálogo tem fileira própria a partir de 1024px. Antes ela só
+   * aparecia em 1700px: em 1440 — a largura desta suíte e a de trabalho mais
+   * comum — o site inteiro caía no botão de menu, e o desktop navegava como
+   * celular. Com um nível só para ela, a busca deixou de disputar a mesma
+   * linha e o caminho real de quem está em 1440 passou a ser o link direto.
    *
-   * "Equipamentos" tem mega menu, então na gaveta é um botão que abre a
-   * seção; o link do catálogo inteiro está dentro dela.
+   * O caminho do celular continua coberto pelo teste seguinte, que estreita a
+   * janela e percorre a gaveta.
    */
   test("o menu do cabeçalho leva ao catálogo", async ({ page }) => {
+    await page.goto("/");
+
+    const direcao = page.getByRole("navigation", { name: "Principal" });
+    await expect(direcao).toBeVisible();
+    await direcao.getByRole("link", { name: "Equipamentos" }).click();
+
+    await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+
+  /**
+   * O mesmo destino pela gaveta, na largura em que ela é o caminho real.
+   *
+   * Cada linha da gaveta é duas coisas: o link do destino e, ao lado, o botão
+   * que abre as opções daquela seção. O caminho para o catálogo inteiro é o
+   * link — o botão só revela as categorias. A busca é feita dentro da
+   * navegação principal da gaveta porque "Equipamentos" também é o nome de um
+   * atalho da Área da Clínica, logo acima.
+   */
+  test("no celular, a gaveta leva ao catálogo", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
 
     await page.getByRole("button", { name: "Abrir o menu" }).click();
@@ -50,8 +71,11 @@ test.describe("Home", () => {
     const gaveta = page.getByRole("dialog", { name: "Menu de navegação" });
     await expect(gaveta).toBeVisible();
 
-    await gaveta.getByRole("button", { name: /Equipamentos/ }).first().click();
-    await gaveta.getByRole("link", { name: "Ver todos os equipamentos" }).click();
+    await gaveta
+      .getByRole("navigation", { name: "Menu principal no celular" })
+      .getByRole("link", { name: /Equipamentos/ })
+      .first()
+      .click();
 
     await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

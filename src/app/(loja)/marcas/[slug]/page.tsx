@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { Vitrine, type ParametrosVitrine } from "@/components/loja/vitrine";
 import { LinkBotao } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { TituloSecao } from "@/components/ui/data";
 import { Grade } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import { PUBLICADO } from "@/lib/catalogo";
+import { chaveDeNome } from "@/lib/homonimos";
 import { logoDaMarca } from "@/lib/marcas";
 import { textoDeHtml } from "@/lib/html";
 import { prisma } from "@/lib/prisma";
@@ -96,7 +97,22 @@ export default async function MarcaPage({ params, searchParams }: Props) {
       logo: { select: { url: true, alt: true } },
     },
   });
-  if (!marca || !marca.published) notFound();
+  if (!marca) notFound();
+
+  /* Mesma regra da categoria: marca despublicada por unificação entrega o
+     endereço antigo à homônima que ficou publicada, em vez de um 404 para
+     quem tinha o link salvo. Ver `scripts/unificar-duplicatas.ts`. */
+  if (!marca.published) {
+    const publicadas = await prisma.brand.findMany({
+      where: { published: true },
+      select: { slug: true, name: true },
+    });
+    const herdeira = publicadas.find(
+      (outra) => chaveDeNome(outra.name) === chaveDeNome(marca.name),
+    );
+    if (herdeira) permanentRedirect(`/marcas/${herdeira.slug}`);
+    notFound();
+  }
 
   const [parametros, vizinhas] = await Promise.all([searchParams, outrasMarcas(marca.slug)]);
 

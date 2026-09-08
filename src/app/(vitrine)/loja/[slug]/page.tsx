@@ -559,6 +559,11 @@ export default async function ProdutoPage({ params }: Props) {
                     hrefOrcamento={hrefOrcamento}
                     maxParcelas={maxParcelas}
                     minParcelaCents={minParcelaCents}
+                    garantia={
+                      garantiaMeses && garantiaMeses > 0
+                        ? { meses: garantiaMeses, daUnidade: Boolean(unidade?.warrantyMonths) }
+                        : null
+                    }
                   />
                 )}
 

@@ -121,11 +121,30 @@ export default async function AssistenciaTecnicaPage() {
     /* A foto do topo é de equipamento de verdade, do catálogo da própria JB —
        é o argumento da página inteira: quem vende é quem conserta. Sem
        equipamento com foto publicada, o hero fica só com o texto, em coluna
-       única, em vez de abrir espaço para uma imagem que não existe. */
-    prisma.product.findFirst({
+       única, em vez de abrir espaço para uma imagem que não existe.
+
+       Duas candidatas, e não uma: a consulta era idêntica à do destaque da
+       home, então a assistência abria com EXATAMENTE a mesma autoclave da
+       primeira dobra da vitrine. Compra e serviço ficavam com a mesma cara, e
+       a página que fala de bancada não mostrava nada de bancada. A escolha
+       abaixo prefere um seminovo — unidade que de fato passou pela revisão da
+       JB — e, na falta dele, pega a segunda foto do catálogo em vez da
+       primeira.
+
+       Isto reduz a repetição; não a resolve. A correção completa é
+       fotografia própria de diagnóstico e manutenção, que está registrada na
+       auditoria de 08/09/2026 como produção de conteúdo. */
+    prisma.product.findMany({
       where: { status: "active", media: { some: {} } },
-      orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+      orderBy: [
+        { condition: "asc" },
+        { featured: "desc" },
+        { publishedAt: "desc" },
+        { createdAt: "desc" },
+      ],
+      take: 2,
       select: {
+        condition: true,
         media: {
           orderBy: { order: "asc" },
           take: 1,
@@ -135,7 +154,9 @@ export default async function AssistenciaTecnicaPage() {
     }),
   ]);
 
-  const foto = vitrine?.media[0]?.media.url ?? null;
+  const daBancada = vitrine.find((produto) => produto.condition === "seminovo");
+  const escolhida = daBancada ?? vitrine[1] ?? vitrine[0];
+  const foto = escolhida?.media[0]?.media.url ?? null;
 
   /* Cartão com foto e cartão sem foto na mesma grade viram uma fileira
      desalinhada. Ou a JB cadastrou imagem em todas as frentes e a seção é

@@ -5,17 +5,22 @@ import { fixtures } from "./fixtures";
 /**
  * Catálogo.
  *
- * O que está sob teste é o contrato "filtro mora na URL": escolher uma
- * condição precisa aparecer na barra de endereço, sobreviver a um
- * recarregamento e voltar ao estado anterior no botão "voltar". Sem isso o
- * resultado deixa de ser compartilhável e o Next perde a renderização no
- * servidor.
+ * O que está sob teste é o contrato "filtro mora na URL": escolher uma opção
+ * precisa aparecer na barra de endereço, sobreviver a um recarregamento e
+ * voltar ao estado anterior no botão "voltar". Sem isso o resultado deixa de
+ * ser compartilhável e o Next perde a renderização no servidor.
  *
  * Cada opção de filtro é um link de verdade — endereço próprio, funciona sem
- * script e anuncia o que faz ("Filtrar por Condição: Novo" enquanto está
- * desligada, "Remover filtro Condição: Novo" depois de ligada). É por esse
- * nome acessível que o teste localiza as opções, e é ele que diz se o filtro
- * está aplicado.
+ * script e anuncia o que faz ("Filtrar por Categoria: Biossegurança" enquanto
+ * está desligada, "Remover filtro Categoria: Biossegurança" depois de
+ * ligada). É por esse nome acessível que o teste localiza as opções, e é ele
+ * que diz se o filtro está aplicado.
+ *
+ * O grupo escolhido é **Categoria**, e não Condição: /loja é a coleção dos
+ * novos e trava a condição — ela é o escopo da página, não uma escolha que a
+ * pessoa possa desmarcar, então aquele grupo simplesmente não é desenhado
+ * ali. O teste pedia por ele e falhava sem que houvesse defeito nenhum na
+ * aplicação.
  */
 
 /** O contador do topo da lista, que muda de texto quando há filtro. */
@@ -37,10 +42,7 @@ test.describe("Catálogo", () => {
     await expect(page.getByRole("heading", { level: 1, name: produto.nome })).toBeVisible();
   });
 
-  test("filtrar por condição escreve o filtro na URL e reduz o resultado", async ({ page }) => {
-    const { condicoes } = fixtures();
-    test.skip(condicoes.length < 2, "o banco precisa de duas condições para o filtro significar algo");
-
+  test("filtrar por categoria escreve o filtro na URL e reduz o resultado", async ({ page }) => {
     await page.goto("/loja");
 
     const contador = page.getByText(CONTADOR);
@@ -53,14 +55,14 @@ test.describe("Catálogo", () => {
     // painel: a fileira de fichas de filtro aplicado repete o mesmo nome
     // acessível, e é o painel que representa o estado de cada opção.
     const painel = page.getByRole("complementary", { name: "Filtros do catálogo" });
-    const opcoes = painel.getByRole("link", { name: /^Filtrar por Condição: / });
+    const opcoes = painel.getByRole("link", { name: /^Filtrar por Categoria: / });
     await expect(opcoes.first()).toBeVisible();
     const escolhida = opcoes.first();
     const rotulo = (await escolhida.getAttribute("aria-label"))?.replace(
-      "Filtrar por Condição: ",
+      "Filtrar por Categoria: ",
       "",
     );
-    expect(rotulo, "o painel de filtros precisa oferecer alguma condição").toBeTruthy();
+    expect(rotulo, "o painel de filtros precisa oferecer alguma categoria").toBeTruthy();
 
     await escolhida.click();
 
@@ -71,7 +73,7 @@ test.describe("Catálogo", () => {
 
     // ligada, a mesma opção passa a oferecer a remoção
     await expect(
-      painel.getByRole("link", { name: `Remover filtro Condição: ${rotulo}` }),
+      painel.getByRole("link", { name: `Remover filtro Categoria: ${rotulo}` }),
     ).toBeVisible();
 
     const totalFiltrado = Number((await contador.innerText()).match(/\d+/)?.[0] ?? 0);
@@ -79,12 +81,20 @@ test.describe("Catálogo", () => {
     expect(totalFiltrado).toBeLessThanOrEqual(totalSemFiltro);
   });
 
-  test("a condição escolhida sobrevive ao recarregamento e ao voltar", async ({ page }) => {
-    const { condicoes } = fixtures();
-    const condicao = condicoes[0];
-    test.skip(!condicao, "nenhuma condição publicada no catálogo");
+  test("a categoria escolhida sobrevive ao recarregamento e ao voltar", async ({ page }) => {
+    /* A categoria sai da própria página, e não de uma lista fixa: o catálogo
+       de demonstração muda, e um slug escrito à mão aqui vira teste que
+       reprova por causa do banco. */
+    await page.goto("/loja");
+    const primeira = page
+      .getByRole("complementary", { name: "Filtros do catálogo" })
+      .getByRole("link", { name: /^Filtrar por Categoria: / })
+      .first();
+    await expect(primeira).toBeVisible();
+    const alvo = await primeira.getAttribute("href");
+    expect(alvo, "o painel precisa oferecer uma categoria").toBeTruthy();
 
-    await page.goto(`/loja?condicao=${condicao}`);
+    await page.goto(alvo!);
 
     const contador = page.getByText(CONTADOR);
     await expect(contador).toBeVisible();
@@ -102,11 +112,11 @@ test.describe("Catálogo", () => {
     await expect(ligadas).toHaveCount(1);
 
     await limpar.click();
-    await page.waitForURL((url) => !url.searchParams.has("condicao"));
+    await page.waitForURL((url) => !url.searchParams.has("categoria"));
     await expect(ligadas).toHaveCount(0);
 
     await page.goBack();
-    await page.waitForURL(/condicao=/);
+    await page.waitForURL(/categoria=/);
     await expect(ligadas).toHaveCount(1);
   });
 

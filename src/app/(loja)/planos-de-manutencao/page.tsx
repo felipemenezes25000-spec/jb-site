@@ -15,6 +15,7 @@ import {
   escoposComparaveis,
   paraPlanoPublico,
   precoDoPlano,
+  regraDoPlano,
   SELECAO_PLANO_PUBLICO,
   type PlanoPublico,
 } from "@/lib/plano";
@@ -151,12 +152,17 @@ const LINHAS_COMPARATIVO: {
   {
     rotulo: "Peças",
     valor: (plano) =>
-      plano.politicaDePecas ||
+      regraDoPlano(plano, plano.politicaDePecas, /pe[çc]a/i) ||
       (plano.descontoEmPecas > 0 ? `${plano.descontoEmPecas}% de desconto` : "Orçadas à parte"),
   },
   {
+    /* `regraDoPlano` antes do "A combinar": com o campo próprio vazio, a
+       linha contradizia o benefício que o cartão logo acima anunciava. Ver o
+       comentário em `src/lib/plano.ts`. */
     rotulo: "Deslocamento",
-    valor: (plano) => plano.politicaDeDeslocamento || "A combinar",
+    valor: (plano) =>
+      regraDoPlano(plano, plano.politicaDeDeslocamento, /desloca|visita t[ée]cnica|regi[ãa]o/i) ||
+      "A combinar",
   },
 ];
 

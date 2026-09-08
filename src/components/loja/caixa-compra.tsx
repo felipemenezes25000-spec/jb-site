@@ -2,7 +2,16 @@
 
 import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, CreditCard, Minus, Plus, ShoppingCart, Sliders, Zap } from "lucide-react";
+import {
+  CheckCircle2,
+  CreditCard,
+  Minus,
+  Plus,
+  ShieldCheck,
+  ShoppingCart,
+  Sliders,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { adicionarAoCarrinho, type EstadoCarrinho } from "@/app/acoes/carrinho";
@@ -66,6 +75,7 @@ export function CaixaCompra({
   hrefOrcamento,
   maxParcelas,
   minParcelaCents,
+  garantia,
 }: {
   produtoId: string;
   precoCents: number;
@@ -82,6 +92,16 @@ export function CaixaCompra({
   maxParcelas: number;
   /** Valor mínimo da parcela, também vindo da configuração da loja. */
   minParcelaCents: number;
+  /**
+   * Garantia, em meses, e se ela é da unidade específica.
+   *
+   * Entra DENTRO da moldura que decide a compra: preço, ação principal e
+   * garantia são a mesma decisão, e a garantia ficava só no bloco de
+   * condições, abaixo da foto — a duas rolagens do botão em telas pequenas.
+   * É a linha, não o bloco: repetir "Condições desta compra" inteiro aqui
+   * devolveria a pilha de cartões que a coluna passou a evitar.
+   */
+  garantia?: { meses: number; daUnidade: boolean } | null;
 }) {
   const router = useRouter();
   const [quantidade, setQuantidade] = useState(1);
@@ -411,6 +431,18 @@ export function CaixaCompra({
           </LinkBotao>
         </div>
       )}
+
+      {garantia && garantia.meses > 0 ? (
+        <p className="flex items-start gap-2.5 border-t border-graf-200 px-5 py-4 text-[0.8125rem] leading-relaxed text-graf-600 sm:px-6">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+          <span>
+            <span className="font-bold text-graf-950">
+              Garantia de {garantia.meses} {garantia.meses === 1 ? "mês" : "meses"}
+            </span>
+            {garantia.daUnidade ? " — registrada para esta unidade específica." : "."}
+          </span>
+        </p>
+      ) : null}
 
       {/* A estimativa fica fora do formulário: consultar o CEP não pode
           enviar o item para o carrinho por acidente. */}

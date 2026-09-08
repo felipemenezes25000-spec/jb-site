@@ -44,6 +44,16 @@ export type CondicaoMenu = { slug: string; rotulo: string; total: number };
 type Props = {
   categorias: CategoriaMenu[];
   condicoes: CondicaoMenu[];
+  /**
+   * A Central Técnica tem publicação no ar.
+   *
+   * Sem isso, ela some da direção principal: um dos cinco lugares do
+   * cabeçalho estava reservado a uma página que só sabia dizer que ainda não
+   * tem conteúdo. Continua no rodapé e no mapa do site — o que ela perde é o
+   * destaque comercial, não a existência. É a mesma regra que já vale para
+   * categoria sem equipamento no mega menu.
+   */
+  centralPublicada?: boolean;
   acessoDaConta: React.ReactNode;
   contadorDoCarrinho: React.ReactNode;
   telefone: string;
@@ -54,13 +64,6 @@ type Props = {
 };
 
 type ChaveMegaPremium = "catalogo" | "seminovos" | "assistencia" | "manutencao" | "central";
-
-const CSS_FAIXA = `
-@keyframes jb-faixa { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
-.jb-faixa-trilho { animation: jb-faixa 34s linear infinite; will-change: transform; }
-.jb-faixa:hover .jb-faixa-trilho { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) { .jb-faixa-trilho { animation: none; } }
-`;
 
 const MENSAGEM_WHATSAPP = "Olá! Vim pelo site da JB.";
 
@@ -93,6 +96,7 @@ function IconeMenu({ chave, className }: { chave: ChaveMegaPremium; className?: 
 export function Cabecalho({
   categorias,
   condicoes,
+  centralPublicada = true,
   acessoDaConta,
   contadorDoCarrinho,
   telefone,
@@ -170,6 +174,10 @@ export function Cabecalho({
     if (!evento.currentTarget.contains(evento.relatedTarget)) setMega(null);
   }
 
+  const menu = centralPublicada
+    ? MENU_PRINCIPAL
+    : MENU_PRINCIPAL.filter((item) => item.href !== "/central-tecnica");
+
   const recados = recadosDaFaixa(desde, cidade);
   const temBarraUtilidade = Boolean(horario || telefone || whatsapp);
 
@@ -182,10 +190,19 @@ export function Cabecalho({
         Pular para o conteúdo
       </a>
 
+      {/* ------------------------------------------------- nível 1: utilidade
+
+          Era uma faixa vermelha com cinco recados em rolagem infinita. Três
+          problemas, todos visíveis nas capturas da auditoria: o texto entrava
+          e saía cortado no meio da palavra sob os blocos fixos das pontas; o
+          movimento disputava atenção com a vitrine, que é onde a JB quer o
+          olho; e uma frase que passa não pode ser lida por quem chega depois
+          dela. Agora é uma linha parada — horário à esquerda, uma afirmação
+          da empresa no meio, telefone e WhatsApp à direita. O movimento
+          expressivo fica reservado à descoberta e às vitrines. */}
       {temBarraUtilidade ? (
         <div className="hidden bg-gradient-to-r from-jb-700 via-jb-600 to-jb-700 text-white lg:block">
-          <style>{CSS_FAIXA}</style>
-          <div className="mx-auto flex h-11 max-w-[105rem] items-center gap-7 px-8 text-[0.78rem]">
+          <div className="mx-auto flex h-10 max-w-[105rem] items-center gap-7 px-8 lg:px-10 text-[0.78rem]">
             {horario ? (
               <p className="flex shrink-0 items-center gap-2 font-semibold text-white/90">
                 <Clock className="size-4" aria-hidden />
@@ -193,25 +210,15 @@ export function Cabecalho({
               </p>
             ) : <span />}
 
-            <div
-              className="jb-faixa relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_5%,#000_95%,transparent)]"
-              aria-label="Destaques da JB"
-            >
-              <ul className="jb-faixa-trilho flex w-max items-center">
-                {[0, 1].map((copia) =>
-                  recados.map((recado, posicao) => (
-                    <li key={`${copia}-${posicao}`} className="flex shrink-0 items-center gap-7 pr-7" aria-hidden={copia === 1 ? true : undefined}>
-                      <span className="whitespace-nowrap font-semibold tracking-[-0.01em] text-white/95">{recado}</span>
-                      <span className="size-1 rotate-45 bg-white/40" aria-hidden />
-                    </li>
-                  )),
-                )}
-              </ul>
-            </div>
+            {recados[0] ? (
+              <p className="hidden min-w-0 flex-1 truncate font-semibold tracking-[-0.01em] text-white/90 xl:block">
+                {recados[0]}
+              </p>
+            ) : null}
 
             <div className="ml-auto flex shrink-0 items-center gap-4">
               {telefone ? (
-                <a href={telHref(telefone)} className="flex h-11 items-center gap-2 font-semibold text-white/90 transition hover:text-white">
+                <a href={telHref(telefone)} className="flex h-10 items-center gap-2 font-semibold text-white/90 transition hover:text-white">
                   <Phone className="size-4" aria-hidden />
                   {telefone}
                 </a>
@@ -221,7 +228,7 @@ export function Cabecalho({
                   href={whatsappHref(whatsapp, MENSAGEM_WHATSAPP)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-11 items-center gap-2 font-bold text-white transition hover:text-white/80"
+                  className="flex h-10 items-center gap-2 font-bold text-white transition hover:text-white/80"
                 >
                   <MessageCircle className="size-4" aria-hidden />
                   WhatsApp {whatsapp}
@@ -241,61 +248,14 @@ export function Cabecalho({
           compacto && "shadow-[0_10px_35px_rgba(25,28,32,0.08)]",
         )}
       >
-        <div className="mx-auto max-w-[105rem] px-5 sm:px-8">
-          <div className={cn("flex items-center gap-4 transition-[height] duration-200", compacto ? "h-[72px]" : "h-[90px]")}>
+        <div className="mx-auto max-w-[105rem] px-5 sm:px-8 lg:px-10">
+          <div className={cn("flex items-center gap-4 transition-[height] duration-200", compacto ? "h-[64px]" : "h-[78px]")}>
             <Link href="/" aria-label="JB Soluções Odontológicas — início" className="flex min-h-11 shrink-0 items-center rounded-lg">
-              <Logo altura={compacto ? 38 : 46} prioridade />
+              <Logo altura={compacto ? 34 : 42} prioridade />
             </Link>
 
-            <nav aria-label="Principal" className="hidden shrink-0 items-center rounded-2xl border border-graf-200/80 bg-graf-50/75 p-1 min-[1700px]:flex">
-              {MENU_PRINCIPAL.map((item) => {
-                const chave = chaveDoItem(item);
-                const aberto = mega === chave;
-                const estaAtivo = ativo(item.href);
-                return (
-                  <div
-                    key={item.href}
-                    className="relative flex h-11 items-center"
-                    onMouseEnter={() => {
-                      cancelarFechamento();
-                      setMega(chave);
-                    }}
-                  >
-                    <Link
-                      href={item.href}
-                      aria-current={estaAtivo ? "page" : undefined}
-                      className={cn(
-                        "group relative flex h-10 items-center gap-2 rounded-xl pl-3 pr-1.5 text-[0.79rem] font-bold transition-all",
-                        aberto || estaAtivo
-                          ? "bg-white text-jb-700 shadow-[0_1px_2px_rgba(26,28,30,0.05),0_5px_16px_rgba(26,28,30,0.07)]"
-                          : "text-graf-700 hover:bg-white/90 hover:text-jb-700",
-                      )}
-                    >
-                      <span className={cn("flex size-6 items-center justify-center rounded-lg transition-colors", aberto || estaAtivo ? "bg-jb-50 text-jb-600" : "text-graf-500 group-hover:bg-jb-50 group-hover:text-jb-600")}>
-                        <IconeMenu chave={chave} className="size-3.5" />
-                      </span>
-                      <span className="whitespace-nowrap">{item.rotulo}</span>
-                    </Link>
-                    <button
-                      type="button"
-                      ref={(el) => { gatilhosMega.current[chave] = el; }}
-                      aria-expanded={aberto}
-                      aria-label={`${aberto ? "Fechar" : "Abrir"} o menu de ${item.rotulo}`}
-                      onFocus={cancelarFechamento}
-                      onClick={() => setMega(aberto ? null : chave)}
-                      className={cn(
-                        "mr-1 flex size-8 items-center justify-center rounded-lg transition-colors",
-                        aberto ? "bg-white text-jb-700" : "text-graf-500 hover:bg-white hover:text-jb-700",
-                      )}
-                    >
-                      <ChevronDown className={cn("size-3.5 transition-transform duration-200", aberto && "rotate-180")} aria-hidden />
-                    </button>
-                  </div>
-                );
-              })}
-            </nav>
 
-            <div className="ml-auto hidden min-w-0 max-w-[26rem] flex-1 lg:block min-[1700px]:ml-1">
+            <div className="ml-auto hidden min-w-0 max-w-[32rem] flex-1 lg:block">
               <BuscaComSugestoes id="busca-cabecalho" compacto={compacto} />
             </div>
 
@@ -316,7 +276,7 @@ export function Cabecalho({
 
               <Link
                 href="/assistencia-tecnica/solicitar"
-                className={classesBotao("primario", "sm", "ml-1.5 hidden min-h-12 rounded-2xl px-5 shadow-[0_12px_28px_rgba(196,14,21,0.2)] xl:inline-flex")}
+                className={classesBotao("primario", "sm", "ml-1.5 hidden min-h-11 rounded-xl px-4 shadow-[0_12px_28px_rgba(196,14,21,0.2)] lg:inline-flex xl:min-h-12 xl:px-5")}
               >
                 <Wrench className="size-4 shrink-0" aria-hidden />
                 Solicitar assistência
@@ -327,12 +287,86 @@ export function Cabecalho({
                 onClick={() => setMenuAberto(true)}
                 aria-haspopup="dialog"
                 aria-expanded={menuAberto}
-                className="ml-1 flex size-11 items-center justify-center rounded-xl border border-graf-200 text-graf-800 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 min-[1700px]:hidden"
+                className="ml-1 flex size-11 items-center justify-center rounded-xl border border-graf-200 text-graf-800 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 lg:hidden"
               >
                 <Menu className="size-5" aria-hidden />
                 <span className="sr-only">Abrir o menu</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* ------------------------------------------- nível 3: navegação
+
+            A direção do catálogo tinha a própria fileira só a partir de
+            1700px: em 1440px — a largura de trabalho mais comum — o site
+            inteiro caía no botão de menu, e o desktop navegava como celular.
+            Empilhada com busca, conta, carrinho e o botão de assistência na
+            MESMA linha, ela também disputava atenção com tudo o que estava do
+            lado. Aqui ela ganha um nível só dela, aparece a partir de 1024px
+            e o botão de menu volta a ser o que sempre foi: a saída do
+            celular. */}
+        <div className="hidden border-t border-graf-200/70 lg:block">
+          <div className="mx-auto max-w-[105rem] px-5 sm:px-8 lg:px-10">
+            <nav aria-label="Principal" className="-mx-1.5 flex items-center">
+              {menu.map((item) => {
+                const chave = chaveDoItem(item);
+                const aberto = mega === chave;
+                const estaAtivo = ativo(item.href);
+                return (
+                  <div
+                    key={item.href}
+                    /* Numa fileira própria o item não precisa mais parecer
+                       botão: pastilha branca com sombra, dentro de uma cápsula
+                       cinza, ao lado de outros quatro, era o que fazia cinco
+                       seções do site pesarem tanto quanto a ação principal do
+                       cabeçalho. Aqui é texto, com um filete vermelho embaixo
+                       de quem está aberto ou ativo — o mesmo sinal que a
+                       marca usa em todo o resto do site. */
+                    className="relative flex h-12 items-center"
+                    onMouseEnter={() => {
+                      cancelarFechamento();
+                      setMega(chave);
+                    }}
+                  >
+                    <Link
+                      href={item.href}
+                      aria-current={estaAtivo ? "page" : undefined}
+                      className={cn(
+                        "group relative flex h-12 items-center gap-2 rounded-t-lg px-3 text-[0.8125rem] font-bold transition-colors",
+                        "after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors after:content-['']",
+                        aberto || estaAtivo
+                          ? "text-jb-700 after:bg-jb-500"
+                          : "text-graf-700 after:bg-transparent hover:text-jb-700",
+                      )}
+                    >
+                      <IconeMenu
+                        chave={chave}
+                        className={cn(
+                          "size-4 shrink-0 transition-colors",
+                          aberto || estaAtivo ? "text-jb-600" : "text-graf-500 group-hover:text-jb-600",
+                        )}
+                      />
+                      <span className="whitespace-nowrap">{item.rotulo}</span>
+                    </Link>
+                    <button
+                      type="button"
+                      ref={(el) => { gatilhosMega.current[chave] = el; }}
+                      aria-expanded={aberto}
+                      aria-label={`${aberto ? "Fechar" : "Abrir"} o menu de ${item.rotulo}`}
+                      onFocus={cancelarFechamento}
+                      onClick={() => setMega(aberto ? null : chave)}
+                      className={cn(
+                        "-ml-2 mr-1 flex size-8 items-center justify-center rounded-lg transition-colors",
+                        aberto ? "text-jb-700" : "text-graf-400 hover:text-jb-700",
+                      )}
+                    >
+                      <ChevronDown className={cn("size-3.5 transition-transform duration-200", aberto && "rotate-180")} aria-hidden />
+                    </button>
+                  </div>
+                );
+              })}
+            </nav>
           </div>
         </div>
 
@@ -362,7 +396,7 @@ export function Cabecalho({
               exit={{ opacity: 0, y: reduzido ? 0 : -6 }}
               transition={{ duration: reduzido ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
               onMouseEnter={cancelarFechamento}
-              className="absolute inset-x-0 top-full hidden px-4 pt-3 min-[1700px]:block"
+              className="absolute inset-x-0 top-full hidden px-4 pt-3 lg:block"
             >
               <div className="mx-auto max-h-[72dvh] max-w-[101rem] overflow-y-auto overscroll-contain rounded-[1.6rem] border border-graf-200/80 bg-white shadow-[0_22px_65px_rgba(26,28,30,0.16)]">
                 <PainelMega
@@ -384,6 +418,7 @@ export function Cabecalho({
         aoFechar={fecharMenu}
         categorias={categorias}
         condicoes={condicoes}
+        menu={menu}
         telefone={telefone}
         whatsapp={whatsapp}
         ativo={ativo}
@@ -669,6 +704,7 @@ function MenuMobile({
   aoFechar,
   categorias,
   condicoes,
+  menu,
   telefone,
   whatsapp,
   ativo,
@@ -678,6 +714,8 @@ function MenuMobile({
   aoFechar: () => void;
   categorias: CategoriaMenu[];
   condicoes: CondicaoMenu[];
+  /** A mesma direção da fileira do desktop — ver `centralPublicada`. */
+  menu: ItemMenu[];
   telefone: string;
   whatsapp: string;
   ativo: (href: string) => boolean;
@@ -692,7 +730,7 @@ function MenuMobile({
     <AnimatePresence>
       {aberto ? (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduzido ? 0 : 0.2 }} onClick={aoFechar} className="fixed inset-0 z-60 bg-graf-950/45 backdrop-blur-[2px] min-[1700px]:hidden" aria-hidden />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduzido ? 0 : 0.2 }} onClick={aoFechar} className="fixed inset-0 z-60 bg-graf-950/45 backdrop-blur-[2px] lg:hidden" aria-hidden />
           <motion.div
             ref={caixa}
             role="dialog"
@@ -703,7 +741,7 @@ function MenuMobile({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: reduzido ? 0 : "100%", opacity: reduzido ? 0 : 1 }}
             transition={{ type: "tween", duration: reduzido ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-y-0 right-0 z-70 flex w-[min(25rem,94vw)] flex-col bg-white shadow-[0_0_70px_rgba(26,28,30,0.25)] min-[1700px]:hidden"
+            className="fixed inset-y-0 right-0 z-70 flex w-[min(25rem,94vw)] flex-col bg-white shadow-[0_0_70px_rgba(26,28,30,0.25)] lg:hidden"
           >
             <div className="flex h-17 shrink-0 items-center justify-between border-b border-graf-200 px-5 pr-3">
               <Logo altura={35} />
@@ -721,7 +759,7 @@ function MenuMobile({
 
               <nav aria-label="Menu principal no celular" className="p-4 pt-2">
                 <ul className="space-y-2">
-                  {MENU_PRINCIPAL.map((item) => {
+                  {menu.map((item) => {
                     const chave = chaveDoItem(item);
                     const abertoSecao = secao === chave;
                     return (

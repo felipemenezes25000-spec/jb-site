@@ -35,9 +35,15 @@ async function dadosDoTopo() {
  * Home pública da JB.
  *
  * A jornada é a de uma vitrine, não a de uma landing page: abertura curta com
- * um equipamento real na primeira tela, três listas do catálogo publicado —
- * oferta, seminovo revisado e o que sai mais —, e só depois o que a JB
- * afirma sobre si (categorias, assistência, marcas).
+ * um equipamento real na primeira tela, a escolha por área do consultório
+ * logo em seguida, três listas do catálogo publicado — oferta, seminovo
+ * revisado e o que sai mais — e só depois o que a JB afirma sobre si
+ * (assistência, marcas).
+ *
+ * A ordem das listas não é decorativa: cada uma fica só com o que as
+ * anteriores não usaram (ver `dadosDaHome`). Antes as quatro vitrines
+ * dividiam o mesmo catálogo pequeno sem memória entre si, e o mesmo
+ * equipamento aparecia três ou quatro vezes na mesma rolagem.
  *
  * O que ela deliberadamente NÃO faz é abrir com três telas de posicionamento
  * antes do primeiro preço. Quem chega aqui está comprando equipamento.
@@ -60,6 +66,16 @@ export default async function HomePage() {
       : null,
   ].filter((numero) => numero !== null);
 
+  /* Tudo o que a página já mostrou, em ordem de aparição. Serve à tira de
+     "vistos recentemente" lá embaixo, que é a quarta chance de o mesmo
+     equipamento aparecer na mesma rolagem. */
+  const jaNaHome = [
+    catalogo.destaque?.slug,
+    ...catalogo.ofertas.map((produto) => produto.slug),
+    ...catalogo.seminovos.map((produto) => produto.slug),
+    ...catalogo.procurados.map((produto) => produto.slug),
+  ].filter((slug): slug is string => Boolean(slug));
+
   return (
     <>
       {/* A home era a única página sem dado estruturado: as internas já
@@ -77,6 +93,17 @@ export default async function HomePage() {
         destaque={catalogo.destaque}
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
       />
+
+      {/* A escolha por área do consultório vinha DEPOIS de quatro vitrines de
+          produto. Quem chega sabendo o que precisa — autoclave, compressor,
+          fotopolimerizador — tinha de rolar a home inteira para achar o
+          caminho por categoria; quem chega sem saber via preço antes de ver
+          do que se trata. Subir a seção é a "escolha rápida" do plano da home
+          e o padrão de organização da referência de UX enviada: categoria
+          antes de oferta. */}
+      <Suspense fallback={<EsqueletoCategoriasHome />}>
+        <SecaoCategorias />
+      </Suspense>
 
       <FaixaVitrine
         sobretitulo="Preço abaixo do de tabela"
@@ -115,13 +142,17 @@ export default async function HomePage() {
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
       />
 
-      <Suspense fallback={<EsqueletoCategoriasHome />}>
-        <SecaoCategorias />
-      </Suspense>
-
       {/* Continua de onde parou. Some inteiro para quem chega pela primeira
-          vez — a home não abre um buraco para dizer que não sabe nada. */}
-      <VistosRecentemente titulo="Continue de onde parou" larguraInterna="max-w-[112rem]" />
+          vez — a home não abre um buraco para dizer que não sabe nada.
+
+          `excluir` recebe tudo o que as vitrines acima já mostraram: sem
+          isso, quem visitou dois equipamentos do próprio destaque via os
+          mesmos cartões pela segunda ou terceira vez na mesma rolagem. */}
+      <VistosRecentemente
+        titulo="Continue de onde parou"
+        excluir={jaNaHome}
+        larguraInterna="max-w-[112rem]"
+      />
 
       <SecaoAssistencia configuracoes={s} />
 

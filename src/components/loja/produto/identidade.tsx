@@ -125,7 +125,7 @@ export function IdentidadeProduto({
       <dl className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.8125rem]">
         {identificadores.map((linha) => (
           <div key={linha.rotulo} className="flex items-baseline gap-1.5">
-            <dt className="micro text-graf-400">{linha.rotulo}</dt>
+            <dt className="micro text-graf-500">{linha.rotulo}</dt>
             <dd
               className={
                 linha.mono ? "label-mono text-graf-800" : "font-semibold text-graf-800"
@@ -138,7 +138,7 @@ export function IdentidadeProduto({
 
         {categoria ? (
           <div className="flex items-baseline gap-1.5">
-            <dt className="micro text-graf-400">Categoria</dt>
+            <dt className="micro text-graf-500">Categoria</dt>
             <dd>
               <Link
                 href={`/categoria/${categoria.slug}`}

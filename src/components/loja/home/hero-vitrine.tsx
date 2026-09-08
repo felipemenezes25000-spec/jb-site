@@ -54,23 +54,96 @@ export function HeroVitrine({
         }}
       />
 
-      <div className="container-jb grid items-center gap-x-12 gap-y-10 py-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:py-20 xl:grid-cols-[minmax(0,1fr)_25rem]">
-        <div className="max-w-3xl">
+      {/* A grade explícita é o que resolve a primeira dobra do celular.
+
+          Em coluna única, o equipamento entrava DEPOIS de sobretítulo,
+          título, parágrafo, dois botões e três números: em 390 × 844 a visita
+          começava sem ver nada do que a JB vende
+          (`docs/auditoria-visual-2026-09-08/24-home-mobile.png`). Aqui o
+          painel do produto é o segundo filho, então no celular ele sobe para
+          logo abaixo do título; no desktop a colocação por linha e coluna
+          devolve exatamente o desenho anterior — texto à esquerda em duas
+          linhas de grade, painel à direita ocupando as duas. */}
+      <div className="container-jb grid items-center gap-x-12 gap-y-7 py-9 sm:py-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-y-10 lg:py-20 xl:grid-cols-[minmax(0,1fr)_25rem]">
+        <div className="entrada max-w-3xl lg:col-start-1 lg:row-start-1">
           <p className="sobretitulo">Estoque próprio{cidade ? ` · ${cidade}` : ""}</p>
 
           {/* Duas frases numa: o que a pessoa quer fazer e o medo que ela tem
               de fazer errado. O vermelho fica na segunda metade — é o risco
-              que a JB se propõe a tirar da mesa. */}
-          <h1 className="mt-4 text-hero text-graf-950">
+              que a JB se propõe a tirar da mesa.
+
+              O degrau menor até `sm` é de propósito: em 390px o `text-hero`
+              cheio quebrava a frase em quatro linhas e sozinho empurrava a
+              foto para fora da tela. Do tablet para cima nada muda. */}
+          <h1 className="mt-4 text-[2.125rem] font-extrabold leading-[1.06] tracking-[-0.03em] text-graf-950 sm:text-hero">
             Equipar consultório <span className="text-jb-600">sem apostar no escuro.</span>
           </h1>
 
-          <p className="texto-guia mt-6 max-w-xl text-graf-600">
-            Catálogo de equipamentos novos e seminovos revisados, com ficha técnica completa,
-            comparação lado a lado e a mesma equipe que dá assistência depois da venda.
+          <p className="mt-4 max-w-xl text-[1.0625rem] leading-relaxed text-graf-600 sm:mt-6 sm:texto-guia">
+            Equipamentos novos e seminovos revisados, com ficha técnica completa e a mesma
+            equipe que dá assistência depois da venda.
           </p>
+        </div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+        {/* Um equipamento de verdade, com preço de verdade, na primeira tela.
+            Sem produto com foto cadastrada o painel não entra — melhor uma
+            dobra mais curta do que uma moldura vazia.
+
+            No celular ele é deitado: uma foto quadrada com a largura inteira
+            teria 358px de altura e comeria de volta o espaço que a subida
+            economizou. Do `lg` para cima volta a ser o painel em pé. */}
+        {destaque ? (
+          <Link
+            href={`/loja/${destaque.slug}`}
+            className="entrada group placa flex overflow-hidden [animation-delay:140ms] transition-[transform,box-shadow] duration-200 ease-out-quint hover:-translate-y-1 hover:shadow-raised lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:block lg:self-center"
+          >
+            <div className="relative aspect-square w-2/5 shrink-0 bg-white lg:max-h-80 lg:w-full">
+              {destaque.imageUrl ? (
+                <Image
+                  src={destaque.imageUrl}
+                  alt={destaque.imageAlt || destaque.name}
+                  fill
+                  preload
+                  unoptimized={destaque.imageUrl.startsWith("/")}
+                  sizes="(max-width: 1024px) 40vw, 25rem"
+                  className="object-contain p-3 transition-transform duration-500 ease-out-quint group-hover:scale-[1.03] lg:p-6"
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center text-graf-400">
+                  <ImageOff className="size-8" aria-hidden />
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1 border-l border-graf-100 p-4 lg:border-l-0 lg:border-t lg:p-5">
+              {/* A etiqueta saiu de cima da foto. Na versão deitada do celular
+                  ela quebrava em duas linhas e cobria justamente o
+                  equipamento — a peça que a dobra existe para mostrar. Aqui
+                  ela é uma linha de rótulo, e a fotografia fica limpa nos dois
+                  desenhos. */}
+              <p className="micro inline-flex rounded-md bg-jb-500 px-2 py-1 text-white">
+                Mais procurado
+              </p>
+              {destaque.brandName ? (
+                <p className="micro mt-2.5 text-graf-500">{destaque.brandName}</p>
+              ) : null}
+              <p className="mt-2 line-2 text-[0.9375rem] font-bold leading-snug text-graf-950">
+                {destaque.name}
+              </p>
+              <p className="numero mt-3 text-2xl text-graf-950">
+                {formatarPreco(destaque.priceCents)}
+              </p>
+              {parcelas ? (
+                <p className="mt-1.5 text-[0.8125rem] text-graf-500">
+                  em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
+                </p>
+              ) : null}
+            </div>
+          </Link>
+        ) : null}
+
+        <div className="entrada max-w-3xl [animation-delay:260ms] lg:col-start-1 lg:row-start-2">
+          <div className="flex flex-wrap gap-3">
             <Link
               href="/loja"
               className="foco-jb flex h-12 items-center gap-2 rounded-lg bg-jb-500 px-6 text-[0.9375rem] font-bold text-white transition-colors hover:bg-jb-600"
@@ -89,7 +162,7 @@ export function HeroVitrine({
           {/* Os números saem do catálogo publicado. Nenhum é redondo de
               propósito: número redondo em vitrine cheira a enfeite. */}
           {numeros.length > 0 ? (
-            <dl className="mt-10 flex flex-wrap gap-x-12 gap-y-6 border-t border-graf-200 pt-7">
+            <dl className="mt-8 flex flex-wrap gap-x-12 gap-y-6 border-t border-graf-200 pt-7 lg:mt-10">
               {numeros.map((numero) => (
                 <div key={numero.rotulo}>
                   <dt className="micro text-graf-500">{numero.rotulo}</dt>
@@ -99,54 +172,6 @@ export function HeroVitrine({
             </dl>
           ) : null}
         </div>
-
-        {/* Um equipamento de verdade, com preço de verdade, na primeira tela.
-            Sem produto com foto cadastrada o painel não entra — melhor uma
-            dobra mais curta do que uma moldura vazia. */}
-        {destaque ? (
-          <Link
-            href={`/loja/${destaque.slug}`}
-            className="group placa block overflow-hidden transition-[transform,box-shadow] duration-200 ease-out-quint hover:-translate-y-1 hover:shadow-raised"
-          >
-            <div className="relative aspect-square max-h-80 bg-white">
-              {destaque.imageUrl ? (
-                <Image
-                  src={destaque.imageUrl}
-                  alt={destaque.imageAlt || destaque.name}
-                  fill
-                  preload
-                  unoptimized={destaque.imageUrl.startsWith("/")}
-                  sizes="(max-width: 1024px) 92vw, 25rem"
-                  className="object-contain p-6 transition-transform duration-500 ease-out-quint group-hover:scale-[1.03]"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-graf-400">
-                  <ImageOff className="size-8" aria-hidden />
-                </div>
-              )}
-              <span className="micro absolute left-4 top-4 rounded-md bg-jb-500 px-2.5 py-1.5 text-white">
-                Mais procurado
-              </span>
-            </div>
-
-            <div className="border-t border-graf-100 p-5">
-              {destaque.brandName ? (
-                <p className="micro text-graf-500">{destaque.brandName}</p>
-              ) : null}
-              <p className="mt-2 line-2 text-[0.9375rem] font-bold leading-snug text-graf-950">
-                {destaque.name}
-              </p>
-              <p className="numero mt-3 text-2xl text-graf-950">
-                {formatarPreco(destaque.priceCents)}
-              </p>
-              {parcelas ? (
-                <p className="mt-1.5 text-[0.8125rem] text-graf-500">
-                  em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
-                </p>
-              ) : null}
-            </div>
-          </Link>
-        ) : null}
       </div>
 
       <div className="border-t border-graf-200 bg-surface-muted">

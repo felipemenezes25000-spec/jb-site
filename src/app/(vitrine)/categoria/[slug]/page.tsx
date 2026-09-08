@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import {
   Vitrine,
   atalhosDeSubcategorias,
   type ParametrosVitrine,
 } from "@/components/loja/vitrine";
+import { chaveDeNome } from "@/lib/homonimos";
 import { textoDeHtml } from "@/lib/html";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
@@ -62,7 +63,25 @@ export default async function CategoriaPage({ params, searchParams }: Props) {
       parent: { select: { slug: true, name: true, published: true } },
     },
   });
-  if (!categoria || !categoria.published) notFound();
+  if (!categoria) notFound();
+
+  /* Categoria despublicada por unificação continua tendo link antigo, índice
+     de busca e favorito apontando para ela. Quando existe uma publicada com o
+     mesmo nome — que é o caso das duplicatas que `scripts/unificar-
+     duplicatas.ts` junta — o endereço velho leva para ela em vez de bater num
+     404. Sem homônima publicada, segue sendo 404, que é a resposta certa para
+     uma prateleira que a JB tirou do ar. */
+  if (!categoria.published) {
+    const publicadas = await prisma.category.findMany({
+      where: { published: true },
+      select: { slug: true, name: true },
+    });
+    const herdeira = publicadas.find(
+      (outra) => chaveDeNome(outra.name) === chaveDeNome(categoria.name),
+    );
+    if (herdeira) permanentRedirect(`/categoria/${herdeira.slug}`);
+    notFound();
+  }
 
   const [parametros, atalhos] = await Promise.all([
     searchParams,
