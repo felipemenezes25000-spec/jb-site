@@ -155,7 +155,7 @@ export function CabecalhoColecao({
             </p>
             <Link
               href="/marcas"
-              className="inline-flex min-h-10 items-center gap-1 rounded-lg px-2 text-[0.8125rem] font-bold text-jb-700 transition-colors hover:bg-jb-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-[0.8125rem] font-bold text-jb-700 transition-colors hover:bg-jb-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
               Ver marcas
               <ArrowRight className="size-3.5" aria-hidden />
@@ -167,7 +167,7 @@ export function CabecalhoColecao({
               <li key={categoria.slug} className="shrink-0">
                 <Link
                   href={categoria.href}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 text-[0.8125rem] font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 text-[0.8125rem] font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
                   {categoria.nome}
                   <span className="tabular text-xs font-medium text-graf-500">
