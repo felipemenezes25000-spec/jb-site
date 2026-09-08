@@ -64,8 +64,8 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
         }
       />
 
-      <div className="mx-auto w-full max-w-[120rem] flex-1 px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-9 2xl:px-11">
-        <div className="lg:grid lg:grid-cols-[17.25rem_minmax(0,1fr)] lg:items-start lg:gap-7 xl:gap-8">
+      <div className="w-full flex-1 lg:pl-[16rem]">
+        <div className="mx-auto w-full max-w-[94rem] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7 xl:px-10 2xl:px-12">
           <MenuLateral
             contadores={contadores}
             identidade={{ nome: cliente.name, email: cliente.email }}
@@ -83,7 +83,7 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
             }
           />
 
-          <main id="conteudo" className="min-w-0 pb-5">
+          <main id="conteudo" className="min-w-0 pb-6">
             {children}
           </main>
         </div>
