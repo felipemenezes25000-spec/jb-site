@@ -1,0 +1,31 @@
+/* Ajustes que dependem dos data-attributes aplicados pelo enhancer do header. */
+
+@media (min-width: 1024px) {
+  header[data-jb-premium-header="true"][data-jb-compact="true"] .jb-promo-ticker {
+    max-height: 0;
+    opacity: 0;
+    border-top-color: transparent;
+    pointer-events: none;
+  }
+}
+
+/* O acabamento vermelho do CTA pertence somente ao botão do topo. O mesmo
+   href também aparece como card dentro do mega menu de assistência. */
+header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full a[href="/assistencia-tecnica/solicitar"] {
+  overflow: visible;
+  border: 1px solid rgb(225 228 232 / 0.9) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full a[href="/assistencia-tecnica/solicitar"]::after {
+  display: none !important;
+}
+
+header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full a[href="/assistencia-tecnica/solicitar"]:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-jb-200) !important;
+  background: rgb(255 245 245 / 0.45) !important;
+  box-shadow: 0 10px 24px rgb(26 28 30 / 0.07) !important;
+}
