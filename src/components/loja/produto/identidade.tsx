@@ -59,7 +59,14 @@ export function IdentidadeProduto({
   const desenho = CONDICAO_PDP[condicao];
   const modeloUtil = modelo.trim() && normalizar(modelo) !== normalizar(categoria?.nome ?? "");
 
-  const identificadores: Identificador[] = [
+  /* A lista crua e a lista filtrada em duas constantes.
+
+     Escrita numa só, a anotação de tipo caía sobre o RESULTADO do `.filter`,
+     não sobre o literal — então o literal continuava inferido com `null`
+     dentro e o `tsc` reprovava o arquivo, levando junto o `next build`, que
+     roda a checagem de tipos. Com a lista crua declarada como
+     `(Identificador | null)[]`, o filtro estreita o que precisa estreitar. */
+  const linhas: (Identificador | null)[] = [
     modeloUtil
       ? { rotulo: "Modelo", valor: modelo.trim(), mono: false, icone: Cpu }
       : null,
@@ -86,7 +93,9 @@ export function IdentidadeProduto({
     numeroDeSerie
       ? { rotulo: "Nº de série", valor: numeroDeSerie, mono: true, icone: BadgeCheck }
       : null,
-  ].filter((linha): linha is Identificador => linha !== null);
+  ];
+
+  const identificadores = linhas.filter((linha): linha is Identificador => linha !== null);
 
   return (
     <div>

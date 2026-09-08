@@ -9,6 +9,7 @@ import {
   BookOpen,
   ChevronDown,
   Clock,
+  Headset,
   Menu,
   MessageCircle,
   Package,
@@ -19,6 +20,7 @@ import {
   ShieldCheck,
   Sparkles,
   Tag,
+  Truck,
   User,
   Wrench,
   X,
@@ -66,6 +68,114 @@ type Props = {
 type ChaveMegaPremium = "catalogo" | "seminovos" | "assistencia" | "manutencao" | "central";
 
 const MENSAGEM_WHATSAPP = "Olá! Vim pelo site da JB.";
+
+/* ============================================================================
+   Nível 4 — o que a JB garante em toda compra
+
+   Quatro promessas fixas, escritas à mão de propósito: elas não dependem do
+   catálogo, valem para o site inteiro e é por isso que moram no cabeçalho e
+   não numa vitrine.
+
+   A faixa nasceu como um componente separado que procurava o `<header>` no
+   DOM e injetava esta seção por portal, montado no layout raiz. Funcionava,
+   mas custava caro: um MutationObserver ficava rodando em toda rota — painel
+   e Área da Clínica inclusive, onde este cabeçalho nem existe —, o estado de
+   "compacto" passava a existir duas vezes (o do React e um `data-` escrito à
+   mão no scroll) e o acabamento se prendia à estrutura das `div` do header,
+   quebrando em silêncio a cada mexida no layout. Aqui ela é o que sempre foi:
+   o quarto nível do cabeçalho, renderizado pelo cabeçalho.
+
+   Some ao rolar. É apresentação de marca, não navegação: quem já está lendo a
+   página precisa da barra grudada curta, e o que tem de sobreviver ali é
+   busca, conta, carrinho e direção do catálogo.
+   ============================================================================ */
+
+const DESTAQUES = [
+  { titulo: "Ofertas especiais", descricao: "Equipamentos com condições exclusivas", Icone: Tag },
+  { titulo: "Frete para todo o Brasil", descricao: "Agilidade e segurança na entrega", Icone: Truck },
+  { titulo: "Suporte especializado", descricao: "Fale com a equipe técnica JB", Icone: Headset },
+  { titulo: "Pós-venda de confiança", descricao: "Seu consultório sempre funcionando", Icone: ShieldCheck },
+] as const;
+
+const TEMPO_DESTAQUE_MS = 4600;
+
+function FaixaDestaques({ recolhida }: { recolhida: boolean }) {
+  const reduzido = useReducedMotion();
+  const [atual, setAtual] = useState(0);
+
+  /* O rodízio vive aqui, e não no cabeçalho inteiro: um `setInterval` no
+     componente de cima redesenharia busca, conta, carrinho e mega menu a cada
+     4,6 segundos para trocar duas linhas de texto.
+
+     Ele para quando a faixa está recolhida — nada de contar tempo para
+     animar o que ninguém está vendo — e quando a pessoa pediu menos
+     movimento, caso em que a primeira promessa fica fixa. */
+  useEffect(() => {
+    if (reduzido || recolhida) return;
+    const relogio = window.setInterval(
+      () => setAtual((indice) => (indice + 1) % DESTAQUES.length),
+      TEMPO_DESTAQUE_MS,
+    );
+    return () => window.clearInterval(relogio);
+  }, [reduzido, recolhida]);
+
+  const { titulo, descricao, Icone } = DESTAQUES[atual];
+
+  return (
+    <section
+      className="jb-promo-ticker"
+      data-recolhida={recolhida ? "true" : "false"}
+      aria-label="O que a JB garante"
+    >
+      {/* Acima de 1400px cabem as quatro lado a lado; abaixo disso elas se
+          revezam. Só uma das duas versões existe por vez — a outra sai do
+          desenho e da árvore de acessibilidade por `display: none`, então
+          ninguém ouve a mesma promessa duas vezes. */}
+      <div className="jb-promo-ticker__desktop">
+        {DESTAQUES.map(({ titulo: t, descricao: d, Icone: I }, indice) => (
+          <div className="jb-promo-ticker__item" key={t}>
+            <span className="jb-promo-ticker__icon">
+              <I aria-hidden />
+            </span>
+            <span className="jb-promo-ticker__copy">
+              <strong>{t}</strong>
+              <small>{d}</small>
+            </span>
+            {indice < DESTAQUES.length - 1 ? (
+              <span className="jb-promo-ticker__divider" aria-hidden />
+            ) : null}
+          </div>
+        ))}
+      </div>
+
+      <div className="jb-promo-ticker__compact">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={titulo}
+            initial={reduzido ? false : { opacity: 0, y: 7 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduzido ? undefined : { opacity: 0, y: -7 }}
+            transition={{ duration: reduzido ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="jb-promo-ticker__compact-item"
+          >
+            <span className="jb-promo-ticker__icon">
+              <Icone aria-hidden />
+            </span>
+            <span className="jb-promo-ticker__copy">
+              <strong>{titulo}</strong>
+              <small>{descricao}</small>
+            </span>
+            <span className="jb-promo-ticker__progress" aria-hidden>
+              {DESTAQUES.map((item, indice) => (
+                <i key={item.titulo} data-active={indice === atual ? "true" : "false"} />
+              ))}
+            </span>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}
 
 function chaveDoItem(item: ItemMenu): ChaveMegaPremium {
   if (item.href === "/loja") return "catalogo";
@@ -165,7 +275,22 @@ export function Cabecalho({
   function agendarFechamento() {
     if (fecharTimer.current) window.clearTimeout(fecharTimer.current);
     fecharTimer.current = window.setTimeout(() => {
-      if (refCabecalho.current?.contains(document.activeElement)) return;
+      /* A guarda é para o teclado, não para o mouse.
+         Ela existia para o painel não fechar embaixo de quem está tabulando
+         dentro dele — mas testava só "o foco está no cabeçalho", e um CLIQUE
+         no gatilho também deixa o foco lá. Resultado: quem abria o mega menu
+         clicando via o painel continuar aberto depois de tirar o ponteiro,
+         até clicar em outro lugar.
+
+         `:focus-visible` é exatamente a diferença entre os dois casos: o
+         navegador só o aplica quando o foco veio de teclado. Com ele, tabular
+         segura o painel e clicar não segura. */
+      const focado = document.activeElement;
+      const focoDeTeclado =
+        focado instanceof HTMLElement &&
+        refCabecalho.current?.contains(focado) &&
+        focado.matches(":focus-visible");
+      if (focoDeTeclado) return;
       setMega(null);
     }, 180);
   }
@@ -201,7 +326,10 @@ export function Cabecalho({
           da empresa no meio, telefone e WhatsApp à direita. O movimento
           expressivo fica reservado à descoberta e às vitrines. */}
       {temBarraUtilidade ? (
-        <div className="hidden bg-gradient-to-r from-jb-700 via-jb-600 to-jb-700 text-white lg:block">
+        <div
+          data-jb-utility-bar="true"
+          className="hidden bg-gradient-to-r from-jb-700 via-jb-600 to-jb-700 text-white lg:block"
+        >
           <div className="mx-auto flex h-10 max-w-[105rem] items-center gap-7 px-8 lg:px-10 text-[0.78rem]">
             {horario ? (
               <p className="flex shrink-0 items-center gap-2 font-semibold text-white/90">
@@ -239,8 +367,15 @@ export function Cabecalho({
         </div>
       ) : null}
 
+      {/* Os ganchos de acabamento são atributo e classe, nunca a posição da
+          `div` na árvore. `header-premium.css` chegou escrito em cima da
+          estrutura — `> div:first-of-type > div > a:first-child` para o
+          logotipo — e essa é a forma de estilo que quebra sem avisar: basta
+          alguém envolver o logo num `span` para o acabamento sumir sem
+          nenhum erro em lugar nenhum. */}
       <header
         ref={refCabecalho}
+        data-jb-premium-header="true"
         onMouseLeave={agendarFechamento}
         onBlur={aoPerderFoco}
         className={cn(
@@ -250,12 +385,12 @@ export function Cabecalho({
       >
         <div className="mx-auto max-w-[105rem] px-5 sm:px-8 lg:px-10">
           <div className={cn("flex items-center gap-4 transition-[height] duration-200", compacto ? "h-[64px]" : "h-[78px]")}>
-            <Link href="/" aria-label="JB Soluções Odontológicas — início" className="flex min-h-11 shrink-0 items-center rounded-lg">
+            <Link href="/" aria-label="JB Soluções Odontológicas — início" className="jb-logo flex min-h-11 shrink-0 items-center rounded-lg">
               <Logo altura={compacto ? 34 : 42} prioridade />
             </Link>
 
 
-            <div className="ml-auto hidden min-w-0 max-w-[32rem] flex-1 lg:block">
+            <div className="jb-busca-topo ml-auto hidden min-w-0 max-w-[32rem] flex-1 lg:block">
               <BuscaComSugestoes id="busca-cabecalho" compacto={compacto} />
             </div>
 
@@ -276,7 +411,11 @@ export function Cabecalho({
 
               <Link
                 href="/assistencia-tecnica/solicitar"
-                className={classesBotao("primario", "sm", "ml-1.5 hidden min-h-11 rounded-xl px-4 shadow-[0_12px_28px_rgba(196,14,21,0.2)] lg:inline-flex xl:min-h-12 xl:px-5")}
+                className={classesBotao(
+                  "primario",
+                  "sm",
+                  "jb-cta-topo ml-1.5 hidden min-h-11 rounded-xl px-4 shadow-[0_12px_28px_rgba(196,14,21,0.2)] lg:inline-flex xl:min-h-12 xl:px-5",
+                )}
               >
                 <Wrench className="size-4 shrink-0" aria-hidden />
                 Solicitar assistência
@@ -308,7 +447,7 @@ export function Cabecalho({
             celular. */}
         <div className="hidden border-t border-graf-200/70 lg:block">
           <div className="mx-auto max-w-[105rem] px-5 sm:px-8 lg:px-10">
-            <nav aria-label="Principal" className="-mx-1.5 flex items-center">
+            <nav aria-label="Principal" className="flex items-center">
               {menu.map((item) => {
                 const chave = chaveDoItem(item);
                 const aberto = mega === chave;
@@ -370,6 +509,8 @@ export function Cabecalho({
           </div>
         </div>
 
+        <FaixaDestaques recolhida={compacto} />
+
         <AnimatePresence initial={false}>
           {buscaAberta ? (
             <motion.div
@@ -396,7 +537,7 @@ export function Cabecalho({
               exit={{ opacity: 0, y: reduzido ? 0 : -6 }}
               transition={{ duration: reduzido ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
               onMouseEnter={cancelarFechamento}
-              className="absolute inset-x-0 top-full hidden px-4 pt-3 lg:block"
+              className="jb-mega-painel absolute inset-x-0 top-full hidden px-4 pt-3 lg:block"
             >
               <div className="mx-auto max-h-[72dvh] max-w-[101rem] overflow-y-auto overscroll-contain rounded-[1.6rem] border border-graf-200/80 bg-white shadow-[0_22px_65px_rgba(26,28,30,0.16)]">
                 <PainelMega

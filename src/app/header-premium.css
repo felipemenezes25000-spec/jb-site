@@ -1,9 +1,16 @@
 /* ==========================================================================
-   Cabeçalho público — camada premium
+   Cabeçalho público — camada de acabamento
 
-   O componente original continua responsável por navegação, busca, conta,
-   carrinho e mega menus. Este arquivo cuida apenas de hierarquia visual,
-   microinterações e do ticker inserido por CabecalhoEnhancements.
+   O componente continua responsável por navegação, busca, conta, carrinho,
+   mega menus e pela faixa de destaques. Este arquivo cuida só de hierarquia
+   visual e microinteração.
+
+   Todo seletor aqui se prende a um gancho declarado no JSX —
+   `data-jb-premium-header`, `.jb-logo`, `.jb-busca-topo`, `.jb-cta-topo`,
+   `.jb-mega-painel`, `.jb-promo-ticker`. Nenhum se prende à posição de uma
+   `div` na árvore: a primeira versão deste arquivo selecionava o logotipo por
+   `> div:first-of-type > div > a:first-child`, e um invólucro a mais no JSX
+   apagaria o acabamento sem erro nenhum em lugar nenhum.
    ========================================================================== */
 
 [data-jb-utility-bar="true"] {
@@ -37,18 +44,18 @@ header[data-jb-premium-header="true"] {
 }
 
 /* Logo com um pouco mais de presença, sem aumentar a altura real do header. */
-header[data-jb-premium-header="true"] > div:first-of-type > div > a:first-child {
+header[data-jb-premium-header="true"] .jb-logo {
   transition: transform 180ms ease, filter 180ms ease;
   filter: drop-shadow(0 5px 10px rgb(111 15 19 / 0.08));
 }
 
-header[data-jb-premium-header="true"] > div:first-of-type > div > a:first-child:hover {
+header[data-jb-premium-header="true"] .jb-logo:hover {
   transform: translateY(-1px) scale(1.025);
   filter: drop-shadow(0 8px 14px rgb(111 15 19 / 0.12));
 }
 
 /* A busca vira o eixo visual central do topo. */
-header[data-jb-premium-header="true"] > div:first-of-type > div > div:has(#busca-cabecalho) {
+header[data-jb-premium-header="true"] .jb-busca-topo {
   max-width: 46rem !important;
 }
 
@@ -113,7 +120,7 @@ header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) 
 }
 
 /* CTA: destaque forte, mas sem competir com a busca. */
-header[data-jb-premium-header="true"] a[href="/assistencia-tecnica/solicitar"] {
+header[data-jb-premium-header="true"] .jb-cta-topo {
   position: relative;
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 0.18);
@@ -124,7 +131,7 @@ header[data-jb-premium-header="true"] a[href="/assistencia-tecnica/solicitar"] {
   transition: transform 170ms ease, box-shadow 170ms ease, filter 170ms ease;
 }
 
-header[data-jb-premium-header="true"] a[href="/assistencia-tecnica/solicitar"]::after {
+header[data-jb-premium-header="true"] .jb-cta-topo::after {
   content: "";
   position: absolute;
   inset: -40% auto -40% -36%;
@@ -135,7 +142,7 @@ header[data-jb-premium-header="true"] a[href="/assistencia-tecnica/solicitar"]::
   transition: left 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-header[data-jb-premium-header="true"] a[href="/assistencia-tecnica/solicitar"]:hover {
+header[data-jb-premium-header="true"] .jb-cta-topo:hover {
   transform: translateY(-1px);
   filter: saturate(1.04);
   box-shadow:
@@ -143,7 +150,7 @@ header[data-jb-premium-header="true"] a[href="/assistencia-tecnica/solicitar"]:h
     0 15px 32px rgb(196 14 21 / 0.29) !important;
 }
 
-header[data-jb-premium-header="true"] a[href="/assistencia-tecnica/solicitar"]:hover::after {
+header[data-jb-premium-header="true"] .jb-cta-topo:hover::after {
   left: 118%;
 }
 
@@ -157,6 +164,23 @@ header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div {
   position: relative;
   flex: 1 1 0;
   justify-content: center;
+}
+
+/* As pontas não se centralizam: a distribuição continua igual entre os
+   quatro destinos, mas o primeiro nasce na mesma vertical do logotipo e da
+   faixa de destaques, e o último termina onde termina o botão de
+   assistência. Sem isto, três níveis começavam em 40px e a navegação
+   começava em 120px. */
+header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div:first-child {
+  justify-content: flex-start;
+}
+
+header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div:last-child {
+  justify-content: flex-end;
+}
+
+header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div:first-child > a {
+  padding-left: 0;
 }
 
 header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div:not(:last-child)::after {
@@ -181,7 +205,7 @@ header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div:hover > 
 }
 
 /* Mega menu: o painel continua sendo o existente, só ganha acabamento. */
-header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full > div {
+header[data-jb-premium-header="true"] .jb-mega-painel > div {
   border-top: 2px solid rgb(224 20 27 / 0.32) !important;
   box-shadow:
     0 28px 80px rgb(26 28 30 / 0.17),
@@ -211,11 +235,17 @@ header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full > div {
   animation: jb-ticker-sheen 8.5s ease-in-out infinite 1s;
 }
 
+/* A mesma coluna dos outros três níveis.
+
+   Era `min(100% - 3rem, 101rem)`, contra o `max-w-[105rem]` com `px-10` que
+   o cabeçalho usa: a faixa começava alguns pixels à direita do logotipo e da
+   navegação, e o desencaixe só aparecia em monitor largo — onde justamente
+   ela existe. */
 .jb-promo-ticker__desktop,
 .jb-promo-ticker__compact {
   position: relative;
   z-index: 1;
-  width: min(100% - 3rem, 101rem);
+  width: min(100% - 5rem, 105rem);
   margin-inline: auto;
 }
 
@@ -233,6 +263,20 @@ header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full > div {
   align-items: center;
   gap: 0.85rem;
   padding: 0.78rem 1.2rem;
+}
+
+/* Sem recuo nas pontas: o ícone da primeira promessa nasce na mesma vertical
+   do logotipo, e a última termina na do botão de assistência. */
+.jb-promo-ticker__item:first-child {
+  padding-left: 0;
+}
+
+.jb-promo-ticker__item:last-child {
+  padding-right: 0;
+}
+
+.jb-promo-ticker__compact-item {
+  padding-inline: 0;
 }
 
 .jb-promo-ticker__divider {
@@ -271,11 +315,17 @@ header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full > div {
   line-height: 1.12;
 }
 
+/* 0,75rem, e não 0,71rem.
+
+   12px é o piso que `scripts/responsivo.mjs` cobra em toda rota pública, e o
+   mesmo tamanho do `micro` do design system — o rótulo em caixa alta que o
+   resto do site usa. Com 11,4px a faixa reprovava o portão nas 24 rotas
+   públicas de uma vez. */
 .jb-promo-ticker__copy strong {
   display: block;
   overflow: hidden;
   color: var(--color-jb-700);
-  font-size: 0.71rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.02em;
   text-overflow: ellipsis;
@@ -288,7 +338,7 @@ header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full > div {
   overflow: hidden;
   margin-top: 0.28rem;
   color: var(--color-graf-600, #5f646c);
-  font-size: 0.71rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
@@ -305,7 +355,6 @@ header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full > div {
   min-height: 3.65rem;
   align-items: center;
   gap: 0.8rem;
-  padding-inline: 0.75rem;
 }
 
 .jb-promo-ticker__progress {
@@ -335,6 +384,16 @@ header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full > div {
     display: block;
     max-height: 4.4rem;
   }
+
+  /* Recolhe ao rolar. O estado é o mesmo `compacto` que já encolhe a linha
+     principal — vem do React por `data-recolhida`, e não de um segundo
+     ouvinte de scroll escrevendo atributo por fora. */
+  .jb-promo-ticker[data-recolhida="true"] {
+    max-height: 0;
+    opacity: 0;
+    border-top-color: transparent;
+    pointer-events: none;
+  }
 }
 
 @media (min-width: 1400px) {
@@ -348,7 +407,7 @@ header[data-jb-premium-header="true"] > div.absolute.inset-x-0.top-full > div {
 }
 
 @media (max-width: 1199px) {
-  header[data-jb-premium-header="true"] > div:first-of-type > div > div:has(#busca-cabecalho) {
+  header[data-jb-premium-header="true"] .jb-busca-topo {
     max-width: 35rem !important;
   }
 

@@ -6,7 +6,6 @@ import { cacheLife, cacheTag } from "next/cache";
 
 import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { Medicao } from "@/components/analytics/medicao";
-import { CabecalhoEnhancements } from "@/components/loja/cabecalho-enhancements";
 import { SITE_URL } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
@@ -14,7 +13,6 @@ import "./globals.css";
 import "./footer-alignment.css";
 import "./header-search.css";
 import "./header-premium.css";
-import "./header-premium-runtime.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -133,7 +131,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <body className="antialiased">
         {children}
-        <CabecalhoEnhancements />
         <Medicao identificador={await codigoDeMedicao()} />
         <Toaster
           position="bottom-right"
