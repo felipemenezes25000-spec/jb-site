@@ -6,27 +6,6 @@ import { ListFilter, Loader2, Search, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-/**
- * Barra de filtros das listagens do painel.
- *
- * Todo o estado mora na query string: a listagem continua sendo renderizada no
- * servidor, o "voltar" do navegador funciona e o gestor consegue mandar o link
- * já filtrado para outra pessoa. Qualquer mudança apaga `pagina`, senão a
- * pessoa filtra e cai numa página 7 que não existe mais.
- *
- * Uso:
- *   <FiltrosLista
- *     campos={[
- *       { tipo: "busca", nome: "q", rotulo: "Buscar", placeholder: "Número, cliente ou e-mail" },
- *       { tipo: "selecao", nome: "status", rotulo: "Status", opcoes: [...] },
- *       { tipo: "periodo", nome: "data", rotulo: "Período" },
- *     ]}
- *   />
- *
- * O campo `periodo` escreve dois parâmetros: `<nome>_de` e `<nome>_ate`, no
- * mesmo formato do `<input type="date">` (AAAA-MM-DD).
- */
-
 export type OpcaoFiltro = { valor: string; rotulo: string };
 
 export type CampoFiltro =
@@ -35,7 +14,6 @@ export type CampoFiltro =
       nome: string;
       rotulo: string;
       placeholder?: string;
-      /** Ocupa mais espaço na linha. Ligado por padrão. */
       largo?: boolean;
     }
   | {
@@ -43,7 +21,6 @@ export type CampoFiltro =
       nome: string;
       rotulo: string;
       opcoes: OpcaoFiltro[];
-      /** Texto da opção que representa "sem filtro". */
       todos?: string;
     }
   | { tipo: "periodo"; nome: string; rotulo: string }
@@ -51,7 +28,6 @@ export type CampoFiltro =
 
 const ATRASO_BUSCA = 450;
 
-/** Todos os parâmetros que esta barra controla — usado ao limpar. */
 function parametrosDe(campos: CampoFiltro[]) {
   return campos.flatMap((campo) =>
     campo.tipo === "periodo" ? [`${campo.nome}_de`, `${campo.nome}_ate`] : [campo.nome],
@@ -59,8 +35,6 @@ function parametrosDe(campos: CampoFiltro[]) {
 }
 
 export function FiltrosLista(props: { campos: CampoFiltro[]; className?: string }) {
-  // useSearchParams precisa de fronteira de suspensão para não travar a
-  // pré-renderização de rotas estáticas; a barra já traz a sua.
   return (
     <Suspense fallback={<EsqueletoFiltros className={props.className} />}>
       <Barra {...props} />
@@ -73,7 +47,7 @@ function EsqueletoFiltros({ className }: { className?: string }) {
     <div
       aria-hidden
       className={cn(
-        "h-[5.25rem] animate-pulse rounded-xl border border-graf-200 bg-white sm:h-[4.75rem]",
+        "h-[5.5rem] animate-pulse rounded-2xl border border-graf-200/80 bg-white shadow-[0_1px_2px_rgba(20,24,32,0.03)] sm:h-[5rem]",
         className,
       )}
     />
@@ -116,12 +90,10 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
     [consulta, pathname, router],
   );
 
-  // a URL chegou onde queríamos: o indicador de carregando pode sair
   useEffect(() => {
     if (consulta === ultimaAplicada.current) setPendente(false);
   }, [consulta]);
 
-  // busca é digitada, então espera a pessoa parar antes de recarregar a lista
   useEffect(() => {
     const relogio = setTimeout(() => {
       const mudancas: Record<string, string> = {};
@@ -146,25 +118,31 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
     <section
       aria-label="Filtros da listagem"
       aria-busy={pendente || undefined}
-      className={cn("rounded-xl border border-graf-200 bg-white p-4", className)}
+      className={cn(
+        "rounded-2xl border border-graf-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(20,24,32,0.03)] sm:p-5",
+        className,
+      )}
     >
-      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end">
+      <div className="flex flex-col gap-3.5 md:flex-row md:flex-wrap md:items-end">
         {campos.map((campo) => {
           if (campo.tipo === "busca") {
             return (
               <div
                 key={campo.nome}
-                className={cn("min-w-0", campo.largo === false ? "md:w-56" : "md:min-w-64 md:flex-1")}
+                className={cn(
+                  "min-w-0",
+                  campo.largo === false ? "md:w-56" : "md:min-w-64 md:flex-1",
+                )}
               >
                 <label
                   htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                  className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[0.055em] text-graf-600"
                 >
                   {campo.rotulo}
                 </label>
                 <div className="relative">
                   <Search
-                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-graf-500"
+                    className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graf-500"
                     aria-hidden
                   />
                   <input
@@ -177,9 +155,9 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                       setTextos((atual) => ({ ...atual, [campo.nome]: evento.target.value }))
                     }
                     className={cn(
-                      "h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-base sm:text-sm text-graf-900",
-                      "placeholder:text-graf-500 hover:border-graf-500",
-                      "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
+                      "h-11 w-full rounded-xl border border-graf-300 bg-graf-50/70 pl-10 pr-3 text-base text-graf-900 sm:text-sm",
+                      "placeholder:text-graf-500 transition-[background-color,border-color,box-shadow] hover:border-graf-400 hover:bg-white",
+                      "focus:border-jb-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/10",
                     )}
                   />
                 </div>
@@ -192,7 +170,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
               <div key={campo.nome} className="min-w-0 md:w-52">
                 <label
                   htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                  className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[0.055em] text-graf-600"
                 >
                   {campo.rotulo}
                 </label>
@@ -201,9 +179,9 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                   value={params.get(campo.nome) ?? ""}
                   onChange={(evento) => aplicar({ [campo.nome]: evento.target.value })}
                   className={cn(
-                    "h-11 w-full rounded-lg border border-graf-450 bg-white px-3 pr-8 text-base sm:text-sm text-graf-900",
-                    "hover:border-graf-500",
-                    "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
+                    "h-11 w-full rounded-xl border border-graf-300 bg-graf-50/70 px-3 pr-8 text-base text-graf-900 sm:text-sm",
+                    "transition-[background-color,border-color,box-shadow] hover:border-graf-400 hover:bg-white",
+                    "focus:border-jb-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/10",
                   )}
                 >
                   <option value="">{campo.todos ?? "Todos"}</option>
@@ -222,7 +200,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
               <div key={campo.nome} className="min-w-0 md:w-44">
                 <label
                   htmlFor={`filtro-${campo.nome}`}
-                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                  className="mb-1.5 block text-[0.75rem] font-bold uppercase tracking-[0.055em] text-graf-600"
                 >
                   {campo.rotulo}
                 </label>
@@ -236,11 +214,10 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
           }
 
           return (
-            // No celular os dois campos de data empilham: lado a lado, dois
-            // `input[type=date]` não encolhem abaixo da própria largura mínima
-            // e empurravam a barra para fora da tela em 360px.
             <fieldset key={campo.nome} className="min-w-0">
-              <legend className="mb-1.5 text-[0.8125rem] font-semibold text-graf-700">{campo.rotulo}</legend>
+              <legend className="mb-1.5 text-[0.75rem] font-bold uppercase tracking-[0.055em] text-graf-600">
+                {campo.rotulo}
+              </legend>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <EntradaData
                   id={`filtro-${campo.nome}-de`}
@@ -249,7 +226,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                   aoMudar={(valor) => aplicar({ [`${campo.nome}_de`]: valor })}
                   className="w-full min-w-0 sm:w-40"
                 />
-                <span className="shrink-0 text-sm text-graf-500" aria-hidden>
+                <span className="shrink-0 text-sm font-medium text-graf-500" aria-hidden>
                   até
                 </span>
                 <EntradaData
@@ -287,8 +264,8 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
               type="button"
               onClick={limpar}
               className={cn(
-                "inline-flex h-11 items-center gap-1.5 rounded-lg border border-graf-300 bg-white px-3.5 text-sm font-semibold text-graf-700",
-                "transition-colors hover:border-graf-400 hover:bg-graf-50",
+                "inline-flex h-11 items-center gap-1.5 rounded-xl border border-graf-300 bg-white px-3.5 text-sm font-semibold text-graf-700 shadow-sm",
+                "transition-all hover:border-graf-400 hover:bg-graf-50",
                 "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
               )}
             >
@@ -328,9 +305,9 @@ function EntradaData({
         value={valor}
         onChange={(evento) => aoMudar(evento.target.value)}
         className={cn(
-          "h-11 rounded-lg border border-graf-450 bg-white px-3 text-base sm:text-sm text-graf-900",
-          "hover:border-graf-500",
-          "focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15",
+          "h-11 rounded-xl border border-graf-300 bg-graf-50/70 px-3 text-base text-graf-900 sm:text-sm",
+          "transition-[background-color,border-color,box-shadow] hover:border-graf-400 hover:bg-white",
+          "focus:border-jb-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/10",
           className ?? "w-full",
         )}
       />

@@ -1,0 +1,88 @@
+.shell {
+  --admin-canvas: #f6f7f9;
+  --admin-surface: #ffffff;
+  --admin-border: rgba(221, 223, 226, 0.9);
+  --admin-border-soft: rgba(238, 239, 241, 0.95);
+  --admin-shadow: 0 1px 2px rgba(20, 24, 32, 0.025), 0 12px 32px -28px rgba(20, 24, 32, 0.22);
+}
+
+/* Acabamento compartilhado para cartões antigos que ainda usam o primitivo
+   genérico da plataforma. O escopo fica preso ao backoffice. */
+.shell :global(.rounded-xl.border.border-graf-200.bg-white) {
+  border-radius: 1rem;
+  border-color: var(--admin-border);
+  box-shadow: var(--admin-shadow);
+}
+
+.shell :global(.rounded-xl.border.border-graf-200.bg-white):has(a:hover) {
+  border-color: rgba(194, 198, 203, 0.95);
+}
+
+/* Tabelas do backoffice passam a ter o mesmo ritmo visual do painel inicial. */
+.shell :global(table) {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.shell :global(thead) {
+  background: rgba(247, 248, 248, 0.88);
+}
+
+.shell :global(th) {
+  color: #666d76;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.shell :global(tbody tr) {
+  transition: background-color 150ms ease;
+}
+
+.shell :global(tbody tr:hover) {
+  background: rgba(247, 248, 248, 0.72);
+}
+
+/* Campos que não usam FiltrosLista também recebem o mesmo acabamento. */
+.shell :global(input:not([type="checkbox"]):not([type="radio"])),
+.shell :global(select),
+.shell :global(textarea) {
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.shell :global(input:not([type="checkbox"]):not([type="radio"]):hover),
+.shell :global(select:hover),
+.shell :global(textarea:hover) {
+  border-color: #9ba1a8;
+}
+
+/* Cabeçalhos e blocos de leitura ganham contraste sem virar caixas pesadas. */
+.shell :global(dl) {
+  min-width: 0;
+}
+
+.shell :global(hr) {
+  border-color: var(--admin-border-soft);
+}
+
+/* Rolagem da navegação lateral mais discreta, mantendo-a acessível. */
+.shell :global(aside)::-webkit-scrollbar,
+.shell :global(aside *)::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shell :global(aside)::-webkit-scrollbar-thumb,
+.shell :global(aside *)::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(155, 161, 168, 0.45);
+  background-clip: padding-box;
+}
+
+@media (max-width: 639px) {
+  .shell :global(.rounded-xl.border.border-graf-200.bg-white) {
+    border-radius: 0.875rem;
+  }
+}
