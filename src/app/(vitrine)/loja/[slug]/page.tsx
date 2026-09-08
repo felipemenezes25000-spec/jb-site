@@ -94,17 +94,21 @@ export const instant = false;
 /**
  * Página de um equipamento.
  *
- * A primeira dobra é a compra: galeria grande à esquerda, e à direita a coluna
- * que decide — marca, nome, identificadores, preço, disponibilidade, botão,
- * condições e o caminho para falar com a equipe. Essa coluna tem UMA moldura
- * (a caixa de compra); o resto corre em fio fino, para a página não abrir com
- * quatro cartões empilhados.
+ * A primeira dobra é a compra: galeria à esquerda em cima, a coluna que decide
+ * à direita atravessando as duas linhas — marca, nome, identificadores, preço,
+ * disponibilidade e botão — e, fechando o vão debaixo da foto, as condições da
+ * compra e o caminho para falar com a equipe. Essa divisão não é estética: com
+ * tudo empilhado à direita, a coluna media quase o dobro da imagem e sobrava
+ * meia tela branca embaixo dela em toda ficha.
  *
- * Abaixo da dobra a página vira faixa, não pilha de cartão: por que na JB, a
- * unidade física quando existe, a descrição em coluna de leitura, a ficha
- * técnica, os serviços da equipe, as dúvidas, os equipamentos relacionados e a
- * assistência que continua depois da entrega. Cada faixa alterna o fundo e tem
- * título próprio.
+ * Abaixo da dobra a ordem segue a decisão de quem compra equipamento caro:
+ * o que é (descrição), quanto entrega (ficha técnica), o que preciso ter e o
+ * que vem depois (antes e depois da compra), por que aqui (motivos), o que a
+ * equipe faz junto (serviços), o que ainda ficou em dúvida, o que mais existe
+ * e a assistência que continua depois da entrega.
+ *
+ * Confiança vem DEPOIS da ficha técnica, de propósito: "por que comprar na JB"
+ * antes de a pessoa saber o que o equipamento faz é argumento no vazio.
  *
  * A regra que atravessa o arquivo inteiro: campo vazio não vira linha. Não há
  * prazo, frete, certificação, nota nem depoimento que não esteja no banco.
@@ -420,8 +424,8 @@ export default async function ProdutoPage({ params }: Props) {
     { id: "visao-geral", rotulo: "Visão geral" },
     ...(unidade ? [{ id: "unidade", rotulo: "Esta unidade" }] : []),
     ...(temDescricao ? [{ id: "sobre", rotulo: "Sobre" }] : []),
-    { id: "antes-de-comprar", rotulo: "Antes de comprar" },
     ...(temFichaTecnica ? [{ id: "ficha-tecnica", rotulo: "Ficha técnica" }] : []),
+    { id: "antes-de-comprar", rotulo: "Antes de comprar" },
     ...(servicos.length > 0 && !arquivado
       ? [{ id: "servicos-jb", rotulo: "Serviços da JB" }]
       : []),
@@ -466,118 +470,129 @@ export default async function ProdutoPage({ params }: Props) {
             desenho — galeria à esquerda ocupando as duas linhas, identidade e
             compra empilhadas na coluna da direita. */}
         <div className="grid gap-y-8 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-10 xl:gap-x-16">
-          <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-1">
-            <IdentidadeProduto
-              nome={produto.name}
-              modelo={produto.model}
-              sku={produto.sku}
-              codigoDoFabricante={produto.mpn}
-              gtin={produto.gtin}
-              codigoAnvisa={produto.anvisaCode}
-              numeroDeSerie={unidade?.serialNumber ?? null}
-              condicao={produto.condition}
-              definicaoDaCondicao={definicao}
-              marca={
-                produto.brand
-                  ? {
-                      nome: produto.brand.name,
-                      slug: produto.brand.slug,
-                      logo: produto.brand.logo
-                        ? {
-                            url: produto.brand.logo.url,
-                            alt: produto.brand.logo.alt || produto.brand.name,
-                            largura: produto.brand.logo.width,
-                            altura: produto.brand.logo.height,
-                          }
-                        : null,
-                    }
-                  : null
-              }
-              categoria={
-                produto.category
-                  ? { nome: produto.category.name, slug: produto.category.slug }
-                  : null
-              }
-              resumo={produto.shortDescription}
-            />
+          {/* A ordem do DOM é a do celular: foto, identidade e compra, e só
+              então as condições. No desktop as posições explícitas montam o
+              outro desenho — foto em cima à esquerda, coluna de compra
+              atravessando as duas linhas à direita, e as condições fechando o
+              vão embaixo da foto.
 
-            {/* Guardar e comparar ficam com a identidade, não com o preço: são
-                gestos de quem ainda está decidindo, e a caixa de compra é de
-                quem já decidiu. O `<Suspense>` mantém a casca prerenderizada —
-                só o estado do favorito depende de sessão. */}
-            {arquivado ? null : (
-              <div className="mt-5">
-                <Suspense fallback={<AcoesDoProdutoEsqueleto />}>
-                  <AcoesDoProduto
-                    produtoId={produto.id}
-                    nome={produto.name}
-                    slug={produto.slug}
-                  />
-                </Suspense>
-              </div>
-            )}
-          </div>
-
-          {/* NADA gruda nesta página.
-
-              A galeria já foi `sticky`, com o argumento de que a foto deve
-              acompanhar cada decisão que a coluna de compra pede. O argumento é
-              bom no papel e ruim na tela: a pessoa rola, o texto anda e a foto
-              não, e a página inteira dá a impressão de estar travada. Foi a
-              primeira coisa que apareceu na revisão, duas vezes.
-
-              `self-start` fica: sem ele o `stretch` padrão de item de grade
-              estica a célula da foto até a altura da coluna da direita, e sobra
-              meia tela branca embaixo da imagem. */}
-          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start">
+              NADA gruda nesta página. A galeria já foi `sticky`, com o
+              argumento de que a foto deve acompanhar cada decisão que a coluna
+              de compra pede. O argumento é bom no papel e ruim na tela: a
+              pessoa rola, o texto anda e a foto não, e a página inteira dá a
+              impressão de estar travada. Foi a primeira coisa que apareceu na
+              revisão, duas vezes. */}
+          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-1">
             <GaleriaProduto fotos={fotos} nome={produto.name} />
           </div>
 
-          <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-2">
-            {/* Esta coluna também rola. Antes as duas grudavam, e a primeira
-                dobra inteira parecia congelada; depois só a galeria grudou, e
-                a foto continuava parada enquanto o texto andava. As duas
-                rolando, a página se move como página. */}
-            <div id="caixa-de-compra" className="scroll-mt-32 space-y-8">
-              {arquivado ? (
-                <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
-              ) : (
-                <CaixaCompra
-                  produtoId={produto.id}
-                  precoCents={produto.priceCents}
-                  compareAtCents={produto.compareAtCents}
-                  permiteCompra={produto.allowDirectPurchase}
-                  permiteOrcamento={produto.allowQuoteRequest}
-                  estoque={produto.stock}
-                  controlaEstoque={produto.trackInventory}
-                  unico={produto.unique}
-                  addons={addons}
-                  hrefOrcamento={hrefOrcamento}
-                  maxParcelas={maxParcelas}
-                  minParcelaCents={minParcelaCents}
-                />
+          {/* A coluna que decide: quem é o equipamento, o que dá para fazer com
+              ele e quanto custa — sem quebra entre as três coisas. Ela
+              atravessa as duas linhas da grade, e é isso que faz a foto e as
+              condições dividirem a coluna da esquerda em vez de deixarem meia
+              tela em branco embaixo da imagem. */}
+          <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1">
+              <IdentidadeProduto
+                nome={produto.name}
+                modelo={produto.model}
+                sku={produto.sku}
+                codigoDoFabricante={produto.mpn}
+                gtin={produto.gtin}
+                codigoAnvisa={produto.anvisaCode}
+                numeroDeSerie={unidade?.serialNumber ?? null}
+                condicao={produto.condition}
+                definicaoDaCondicao={definicao}
+                marca={
+                  produto.brand
+                    ? {
+                        nome: produto.brand.name,
+                        slug: produto.brand.slug,
+                        logo: produto.brand.logo
+                          ? {
+                              url: produto.brand.logo.url,
+                              alt: produto.brand.logo.alt || produto.brand.name,
+                              largura: produto.brand.logo.width,
+                              altura: produto.brand.logo.height,
+                            }
+                          : null,
+                      }
+                    : null
+                }
+                categoria={
+                  produto.category
+                    ? { nome: produto.category.name, slug: produto.category.slug }
+                    : null
+                }
+                resumo={produto.shortDescription}
+              />
+
+              {/* Guardar e comparar ficam com a identidade, não com o preço: são
+                  gestos de quem ainda está decidindo, e a caixa de compra é de
+                  quem já decidiu. O `<Suspense>` mantém a casca prerenderizada —
+                  só o estado do favorito depende de sessão. */}
+              {arquivado ? null : (
+                <div className="mt-5">
+                  <Suspense fallback={<AcoesDoProdutoEsqueleto />}>
+                    <AcoesDoProduto
+                      produtoId={produto.id}
+                      nome={produto.name}
+                      slug={produto.slug}
+                    />
+                  </Suspense>
+                </div>
               )}
 
-              {!arquivado && semEstoque ? (
-                <SemEstoque
-                  unico={produto.unique}
-                  hrefAlternativas={
-                    produto.condition === "novo"
-                      ? "/loja"
-                      : produto.condition === "seminovo"
-                        ? "/seminovos"
-                        : produto.condition === "recondicionado"
-                          ? "/recondicionados"
-                          : "/usados"
-                  }
-                />
-              ) : null}
+              <div id="caixa-de-compra" className="scroll-mt-32 space-y-8">
+                {arquivado ? (
+                  <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
+                ) : (
+                  <CaixaCompra
+                    produtoId={produto.id}
+                    precoCents={produto.priceCents}
+                    compareAtCents={produto.compareAtCents}
+                    permiteCompra={produto.allowDirectPurchase}
+                    permiteOrcamento={produto.allowQuoteRequest}
+                    estoque={produto.stock}
+                    controlaEstoque={produto.trackInventory}
+                    unico={produto.unique}
+                    addons={addons}
+                    hrefOrcamento={hrefOrcamento}
+                    maxParcelas={maxParcelas}
+                    minParcelaCents={minParcelaCents}
+                  />
+                )}
 
-              {/* O selo fica na coluna que decide, não só na faixa lá
-                  embaixo: quem está olhando o preço de um seminovo está
-                  pesando exatamente o risco que ele responde. */}
-              {certificado ? <SeloCertificado certificado={certificado} /> : null}
+                {!arquivado && semEstoque ? (
+                  <SemEstoque
+                    unico={produto.unique}
+                    hrefAlternativas={
+                      produto.condition === "novo"
+                        ? "/loja"
+                        : produto.condition === "seminovo"
+                          ? "/seminovos"
+                          : produto.condition === "recondicionado"
+                            ? "/recondicionados"
+                            : "/usados"
+                    }
+                  />
+                ) : null}
 
+                {/* O selo fica na coluna que decide, não só na faixa lá
+                    embaixo: quem está olhando o preço de um seminovo está
+                    pesando exatamente o risco que ele responde. */}
+                {certificado ? <SeloCertificado certificado={certificado} /> : null}
+              </div>
+          </div>
+
+          {/* Condições e contato fecham o vão debaixo da foto.
+
+              Empilhados no trilho de compra, eles faziam a coluna da direita
+              medir quase o dobro da imagem, e sobrava meia tela branca — o
+              buraco que aparecia em toda ficha. Aqui eles também leem melhor,
+              lado a lado: garantia, frete e voltagem são o que se confere
+              ANTES de clicar em comprar. */}
+          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-2">
+            <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
               <CondicoesDeCompra
                 garantiaMeses={garantiaMeses}
                 garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
@@ -599,28 +614,30 @@ export default async function ProdutoPage({ params }: Props) {
                 voltagem={produto.voltage}
               />
 
-              <AjudaDaEquipe
-                nomeDoProduto={produto.name}
-                sku={produto.sku}
-                telefone={s.telefone}
-                whatsapp={s.whatsapp}
-                email={s.email}
-                horario={s.horario}
-              />
-
-              {/* Atalho para quem já tem o equipamento e caiu aqui procurando
-                  conserto — sem virar mais um cartão na coluna. */}
-              <Link
-                href="/assistencia-tecnica"
-                className="foco-jb group inline-flex min-h-11 items-center gap-2 rounded-md text-[0.9375rem] font-semibold text-jb-700 transition-colors duration-150 hover:text-jb-500"
-              >
-                <Wrench className="size-4 shrink-0" aria-hidden />
-                Já tem este equipamento? Ver assistência técnica
-                <ArrowRight
-                  className="size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
-                  aria-hidden
+              <div>
+                <AjudaDaEquipe
+                  nomeDoProduto={produto.name}
+                  sku={produto.sku}
+                  telefone={s.telefone}
+                  whatsapp={s.whatsapp}
+                  email={s.email}
+                  horario={s.horario}
                 />
-              </Link>
+
+                {/* Atalho para quem já tem o equipamento e caiu aqui
+                    procurando conserto — sem virar mais um cartão. */}
+                <Link
+                  href="/assistencia-tecnica"
+                  className="foco-jb group mt-6 inline-flex min-h-11 items-center gap-2 rounded-md text-[0.9375rem] font-semibold text-jb-700 transition-colors duration-150 hover:text-jb-500"
+                >
+                  <Wrench className="size-4 shrink-0" aria-hidden />
+                  Já tem este equipamento? Ver assistência técnica
+                  <ArrowRight
+                    className="size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -630,17 +647,6 @@ export default async function ProdutoPage({ params }: Props) {
       {/* Fora de qualquer `Secao`: o `sticky` precisa de um pai que atravesse
           o resto da página, e cada faixa termina no fim de si mesma. */}
       <NavegacaoDoProduto ancoras={ancoras} />
-
-      {/* ====================================================== POR QUE NA JB */}
-      {arquivado ? null : (
-        <MotivosJB
-          desde={s.empresa_desde}
-          cidade={s.endereco_cidade}
-          uf={s.endereco_uf}
-          garantiaMeses={garantiaMeses}
-          temServicos={servicos.length > 0}
-        />
-      )}
 
       {/* ==================================================== UNIDADE FÍSICA */}
       {/* A faixa vem montada de dentro do componente: sem nenhum campo da
@@ -693,46 +699,6 @@ export default async function ProdutoPage({ params }: Props) {
         </Secao>
       ) : null}
 
-      {/* ============================================ ANTES E DEPOIS DA COMPRA
-
-          Estas quatro seções respondem, nesta ordem, às perguntas que fazem
-          alguém desistir quando ficam sem resposta: cabe na minha sala, preciso
-          comprar mais alguma coisa, quem instala, e o que acontece depois.
-
-          Cada uma some inteira quando o cadastro está vazio. Uma ficha cheia
-          de "não informado" é pior que a ausência da seção — ela ocupa espaço
-          para dizer que a JB não sabe. */}
-      <Secao id="antes-de-comprar" espaco="lg" separador className="scroll-mt-32">
-        <div className="grid max-w-4xl gap-12">
-          <AntesDeComprar
-            dados={{
-              voltagem: produto.voltage,
-              pesoGramas: produto.weightGrams,
-              larguraMm: produto.widthMm,
-              alturaMm: produto.heightMm,
-              profundidadeMm: produto.depthMm,
-              requisitos: produto.infrastructureNotes,
-            }}
-          />
-
-          <OQueVemNaCaixa itens={produto.boxContents} />
-
-          <Instalacao
-            politica={produto.installationPolicy}
-            observacao={produto.installationNote}
-            precoCents={precoDaInstalacao}
-          />
-
-          <DepoisDaCompraNoProduto
-            garantiaMeses={produto.warrantyMonths}
-            /* Só produto vira equipamento no prontuário. Serviço, peça e
-               acessório não — dizer que viram encheria a Área da Clínica de
-               linhas que não são máquina nenhuma. */
-            geraEquipamento={produto.condition !== "novo" || produto.trackInventory}
-          />
-        </div>
-      </Secao>
-
       {/* ====================================================== FICHA TÉCNICA */}
       {temFichaTecnica ? (
         <Secao id="ficha-tecnica" espaco="lg" separador className="scroll-mt-32">
@@ -777,6 +743,59 @@ export default async function ProdutoPage({ params }: Props) {
           </div>
         </Secao>
       ) : null}
+
+      {/* ============================================ ANTES E DEPOIS DA COMPRA
+
+          Estas quatro seções respondem, nesta ordem, às perguntas que fazem
+          alguém desistir quando ficam sem resposta: cabe na minha sala, preciso
+          comprar mais alguma coisa, quem instala, e o que acontece depois.
+
+          Cada uma some inteira quando o cadastro está vazio. Uma ficha cheia
+          de "não informado" é pior que a ausência da seção — ela ocupa espaço
+          para dizer que a JB não sabe. */}
+      <Secao id="antes-de-comprar" espaco="lg" separador className="scroll-mt-32">
+        {/* Duas colunas: empilhados numa coluna de 56rem, os quatro blocos
+            desciam a página com metade da tela vazia à direita. */}
+        <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
+          <AntesDeComprar
+            dados={{
+              voltagem: produto.voltage,
+              pesoGramas: produto.weightGrams,
+              larguraMm: produto.widthMm,
+              alturaMm: produto.heightMm,
+              profundidadeMm: produto.depthMm,
+              requisitos: produto.infrastructureNotes,
+            }}
+          />
+
+          <OQueVemNaCaixa itens={produto.boxContents} />
+
+          <Instalacao
+            politica={produto.installationPolicy}
+            observacao={produto.installationNote}
+            precoCents={precoDaInstalacao}
+          />
+
+          <DepoisDaCompraNoProduto
+            garantiaMeses={produto.warrantyMonths}
+            /* Só produto vira equipamento no prontuário. Serviço, peça e
+               acessório não — dizer que viram encheria a Área da Clínica de
+               linhas que não são máquina nenhuma. */
+            geraEquipamento={produto.condition !== "novo" || produto.trackInventory}
+          />
+        </div>
+      </Secao>
+
+      {/* ====================================================== POR QUE NA JB */}
+      {arquivado ? null : (
+        <MotivosJB
+          desde={s.empresa_desde}
+          cidade={s.endereco_cidade}
+          uf={s.endereco_uf}
+          garantiaMeses={garantiaMeses}
+          temServicos={servicos.length > 0}
+        />
+      )}
 
       {/* ==================================================== SERVIÇOS DA JB */}
       {servicos.length > 0 && !arquivado ? (
