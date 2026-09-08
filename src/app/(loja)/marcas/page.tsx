@@ -213,7 +213,7 @@ export default async function MarcasPage() {
         )}
       </Secao>
 
-      <Secao fundo="grafite" espaco="md">
+      <Secao fundo="afundada" espaco="md">
         <TituloSecao
           tamanho="titulo"
           sobretitulo="Fora da lista"
@@ -221,11 +221,11 @@ export default async function MarcasPage() {
           descricao="A JB vende além do que está publicado e atende equipamento de outras marcas na bancada. Diga a marca, o modelo e o que a clínica precisa."
           acao={
             <div className="flex flex-wrap gap-3">
-              <LinkBotao href="/orcamento" variante="claro">
+              <LinkBotao href="/orcamento" variante="primario">
                 Pedir orçamento
                 <ArrowRight className="size-4" aria-hidden />
               </LinkBotao>
-              <LinkBotao href="/assistencia-tecnica/solicitar" variante="contorno-claro">
+              <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario">
                 Pedir atendimento técnico
               </LinkBotao>
             </div>

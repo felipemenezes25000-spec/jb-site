@@ -201,7 +201,7 @@ export default async function ChamadoPage({ params }: Parametros) {
       </div>
 
       {/* ============================================================ PROTOCOLO */}
-      <header className="on-dark relative isolate mt-6 overflow-hidden bg-graf-950">
+      <header className="relative isolate mt-6 overflow-hidden border-y border-graf-200 bg-surface-muted">
         <span
           aria-hidden
           className="field-orbit pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(60%_90%_at_75%_0%,#000,transparent)]"
@@ -211,11 +211,11 @@ export default async function ChamadoPage({ params }: Parametros) {
           <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
             <div className="min-w-0">
               <p className="label-mono texto-suave uppercase">Protocolo do chamado</p>
-              <h1 className="tabular text-display mt-2 font-mono text-white">
+              <h1 className="tabular text-display mt-2 font-mono text-graf-950">
                 {chamado.number}
               </h1>
               {equipamento ? (
-                <p className="mt-4 text-[0.9375rem] font-semibold text-white">
+                <p className="mt-4 text-[0.9375rem] font-semibold text-graf-800">
                   {equipamento}
                 </p>
               ) : null}

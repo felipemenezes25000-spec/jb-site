@@ -54,13 +54,13 @@ export function AssistenciaRelacionada({
   const praca = cidade ? ` em ${cidade}` : "";
 
   return (
-    <Secao fundo="grafite" espaco="lg" padraoDeFundo>
+    <Secao fundo="afundada" espaco="lg" padraoDeFundo>
       <TituloSecao
         sobretitulo="Depois da entrega"
         titulo="Quem vende é quem conserta"
         descricao={`A JB é assistência técnica de equipamento odontológico${desdeQuando}, com equipe própria${praca}. O equipamento que sai daqui continua com a mesma equipe do outro lado.`}
         acao={
-          <LinkBotao href="/assistencia-tecnica/solicitar" variante="claro" tamanho="lg">
+          <LinkBotao href="/assistencia-tecnica/solicitar" variante="primario" tamanho="lg">
             Abrir um chamado
           </LinkBotao>
         }
@@ -74,7 +74,7 @@ export function AssistenciaRelacionada({
           return (
             <li key={caminho.href} className="group relative">
               <Icone className="size-5 text-jb-300" aria-hidden />
-              <h3 className="mt-3.5 text-base font-bold text-white">
+              <h3 className="mt-3.5 text-base font-bold text-graf-950">
                 <Link
                   href={caminho.href}
                   /* Link esticado: o item inteiro fica clicável sem virar
@@ -87,7 +87,7 @@ export function AssistenciaRelacionada({
               <p className="texto-suave mt-2 text-[0.9375rem] leading-relaxed">
                 {caminho.texto}
               </p>
-              <span className="mt-3.5 inline-flex items-center gap-1.5 text-sm font-semibold text-white">
+              <span className="mt-3.5 inline-flex items-center gap-1.5 text-sm font-semibold text-jb-700">
                 Ver como funciona
                 <ArrowRight
                   className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"

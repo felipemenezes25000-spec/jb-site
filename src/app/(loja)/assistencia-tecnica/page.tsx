@@ -354,7 +354,7 @@ export default async function AssistenciaTecnicaPage() {
           número de cada etapa pendurado fora do fio que liga uma à outra. */}
       <Secao
         id="como-funciona"
-        fundo="grafite"
+        fundo="afundada"
         espaco="lg"
         padraoDeFundo
         className="scroll-mt-24"
@@ -368,7 +368,7 @@ export default async function AssistenciaTecnicaPage() {
             />
 
             <div className="mt-9">
-              <LinkBotao href="/assistencia-tecnica/solicitar" variante="claro" tamanho="lg">
+              <LinkBotao href="/assistencia-tecnica/solicitar" variante="primario" tamanho="lg">
                 Começar pela etapa 1
                 <ArrowRight className="size-4" aria-hidden />
               </LinkBotao>
@@ -397,12 +397,12 @@ export default async function AssistenciaTecnicaPage() {
                   >
                     <span
                       aria-hidden
-                      className="tabular pr-4 text-right font-mono text-2xl font-extrabold leading-none text-white/30 sm:pr-5 sm:text-[1.75rem]"
+                      className="tabular pr-4 text-right font-mono text-2xl font-extrabold leading-none text-graf-300 sm:pr-5 sm:text-[1.75rem]"
                     >
                       {String(indice + 1).padStart(2, "0")}
                     </span>
                     <div className="min-w-0">
-                      <h3 className="text-lg font-bold leading-tight text-white sm:text-xl">
+                      <h3 className="text-lg font-bold leading-tight text-graf-950 sm:text-xl">
                         {etapa.titulo}
                       </h3>
                       <p className="texto-suave mt-2.5 max-w-xl text-[0.9375rem] leading-relaxed">
@@ -417,7 +417,7 @@ export default async function AssistenciaTecnicaPage() {
             {/* Onde o histórico da última etapa fica guardado. */}
             <div className="mt-12 flex flex-col gap-5 rounded-2xl border border-white/15 bg-white/5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
               <div className="max-w-md">
-                <h3 className="flex items-center gap-2.5 text-base font-bold text-white">
+                <h3 className="flex items-center gap-2.5 text-base font-bold text-graf-950">
                   <LayoutDashboard className="size-4.5 shrink-0 text-jb-300" aria-hidden />
                   O histórico fica na Área da Clínica
                 </h3>
@@ -428,7 +428,7 @@ export default async function AssistenciaTecnicaPage() {
               </div>
               <LinkBotao
                 href="/minha-jb"
-                variante="contorno-claro"
+                variante="secundario"
                 className="sm:shrink-0"
               >
                 Entrar na Área da Clínica

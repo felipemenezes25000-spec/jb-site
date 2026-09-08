@@ -321,18 +321,18 @@ export default async function ManutencaoPreventivaPage() {
 
       {/* ================================================================ CTA */}
       <FaixaChamada
-        fundo="grafite"
+        fundo="clara"
         titulo="Programe a revisão antes que o defeito programe por você."
         descricao="Comparar planos leva um minuto. Se já existe algo com defeito, o caminho é outro: abra o chamado e a triagem responde com o próximo passo."
         acoes={
           <>
-            <LinkBotao href="/planos-de-manutencao" variante="claro" tamanho="lg">
+            <LinkBotao href="/planos-de-manutencao" variante="primario" tamanho="lg">
               Comparar planos
               <ArrowRight className="size-4" aria-hidden />
             </LinkBotao>
             <LinkBotao
               href="/assistencia-tecnica/solicitar"
-              variante="contorno-claro"
+              variante="secundario"
               tamanho="lg"
             >
               Já tem algo com defeito?

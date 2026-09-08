@@ -202,31 +202,31 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
             </div>
           </article>
 
-          <article className="relative min-h-[24rem] overflow-hidden rounded-lg bg-chrome text-white">
+          <article className="placa relative min-h-[24rem] overflow-hidden">
             <div
               /* Grafite de ponta a ponta. Antes o degradê terminava em #1d0709 —
                  vermelho quase preto — e duas lavagens vermelhas por cima
                  deixavam o cartão com aspecto de fundo sujo em vez de escuro
                  deliberado. O vermelho voltou para onde ele age: o botão. */
-              className="absolute inset-0 bg-[linear-gradient(125deg,#141518_0%,#1a1c1e_52%,#212429_100%)]"
+              className="absolute inset-0 bg-[linear-gradient(125deg,#ffffff_0%,#fff7f7_58%,#ffeced_100%)]"
               aria-hidden
             />
 
             <div
-              className="absolute inset-0 bg-[radial-gradient(circle_at_86%_44%,rgba(244,25,35,0.1),transparent_30%),linear-gradient(90deg,#141518_0%,rgba(20,21,24,0.94)_34%,transparent_61%)]"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_86%_44%,rgba(224,20,27,0.08),transparent_34%)]"
               aria-hidden
             />
             <div
-              className="absolute -right-36 -top-36 size-[30rem] rounded-full border border-jb-500/50"
+              className="absolute -right-36 -top-36 size-[30rem] rounded-full border border-jb-200"
               aria-hidden
             />
             <div
-              className="absolute -right-16 -top-16 size-[21rem] rounded-full border border-jb-500/20"
+              className="absolute -right-16 -top-16 size-[21rem] rounded-full border border-jb-100"
               aria-hidden
             />
 
             <p
-              className="pointer-events-none absolute right-7 top-8 z-10 hidden text-right text-[0.6875rem] font-semibold uppercase leading-[1.8] tracking-[0.25em] text-white/45 min-[1280px]:block"
+              className="pointer-events-none absolute right-7 top-8 z-10 hidden text-right text-[0.6875rem] font-semibold uppercase leading-[1.8] tracking-[0.25em] text-graf-400 min-[1280px]:block"
               aria-hidden
             >
               Suporte hoje
@@ -241,13 +241,13 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
               <span className="flex size-12 items-center justify-center rounded-lg bg-jb-600 text-white">
                 <Wrench className="size-5" aria-hidden />
               </span>
-              <p className="mt-6 text-[0.67rem] font-black uppercase tracking-[0.18em] text-jb-300">
+              <p className="mt-6 text-[0.67rem] font-black uppercase tracking-[0.18em] text-jb-600">
                 Preciso de suporte
               </p>
-              <h3 className="mt-2 max-w-[10ch] text-[clamp(1.9rem,2.45vw,3rem)] font-black leading-[0.95] tracking-[-0.05em] text-white">
+              <h3 className="manchete mt-2 max-w-[10ch] text-[clamp(1.9rem,2.45vw,2.75rem)] text-graf-950">
                 Resolver um equipamento.
               </h3>
-              <p className="mt-4 max-w-lg text-sm leading-6 text-white/65 min-[640px]:text-[0.98rem] min-[640px]:leading-7">
+              <p className="mt-4 max-w-lg text-sm leading-6 text-graf-600 min-[640px]:text-[0.98rem] min-[640px]:leading-7">
                 Abra o chamado no canal certo desde o início e deixe a equipe da JB conduzir a
                 triagem, o orçamento e o histórico do atendimento.
               </p>

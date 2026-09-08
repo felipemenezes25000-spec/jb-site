@@ -615,11 +615,11 @@ function MegaCentral() {
           <AtalhoCard href="/contato" icone={<Phone className="size-4" aria-hidden />} titulo="Contato" descricao="Fale com a equipe." />
         </div>
       </section>
-      <aside className="m-4 ml-0 flex flex-col rounded-[1.4rem] bg-graf-950 p-6 text-white">
-        <span className="flex size-11 items-center justify-center rounded-2xl bg-white/10 text-jb-300"><BookOpen className="size-5" aria-hidden /></span>
-        <h3 className="mt-5 text-2xl font-extrabold tracking-[-0.035em] text-white">O que a bancada aprende vira referência.</h3>
-        <p className="mt-3 text-sm leading-relaxed text-white/68">Use a Central Técnica para aprofundar a decisão e entender melhor os equipamentos.</p>
-        <Link href="/central-tecnica" className="mt-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-extrabold text-graf-950 transition hover:bg-jb-50">Explorar Central Técnica <ArrowRight className="size-4" aria-hidden /></Link>
+      <aside className="m-4 ml-0 flex flex-col rounded-[1.4rem] border border-jb-100 bg-jb-50/60 p-6">
+        <span className="flex size-11 items-center justify-center rounded-2xl bg-white text-jb-600 ring-1 ring-jb-100"><BookOpen className="size-5" aria-hidden /></span>
+        <h3 className="mt-5 text-2xl font-extrabold tracking-[-0.035em] text-graf-950">O que a bancada aprende vira referência.</h3>
+        <p className="mt-3 text-sm leading-relaxed text-graf-600">Use a Central Técnica para aprofundar a decisão e entender melhor os equipamentos.</p>
+        <Link href="/central-tecnica" className="mt-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-jb-500 px-4 text-sm font-extrabold text-white transition hover:bg-jb-600">Explorar Central Técnica <ArrowRight className="size-4" aria-hidden /></Link>
       </aside>
     </div>
   );
