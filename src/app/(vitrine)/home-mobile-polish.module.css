@@ -1,0 +1,360 @@
+.mobilePolish {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.mobilePolish :global(section),
+.mobilePolish :global(nav),
+.mobilePolish :global(article),
+.mobilePolish :global(ol),
+.mobilePolish :global(ul),
+.mobilePolish :global(li) {
+  min-width: 0;
+}
+
+/* ========================================================================== */
+/* MOBILE FIRST — HOME                                                        */
+/* ========================================================================== */
+
+@media (max-width: 767px) {
+  .mobilePolish :global(section) {
+    scroll-margin-top: 4.5rem;
+  }
+
+  .mobilePolish :global(a),
+  .mobilePolish :global(button) {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Hero: leitura curta, CTAs grandes e números sem alongar a página.      */
+  /* ---------------------------------------------------------------------- */
+
+  .mobilePolish > :global(section:first-of-type) {
+    overflow: clip;
+  }
+
+  .mobilePolish > :global(section:first-of-type) h1 {
+    max-width: 10.8ch !important;
+    font-size: clamp(2.7rem, 12.3vw, 3.55rem) !important;
+    line-height: 0.9 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  .mobilePolish > :global(section:first-of-type) form[role="search"] {
+    width: 100%;
+    max-width: none;
+    margin-top: 1.45rem;
+  }
+
+  .mobilePolish > :global(section:first-of-type) nav[aria-label="Comece sua compra"] a {
+    width: 100%;
+    min-height: 3.25rem;
+  }
+
+  .mobilePolish > :global(section:first-of-type) dl[aria-label="Catálogo JB agora"] {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+    width: 100%;
+    padding-top: 0.9rem !important;
+  }
+
+  .mobilePolish > :global(section:first-of-type) dl[aria-label="Catálogo JB agora"] > div {
+    min-width: 0;
+    border-top: 0 !important;
+    border-left: 1px solid var(--color-jb-100) !important;
+    padding: 0 0.6rem !important;
+  }
+
+  .mobilePolish > :global(section:first-of-type) dl[aria-label="Catálogo JB agora"] > div:first-child {
+    border-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  .mobilePolish > :global(section:first-of-type) dl[aria-label="Catálogo JB agora"] dd {
+    overflow: hidden;
+    font-size: clamp(1.02rem, 5vw, 1.3rem) !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobilePolish > :global(section:first-of-type) dl[aria-label="Catálogo JB agora"] dt {
+    font-size: 0.58rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .mobilePolish > :global(section:first-of-type) a[href^="/loja/"] {
+    min-height: 23rem !important;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Atalhos: swipe natural, sempre deixando a próxima opção aparecer.      */
+  /* ---------------------------------------------------------------------- */
+
+  .mobilePolish :global(nav[aria-label="Acesso rápido à loja"] ul) {
+    scroll-padding-inline: 0.15rem;
+    border-radius: 1.5rem !important;
+    overscroll-behavior-inline: contain;
+  }
+
+  .mobilePolish :global(nav[aria-label="Acesso rápido à loja"] li) {
+    min-width: min(78vw, 15rem) !important;
+  }
+
+  .mobilePolish :global(nav[aria-label="Acesso rápido à loja"] li a) {
+    min-height: 4.65rem !important;
+    border-radius: 1.5rem !important;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Comparador: 3 equipamentos continuam comparáveis, mas por swipe.       */
+  /* ---------------------------------------------------------------------- */
+
+  .mobilePolish :global(section:has(a[href="/comparar"]) div[class*="grid-cols-3"][class*="divide-x"]) {
+    display: flex !important;
+    gap: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobilePolish :global(section:has(a[href="/comparar"]) div[class*="grid-cols-3"][class*="divide-x"]::-webkit-scrollbar) {
+    display: none;
+  }
+
+  .mobilePolish :global(section:has(a[href="/comparar"]) div[class*="grid-cols-3"][class*="divide-x"] > div) {
+    width: min(44vw, 10.75rem);
+    min-width: min(44vw, 10.75rem);
+    scroll-snap-align: start;
+    border-left: 1px solid var(--color-jb-100);
+    padding-inline: 0.7rem !important;
+  }
+
+  .mobilePolish :global(section:has(a[href="/comparar"]) div[class*="grid-cols-3"][class*="divide-x"] > div:first-child) {
+    border-left: 0;
+    padding-left: 0.15rem !important;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Seminovos: deixa de empilhar foto enorme + texto + preço.              */
+  /* ---------------------------------------------------------------------- */
+
+  .mobilePolish :global(section:has(a[href="/seminovos"]) ol > li > a[href^="/loja/"]) {
+    display: grid !important;
+    grid-template-columns: 6.8rem minmax(0, 1fr) !important;
+    grid-template-rows: auto auto;
+    align-items: start !important;
+    gap: 0.6rem 0.9rem !important;
+    min-height: 0 !important;
+    padding-block: 1rem !important;
+    transform: none !important;
+  }
+
+  .mobilePolish :global(section:has(a[href="/seminovos"]) ol > li > a[href^="/loja/"] > span:nth-child(2)) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 100%;
+    aspect-ratio: 1 / 1 !important;
+    align-self: start;
+  }
+
+  .mobilePolish :global(section:has(a[href="/seminovos"]) ol > li > a[href^="/loja/"] > span:nth-child(3)) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .mobilePolish :global(section:has(a[href="/seminovos"]) ol > li > a[href^="/loja/"] > span:nth-child(4)) {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex !important;
+    min-width: 0 !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.6rem !important;
+    text-align: left !important;
+  }
+
+  .mobilePolish :global(section:has(a[href="/seminovos"]) ol > li > a[href^="/loja/"] > span:nth-child(4) > span:last-child) {
+    margin-top: 0 !important;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Assistência: no código desktop o conteúdo ocupa 60–66% do card.        */
+  /* No celular isso espremia títulos e botões para metade da tela.         */
+  /* ---------------------------------------------------------------------- */
+
+  .mobilePolish :global(section article.placa > div[class*="max-w-[66%]"]),
+  .mobilePolish :global(section article.placa > div[class*="max-w-[60%]"]) {
+    max-width: 100% !important;
+  }
+
+  .mobilePolish :global(section article.placa div[class*="flex-col"][class*="gap-3"] > a) {
+    width: 100%;
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Marcas: no celular o usuário controla o trilho com o dedo.             */
+  /* ---------------------------------------------------------------------- */
+
+  .mobilePolish :global(.jb-marcas) {
+    overflow-x: auto !important;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
+    mask-image: none !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobilePolish :global(.jb-marcas::-webkit-scrollbar) {
+    display: none;
+  }
+
+  .mobilePolish :global(.jb-marcas-trilho) {
+    animation: none !important;
+    gap: 0.75rem !important;
+    padding-inline: 0.15rem 1rem;
+    transform: none !important;
+  }
+
+  .mobilePolish :global(.jb-marcas a[href^="/marcas/"]) {
+    width: min(62vw, 13.25rem) !important;
+    height: 10rem !important;
+    scroll-snap-align: start;
+    padding-inline: 1rem !important;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Fechamento: CTAs fáceis de tocar e etapas sem respiro desperdiçado.    */
+  /* ---------------------------------------------------------------------- */
+
+  .mobilePolish :global(section:last-of-type a[href="/loja"]),
+  .mobilePolish :global(section:last-of-type a[href="/assistencia-tecnica/solicitar"]) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mobilePolish :global(section:last-of-type ol > li) {
+    min-height: 0 !important;
+    padding-block: 1.15rem !important;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Rodapé: 390 px não recebe quatro colunas desktop espremidas.            */
+  /* ---------------------------------------------------------------------- */
+
+  :global(body):has(.mobilePolish) footer {
+    overflow-x: clip;
+  }
+
+  :global(body):has(.mobilePolish) footer nav[aria-label="Rodapé"] a {
+    min-height: 2.75rem;
+    align-items: center;
+    padding-block: 0.45rem;
+  }
+
+  :global(body):has(.mobilePolish) footer a[href="/assistencia-tecnica/solicitar"],
+  :global(body):has(.mobilePolish) footer a[href="/orcamento"] {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Header e drawer: compactos sem sacrificar alvos de toque.              */
+  /* ---------------------------------------------------------------------- */
+
+  :global(body):has(.mobilePolish) [data-jb-home-header-v2="true"] {
+    max-width: 100vw;
+  }
+
+  :global(body):has(.mobilePolish) [data-jb-home-header-v2="true"] > div:first-of-type > div {
+    height: 4rem !important;
+    gap: 0.35rem !important;
+  }
+
+  :global(body):has(.mobilePolish) [data-jb-home-header-v2="true"] button,
+  :global(body):has(.mobilePolish) [data-jb-home-header-v2="true"] a {
+    min-width: 2.75rem;
+  }
+
+  :global(body):has(.mobilePolish) div[role="dialog"][aria-label="Menu principal"] {
+    width: min(100vw, 27rem) !important;
+    max-width: 100vw !important;
+  }
+}
+
+@media (max-width: 479px) {
+  .mobilePolish :global(section) {
+    /* Evita o padrão desktop de 64–80 px em toda faixa no aparelho estreito. */
+    --mobile-section-space: 3rem;
+  }
+
+  .mobilePolish > :global(section:first-of-type) h1 {
+    font-size: clamp(2.55rem, 12.5vw, 3.2rem) !important;
+  }
+
+  .mobilePolish > :global(section:first-of-type) dl[aria-label="Catálogo JB agora"] dt {
+    font-size: 0.54rem !important;
+  }
+
+  .mobilePolish :global(nav[aria-label="Acesso rápido à loja"] li) {
+    min-width: 82vw !important;
+  }
+
+  .mobilePolish :global(section:has(a[href="/comparar"]) div[class*="grid-cols-3"][class*="divide-x"] > div) {
+    width: 46vw;
+    min-width: 46vw;
+  }
+
+  :global(body):has(.mobilePolish) footer nav[aria-label="Rodapé"] {
+    grid-template-columns: 1fr !important;
+    gap: 1.35rem !important;
+  }
+
+  :global(body):has(.mobilePolish) footer nav[aria-label="Rodapé"] ul {
+    margin-top: 0.45rem !important;
+  }
+
+  :global(body):has(.mobilePolish) footer nav[aria-label="Rodapé"] a {
+    min-height: 2.85rem;
+    border-bottom: 1px solid var(--color-jb-100);
+    border-radius: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  :global(body):has(.mobilePolish) div[role="dialog"][aria-label="Menu principal"] {
+    width: 100vw !important;
+  }
+}
+
+/* Tablet pequeno: mantém duas colunas onde já há espaço real. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mobilePolish :global(section) {
+    min-width: 0;
+  }
+
+  .mobilePolish :global(.jb-marcas) {
+    overflow-x: auto;
+    mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+  }
+}
+
+@media (pointer: coarse) {
+  :global(body):has(.mobilePolish) footer nav[aria-label="Rodapé"] a:active,
+  .mobilePolish :global(a:active),
+  .mobilePolish :global(button:active) {
+    transform: scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobilePolish :global(.jb-marcas-trilho) {
+    animation: none !important;
+    transform: none !important;
+  }
+}
