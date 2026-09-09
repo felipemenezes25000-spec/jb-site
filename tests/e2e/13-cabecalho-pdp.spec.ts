@@ -5,13 +5,15 @@ import { fixtures } from "./fixtures";
 /**
  * Cabeçalho exclusivo da PDP.
  *
- * A Home já tem o cabeçalho aprovado. O contrato desta suíte é justamente
- * impedir que o acabamento da ficha de produto vaze para `/`, `/loja` ou
- * qualquer outra tela, e garantir que a versão especial continue íntegra nas
- * larguras onde um header de marketplace costuma quebrar.
+ * A Home já tem o cabeçalho aprovado e usa sua própria implementação flagship.
+ * O contrato desta suíte é justamente impedir que o acabamento da ficha de
+ * produto vaze para `/`, `/loja` ou qualquer outra tela, e garantir que a
+ * versão especial continue íntegra nas larguras onde um header de marketplace
+ * costuma quebrar.
  */
 
 const HEADER = 'header[data-jb-premium-header="true"]';
+const HEADER_HOME = 'header[data-jb-home-header-v2="true"]';
 const PDP = "[data-pdp-marketplace]";
 const BUSCA_DESKTOP = ".jb-busca-topo";
 
@@ -56,23 +58,32 @@ async function alvosPrincipaisTem44px(page: import("@playwright/test").Page) {
 }
 
 test.describe("Cabeçalho da página de produto", () => {
-  for (const rota of ["/", "/loja"]) {
-    test(`não deixa o redesign da PDP vazar para ${rota}`, async ({ page }) => {
-      await page.setViewportSize({ width: 1440, height: 900 });
-      await page.goto(rota);
+  test("não deixa o redesign da PDP vazar para a Home", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
 
-      await expect(page.locator(PDP)).toHaveCount(0);
+    await expect(page.locator(PDP)).toHaveCount(0);
+    await expect(page.locator(HEADER_HOME)).toBeVisible();
+    await expect(page.locator(`${HEADER_HOME} #busca-home-flagship`)).toBeVisible();
+    await expect(page.locator(`${HEADER_HOME} ${BUSCA_DESKTOP}`)).toHaveCount(0);
+    await semRolagemHorizontal(page);
+  });
 
-      const busca = page.locator(BUSCA_DESKTOP);
-      await expect(busca).toBeVisible();
-      const maxWidthDaBusca = await busca.evaluate((el) => getComputedStyle(el).maxWidth);
+  test("não deixa o redesign da PDP vazar para o catálogo", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/loja");
 
-      // Fora da ficha continua valendo o limite do header original. Na PDP o
-      // CSS exclusivo troca esse valor para `none` e deixa a busca absorver espaço.
-      expect(maxWidthDaBusca).not.toBe("none");
-      await semRolagemHorizontal(page);
-    });
-  }
+    await expect(page.locator(PDP)).toHaveCount(0);
+
+    const busca = page.locator(BUSCA_DESKTOP);
+    await expect(busca).toBeVisible();
+    const maxWidthDaBusca = await busca.evaluate((el) => getComputedStyle(el).maxWidth);
+
+    // Fora da ficha continua valendo o limite do header original. Na PDP o
+    // CSS exclusivo troca esse valor para `none` e deixa a busca absorver espaço.
+    expect(maxWidthDaBusca).not.toBe("none");
+    await semRolagemHorizontal(page);
+  });
 
   test("em 1440px ativa somente a composição premium da PDP", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
