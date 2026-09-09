@@ -16,7 +16,16 @@ import {
   type DadosCrossSell,
 } from "@/components/loja/produto/cross-sell-intencional";
 import { formatarPreco } from "@/lib/format";
-import { decodificarOrdemRelacao } from "@/lib/marketplace/relacionamentos-produto";
+import {
+  carregarComentariosAvaliacoesProduto,
+  carregarResumoAvaliacoesProduto,
+  type ComentarioAvaliacaoProduto,
+  type ResumoAvaliacoesProduto,
+} from "@/lib/marketplace/avaliacoes-produto";
+import {
+  categoriaDaAlternativaAutomatica,
+  decodificarOrdemRelacao,
+} from "@/lib/marketplace/relacionamentos-produto";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -45,15 +54,6 @@ type ProdutoComparavel = {
   voltage: string | null;
   warrantyMonths: number | null;
   specs: { label: string; value: string; order: number }[];
-};
-
-type AvaliacaoPublica = {
-  id: string;
-  score: number;
-  comment: string;
-  displayName: string;
-  publishedAt: Date | null;
-  createdAt: Date;
 };
 
 const PRIORIDADE_ATRIBUTOS = [
@@ -338,15 +338,16 @@ function Estrelas({ nota }: { nota: number }) {
   );
 }
 
-function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] }) {
-  if (avaliacoes.length === 0) return null;
+function AvaliacoesVerificadas({
+  resumo,
+  comentarios,
+}: {
+  resumo: ResumoAvaliacoesProduto | null;
+  comentarios: ComentarioAvaliacaoProduto[];
+}) {
+  if (!resumo) return null;
 
-  const media = avaliacoes.reduce((soma, avaliacao) => soma + avaliacao.score, 0) / avaliacoes.length;
-  const distribuicao = [5, 4, 3, 2, 1].map((nota) => ({
-    nota,
-    quantidade: avaliacoes.filter((avaliacao) => avaliacao.score === nota).length,
-  }));
-  const comentarios = avaliacoes.filter((avaliacao) => avaliacao.comment.trim()).slice(0, 4);
+  const { media, total, distribuicao } = resumo;
 
   return (
     <section
@@ -368,14 +369,14 @@ function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] 
             <div className="pb-0.5">
               <Estrelas nota={Math.round(media)} />
               <p className="mt-1 text-xs text-graf-500">
-                {avaliacoes.length} {avaliacoes.length === 1 ? "avaliação publicada" : "avaliações publicadas"}
+                {total} {total === 1 ? "avaliação publicada" : "avaliações publicadas"}
               </p>
             </div>
           </div>
 
           <div className="mt-5 space-y-2" aria-label="Distribuição das notas">
             {distribuicao.map(({ nota, quantidade }) => {
-              const percentual = Math.round((quantidade / avaliacoes.length) * 100);
+              const percentual = Math.round((quantidade / total) * 100);
               return (
                 <div key={nota} className="grid grid-cols-[2rem_1fr_2.5rem] items-center gap-2 text-xs">
                   <span className="font-semibold text-graf-600">{nota}★</span>
@@ -514,7 +515,6 @@ export default async function ProdutoLayout({ children, params }: Props) {
       ...SELECT_COMPARAVEL,
       status: true,
       categoryId: true,
-      brandId: true,
       condition: true,
       trackInventory: true,
       relatedFrom: {
@@ -539,6 +539,12 @@ export default async function ProdutoLayout({ children, params }: Props) {
     .map((relacao) => relacao.target)
     .filter((alvo) => alvo.status === "active")
     .slice(0, 2);
+
+  /* A estatística e os comentários independem das relações comerciais. Começar
+     as duas leituras agora evita uma etapa sequencial no fim do layout; `cache`
+     no helper também permite que a página principal reutilize o mesmo resumo. */
+  const resumoAvaliacoesPromise = carregarResumoAvaliacoesProduto(produto.id);
+  const comentariosAvaliacoesPromise = carregarComentariosAvaliacoesProduto(produto.id);
 
   const todasRelacoes = await prisma.productRelation.findMany({
     where: { sourceId: produto.id },
@@ -610,16 +616,14 @@ export default async function ProdutoLayout({ children, params }: Props) {
   crossSell.complementos.sort((a, b) => a.ordem - b.ordem);
 
   const faltam = 2 - alternativasManuais.length;
+  const categoriaAlternativa = categoriaDaAlternativaAutomatica(produto.categoryId);
   const alternativasAutomaticas =
-    faltam > 0 && (produto.categoryId || produto.brandId)
+    faltam > 0 && categoriaAlternativa
       ? await prisma.product.findMany({
           where: {
             status: "active",
             id: { notIn: [produto.id, ...relacionadosIds] },
-            OR: [
-              ...(produto.categoryId ? [{ categoryId: produto.categoryId }] : []),
-              ...(produto.brandId ? [{ brandId: produto.brandId }] : []),
-            ],
+            categoryId: categoriaAlternativa,
           },
           orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
           take: faltam,
@@ -627,28 +631,10 @@ export default async function ProdutoLayout({ children, params }: Props) {
         })
       : [];
 
-  const avaliacoes = await prisma.review.findMany({
-    where: {
-      publicConsent: true,
-      publishedAt: { not: null },
-      request: {
-        kind: "compra",
-        order: {
-          items: { some: { productId: produto.id, kind: "produto" } },
-        },
-      },
-    },
-    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    take: 50,
-    select: {
-      id: true,
-      score: true,
-      comment: true,
-      displayName: true,
-      publishedAt: true,
-      createdAt: true,
-    },
-  });
+  const [resumoAvaliacoes, comentariosAvaliacoes] = await Promise.all([
+    resumoAvaliacoesPromise,
+    comentariosAvaliacoesPromise,
+  ]);
 
   const comparaveis: ProdutoComparavel[] = [
     produto,
@@ -663,7 +649,10 @@ export default async function ProdutoLayout({ children, params }: Props) {
       {children}
       <div className="container-jb max-w-[112rem]">
         <ComparacaoRapida produtos={comparaveis} />
-        <AvaliacoesVerificadas avaliacoes={avaliacoes} />
+        <AvaliacoesVerificadas
+          resumo={resumoAvaliacoes}
+          comentarios={comentariosAvaliacoes}
+        />
         <CrossSellIntencional dados={crossSell} />
         {geraEquipamento ? <PosVendaJB garantiaMeses={produto.warrantyMonths} /> : null}
       </div>
