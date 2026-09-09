@@ -2,11 +2,11 @@
   position: relative;
   z-index: 5;
   overflow: hidden;
-  border-block: 1px solid color-mix(in srgb, var(--color-jb-700) 42%, transparent);
+  border-block: 1px solid var(--color-jb-700);
   color: white;
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--color-jb-950) 84%, #000), var(--color-jb-600) 48%, color-mix(in srgb, var(--color-jb-950) 84%, #000));
-  box-shadow: 0 1rem 2.8rem -2.3rem color-mix(in srgb, var(--color-jb-950) 75%, transparent);
+    linear-gradient(90deg, var(--color-jb-600), var(--color-jb-500) 50%, var(--color-jb-600));
+  box-shadow: 0 1rem 2.8rem -2.3rem color-mix(in srgb, var(--color-jb-700) 55%, transparent);
 }
 
 .ticker::before,
@@ -22,12 +22,12 @@
 
 .ticker::before {
   left: 0;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--color-jb-950) 94%, #000), transparent);
+  background: linear-gradient(90deg, var(--color-jb-600), transparent);
 }
 
 .ticker::after {
   right: 0;
-  background: linear-gradient(270deg, color-mix(in srgb, var(--color-jb-950) 94%, #000), transparent);
+  background: linear-gradient(270deg, var(--color-jb-600), transparent);
 }
 
 .janela {
@@ -37,7 +37,7 @@
 .movimento {
   display: flex;
   width: max-content;
-  animation: correr 34s linear infinite;
+  animation: correr 31s linear infinite;
   will-change: transform;
 }
 
@@ -57,13 +57,14 @@
 
 .trilha li {
   display: flex;
-  min-height: 3.35rem;
+  min-height: 3.5rem;
   align-items: center;
-  gap: 0.65rem;
-  padding-inline: clamp(1.1rem, 2.2vw, 2.25rem);
-  font-size: 0.74rem;
-  font-weight: 850;
-  letter-spacing: 0.07em;
+  gap: 0.7rem;
+  padding-inline: clamp(1.15rem, 2.4vw, 2.45rem);
+  color: white;
+  font-size: 0.73rem;
+  font-weight: 900;
+  letter-spacing: 0.085em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -71,15 +72,16 @@
 .trilha svg {
   width: 1rem;
   height: 1rem;
-  color: rgb(255 255 255 / 0.82);
-  stroke-width: 2;
+  color: white;
+  stroke-width: 2.2;
 }
 
 .trilha i {
   margin-left: clamp(0.6rem, 1.4vw, 1.35rem);
-  color: rgb(255 255 255 / 0.34);
-  font-size: 0.55rem;
+  color: white;
+  font-size: 0.5rem;
   font-style: normal;
+  opacity: 0.42;
 }
 
 @keyframes correr {
