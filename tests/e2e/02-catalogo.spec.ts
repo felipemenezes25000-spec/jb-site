@@ -50,11 +50,10 @@ test.describe("Catálogo", () => {
     const totalSemFiltro = Number((await contador.innerText()).match(/\d+/)?.[0] ?? 0);
     expect(totalSemFiltro).toBeGreaterThan(0);
 
-    // pega a primeira condição oferecida pela própria página, em vez de
-    // fixar um rótulo que o catálogo pode não ter. A busca fica dentro do
-    // painel: a fileira de fichas de filtro aplicado repete o mesmo nome
-    // acessível, e é o painel que representa o estado de cada opção.
-    const painel = page.getByRole("complementary", { name: "Filtros do catálogo" });
+    // A lista completa fica sob demanda em qualquer largura; isso devolve a
+    // área horizontal à grade sem perder filtros compartilháveis por URL.
+    await page.getByRole("button", { name: /Todos os filtros/ }).click();
+    const painel = page.getByRole("dialog", { name: "Filtros do catálogo" });
     const opcoes = painel.getByRole("link", { name: /^Filtrar por Categoria: / });
     await expect(opcoes.first()).toBeVisible();
     const escolhida = opcoes.first();
@@ -71,9 +70,9 @@ test.describe("Catálogo", () => {
     const chaves = [...url.searchParams.keys()];
     expect(chaves.length, `a URL deveria carregar o filtro: ${url.search}`).toBeGreaterThan(0);
 
-    // ligada, a mesma opção passa a oferecer a remoção
+    // ligada, a ficha visível passa a oferecer a remoção
     await expect(
-      painel.getByRole("link", { name: `Remover filtro Categoria: ${rotulo}` }),
+      page.getByRole("link", { name: `Remover filtro Categoria: ${rotulo}` }).first(),
     ).toBeVisible();
 
     const totalFiltrado = Number((await contador.innerText()).match(/\d+/)?.[0] ?? 0);
@@ -86,8 +85,9 @@ test.describe("Catálogo", () => {
        de demonstração muda, e um slug escrito à mão aqui vira teste que
        reprova por causa do banco. */
     await page.goto("/loja");
+    await page.getByRole("button", { name: /Todos os filtros/ }).click();
     const primeira = page
-      .getByRole("complementary", { name: "Filtros do catálogo" })
+      .getByRole("dialog", { name: "Filtros do catálogo" })
       .getByRole("link", { name: /^Filtrar por Categoria: / })
       .first();
     await expect(primeira).toBeVisible();
@@ -100,16 +100,15 @@ test.describe("Catálogo", () => {
     await expect(contador).toBeVisible();
 
     // o filtro veio da URL: a opção correspondente precisa estar ligada
-    const painel = page.getByRole("complementary", { name: "Filtros do catálogo" });
-    const ligadas = painel.getByRole("link", { name: /^Remover filtro / });
-    await expect(ligadas).toHaveCount(1);
+    const ligadas = page.getByRole("link", { name: /^Remover filtro Categoria:/ });
+    await expect(ligadas.first()).toBeVisible();
 
     // e a barra de filtros aplicados precisa oferecer a limpeza
     const limpar = page.getByRole("link", { name: "Limpar tudo" }).first();
     await expect(limpar).toBeVisible();
 
     await page.reload();
-    await expect(ligadas).toHaveCount(1);
+    await expect(ligadas.first()).toBeVisible();
 
     await limpar.click();
     await page.waitForURL((url) => !url.searchParams.has("categoria"));
@@ -117,7 +116,7 @@ test.describe("Catálogo", () => {
 
     await page.goBack();
     await page.waitForURL(/categoria=/);
-    await expect(ligadas).toHaveCount(1);
+    await expect(ligadas.first()).toBeVisible();
   });
 
   test("filtro sem resultado mostra o estado vazio com saída útil", async ({ page }) => {

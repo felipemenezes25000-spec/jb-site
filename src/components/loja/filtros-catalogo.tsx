@@ -74,7 +74,7 @@ function paraParams(parametros: ParametrosCatalogo) {
 }
 
 /** Endereço da mesma lista com as mudanças aplicadas. Página sempre volta ao início. */
-function enderecoCom(
+export function enderecoCom(
   caminho: string,
   parametros: ParametrosCatalogo,
   mudancas: Record<string, string | null>,
@@ -89,21 +89,21 @@ function enderecoCom(
   return consulta ? `${caminho}?${consulta}` : caminho;
 }
 
-function valoresDe(parametros: ParametrosCatalogo, chave: string): string[] {
+export function valoresDe(parametros: ParametrosCatalogo, chave: string): string[] {
   const bruto = parametros[chave];
   if (!bruto) return [];
   const texto = Array.isArray(bruto) ? bruto.join(",") : bruto;
   return texto.split(",").filter(Boolean);
 }
 
-function textoDe(parametros: ParametrosCatalogo, chave: string): string {
+export function textoDe(parametros: ParametrosCatalogo, chave: string): string {
   const bruto = parametros[chave];
   if (!bruto) return "";
   return Array.isArray(bruto) ? (bruto[0] ?? "") : bruto;
 }
 
 /** Soma ou tira um valor de um filtro de vários valores. */
-function alternado(parametros: ParametrosCatalogo, chave: string, valor: string) {
+export function alternado(parametros: ParametrosCatalogo, chave: string, valor: string) {
   const atuais = valoresDe(parametros, chave);
   const novos = atuais.includes(valor)
     ? atuais.filter((v) => v !== valor)
@@ -116,7 +116,7 @@ function alternado(parametros: ParametrosCatalogo, chave: string, valor: string)
  * Fica dentro deste módulo de propósito: é código de cliente, e chamar daqui
  * de um Server Component devolveria uma referência, não a função.
  */
-function filtrosAplicados(parametros: ParametrosCatalogo, grupos: GruposFiltro) {
+export function filtrosAplicados(parametros: ParametrosCatalogo, grupos: GruposFiltro) {
   const fichas: { chave: string; valor: string | null; campo?: string; rotulo: string }[] = [];
 
   const fontes: Record<string, OpcaoFiltro[]> = {
@@ -291,9 +291,11 @@ export function ConteudoFiltros({
   travarCategoria,
   travarCondicao,
   travarMarca,
+  onNavigate,
 }: {
   grupos: GruposFiltro;
   parametros: ParametrosCatalogo;
+  onNavigate?: () => void;
 } & Travas) {
   const router = useRouter();
   const caminho = usePathname();
@@ -315,7 +317,12 @@ export function ConteudoFiltros({
   const comVendidos = textoDe(parametros, "vendidos") === "1";
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      onClick={(evento) => {
+        if ((evento.target as HTMLElement).closest("a[href]")) onNavigate?.();
+      }}
+    >
       {/* um grupo com uma opção só não filtra nada: ou some, ou engana */}
       {!travarCategoria && grupos.categorias.length > 1 ? (
         <Grupo titulo="Categoria">

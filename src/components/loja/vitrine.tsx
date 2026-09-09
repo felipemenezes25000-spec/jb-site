@@ -4,12 +4,11 @@ import { Suspense } from "react";
 import type { Prisma, ProductCondition } from "@prisma/client";
 import { ArrowRight, PackageSearch, SearchX, TriangleAlert } from "lucide-react";
 
-import {
-  BarraCatalogo,
-  PainelFiltros,
-  type GruposFiltro,
-  type ParametrosCatalogo,
+import type {
+  GruposFiltro,
+  ParametrosCatalogo,
 } from "@/components/loja/filtros-catalogo";
+import { ControlesColecao } from "@/components/loja/marketplace/controles-colecao";
 import {
   EsqueletoGradeMarketplace,
   GradeMarketplace,
@@ -768,20 +767,10 @@ export async function Vitrine({
         </>
       )}
 
-      <div
-        className={cn(
-          "grid gap-x-12 gap-y-8 lg:grid-cols-[17rem_minmax(0,1fr)]",
-          semCabecalhoInterno ? "mt-6 lg:mt-7" : "mt-8 lg:mt-10",
-        )}
-      >
-        <aside className="hidden lg:block" aria-label="Filtros do catálogo">
-          <PainelFiltros grupos={grupos} parametros={parametros} {...travas} />
-          {apoioNoFiltro}
-        </aside>
+      <div className={cn(semCabecalhoInterno ? "mt-5 lg:mt-6" : "mt-7 lg:mt-8")}>
+        <ControlesColecao grupos={grupos} parametros={parametros} {...travas} />
 
-        <div className="min-w-0">
-          <BarraCatalogo grupos={grupos} parametros={parametros} className="mb-6" {...travas} />
-
+        <div className="mt-6 min-w-0">
           <Suspense key={chave} fallback={<EsqueletoResultados />}>
             <Resultados
               consulta={consulta}
@@ -794,6 +783,8 @@ export async function Vitrine({
             />
           </Suspense>
         </div>
+
+        {apoioNoFiltro ? <div className="mt-6">{apoioNoFiltro}</div> : null}
       </div>
     </div>
   );
