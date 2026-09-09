@@ -82,7 +82,8 @@
    transparentes continuam transparentes. A sombra fica no equipamento, não
    numa caixa em volta dele. */
 :global([data-jb-home="true"] a[href^="/loja/"] img),
-:global([data-jb-home="true"] article.placa > div:first-child img) {
+:global([data-jb-home="true"] article.placa > div:first-child img),
+:global([data-jb-home="true"] div[class*="grid-cols-3"][class*="divide-x"] img) {
   mix-blend-mode: multiply;
   background: transparent !important;
   filter: drop-shadow(0 1.6rem 1.45rem rgb(67 18 22 / 0.14));
@@ -93,7 +94,8 @@
 :global([data-jb-home="true"] a[href^="/loja/"] > div:has(> img)),
 :global([data-jb-home="true"] a[href^="/loja/"] > span:has(> img)),
 :global([data-jb-home="true"] a[href^="/loja/"] span:has(> img)),
-:global([data-jb-home="true"] article.placa > div:first-child:has(img)) {
+:global([data-jb-home="true"] article.placa > div:first-child:has(img)),
+:global([data-jb-home="true"] div[class*="grid-cols-3"][class*="divide-x"] div:has(> img)) {
   border-color: transparent !important;
   border-radius: 0 !important;
   background: transparent !important;
@@ -187,7 +189,8 @@
   }
 
   :global([data-jb-home="true"] a[href^="/loja/"] img),
-  :global([data-jb-home="true"] article.placa > div:first-child img) {
+  :global([data-jb-home="true"] article.placa > div:first-child img),
+  :global([data-jb-home="true"] div[class*="grid-cols-3"][class*="divide-x"] img) {
     transition: none !important;
   }
 }
