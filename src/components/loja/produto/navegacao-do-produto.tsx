@@ -8,6 +8,16 @@ import { cn } from "@/lib/utils";
 
 export type AncoraDoProduto = { id: string; rotulo: string };
 
+const ROTULOS_COMPACTOS: Record<string, string> = {
+  "visao-geral": "Visão geral",
+  sobre: "Sobre",
+  "ficha-tecnica": "Especificações",
+  preparo: "Antes de comprar",
+  "entrega-e-garantia": "Entrega e garantia",
+  duvidas: "Dúvidas",
+  relacionados: "Alternativas",
+};
+
 export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) {
   const [ativa, setAtiva] = useState<string | null>(null);
   const trilhoRef = useRef<HTMLUListElement>(null);
@@ -50,6 +60,12 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
     }
   }, [ativa]);
 
+  function abrirSecao(id: string) {
+    const secao = document.querySelector<HTMLElement>(`main #${CSS.escape(id)}`);
+    const detalhes = secao?.querySelector<HTMLDetailsElement>("details");
+    if (detalhes) detalhes.open = true;
+  }
+
   if (ancoras.length < 2) return null;
 
   return (
@@ -67,9 +83,10 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
               href={`#${ancora.id}`}
               data-ancora={ancora.id}
               aria-current={ativa === ancora.id ? "true" : undefined}
+              onClick={() => abrirSecao(ancora.id)}
               className="foco-jb flex min-h-12 items-center whitespace-nowrap border-b-2 border-transparent text-sm font-semibold text-graf-600 transition-colors hover:text-graf-950 aria-[current=true]:border-jb-500 aria-[current=true]:text-jb-700"
             >
-              {ancora.rotulo}
+              {ROTULOS_COMPACTOS[ancora.id] ?? ancora.rotulo}
             </a>
           </li>
         ))}
