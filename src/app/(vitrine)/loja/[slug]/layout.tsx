@@ -18,6 +18,7 @@ import {
   CrossSellIntencional,
   type DadosCrossSell,
 } from "@/components/loja/produto/cross-sell-intencional";
+import { mesmoPerfilParaAlternativaAutomatica } from "@/lib/marketplace/atributos-decisao";
 import {
   carregarComentariosAvaliacoesProduto,
   carregarResumoAvaliacoesProduto,
@@ -365,7 +366,7 @@ export default async function ProdutoLayout({ children, params }: Props) {
 
   const faltam = 2 - alternativasManuais.length;
   const categoriaAlternativa = categoriaDaAlternativaAutomatica(produto.categoryId);
-  const alternativasAutomaticas =
+  const candidatosAutomaticos =
     faltam > 0 && categoriaAlternativa
       ? await prisma.product.findMany({
           where: {
@@ -374,10 +375,25 @@ export default async function ProdutoLayout({ children, params }: Props) {
             categoryId: categoriaAlternativa,
           },
           orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
-          take: faltam,
+          // Categoria é só o primeiro filtro. A janela maior permite descartar
+          // subtipos incompatíveis sem exigir classificação nova no banco.
+          take: Math.max(12, faltam * 6),
           select: SELECT_COMPARAVEL,
         })
       : [];
+
+  const contextoAtual = {
+    nome: produto.name,
+    rotulos: produto.specs.map((spec) => spec.label),
+  };
+  const alternativasAutomaticas = candidatosAutomaticos
+    .filter((candidato) =>
+      mesmoPerfilParaAlternativaAutomatica(contextoAtual, {
+        nome: candidato.name,
+        rotulos: candidato.specs.map((spec) => spec.label),
+      }),
+    )
+    .slice(0, faltam);
 
   const [resumoAvaliacoes, comentariosAvaliacoes] = await Promise.all([
     resumoAvaliacoesPromise,
