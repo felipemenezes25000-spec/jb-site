@@ -65,6 +65,16 @@ test.describe("Carrinho", () => {
     ).toBeVisible();
   });
 
+  test("comprar agora segue direto para o checkout", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.goto(`/loja/${produto.slug}`);
+
+    await page.getByRole("button", { name: "Comprar agora" }).click();
+    await page.waitForURL(/\/checkout$/);
+    await expect(page.getByRole("heading", { name: "Fechar pedido", level: 1 })).toBeVisible();
+    await expect(page.getByText(produto.nome).first()).toBeVisible();
+  });
+
   test("duas unidades cobram o dobro, e aumentar a quantidade recalcula", async ({ page }) => {
     const { precoUnitarioCents } = await adicionarAoCarrinho(page, { quantidade: 2 });
 

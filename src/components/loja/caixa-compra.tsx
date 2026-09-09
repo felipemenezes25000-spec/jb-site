@@ -210,10 +210,17 @@ export function CaixaCompra({
     );
   }
 
+  const CLASSE_PAINEL_COMPRA =
+    "overflow-hidden rounded-[10px] border border-graf-300 bg-white shadow-card";
+  const CLASSE_SECAO_COMPRA = "border-t border-graf-200 px-5 py-4";
+  const CLASSE_ACOES_COMPRA = "mt-4 grid gap-2";
+  const CLASSE_GARANTIA_COMPRA =
+    "flex items-start gap-2.5 border-t border-graf-200 px-5 py-3 text-xs leading-5 text-graf-600";
+
   return (
-    <div className="placa overflow-hidden">
-      <div className="p-5 sm:p-6">
-        <div className="mb-4">
+    <div className={CLASSE_PAINEL_COMPRA}>
+      <div className="px-5 py-4">
+        <div className="mb-3">
           {semEstoque ? (
             <Etiqueta tom="neutro">{unico ? "Vendido" : "Sem estoque no momento"}</Etiqueta>
           ) : unico ? (
@@ -254,12 +261,12 @@ export function CaixaCompra({
 
             {/* 44px só a partir de `xl`: em 1024px a coluna tem ~345px úteis,
                 e um preço de seis dígitos nesse corpo não caberia na linha. */}
-            <p className="numero text-[2.5rem] leading-none text-graf-950 xl:text-[2.875rem]">
+            <p className="numero text-[2.25rem] leading-none text-graf-950 xl:text-[2.5rem]">
               {formatarPreco(precoCents)}
             </p>
 
             {parcelas ? (
-              <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-600">
+              <p className="mt-2 text-sm leading-6 text-graf-600">
                 em até{" "}
                 <span className="font-semibold text-graf-900">
                   {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
@@ -268,7 +275,7 @@ export function CaixaCompra({
               </p>
             ) : null}
 
-            <p className="mt-1.5 flex items-center gap-2 text-sm text-graf-500">
+            <p className="mt-1 flex items-center gap-2 text-xs text-graf-500">
               <CreditCard className="size-4 shrink-0 text-graf-500" aria-hidden />
               Pix ou cartão de crédito
             </p>
@@ -282,8 +289,12 @@ export function CaixaCompra({
         )}
       </div>
 
+      {/* Consultar entrega é parte da decisão e vem antes dos complementos e
+          dos botões. Fica fora do formulário para Enter no CEP nunca comprar. */}
+      {podeComprar ? <EntregaPorCep produtoId={produtoId} /> : null}
+
       {podeComprar ? (
-        <form action={acao} className="space-y-6 border-t border-graf-200 p-5 sm:p-6">
+        <form action={acao} className={`${CLASSE_SECAO_COMPRA} space-y-4`}>
           <input type="hidden" name="produtoId" value={produtoId} />
           <input type="hidden" name="quantidade" value={quantidade} />
           {escolhidos.map((id) => (
@@ -365,7 +376,7 @@ export function CaixaCompra({
 
           {estado.erro ? <Aviso tom="erro">{estado.erro}</Aviso> : null}
 
-          <div className="space-y-2.5">
+          <div className={CLASSE_ACOES_COMPRA}>
             {/* Comprar agora é o primário; adicionar ao carrinho é a
                 alternativa de quem ainda vai juntar itens. O `onClick` só
                 define o destino — quem envia é o `type="submit"`, para o
@@ -433,7 +444,7 @@ export function CaixaCompra({
       )}
 
       {garantia && garantia.meses > 0 ? (
-        <p className="flex items-start gap-2.5 border-t border-graf-200 px-5 py-4 text-[0.8125rem] leading-relaxed text-graf-600 sm:px-6">
+        <p className={CLASSE_GARANTIA_COMPRA}>
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
           <span>
             <span className="font-bold text-graf-950">
@@ -444,9 +455,6 @@ export function CaixaCompra({
         </p>
       ) : null}
 
-      {/* A estimativa fica fora do formulário: consultar o CEP não pode
-          enviar o item para o carrinho por acidente. */}
-      {podeComprar ? <EntregaPorCep produtoId={produtoId} /> : null}
     </div>
   );
 }

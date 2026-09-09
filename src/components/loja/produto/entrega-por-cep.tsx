@@ -73,7 +73,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   }
 
   return (
-    <section aria-labelledby="entrega-cep" className="border-t border-graf-200 p-5 sm:p-6">
+    <section aria-labelledby="entrega-cep" className="border-t border-graf-200 px-5 py-4">
       <h3
         id="entrega-cep"
         className="flex items-center gap-2 text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
@@ -82,7 +82,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
         Entrega do equipamento
       </h3>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2.5 flex flex-col gap-2 min-[375px]:flex-row">
         <div className="relative min-w-0 flex-1">
           <label htmlFor="cep-entrega" className="sr-only">
             CEP de entrega
@@ -110,7 +110,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
               evento.preventDefault();
               calcular();
             }}
-            className="h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-[0.9375rem] tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/15"
+            className="h-10 w-full rounded-md border border-graf-450 bg-white pl-9 pr-3 text-sm tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/15"
           />
         </div>
         <button
@@ -118,7 +118,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
           onClick={calcular}
           disabled={!completo || calculando}
           className={cn(
-            "foco-jb flex h-11 shrink-0 items-center gap-2 rounded-lg border border-graf-300 px-4 text-[0.875rem] font-bold transition-colors duration-150",
+            "foco-jb flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-md border border-graf-300 px-4 text-sm font-bold transition-colors duration-150 min-[375px]:w-auto",
             completo && !calculando
               ? "text-graf-900 hover:border-graf-450 hover:bg-graf-50"
               : "cursor-not-allowed text-graf-500",
@@ -138,7 +138,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
       ) : null}
 
       {resultado?.ok ? (
-        <div className="mt-3 rounded-lg border border-graf-200 bg-graf-50 p-3.5">
+        <div className="mt-2.5 border-l-2 border-jb-500 bg-graf-50 px-3 py-2.5">
           {resultado.orcadoDepois ? (
             <>
               <p className="text-[0.9375rem] font-semibold text-graf-900">

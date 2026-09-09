@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { emReais } from "./apoio";
 import { fixtures } from "./fixtures";
 
 test.describe("Marketplace — página do produto", () => {
@@ -26,5 +27,29 @@ test.describe("Marketplace — página do produto", () => {
     await expect(
       compra.getByRole("button", { name: "Adicionar ao carrinho" }),
     ).toBeVisible();
+  });
+
+  test("mantém preço, CEP e ações na ordem de decisão", async ({ page }) => {
+    const { frete } = fixtures();
+    await page.goto(`/loja/${frete.slug}`);
+
+    const painel = page.locator("[data-pdp-buybox]");
+    const preco = painel.getByText(emReais(frete.precoCents)).first();
+    const cep = painel.getByRole("textbox", { name: /CEP/ });
+    const comprar = painel.getByRole("button", { name: "Comprar agora" });
+    await expect(preco).toBeVisible();
+    await expect(cep).toBeVisible();
+    await expect(comprar).toBeVisible();
+    await expect(
+      painel.getByRole("button", { name: "Adicionar ao carrinho" }),
+    ).toBeVisible();
+
+    const [caixaPreco, caixaCep, caixaComprar] = await Promise.all([
+      preco.boundingBox(),
+      cep.boundingBox(),
+      comprar.boundingBox(),
+    ]);
+    expect(caixaPreco!.y).toBeLessThan(caixaCep!.y);
+    expect(caixaCep!.y).toBeLessThan(caixaComprar!.y);
   });
 });
