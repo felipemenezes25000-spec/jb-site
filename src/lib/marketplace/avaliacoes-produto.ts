@@ -84,6 +84,28 @@ export const carregarResumoAvaliacoesProduto = cache(
 );
 
 /**
+ * A primeira dobra já tem o SKU, que é único no catálogo. Resolver o id por
+ * ele permite reutilizar o MESMO `carregarResumoAvaliacoesProduto` usado pelo
+ * bloco completo. A chamada interna recebe o id canônico e, dentro do mesmo
+ * render do React, o `cache()` evita recalcular a estatística quando o layout
+ * complementar pedir o mesmo resumo.
+ */
+export const carregarResumoAvaliacoesProdutoPorSku = cache(
+  async (sku: string): Promise<ResumoAvaliacoesProduto | null> => {
+    const codigo = sku.trim();
+    if (!codigo) return null;
+
+    const produto = await prisma.product.findUnique({
+      where: { sku: codigo },
+      select: { id: true },
+    });
+    if (!produto) return null;
+
+    return carregarResumoAvaliacoesProduto(produto.id);
+  },
+);
+
+/**
  * Comentários são conteúdo editorial, não a fonte da estatística.
  *
  * Trazemos uma janela curta e descartamos eventual comentário composto só por
