@@ -15,14 +15,17 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   preparo: "Antes de comprar",
   "entrega-e-garantia": "Entrega e garantia",
   duvidas: "Dúvidas",
-  relacionados: "Explorar",
   "comparacao-rapida": "Comparar",
   "avaliacoes-verificadas": "Avaliações",
+  "acessorios-compativeis": "Acessórios",
+  "produtos-complementares": "Use junto",
 };
 
 const EXTRAS_DA_PDP: AncoraDoProduto[] = [
   { id: "comparacao-rapida", rotulo: "Comparar" },
   { id: "avaliacoes-verificadas", rotulo: "Avaliações" },
+  { id: "acessorios-compativeis", rotulo: "Acessórios" },
+  { id: "produtos-complementares", rotulo: "Use junto" },
 ];
 
 export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) {
@@ -31,22 +34,39 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
   const trilhoRef = useRef<HTMLUListElement>(null);
 
   /*
-   * Comparação e avaliações são renderizadas pela camada complementar da PDP.
-   * Elas só entram na navegação quando existem de verdade no DOM: produto sem
-   * avaliação pública não ganha uma âncora vazia e produto sem alternativa não
-   * promete comparação inexistente.
+   * Comparação/avaliações podem vir do layout servidor, enquanto acessórios e
+   * complementos chegam depois de uma consulta cliente. Um MutationObserver
+   * mantém a barra fiel ao que existe de verdade, sem aba vazia e sem depender
+   * da ordem de hidratação.
    */
   useEffect(() => {
-    const ids = EXTRAS_DA_PDP
-      .filter((ancora) => document.querySelector(`main #${CSS.escape(ancora.id)}`))
-      .map((ancora) => ancora.id);
-    setExtrasVisiveis(ids);
+    function sincronizarExtras() {
+      const ids = EXTRAS_DA_PDP
+        .filter((ancora) => document.querySelector(`main #${CSS.escape(ancora.id)}`))
+        .map((ancora) => ancora.id);
+
+      setExtrasVisiveis((atuais) =>
+        atuais.length === ids.length && atuais.every((id, indice) => id === ids[indice]) ? atuais : ids,
+      );
+    }
+
+    sincronizarExtras();
+    const main = document.querySelector("main");
+    if (!main) return;
+
+    const observador = new MutationObserver(sincronizarExtras);
+    observador.observe(main, { childList: true, subtree: true });
+    return () => observador.disconnect();
   }, []);
 
   const ancorasEfetivas = useMemo(() => {
-    const existentes = new Set(ancoras.map((ancora) => ancora.id));
+    // O chamador antigo ainda declara `relacionados` durante a migração, mas o
+    // bloco genérico foi aposentado: alternativas/complementos/acessórios têm
+    // experiências próprias. Filtrar aqui evita uma âncora sem destino.
+    const base = ancoras.filter((ancora) => ancora.id !== "relacionados");
+    const existentes = new Set(base.map((ancora) => ancora.id));
     return [
-      ...ancoras,
+      ...base,
       ...EXTRAS_DA_PDP.filter(
         (ancora) => extrasVisiveis.includes(ancora.id) && !existentes.has(ancora.id),
       ),

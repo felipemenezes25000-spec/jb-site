@@ -101,7 +101,11 @@ export function ControlesColecao({
             aria-label="Todos os filtros"
             aria-haspopup="dialog"
             aria-expanded={aberto}
-            className={classesBotao("secundario", "md", "shrink-0 whitespace-nowrap")}
+            className={classesBotao(
+              "secundario",
+              "md",
+              "shrink-0 whitespace-nowrap max-[359px]:px-4",
+            )}
           >
             <SlidersHorizontal className="size-4" aria-hidden />
             <span className="max-[359px]:hidden">Todos os filtros</span>
