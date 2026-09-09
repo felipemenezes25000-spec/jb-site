@@ -98,12 +98,14 @@ export function ControlesColecao({
           <button
             type="button"
             onClick={() => setAberto(true)}
+            aria-label="Todos os filtros"
             aria-haspopup="dialog"
             aria-expanded={aberto}
             className={classesBotao("secundario", "md", "shrink-0 whitespace-nowrap")}
           >
             <SlidersHorizontal className="size-4" aria-hidden />
-            Todos os filtros
+            <span className="max-[359px]:hidden">Todos os filtros</span>
+            <span className="hidden max-[359px]:inline">Filtros</span>
             {ativos ? (
               <span className="tabular ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-jb-500 text-xs font-extrabold text-white">
                 {ativos}

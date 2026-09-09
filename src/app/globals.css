@@ -627,3 +627,25 @@
     animation: none;
   }
 }
+
+/* A loja pública prioriza leitura direta: textos informativos não usam cinza
+   claro. Preço anterior continua discretamente recuado, e estados desabilitados
+   preservam as variantes próprias de opacidade/cor do componente. */
+[data-jb-publico="true"] :where(.text-graf-500, .text-graf-600, .text-graf-700) {
+  color: var(--color-graf-950);
+}
+
+[data-jb-publico="true"]
+  :where(p, span, small, li, dt, dd, figcaption, address, label, legend, a)
+  [class*="text-graf-950/"] {
+  color: var(--color-graf-950);
+}
+
+[data-jb-publico="true"]
+  :where(p, span, small, li, dt, dd, figcaption, address, label, legend, a)[class*="text-graf-950/"] {
+  color: var(--color-graf-950);
+}
+
+[data-jb-publico="true"] .line-through {
+  color: var(--color-graf-700);
+}

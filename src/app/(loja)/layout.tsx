@@ -36,7 +36,10 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
 
   return (
     <ComparadorProvider>
-      <div className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]">
+      <div
+        data-jb-publico="true"
+        className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]"
+      >
         <Cabecalho
           categorias={categorias}
           condicoes={condicoes}

@@ -35,7 +35,10 @@ export default async function VitrineLayout({ children }: { children: React.Reac
 
   return (
     <ComparadorProvider>
-      <div className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]">
+      <div
+        data-jb-publico="true"
+        className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]"
+      >
         <CabecalhoVitrine
           categorias={categorias}
           condicoes={condicoes}

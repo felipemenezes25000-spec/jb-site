@@ -362,7 +362,7 @@ export function Cabecalho({
                       href={item.href}
                       aria-current={estaAtivo ? "page" : undefined}
                       className={cn(
-                        "group relative flex h-11 items-center gap-2 rounded-t-lg px-3 text-[0.8125rem] font-bold transition-colors",
+                        "group relative flex h-11 items-center gap-2 rounded-t-lg pl-3 pr-1 text-[0.8125rem] font-bold transition-colors",
                         "after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors after:content-['']",
                         aberto || estaAtivo
                           ? "text-jb-700 after:bg-jb-500"
@@ -386,7 +386,7 @@ export function Cabecalho({
                       onFocus={cancelarFechamento}
                       onClick={() => setMega(aberto ? null : chave)}
                       className={cn(
-                        "-ml-2 mr-1 flex size-8 items-center justify-center rounded-lg transition-colors",
+                        "ml-0 mr-1 flex size-8 items-center justify-center rounded-lg transition-colors",
                         aberto ? "text-jb-700" : "text-graf-400 hover:text-jb-700",
                       )}
                     >

@@ -54,7 +54,7 @@ export default async function AcessoLayout({ children }: { children: React.React
   ]);
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div data-jb-publico="true" className="flex min-h-dvh flex-col">
       <Cabecalho
         categorias={categorias}
         condicoes={condicoes}
