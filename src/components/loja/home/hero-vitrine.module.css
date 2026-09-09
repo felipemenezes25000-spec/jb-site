@@ -258,7 +258,9 @@
 }
 
 .numeros > div {
+  display: flex;
   min-width: 0;
+  flex-direction: column-reverse;
   padding-inline: 1rem;
 }
 

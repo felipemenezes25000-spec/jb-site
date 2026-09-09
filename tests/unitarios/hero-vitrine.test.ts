@@ -38,7 +38,10 @@ describe("HeroVitrine", () => {
   it("oferece os caminhos de compra em uma navegação identificada", () => {
     const html = renderizarHero();
 
-    expect(html).toContain('<nav aria-label="Comece sua busca"');
+    /* "Comece sua compra", e não "sua busca": esta navegação tem dois
+       destinos — catálogo e seminovos —, e a busca é o formulário logo acima
+       dela. O rótulo descreve o que os dois links fazem. */
+    expect(html).toContain('<nav aria-label="Comece sua compra"');
     expect(html).toContain('href="/loja"');
     expect(html).toContain('href="/seminovos"');
   });

@@ -97,9 +97,14 @@ export function HeroVitrine({
           {numeros.length > 0 ? (
             <dl className={styles.numeros} aria-label="Catálogo JB agora">
               {numeros.slice(0, 3).map((numero) => (
+                /* `dt` antes de `dd` no HTML: numa lista de definição o termo
+                   vem antes da definição, e é assim que leitor de tela e o
+                   próprio teste desta peça esperam ler. A ordem VISUAL — número
+                   grande em cima, rótulo embaixo — é do CSS
+                   (`.numeros > div`, `column-reverse`). */
                 <div key={numero.rotulo}>
-                  <dd>{numero.valor}</dd>
                   <dt>{numero.rotulo}</dt>
+                  <dd>{numero.valor}</dd>
                 </div>
               ))}
             </dl>
