@@ -15,7 +15,6 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   preparo: "Antes de comprar",
   "entrega-e-garantia": "Entrega e garantia",
   duvidas: "Dúvidas",
-  relacionados: "Explorar",
   "comparacao-rapida": "Comparar",
   "avaliacoes-verificadas": "Avaliações",
   "acessorios-compativeis": "Acessórios",
@@ -61,9 +60,13 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
   }, []);
 
   const ancorasEfetivas = useMemo(() => {
-    const existentes = new Set(ancoras.map((ancora) => ancora.id));
+    // O chamador antigo ainda declara `relacionados` durante a migração, mas o
+    // bloco genérico foi aposentado: alternativas/complementos/acessórios têm
+    // experiências próprias. Filtrar aqui evita uma âncora sem destino.
+    const base = ancoras.filter((ancora) => ancora.id !== "relacionados");
+    const existentes = new Set(base.map((ancora) => ancora.id));
     return [
-      ...ancoras,
+      ...base,
       ...EXTRAS_DA_PDP.filter(
         (ancora) => extrasVisiveis.includes(ancora.id) && !existentes.has(ancora.id),
       ),
