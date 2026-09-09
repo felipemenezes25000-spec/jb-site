@@ -5,11 +5,7 @@ import { z } from "zod";
 
 import { registrarAuditoria } from "@/lib/auditoria";
 import { somenteDigitos } from "@/lib/format";
-import {
-  escreverMetaMelhorEnvio,
-  lerMetaMelhorEnvio,
-  type MetaMelhorEnvio,
-} from "@/lib/logistica-meta";
+import { salvarNfeMelhorEnvio } from "@/lib/melhor-envio-admin";
 import {
   atualizarRastreioMelhorEnvio,
   cotacoesMelhorEnvio,
@@ -68,7 +64,15 @@ export async function salvarDimensoesProduto(
 
   const antes = await prisma.product.findUnique({
     where: { id: dados.data.productId },
-    select: { id: true, name: true, slug: true, weightGrams: true, widthMm: true, heightMm: true, depthMm: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      weightGrams: true,
+      widthMm: true,
+      heightMm: true,
+      depthMm: true,
+    },
   });
   if (!antes) return { erro: "Produto não encontrado." };
 
@@ -80,7 +84,15 @@ export async function salvarDimensoesProduto(
       heightMm: dados.data.heightMm,
       depthMm: dados.data.depthMm,
     },
-    select: { id: true, name: true, slug: true, weightGrams: true, widthMm: true, heightMm: true, depthMm: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      weightGrams: true,
+      widthMm: true,
+      heightMm: true,
+      depthMm: true,
+    },
   });
 
   await registrarAuditoria({
@@ -141,7 +153,9 @@ export async function testarCotacaoProduto(
     });
     return {
       ok: true,
-      mensagem: opcoes.length ? `${opcoes.length} modalidade(s) disponível(is).` : "Nenhuma modalidade disponível.",
+      mensagem: opcoes.length
+        ? `${opcoes.length} modalidade(s) disponível(is).`
+        : "Nenhuma modalidade disponível.",
       opcoes: opcoes.map((item) => ({
         serviceId: item.serviceId,
         companyName: item.companyName,
@@ -156,7 +170,10 @@ export async function testarCotacaoProduto(
 }
 
 async function revalidarPedido(orderId: string) {
-  const pedido = await prisma.order.findUnique({ where: { id: orderId }, select: { number: true } });
+  const pedido = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { number: true },
+  });
   revalidatePath("/admin/frete");
   revalidatePath(`/admin/pedidos/${orderId}`);
   if (pedido) {
@@ -176,7 +193,7 @@ export async function gerarEtiquetaPedido(
 
   const pedido = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, internalNote: true, shippingLabel: true, paidAt: true },
+    select: { id: true, shippingLabel: true, paidAt: true },
   });
   if (!pedido) return { erro: "Pedido não encontrado." };
   if (!pedido.paidAt) return { erro: "O pedido precisa estar pago antes de comprar a etiqueta." };
@@ -185,20 +202,10 @@ export async function gerarEtiquetaPedido(
   }
 
   const status = statusMelhorEnvio();
-  if (!status.nonCommercial && invoiceKey.length !== 44) {
-    return { erro: "Informe a chave de 44 dígitos da NF-e.", campo: "invoiceKey" };
+  if (!status.nonCommercial) {
+    const salvo = await salvarNfeMelhorEnvio(orderId, invoiceKey);
+    if (!salvo.ok) return { erro: salvo.error, campo: "invoiceKey" };
   }
-
-  const metaAnterior = lerMetaMelhorEnvio(pedido.internalNote) ?? ({ provider: "melhor_envio" } satisfies MetaMelhorEnvio);
-  const meta: MetaMelhorEnvio = {
-    ...metaAnterior,
-    invoiceKey: invoiceKey || metaAnterior.invoiceKey,
-    error: "",
-  };
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { internalNote: escreverMetaMelhorEnvio(pedido.internalNote, meta) },
-  });
 
   const resultado = await processarPedidoMelhorEnvio(orderId);
   await revalidarPedido(orderId);
