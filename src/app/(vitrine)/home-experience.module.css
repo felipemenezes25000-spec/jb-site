@@ -5,17 +5,24 @@
   background: #fff;
 }
 
-/* Na home, a linguagem cromática é deliberadamente mais rígida: texto só
-   preto, vermelho ou branco. Estados continuam identificáveis por ícone,
-   posição e forma — não dependem de texto verde/âmbar/cinza. */
+/* A home usa uma paleta deliberadamente rígida: preto para leitura, vermelho
+   para ação/estado e branco para superfície. Isso vale só dentro da home e não
+   contamina catálogo, checkout, conta ou backoffice. */
 .home :global([class*="text-graf-"]),
 .home :global([class*="text-ok-"]),
 .home :global([class*="text-warn-"]) {
   color: var(--color-graf-950) !important;
 }
 
+.home :global([class*="bg-ok-"]),
+.home :global([class*="bg-warn-"]),
 .home :global([class*="bg-graf-950"]) {
   background-color: var(--color-jb-500) !important;
+}
+
+.home :global([class*="ring-ok-"]),
+.home :global([class*="ring-warn-"]) {
+  --tw-ring-color: var(--color-jb-500) !important;
 }
 
 .home::before {
@@ -36,9 +43,6 @@
   z-index: 1;
 }
 
-/* Motion progressivo: em navegadores que suportam view-timeline cada bloco
-   entra com pouquíssimo deslocamento. Não há JS, não há layout shift e quem
-   pede menos movimento recebe a página estática. */
 @supports (animation-timeline: view()) {
   .home > :global(section:not(:first-child)) {
     animation: revelarHome linear both;
