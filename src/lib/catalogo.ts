@@ -3,7 +3,9 @@ import "server-only";
 import type { Prisma, ProductCondition } from "@prisma/client";
 
 import type { ProdutoCard } from "@/components/loja/card-produto";
+import type { ProdutoMarketplaceCard } from "@/components/loja/marketplace/tipos";
 import { mapaDeSinonimos, unificarPorNome } from "@/lib/homonimos";
+import { destaquesDoCard } from "@/lib/marketplace/destaques-card";
 import { prisma } from "@/lib/prisma";
 
 /** Só o necessário para montar um card — evita trazer descrição e ficha à toa. */
@@ -28,6 +30,22 @@ export const SELECAO_CARD = {
 
 type LinhaCard = Prisma.ProductGetPayload<{ select: typeof SELECAO_CARD }>;
 
+export const SELECAO_CARD_MARKETPLACE = {
+  ...SELECAO_CARD,
+  voltage: true,
+  warrantyMonths: true,
+  category: { select: { name: true } },
+  specs: {
+    orderBy: { order: "asc" },
+    take: 6,
+    select: { label: true, value: true, order: true },
+  },
+} satisfies Prisma.ProductSelect;
+
+type LinhaMarketplace = Prisma.ProductGetPayload<{
+  select: typeof SELECAO_CARD_MARKETPLACE;
+}>;
+
 export function paraCard(produto: LinhaCard): ProdutoCard {
   const primeira = produto.media[0];
   return {
@@ -44,6 +62,18 @@ export function paraCard(produto: LinhaCard): ProdutoCard {
     brandName: produto.brand?.name ?? null,
     imageUrl: primeira?.media.url ?? null,
     imageAlt: primeira?.alt || primeira?.media.alt || produto.name,
+  };
+}
+
+export function paraCardMarketplace(produto: LinhaMarketplace): ProdutoMarketplaceCard {
+  return {
+    ...paraCard(produto),
+    categoryName: produto.category?.name ?? null,
+    destaques: destaquesDoCard({
+      specs: produto.specs,
+      voltage: produto.voltage,
+      warrantyMonths: produto.warrantyMonths,
+    }),
   };
 }
 
@@ -272,6 +302,36 @@ export async function buscarProdutos(opcoes: {
 
   return {
     produtos: linhas.map(paraCard),
+    total,
+    pagina,
+    porPagina,
+    paginas: Math.max(1, Math.ceil(total / porPagina)),
+  };
+}
+
+export async function buscarProdutosMarketplace(opcoes: {
+  filtros?: FiltrosCatalogo;
+  ordem?: Ordenacao;
+  pagina?: number;
+  porPagina?: number;
+}) {
+  const porPagina = opcoes.porPagina ?? 24;
+  const pagina = Math.max(1, opcoes.pagina ?? 1);
+  const where = montarFiltro(opcoes.filtros ?? {});
+
+  const [linhas, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy: ordenar(opcoes.ordem),
+      skip: (pagina - 1) * porPagina,
+      take: porPagina,
+      select: SELECAO_CARD_MARKETPLACE,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return {
+    produtos: linhas.map(paraCardMarketplace),
     total,
     pagina,
     porPagina,
