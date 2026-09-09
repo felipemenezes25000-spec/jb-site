@@ -55,35 +55,25 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
   return (
     <nav
       aria-label="Seções deste equipamento"
-      className="sticky top-[72px] z-30 border-b border-graf-200/80 bg-white/88 py-2 shadow-[0_8px_24px_rgba(15,23,42,0.035)] backdrop-blur-xl"
+      className="sticky top-[72px] z-30 border-y border-graf-200 bg-white/95 backdrop-blur"
     >
-      <div className="container-jb">
-        <ul
-          ref={trilhoRef}
-          className="scrollbar-none flex gap-1.5 overflow-x-auto rounded-2xl border border-graf-200 bg-graf-50/75 p-1.5"
-        >
-          {ancoras.map((ancora) => {
-            const atual = ativa === ancora.id;
-            return (
-              <li key={ancora.id} className="shrink-0">
-                <a
-                  href={`#${ancora.id}`}
-                  data-ancora={ancora.id}
-                  aria-current={atual ? "true" : undefined}
-                  className={cn(
-                    "foco-jb flex min-h-10 items-center whitespace-nowrap rounded-xl px-3.5 text-[0.8125rem] font-bold transition-all duration-150",
-                    atual
-                      ? "bg-white text-jb-700 shadow-[0_1px_3px_rgba(15,23,42,0.08)] ring-1 ring-graf-200"
-                      : "text-graf-500 hover:bg-white/70 hover:text-graf-950",
-                  )}
-                >
-                  {ancora.rotulo}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <ul
+        ref={trilhoRef}
+        className="container-jb scrollbar-none flex min-h-12 max-w-[112rem] gap-5 overflow-x-auto"
+      >
+        {ancoras.map((ancora) => (
+          <li key={ancora.id} className="shrink-0">
+            <a
+              href={`#${ancora.id}`}
+              data-ancora={ancora.id}
+              aria-current={ativa === ancora.id ? "true" : undefined}
+              className="foco-jb flex min-h-12 items-center whitespace-nowrap border-b-2 border-transparent text-sm font-semibold text-graf-600 transition-colors hover:text-graf-950 aria-[current=true]:border-jb-500 aria-[current=true]:text-jb-700"
+            >
+              {ancora.rotulo}
+            </a>
+          </li>
+        ))}
+      </ul>
     </nav>
   );
 }
@@ -118,14 +108,18 @@ export function BarraCompraMobile({
 
   useEffect(() => {
     const raiz = document.documentElement;
+    const corpo = document.body;
     if (!visivel) {
       raiz.style.removeProperty("--jb-barra-inferior");
+      corpo.style.removeProperty("padding-bottom");
       return;
     }
     const altura = barraRef.current?.offsetHeight ?? 0;
     raiz.style.setProperty("--jb-barra-inferior", `${altura}px`);
+    corpo.style.paddingBottom = `${altura}px`;
     return () => {
       raiz.style.removeProperty("--jb-barra-inferior");
+      corpo.style.removeProperty("padding-bottom");
     };
   }, [visivel]);
 

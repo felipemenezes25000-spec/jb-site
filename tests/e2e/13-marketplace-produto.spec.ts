@@ -76,4 +76,20 @@ test.describe("Marketplace — página do produto", () => {
       await page.getByText("Assistência técnica própria", { exact: true }).count(),
     ).toBeLessThanOrEqual(1);
   });
+
+  test("mantém a conversão acessível no celular sem cobrir o final da página", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/loja/${produto.slug}`);
+    await page.locator("#ficha-tecnica, #preparo").first().scrollIntoViewIfNeeded();
+
+    const barra = page.getByRole("link", { name: "Comprar", exact: true });
+    await expect(barra).toBeVisible();
+    const caixa = await barra.boundingBox();
+    expect(caixa!.y + caixa!.height).toBeLessThanOrEqual(844);
+
+    await page.getByRole("contentinfo").scrollIntoViewIfNeeded();
+    const padding = await page.evaluate(() => getComputedStyle(document.body).paddingBottom);
+    expect(Number.parseFloat(padding)).toBeGreaterThan(0);
+  });
 });
