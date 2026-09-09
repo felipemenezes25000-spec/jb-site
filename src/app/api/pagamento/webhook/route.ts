@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 
+import { processarPedidoMelhorEnvio } from "@/lib/melhor-envio";
 import { provedorPagamento } from "@/lib/pagamento";
 import { confirmarPagamento, estornarPedido, mudarStatus } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
@@ -8,26 +9,11 @@ import { prisma } from "@/lib/prisma";
 /**
  * Notificação do provedor de pagamento.
  *
- * Este é o único lugar em que um pagamento vira "pago". Nem a tela, nem a
- * volta do navegador depois do banco: só o provedor, falando com o servidor,
- * com assinatura conferida dentro de `lerWebhook`.
- *
- * Não há sessão aqui — quem chama é uma máquina. A autenticação é a
- * assinatura da mensagem, e é responsabilidade do adapter do provedor.
- *
- * Duas regras que valem para qualquer adquirente:
- *
- * 1. Idempotência primeiro. O evento é gravado ANTES de qualquer efeito, com
- *    chave única. Reentrega repetida esbarra no unique e para em 200. Se o
- *    processamento falhar depois disso, a linha do evento é apagada para que
- *    a próxima entrega possa valer — senão o evento ficaria marcado como
- *    tratado sem nunca ter surtido efeito.
- *
- * 2. Responder 200 sempre que o evento foi aceito, mesmo quando não há nada a
- *    fazer. Provedor que recebe erro reenvia em laço, e um laço de reentrega
- *    é um incidente noturno esperando para acontecer.
+ * Pagamento e logística têm fronteiras diferentes. O pagamento aprovado é
+ * confirmado primeiro e de forma idempotente. Só depois tentamos a etiqueta:
+ * falta de NF-e, saldo no Melhor Envio ou indisponibilidade da transportadora
+ * nunca podem transformar um pagamento válido em webhook com erro.
  */
-
 export async function POST(request: Request) {
   const corpo = await request.text();
 
@@ -39,7 +25,6 @@ export async function POST(request: Request) {
     return Response.json({ erro: "Não foi possível ler a notificação." }, { status: 500 });
   }
 
-  // assinatura inválida ou corpo ilegível: nada é tocado
   if (!evento) {
     return Response.json({ erro: "Notificação inválida." }, { status: 400 });
   }
@@ -49,7 +34,6 @@ export async function POST(request: Request) {
     include: { order: { select: { id: true, number: true, status: true, paidAt: true } } },
   });
 
-  // cobrança de outro ambiente, ou já removida: aceitar encerra a reentrega
   if (!pagamento) {
     return Response.json({ ok: true, ignorado: "pagamento desconhecido" });
   }
@@ -86,10 +70,22 @@ export async function POST(request: Request) {
     });
 
     switch (evento.status) {
-      case "aprovado":
-        // idempotente por dentro: pedido já pago sai na primeira linha
+      case "aprovado": {
         await confirmarPagamento(pagamento.orderId);
+
+        // Melhor Envio é efeito pós-pagamento. A própria função é idempotente:
+        // se o webhook repetir, ela recupera a etiqueta/rastreio em vez de
+        // comprar outro frete. Pendência fiscal fica gravada no pedido.
+        try {
+          const logistica = await processarPedidoMelhorEnvio(pagamento.orderId);
+          if (!logistica.ok && !("skipped" in logistica)) {
+            console.warn("[webhook/logistica] etiqueta pendente", logistica.error);
+          }
+        } catch (erro) {
+          console.error("[webhook/logistica] falha pós-pagamento", erro);
+        }
         break;
+      }
 
       case "em_analise":
         if (!pagamento.order.paidAt && pagamento.order.status === "aguardando_pagamento") {
@@ -102,8 +98,6 @@ export async function POST(request: Request) {
       case "recusado":
       case "expirado":
       case "cancelado":
-        // Recusa não cancela pedido: o estoque continua reservado e a pessoa
-        // pode tentar de novo pela própria página do pedido.
         if (!pagamento.order.paidAt) {
           await prisma.orderStatusEvent.create({
             data: {
@@ -121,20 +115,14 @@ export async function POST(request: Request) {
         break;
 
       case "estornado":
-        // "reembolsado" e "cancelado" são estados diferentes, e o pedido
-        // estornado precisa continuar dizendo que houve venda e devolução.
-        // A devolução de estoque é decidida lá dentro: só volta o que ainda
-        // não tinha saído da JB.
         await estornarPedido(pagamento.orderId, "Pagamento estornado pelo provedor.");
         break;
 
       default:
-        // criado/pendente: só o registro do evento já basta
         break;
     }
   } catch (erro) {
     console.error("[webhook] falha ao processar o evento", erro);
-    // libera a chave para que a reentrega do provedor volte a valer
     await prisma.paymentEvent
       .delete({ where: { eventKey: evento.chave } })
       .catch(() => undefined);
@@ -142,6 +130,7 @@ export async function POST(request: Request) {
   }
 
   revalidatePath(`/pedido/${pagamento.order.number}`);
+  revalidatePath(`/minha-jb/pedidos/${pagamento.order.number}`);
 
   return Response.json({ ok: true, status: evento.status });
 }
