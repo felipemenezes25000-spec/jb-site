@@ -5,10 +5,9 @@ import { formatarPreco } from "@/lib/format";
 /* ============================================================================
    Condições desta compra
 
-   O bloco funciona como um resumo operacional da compra. Em vez de uma lista
-   longa, cada condição vira uma célula curta e comparável: garantia, frete,
-   retirada, alimentação e assistência. Isso deixa a primeira dobra mais
-   escaneável e cria um padrão visual único para todo o catálogo.
+   Esta área já vive dentro de "Entrega, garantia e suporte". Evitamos repetir
+   um grande cabeçalho interno: as condições viram uma grade operacional curta,
+   com foco em prazo, cobertura e retirada.
    ============================================================================ */
 
 export type PerfilDeFrete = {
@@ -90,19 +89,23 @@ export function CondicoesDeCompra({
     });
   }
 
+  if (linhas.length === 0) return null;
+
   return (
-    <section
-      aria-labelledby="condicoes-desta-compra"
-      className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
-    >
-      <header className="border-b border-graf-200 bg-graf-50/70 px-5 py-4">
-        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-jb-700">
-          Compra segura
-        </p>
-        <h2 id="condicoes-desta-compra" className="mt-1 text-[0.9375rem] font-bold text-graf-950">
-          Condições deste equipamento
-        </h2>
-      </header>
+    <section aria-label="Condições deste equipamento" className="overflow-hidden rounded-xl border border-graf-200 bg-white">
+      <div className="flex items-center justify-between gap-3 border-b border-graf-200 px-4 py-3 sm:px-5">
+        <div>
+          <p className="text-[0.625rem] font-bold uppercase tracking-[0.09em] text-jb-700">
+            Compra segura
+          </p>
+          <p className="mt-0.5 text-[0.875rem] font-extrabold text-graf-950">
+            Condições deste equipamento
+          </p>
+        </div>
+        <span className="rounded-full bg-graf-50 px-2.5 py-1 text-[0.6875rem] font-semibold text-graf-500">
+          {linhas.length} {linhas.length === 1 ? "ponto" : "pontos"}
+        </span>
+      </div>
 
       <ul className="grid sm:grid-cols-2">
         {linhas.map((linha, indice) => {
@@ -110,19 +113,19 @@ export function CondicoesDeCompra({
           return (
             <li
               key={linha.titulo}
-              className={`flex min-w-0 gap-3 border-graf-200 px-5 py-4 ${
+              className={`flex min-w-0 gap-2.5 border-graf-200 px-4 py-3 sm:px-5 ${
                 indice >= 2 ? "border-t" : ""
               } ${indice % 2 === 1 ? "sm:border-l" : ""} ${
                 indice === 1 ? "border-t sm:border-t-0" : ""
               }`}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700">
-                <Icone className="size-[17px]" aria-hidden />
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
+                <Icone className="size-4" aria-hidden />
               </span>
               <div className="min-w-0">
-                <p className="text-[0.875rem] font-bold leading-5 text-graf-950">{linha.titulo}</p>
+                <p className="text-[0.8125rem] font-extrabold leading-5 text-graf-950">{linha.titulo}</p>
                 {linha.detalhe ? (
-                  <p className="mt-1 text-[0.8125rem] leading-5 text-graf-500">{linha.detalhe}</p>
+                  <p className="mt-0.5 text-[0.75rem] leading-4 text-graf-500">{linha.detalhe}</p>
                 ) : null}
               </div>
             </li>
