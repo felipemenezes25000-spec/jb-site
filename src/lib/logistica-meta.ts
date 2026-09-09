@@ -1,26 +1,51 @@
 export const MARCADOR_MELHOR_ENVIO = "[[JB_MELHOR_ENVIO:";
 
+export type ProdutoPacoteMelhorEnvio = {
+  id: string;
+  quantity: number;
+};
+
 export type PacoteMelhorEnvio = {
   height: number;
   width: number;
   length: number;
   weight: number;
+  insuranceValue?: number;
+  /** Mapeamento devolvido pela cotação. Necessário para separar etiquetas multivolume. */
+  products?: ProdutoPacoteMelhorEnvio[];
+};
+
+export type ProviderShipmentMelhorEnvio = {
+  id: string;
+  /** -1 = uma etiqueta agrupando todos os volumes; >= 0 = índice do pacote isolado. */
+  packageIndex: number;
 };
 
 export type MetaMelhorEnvio = {
   provider: "melhor_envio";
+  companyId?: number;
   serviceId?: number;
   serviceName?: string;
   companyName?: string;
   quotedPriceCents?: number;
   estimatedDays?: number | null;
   packages?: PacoteMelhorEnvio[];
+
+  /** Compatibilidade com pedidos gravados antes do suporte a múltiplas etiquetas. */
   providerOrderIds?: string[];
+  /** Estrutura nova: permite retomar pacote a pacote sem comprar o mesmo volume duas vezes. */
+  providerShipments?: ProviderShipmentMelhorEnvio[];
+
   status?: string;
   trackingCode?: string;
+  trackingCodes?: string[];
   labelUrl?: string;
   invoiceKey?: string;
   error?: string;
+
+  /** Lock otimista. Fica na própria linha do pedido; não mantém transação aberta durante HTTP. */
+  lockToken?: string;
+  lockAcquiredAt?: string;
   updatedAt?: string;
 };
 
