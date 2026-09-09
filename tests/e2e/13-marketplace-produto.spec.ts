@@ -53,28 +53,59 @@ test.describe("Marketplace — página do produto", () => {
     expect(caixaCep!.y).toBeLessThan(caixaComprar!.y);
   });
 
-  test("organiza conteúdo técnico antes de relacionados e evita chamadas repetidas", async ({ page }) => {
+  test("usa hub técnico progressivo e não recupera relacionados genéricos", async ({ page }) => {
     const { produto } = fixtures();
     await page.goto(`/loja/${produto.slug}`);
 
+    const ficha = page.locator("#ficha-tecnica");
     const preparo = page.locator("#preparo");
     const entrega = page.locator("#entrega-e-garantia");
-    const relacionados = page.locator("#relacionados");
+    await expect(ficha).toBeVisible();
     await expect(preparo).toBeVisible();
     await expect(entrega).toBeVisible();
-    await expect(relacionados).toBeVisible();
 
-    const candidatos = [page.locator("#ficha-tecnica"), preparo, entrega];
-    for (const candidato of candidatos) {
-      if (await candidato.count()) {
-        expect((await candidato.boundingBox())!.y).toBeLessThan(
-          (await relacionados.boundingBox())!.y,
-        );
-      }
-    }
+    // O carrossel genérico foi aposentado: cada intenção comercial tem sua
+    // própria experiência (comparação, acessórios e complementos).
+    await expect(page.locator("#relacionados")).toHaveCount(0);
+    await expect(
+      page.getByRole("navigation", { name: "Seções deste equipamento" }).getByRole("link", {
+        name: "Relacionados",
+      }),
+    ).toHaveCount(0);
+
+    const detalhes = page.locator(
+      "#ficha-tecnica > details, #preparo > details, #entrega-e-garantia > details",
+    );
+    await expect(detalhes).toHaveCount(3);
+
+    const estadosIniciais = await detalhes.evaluateAll((itens) =>
+      itens.map((item) => (item as HTMLDetailsElement).open),
+    );
+    expect(estadosIniciais).toEqual([false, false, false]);
+
+    await preparo.locator("summary").click();
+    await expect(preparo.locator("details")).toHaveAttribute("open", "");
+    await expect(preparo.getByText("Antes de comprar", { exact: true }).first()).toBeVisible();
+
     expect(
       await page.getByText("Assistência técnica própria", { exact: true }).count(),
     ).toBeLessThanOrEqual(1);
+  });
+
+  test("a navegação sticky não aponta para seção inexistente", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.goto(`/loja/${produto.slug}`);
+
+    const destinos = await page
+      .getByRole("navigation", { name: "Seções deste equipamento" })
+      .locator('a[href^="#"]')
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")).filter(Boolean));
+
+    const ausentes = await page.evaluate((hrefs) =>
+      hrefs.filter((href) => !document.querySelector(href as string)),
+      destinos,
+    );
+    expect(ausentes).toEqual([]);
   });
 
   test("mantém a conversão acessível no celular sem cobrir o final da página", async ({ page }) => {
@@ -91,6 +122,40 @@ test.describe("Marketplace — página do produto", () => {
     await page.getByRole("contentinfo").scrollIntoViewIfNeeded();
     const padding = await page.evaluate(() => getComputedStyle(document.body).paddingBottom);
     expect(Number.parseFloat(padding)).toBeGreaterThan(0);
+  });
+
+  test("não cria overflow horizontal da página em larguras críticas", async ({ page }) => {
+    const { produto } = fixtures();
+
+    for (const width of [320, 390, 768, 1366, 1920]) {
+      await page.setViewportSize({ width, height: width < 800 ? 844 : 1000 });
+      await page.goto(`/loja/${produto.slug}`);
+
+      const medidas = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(
+        medidas.scrollWidth,
+        `overflow horizontal na PDP com viewport ${width}px`,
+      ).toBeLessThanOrEqual(medidas.clientWidth + 1);
+    }
+  });
+
+  test("pergunta técnica fica recolhida até o cliente pedir", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.goto(`/loja/${produto.slug}`);
+
+    const duvidas = page.locator("#duvidas");
+    await expect(duvidas).toBeVisible();
+
+    const campo = duvidas.getByRole("textbox", { name: "Sua pergunta" });
+    await expect(campo).toBeHidden();
+
+    await duvidas.getByText("Não encontrou sua dúvida?", { exact: true }).click();
+    await expect(campo).toBeVisible();
+    await expect(duvidas.getByRole("textbox", { name: "Seu nome" })).toBeVisible();
+    await expect(duvidas.getByRole("textbox", { name: "E-mail" })).toBeVisible();
   });
 
   test("o produto comprável não mistura orçamento ou indisponibilidade", async ({ page }) => {
