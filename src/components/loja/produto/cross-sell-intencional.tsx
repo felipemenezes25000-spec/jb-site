@@ -89,15 +89,20 @@ function Secao({
 }) {
   if (itens.length === 0) return null;
   const Icone = tipo === "acessorio" ? PackagePlus : Puzzle;
+  const id = tipo === "acessorio" ? "acessorios-compativeis" : "produtos-complementares";
 
   return (
-    <section className="border-t border-graf-200 py-9 lg:py-11" aria-labelledby={`cross-${tipo}-titulo`}>
+    <section
+      id={id}
+      className="scroll-mt-32 border-t border-graf-200 py-9 lg:py-11"
+      aria-labelledby={`${id}-titulo`}
+    >
       <div className="mb-5 flex items-start gap-3">
         <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700">
           <Icone className="size-5" aria-hidden />
         </span>
         <div>
-          <h2 id={`cross-${tipo}-titulo`} className="text-xl font-extrabold tracking-[-0.025em] text-graf-950 lg:text-2xl">
+          <h2 id={`${id}-titulo`} className="text-xl font-extrabold tracking-[-0.025em] text-graf-950 lg:text-2xl">
             {titulo}
           </h2>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-graf-500">{subtitulo}</p>
