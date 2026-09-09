@@ -1,61 +1,55 @@
+import {
+  normalizarAtributo,
+  prioridadeAtributoDecisao,
+} from "@/lib/marketplace/atributos-decisao";
+
 type EntradaDoResumo = {
   specs: { label: string; value: string; order: number }[];
   voltage: string | null;
   warrantyMonths: number | null;
   anvisaCode: string | null;
+  /** Opcionais: ajudam quando o nome técnico é mais informativo que os rótulos. */
+  nome?: string | null;
+  categoriaSlug?: string | null;
 };
 
 export type DestaqueProduto = { rotulo: string; valor: string };
 
-const PRIORIDADES_PDP = [
-  /intensidade|irradiancia|luminosidade/,
-  /torque/,
-  /capacidade|volume|litros/,
-  /modos|programas|ciclos/,
-  /rotacao|rpm|velocidade/,
-  /pressao/,
-  /frequencia/,
-  /vazao/,
-  /potencia/,
-  /ponteira|diametro|alcance/,
-  /tensao|voltagem/,
-  /bateria|autonomia/,
-  /compatibilidade/,
-  /peso/,
-];
-
-function chave(texto: string) {
-  return texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
-}
-
-function prioridade(rotulo: string) {
-  const normalizado = chave(rotulo);
-  const indice = PRIORIDADES_PDP.findIndex((padrao) => padrao.test(normalizado));
-  return indice < 0 ? PRIORIDADES_PDP.length : indice;
-}
-
 function formatarVoltagem(voltagem: string) {
-  if (chave(voltagem) === "bivolt") return "Bivolt";
+  if (normalizarAtributo(voltagem) === "bivolt") return "Bivolt";
   return /\bv\b/i.test(voltagem) ? voltagem.trim() : `${voltagem.trim()} V`;
 }
 
 /**
- * A PDP precisa responder "o que decide esta compra?" antes de funcionar como
- * ficha técnica. Por isso ela pode mostrar mais atributos que o card da vitrine
- * e usa uma prioridade própria, orientada a equipamento profissional.
+ * A PDP responde "o que decide esta compra?" antes de funcionar como ficha.
  *
- * O cadastro continua sendo a fonte da verdade: não há headline inventada,
- * nota comercial ou especificação derivada. A função só escolhe e ordena o que
- * já existe no produto.
+ * A escolha agora usa uma matriz por tipo de equipamento. O tipo pode vir do
+ * nome/categoria ou da combinação de rótulos reais do cadastro. A função nunca
+ * inventa uma especificação: só muda a ordem do que já existe.
  */
 export function destaquesDaPdp(entrada: EntradaDoResumo): DestaqueProduto[] {
+  const contexto = {
+    nome: entrada.nome,
+    categoriaSlug: entrada.categoriaSlug,
+    rotulos: entrada.specs.map((item) => item.label),
+  };
+
   const encontrados: DestaqueProduto[] = entrada.specs
     .filter((item) => item.label.trim() && item.value.trim())
-    .sort((a, b) => prioridade(a.label) - prioridade(b.label) || a.order - b.order)
+    .sort(
+      (a, b) =>
+        prioridadeAtributoDecisao(a.label, contexto) -
+          prioridadeAtributoDecisao(b.label, contexto) ||
+        a.order - b.order,
+    )
     .map((item) => ({ rotulo: item.label.trim(), valor: item.value.trim() }));
 
   if (entrada.voltage?.trim()) {
-    if (!encontrados.some((item) => /tensao|voltagem/.test(chave(item.rotulo)))) {
+    if (
+      !encontrados.some((item) =>
+        /tensao|voltagem/.test(normalizarAtributo(item.rotulo)),
+      )
+    ) {
       encontrados.push({ rotulo: "Voltagem", valor: formatarVoltagem(entrada.voltage) });
     }
   }
@@ -75,7 +69,7 @@ export function destaquesDaPdp(entrada: EntradaDoResumo): DestaqueProduto[] {
   const vistos = new Set<string>();
   return encontrados
     .filter((item) => {
-      const id = `${chave(item.rotulo)}:${chave(item.valor)}`;
+      const id = `${normalizarAtributo(item.rotulo)}:${normalizarAtributo(item.valor)}`;
       if (vistos.has(id)) return false;
       vistos.add(id);
       return true;
