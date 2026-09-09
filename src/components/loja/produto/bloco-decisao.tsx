@@ -11,6 +11,13 @@ type Props = {
 
 const SECOES_DE_CONSULTA = new Set(["ficha-tecnica", "preparo", "entrega-e-garantia"]);
 
+const TITULOS_ORIENTADOS_A_COMPRA: Record<string, string> = {
+  "ficha-tecnica": "Especificações e documentos",
+  preparo: "Antes de comprar",
+  "entrega-e-garantia": "Entrega, garantia e suporte",
+  relacionados: "Outras opções para comparar",
+};
+
 /**
  * A PDP tem dois ritmos diferentes:
  *
@@ -24,6 +31,7 @@ const SECOES_DE_CONSULTA = new Set(["ficha-tecnica", "preparo", "entrega-e-garan
  */
 export function BlocoDecisao({ id, titulo, resumo, children, lateral }: Props) {
   const recolhivel = SECOES_DE_CONSULTA.has(id);
+  const tituloExibido = TITULOS_ORIENTADOS_A_COMPRA[id] ?? titulo;
 
   if (recolhivel) {
     return (
@@ -35,7 +43,7 @@ export function BlocoDecisao({ id, titulo, resumo, children, lateral }: Props) {
                 id={`${id}-titulo`}
                 className="text-lg font-extrabold tracking-[-0.02em] text-graf-950 lg:text-xl"
               >
-                {titulo}
+                {tituloExibido}
               </h2>
               {resumo ? (
                 <p className="mt-1 max-w-3xl text-sm leading-5 text-graf-500">{resumo}</p>
@@ -76,7 +84,7 @@ export function BlocoDecisao({ id, titulo, resumo, children, lateral }: Props) {
             id={`${id}-titulo`}
             className="text-xl font-extrabold tracking-[-0.02em] text-graf-950 lg:text-2xl"
           >
-            {titulo}
+            {tituloExibido}
           </h2>
           {resumo ? <p className="mt-2 text-sm leading-6 text-graf-600">{resumo}</p> : null}
         </header>
