@@ -4,6 +4,7 @@ import { ArrowRight, Check, GitCompareArrows, Sparkles } from "lucide-react";
 
 import type { Parcelamento, ProdutoCard } from "@/components/loja/card-produto";
 import { GradeVitrine } from "@/components/loja/card-vitrine";
+import { DestaqueOfertaHome } from "@/components/loja/home/destaque-oferta";
 import { formatarPreco } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,8 @@ export function FaixaVitrine({
   if (produtos.length === 0) return null;
 
   const etiqueta = ROTULO_VARIANTE[variante];
+  const mostrarDestaque = variante === "ofertas" && produtos.length >= 2;
+  const produtosDaGrade = mostrarDestaque ? produtos.slice(1) : produtos;
 
   return (
     <section
@@ -90,12 +93,19 @@ export function FaixaVitrine({
           <span className="pointer-events-none absolute -left-2 -top-7 hidden font-display text-[6rem] font-black leading-none text-jb-500/[0.055] lg:block" aria-hidden>
             {variante === "ofertas" ? "%" : variante === "seminovos" ? "R" : variante === "procurados" ? "↑" : "JB"}
           </span>
-          <GradeVitrine
-            produtos={produtos}
-            parcelamento={parcelamento}
-            colunas={colunas ?? { base: 1, sm: 2, lg: 3, xl: 4 }}
-            className="relative z-10"
-          />
+
+          {mostrarDestaque ? (
+            <DestaqueOfertaHome produto={produtos[0]} parcelamento={parcelamento} />
+          ) : null}
+
+          {produtosDaGrade.length > 0 ? (
+            <GradeVitrine
+              produtos={produtosDaGrade}
+              parcelamento={parcelamento}
+              colunas={colunas ?? { base: 1, sm: 2, lg: 3, xl: 4 }}
+              className="relative z-10"
+            />
+          ) : null}
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-jb-100 pt-5 text-[0.72rem] font-black uppercase tracking-[0.12em] text-graf-950">
@@ -215,7 +225,7 @@ export function ChamadaDestacada({
             </div>
 
             <div className="mt-3 overflow-hidden rounded-lg border border-jb-100">
-              {["Preço", "Condição", "Garantia", "Instalação"].map((item, linha) => (
+              {["Preço", "Condição", "Garantia", "Instalação"].map((item) => (
                 <div key={item} className="grid grid-cols-[1.2fr_repeat(3,1fr)] items-center border-b border-jb-100 bg-white px-3 py-3 last:border-b-0">
                   <span className="text-[0.65rem] font-black uppercase tracking-[0.12em] text-graf-950">{item}</span>
                   {[0, 1, 2].map((coluna) => (
