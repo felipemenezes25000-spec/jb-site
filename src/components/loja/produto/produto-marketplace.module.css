@@ -1,6 +1,7 @@
 .topo {
   display: grid;
-  gap: 1.25rem;
+  gap: 1rem;
+  position: relative;
 }
 
 .galeria,
@@ -9,9 +10,8 @@
   min-width: 0;
 }
 
-/* No celular o contexto vem antes da imagem: marca, nome e os atributos que
-   decidem se vale continuar. A galeria segue logo depois e a compra fecha a
-   sequência. No desktop a composição volta para o padrão marketplace. */
+/* No celular, nome e decisão técnica vêm antes da imagem; depois a galeria e a
+   compra. Isso evita começar a ficha com uma foto grande sem contexto. */
 .resumo {
   order: 1;
   align-self: start;
@@ -27,7 +27,7 @@
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .topo {
-    grid-template-columns: minmax(0, 1fr) minmax(20rem, 1fr);
+    grid-template-columns: minmax(0, 1.08fr) minmax(20rem, 0.92fr);
     align-items: start;
     gap: 1.5rem;
   }
@@ -47,12 +47,11 @@
 
 @media (min-width: 1024px) {
   .topo {
-    /* Galeria é protagonista; resumo explica; buy box conclui. A coluna de
-       compra continua larga o bastante para preço, CEP e ações sem parecer um
-       painel maior do que o próprio produto. */
-    grid-template-columns: minmax(0, 1.45fr) minmax(15rem, 0.86fr) minmax(20rem, 1fr);
+    /* A foto domina, o resumo explica e a buybox conclui. A coluna central
+       fica deliberadamente mais estreita para não competir com produto/preço. */
+    grid-template-columns: minmax(0, 1.58fr) minmax(16.5rem, 0.82fr) minmax(21rem, 0.98fr);
     align-items: start;
-    gap: clamp(1.25rem, 1.8vw, 2.25rem);
+    gap: clamp(1.25rem, 1.75vw, 2rem);
   }
 
   .galeria,
@@ -61,15 +60,26 @@
     order: 0;
   }
 
+  .resumo {
+    padding-top: 0.2rem;
+  }
+
   .compra {
     position: sticky;
-    top: 6.5rem;
+    top: 6.25rem;
   }
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1280px) {
   .topo {
-    grid-template-columns: minmax(0, 1.55fr) minmax(16rem, 0.9fr) minmax(21rem, 1fr);
+    grid-template-columns: minmax(0, 1.68fr) minmax(17rem, 0.84fr) minmax(21.5rem, 1fr);
+    gap: clamp(1.5rem, 1.8vw, 2.25rem);
+  }
+}
+
+@media (min-width: 1600px) {
+  .topo {
+    grid-template-columns: minmax(0, 1.78fr) minmax(17.5rem, 0.86fr) minmax(22rem, 1.02fr);
     gap: 2.5rem;
   }
 }
