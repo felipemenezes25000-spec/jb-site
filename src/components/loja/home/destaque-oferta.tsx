@@ -25,22 +25,26 @@ export function DestaqueOfertaHome({
     : null;
 
   return (
-    <article className="group relative mb-5 grid min-h-[25rem] overflow-hidden rounded-2xl border border-graf-950 bg-white shadow-[0_2.2rem_5rem_-3.6rem_rgba(20,20,22,0.45)] lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
-      <div className="relative z-10 flex flex-col justify-center p-7 sm:p-9 lg:p-11">
+    <article className="group relative mb-7 grid min-h-[27rem] overflow-hidden rounded-[2.4rem] bg-white shadow-[0_30px_90px_-58px_rgba(125,13,18,0.48)] ring-1 ring-jb-100/80 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div
+        className="pointer-events-none absolute -left-28 -top-32 size-72 rounded-full bg-jb-50/70 blur-2xl"
+        aria-hidden
+      />
+      <div className="relative z-10 flex flex-col justify-center p-7 sm:p-9 lg:p-12">
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className="inline-flex items-center gap-2 rounded-full bg-jb-500 px-3 py-2 text-[0.66rem] font-black uppercase tracking-[0.14em] text-white">
+          <span className="inline-flex items-center gap-2 rounded-full bg-jb-500 px-3 py-2 text-[0.64rem] font-black uppercase tracking-[0.14em] text-white">
             <BadgePercent className="size-3.5" aria-hidden />
             Oferta em evidência
           </span>
           {desconto >= 5 ? (
-            <span className="rounded-full border border-jb-500 bg-white px-3 py-2 text-[0.66rem] font-black uppercase tracking-[0.14em] text-jb-700">
+            <span className="rounded-full bg-jb-50 px-3 py-2 text-[0.64rem] font-black uppercase tracking-[0.14em] text-jb-700 ring-1 ring-jb-100">
               −{desconto}%
             </span>
           ) : null}
         </div>
 
         {produto.brandName ? (
-          <p className="mt-7 text-[0.69rem] font-black uppercase tracking-[0.18em] text-jb-700">
+          <p className="mt-7 text-[0.67rem] font-black uppercase tracking-[0.19em] text-jb-700">
             {produto.brandName}
           </p>
         ) : null}
@@ -50,7 +54,7 @@ export function DestaqueOfertaHome({
 
         <div className="mt-7 flex flex-wrap items-end gap-x-4 gap-y-2">
           {precoAnterior ? (
-            <span className="text-[0.82rem] font-black text-graf-950 line-through">
+            <span className="text-[0.8rem] font-bold text-graf-950/55 line-through">
               {formatarPreco(precoAnterior)}
             </span>
           ) : null}
@@ -59,12 +63,12 @@ export function DestaqueOfertaHome({
           </strong>
         </div>
         {parcelas ? (
-          <p className="mt-2 text-[0.82rem] font-black text-graf-950">
+          <p className="mt-2 text-[0.8rem] font-black text-graf-950">
             até {parcelas.parcelas}x de {formatarPreco(parcelas.valorCents)}
           </p>
         ) : null}
 
-        <div className="mt-7 flex flex-wrap items-center gap-4 text-[0.72rem] font-black uppercase tracking-[0.1em] text-graf-950">
+        <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.68rem] font-black uppercase tracking-[0.1em] text-graf-950">
           {produto.trackInventory && produto.stock > 0 ? (
             <span className="flex items-center gap-2">
               <PackageCheck className="size-4 text-jb-600" aria-hidden />
@@ -76,7 +80,7 @@ export function DestaqueOfertaHome({
 
         <Link
           href={`/loja/${produto.slug}`}
-          className="group/botao foco-jb mt-8 inline-flex min-h-13 w-fit items-center gap-6 rounded-lg bg-jb-500 py-2 pl-6 pr-2.5 text-[0.86rem] font-black text-white transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-600"
+          className="group/botao foco-jb mt-8 inline-flex min-h-13 w-fit items-center gap-6 rounded-full bg-jb-500 py-2 pl-6 pr-2.5 text-[0.84rem] font-black text-white shadow-[0_18px_38px_-25px_rgba(157,10,18,0.72)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-600"
         >
           Ver esta oferta
           <span className="grid size-9 place-items-center rounded-full bg-white text-jb-600 transition-transform group-hover/botao:translate-x-1">
@@ -88,11 +92,11 @@ export function DestaqueOfertaHome({
       <Link
         href={`/loja/${produto.slug}`}
         aria-label={`Ver ${produto.name}`}
-        className="relative min-h-[20rem] overflow-hidden border-t border-jb-100 bg-[#fffafa] lg:min-h-full lg:border-l lg:border-t-0"
+        className="relative min-h-[21rem] overflow-hidden bg-[linear-gradient(145deg,#fff_0%,#fff9f9_48%,#fff1f2_100%)] lg:min-h-full"
       >
-        <span className="absolute -right-28 -top-28 size-[28rem] rounded-full border-[2.8rem] border-jb-50" aria-hidden />
-        <span className="absolute -right-16 -top-16 size-[20rem] rounded-full border border-jb-200" aria-hidden />
-        <span className="absolute bottom-5 right-5 font-display text-[5rem] font-black leading-none text-jb-500/[0.08] sm:text-[8rem]" aria-hidden>
+        <span className="absolute -right-28 -top-28 size-[28rem] rounded-full bg-jb-50/80" aria-hidden />
+        <span className="absolute -right-4 -top-4 size-[18rem] rounded-full border border-jb-100/80" aria-hidden />
+        <span className="absolute bottom-5 right-5 font-display text-[5rem] font-black leading-none text-jb-500/[0.07] sm:text-[8rem]" aria-hidden>
           %
         </span>
         {produto.imageUrl ? (
@@ -102,7 +106,7 @@ export function DestaqueOfertaHome({
             fill
             unoptimized={produto.imageUrl.startsWith("/")}
             sizes="(max-width: 1024px) 100vw, 52vw"
-            className="object-contain p-[8%] transition-transform duration-700 ease-out-quint group-hover:scale-[1.045] group-hover:-rotate-[0.4deg]"
+            className="object-contain p-[8%] drop-shadow-[0_28px_28px_rgba(58,18,20,0.14)] transition-transform duration-700 ease-out-quint group-hover:scale-[1.055] group-hover:-rotate-[0.35deg]"
           />
         ) : null}
       </Link>

@@ -6,8 +6,7 @@
 }
 
 /* A home usa uma paleta deliberadamente rígida: preto para leitura, vermelho
-   para ação/estado e branco para superfície. Isso vale só dentro da home e não
-   contamina catálogo, checkout, conta ou backoffice. */
+   para ação/estado e branco para superfície. O escopo termina na rota inicial. */
 .home :global([class*="text-graf-"]),
 .home :global([class*="text-ok-"]),
 .home :global([class*="text-warn-"]) {
@@ -21,8 +20,30 @@
 }
 
 .home :global([class*="ring-ok-"]),
-.home :global([class*="ring-warn-"]) {
-  --tw-ring-color: var(--color-jb-500) !important;
+.home :global([class*="ring-warn-"]),
+.home :global([class*="ring-graf-"]) {
+  --tw-ring-color: var(--color-jb-100) !important;
+}
+
+/* Nenhuma moldura preta domina a home. Os componentes compartilhados continuam
+   iguais no catálogo; dentro da home, placas viram superfícies editoriais mais
+   abertas, com hairline vermelho muito suave e sombra curta. */
+.home :global(.placa) {
+  border-color: var(--color-jb-100) !important;
+  border-radius: 1.55rem !important;
+  background-color: #fff !important;
+  box-shadow: 0 24px 62px -52px rgb(108 10 16 / 0.42) !important;
+}
+
+.home :global(.placa:hover) {
+  border-color: var(--color-jb-200) !important;
+  box-shadow: 0 30px 72px -50px rgb(108 10 16 / 0.48) !important;
+}
+
+.home :global([class*="border-graf-950"]),
+.home :global([class*="border-graf-900"]),
+.home :global([class*="border-graf-800"]) {
+  border-color: var(--color-jb-100) !important;
 }
 
 .home::before {
@@ -32,7 +53,7 @@
   left: 50%;
   width: min(94vw, 112rem);
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--color-jb-200), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-jb-100), transparent);
   content: "";
   transform: translateX(-50%);
   pointer-events: none;
@@ -41,6 +62,79 @@
 .home > :global(section) {
   position: relative;
   z-index: 1;
+}
+
+/* O topo é compartilhado por todas as páginas. :has(.home) permite dar à HOME
+   um tratamento próprio sem contaminar produto, catálogo, checkout ou conta. */
+:global(body):has(.home) [data-jb-utility-bar="true"] {
+  background: linear-gradient(90deg, var(--color-jb-700), var(--color-jb-500) 52%, var(--color-jb-700));
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.14);
+}
+
+:global(body):has(.home) [data-jb-premium-header="true"] {
+  border-color: var(--color-jb-100) !important;
+  background: rgb(255 255 255 / 0.96) !important;
+  box-shadow: 0 20px 52px -44px rgb(86 9 14 / 0.48);
+}
+
+:global(body):has(.home) [data-jb-premium-header="true"] [class*="text-graf-"] {
+  color: var(--color-graf-950) !important;
+}
+
+:global(body):has(.home) [data-jb-premium-header="true"] [class*="border-graf-"] {
+  border-color: var(--color-jb-100) !important;
+}
+
+:global(body):has(.home) [data-jb-premium-header="true"] :global(.jb-busca-topo) form {
+  border-color: var(--color-jb-100) !important;
+  border-radius: 999px !important;
+  background: #fffafa !important;
+  box-shadow: 0 14px 32px -28px rgb(105 10 16 / 0.52);
+}
+
+:global(body):has(.home) [data-jb-premium-header="true"] :global(.jb-cta-topo) {
+  border-radius: 999px !important;
+  box-shadow: 0 16px 32px -22px rgb(150 9 18 / 0.62) !important;
+}
+
+:global(body):has(.home) [data-jb-premium-header="true"] nav a,
+:global(body):has(.home) [data-jb-premium-header="true"] nav button {
+  border-radius: 999px;
+}
+
+:global(body):has(.home) [data-jb-premium-header="true"] nav a:hover,
+:global(body):has(.home) [data-jb-premium-header="true"] nav button:hover {
+  background-color: var(--color-jb-50);
+}
+
+/* O rodapé permanece funcionalmente compartilhado, mas fecha a home no mesmo
+   palco claro e editorial. Nenhum bloco preto ou badge verde aparece aqui. */
+:global(body):has(.home) footer {
+  border-color: var(--color-jb-100) !important;
+  background:
+    radial-gradient(circle at 88% 16%, rgb(214 24 34 / 0.055), transparent 24rem),
+    linear-gradient(180deg, #fff 0%, #fff9f9 100%) !important;
+}
+
+:global(body):has(.home) footer [class*="text-graf-"] {
+  color: var(--color-graf-950) !important;
+}
+
+:global(body):has(.home) footer [class*="border-graf-"] {
+  border-color: var(--color-jb-100) !important;
+}
+
+:global(body):has(.home) footer [class*="bg-emerald-"] {
+  background-color: var(--color-jb-50) !important;
+}
+
+:global(body):has(.home) footer [class*="text-emerald-"] {
+  color: var(--color-jb-700) !important;
+}
+
+:global(body):has(.home) footer a[href="/assistencia-tecnica/solicitar"],
+:global(body):has(.home) footer a[href="/orcamento"] {
+  border-radius: 999px !important;
 }
 
 @supports (animation-timeline: view()) {
@@ -53,12 +147,18 @@
 
 @keyframes revelarHome {
   from {
-    opacity: 0.86;
-    transform: translateY(16px);
+    opacity: 0.88;
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (max-width: 767px) {
+  .home :global(.placa) {
+    border-radius: 1.35rem !important;
   }
 }
 

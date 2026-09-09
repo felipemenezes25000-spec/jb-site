@@ -3,8 +3,10 @@ import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { AtalhosHome } from "@/components/loja/home/atalhos-home";
+import { ProcuradosHome, SeminovosHome } from "@/components/loja/home/colecoes-home";
 import { lerParcelamento } from "@/components/loja/home/comum";
 import { ChamadaDestacada, FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
+import { FechamentoHome } from "@/components/loja/home/fechamento-home";
 import { HeroVitrine, type NumeroDaHome } from "@/components/loja/home/hero-vitrine";
 import { TickerHome } from "@/components/loja/home/ticker-home";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
@@ -38,6 +40,7 @@ async function dadosDoTopo() {
 export default async function HomePage() {
   const [s, catalogo] = await dadosDoTopo();
   const parcelamento = lerParcelamento(s);
+  const parcelamentoHome = { max: parcelamento.max, minimoCents: parcelamento.minimaCents };
 
   const numeros: NumeroDaHome[] = [
     catalogo.totalPublicado > 0
@@ -65,14 +68,14 @@ export default async function HomePage() {
   ].slice(0, 3);
 
   return (
-    <div className={styles.home}>
+    <div className={styles.home} data-jb-home="true">
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
       <HeroVitrine
         cidade={s.endereco_cidade}
         numeros={numeros}
         destaque={catalogo.destaque}
-        parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
+        parcelamento={parcelamentoHome}
       />
 
       <TickerHome />
@@ -88,7 +91,7 @@ export default async function HomePage() {
         href="/loja"
         rotuloDoLink="Ver tudo"
         produtos={catalogo.ofertas.slice(0, 4)}
-        parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
+        parcelamento={parcelamentoHome}
         variante="ofertas"
       />
 
@@ -101,27 +104,9 @@ export default async function HomePage() {
         produtos={paraComparar}
       />
 
-      <FaixaVitrine
-        sobretitulo="Revisados na bancada da JB"
-        titulo="Seminovos com laudo e garantia"
-        href="/seminovos"
-        rotuloDoLink="Ver seminovos"
-        produtos={catalogo.seminovos.slice(0, 4)}
-        parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
-        colunas={{ base: 1, sm: 2, lg: 4 }}
-        fundo="nevoa"
-        variante="seminovos"
-      />
+      <SeminovosHome produtos={catalogo.seminovos} parcelamento={parcelamentoHome} />
 
-      <FaixaVitrine
-        sobretitulo="O que sai mais do estoque"
-        titulo="Equipamentos que a clínica repõe sempre"
-        href="/loja"
-        rotuloDoLink="Catálogo completo"
-        produtos={catalogo.procurados.slice(0, 8)}
-        parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
-        variante="procurados"
-      />
+      <ProcuradosHome produtos={catalogo.procurados} parcelamento={parcelamentoHome} />
 
       <VistosRecentemente
         titulo="Continue de onde parou"
@@ -134,6 +119,8 @@ export default async function HomePage() {
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
       </Suspense>
+
+      <FechamentoHome />
     </div>
   );
 }
