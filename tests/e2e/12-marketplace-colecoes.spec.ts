@@ -107,4 +107,40 @@ test.describe("Marketplace — coleções", () => {
       ).toBeVisible();
     }
   });
+
+  test("coleção e filtros funcionam por teclado sem overflow horizontal", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto("/loja");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      320,
+    );
+
+    const abrir = page.getByRole("button", { name: /Todos os filtros/ });
+    await abrir.focus();
+    await page.keyboard.press("Enter");
+    const dialogo = page.getByRole("dialog", { name: "Filtros do catálogo" });
+    await expect(dialogo).toBeVisible();
+
+    const alvosPequenos = await dialogo
+      .locator("button, a, input, select")
+      .evaluateAll((elementos) =>
+        elementos
+          .filter((elemento) => {
+            const caixa = elemento.getBoundingClientRect();
+            return (
+              caixa.width > 0 &&
+              caixa.height > 0 &&
+              (caixa.width < 44 || caixa.height < 44)
+            );
+          })
+          .map((elemento) =>
+            (
+              elemento.textContent ||
+              elemento.getAttribute("aria-label") ||
+              elemento.tagName
+            ).trim(),
+          ),
+      );
+    expect(alvosPequenos).toEqual([]);
+  });
 });

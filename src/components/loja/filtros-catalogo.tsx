@@ -461,7 +461,13 @@ export function ConteudoFiltros({
                 />
               </div>
             </div>
-            <Botao type="submit" variante="secundario" tamanho="sm" larguraTotal className="mt-3">
+            <Botao
+              type="submit"
+              variante="secundario"
+              tamanho="sm"
+              larguraTotal
+              className="mt-3 min-h-11"
+            >
               Aplicar faixa de preço
             </Botao>
             <p
