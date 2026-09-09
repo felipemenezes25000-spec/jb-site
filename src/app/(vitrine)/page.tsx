@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 
+import { AtalhosHome } from "@/components/loja/home/atalhos-home";
 import { lerParcelamento } from "@/components/loja/home/comum";
 import { ChamadaDestacada, FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
 import { HeroVitrine, type NumeroDaHome } from "@/components/loja/home/hero-vitrine";
@@ -57,6 +58,12 @@ export default async function HomePage() {
     ...catalogo.procurados.map((produto) => produto.slug),
   ].filter((slug): slug is string => Boolean(slug));
 
+  const paraComparar = [
+    ...catalogo.ofertas,
+    ...catalogo.seminovos,
+    ...catalogo.procurados,
+  ].slice(0, 3);
+
   return (
     <main className={styles.home}>
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
@@ -69,6 +76,7 @@ export default async function HomePage() {
       />
 
       <TickerHome />
+      <AtalhosHome />
 
       <Suspense fallback={<EsqueletoCategoriasHome />}>
         <SecaoCategorias />
@@ -90,6 +98,7 @@ export default async function HomePage() {
         texto="Preço, potência, capacidade, garantia, prazo e instalação na mesma leitura — sem abrir cinco abas nem perder o contexto da compra."
         href="/comparar"
         rotulo="Abrir comparador"
+        produtos={paraComparar}
       />
 
       <FaixaVitrine
