@@ -58,6 +58,32 @@ test.describe("Marketplace — página do produto", () => {
     expect(caixaCep!.y).toBeLessThan(caixaPersonalizar!.y);
   });
 
+  test("personalização abaixo do CTA alimenta o mesmo formulário de compra", async ({ page }) => {
+    const { frete } = fixtures();
+    await page.goto(`/loja/${frete.slug}`);
+
+    const painel = page.locator("[data-pdp-buybox]");
+    const adicionar = painel.getByRole("button", { name: "Adicionar ao carrinho" });
+
+    // O controle está depois de entrega/CTA no DOM, mas o estado precisa chegar
+    // aos inputs hidden do formulário principal que ficou acima dele.
+    await painel.getByRole("button", { name: "Aumentar quantidade" }).click();
+    await expect(painel.getByText("Total configurado", { exact: true })).toBeVisible();
+    await expect(painel.getByText(emReais(frete.precoCents * 2), { exact: true })).toBeVisible();
+
+    const formulario = adicionar.locator("xpath=ancestor::form");
+    await expect(formulario.locator('input[name="quantidade"]')).toHaveValue("2");
+
+    await adicionar.click();
+    await expect(page.getByText(`${frete.nome} foi adicionado ao carrinho.`)).toBeVisible();
+
+    await page.goto("/carrinho");
+    await expect(page.getByRole("link", { name: frete.nome })).toBeVisible();
+    await expect(
+      page.getByRole("banner").getByRole("link", { name: /Carrinho com 2 itens/ }),
+    ).toBeVisible();
+  });
+
   test("usa hub técnico progressivo e não recupera relacionados genéricos", async ({ page }) => {
     const { produto } = fixtures();
     await page.goto(`/loja/${produto.slug}`);
