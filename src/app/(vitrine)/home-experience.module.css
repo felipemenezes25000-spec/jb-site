@@ -112,6 +112,14 @@
   box-shadow: 0 20px 52px -44px rgb(86 9 14 / 0.48);
 }
 
+:global(body):has(.home) [data-jb-premium-header="true"] [class*="text-graf-"] {
+  color: var(--color-graf-950) !important;
+}
+
+:global(body):has(.home) [data-jb-premium-header="true"] [class*="border-graf-"] {
+  border-color: var(--color-jb-100) !important;
+}
+
 :global(body):has(.home) [data-jb-premium-header="true"] :global(.jb-busca-topo) form {
   border-color: var(--color-jb-100) !important;
   border-radius: 999px !important;
