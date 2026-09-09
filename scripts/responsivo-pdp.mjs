@@ -56,16 +56,22 @@ async function medirAlvo(locator) {
 const navegador = await chromium.launch();
 const achados = [];
 
+async function novaPagina(viewport) {
+  const contexto = await navegador.newContext({ viewport });
+  const page = await contexto.newPage();
+  return { contexto, page };
+}
+
 try {
-  const descoberta = await navegador.newPage({ viewport: { width: 1440, height: 900 } });
-  const caminhoProduto = await descobrirProduto(descoberta);
-  await descoberta.close();
+  const descoberta = await novaPagina({ width: 1440, height: 900 });
+  const caminhoProduto = await descobrirProduto(descoberta.page);
+  await descoberta.contexto.close();
 
   console.log(`PDP: ${caminhoProduto}`);
 
   // ---------------------------------------------------------- Home intocada
   {
-    const page = await navegador.newPage({ viewport: { width: 1440, height: 900 } });
+    const { contexto, page } = await novaPagina({ width: 1440, height: 900 });
     await page.goto(absoluto("/"), { waitUntil: "domcontentloaded" });
 
     if ((await page.locator(PDP).count()) !== 0) {
@@ -80,13 +86,13 @@ try {
       }
     }
 
-    await page.close();
+    await contexto.close();
   }
 
   // ----------------------------------------------------------- PDP por tela
   for (const largura of LARGURAS) {
     const altura = largura <= 430 ? 844 : largura <= 768 ? 1024 : 900;
-    const page = await navegador.newPage({ viewport: { width: largura, height: altura } });
+    const { contexto, page } = await novaPagina({ width: largura, height: altura });
 
     try {
       await page.goto(absoluto(caminhoProduto), { waitUntil: "domcontentloaded" });
@@ -145,7 +151,7 @@ try {
     } catch (erro) {
       achados.push(`${largura}px: ${erro instanceof Error ? erro.message : String(erro)}`);
     } finally {
-      await page.close();
+      await contexto.close();
     }
   }
 } finally {
