@@ -11,7 +11,9 @@ import { getSettings } from "@/lib/settings";
 
 import "./globals.css";
 import "./footer-alignment.css";
+import "./header-search.css";
 import "./header-premium.css";
+import "./header-product.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
