@@ -6,6 +6,7 @@ import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import type { ProdutoCard, Parcelamento } from "@/components/loja/card-produto";
 import { Grade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -108,7 +109,7 @@ export function CardVitrine({
         {produto.imageUrl ? (
           <Image
             data-imagem-produto
-            src={produto.imageUrl}
+            src={imagemProdutoSemFundo(produto.imageUrl)}
             alt={produto.imageAlt || produto.name}
             fill
             preload={prioridade}

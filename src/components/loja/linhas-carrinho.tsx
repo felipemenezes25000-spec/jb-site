@@ -11,6 +11,7 @@ import { CONDICAO } from "@/components/loja/card-produto";
 import { Botao } from "@/components/ui/button";
 import { Etiqueta } from "@/components/ui/data";
 import { formatarPreco, plural } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 import type { LinhaCarrinho } from "@/lib/carrinho";
 
@@ -67,7 +68,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                 {linha.imagem ? (
                   <Image
                     data-imagem-produto
-                    src={linha.imagem}
+                    src={imagemProdutoSemFundo(linha.imagem)}
                     alt=""
                     fill
                     sizes="(min-width: 640px) 128px, 96px"

@@ -59,6 +59,12 @@
   pointer-events: none;
 }
 
+@media (max-width: 1023px) {
+  .brandHalo {
+    display: none;
+  }
+}
+
 .megaPanel {
   transform-origin: top center;
 }
@@ -84,16 +90,6 @@
 :global([data-jb-home="true"] div[class*="grid-cols-3"][class*="divide-x"] img) {
   background: transparent !important;
   filter: drop-shadow(0 1.6rem 1.45rem rgb(67 18 22 / 0.14));
-}
-
-/* `multiply` só entra em JPG/JPEG, onde o branco costuma estar gravado no
-   próprio arquivo. PNG/WebP transparentes ficam intocados para não tingir as
-   partes brancas do equipamento. */
-:global([data-jb-home="true"] img[src*=".jpg"]),
-:global([data-jb-home="true"] img[src*=".jpeg"]),
-:global([data-jb-home="true"] img[src*=".JPG"]),
-:global([data-jb-home="true"] img[src*=".JPEG"]) {
-  mix-blend-mode: multiply;
 }
 
 :global([data-jb-home="true"] a[href^="/loja/"] > div:has(> img)),

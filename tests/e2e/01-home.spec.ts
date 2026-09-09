@@ -66,13 +66,13 @@ test.describe("Home", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
 
-    await page.getByRole("button", { name: "Abrir o menu" }).click();
+    await page.getByRole("button", { name: "Abrir menu", exact: true }).click();
 
-    const gaveta = page.getByRole("dialog", { name: "Menu de navegação" });
+    const gaveta = page.getByRole("dialog", { name: "Menu principal" });
     await expect(gaveta).toBeVisible();
 
     await gaveta
-      .getByRole("navigation", { name: "Menu principal no celular" })
+      .getByRole("navigation", { name: "Navegação da home no celular" })
       .getByRole("link", { name: /Equipamentos/ })
       .first()
       .click();
@@ -89,19 +89,11 @@ test.describe("Home", () => {
     await expect(rodape.getByRole("link", { name: /Contato/ }).first()).toBeVisible();
   });
 
-  test("a busca do cabeçalho sugere e leva ao resultado", async ({ page }) => {
+  test("a busca principal leva ao resultado", async ({ page }) => {
     await page.goto("/");
 
-    /* `combobox`, e não `searchbox`: o campo passou a abrir uma lista de
-       sugestões enquanto se digita, e o padrão ARIA disso é o combobox
-       com `listbox`. O papel faz parte do contrato — é o que diz ao
-       leitor de tela que existem opções a percorrer com as setas. */
-    const busca = page.getByRole("combobox", { name: "Buscar no catálogo" }).first();
+    const busca = page.getByRole("searchbox", { name: "Buscar no catálogo JB" });
     await busca.fill("autoclave");
-
-    // o painel abre a partir de três letras, com resultado ou sem ele
-    await expect(page.getByRole("listbox", { name: "Sugestões da busca" })).toBeVisible();
-
     await busca.press("Enter");
 
     await page.waitForURL(/\/busca\?/);

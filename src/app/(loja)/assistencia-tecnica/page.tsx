@@ -24,6 +24,7 @@ import { IconeCategoria } from "@/components/ui/icone";
 import { Secao } from "@/components/ui/secao";
 import { whatsappHref } from "@/lib/format";
 import { textoDeHtml } from "@/lib/html";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { prisma } from "@/lib/prisma";
 import {
   JsonLd,
@@ -261,7 +262,7 @@ export default async function AssistenciaTecnicaPage() {
             <figure className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
               <div className="relative aspect-[4/3] bg-gradient-to-b from-white to-graf-50">
                 <Image
-                  src={foto}
+                  src={imagemProdutoSemFundo(foto)}
                   alt=""
                   fill
                   sizes="(max-width: 1024px) 92vw, 44vw"
@@ -310,7 +311,7 @@ export default async function AssistenciaTecnicaPage() {
                   <Cartao className="flex h-full flex-col overflow-hidden">
                     <div className="relative aspect-[5/4] bg-graf-50">
                       <Image
-                        src={categoria.foto}
+                        src={imagemProdutoSemFundo(categoria.foto)}
                         alt=""
                         fill
                         sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 24vw"

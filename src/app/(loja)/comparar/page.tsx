@@ -23,6 +23,7 @@ import {
 import { PUBLICADO, UNIDADE_VENDIDA } from "@/lib/catalogo";
 import { chaveDeNome } from "@/lib/homonimos";
 import { formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { prisma } from "@/lib/prisma";
 import { metadataDePagina } from "@/lib/seo";
 
@@ -295,7 +296,7 @@ export default async function CompararPage({ searchParams }: Props) {
           produto.allowDirectPurchase && produto.priceCents > 0
             ? formatarPreco(produto.priceCents)
             : "Sob orçamento",
-        foto: produto.media[0]?.media.url ?? null,
+        foto: imagemProdutoSemFundo(produto.media[0]?.media.url ?? null),
       });
     }
 
@@ -543,7 +544,7 @@ export default async function CompararPage({ searchParams }: Props) {
                       {produto.media[0] ? (
                         <Image
                           data-imagem-produto
-                          src={produto.media[0].media.url}
+                          src={imagemProdutoSemFundo(produto.media[0].media.url)}
                           alt={produto.media[0].alt || produto.media[0].media.alt || produto.name}
                           width={160}
                           height={160}
@@ -616,7 +617,7 @@ export default async function CompararPage({ searchParams }: Props) {
                             {produto.media[0] ? (
                               <Image
                                 data-imagem-produto
-                                src={produto.media[0].media.url}
+                                src={imagemProdutoSemFundo(produto.media[0].media.url)}
                                 alt={
                                   produto.media[0].alt ||
                                   produto.media[0].media.alt ||

@@ -17,6 +17,7 @@ import {
   type TemaDoArtigo,
 } from "@/lib/central-tecnica";
 import { formatarData, formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { artigoJsonLd, JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
@@ -225,7 +226,7 @@ export default async function ArtigoPage({ params }: Props) {
               >
                 {product.media[0] ? (
                   <Image
-                    src={product.media[0].media.url}
+                    src={imagemProdutoSemFundo(product.media[0].media.url)}
                     alt=""
                     width={72}
                     height={72}

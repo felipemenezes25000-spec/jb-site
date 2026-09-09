@@ -4,6 +4,7 @@ import { ArrowRight, BadgeCheck, ChevronRight, Sparkles } from "lucide-react";
 
 import type { Parcelamento, ProdutoCard } from "@/components/loja/card-produto";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
 function preco(produto: ProdutoCard) {
   return produto.allowDirectPurchase && produto.priceCents > 0
@@ -78,7 +79,7 @@ export function SeminovosHome({
                     {produto.imageUrl ? (
                       <Image
                         data-imagem-produto
-                        src={produto.imageUrl}
+                        src={imagemProdutoSemFundo(produto.imageUrl)}
                         alt={produto.imageAlt || produto.name}
                         fill
                         unoptimized={produto.imageUrl.startsWith("/")}
@@ -192,7 +193,7 @@ export function ProcuradosHome({
                   {produto.imageUrl ? (
                     <Image
                       data-imagem-produto
-                      src={produto.imageUrl}
+                      src={imagemProdutoSemFundo(produto.imageUrl)}
                       alt={produto.imageAlt || produto.name}
                       fill
                       unoptimized={produto.imageUrl.startsWith("/")}

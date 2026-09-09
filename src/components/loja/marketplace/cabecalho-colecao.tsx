@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Trilha, type Migalha } from "@/components/ui/data";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
 type AtalhoColecao = { rotulo: string; href: string; quantidade?: number };
 
@@ -45,7 +46,7 @@ export function CabecalhoColecao({
 
         {imagem ? (
           <Image
-            src={imagem.url}
+            src={imagemProdutoSemFundo(imagem.url)}
             alt={imagem.alt}
             width={160}
             height={64}

@@ -39,6 +39,7 @@ import { liberarAcompanhamento, pedidosDoNavegador } from "@/lib/acompanhamento"
 import { sessaoCliente } from "@/lib/auth-cliente";
 import { ipDoPedido } from "@/lib/seguranca";
 import { formatarDataHora, formatarPreco, telHref, whatsappHref } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { pagamentoEhSimulado, provedorPagamento } from "@/lib/pagamento";
 import { FLUXO_PADRAO, ROTULO_STATUS } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
@@ -643,7 +644,7 @@ export default async function PedidoPage({ params }: Props) {
                     {item.imageUrl ? (
                       <Image
                         data-imagem-produto
-                        src={item.imageUrl}
+                        src={imagemProdutoSemFundo(item.imageUrl)}
                         alt=""
                         fill
                         sizes="(min-width: 640px) 96px, 80px"

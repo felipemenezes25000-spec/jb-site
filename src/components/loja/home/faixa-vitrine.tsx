@@ -6,6 +6,7 @@ import type { Parcelamento, ProdutoCard } from "@/components/loja/card-produto";
 import { GradeVitrine } from "@/components/loja/card-vitrine";
 import { DestaqueOfertaHome } from "@/components/loja/home/destaque-oferta";
 import { formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
 const ROTULO_VARIANTE = {
@@ -206,7 +207,7 @@ export function ChamadaDestacada({
                       {produto?.imageUrl ? (
                         <Image
                           data-imagem-produto
-                          src={produto.imageUrl}
+                          src={imagemProdutoSemFundo(produto.imageUrl)}
                           alt={produto.imageAlt || produto.name}
                           fill
                           unoptimized={produto.imageUrl.startsWith("/")}

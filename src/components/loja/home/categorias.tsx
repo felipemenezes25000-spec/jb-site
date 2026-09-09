@@ -6,6 +6,7 @@ import { IconeCategoria } from "@/components/ui/icone";
 import { stripTags } from "@/lib/html";
 import { plural } from "@/lib/format";
 import { unificarPorNome } from "@/lib/homonimos";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { prisma } from "@/lib/prisma";
 
 const PUBLICADO = { status: "active" } as const;
@@ -287,7 +288,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
         {foto ? (
           <Image
             data-imagem-produto
-            src={foto.url}
+            src={imagemProdutoSemFundo(foto.url)}
             alt={foto.alt}
             fill
             sizes="(max-width: 640px) 100vw, 40vw"
@@ -340,7 +341,7 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
         {foto ? (
           <Image
             data-imagem-produto
-            src={foto.url}
+            src={imagemProdutoSemFundo(foto.url)}
             alt={foto.alt}
             fill
             sizes="240px"

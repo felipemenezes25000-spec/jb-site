@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ImageOff, X, ZoomIn } from "lucide-react";
 
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -207,7 +208,7 @@ export function GaleriaProduto({
         >
           <Image
             data-imagem-produto
-            src={foto.url}
+            src={imagemProdutoSemFundo(foto.url)}
             alt={foto.alt || nome}
             fill
             priority
@@ -311,7 +312,7 @@ export function GaleriaProduto({
               >
                 <Image
                   data-imagem-produto
-                  src={imagem.url}
+                  src={imagemProdutoSemFundo(imagem.url)}
                   alt=""
                   fill
                   sizes="72px"
@@ -370,7 +371,7 @@ export function GaleriaProduto({
                 onTouchEnd={aoSoltar}
               >
                 <Image
-                  src={foto.url}
+                  src={imagemProdutoSemFundo(foto.url)}
                   alt={foto.alt || nome}
                   fill
                   sizes="100vw"
@@ -406,7 +407,7 @@ export function GaleriaProduto({
                           )}
                         >
                           <Image
-                            src={imagem.url}
+                            src={imagemProdutoSemFundo(imagem.url)}
                             alt=""
                             fill
                             sizes="56px"

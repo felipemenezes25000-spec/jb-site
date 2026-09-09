@@ -8,6 +8,7 @@ import type {
   ProdutoMarketplaceCard,
 } from "@/components/loja/marketplace/tipos";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
 import styles from "./marketplace.module.css";
 
@@ -60,7 +61,7 @@ export function CardProdutoMarketplace({
         {produto.imageUrl ? (
           <Image
             data-imagem-produto
-            src={produto.imageUrl}
+            src={imagemProdutoSemFundo(produto.imageUrl)}
             alt={produto.imageAlt || produto.name}
             fill
             preload={prioridade}

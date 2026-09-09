@@ -11,6 +11,7 @@ import { PainelLateral } from "@/components/ui/painel";
 import { formatarPreco, plural } from "@/lib/format";
 import type { LinhaCarrinho } from "@/lib/carrinho";
 import type { FreteExibido } from "@/lib/frete";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
 /* ============================================================================
    Resumo do pedido no checkout
@@ -113,7 +114,7 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
               {linha.imagem ? (
                 <Image
                   data-imagem-produto
-                  src={linha.imagem}
+                  src={imagemProdutoSemFundo(linha.imagem)}
                   alt=""
                   fill
                   sizes="64px"

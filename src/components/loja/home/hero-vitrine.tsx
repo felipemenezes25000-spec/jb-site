@@ -13,6 +13,7 @@ import {
 
 import type { ProdutoCard } from "@/components/loja/card-produto";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
 import styles from "./hero-vitrine.module.css";
 import overlapStyles from "./hero-vitrine-overlap.module.css";
@@ -133,7 +134,7 @@ export function HeroVitrine({
                 {destaque.imageUrl ? (
                   <Image
                     data-imagem-produto
-                    src={destaque.imageUrl}
+                    src={imagemProdutoSemFundo(destaque.imageUrl)}
                     alt={destaque.imageAlt || destaque.name}
                     fill
                     preload

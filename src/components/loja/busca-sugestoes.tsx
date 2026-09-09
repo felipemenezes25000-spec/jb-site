@@ -16,6 +16,7 @@ import { sugestoesDaBusca } from "@/app/acoes/busca";
 import { MINIMO_DE_CARACTERES } from "@/lib/busca/intencao";
 import type { Sugestoes } from "@/lib/busca/sugestoes";
 import { formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -541,7 +542,7 @@ function LinhaProduto({
         {produto.imagem ? (
           <Image
             data-imagem-produto
-            src={produto.imagem}
+            src={imagemProdutoSemFundo(produto.imagem)}
             alt=""
             fill
             sizes="48px"

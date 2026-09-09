@@ -4,6 +4,7 @@ import { ArrowRight, BadgePercent, PackageCheck } from "lucide-react";
 
 import type { Parcelamento, ProdutoCard } from "@/components/loja/card-produto";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
 export function DestaqueOfertaHome({
   produto,
@@ -103,7 +104,7 @@ export function DestaqueOfertaHome({
         {produto.imageUrl ? (
           <Image
             data-imagem-produto
-            src={produto.imageUrl}
+            src={imagemProdutoSemFundo(produto.imageUrl)}
             alt={produto.imageAlt || produto.name}
             fill
             unoptimized={produto.imageUrl.startsWith("/")}
