@@ -3,7 +3,7 @@
 Leia este arquivo antes de retomar. Ele diz onde a execução parou, não o que
 seria bom fazer.
 
-**Atualizado em:** 6 de setembro de 2026
+**Atualizado em:** 9 de setembro de 2026
 **Repositório:** `jb-site` · **Branch:** `plataforma`
 
 ---
@@ -37,10 +37,42 @@ seria bom fazer.
 `build` ✅ · `e2e` **52** ✅ · `prova:atomicidade` ✅ · `a11y` **94** medições,
 0 problemas ✅ · `responsivo` **294** medições, 0 problemas ✅.
 
+**Portões em 9 de setembro de 2026:** `typecheck` ✅ · `lint` ✅ ·
+`test:unit` **581** ✅ · `build` ✅ · `e2e` **53** ✅ ·
+`responsivo` ❌ e `a11y` ❌ — em duas frentes: `(admin)` e `/minha-jb`, e a
+home/catálogo depois do redesenho da vitrine. `--so=publico` separa as duas.
+Detalhe em `ci.md` e `validacao.md`.
+
 A bateria final encontrou **oito regressões**, todas corrigidas antes deste
 registro. As duas mais instrutivas estão em `validacao.md`: `instant = false`
 precisa estar no segmento que levanta a validação, e ele **não** limpa IO
 síncrono — `jwtVerify` lendo o relógio exigiu `connection()` antes.
+
+---
+
+## Depois das fases: auditoria visual e redesenho da vitrine
+
+Duas frentes correram sobre a base entregue nas fases 0–19.
+
+**Auditoria visual (8–9/09).** O site publicado foi percorrido em 22 rotas, no
+desktop e em 390×844, e o resultado está em
+[`../auditoria-visual-2026-09-08/`](../auditoria-visual-2026-09-08/) com 29
+capturas. Os seis achados de alta prioridade foram aplicados — vitrine que
+exige foto e disponibilidade, unidade única vendida fora das listas, cadastros
+homônimos unificados, primeira dobra do celular com equipamento, abertura de
+chamado compacta. A matriz está em `cobertura.md`, seção "Auditoria visual". O
+banco do **preview** foi unificado (`pnpm duplicatas:unificar`); o local
+continua duplicado de propósito.
+
+**Redesenho da vitrine (9/09), em andamento.** A home ganhou cabeçalho próprio
+(`cabecalho-home-flagship.tsx`), hero reescrito e seções novas; há trabalho não
+commitado em `src/components/loja/marketplace/`. Os planos e a especificação
+estão em [`../superpowers/`](../superpowers/). Duas coisas desse redesenho
+estão registradas como pendência: o vocabulário "Marketplace" na abertura
+pública, que contraria o modelo de vendedor único (P12), e o portão de
+responsividade, que a vitrine redesenhada derrubou por texto abaixo de 12px —
+546 achados na primeira medição, 399 depois de elevar a tipografia dos módulos
+da home.
 
 ---
 
@@ -64,8 +96,11 @@ dependem da JB.
    ordena; não há sugestão enquanto se digita.
 6. **Orçamento real no TCO** (22.tco.7) — hoje o valor do reparo é digitado;
    com autorização, ele pode vir do orçamento do próprio cliente.
-7. **ESLint** — 793 erros pré-existentes e config quebrada. Fora dos gates,
-   mas é dívida.
+7. ~~**ESLint**~~ — resolvido: zero erro, e agora é o primeiro passo do job
+   `estatico`.
+8. **Portões de `(admin)` e `/minha-jb`** — alvos de 40×40px e rótulos abaixo
+   de 12px na casca das duas áreas. É o que impede a CI de fechar verde, e é
+   decisão de densidade da JB, não defeito acidental.
 
 **O que depende da JB, e não de código:** revisor técnico para os 19
 rascunhos, autorização de cliente para o primeiro case, acervo fotográfico,
@@ -98,6 +133,10 @@ decisão sobre provedor de OCR, marco da garantia (P10) e as pendências P1 a P9
 | item de grade sem `min-w-0` | conteúdo comprido estoura a tela em 320px | `min-w-0` no contêiner e no rótulo |
 | E2E não sobe com o dev aberto | "Another next dev server is already running" | usar `E2E_BASE_URL` |
 | `.env.local` presente | o dev passa a escrever em produção | conferir `ls .env.local` antes de qualquer comando de banco |
+| Painel do navegador sem pintar quadros | `getComputedStyle` devolve o valor inicial de uma transição para sempre; medição de estado "recolhido" mente | forçar uma captura antes de medir, ou zerar `transition` no elemento antes de ler |
+| Reserva de espaço em porcentagem da janela | navegação do cabeçalho por cima do bloco da conta, e só em certas larguras | medir as duas pontas e publicar em variável CSS; o bloco da conta muda de largura conforme o nome de quem entrou |
+| Seletor CSS preso à estrutura da árvore | acabamento some sem erro nenhum quando o JSX ganha um invólucro | prender a gancho declarado: `data-*` ou classe própria |
+| Página pré-gerada depois de mexer no banco | endereço antigo continua servindo o HTML anterior | reconstruir; `generateStaticParams` só é reavaliado na construção |
 
 ---
 

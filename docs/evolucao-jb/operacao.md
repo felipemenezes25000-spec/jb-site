@@ -9,6 +9,19 @@ recuperação do que já existia. Aqui entra só o que **esta** evolução intro
 
 _(nenhuma até agora)_
 
+## Comandos novos
+
+| Comando | O que faz | Roda contra qual banco |
+|---|---|---|
+| `pnpm db:vitrine` | carrega o catálogo de demonstração da vitrine e **arquiva** o anterior, sem apagar | local |
+| `pnpm duplicatas:prever` | imprime o plano de unificação de categorias e marcas de mesmo nome | o de `DATABASE_URL` |
+| `pnpm duplicatas:unificar` | aplica: move vínculos para o canônico e despublica o duplicado | o de `DATABASE_URL` |
+
+`duplicatas:*` está documentado por inteiro em
+[`../operacao.md`](../operacao.md), seção "Cadastros duplicados de categoria e
+marca" — inclusive como apontar para o banco do preview com segurança e por que
+é preciso reconstruir depois de unificar.
+
 ## Migrações novas
 
 ### `20260906035205_conteudo_revisoes`

@@ -379,3 +379,90 @@ erro e virou o primeiro passo do job `estatico`. Ver `ci.md`, seção "Lint".
 | Publicação de artigo e de case | dependem de gente: autor, revisor e autorização do cliente |
 | Indicadores com dado suficiente | o banco local não tem volume; a tela responde "ainda não há dados suficientes", que é o comportamento correto |
 | ~~ESLint limpo~~ | resolvido depois: zero erro, e agora é gate. Ver acima |
+
+---
+
+## Auditoria visual — 8 e 9 de setembro de 2026
+
+A auditoria do site publicado está em
+[`../auditoria-visual-2026-09-08/`](../auditoria-visual-2026-09-08/): 29
+capturas, o texto observado em `paginas-observadas.json` e a análise em
+`analise-e-direcao-visual.md`. O que segue é o resultado dos portões depois de
+aplicá-la.
+
+### Execuções
+
+| Comando | Resultado | Observação |
+|---|---|---|
+| `pnpm typecheck` | **exit 0** | — |
+| `pnpm lint` | **exit 0** | zero erro; avisos das duas regras do compilador React continuam contados |
+| `pnpm test:unit` | **exit 0** | 29 arquivos, **581 testes** |
+| `pnpm build` | **exit 0** | 184 páginas geradas |
+| `pnpm e2e` | **exit 0** | **53 testes**, contra o servidor de desenvolvimento por `E2E_BASE_URL` |
+| `pnpm responsivo --so=publico` | **exit 0** | 168 medições, **0 rotas com problema** |
+| `pnpm a11y` | **exit 1** | nenhuma ocorrência em rota pública; as 109 restantes são de `/minha-jb` e `(admin)` |
+
+### Quatro testes que reprovavam antes desta rodada
+
+Não eram regressão — descreviam comportamento que a aplicação não tem mais.
+Verificado com `git stash`: os quatro falhavam igualmente na árvore anterior.
+
+| Teste | Por que falhava |
+|---|---|
+| `01-home` › o menu do cabeçalho leva ao catálogo | exigia a gaveta em 1440px, largura em que a direção do catálogo passou a ter fileira própria |
+| `02-catalogo` › filtrar por condição… | pedia o grupo "Condição" em `/loja`, que é a coleção dos novos e **trava** a condição — aquele grupo não é desenhado ali |
+| `02-catalogo` › a condição sobrevive ao recarregamento | idem |
+| `09-admin-catalogo` › a equipe cadastra um equipamento | assertava console limpo **depois** de visitar de propósito uma ficha em rascunho, que responde 404 — e todo 404 vira erro de console |
+
+Os dois de catálogo passaram a exercitar o grupo **Categoria**, que é o que
+`/loja` de fato oferece; o da home ganhou um par que percorre a gaveta em
+390px; e o do painel fecha a varredura de console antes da navegação
+deliberada.
+
+### O que a auditoria corrigiu nos portões
+
+| Achado | Portão que ele derrubava |
+|---|---|
+| Trilha de `/loja` e `/seminovos` com links soltos dentro do `<nav>` | alvo de toque de 42×16px em 320, 360, 390 e 768 |
+| `graf-400` usado como cor de texto, contra a regra do próprio `globals.css` | 66 ocorrências de contraste 2,6:1 no cartão de vitrine |
+| Contagem em pastilha ativa em branco a 50% sobre o vermelho da marca | 2,2:1 — abaixo do 4,5:1 exigido para 12px |
+
+### O que continuava vermelho em 08/09
+
+`pnpm responsivo` e `pnpm a11y` saíam com código 1 por causa de `(admin)` e
+`/minha-jb`: alvos de 40×40px e rótulos de 9,9 a 10,4px na casca das duas
+áreas. São decisões de densidade do redesenho desses painéis, não defeito
+acidental — mexer nelas é decisão da JB, e a auditoria declara explicitamente
+que o painel administrativo e as telas autenticadas **não** foram avaliados.
+
+---
+
+## Redesenho da vitrine — 9 de setembro de 2026
+
+O redesenho da home e do catálogo (cabeçalho próprio da home, hero reescrito,
+cartão de marketplace) derrubou o portão de responsividade **nas rotas
+públicas**, que estava limpo no dia anterior.
+
+| Execução | Resultado |
+|---|---|
+| `pnpm responsivo --so=publico`, antes de qualquer correção | exit 1 — 168 medições, 3 rotas com problema, **546** achados (542 `texto-miudo`, 4 `alvo-de-toque-pequeno`) |
+| depois de elevar a tipografia ao piso de 12px nos módulos da home | exit 1 — **399** achados |
+
+O que foi corrigido: 18 declarações de `font-size` abaixo de `0.75rem` nos
+módulos CSS da home e 15 classes `text-[0.6…rem]` no cabeçalho da home,
+elevadas ao piso de 12px que `scripts/responsivo.mjs` cobra e que é o tamanho
+do `micro` no design system.
+
+O que **não** foi corrigido, e por quê: os 204 achados de `/loja` e os 42 de
+`/seminovos` vêm do cartão de marketplace
+(`src/components/loja/marketplace/`), que estava em trabalho não commitado de
+outra frente no momento desta medição. Mexer naquele arquivo colidiria com
+quem o estava escrevendo.
+
+### Como interpretar uma falha de CI hoje
+
+| Sintoma | Provável origem |
+|---|---|
+| `--so=publico` limpo, completo vermelho | painel ou Área da Clínica |
+| `--so=publico` acusando `/`, `/loja` ou `/seminovos` | tipografia do redesenho da vitrine |
+| `texto-miudo` | algum `font-size` abaixo de 12px; o piso é `0.75rem` |

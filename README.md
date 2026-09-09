@@ -11,7 +11,10 @@ terceiro em lugar nenhum do código.
 Documentação complementar: [`docs/dominio.md`](docs/dominio.md) (fluxos de
 status e transições válidas), [`docs/decisoes.md`](docs/decisoes.md) (por que o
 código é assim), [`docs/operacao.md`](docs/operacao.md) (deploy, migração, seed,
-webhook).
+webhook), [`docs/evolucao-jb/`](docs/evolucao-jb/) (plano, cobertura e portões
+de validação) e
+[`docs/auditoria-visual-2026-09-08/`](docs/auditoria-visual-2026-09-08/)
+(auditoria visual do site publicado, com as 29 capturas que a originaram).
 
 ---
 
@@ -90,11 +93,15 @@ Para remover só o que os seeds de demonstração criaram, sem tocar em dado rea
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:seed` | carga base |
 | `pnpm db:demo` · `pnpm db:demo:operacao` · `pnpm db:demo:limpar` | dados de demonstração |
-| `pnpm test:unit` | 192 testes unitários (Vitest) |
-| `pnpm e2e` | 48 testes de ponta a ponta (Playwright) |
+| `pnpm db:vitrine` | catálogo de demonstração da vitrine (12 equipamentos com ficha e foto) |
+| `pnpm conteudo:prever` · `pnpm conteudo:migrar` | corrige o texto institucional herdado do site em PHP |
+| `pnpm pautas:prever` · `pnpm pautas:carregar` | carrega as pautas da Central Técnica |
+| `pnpm duplicatas:prever` · `pnpm duplicatas:unificar` | junta categorias e marcas de mesmo nome (ver "Cadastros duplicados") |
+| `pnpm test:unit` | 581 testes unitários (Vitest) |
+| `pnpm e2e` | 53 testes de ponta a ponta (Playwright) |
 | `pnpm test` | os dois acima, em sequência |
-| `pnpm responsivo` | mede o layout em 6 larguras × 33 rotas num navegador de verdade |
-| `pnpm a11y` | roda o axe-core (WCAG 2.1 A e AA) em 34 rotas, mais 3 medições próprias |
+| `pnpm responsivo` | mede o layout em 7 larguras × 42 rotas num navegador de verdade |
+| `pnpm a11y` | roda o axe-core (WCAG 2.1 A e AA) em 47 rotas, mais 3 medições próprias |
 | `pnpm prova:atomicidade` | prova, com concorrência real contra o Postgres, que pagamento, estoque e cupom não duplicam |
 | `pnpm tour` | percorre todas as rotas num navegador e fotografa (ver "Testes") |
 
@@ -244,6 +251,66 @@ mensagens (`src/lib/notificacoes.ts`), leads, tickets de suporte, CMS
 
 Os fluxos de status de cada entidade, com as transições válidas, estão em
 [`docs/dominio.md`](docs/dominio.md).
+
+### Vitrine e inventário não são a mesma lista
+
+O catálogo responde a duas perguntas diferentes, e `src/lib/catalogo.ts`
+separa as duas com filtros nomeados:
+
+| Filtro | Responde | Onde entra |
+|---|---|---|
+| `PUBLICADO` | está no catálogo? | ficha do equipamento, busca, sitemap |
+| `UNIDADE_VENDIDA` | esta unidade já saiu? | exclusão padrão de toda listagem |
+| `DISPONIVEL` | dá para comprar hoje? | filtro "somente em estoque" |
+| `VITRINE` | pode encabeçar uma vitrine? | destaque da home, faixas, coleções |
+
+**Unidade única já vendida sai das listas por padrão.** Seminovo na JB é
+unidade, não modelo: quando aquela autoclave específica sai, não existe uma
+segunda igual esperando reposição, e mantê-la na prateleira é oferecer o que
+não se tem. A página dela continua de pé — histórico, link antigo, busca — e
+`?vendidos=1` traz o conjunto de volta, com opção na barra de filtros e ficha
+removível. Produto de linha sem estoque é outra coisa e **continua listado**:
+ele volta, e o cartão já diz "Indisponível".
+
+**`VITRINE` exige foto e disponibilidade.** É o que separa "está no catálogo"
+de "é o que a JB mostra primeiro". A home chegou a abrir com uma cadeira sem
+foto, por R$ 500, já vendida — e a anunciar esse mesmo valor como "menor preço
+do catálogo". Nenhum dos dois era erro de cálculo: era o código promovendo o
+que o cadastro ainda não tinha terminado.
+
+### Cadastros duplicados
+
+O catálogo nasceu de três cargas — o site em PHP (`prisma/seed.ts`), o
+protótipo aprovado (`prisma/catalogo-demo.json`) e a demonstração de operação
+(`prisma/seed-demo.ts`) — e delas sobraram duas categorias "Biossegurança" e
+duas marcas "Schuster", com slugs diferentes.
+
+Para quem visita não existe "o cadastro certo": existem duas opções com o mesmo
+nome, e escolher uma esconde metade do que ela promete. Por isso a loja pública
+trata cadastros de mesmo nome como **uma opção só** — `src/lib/homonimos.ts`
+junta o rótulo e soma as contagens; `expandirCategorias` e `expandirMarcas`
+abrem o slug da URL em todos os homônimos, para que rótulo, contagem e
+resultado do clique concordem. Vale na barra de filtros, nos atalhos de
+coleção, no mega menu, na parede de marcas e na escolha do tipo de equipamento
+ao abrir chamado.
+
+Isso conserta a tela, não o cadastro. A limpeza do banco é o
+`scripts/unificar-duplicatas.ts`:
+
+```bash
+pnpm duplicatas:prever     # mostra o plano, não altera nada
+pnpm duplicatas:unificar   # aplica
+```
+
+Ele move produtos, chamados e equipamentos de cliente para o cadastro canônico
+— o que tem mais equipamentos publicados — e **despublica** o duplicado, que
+fica vazio. Não apaga linha: apagar levaria junto o histórico de quem apontava
+para ela. Endereço antigo de categoria ou marca despublicada redireciona para a
+homônima que ficou, então link salvo e índice de busca continuam valendo.
+
+O banco do preview foi unificado em 08/09/2026. O banco local de
+desenvolvimento continua com as duas cargas de propósito: é onde os seeds
+rodam, e eles as recriam a cada `pnpm db:seed` + `pnpm db:vitrine`.
 
 ### Dinheiro, datas e numeração
 
@@ -408,11 +475,11 @@ substitui a outra.
 
 | Camada | Pergunta que responde | Como roda |
 |---|---|---|
-| `pnpm test:unit` | a regra de negócio está certa? | 192 testes, em memória, sem banco |
-| `pnpm e2e` | o fluxo funciona de ponta a ponta? | 48 testes, navegador real, banco real |
+| `pnpm test:unit` | a regra de negócio está certa? | 581 testes, em memória, sem banco |
+| `pnpm e2e` | o fluxo funciona de ponta a ponta? | 53 testes, navegador real, banco real |
 | `pnpm prova:atomicidade` | duas pessoas ao mesmo tempo quebram? | concorrência real contra o Postgres |
-| `pnpm responsivo` | o layout aguenta a tela do cliente? | 6 larguras × 33 rotas, medido no navegador |
-| `pnpm a11y` | dá para usar sem enxergar, sem mouse? | axe-core WCAG 2.1 A/AA em 34 rotas |
+| `pnpm responsivo` | o layout aguenta a tela do cliente? | 7 larguras × 42 rotas, medido no navegador |
+| `pnpm a11y` | dá para usar sem enxergar, sem mouse? | axe-core WCAG 2.1 A/AA em 47 rotas |
 
 As três últimas saem com código 1 quando acham problema, então servem de
 portão. Todas medem no navegador de verdade em vez de inspecionar o código:
@@ -521,3 +588,27 @@ dado, a tela mostra estado vazio com uma ação útil.
 - **Não há verificação de e-mail no cadastro.** O campo `emailVerifiedAt` existe
   em `Customer` e aparece no painel, mas nada o preenche — depende do mesmo
   worker de envio que falta.
+- **Falta fotografia própria.** Sobre, Estrutura e a página da assistência se
+  apoiam em texto e em imagem do catálogo. A auditoria de 08/09/2026
+  ([`docs/auditoria-visual-2026-09-08/`](docs/auditoria-visual-2026-09-08/))
+  registra o pedido: bancada, equipe, testes e estoque fotografados. Enquanto
+  não existir, a assistência ao menos deixou de abrir com a MESMA foto da home
+  — ela prefere um seminovo, que é unidade que passou pela revisão.
+- **Central Técnica, cases e depoimentos estão sem publicação.** As três telas
+  mostram estado vazio com próximo passo, e a Central Técnica sai da direção
+  principal do cabeçalho enquanto não tiver texto no ar
+  (`centralTemPublicacao`, em `src/lib/loja-publica.ts`). Voltam sozinhas na
+  primeira publicação.
+- **Os portões de responsividade e acessibilidade não estão verdes.** Duas
+  frentes: o painel (`(admin)`) e a Área da Clínica (`/minha-jb`), com alvos de
+  40×40px e rótulos abaixo de 12px na casca das duas áreas — densidade escolhida
+  no redesenho daquelas telas; e a home e o catálogo, desde o redesenho da
+  vitrine de 09/09/2026, com texto abaixo do piso de 12px. `pnpm responsivo
+  --so=publico` separa as duas. Ver
+  [`docs/evolucao-jb/validacao.md`](docs/evolucao-jb/validacao.md).
+- **O vocabulário da home diverge do escopo.** A abertura pública passou a usar
+  "Marketplace técnico odontológico" no redesenho de 09/09/2026, enquanto o
+  modelo continua sendo o descrito na primeira linha deste arquivo: vendedor
+  único, sem seller, comissão ou split. Nenhuma linha de código passou a supor
+  vários vendedores — a divergência é de texto, e precisa de uma decisão
+  editorial.

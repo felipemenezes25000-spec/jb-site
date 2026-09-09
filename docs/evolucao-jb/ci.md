@@ -71,6 +71,32 @@ registrado como tal.
 Relatório, traço e captura de quem falhou, guardados por 7 dias, só em falha.
 Os dados são de demonstração (`@jbteste.local`), então nada real vai junto.
 
+## Estado dos portões em 09/09/2026
+
+O pipeline nunca fechou verde nesta branch, e desde a auditoria visual dá para
+dizer **onde** ele para:
+
+| Job | Estado | O que falta |
+|---|---|---|
+| `estatico` | passa | — |
+| `build` | passa | — |
+| `atomicidade` | passa | — |
+| `ponta-a-ponta` | **reprova** | `pnpm responsivo` e `pnpm a11y` acusam `(admin)` e `/minha-jb` |
+
+Os testes de ponta a ponta em si passam (53/53). O que derruba o job são os
+dois portões de auditoria, e eles acusam **duas** frentes:
+
+- **Painel e Área da Clínica** — alvos de 40×40px e rótulos entre 9,9 e
+  10,4px na casca das duas áreas. Densidade escolhida no redesenho daqueles
+  painéis; decisão da JB.
+- **Home e catálogo, desde o redesenho de 09/09** — texto abaixo do piso de
+  12px. Parte já foi elevada; o que resta está no cartão de marketplace, que
+  seguia em escrita no momento da medição.
+
+Rodar `pnpm responsivo --so=publico` separa as duas: se ele acusa `/`, `/loja`
+ou `/seminovos`, é tipografia da vitrine; se está limpo, a falha é do painel.
+Detalhe por execução em `validacao.md`.
+
 ## O que este arquivo NÃO prova
 
 Workflow criado não é check obrigatório ativado. A proteção de branch — exigir

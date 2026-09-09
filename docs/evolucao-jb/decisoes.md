@@ -103,3 +103,61 @@ que tocar a fila. Não reimplementar o que já existe.
 **Decisão:** migrações e seeds podem rodar localmente. Nenhum comando é
 executado contra o banco da Vercel/Neon. Antes de qualquer comando destrutivo,
 conferir a ausência de `.env.local`, conforme o README.
+
+---
+
+## D11 — A tela conserta primeiro; o cadastro conserta depois
+
+**Origem:** auditoria visual de 08/09/2026 — "Biossegurança" aparecia duas
+vezes nos filtros e nos atalhos de `/seminovos`, e a parede de marcas mostrava
+Schuster em duas entradas, uma com itens e outra sob consulta. Verificado no
+banco: `Category` e `Brand` têm `slug` único, não `name`, e três cargas
+diferentes criaram `bioseguranca` + `biosseguranca` e `schuster` +
+`demo-schuster`.
+
+**Decisão:** corrigir nas duas camadas, com papéis distintos.
+`src/lib/homonimos.ts` junta cadastros de mesmo nome **na exibição** — rótulo
+único, contagens somadas, e o slug da URL aberto em todos os homônimos na
+consulta. `scripts/unificar-duplicatas.ts` corrige **o cadastro**, movendo
+vínculos para o canônico e despublicando o vazio.
+
+**Efeito:** a loja fica correta sem depender de acesso ao banco, o que importa
+quando o dado vive no Neon do preview e a correção precisa subir por deploy. E
+a limpeza continua necessária, porque enquanto houver dois registros o painel
+segue oferecendo os dois na hora de publicar um equipamento. Categoria e marca
+despublicadas por unificação redirecionam para a homônima, para não transformar
+link salvo em 404.
+
+---
+
+## D12 — Vitrine não é a mesma lista que inventário
+
+**Origem:** auditoria visual de 08/09/2026 — a home abria com uma cadeira sem
+foto, por R$ 500, já vendida, e anunciava esse valor como "menor preço do
+catálogo".
+
+**Decisão:** separar em `src/lib/catalogo.ts` os filtros `PUBLICADO`,
+`DISPONIVEL`, `UNIDADE_VENDIDA` e `VITRINE`. Destaque, faixa e abertura de
+coleção passam por `VITRINE` (publicado, com foto, disponível). Unidade única
+já vendida sai das listagens por padrão e volta por `?vendidos=1`.
+
+**Efeito:** nenhum número da home é calculado sobre item que o visitante não
+pode comprar. Contagem de topo, contagem de faceta e resultado do clique saem
+da mesma regra — "3 unidades publicadas" acima de dois cartões deixou de ser
+possível. Produto de linha esgotado continua listado, porque ele volta.
+
+---
+
+## D13 — Item de menu não promete conteúdo que não existe
+
+**Origem:** auditoria visual de 08/09/2026 — Central Técnica ocupava um dos
+cinco lugares da direção principal e entregava um aviso de que ainda não há
+publicação.
+
+**Decisão:** `centralTemPublicacao()` decide se o item entra no cabeçalho. Sem
+artigo publicado, ele sai da direção principal e continua no rodapé e no mapa
+do site.
+
+**Efeito:** é a mesma regra que `categoriasDoMenu` já aplicava a categoria sem
+equipamento. O que a Central perde é o destaque comercial, não a existência — e
+ela volta sozinha na primeira publicação, sem ninguém lembrar de religar.

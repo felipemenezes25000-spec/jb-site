@@ -475,3 +475,52 @@ Nenhum cenário é marcado como coberto sem evidência em `validacao.md`.
 | Review/case sem autorização | validado localmente — depoimento e case recusam publicação sem consentimento registrado; 27 testes |
 | Navegação mobile/teclado | não iniciado |
 | Falha do provedor/rede | não iniciado |
+
+---
+
+## Auditoria visual — 8 e 9 de setembro de 2026
+
+Origem: [`../auditoria-visual-2026-09-08/`](../auditoria-visual-2026-09-08/) —
+29 capturas do site publicado, o texto observado e a análise. As linhas abaixo
+são os achados dela, não requisitos do prompt mestre.
+
+### Alta prioridade
+
+| # | Achado | Implementação | Evidência | Situação |
+|---|---|---|---|---|
+| A.1 | Cadeira sem foto, R$ 500, vendida, em destaque na home e nos seminovos | `VITRINE` e `UNIDADE_VENDIDA` em `src/lib/catalogo.ts` | preview: "2 unidades disponíveis · 1 já foi vendida e saiu da lista" | validado localmente |
+| A.2 | "Menor preço do catálogo R$ 500" saía do item vendido | agregação passou a usar `VITRINE` + `allowDirectPurchase` | preview: R$ 1.480,00 | validado localmente |
+| A.3 | "Biossegurança" duas vezes em filtros, atalhos e abertura de chamado | `src/lib/homonimos.ts`, `expandirCategorias`, `expandirMarcas` | 10 testes em `tests/unitarios/homonimos.test.ts`; filtro devolve a soma | validado localmente |
+| A.4 | Schuster duplicado e marcas exibidas como siglas | unificação na parede de marcas; nome por extenso no lugar do monograma | preview: 9 marcas, Schuster uma vez, KAVO/GNATUS/CRISTÓFOLI por extenso | validado localmente |
+| A.5 | Primeira tela do celular sem fotografia de equipamento | painel do produto sobe para logo abaixo do título, deitado | captura em 390×844 com foto, preço e ação na dobra | validado localmente |
+| A.6 | Primeira tela da abertura de chamado termina antes dos campos | `compacto` em `CabecalhoAssistencia`; régua sem repetir o título | — | implementado |
+
+### Média prioridade
+
+| # | Achado | Situação |
+|---|---|---|
+| M.1 | Repetição de equipamento entre as vitrines da home | validado localmente — curadoria em cascata em `dadosDaHome`; cada faixa fica com o que as anteriores não usaram |
+| M.2 | Cabeçalho com faixa em movimento e cinco grupos no mesmo nível | implementado — níveis separados; a home ganhou cabeçalho próprio no redesenho de 09/09 |
+| M.3 | "Ver equipamento" quebrando em duas linhas | validado localmente — a grade ia a 4 colunas dentro de um contêiner travado em 1440px, o que **encolhia** o cartão; com 3 colunas o cartão vai a 336px |
+| M.4 | Central Técnica, cases e depoimentos sem publicação | implementado — estado vazio com próximo passo nas três; a Central sai da direção principal enquanto vazia |
+| M.5 | Sobre e Estrutura só com texto | **não iniciado** — depende de fotografia própria |
+| M.6 | Assistência reusando a foto da home | implementado — prefere um seminovo; mitigação, não solução |
+| M.7 | Planos: cartão diz "deslocamento incluso", tabela diz "A combinar" | implementado — `regraDoPlano` lê a regra cadastrada nos benefícios quando o campo próprio está vazio |
+| M.8 | Comparador e simulador abrindo como formulário técnico | validado localmente — comparador escolhe por foto/marca/preço agrupado por categoria; simulador abre com três campos e guarda o refinamento |
+
+### Referência de UX enviada pelo usuário
+
+Sete padrões de organização, anexados à análise. Situação: cabeçalho em níveis,
+categorias cedo na home, catálogo mais compacto, cartão com ordem previsível e
+decisão de compra agrupada — todos implementados. "Detalhes progressivos em
+abas" foi **deliberadamente não seguido**: a ficha usa âncoras, e o motivo está
+escrito no topo de `src/components/loja/produto/navegacao-do-produto.tsx` — aba
+esconde conteúdo de busca e de Ctrl+F, e o escopo proíbe esconder conteúdo
+crítico de SEO.
+
+### O que ficou fora
+
+| Item | Motivo |
+|---|---|
+| Fotografia de bancada, equipe, testes e estoque | material não existe; registrado em `pendencias-externas.md` |
+| Portões verdes em `(admin)` e `/minha-jb` | densidade do redesenho daqueles painéis; decisão da JB |

@@ -356,3 +356,90 @@ O motivo é operacional: quem mantém isto, quem lê o log e quem conversa com a
 sobre um chamado usa as mesmas palavras que a JB usa. "Chamado" e "ordem de
 serviço" significam coisas específicas nesse negócio, e traduzir para
 `ticket`/`job` no código só cria um dicionário a mais para errar.
+
+---
+
+## 21. Vitrine e inventário são listas diferentes
+
+`src/lib/catalogo.ts` guarda quatro filtros nomeados em vez de um só
+`PUBLICADO`: `UNIDADE_VENDIDA`, `DISPONIVEL` e `VITRINE` ao lado dele. A
+distinção não é técnica, é comercial — "está no catálogo" e "é o que a JB
+mostra primeiro" são duas perguntas, e responder as duas com o mesmo filtro foi
+o que produziu os achados de alta prioridade da auditoria de 08/09/2026.
+
+A home abria com uma cadeira sem foto, por R$ 500, já vendida, e anunciava esse
+mesmo valor como "menor preço do catálogo". Nenhum dos dois era erro de
+cálculo: os dois números estavam corretos para a pergunta "o que está
+publicado?". Estavam errados para a pergunta que a home faz, que é "o que vale
+a pena mostrar primeiro?".
+
+`VITRINE` responde a segunda: publicado, **com foto** e disponível. Vale para o
+destaque da home, para as faixas e para o painel de abertura das coleções.
+Listagem continua usando `PUBLICADO`, porque listagem é inventário.
+
+A regra irmã é a da **unidade única já vendida**. Seminovo na JB é unidade, não
+modelo: quando aquela autoclave sai, não existe uma segunda igual esperando
+reposição. Ela sai das listas por padrão, a página dela continua de pé e
+`?vendidos=1` traz o conjunto de volta com ficha removível na barra de filtros.
+Produto de linha esgotado continua listado — ele volta, e o cartão já diz
+"Indisponível".
+
+O que isso NÃO faz: esconder informação. Contagem do topo, contagem da faceta e
+resultado do clique passaram a sair da mesma regra, então "3 unidades
+publicadas" com 2 cartões na tela deixou de ser possível.
+
+---
+
+## 22. Cadastro duplicado é problema de banco, corrigido em dois lugares
+
+O catálogo nasceu de três cargas diferentes e delas sobraram duas categorias
+"Biossegurança" e duas marcas "Schuster". Para quem visita não existe "o
+cadastro certo": existem duas opções com o mesmo nome, e escolher uma esconde
+metade do que ela promete.
+
+A correção acontece em duas camadas, de propósito:
+
+1. **Exibição** — `src/lib/homonimos.ts` junta cadastros de mesmo nome numa
+   opção só, soma as contagens e elege como canônico o que tem mais
+   equipamentos publicados. `expandirCategorias` e `expandirMarcas` abrem o
+   slug da URL em todos os homônimos, para rótulo, contagem e resultado do
+   clique concordarem. O endereço continua com um slug — curto,
+   compartilhável, estável.
+2. **Cadastro** — `scripts/unificar-duplicatas.ts` move produtos, chamados e
+   equipamentos de cliente para o canônico e despublica o duplicado. Não apaga
+   linha: apagar levaria junto o histórico de quem apontava para ela.
+
+Só a camada 1 conserta o site sem acesso ao banco, e é ela que garante que o
+problema não reapareça enquanto a limpeza não roda. Só a camada 2 impede que
+ele volte a nascer, porque enquanto houver dois registros o painel continua
+oferecendo os dois na hora de publicar um equipamento.
+
+Categoria e marca despublicadas por unificação **redirecionam** para a homônima
+publicada em vez de responder 404 — link salvo e índice de busca continuam
+valendo. Sem homônima, segue 404, que é a resposta certa para uma prateleira
+que a JB tirou do ar.
+
+---
+
+## 23. Acabamento se prende a gancho declarado, nunca à estrutura da árvore
+
+O cabeçalho ganhou uma camada de acabamento em CSS separado
+(`header-premium.css`, `cabecalho-home-flagship.module.css`). A primeira versão
+dela selecionava por posição — `> div:first-of-type > div > a:first-child` para
+o logotipo, `div.absolute.inset-x-0.top-full` para o painel do mega menu — e
+isso é a forma de estilo que quebra sem avisar: basta alguém envolver o logo num
+`span` para o acabamento sumir, sem erro em lugar nenhum, sem teste vermelho.
+
+Hoje todo seletor se prende a um gancho declarado no JSX:
+`data-jb-premium-header`, `data-jb-home-header-v2`, `.jb-logo`,
+`.jb-busca-topo`, `.jb-cta-topo`, `.jb-mega-painel`, `.jb-promo-ticker`. O
+gancho é contrato: quem mexe no JSX vê o atributo e sabe que alguém depende
+dele.
+
+A mesma regra vale para **medida**: reserva de espaço no cabeçalho não é
+porcentagem da janela. A faixa de menus da home ficou 85px por cima do bloco da
+conta porque estava centrada em `left: 44%` com `width: min(42vw, 46rem)` —
+dois valores que não sabem nada sobre onde as ações começam, ainda mais com a
+largura do bloco variando conforme o nome de quem entrou. Agora o componente
+mede as duas pontas com um `ResizeObserver` e publica `--jb-topo-esq` e
+`--jb-topo-dir`; o CSS reserva o que foi medido.

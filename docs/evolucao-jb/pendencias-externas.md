@@ -160,3 +160,46 @@ Situação possível: `aberta`, `respondida`, `ativada e verificada`.
   preserve o direito já adquirido de quem comprou sob a regra antiga.
 - **Situação:** aberta — o escopo (§15.6) manda preservar a política vigente
   enquanto a decisão não vier, e é o que está feito.
+
+---
+
+## P11 — Fotografia própria de bancada, equipe, testes e estoque
+
+- **O que falta:** fotografias da operação da JB — equipe trabalhando, bancada,
+  equipamento em teste, estoque — e das unidades seminovas anunciadas, na
+  qualidade e na quantidade que uma vitrine de equipamento caro pede.
+- **Por que:** a auditoria visual de 08/09/2026 aponta três consequências
+  diretas da ausência. Sobre e Estrutura descrevem a operação sem mostrá-la; a
+  página da assistência abria com a MESMA foto que a home usa no destaque, o
+  que faz compra e serviço parecerem a mesma coisa; e a vitrine depende de
+  ilustração gerada por IA, creditada em `public/images/CREDITOS.md`, que
+  precisa sair antes de o site receber pedido de verdade.
+- **Responsável:** proprietário da JB.
+- **Efeito enquanto estiver aberta:** a assistência escolhe um seminovo em vez
+  da foto do destaque da home — reduz a repetição, não a resolve. Sobre e
+  Estrutura seguem como estão: o escopo proíbe encher a página com imagem
+  conceitual não identificada.
+- **Passo exato:** produzir as fotos, subir pelo painel e trocar as
+  ilustrações de demonstração. `docs/evolucao-jb/briefing-acervo.md` descreve o
+  que cada tela espera.
+- **Situação:** aberta.
+
+---
+
+## P12 — "Marketplace" na abertura pública
+
+- **O que falta:** decisão editorial sobre o vocabulário da home.
+- **Por que:** o redesenho de 09/09/2026 passou a abrir a home com
+  "Marketplace técnico odontológico" e acrescentou a assinatura "Marketplace
+  odontológico" ao lado do logotipo. O modelo continua sendo o da primeira
+  linha do `README.md` — **vendedor único, a própria JB**, sem seller, comissão
+  ou split — e nenhuma linha de código passou a supor vários vendedores. A
+  própria auditoria já havia registrado que o nome "Marketplace" do rodapé do
+  protótipo de referência não descreve o modelo da JB.
+- **Responsável:** proprietário da JB.
+- **Efeito enquanto estiver aberta:** a página pública afirma um modelo de
+  negócio que o sistema não implementa. Não quebra nada; desalinha a promessa.
+- **Passo exato:** decidir entre adotar o termo (e então revisar escopo,
+  README e docs, que hoje o negam explicitamente) ou trocar a palavra na home,
+  no cabeçalho da home e no teste `tests/e2e/12-marketplace-colecoes.spec.ts`.
+- **Situação:** aberta.

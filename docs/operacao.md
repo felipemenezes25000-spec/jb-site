@@ -115,6 +115,7 @@ migração falha com erro que não parece ser sobre isso.
 | `pnpm db:demo` | vitrine de demonstração: marcas, produtos, cliente, equipamento, chamado | **não** |
 | `pnpm db:demo:operacao` | operação de demonstração: pedido, pagamento, OS, orçamento, contrato, documentos, leads, suporte | **não** |
 | `pnpm db:demo:limpar` | remove tudo o que os dois seeds de demonstração criaram | — |
+| `pnpm db:vitrine` | catálogo de demonstração da vitrine: 12 equipamentos com ficha, foto e destaque; arquiva o catálogo demo anterior em vez de apagar | **não** |
 
 Os dois seeds de demonstração se **recusam a rodar** com `NODE_ENV=production`,
 a menos que exista `PERMITIR_DEMO`. Não defina essa variável em produção.
@@ -132,6 +133,60 @@ um explicitamente, dos filhos para os pais.
 O `db:seed` imprime a senha do usuário administrador criado. Se `ADMIN_PASSWORD`
 não estiver definida, ele sorteia uma. **Anote na hora**: ela não é gravada em
 lugar nenhum além do hash.
+
+---
+
+## Cadastros duplicados de categoria e marca
+
+Sintoma na tela: duas opções com o mesmo nome na barra de filtros, duas
+pastilhas iguais nos atalhos, duas placas "Schuster" na parede de marcas, duas
+opções idênticas na escolha do tipo de equipamento ao abrir chamado.
+
+Causa: `Category` e `Brand` têm `slug` único, não `name`. O catálogo foi
+carregado três vezes — site em PHP (`prisma/seed.ts`), protótipo aprovado
+(`prisma/catalogo-demo.json`) e demonstração de operação
+(`prisma/seed-demo.ts`) — e ficou com `bioseguranca` + `biosseguranca` e
+`schuster` + `demo-schuster`.
+
+A loja pública já junta cadastros de mesmo nome ao exibir, então **o site fica
+correto mesmo sem esta limpeza**. O que ela conserta é o cadastro: enquanto
+houver dois registros, o painel continua oferecendo os dois na hora de publicar
+um equipamento, e o problema volta a nascer a cada produto novo.
+
+```bash
+pnpm duplicatas:prever     # imprime o plano; não altera nada
+pnpm duplicatas:unificar   # aplica
+```
+
+O que ele faz: elege como canônico o cadastro com mais equipamentos publicados
+(empate resolve por `order` e depois pelo mais antigo), move produtos, chamados
+e equipamentos de cliente para ele e **despublica** o duplicado.
+
+O que ele **não** faz: apagar linha. `published: false` mantém o registro no
+painel; apagar levaria junto, por `SetNull`, o histórico de quem apontava para
+ele. Também não junta grafias diferentes — "Biosegurança" com um "s" continua
+sendo outro cadastro, porque corrigir grafia é trabalho de
+`scripts/conteudo-categorias.ts` e juntar por semelhança esconderia o erro em
+vez de mostrá-lo.
+
+**Contra o preview**, puxe as variáveis daquele ambiente antes de rodar e apague
+o arquivo depois — ele traz a credencial do Neon:
+
+```bash
+vercel env pull .env.preview --environment=preview --git-branch=plataforma
+# rode com DATABASE_URL apontando para o DATABASE_URL_UNPOOLED de lá
+rm .env.preview
+```
+
+**Depois de unificar, o preview precisa reconstruir.** As páginas de categoria
+são pré-geradas a partir das publicadas, então `/categoria/<slug-antigo>`
+continua servindo o HTML anterior até a próxima construção. Com a construção
+nova ela sai da lista de rotas pré-geradas, cai no caminho dinâmico e
+redireciona para a homônima que ficou.
+
+O banco do preview foi unificado em 08/09/2026. O banco local de
+desenvolvimento continua duplicado de propósito: é onde os seeds rodam, e eles
+recriam o par a cada `pnpm db:seed` + `pnpm db:vitrine`.
 
 ---
 
@@ -333,3 +388,6 @@ testável; em produção não é impresso nem enviado.
 | Desenvolvimento escrevendo no banco real | existe um `.env.local` — apague |
 | Todo mundo deslogado de repente | `AUTH_SECRET` mudou |
 | E-mail não chega | é esperado: não há worker de envio |
+| Duas opções com o mesmo nome no filtro ou na parede de marcas | cadastro duplicado — `pnpm duplicatas:prever` |
+| Endereço antigo de categoria servindo página velha depois de unificar | falta reconstruir o preview |
+| Unidade seminova sumiu da lista | é a regra: unidade única vendida sai da vitrine; `?vendidos=1` traz de volta |
