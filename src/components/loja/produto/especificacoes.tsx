@@ -6,12 +6,15 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
+import { grupoSemanticoAtributo } from "@/lib/marketplace/atributos-decisao";
+
 /* ============================================================================
    Ficha técnica do produto
 
-   O conteúdo continua completo, mas com densidade de catálogo técnico: menos
-   molduras, menos padding e títulos menores. Quem abre esta área quer consultar
-   informação, não entrar em uma sequência de cards de dashboard.
+   O conteúdo continua completo, mas com densidade de catálogo técnico: uma
+   moldura para a ficha e subseções semânticas dentro dela. Campo com grupo
+   definido no admin mantém a organização humana; só o campo sem grupo recebe
+   uma classificação automática.
    ============================================================================ */
 
 export type EspecificacaoAgrupada = {
@@ -27,8 +30,8 @@ export function agruparEspecificacoes(
   for (const spec of specs) {
     if (!spec.label.trim() || !spec.value.trim()) continue;
 
-    const nome = spec.group.trim() || "Especificações técnicas";
-    let grupo = grupos.find((g) => g.grupo === nome);
+    const nome = spec.group.trim() || grupoSemanticoAtributo(spec.label);
+    let grupo = grupos.find((item) => item.grupo === nome);
 
     if (!grupo) {
       grupo = { grupo: nome, itens: [] };
@@ -37,8 +40,8 @@ export function agruparEspecificacoes(
 
     grupo.itens.push({
       id: spec.id,
-      rotulo: spec.label,
-      valor: spec.value,
+      rotulo: spec.label.trim(),
+      valor: spec.value.trim(),
     });
   }
 
@@ -112,33 +115,53 @@ function Dado({
   );
 }
 
+function tituloDoGrupo(grupo: string, total: number) {
+  const normalizado = grupo.trim().toLowerCase();
+  if (
+    total === 1 &&
+    (normalizado === "ficha técnica" || normalizado === "especificações técnicas")
+  ) {
+    return null;
+  }
+  return grupo;
+}
+
 export function FichaTecnica({ grupos }: { grupos: EspecificacaoAgrupada[] }) {
   if (grupos.length === 0) return null;
 
-  return (
-    <div className="space-y-3">
-      {grupos.map((grupo, indice) => {
-        const titulo =
-          grupos.length === 1 && grupo.grupo.toLowerCase() === "ficha técnica"
-            ? "Especificações técnicas"
-            : grupo.grupo;
+  const totalDeItens = grupos.reduce((soma, grupo) => soma + grupo.itens.length, 0);
 
-        return (
-          <CartaoFicha
-            key={grupo.grupo}
-            titulo={titulo}
-            subtitulo={indice === 0 ? "Dados para comparar este modelo" : undefined}
-            icone={SlidersHorizontal}
-          >
-            <GradeDados>
-              {grupo.itens.map((item) => (
-                <Dado key={item.id} rotulo={item.rotulo} valor={item.valor} />
-              ))}
-            </GradeDados>
-          </CartaoFicha>
-        );
-      })}
-    </div>
+  return (
+    <CartaoFicha
+      titulo="Especificações técnicas"
+      subtitulo={`${totalDeItens} ${totalDeItens === 1 ? "dado organizado" : "dados organizados"} para comparar o modelo`}
+      icone={SlidersHorizontal}
+    >
+      <div className="divide-y divide-graf-200">
+        {grupos.map((grupo) => {
+          const titulo = tituloDoGrupo(grupo.grupo, grupos.length);
+          return (
+            <section key={grupo.grupo} aria-label={titulo ?? "Especificações técnicas"}>
+              {titulo ? (
+                <div className="flex items-center justify-between gap-3 bg-graf-50/55 px-4 py-2.5 sm:px-5">
+                  <h4 className="text-[0.6875rem] font-extrabold uppercase tracking-[0.075em] text-graf-600">
+                    {titulo}
+                  </h4>
+                  <span className="text-[0.6875rem] tabular text-graf-400">
+                    {grupo.itens.length}
+                  </span>
+                </div>
+              ) : null}
+              <GradeDados>
+                {grupo.itens.map((item) => (
+                  <Dado key={item.id} rotulo={item.rotulo} valor={item.valor} />
+                ))}
+              </GradeDados>
+            </section>
+          );
+        })}
+      </div>
+    </CartaoFicha>
   );
 }
 
