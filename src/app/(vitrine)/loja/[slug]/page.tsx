@@ -298,6 +298,44 @@ export default async function ProdutoPage({ params }: Props) {
   const temFichaTecnica = temEspecificacoes || temApoioTecnico;
   const duasColunasNaFicha = temEspecificacoes && temApoioTecnico;
 
+  /*
+   * Os componentes abaixo já retornam `null` quando não têm informação, mas o
+   * accordion pai continuava existindo mesmo assim. Em um cadastro mínimo isso
+   * criava "Antes de comprar" e "Entrega, garantia e suporte" vazios — e a
+   * navegação sticky ainda apontava para eles.
+   *
+   * Estes booleanos reproduzem exatamente as condições de renderização dos
+   * subblocos. A mesma fonte decide a existência da seção E a existência da
+   * âncora, para não haver menu apontando para conteúdo inexistente.
+   */
+  const temInfraestrutura = Boolean(
+    produto.voltage?.trim() ||
+      (produto.weightGrams ?? 0) > 0 ||
+      ((produto.widthMm ?? 0) > 0 &&
+        (produto.heightMm ?? 0) > 0 &&
+        (produto.depthMm ?? 0) > 0) ||
+      produto.infrastructureNotes.length > 0,
+  );
+  const temConteudoDaCaixa = produto.boxContents.length > 0;
+  const temBlocoDeInstalacao = produto.installationPolicy !== "nao_informada";
+  const geraEquipamentoNoPosCompra = produto.condition !== "novo" || produto.trackInventory;
+  const temPreparo =
+    temInfraestrutura ||
+    temConteudoDaCaixa ||
+    temBlocoDeInstalacao ||
+    geraEquipamentoNoPosCompra;
+
+  const temFrete = Boolean(
+    produto.shippingProfile && produto.shippingProfile.kind !== "nao_aplicavel",
+  );
+  const retirada = ligado(s.retirada_disponivel) ? s.retirada_instrucoes.trim() || null : null;
+  const temCondicoesDeCompra = Boolean(
+    (garantiaMeses ?? 0) > 0 || temFrete || retirada || produto.voltage?.trim(),
+  );
+  const temAjudaDaEquipe = Boolean(s.telefone.trim() || s.whatsapp.trim() || s.email.trim());
+  const temServicos = servicos.length > 0 && !arquivado;
+  const temEntregaESuporte = temCondicoesDeCompra || temAjudaDaEquipe || temServicos;
+
   /* ---------------------------------------------------------------- trilha */
 
   const trilha = [
@@ -358,14 +396,13 @@ export default async function ProdutoPage({ params }: Props) {
     ...(unidade ? [{ id: "unidade", rotulo: "Esta unidade" }] : []),
     ...(temDescricao ? [{ id: "sobre", rotulo: "Sobre" }] : []),
     ...(temFichaTecnica ? [{ id: "ficha-tecnica", rotulo: "Ficha técnica" }] : []),
-    { id: "preparo", rotulo: "Preparo" },
-    { id: "entrega-e-garantia", rotulo: "Entrega e suporte" },
+    ...(temPreparo ? [{ id: "preparo", rotulo: "Preparo" }] : []),
+    ...(temEntregaESuporte
+      ? [{ id: "entrega-e-garantia", rotulo: "Entrega e suporte" }]
+      : []),
     ...(arquivado ? [] : [{ id: "duvidas", rotulo: "Dúvidas" }]),
   ];
 
-  const temFrete = Boolean(
-    produto.shippingProfile && produto.shippingProfile.kind !== "nao_aplicavel",
-  );
   const temInstalacao = !["nao_informada", "nao_oferecida"].includes(
     produto.installationPolicy,
   );
@@ -541,83 +578,85 @@ export default async function ProdutoPage({ params }: Props) {
           </BlocoDecisao>
         ) : null}
 
-        <BlocoDecisao
-          id="preparo"
-          titulo="Antes de instalar"
-          resumo="Espaço, infraestrutura, itens inclusos e o que acontece depois da compra."
-        >
-          <div className="grid gap-4 xl:grid-cols-2">
-            <AntesDeComprar
-              dados={{
-                voltagem: produto.voltage,
-                pesoGramas: produto.weightGrams,
-                larguraMm: produto.widthMm,
-                alturaMm: produto.heightMm,
-                profundidadeMm: produto.depthMm,
-                requisitos: produto.infrastructureNotes,
-              }}
-            />
-            <OQueVemNaCaixa itens={produto.boxContents} />
-            <Instalacao
-              politica={produto.installationPolicy}
-              observacao={produto.installationNote}
-              precoCents={precoDaInstalacao}
-            />
-            <DepoisDaCompraNoProduto
-              garantiaMeses={produto.warrantyMonths}
-              geraEquipamento={produto.condition !== "novo" || produto.trackInventory}
-            />
-          </div>
-        </BlocoDecisao>
-
-        <BlocoDecisao
-          id="entrega-e-garantia"
-          titulo="Entrega e suporte"
-          resumo="Condições objetivas e acesso direto à equipe que conhece o equipamento."
-        >
-          <div className="grid gap-4 xl:grid-cols-2">
-            <CondicoesDeCompra
-              garantiaMeses={garantiaMeses}
-              garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
-              frete={
-                produto.shippingProfile
-                  ? {
-                      nome: produto.shippingProfile.name,
-                      tipo: produto.shippingProfile.kind,
-                      descricao: produto.shippingProfile.description,
-                      gratisAcimaCents: produto.shippingProfile.freeAboveCents,
-                    }
-                  : null
-              }
-              retirada={
-                ligado(s.retirada_disponivel) ? s.retirada_instrucoes.trim() || null : null
-              }
-              voltagem={produto.voltage}
-            />
-            <AjudaDaEquipe
-              nomeDoProduto={produto.name}
-              sku={produto.sku}
-              telefone={s.telefone}
-              whatsapp={s.whatsapp}
-              email={s.email}
-              horario={s.horario}
-            />
-          </div>
-
-          {servicos.length > 0 && !arquivado ? (
-            <div className="mt-5 border-t border-graf-200 pt-5">
-              <h3 className="text-base font-extrabold text-graf-950">
-                Serviços disponíveis para este equipamento
-              </h3>
-              <p className="mt-1 max-w-2xl text-sm leading-5 text-graf-600">
-                Podem entrar no mesmo pedido, com valores separados e execução pela JB.
-              </p>
-              <div className="mt-4">
-                <ServicosDoProduto servicos={servicos} />
-              </div>
+        {temPreparo ? (
+          <BlocoDecisao
+            id="preparo"
+            titulo="Antes de instalar"
+            resumo="Espaço, infraestrutura, itens inclusos e o que acontece depois da compra."
+          >
+            <div className="grid gap-4 xl:grid-cols-2">
+              <AntesDeComprar
+                dados={{
+                  voltagem: produto.voltage,
+                  pesoGramas: produto.weightGrams,
+                  larguraMm: produto.widthMm,
+                  alturaMm: produto.heightMm,
+                  profundidadeMm: produto.depthMm,
+                  requisitos: produto.infrastructureNotes,
+                }}
+              />
+              <OQueVemNaCaixa itens={produto.boxContents} />
+              <Instalacao
+                politica={produto.installationPolicy}
+                observacao={produto.installationNote}
+                precoCents={precoDaInstalacao}
+              />
+              <DepoisDaCompraNoProduto
+                garantiaMeses={produto.warrantyMonths}
+                geraEquipamento={geraEquipamentoNoPosCompra}
+              />
             </div>
-          ) : null}
-        </BlocoDecisao>
+          </BlocoDecisao>
+        ) : null}
+
+        {temEntregaESuporte ? (
+          <BlocoDecisao
+            id="entrega-e-garantia"
+            titulo="Entrega e suporte"
+            resumo="Condições objetivas e acesso direto à equipe que conhece o equipamento."
+          >
+            <div className="grid gap-4 xl:grid-cols-2">
+              <CondicoesDeCompra
+                garantiaMeses={garantiaMeses}
+                garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
+                frete={
+                  produto.shippingProfile
+                    ? {
+                        nome: produto.shippingProfile.name,
+                        tipo: produto.shippingProfile.kind,
+                        descricao: produto.shippingProfile.description,
+                        gratisAcimaCents: produto.shippingProfile.freeAboveCents,
+                      }
+                    : null
+                }
+                retirada={retirada}
+                voltagem={produto.voltage}
+              />
+              <AjudaDaEquipe
+                nomeDoProduto={produto.name}
+                sku={produto.sku}
+                telefone={s.telefone}
+                whatsapp={s.whatsapp}
+                email={s.email}
+                horario={s.horario}
+              />
+            </div>
+
+            {temServicos ? (
+              <div className="mt-5 border-t border-graf-200 pt-5">
+                <h3 className="text-base font-extrabold text-graf-950">
+                  Serviços disponíveis para este equipamento
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm leading-5 text-graf-600">
+                  Podem entrar no mesmo pedido, com valores separados e execução pela JB.
+                </p>
+                <div className="mt-4">
+                  <ServicosDoProduto servicos={servicos} />
+                </div>
+              </div>
+            ) : null}
+          </BlocoDecisao>
+        ) : null}
 
         {arquivado ? null : (
           <BlocoDecisao
