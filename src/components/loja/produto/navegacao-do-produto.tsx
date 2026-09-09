@@ -33,36 +33,20 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
   const [extrasVisiveis, setExtrasVisiveis] = useState<string[]>([]);
   const trilhoRef = useRef<HTMLUListElement>(null);
 
-  /*
-   * Comparação/avaliações podem vir do layout servidor, enquanto acessórios e
-   * complementos chegam depois de uma consulta cliente. Um MutationObserver
-   * mantém a barra fiel ao que existe de verdade, sem aba vazia e sem depender
-   * da ordem de hidratação.
-   */
+  /* Todos os complementos da PDP agora nascem no HTML do servidor. Basta
+     conferir uma vez depois da hidratação quais existem de fato; produto sem
+     avaliação, alternativa ou cross-sell continua sem uma âncora vazia. */
   useEffect(() => {
-    function sincronizarExtras() {
-      const ids = EXTRAS_DA_PDP
+    setExtrasVisiveis(
+      EXTRAS_DA_PDP
         .filter((ancora) => document.querySelector(`main #${CSS.escape(ancora.id)}`))
-        .map((ancora) => ancora.id);
-
-      setExtrasVisiveis((atuais) =>
-        atuais.length === ids.length && atuais.every((id, indice) => id === ids[indice]) ? atuais : ids,
-      );
-    }
-
-    sincronizarExtras();
-    const main = document.querySelector("main");
-    if (!main) return;
-
-    const observador = new MutationObserver(sincronizarExtras);
-    observador.observe(main, { childList: true, subtree: true });
-    return () => observador.disconnect();
+        .map((ancora) => ancora.id),
+    );
   }, []);
 
   const ancorasEfetivas = useMemo(() => {
     // O chamador antigo ainda declara `relacionados` durante a migração, mas o
-    // bloco genérico foi aposentado: alternativas/complementos/acessórios têm
-    // experiências próprias. Filtrar aqui evita uma âncora sem destino.
+    // bloco genérico foi aposentado: cada intenção comercial tem sua seção.
     const base = ancoras.filter((ancora) => ancora.id !== "relacionados");
     const existentes = new Set(base.map((ancora) => ancora.id));
     return [

@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import type { Prisma } from "@prisma/client";
-import { Suspense } from "react";
-import Link from "next/link";
+import { cache, Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import { CaixaCompra, type AddonProduto } from "@/components/loja/caixa-compra";
 import { GaleriaProduto, type FotoProduto } from "@/components/loja/galeria-produto";
-import { GradeMarketplace } from "@/components/loja/marketplace/grade-marketplace";
 import {
   AcoesDoProduto,
   AcoesDoProdutoEsqueleto,
@@ -46,14 +43,9 @@ import {
 import type { CertificadoDaUnidade } from "@/components/loja/produto/selo-certificado";
 import { SeloCertificado } from "@/components/loja/produto/selo-certificado";
 import { UnidadeFisica } from "@/components/loja/produto/unidade-fisica";
-import {
-  RegistrarVisita,
-  VistosRecentemente,
-} from "@/components/loja/vistos-recentemente";
+import { RegistrarVisita } from "@/components/loja/vistos-recentemente";
 import { Trilha } from "@/components/ui/data";
-import { EsqueletoCartaoProduto } from "@/components/ui/esqueletos";
 import { sanitizarHtml } from "@/components/admin/conteudo/html-seguro";
-import { paraCardMarketplace, SELECAO_CARD_MARKETPLACE } from "@/lib/catalogo";
 import {
   certificacaoPublicada,
   contarChecklist,
@@ -93,21 +85,11 @@ export const instant = false;
 /**
  * Página de um equipamento.
  *
- * A primeira dobra é a compra: galeria à esquerda em cima, a coluna que decide
- * à direita atravessando as duas linhas — marca, nome, identificadores, preço,
- * disponibilidade e botão — e, fechando o vão debaixo da foto, as condições da
- * compra e o caminho para falar com a equipe. Essa divisão não é estética: com
- * tudo empilhado à direita, a coluna media quase o dobro da imagem e sobrava
- * meia tela branca embaixo dela em toda ficha.
- *
- * Abaixo da dobra a ordem segue a decisão de quem compra equipamento caro:
- * o que é (descrição), quanto entrega (ficha técnica), o que preciso ter e o
- * que vem depois (antes e depois da compra), por que aqui (motivos), o que a
- * equipe faz junto (serviços), o que ainda ficou em dúvida, o que mais existe
- * e a assistência que continua depois da entrega.
- *
- * Confiança vem DEPOIS da ficha técnica, de propósito: "por que comprar na JB"
- * antes de a pessoa saber o que o equipamento faz é argumento no vazio.
+ * A primeira dobra resolve a decisão imediata: galeria, contexto técnico e
+ * caixa de compra. Depois vêm unidade física, descrição e o hub progressivo de
+ * especificações, preparo e entrega. Perguntas encerram o conteúdo do produto;
+ * comparação, avaliações, cross-sell e continuidade JB são compostos pelo
+ * layout do segmento depois desta página.
  *
  * A regra que atravessa o arquivo inteiro: campo vazio não vira linha. Não há
  * prazo, frete, certificação, nota nem depoimento que não esteja no banco.
@@ -115,21 +97,12 @@ export const instant = false;
 
 type Props = { params: Promise<{ slug: string }> };
 
-/**
- * O cartão de um relacionado precisa de `id` e `status` além do que a vitrine
- * usa: `id` para não repetir o mesmo item no complemento automático, `status`
- * porque uma relação cadastrada pode apontar para algo despublicado.
- */
-const SELECAO_RELACIONADO = {
-  ...SELECAO_CARD_MARKETPLACE,
-  id: true,
-  status: true,
-} satisfies Prisma.ProductSelect;
-
-type LinhaRelacionada = Prisma.ProductGetPayload<{ select: typeof SELECAO_RELACIONADO }>;
-
-async function carregar(slug: string) {
-  return prisma.product.findUnique({
+/* `generateMetadata` e a página precisam exatamente do mesmo produto. `cache`
+   evita repetir a consulta Prisma no mesmo render sem transformar o catálogo
+   em cache persistente: publicação/estoque continuam obedecendo o ciclo normal
+   da rota. */
+const carregar = cache(async (slug: string) =>
+  prisma.product.findUnique({
     where: { slug },
     include: {
       brand: { include: { logo: true } },
@@ -156,14 +129,9 @@ async function carregar(slug: string) {
          faixa de CEP. Sem elas só restaria a alternativa que o escopo proíbe:
          publicar um valor único de frete que na verdade depende do CEP. */
       shippingProfile: { include: { zones: { orderBy: { order: "asc" } } } },
-      relatedFrom: {
-        orderBy: { order: "asc" },
-        take: 8,
-        include: { target: { select: SELECAO_RELACIONADO } },
-      },
     },
-  });
-}
+  }),
+);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -233,20 +201,12 @@ export default async function ProdutoPage({ params }: Props) {
      modelo têm desgastes diferentes, e um selo no SKU afirmaria sobre a
      segunda o que só foi verificado na primeira. Por isso a leitura só
      acontece quando existe uma unidade identificada — e só o estado
-     "publicada" aparece, que é o que `certificacaoPublicada` filtra.
-
-     A contagem NÃO é recontada aqui: `itemsTotal` e `itemsApproved` foram
-     carimbados no fechamento da inspeção, e recontar agora daria outro número
-     se o checklist tivesse mudado de versão desde então. */
+     "publicada" aparece, que é o que `certificacaoPublicada` filtra. */
   const certificacao = unidade ? await certificacaoPublicada(unidade.id) : null;
 
   const certificado: CertificadoDaUnidade | null = certificacao
     ? {
         codigoPublico: certificacao.publicCode,
-        /* A contagem sai do MESMO lugar que /verificar usa — os itens do
-           checklist da unidade. As duas telas precisam dizer o mesmo número:
-           ler o carimbo aqui e recontar lá faria a ficha e o certificado
-           discordarem se o checklist tivesse mudado de versão. */
         frase: frasedaVerificacao(contarChecklist(unidade?.checklist ?? [])),
         itensAprovados: certificacao.itemsApproved,
         itensTotal: certificacao.itemsTotal,
@@ -296,8 +256,6 @@ export default async function ProdutoPage({ params }: Props) {
     obrigatorio: a.required,
   }));
 
-  // O mesmo teto do checkout: prometer 12× aqui e oferecer 6× lá seria mentira
-  // de vitrine. Os dois leem a configuração da loja.
   const maxParcelas = Math.min(12, Math.max(1, Number(s.parcelas_max) || 1));
   const minParcelaCents = paraCentavos(s.parcela_minima);
 
@@ -314,10 +272,6 @@ export default async function ProdutoPage({ params }: Props) {
   /* ------------------------------------------------------------- detalhes */
 
   const grupos = agruparEspecificacoes(produto.specs);
-
-  /* O valor da instalação sai do adicional cadastrado, e não de um número
-     escrito na página: `ProductAddon.priceCents` sobrepõe o preço do serviço
-     quando definido, e é essa a regra que o carrinho também usa. */
   const adicionalDeInstalacao = produto.addons.find(
     (adicional) => adicional.service.kind === "instalacao",
   );
@@ -337,17 +291,50 @@ export default async function ProdutoPage({ params }: Props) {
     produto.anvisaCode || produto.manufacturer || produto.regulatoryHolder || produto.regulatoryNote,
   );
   const descricao = produto.description.trim();
-  // `<p></p>` vindo do editor tem comprimento, mas não tem conteúdo: sem tirar
-  // a marcação, a página abriria um título "Sobre este equipamento" vazio.
   const tamanhoDaDescricao = textoLimpo(descricao, 4000).length;
   const temDescricao = tamanhoDaDescricao > 0;
-  // A faixa da ficha técnica tem duas colunas — especificações à esquerda,
-  // medidas, regulatório e documentos à direita. Quando só um dos lados tem
-  // conteúdo, a faixa vira coluna única em vez de deixar metade da tela vazia.
   const temEspecificacoes = grupos.length > 0;
   const temApoioTecnico = temMedidas || temRegulatorio || documentos.length > 0;
   const temFichaTecnica = temEspecificacoes || temApoioTecnico;
   const duasColunasNaFicha = temEspecificacoes && temApoioTecnico;
+
+  /*
+   * Os componentes abaixo já retornam `null` quando não têm informação, mas o
+   * accordion pai continuava existindo mesmo assim. Em um cadastro mínimo isso
+   * criava "Antes de comprar" e "Entrega, garantia e suporte" vazios — e a
+   * navegação sticky ainda apontava para eles.
+   *
+   * Estes booleanos reproduzem exatamente as condições de renderização dos
+   * subblocos. A mesma fonte decide a existência da seção E a existência da
+   * âncora, para não haver menu apontando para conteúdo inexistente.
+   */
+  const temInfraestrutura = Boolean(
+    produto.voltage?.trim() ||
+      (produto.weightGrams ?? 0) > 0 ||
+      ((produto.widthMm ?? 0) > 0 &&
+        (produto.heightMm ?? 0) > 0 &&
+        (produto.depthMm ?? 0) > 0) ||
+      produto.infrastructureNotes.length > 0,
+  );
+  const temConteudoDaCaixa = produto.boxContents.length > 0;
+  const temBlocoDeInstalacao = produto.installationPolicy !== "nao_informada";
+  const geraEquipamentoNoPosCompra = produto.condition !== "novo" || produto.trackInventory;
+  const temPreparo =
+    temInfraestrutura ||
+    temConteudoDaCaixa ||
+    temBlocoDeInstalacao ||
+    geraEquipamentoNoPosCompra;
+
+  const temFrete = Boolean(
+    produto.shippingProfile && produto.shippingProfile.kind !== "nao_aplicavel",
+  );
+  const retirada = ligado(s.retirada_disponivel) ? s.retirada_instrucoes.trim() || null : null;
+  const temCondicoesDeCompra = Boolean(
+    (garantiaMeses ?? 0) > 0 || temFrete || retirada || produto.voltage?.trim(),
+  );
+  const temAjudaDaEquipe = Boolean(s.telefone.trim() || s.whatsapp.trim() || s.email.trim());
+  const temServicos = servicos.length > 0 && !arquivado;
+  const temEntregaESuporte = temCondicoesDeCompra || temAjudaDaEquipe || temServicos;
 
   /* ---------------------------------------------------------------- trilha */
 
@@ -379,9 +366,6 @@ export default async function ProdutoPage({ params }: Props) {
     vendedor: s.empresa_nome,
     gtin: produto.gtin,
     mpn: produto.mpn,
-    /* Perfil sob orçamento não declara entrega nenhuma: o preço dele não
-       existe ainda. Faixa sem preço também fica de fora — zero real é outra
-       coisa, e o perfil "grátis" tem tipo próprio. */
     entrega:
       produto.shippingProfile && produto.shippingProfile.kind !== "sob_orcamento"
         ? produto.shippingProfile.zones.map((faixa) => ({
@@ -394,9 +378,6 @@ export default async function ProdutoPage({ params }: Props) {
     devolucao: politicaDeDevolucao(s),
   });
 
-  // Fora de linha é diferente de "sem estoque": o buscador precisa ler
-  // Discontinued. O construtor genérico não conhece esse estado, então a oferta
-  // é ajustada aqui — sem reescrever o resto do objeto na mão.
   if (arquivado) {
     const oferta = dadosDoProduto.offers;
     if (oferta && typeof oferta === "object" && !Array.isArray(oferta)) {
@@ -407,33 +388,25 @@ export default async function ProdutoPage({ params }: Props) {
     }
   }
 
-  /* ------------------------------------------------------------- âncoras
-
-     A faixa de navegação só lista o que a página realmente tem. Uma âncora
-     para uma seção que não foi renderizada leva a lugar nenhum — e é
-     exatamente o defeito que o menu de abas costuma esconder. A ordem aqui é
-     a ordem do documento, porque é ela que o destaque da seção ativa segue. */
+  /* A navegação lista apenas conteúdo desta `page`. Comparação, avaliações e
+     cross-sell são detectados uma vez no HTML pelo componente de navegação e
+     acrescentados depois, sem âncora genérica de "Relacionados". */
   const ancoras: AncoraDoProduto[] = [
     { id: "visao-geral", rotulo: "Visão geral" },
     ...(unidade ? [{ id: "unidade", rotulo: "Esta unidade" }] : []),
     ...(temDescricao ? [{ id: "sobre", rotulo: "Sobre" }] : []),
     ...(temFichaTecnica ? [{ id: "ficha-tecnica", rotulo: "Ficha técnica" }] : []),
-    { id: "preparo", rotulo: "Preparo" },
-    { id: "entrega-e-garantia", rotulo: "Entrega e suporte" },
+    ...(temPreparo ? [{ id: "preparo", rotulo: "Preparo" }] : []),
+    ...(temEntregaESuporte
+      ? [{ id: "entrega-e-garantia", rotulo: "Entrega e suporte" }]
+      : []),
     ...(arquivado ? [] : [{ id: "duvidas", rotulo: "Dúvidas" }]),
-    { id: "relacionados", rotulo: "Relacionados" },
   ];
 
-  const temFrete = Boolean(
-    produto.shippingProfile && produto.shippingProfile.kind !== "nao_aplicavel",
-  );
   const temInstalacao = !["nao_informada", "nao_oferecida"].includes(
     produto.installationPolicy,
   );
 
-  /* A barra do celular repete o preço, então repete a MESMA conta de
-     parcelamento da caixa de compra — dois números diferentes para a mesma
-     compra, na mesma tela, seria erro de confiança e não de layout. */
   const parcelasDaBarra =
     produto.allowDirectPurchase && produto.priceCents > 0
       ? calcularParcelas(produto.priceCents, maxParcelas, minParcelaCents)
@@ -448,11 +421,8 @@ export default async function ProdutoPage({ params }: Props) {
 
   return (
     <>
-      {/* Tudo do próprio catálogo — nada de nota ou avaliação inventada.
-          JsonLd escapa "<": nome de produto com "</script>" fecharia a tag. */}
       <JsonLd dados={estruturados} />
 
-      {/* ==================================================== PRIMEIRA DOBRA */}
       <TopoMarketplace
         trilha={<Trilha itens={trilha} />}
         galeria={<GaleriaProduto fotos={fotos} nome={produto.name} />}
@@ -545,14 +515,8 @@ export default async function ProdutoPage({ params }: Props) {
         temInstalacao={temInstalacao}
       />
 
-      {/* ============================================ NAVEGAÇÃO DAS SEÇÕES */}
-      {/* Fora de qualquer `Secao`: o `sticky` precisa de um pai que atravesse
-          o resto da página, e cada faixa termina no fim de si mesma. */}
       <NavegacaoDoProduto ancoras={ancoras} />
 
-      {/* ==================================================== UNIDADE FÍSICA */}
-      {/* A faixa vem montada de dentro do componente: sem nenhum campo da
-          unidade preenchido ela some inteira, em vez de sobrar uma tira vazia. */}
       {unidade ? (
         <UnidadeFisica
           id="unidade"
@@ -571,7 +535,6 @@ export default async function ProdutoPage({ params }: Props) {
       ) : null}
 
       <div className="container-jb max-w-[112rem]">
-        {/* ======================================================== DESCRIÇÃO */}
         {temDescricao ? (
           <BlocoDecisao
             id="sobre"
@@ -585,18 +548,17 @@ export default async function ProdutoPage({ params }: Props) {
           </BlocoDecisao>
         ) : null}
 
-        {/* ==================================================== FICHA TÉCNICA */}
         {temFichaTecnica ? (
           <BlocoDecisao
             id="ficha-tecnica"
             titulo="Ficha técnica"
             resumo="Dados para comparar compatibilidade, instalação e operação."
           >
-            <div className={duasColunasNaFicha ? "grid gap-8 xl:grid-cols-2" : "max-w-3xl"}>
+            <div className={duasColunasNaFicha ? "grid gap-5 xl:grid-cols-2" : "max-w-4xl"}>
               {temEspecificacoes ? <FichaTecnica grupos={grupos} /> : null}
 
               {temApoioTecnico ? (
-                <div className="min-w-0 space-y-7">
+                <div className="min-w-0 space-y-4">
                   <MedidasEPeso
                     larguraMm={produto.widthMm}
                     alturaMm={produto.heightMm}
@@ -616,94 +578,93 @@ export default async function ProdutoPage({ params }: Props) {
           </BlocoDecisao>
         ) : null}
 
-        {/* ================================================ PREPARO DA CLÍNICA */}
-        <BlocoDecisao
-          id="preparo"
-          titulo="Antes de instalar"
-          resumo="Espaço, infraestrutura, itens inclusos e o que acontece depois da compra."
-        >
-          <div className="grid gap-5 xl:grid-cols-2">
-            <AntesDeComprar
-              dados={{
-                voltagem: produto.voltage,
-                pesoGramas: produto.weightGrams,
-                larguraMm: produto.widthMm,
-                alturaMm: produto.heightMm,
-                profundidadeMm: produto.depthMm,
-                requisitos: produto.infrastructureNotes,
-              }}
-            />
-            <OQueVemNaCaixa itens={produto.boxContents} />
-            <Instalacao
-              politica={produto.installationPolicy}
-              observacao={produto.installationNote}
-              precoCents={precoDaInstalacao}
-            />
-            <DepoisDaCompraNoProduto
-              garantiaMeses={produto.warrantyMonths}
-              geraEquipamento={produto.condition !== "novo" || produto.trackInventory}
-            />
-          </div>
-        </BlocoDecisao>
-
-        {/* =========================================== ENTREGA, GARANTIA, SUPORTE */}
-        <BlocoDecisao
-          id="entrega-e-garantia"
-          titulo="Entrega e suporte"
-          resumo="Condições objetivas e acesso direto à equipe que conhece o equipamento."
-        >
-          <div className="grid gap-5 xl:grid-cols-2">
-            <CondicoesDeCompra
-              garantiaMeses={garantiaMeses}
-              garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
-              frete={
-                produto.shippingProfile
-                  ? {
-                      nome: produto.shippingProfile.name,
-                      tipo: produto.shippingProfile.kind,
-                      descricao: produto.shippingProfile.description,
-                      gratisAcimaCents: produto.shippingProfile.freeAboveCents,
-                    }
-                  : null
-              }
-              retirada={
-                ligado(s.retirada_disponivel) ? s.retirada_instrucoes.trim() || null : null
-              }
-              voltagem={produto.voltage}
-            />
-            <AjudaDaEquipe
-              nomeDoProduto={produto.name}
-              sku={produto.sku}
-              telefone={s.telefone}
-              whatsapp={s.whatsapp}
-              email={s.email}
-              horario={s.horario}
-            />
-          </div>
-
-          {servicos.length > 0 && !arquivado ? (
-            <div className="mt-7 border-t border-graf-200 pt-7">
-              <h3 className="text-lg font-extrabold text-graf-950">
-                Serviços disponíveis para este equipamento
-              </h3>
-              <p className="mt-1.5 max-w-2xl text-sm leading-6 text-graf-600">
-                Podem entrar no mesmo pedido, sempre com valores separados e execução pela JB.
-              </p>
-              <div className="mt-5">
-                <ServicosDoProduto servicos={servicos} />
-              </div>
+        {temPreparo ? (
+          <BlocoDecisao
+            id="preparo"
+            titulo="Antes de instalar"
+            resumo="Espaço, infraestrutura, itens inclusos e o que acontece depois da compra."
+          >
+            <div className="grid gap-4 xl:grid-cols-2">
+              <AntesDeComprar
+                dados={{
+                  voltagem: produto.voltage,
+                  pesoGramas: produto.weightGrams,
+                  larguraMm: produto.widthMm,
+                  alturaMm: produto.heightMm,
+                  profundidadeMm: produto.depthMm,
+                  requisitos: produto.infrastructureNotes,
+                }}
+              />
+              <OQueVemNaCaixa itens={produto.boxContents} />
+              <Instalacao
+                politica={produto.installationPolicy}
+                observacao={produto.installationNote}
+                precoCents={precoDaInstalacao}
+              />
+              <DepoisDaCompraNoProduto
+                garantiaMeses={produto.warrantyMonths}
+                geraEquipamento={geraEquipamentoNoPosCompra}
+              />
             </div>
-          ) : null}
-        </BlocoDecisao>
+          </BlocoDecisao>
+        ) : null}
 
-        {/* ============================================================= FAQ */}
+        {temEntregaESuporte ? (
+          <BlocoDecisao
+            id="entrega-e-garantia"
+            titulo="Entrega e suporte"
+            resumo="Condições objetivas e acesso direto à equipe que conhece o equipamento."
+          >
+            <div className="grid gap-4 xl:grid-cols-2">
+              <CondicoesDeCompra
+                garantiaMeses={garantiaMeses}
+                garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
+                frete={
+                  produto.shippingProfile
+                    ? {
+                        nome: produto.shippingProfile.name,
+                        tipo: produto.shippingProfile.kind,
+                        descricao: produto.shippingProfile.description,
+                        gratisAcimaCents: produto.shippingProfile.freeAboveCents,
+                      }
+                    : null
+                }
+                retirada={retirada}
+                voltagem={produto.voltage}
+              />
+              <AjudaDaEquipe
+                nomeDoProduto={produto.name}
+                sku={produto.sku}
+                telefone={s.telefone}
+                whatsapp={s.whatsapp}
+                email={s.email}
+                horario={s.horario}
+              />
+            </div>
+
+            {temServicos ? (
+              <div className="mt-5 border-t border-graf-200 pt-5">
+                <h3 className="text-base font-extrabold text-graf-950">
+                  Serviços disponíveis para este equipamento
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm leading-5 text-graf-600">
+                  Podem entrar no mesmo pedido, com valores separados e execução pela JB.
+                </p>
+                <div className="mt-4">
+                  <ServicosDoProduto servicos={servicos} />
+                </div>
+              </div>
+            ) : null}
+          </BlocoDecisao>
+        ) : null}
+
         {arquivado ? null : (
           <BlocoDecisao
             id="duvidas"
             titulo="Dúvidas"
             resumo="Respostas técnicas e um canal para perguntar sobre este modelo."
           >
-            <div className={produto.faqs.length > 0 ? "grid gap-6 xl:grid-cols-2" : "max-w-3xl"}>
+            <div className={produto.faqs.length > 0 ? "grid gap-5 xl:grid-cols-2" : "max-w-3xl"}>
               {produto.faqs.length > 0 ? (
                 <PerguntasDoProduto
                   perguntas={produto.faqs.map((faq) => ({
@@ -717,39 +678,12 @@ export default async function ProdutoPage({ params }: Props) {
             </div>
           </BlocoDecisao>
         )}
-
-        {/* ===================================================== RELACIONADOS */}
-        <BlocoDecisao
-          id="relacionados"
-          titulo="Equipamentos relacionados"
-          resumo="Outras opções da mesma categoria ou marca para comparar."
-        >
-          <Suspense fallback={<EsqueletoRelacionados />}>
-            <Relacionados
-              produtoId={produto.id}
-              categoriaId={produto.categoryId}
-              marcaId={produto.brandId}
-              maxParcelas={maxParcelas}
-              minParcelaCents={minParcelaCents}
-              escolhidos={produto.relatedFrom
-                .map((relacao) => relacao.target)
-                .filter((alvo) => alvo.status === "active")}
-            />
-          </Suspense>
-        </BlocoDecisao>
       </div>
 
-      {/* ================================================ VISTOS RECENTEMENTE */}
-      {/* Registro da visita e a tira do que já foi visto. Os dois só existem no
-          navegador de quem está lendo — nenhum histórico de navegação de
-          visitante entra no banco. */}
+      {/* Registrar é invisível; o carrossel visual de vistos recentemente fica
+          no layout, depois de comparação, avaliações e cross-sell. */}
       <RegistrarVisita slug={produto.slug} />
-      <VistosRecentemente excluir={produto.slug} />
 
-      {/* ============================================ BARRA DE COMPRA (CELULAR) */}
-      {/* No desktop a caixa de compra fica grudada e nunca sai da tela; no
-          celular ela sobe com a rolagem. Esta barra devolve preço e caminho de
-          volta — sem duplicar a escolha de serviço e quantidade. */}
       <BarraCompraMobile
         precoCents={produto.priceCents}
         parcelas={parcelasDaBarra}
@@ -757,99 +691,5 @@ export default async function ProdutoPage({ params }: Props) {
         indisponivel={arquivado || semEstoque}
       />
     </>
-  );
-}
-
-/* ==========================================================================
-   Relacionados
-
-   As relações cadastradas à mão vêm primeiro — foi a JB que disse que um
-   equipamento substitui o outro. Só o que faltar para fechar quatro cartões é
-   completado por categoria e marca.
-   ========================================================================== */
-
-async function Relacionados({
-  produtoId,
-  categoriaId,
-  marcaId,
-  maxParcelas,
-  minParcelaCents,
-  escolhidos,
-}: {
-  produtoId: string;
-  categoriaId: string | null;
-  marcaId: string | null;
-  maxParcelas: number;
-  minParcelaCents: number;
-  escolhidos: LinhaRelacionada[];
-}) {
-  const manuais = escolhidos.slice(0, 4);
-  const faltam = 4 - manuais.length;
-
-  const complemento =
-    faltam > 0 && (categoriaId || marcaId)
-      ? await prisma.product.findMany({
-          where: {
-            status: "active",
-            id: { notIn: [produtoId, ...manuais.map((item) => item.id)] },
-            OR: [
-              ...(categoriaId ? [{ categoryId: categoriaId }] : []),
-              ...(marcaId ? [{ brandId: marcaId }] : []),
-            ],
-          },
-          orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
-          take: faltam,
-          select: SELECAO_CARD_MARKETPLACE,
-        })
-      : [];
-
-  const produtos = [
-    ...manuais.map(paraCardMarketplace),
-    ...complemento.map(paraCardMarketplace),
-  ];
-
-  if (produtos.length === 0) {
-    return (
-      <p className="text-base leading-relaxed text-graf-600">
-        Ainda não há outro equipamento parecido publicado.{" "}
-        <Link
-          href="/loja"
-          className="foco-jb font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
-        >
-          Ver o catálogo completo
-        </Link>
-        .
-      </p>
-    );
-  }
-
-  return (
-    <GradeMarketplace
-      produtos={produtos}
-      parcelamento={{ max: maxParcelas, minimoCents: minParcelaCents }}
-      className={
-        produtos.length === 1
-          ? "max-w-[18rem] !grid-cols-1"
-          : produtos.length === 2
-            ? "max-w-[38rem] !grid-cols-2"
-            : produtos.length === 3
-              ? "max-w-5xl xl:!grid-cols-3"
-              : undefined
-      }
-    />
-  );
-}
-
-function EsqueletoRelacionados() {
-  return (
-    <div
-      role="status"
-      aria-label="Carregando equipamentos relacionados"
-      className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4"
-    >
-      {Array.from({ length: 4 }).map((_, indice) => (
-        <EsqueletoCartaoProduto key={indice} />
-      ))}
-    </div>
   );
 }

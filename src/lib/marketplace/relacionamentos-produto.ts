@@ -66,3 +66,19 @@ export function ordenarRelacoesTipadas(relacoes: RelacaoProdutoTipada[]) {
 
   return [...relacoes].sort((a, b) => peso[a.tipo] - peso[b.tipo] || a.ordem - b.ordem);
 }
+
+/**
+ * Escopo para preencher automaticamente as lacunas da comparação.
+ *
+ * Marca não basta para dizer que dois equipamentos substituem um ao outro: a
+ * mesma fabricante pode vender fotopolimerizador, autoclave e compressor. A
+ * relação manual continua sendo a fonte mais forte; quando ela não traz duas
+ * alternativas, a automação só completa com itens da MESMA categoria.
+ *
+ * Sem categoria não há fallback automático. Melhor mostrar menos comparação
+ * do que preencher uma tabela com um produto apenas porque compartilha marca.
+ */
+export function categoriaDaAlternativaAutomatica(categoryId: string | null | undefined) {
+  const categoria = categoryId?.trim();
+  return categoria || null;
+}

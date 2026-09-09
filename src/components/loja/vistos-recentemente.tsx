@@ -19,10 +19,6 @@ import { TituloSecao } from "@/components/ui/data";
    estoque e condição vêm do servidor a cada renderização, por
    `cartoesVistos`: preço guardado no `localStorage` envelhece, e valor
    exibido vincula quem anuncia.
-
-   A tira não aparece para quem não tem histórico, e não conta a própria
-   página: estar vendo uma autoclave e ver "visto recentemente: esta
-   autoclave" é ruído.
    ============================================================================ */
 
 const CHAVE = "jb:vistos";
@@ -41,11 +37,9 @@ function ler(): string[] {
 }
 
 /**
- * Marca a visita a um equipamento. Não renderiza nada — é só o registro.
- *
- * O slug entra na frente da lista e sai de qualquer posição anterior, para a
- * ordem ser sempre "o mais recente primeiro" mesmo quando a pessoa volta a um
- * equipamento que já tinha visto.
+ * Marca a visita e mantém a faixa de continuidade da PDP no mesmo ponto do
+ * documento. O registro continua local; a tira só aparece quando existe
+ * histórico suficiente para realmente ajudar.
  */
 export function RegistrarVisita({ slug }: { slug: string }) {
   useEffect(() => {
@@ -58,7 +52,7 @@ export function RegistrarVisita({ slug }: { slug: string }) {
     }
   }, [slug]);
 
-  return null;
+  return <VistosRecentemente excluir={slug} />;
 }
 
 export function VistosRecentemente({
@@ -66,26 +60,10 @@ export function VistosRecentemente({
   titulo = "Você viu recentemente",
   larguraInterna,
 }: {
-  /**
-   * O que não deve aparecer nesta lista.
-   *
-   * Na ficha, é o slug da própria página. Na home, é tudo o que as vitrines
-   * acima já mostraram: a tira repetia os mesmos equipamentos das faixas de
-   * oferta e de seminovos, e a página terminava dizendo três vezes a mesma
-   * coisa. "Continue de onde parou" só vale a pena quando traz algo que a
-   * rolagem ainda não trouxe.
-   */
+  /** O que não deve aparecer nesta lista. */
   excluir?: string | string[];
   titulo?: string;
-  /**
-   * Teto do container desta faixa.
-   *
-   * A faixa é a mesma peça em páginas de medidas diferentes: na ficha do
-   * equipamento as seções vizinhas usam o `container-jb` padrão (90rem), e na
-   * home todas usam 112rem. Sem este parâmetro, a tira entrava na home 190px
-   * mais para dentro que a faixa de cima — o tipo de desencaixe que só aparece
-   * em monitor largo e faz a página parecer montada por pedaços.
-   */
+  /** Teto do container desta faixa. */
   larguraInterna?: string;
 }) {
   const [dados, setDados] = useState<VistosRecentes | null>(null);
@@ -108,8 +86,7 @@ export function VistosRecentemente({
     };
   }, [foraDaLista]);
 
-  // Com menos de dois, a tira é só o equipamento que a pessoa está vendo de
-  // novo — não ajuda a comparar nada.
+  // Com menos de dois, a tira é só ruído e não ajuda a comparar nada.
   if (!dados || dados.produtos.length < 2) return null;
 
   return (
@@ -120,7 +97,7 @@ export function VistosRecentemente({
         descricao="A lista fica só neste navegador. Preço e disponibilidade são os de agora."
       />
 
-      <div className="mt-8">
+      <div className="mt-6">
         <ul className="scrollbar-none -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
           {dados.produtos.map((produto) => (
             <li

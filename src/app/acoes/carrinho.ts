@@ -23,6 +23,11 @@ const adicionar = z.object({
 /**
  * Adiciona ao carrinho. Preço nunca vem do formulário — o servidor lê do
  * banco na hora de fechar o pedido. Aqui só se guarda o que e quanto.
+ *
+ * Serviços obrigatórios também nunca dependem do formulário: um cliente
+ * alterado pode omitir qualquer hidden input. A fonte de verdade é
+ * ProductAddon.required. Se um serviço que precisa entrar no pedido está sob
+ * orçamento, a compra direta para antes de criar/alterar qualquer item.
  */
 export async function adicionarAoCarrinho(
   _anterior: EstadoCarrinho,
@@ -41,6 +46,7 @@ export async function adicionarAoCarrinho(
       id: true,
       name: true,
       status: true,
+      priceCents: true,
       trackInventory: true,
       stock: true,
       unique: true,
@@ -48,8 +54,48 @@ export async function adicionarAoCarrinho(
     },
   });
 
-  if (!produto || produto.status !== "active" || !produto.allowDirectPurchase) {
+  if (
+    !produto ||
+    produto.status !== "active" ||
+    !produto.allowDirectPurchase ||
+    produto.priceCents <= 0
+  ) {
     return { erro: "Este item não está disponível para compra direta." };
+  }
+
+  /* Resolve todos os adicionais antes de tocar no carrinho. Além de garantir
+     os obrigatórios, isto impede uma compra parcialmente criada quando algum
+     serviço selecionado ainda depende de orçamento. */
+  const adicionais = await prisma.productAddon.findMany({
+    where: { productId: produto.id },
+    select: {
+      serviceId: true,
+      required: true,
+      priceCents: true,
+      service: { select: { priceCents: true } },
+    },
+  });
+
+  const porId = new Map(adicionais.map((addon) => [addon.serviceId, addon]));
+  const idsFinais = new Set<string>();
+
+  for (const addon of adicionais) {
+    if (addon.required) idsFinais.add(addon.serviceId);
+  }
+  for (const serviceId of dados.data.addons) {
+    if (porId.has(serviceId)) idsFinais.add(serviceId);
+  }
+
+  const semPreco = [...idsFinais]
+    .map((serviceId) => porId.get(serviceId))
+    .find((addon) => addon && (addon.priceCents ?? addon.service.priceCents ?? 0) <= 0);
+
+  if (semPreco) {
+    return {
+      erro: semPreco.required
+        ? "Este equipamento possui um serviço obrigatório sob orçamento. Solicite uma proposta para fechar a compra."
+        : "Um dos serviços selecionados está sob orçamento. Remova esse serviço ou solicite uma proposta.",
+    };
   }
 
   const cliente = await sessaoCliente();
@@ -81,27 +127,21 @@ export async function adicionarAoCarrinho(
         data: { cartId: carrinho.id, productId: produto.id, quantity: dados.data.quantidade },
       });
 
-  // serviços adicionais entram como filhos do item, para ficarem auditáveis
-  if (dados.data.addons.length) {
-    const permitidos = await prisma.productAddon.findMany({
-      where: { productId: produto.id, serviceId: { in: dados.data.addons } },
-      select: { serviceId: true },
-    });
-
-    for (const addon of permitidos) {
-      const existe = carrinho.items.find(
-        (i) => i.parentId === item.id && i.serviceId === addon.serviceId,
-      );
-      if (!existe) {
-        await prisma.cartItem.create({
-          data: {
-            cartId: carrinho.id,
-            serviceId: addon.serviceId,
-            parentId: item.id,
-            quantity: 1,
-          },
-        });
-      }
+  // Serviços entram como filhos do produto para ficarem auditáveis. A lista
+  // final já contém todos os required do banco mesmo se o navegador os omitir.
+  for (const serviceId of idsFinais) {
+    const existe = carrinho.items.find(
+      (i) => i.parentId === item.id && i.serviceId === serviceId,
+    );
+    if (!existe) {
+      await prisma.cartItem.create({
+        data: {
+          cartId: carrinho.id,
+          serviceId,
+          parentId: item.id,
+          quantity: 1,
+        },
+      });
     }
   }
 

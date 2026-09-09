@@ -26,19 +26,19 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    Caixa de compra
 
-   O bloco que decide a venda: disponibilidade, preço, parcelamento, entrega,
-   quantidade, ação e, por último, personalização com serviços. É a ÚNICA
-   moldura da coluna da direita — o resto da coluna corre sem borda, separado
-   por fios. Empilhar cartões dentro de cartões faz uma ficha de equipamento
-   parecer painel de SaaS; aqui a compra precisa continuar sendo o protagonista.
+   O bloco que decide a venda: disponibilidade, preço, ação, garantia, entrega
+   e, só depois, quantidade/personalização com serviços. É a ÚNICA moldura da
+   coluna da direita — o resto corre separado por fios. Empilhar cartões dentro
+   de cartões faz uma ficha de equipamento parecer painel de SaaS; aqui a compra
+   precisa continuar sendo o protagonista.
 
    SERVIÇOS SÃO UMA CAMADA OPCIONAL DA DECISÃO
 
    Instalação, preventiva e orientação são diferenciais da JB, mas não podem
    competir com preço, entrega e CTA. Por isso ficam atrás de uma única linha
-   progressiva "Adicionar serviços JB". Quem quer só o equipamento entende a
-   compra sem atravessar configuração; quem quer acompanhamento abre a linha e
-   recebe exatamente as mesmas escolhas e preços de antes.
+   progressiva "Adicionar serviços JB", abaixo da decisão principal. Quem quer
+   só o equipamento consegue comprar sem atravessar configuração; quem quer
+   acompanhamento abre a linha e recebe exatamente as mesmas escolhas e preços.
 
    A regra que isso NÃO pode quebrar: **serviço pago nunca vem marcado.** O
    estado inicial é "só o equipamento" com os adicionais obrigatórios (os que
@@ -138,16 +138,10 @@ export function CaixaCompra({
         }
 
         /* Depois de uma ação, o React 19 chama `form.reset()` sozinho. O reset
-           age no DOM e não no estado: os checkboxes de serviço voltavam a
-           desmarcados enquanto `escolhidos` continuava cheio, e como não havia
-           re-render a linha seguia com o fundo destacado e o Total seguia
-           somando serviços que a tela já mostrava desmarcados.
-
-           Voltar o estado ao inicial junto com o reset mantém os dois lados
-           contando a mesma história — e é o que faz sentido depois de mandar o
-           item para o carrinho: a caixa recomeça limpa, com os obrigatórios
-           marcados. O que foi enviado não muda; os campos que o servidor lê são
-           os `hidden` montados a partir deste mesmo estado. */
+           age no DOM e não no estado. Como quantidade e serviços são controles
+           React fora do formulário principal, voltar o estado ao inicial é o
+           que mantém o resumo, os `hidden` e a configuração contando a mesma
+           história depois de mandar um item ao carrinho. */
         setQuantidade(1);
         setEscolhidos(obrigatorios);
 
@@ -186,7 +180,13 @@ export function CaixaCompra({
   const mostrarTotal = totalAddons > 0 || quantidade > 1;
   const servicosComPreco = selecionados.filter((a) => (a.precoCents ?? 0) > 0).length;
 
-  const podeComprar = !soOrcamento && !semEstoque;
+  /* No catálogo JB, adicional com valor <= 0 significa "sob orçamento". Ele
+     pode continuar selecionável para o cliente entender/configurar o pedido,
+     mas a compra direta não pode seguir como se o serviço custasse zero. O
+     Server Action repete esta trava com os dados do banco. */
+  const servicoSobOrcamento = selecionados.find((a) => (a.precoCents ?? 0) <= 0) ?? null;
+  const baseCompravel = !soOrcamento && !semEstoque;
+  const podeComprar = baseCompravel && !servicoSobOrcamento;
 
   /* ------------------------------------------------------------- JB Care */
 
@@ -210,7 +210,7 @@ export function CaixaCompra({
   const CLASSE_PAINEL_COMPRA =
     "overflow-hidden rounded-[10px] border border-graf-300 bg-white shadow-card";
   const CLASSE_SECAO_COMPRA = "border-t border-graf-200 px-5 py-4";
-  const CLASSE_ACOES_COMPRA = "mt-4 grid gap-2";
+  const CLASSE_ACOES_COMPRA = "grid gap-2";
   const CLASSE_GARANTIA_COMPRA =
     "flex items-start gap-2.5 border-t border-graf-200 px-5 py-3 text-xs leading-5 text-graf-600";
 
@@ -286,17 +286,143 @@ export function CaixaCompra({
         )}
       </div>
 
-      {/* Consultar entrega é parte da decisão e vem imediatamente depois do
-          preço. Fica fora do formulário para Enter no CEP nunca comprar. */}
-      {podeComprar ? <EntregaPorCep produtoId={produtoId} /> : null}
-
-      {podeComprar ? (
-        <form action={acao} className={`${CLASSE_SECAO_COMPRA} space-y-4`}>
+      {/* A ação principal vem antes de CEP e personalização. O cliente não deve
+          atravessar logística e JB Care para descobrir como comprar. Quantidade
+          e serviços continuam em estado React e alimentam estes `hidden`, então
+          personalizar mais abaixo atualiza o MESMO formulário sem duplicar
+          regra de compra. */}
+      {baseCompravel ? (
+        <form action={acao} className={`${CLASSE_SECAO_COMPRA} space-y-3`}>
           <input type="hidden" name="produtoId" value={produtoId} />
           <input type="hidden" name="quantidade" value={quantidade} />
           {escolhidos.map((id) => (
             <input key={id} type="hidden" name="addons" value={id} />
           ))}
+
+          {mostrarTotal ? (
+            <div className="flex items-end justify-between gap-4 rounded-lg bg-graf-50 px-3.5 py-3">
+              <span>
+                <span className="block text-[0.6875rem] font-bold uppercase tracking-[0.07em] text-graf-500">
+                  Total configurado
+                </span>
+                <span className="mt-0.5 block text-[0.75rem] text-graf-500">
+                  {plural(quantidade, "equipamento", "equipamentos")}
+                  {servicosComPreco > 0
+                    ? ` + ${plural(servicosComPreco * quantidade, "serviço", "serviços")}`
+                    : ""}
+                </span>
+              </span>
+              <strong className="shrink-0 text-xl font-extrabold tabular text-graf-950">
+                {formatarPreco(total)}
+              </strong>
+            </div>
+          ) : null}
+
+          {servicoSobOrcamento ? (
+            <Aviso
+              tom="atencao"
+              titulo={
+                servicoSobOrcamento.obrigatorio
+                  ? "Há um serviço obrigatório sob orçamento"
+                  : "O serviço selecionado ainda precisa de orçamento"
+              }
+            >
+              {servicoSobOrcamento.obrigatorio
+                ? "A compra direta fica bloqueada até a JB definir o valor desse serviço. Solicite uma proposta para receber equipamento e serviço separados."
+                : "Desmarque esse serviço para comprar o equipamento agora, ou solicite uma proposta com o serviço incluído."}
+            </Aviso>
+          ) : null}
+
+          {estado.erro ? <Aviso tom="erro">{estado.erro}</Aviso> : null}
+
+          <div className={CLASSE_ACOES_COMPRA}>
+            <Botao
+              type="submit"
+              tamanho="lg"
+              larguraTotal
+              disabled={enviando || !podeComprar}
+              carregando={enviando && irParaPagamento && podeComprar}
+              onClick={() => {
+                destinoRef.current = "checkout";
+                setIrParaPagamento(true);
+              }}
+            >
+              <Zap className="size-[18px]" aria-hidden />
+              Comprar agora
+            </Botao>
+
+            <Botao
+              type="submit"
+              variante="secundario"
+              tamanho="lg"
+              larguraTotal
+              disabled={enviando || !podeComprar}
+              carregando={enviando && !irParaPagamento && podeComprar}
+              onClick={() => {
+                destinoRef.current = "carrinho";
+                setIrParaPagamento(false);
+              }}
+            >
+              <ShoppingCart className="size-[18px]" aria-hidden />
+              Adicionar ao carrinho
+            </Botao>
+
+            {permiteOrcamento ? (
+              <LinkBotao href={hrefOrcamento} variante="texto" tamanho="lg" larguraTotal>
+                Solicitar orçamento
+              </LinkBotao>
+            ) : null}
+          </div>
+        </form>
+      ) : permiteOrcamento ? (
+        <div className="border-t border-graf-200 p-5 sm:p-6">
+          <LinkBotao href={hrefOrcamento} tamanho="lg" larguraTotal>
+            Solicitar orçamento
+          </LinkBotao>
+          <p className="mt-2.5 text-center text-[0.8125rem] leading-relaxed text-graf-500">
+            A proposta chega com equipamento, serviço e deslocamento separados.
+          </p>
+        </div>
+      ) : (
+        /* Sem compra direta e sem orçamento, a caixa ficaria sem saída
+           nenhuma. O contato é o próximo passo que sempre existe. */
+        <div className="border-t border-graf-200 p-5 sm:p-6">
+          <LinkBotao href="/contato" variante="secundario" tamanho="lg" larguraTotal>
+            Falar com a equipe
+          </LinkBotao>
+        </div>
+      )}
+
+      {/* Garantia é prova de confiança da decisão, então acompanha a ação e não
+          fica escondida depois de configuração opcional. */}
+      {garantia && garantia.meses > 0 ? (
+        <p className={CLASSE_GARANTIA_COMPRA}>
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+          <span>
+            <span className="font-bold text-graf-950">
+              Garantia de {garantia.meses} {garantia.meses === 1 ? "mês" : "meses"}
+            </span>
+            {garantia.daUnidade ? " — registrada para esta unidade específica." : "."}
+          </span>
+        </p>
+      ) : null}
+
+      {/* CEP é importante para decidir, mas já não empurra o CTA. Continua fora
+          do formulário de compra para Enter no campo nunca disparar pedido. */}
+      {baseCompravel ? <EntregaPorCep produtoId={produtoId} /> : null}
+
+      {/* Configuração vem depois da ação e da entrega. Ela atualiza os mesmos
+          estados usados pelos hidden inputs do formulário acima. */}
+      {baseCompravel && (!unico || addons.length > 0) ? (
+        <div className={`${CLASSE_SECAO_COMPRA} space-y-4`}>
+          <div>
+            <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
+              Personalize a compra
+            </p>
+            <p className="mt-1 text-xs leading-5 text-graf-500">
+              Ajuste quantidade e serviços somente se precisar. A seleção atualiza o total acima.
+            </p>
+          </div>
 
           {!unico ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -376,101 +502,11 @@ export function CaixaCompra({
           ) : null}
 
           {mostrarTotal ? (
-            <div className="border-t border-graf-200 pt-4">
-              <div className="flex items-baseline justify-between gap-4">
-                <span className="text-[0.9375rem] font-semibold text-graf-700">Total</span>
-                <span className="text-2xl font-extrabold tabular text-graf-950">
-                  {formatarPreco(total)}
-                </span>
-              </div>
-              <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-500">
-                {plural(quantidade, "equipamento", "equipamentos")}
-                {servicosComPreco > 0
-                  ? ` + ${plural(servicosComPreco * quantidade, "serviço", "serviços")}`
-                  : ""}
-              </p>
-            </div>
+            <p className="border-t border-graf-200 pt-3 text-xs leading-5 text-graf-500">
+              O total configurado aparece junto aos botões de compra acima e é recalculado em tempo real.
+            </p>
           ) : null}
-
-          {estado.erro ? <Aviso tom="erro">{estado.erro}</Aviso> : null}
-
-          <div className={CLASSE_ACOES_COMPRA}>
-            {/* Comprar agora é o primário; adicionar ao carrinho é a
-                alternativa de quem ainda vai juntar itens. O `onClick` só
-                define o destino — quem envia é o `type="submit"`, para o
-                formulário continuar funcionando sem JavaScript pronto. */}
-            <Botao
-              type="submit"
-              tamanho="lg"
-              larguraTotal
-              disabled={enviando}
-              carregando={enviando && irParaPagamento}
-              onClick={() => {
-                destinoRef.current = "checkout";
-                setIrParaPagamento(true);
-              }}
-            >
-              <Zap className="size-[18px]" aria-hidden />
-              Comprar agora
-            </Botao>
-
-            <Botao
-              type="submit"
-              variante="secundario"
-              tamanho="lg"
-              larguraTotal
-              disabled={enviando}
-              carregando={enviando && !irParaPagamento}
-              onClick={() => {
-                destinoRef.current = "carrinho";
-                setIrParaPagamento(false);
-              }}
-            >
-              <ShoppingCart className="size-[18px]" aria-hidden />
-              Adicionar ao carrinho
-            </Botao>
-
-            {permiteOrcamento ? (
-              <>
-                <LinkBotao href={hrefOrcamento} variante="texto" tamanho="lg" larguraTotal>
-                  Solicitar orçamento
-                </LinkBotao>
-                <p className="pt-1 text-center text-[0.8125rem] leading-relaxed text-graf-500">
-                  A proposta chega com equipamento, serviço e deslocamento separados.
-                </p>
-              </>
-            ) : null}
-          </div>
-        </form>
-      ) : permiteOrcamento ? (
-        <div className="border-t border-graf-200 p-5 sm:p-6">
-          <LinkBotao href={hrefOrcamento} tamanho="lg" larguraTotal>
-            Solicitar orçamento
-          </LinkBotao>
-          <p className="mt-2.5 text-center text-[0.8125rem] leading-relaxed text-graf-500">
-            A proposta chega com equipamento, serviço e deslocamento separados.
-          </p>
         </div>
-      ) : (
-        /* Sem compra direta e sem orçamento, a caixa ficaria sem saída
-           nenhuma. O contato é o próximo passo que sempre existe. */
-        <div className="border-t border-graf-200 p-5 sm:p-6">
-          <LinkBotao href="/contato" variante="secundario" tamanho="lg" larguraTotal>
-            Falar com a equipe
-          </LinkBotao>
-        </div>
-      )}
-
-      {garantia && garantia.meses > 0 ? (
-        <p className={CLASSE_GARANTIA_COMPRA}>
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
-          <span>
-            <span className="font-bold text-graf-950">
-              Garantia de {garantia.meses} {garantia.meses === 1 ? "mês" : "meses"}
-            </span>
-            {garantia.daUnidade ? " — registrada para esta unidade específica." : "."}
-          </span>
-        </p>
       ) : null}
     </div>
   );
@@ -532,7 +568,7 @@ function PacoteDeServicos({
                 obrigatoriamente neste equipamento
                 {(addon.precoCents ?? 0) > 0
                   ? ` (+ ${formatarPreco(addon.precoCents ?? 0)})`
-                  : ""}
+                  : " — sob orçamento"}
               </span>
             </li>
           ))}
@@ -670,9 +706,6 @@ function AlternativaDoPacote({
           <span className="text-[0.9375rem] font-bold text-graf-900">{titulo}</span>
           {valor !== null ? (
             <span className="shrink-0 text-right text-[0.9375rem] font-bold tabular text-graf-800">
-              {/* "a partir de" numa linha própria: colado ao valor virava
-                  "A PARTIR DE + R$ 770,00", em que o sinal de mais parece parte
-                  da frase e não do preço. */}
               {aPartirDe ? (
                 <span className="block text-[0.75rem] font-semibold uppercase tracking-wide text-graf-500">
                   a partir de

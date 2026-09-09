@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  categoriaDaAlternativaAutomatica,
   codificarOrdemRelacao,
   decodificarOrdemRelacao,
   ordenarRelacoesTipadas,
@@ -42,5 +43,13 @@ describe("relacionamentos de produto", () => {
       { targetId: "x1", tipo: "acessorio", ordem: 1 },
       { targetId: "c2", tipo: "complemento", ordem: 2 },
     ]);
+  });
+
+  it("só permite completar alternativas automaticamente quando há categoria", () => {
+    expect(categoriaDaAlternativaAutomatica("profilaxia-id")).toBe("profilaxia-id");
+    expect(categoriaDaAlternativaAutomatica("  profilaxia-id  ")).toBe("profilaxia-id");
+    expect(categoriaDaAlternativaAutomatica("")).toBeNull();
+    expect(categoriaDaAlternativaAutomatica(null)).toBeNull();
+    expect(categoriaDaAlternativaAutomatica(undefined)).toBeNull();
   });
 });

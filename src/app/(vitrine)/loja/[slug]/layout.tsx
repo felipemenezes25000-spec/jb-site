@@ -11,20 +11,34 @@ import {
   Wrench,
 } from "lucide-react";
 
+import {
+  CrossSellIntencional,
+  type DadosCrossSell,
+} from "@/components/loja/produto/cross-sell-intencional";
 import { formatarPreco } from "@/lib/format";
+import {
+  carregarComentariosAvaliacoesProduto,
+  carregarResumoAvaliacoesProduto,
+  type ComentarioAvaliacaoProduto,
+  type ResumoAvaliacoesProduto,
+} from "@/lib/marketplace/avaliacoes-produto";
+import {
+  categoriaDaAlternativaAutomatica,
+  decodificarOrdemRelacao,
+} from "@/lib/marketplace/relacionamentos-produto";
 import { prisma } from "@/lib/prisma";
 
 /**
  * Camada complementar da PDP.
  *
  * A página principal cuida da decisão imediata (galeria, key specs, preço,
- * estoque, entrega e compra). Este layout entra depois dela com três tarefas:
- * comparar alternativas reais, provar confiança com avaliações verificadas e
- * explicar a continuidade do pós-venda JB.
+ * estoque, entrega e compra). Este layout entra depois dela com quatro tarefas:
+ * comparar alternativas reais, provar confiança com avaliações verificadas,
+ * oferecer cross-sell intencional e explicar a continuidade do pós-venda JB.
  *
- * Importante: ProductRelation com order < 1000 é alternativa. Acessórios e
- * complementos usam as faixas seguintes e são renderizados pelo cross-sell
- * intencional. Assim um acessório nunca entra numa tabela de substitutos.
+ * ProductRelation com order < 1000 é alternativa. As faixas seguintes são
+ * acessórios e complementos. Tudo é resolvido no servidor para a PDP nascer
+ * pronta, sem um segundo fetch depois da hidratação.
  */
 type Props = {
   children: ReactNode;
@@ -40,15 +54,6 @@ type ProdutoComparavel = {
   voltage: string | null;
   warrantyMonths: number | null;
   specs: { label: string; value: string; order: number }[];
-};
-
-type AvaliacaoPublica = {
-  id: string;
-  score: number;
-  comment: string;
-  displayName: string;
-  publishedAt: Date | null;
-  createdAt: Date;
 };
 
 const PRIORIDADE_ATRIBUTOS = [
@@ -81,6 +86,21 @@ function preco(produto: ProdutoComparavel) {
   return formatarPreco(produto.priceCents);
 }
 
+function diferencaDePreco(atual: ProdutoComparavel, alternativa: ProdutoComparavel) {
+  if (
+    !atual.allowDirectPurchase ||
+    !alternativa.allowDirectPurchase ||
+    atual.priceCents <= 0 ||
+    alternativa.priceCents <= 0
+  ) {
+    return null;
+  }
+
+  const diferenca = alternativa.priceCents - atual.priceCents;
+  if (diferenca === 0) return "Mesmo preço";
+  return `${formatarPreco(Math.abs(diferenca))} ${diferenca < 0 ? "a menos" : "a mais"}`;
+}
+
 function linhasDaComparacao(produtos: ProdutoComparavel[]) {
   const candidatos = new Map<
     string,
@@ -111,7 +131,7 @@ function linhasDaComparacao(produtos: ProdutoComparavel[]) {
       b.ocorrencias - a.ocorrencias ||
       a.primeiraOrdem - b.primeiraOrdem,
     )
-    .slice(0, 5)
+    .slice(0, 4)
     .map(([id, dado]) => ({ id, rotulo: dado.rotulo }));
 
   return [
@@ -122,7 +142,7 @@ function linhasDaComparacao(produtos: ProdutoComparavel[]) {
     ...(produtos.some((produto) => (produto.warrantyMonths ?? 0) > 0)
       ? [{ id: "__garantia", rotulo: "Garantia" }]
       : []),
-  ].slice(0, 7);
+  ].slice(0, 6);
 }
 
 function valorDaLinha(produto: ProdutoComparavel, id: string) {
@@ -149,21 +169,21 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
     <section
       id="comparacao-rapida"
       aria-labelledby="comparacao-rapida-titulo"
-      className="scroll-mt-32 border-t border-graf-200 py-10 lg:py-12"
+      className="scroll-mt-32 border-t border-graf-200 py-9 lg:py-10"
     >
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-jb-700">
-            Decida sem abrir três abas
+            Compare sem sair da ficha
           </p>
           <h2
             id="comparacao-rapida-titulo"
-            className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-graf-950 lg:text-3xl"
+            className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-graf-950 lg:text-[1.75rem]"
           >
-            Compare as diferenças que realmente importam
+            O que muda entre este modelo e as alternativas
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-graf-600">
-            Só entram aqui substitutos do equipamento. Acessórios e itens complementares aparecem em blocos próprios.
+            Aqui entram somente substitutos. Acessórios e produtos de uso conjunto ficam separados para não confundir a decisão.
           </p>
         </div>
 
@@ -178,53 +198,64 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
       </div>
 
       <div className="space-y-3 md:hidden">
-        {alternativas.map((alternativa) => (
-          <article key={alternativa.id} className="overflow-hidden rounded-2xl border border-graf-200 bg-white">
-            <div className="grid grid-cols-2 border-b border-graf-200">
-              <div className="bg-jb-50/45 p-4">
-                <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
-                  Este modelo
-                </span>
-                <p className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950">{atual.name}</p>
-                <p className="mt-2 text-sm font-extrabold tabular text-graf-950">{preco(atual)}</p>
-              </div>
-              <div className="p-4">
-                <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
-                  Alternativa
-                </span>
-                <Link
-                  href={`/loja/${alternativa.slug}`}
-                  className="foco-jb mt-1 block line-clamp-2 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
-                >
-                  {alternativa.name}
-                </Link>
-                <p className="mt-2 text-sm font-extrabold tabular text-graf-950">{preco(alternativa)}</p>
-              </div>
-            </div>
-
-            <dl className="divide-y divide-graf-100">
-              {linhas.map((linha) => (
-                <div key={linha.id} className="p-3.5">
-                  <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-graf-500">
-                    {linha.rotulo}
-                  </dt>
-                  <dd className="mt-2 grid grid-cols-2 gap-3 text-sm font-semibold text-graf-800">
-                    <span className="min-w-0 break-words">{valorDaLinha(atual, linha.id)}</span>
-                    <span className="min-w-0 break-words">{valorDaLinha(alternativa, linha.id)}</span>
-                  </dd>
+        {alternativas.map((alternativa) => {
+          const delta = diferencaDePreco(atual, alternativa);
+          return (
+            <article key={alternativa.id} className="overflow-hidden rounded-2xl border border-graf-200 bg-white">
+              <div className="grid grid-cols-2 border-b border-graf-200">
+                <div className="bg-jb-50/45 p-4">
+                  <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
+                    Este modelo
+                  </span>
+                  <p className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950">{atual.name}</p>
+                  <p className="mt-2 text-sm font-extrabold tabular text-graf-950">{preco(atual)}</p>
                 </div>
-              ))}
-            </dl>
+                <div className="p-4">
+                  <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
+                    Alternativa
+                  </span>
+                  <Link
+                    href={`/loja/${alternativa.slug}`}
+                    className="foco-jb mt-1 block line-clamp-2 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
+                  >
+                    {alternativa.name}
+                  </Link>
+                  <p className="mt-2 text-sm font-extrabold tabular text-graf-950">{preco(alternativa)}</p>
+                  {delta ? <p className="mt-1 text-[0.6875rem] font-bold text-graf-500">{delta}</p> : null}
+                </div>
+              </div>
 
-            <Link
-              href={`/loja/${alternativa.slug}`}
-              className="foco-jb flex min-h-11 items-center justify-center gap-2 border-t border-graf-200 px-4 text-sm font-bold text-jb-700 hover:bg-graf-50"
-            >
-              Ver alternativa
-              <ArrowRight className="size-4" aria-hidden />
-            </Link>
-          </article>
-        ))}
+              <dl className="divide-y divide-graf-100">
+                {linhas.map((linha) => {
+                  const valorAtual = valorDaLinha(atual, linha.id);
+                  const valorAlternativa = valorDaLinha(alternativa, linha.id);
+                  const diferente = chave(valorAtual) !== chave(valorAlternativa);
+                  return (
+                    <div key={linha.id} className="p-3.5">
+                      <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-graf-500">
+                        {linha.rotulo}
+                      </dt>
+                      <dd className="mt-2 grid grid-cols-2 gap-3 text-sm font-semibold text-graf-800">
+                        <span className="min-w-0 break-words">{valorAtual}</span>
+                        <span className={`min-w-0 break-words ${diferente ? "font-extrabold text-graf-950" : ""}`}>
+                          {valorAlternativa}
+                        </span>
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+
+              <Link
+                href={`/loja/${alternativa.slug}`}
+                className="foco-jb flex min-h-11 items-center justify-center gap-2 border-t border-graf-200 px-4 text-sm font-bold text-jb-700 hover:bg-graf-50"
+              >
+                Ver alternativa
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
+            </article>
+          );
+        })}
       </div>
 
       <div className="hidden overflow-x-auto rounded-2xl border border-graf-200 bg-white md:block">
@@ -234,41 +265,58 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
               <th className="w-[22%] border-b border-graf-200 bg-graf-50/80 px-5 py-5 text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
                 Comparação
               </th>
-              {produtos.slice(0, 3).map((produto, indice) => (
-                <th
-                  key={produto.id}
-                  className={`border-b border-graf-200 px-5 py-5 align-top ${indice === 0 ? "bg-jb-50/45" : "bg-white"}`}
-                >
-                  {indice === 0 ? (
-                    <span className="mb-2 inline-flex rounded-full bg-jb-100 px-2.5 py-1 text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
-                      Você está vendo
-                    </span>
-                  ) : null}
-                  <Link
-                    href={`/loja/${produto.slug}`}
-                    className="foco-jb block text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
+              {produtos.slice(0, 3).map((produto, indice) => {
+                const delta = indice > 0 ? diferencaDePreco(atual, produto) : null;
+                return (
+                  <th
+                    key={produto.id}
+                    className={`border-b border-graf-200 px-5 py-5 align-top ${indice === 0 ? "bg-jb-50/45" : "bg-white"}`}
                   >
-                    {produto.name}
-                  </Link>
-                  <p className="mt-2 text-base font-extrabold tabular text-graf-950">{preco(produto)}</p>
-                </th>
-              ))}
+                    {indice === 0 ? (
+                      <span className="mb-2 inline-flex rounded-full bg-jb-100 px-2.5 py-1 text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
+                        Você está vendo
+                      </span>
+                    ) : null}
+                    <Link
+                      href={`/loja/${produto.slug}`}
+                      className="foco-jb block text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
+                    >
+                      {produto.name}
+                    </Link>
+                    <p className="mt-2 text-base font-extrabold tabular text-graf-950">{preco(produto)}</p>
+                    {delta ? <p className="mt-1 text-[0.6875rem] font-bold text-graf-500">{delta}</p> : null}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody className="divide-y divide-graf-100">
-            {linhas.map((linha) => (
-              <tr key={linha.id}>
-                <th className="bg-graf-50/55 px-5 py-3.5 text-xs font-semibold text-graf-600">{linha.rotulo}</th>
-                {produtos.slice(0, 3).map((produto, indice) => (
-                  <td
-                    key={produto.id}
-                    className={`px-5 py-3.5 text-sm font-semibold text-graf-800 ${indice === 0 ? "bg-jb-50/20" : ""}`}
-                  >
-                    {valorDaLinha(produto, linha.id)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {linhas.map((linha) => {
+              const valorAtual = valorDaLinha(atual, linha.id);
+              return (
+                <tr key={linha.id}>
+                  <th className="bg-graf-50/55 px-5 py-3.5 text-xs font-semibold text-graf-600">{linha.rotulo}</th>
+                  {produtos.slice(0, 3).map((produto, indice) => {
+                    const valor = valorDaLinha(produto, linha.id);
+                    const diferente = indice > 0 && chave(valor) !== chave(valorAtual);
+                    return (
+                      <td
+                        key={produto.id}
+                        className={`px-5 py-3.5 text-sm text-graf-800 ${
+                          indice === 0
+                            ? "bg-jb-50/20 font-semibold"
+                            : diferente
+                              ? "font-extrabold text-graf-950"
+                              : "font-semibold"
+                        }`}
+                      >
+                        {valor}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -290,44 +338,45 @@ function Estrelas({ nota }: { nota: number }) {
   );
 }
 
-function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] }) {
-  if (avaliacoes.length === 0) return null;
+function AvaliacoesVerificadas({
+  resumo,
+  comentarios,
+}: {
+  resumo: ResumoAvaliacoesProduto | null;
+  comentarios: ComentarioAvaliacaoProduto[];
+}) {
+  if (!resumo) return null;
 
-  const media = avaliacoes.reduce((soma, avaliacao) => soma + avaliacao.score, 0) / avaliacoes.length;
-  const distribuicao = [5, 4, 3, 2, 1].map((nota) => ({
-    nota,
-    quantidade: avaliacoes.filter((avaliacao) => avaliacao.score === nota).length,
-  }));
-  const comentarios = avaliacoes.filter((avaliacao) => avaliacao.comment.trim()).slice(0, 6);
+  const { media, total, distribuicao } = resumo;
 
   return (
     <section
       id="avaliacoes-verificadas"
       aria-labelledby="avaliacoes-verificadas-titulo"
-      className="scroll-mt-32 border-t border-graf-200 py-10 lg:py-12"
+      className="scroll-mt-32 border-t border-graf-200 py-9 lg:py-10"
     >
-      <div className="grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-12">
+      <div className="grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-10">
         <div>
           <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-jb-700">Quem comprou conta</p>
           <h2 id="avaliacoes-verificadas-titulo" className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-graf-950">
             Avaliações verificadas
           </h2>
 
-          <div className="mt-6 flex items-end gap-3">
+          <div className="mt-5 flex items-end gap-3">
             <span className="text-5xl font-extrabold leading-none tracking-[-0.04em] tabular text-graf-950">
               {media.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
             </span>
             <div className="pb-0.5">
               <Estrelas nota={Math.round(media)} />
               <p className="mt-1 text-xs text-graf-500">
-                {avaliacoes.length} {avaliacoes.length === 1 ? "avaliação publicada" : "avaliações publicadas"}
+                {total} {total === 1 ? "avaliação publicada" : "avaliações publicadas"}
               </p>
             </div>
           </div>
 
-          <div className="mt-6 space-y-2" aria-label="Distribuição das notas">
+          <div className="mt-5 space-y-2" aria-label="Distribuição das notas">
             {distribuicao.map(({ nota, quantidade }) => {
-              const percentual = Math.round((quantidade / avaliacoes.length) * 100);
+              const percentual = Math.round((quantidade / total) * 100);
               return (
                 <div key={nota} className="grid grid-cols-[2rem_1fr_2.5rem] items-center gap-2 text-xs">
                   <span className="font-semibold text-graf-600">{nota}★</span>
@@ -342,14 +391,14 @@ function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] 
 
           <p className="mt-5 flex items-start gap-2 text-xs leading-5 text-graf-500">
             <BadgeCheck className="mt-0.5 size-4 shrink-0 text-jb-700" aria-hidden />
-            Só entram aqui avaliações públicas vinculadas a pedidos que continham este produto.
+            Só entram avaliações públicas ligadas a pedidos que continham este produto.
           </p>
         </div>
 
         {comentarios.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {comentarios.map((avaliacao) => (
-              <article key={avaliacao.id} className="rounded-2xl border border-graf-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.025)]">
+              <article key={avaliacao.id} className="flex min-h-[13rem] flex-col rounded-2xl border border-graf-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.025)]">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Estrelas nota={avaliacao.score} />
                   <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-bold text-ok-700">
@@ -357,8 +406,8 @@ function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] 
                     Compra verificada
                   </span>
                 </div>
-                <p className="mt-4 text-sm leading-6 text-graf-700">“{avaliacao.comment.trim()}”</p>
-                <div className="mt-4 border-t border-graf-100 pt-3">
+                <p className="mt-4 line-clamp-5 text-sm leading-6 text-graf-700">“{avaliacao.comment.trim()}”</p>
+                <div className="mt-auto border-t border-graf-100 pt-3">
                   <p className="text-xs font-bold text-graf-800">{avaliacao.displayName.trim() || "Cliente JB"}</p>
                   <p className="mt-0.5 text-[0.6875rem] text-graf-400">
                     {(avaliacao.publishedAt ?? avaliacao.createdAt).toLocaleDateString("pt-BR", {
@@ -405,7 +454,7 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
   ];
 
   return (
-    <section className="border-t border-graf-200 py-10 lg:py-12" aria-labelledby="pos-venda-jb-titulo">
+    <section className="border-t border-graf-200 py-9 lg:py-10" aria-labelledby="pos-venda-jb-titulo">
       <div className="overflow-hidden rounded-3xl border border-graf-200 bg-graf-950 text-white">
         <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.85fr_1.4fr] lg:gap-12 lg:p-10">
           <div>
@@ -466,7 +515,6 @@ export default async function ProdutoLayout({ children, params }: Props) {
       ...SELECT_COMPARAVEL,
       status: true,
       categoryId: true,
-      brandId: true,
       condition: true,
       trackInventory: true,
       relatedFrom: {
@@ -492,23 +540,90 @@ export default async function ProdutoLayout({ children, params }: Props) {
     .filter((alvo) => alvo.status === "active")
     .slice(0, 2);
 
+  /* A estatística e os comentários independem das relações comerciais. Começar
+     as duas leituras agora evita uma etapa sequencial no fim do layout; `cache`
+     no helper também permite que a página principal reutilize o mesmo resumo. */
+  const resumoAvaliacoesPromise = carregarResumoAvaliacoesProduto(produto.id);
+  const comentariosAvaliacoesPromise = carregarComentariosAvaliacoesProduto(produto.id);
+
   const todasRelacoes = await prisma.productRelation.findMany({
     where: { sourceId: produto.id },
-    select: { targetId: true },
+    orderBy: { order: "asc" },
+    select: {
+      targetId: true,
+      order: true,
+      target: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          status: true,
+          shortDescription: true,
+          priceCents: true,
+          allowDirectPurchase: true,
+          trackInventory: true,
+          stock: true,
+          addons: {
+            where: { required: true },
+            take: 1,
+            select: { id: true },
+          },
+          media: {
+            orderBy: { order: "asc" },
+            take: 1,
+            select: {
+              alt: true,
+              media: { select: { url: true } },
+            },
+          },
+        },
+      },
+    },
   });
   const relacionadosIds = todasRelacoes.map((relacao) => relacao.targetId);
 
+  const crossSell: DadosCrossSell = { acessorios: [], complementos: [] };
+  for (const relacao of todasRelacoes) {
+    if (relacao.target.status !== "active") continue;
+    const { tipo, ordem } = decodificarOrdemRelacao(relacao.order);
+    if (tipo === "alternativa") continue;
+
+    const item = {
+      id: relacao.target.id,
+      slug: relacao.target.slug,
+      nome: relacao.target.name,
+      descricao: relacao.target.shortDescription ?? "",
+      precoCents:
+        relacao.target.allowDirectPurchase && relacao.target.priceCents > 0
+          ? relacao.target.priceCents
+          : null,
+      imagem: relacao.target.media[0]?.media.url ?? null,
+      alt: relacao.target.media[0]?.alt || relacao.target.name,
+      ordem,
+      compraRapida:
+        tipo === "acessorio" &&
+        relacao.target.allowDirectPurchase &&
+        relacao.target.priceCents > 0 &&
+        (!relacao.target.trackInventory || relacao.target.stock > 0) &&
+        relacao.target.addons.length === 0,
+    };
+
+    if (tipo === "acessorio") crossSell.acessorios.push(item);
+    if (tipo === "complemento") crossSell.complementos.push(item);
+  }
+
+  crossSell.acessorios.sort((a, b) => a.ordem - b.ordem);
+  crossSell.complementos.sort((a, b) => a.ordem - b.ordem);
+
   const faltam = 2 - alternativasManuais.length;
+  const categoriaAlternativa = categoriaDaAlternativaAutomatica(produto.categoryId);
   const alternativasAutomaticas =
-    faltam > 0 && (produto.categoryId || produto.brandId)
+    faltam > 0 && categoriaAlternativa
       ? await prisma.product.findMany({
           where: {
             status: "active",
             id: { notIn: [produto.id, ...relacionadosIds] },
-            OR: [
-              ...(produto.categoryId ? [{ categoryId: produto.categoryId }] : []),
-              ...(produto.brandId ? [{ brandId: produto.brandId }] : []),
-            ],
+            categoryId: categoriaAlternativa,
           },
           orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
           take: faltam,
@@ -516,28 +631,10 @@ export default async function ProdutoLayout({ children, params }: Props) {
         })
       : [];
 
-  const avaliacoes = await prisma.review.findMany({
-    where: {
-      publicConsent: true,
-      publishedAt: { not: null },
-      request: {
-        kind: "compra",
-        order: {
-          items: { some: { productId: produto.id, kind: "produto" } },
-        },
-      },
-    },
-    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    take: 50,
-    select: {
-      id: true,
-      score: true,
-      comment: true,
-      displayName: true,
-      publishedAt: true,
-      createdAt: true,
-    },
-  });
+  const [resumoAvaliacoes, comentariosAvaliacoes] = await Promise.all([
+    resumoAvaliacoesPromise,
+    comentariosAvaliacoesPromise,
+  ]);
 
   const comparaveis: ProdutoComparavel[] = [
     produto,
@@ -552,7 +649,11 @@ export default async function ProdutoLayout({ children, params }: Props) {
       {children}
       <div className="container-jb max-w-[112rem]">
         <ComparacaoRapida produtos={comparaveis} />
-        <AvaliacoesVerificadas avaliacoes={avaliacoes} />
+        <AvaliacoesVerificadas
+          resumo={resumoAvaliacoes}
+          comentarios={comentariosAvaliacoes}
+        />
+        <CrossSellIntencional dados={crossSell} />
         {geraEquipamento ? <PosVendaJB garantiaMeses={produto.warrantyMonths} /> : null}
       </div>
     </>

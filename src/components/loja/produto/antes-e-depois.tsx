@@ -18,10 +18,9 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    Preparação, conteúdo da caixa, instalação e pós-compra
 
-   Os quatro blocos usam a mesma linguagem visual da ficha técnica: título
-   forte, explicação curta, dados escaneáveis e uma única moldura. Isso elimina
-   a sensação de vários widgets independentes e transforma a área em uma
-   sequência lógica de decisão.
+   Esta área vive dentro do hub progressivo da PDP. Por isso os subblocos são
+   deliberadamente densos: uma moldura leve, cabeçalho curto e informação em
+   células. O objetivo é consultar em segundos, não criar quatro mini páginas.
    ============================================================================ */
 
 export type DadosDeInfraestrutura = {
@@ -59,23 +58,26 @@ function Cabecalho({
   descricao?: string;
 }) {
   return (
-    <header className="flex items-start gap-3 border-b border-graf-200 bg-graf-50/70 px-5 py-4 sm:px-6">
-      <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white text-jb-700 shadow-sm">
-        <Icone className="size-[18px]" aria-hidden />
+    <header className="flex items-center gap-3 border-b border-graf-200 bg-white px-4 py-3 sm:px-5">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">
+        <Icone className="size-4" aria-hidden />
       </span>
       <div className="min-w-0">
-        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-jb-700">
+        <p className="text-[0.625rem] font-bold uppercase tracking-[0.09em] text-jb-700">
           {sobretitulo}
         </p>
-        <h2 className="mt-1 text-base font-bold tracking-[-0.01em] text-graf-950">{titulo}</h2>
-        {descricao ? <p className="mt-1 text-sm leading-5 text-graf-500">{descricao}</p> : null}
+        <h3 className="mt-0.5 text-[0.875rem] font-extrabold tracking-[-0.01em] text-graf-950">
+          {titulo}
+        </h3>
+        {descricao ? (
+          <p className="mt-0.5 text-[0.75rem] leading-4 text-graf-500">{descricao}</p>
+        ) : null}
       </div>
     </header>
   );
 }
 
-const MOLDURA =
-  "overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]";
+const MOLDURA = "overflow-hidden rounded-xl border border-graf-200 bg-white";
 
 /* -------------------------------------------------------- antes de comprar */
 
@@ -98,7 +100,7 @@ export function AntesDeComprar({
 
   const fichas = [
     voltagem ? { icone: PlugZap, rotulo: "Alimentação", valor: voltagem } : null,
-    dimensoes ? { icone: Ruler, rotulo: "Dimensões (L × A × P)", valor: dimensoes } : null,
+    dimensoes ? { icone: Ruler, rotulo: "Dimensões", valor: dimensoes } : null,
     peso ? { icone: Package, rotulo: "Peso", valor: peso } : null,
   ].filter((f) => f !== null);
 
@@ -110,8 +112,8 @@ export function AntesDeComprar({
         <Cabecalho
           icone={Ruler}
           sobretitulo="Prepare a clínica"
-          titulo="Antes de comprar"
-          descricao="O essencial para saber se o equipamento cabe e pode ser instalado no local."
+          titulo="Compatibilidade com o local"
+          descricao="Espaço, alimentação e infraestrutura."
         />
       </div>
 
@@ -122,15 +124,15 @@ export function AntesDeComprar({
             return (
               <div
                 key={ficha.rotulo}
-                className={`min-w-0 border-graf-200 px-5 py-4 sm:px-6 ${
+                className={`min-w-0 border-graf-200 px-4 py-3 sm:px-5 ${
                   indice > 0 ? "border-t sm:border-l sm:border-t-0" : ""
                 }`}
               >
-                <dt className="flex items-center gap-2 text-[0.6875rem] font-bold uppercase tracking-[0.075em] text-graf-500">
-                  <Icone className="size-3.5 shrink-0" aria-hidden />
+                <dt className="flex items-center gap-1.5 text-[0.625rem] font-bold uppercase tracking-[0.065em] text-graf-500">
+                  <Icone className="size-3 shrink-0" aria-hidden />
                   {ficha.rotulo}
                 </dt>
-                <dd className="tabular mt-1.5 break-words text-[0.9375rem] font-bold text-graf-950">
+                <dd className="tabular mt-1 break-words text-[0.875rem] font-bold text-graf-950">
                   {ficha.valor}
                 </dd>
               </div>
@@ -140,14 +142,14 @@ export function AntesDeComprar({
       ) : null}
 
       {dados.requisitos.length > 0 ? (
-        <div className="border-t border-graf-200 px-5 py-5 sm:px-6">
-          <p className="text-[0.75rem] font-bold uppercase tracking-[0.08em] text-graf-500">
-            O que precisa estar pronto no local
+        <div className="border-t border-graf-200 px-4 py-3.5 sm:px-5">
+          <p className="text-[0.625rem] font-bold uppercase tracking-[0.07em] text-graf-500">
+            Precisa estar pronto no local
           </p>
-          <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
+          <ul className="mt-2 grid gap-x-5 gap-y-1.5 sm:grid-cols-2">
             {dados.requisitos.map((item) => (
-              <li key={item} className="flex gap-2.5 text-sm leading-6 text-graf-700">
-                <ShieldCheck className="mt-1 size-4 shrink-0 text-jb-600" aria-hidden />
+              <li key={item} className="flex gap-2 text-[0.8125rem] leading-5 text-graf-700">
+                <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-jb-600" aria-hidden />
                 <span>{item}</span>
               </li>
             ))}
@@ -176,24 +178,20 @@ export function OQueVemNaCaixa({
           icone={PackageOpen}
           sobretitulo="Conteúdo confirmado"
           titulo="O que vem na caixa"
-          descricao="Itens incluídos no fornecimento deste equipamento."
+          descricao={`${itens.length} ${itens.length === 1 ? "item incluído" : "itens incluídos"}`}
         />
       </div>
 
-      <ul className="divide-y divide-graf-100 px-5 sm:px-6">
+      <ul className="divide-y divide-graf-100 px-4 sm:px-5">
         {itens.map((item, indice) => (
-          <li key={item} className="flex gap-3 py-3.5 text-[0.9375rem] leading-6 text-graf-700">
-            <span className="tabular flex size-6 shrink-0 items-center justify-center rounded-full bg-graf-100 text-[0.6875rem] font-bold text-graf-500">
-              {String(indice + 1).padStart(2, "0")}
+          <li key={item} className="flex gap-2.5 py-2.5 text-[0.8125rem] leading-5 text-graf-700">
+            <span className="tabular flex size-5 shrink-0 items-center justify-center rounded-full bg-graf-100 text-[0.625rem] font-bold text-graf-500">
+              {indice + 1}
             </span>
             <span>{item}</span>
           </li>
         ))}
       </ul>
-
-      <p className="border-t border-graf-100 bg-graf-50/55 px-5 py-3.5 text-[0.75rem] leading-5 text-graf-500 sm:px-6">
-        O que não estiver nesta lista é vendido à parte. Em dúvida, confirme com a equipe antes da compra.
-      </p>
     </section>
   );
 }
@@ -205,19 +203,19 @@ const TEXTO_DA_POLITICA: Record<InstallationPolicy, { titulo: string; texto: str
   nao_oferecida: {
     titulo: "Instalação não oferecida pela JB",
     texto:
-      "O equipamento é entregue pronto para uso ou depende de instalação por quem cuida da infraestrutura da clínica.",
+      "O equipamento é entregue pronto para uso ou depende da infraestrutura preparada pela clínica.",
   },
   opcional: {
     titulo: "Instalação disponível como serviço",
-    texto: "Pode ser contratada junto com a compra e aparece separada no resumo do pedido.",
+    texto: "Pode ser contratada junto com a compra e aparece separada no pedido.",
   },
   inclusa: {
     titulo: "Instalação inclusa",
-    texto: "Já está no preço deste equipamento. A visita é agendada depois da confirmação da compra.",
+    texto: "Já está no preço deste equipamento e é agendada após a confirmação da compra.",
   },
   sob_consulta: {
-    titulo: "Instalação disponível sob consulta",
-    texto: "A equipe avalia local, distância e infraestrutura antes de informar qualquer cobrança.",
+    titulo: "Instalação sob consulta",
+    texto: "A equipe avalia local, distância e infraestrutura antes de informar a cobrança.",
   },
 };
 
@@ -242,21 +240,21 @@ export function Instalacao({
           icone={Wrench}
           sobretitulo="Implantação"
           titulo="Instalação"
-          descricao="Como este equipamento entra em operação na clínica."
+          descricao="Como o equipamento entra em operação."
         />
       </div>
 
-      <div className="p-5 sm:p-6">
-        <div className="flex items-start gap-3.5">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700">
-            <Wrench className="size-[18px]" aria-hidden />
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
+            <Wrench className="size-4" aria-hidden />
           </span>
           <div className="min-w-0">
-            <p className="text-base font-bold text-graf-950">{base.titulo}</p>
-            <p className="mt-1.5 text-[0.9375rem] leading-6 text-graf-600">{base.texto}</p>
+            <p className="text-[0.875rem] font-extrabold text-graf-950">{base.titulo}</p>
+            <p className="mt-1 text-[0.8125rem] leading-5 text-graf-600">{base.texto}</p>
 
             {politica === "opcional" && precoCents && precoCents > 0 ? (
-              <p className="tabular mt-3 inline-flex rounded-full bg-graf-100 px-3 py-1.5 text-sm font-bold text-graf-900">
+              <p className="tabular mt-2 inline-flex rounded-full bg-graf-100 px-2.5 py-1 text-[0.75rem] font-bold text-graf-900">
                 {formatarPreco(precoCents)}
               </p>
             ) : null}
@@ -264,7 +262,7 @@ export function Instalacao({
         </div>
 
         {observacao ? (
-          <p className="mt-5 border-t border-graf-200 pt-4 text-[0.875rem] leading-6 text-graf-600">
+          <p className="mt-3 border-t border-graf-200 pt-3 text-[0.8125rem] leading-5 text-graf-600">
             {observacao}
           </p>
         ) : null}
@@ -296,29 +294,29 @@ export function DepoisDaCompraNoProduto({
   const passos: Passo[] = [
     {
       icone: ClipboardList,
-      titulo: "Prontuário Técnico JB",
-      detalhe: "Depois da confirmação, o equipamento passa a ter origem, data e histórico próprios.",
+      titulo: "Prontuário Técnico",
+      detalhe: "Origem e histórico do equipamento.",
     },
     meses > 0
       ? {
           icone: FileText,
-          titulo: `Garantia de ${meses} ${meses === 1 ? "mês" : "meses"}`,
-          detalhe: "Prazo cadastrado para este equipamento, contado a partir da compra.",
+          titulo: `${meses} ${meses === 1 ? "mês" : "meses"} de garantia`,
+          detalhe: "Prazo cadastrado a partir da compra.",
         }
       : {
           icone: FileText,
           titulo: "Documentos reunidos",
-          detalhe: "Nota, manual e certificados ficam concentrados na ficha do equipamento.",
+          detalhe: "Nota, manual e certificados na ficha.",
         },
     {
       icone: History,
       titulo: "Histórico técnico",
-      detalhe: "Chamados, orçamentos e reparos ficam registrados na mesma linha do tempo.",
+      detalhe: "Chamados, orçamentos e reparos.",
     },
     {
       icone: CalendarClock,
       titulo: "Preventiva acompanhada",
-      detalhe: "A próxima revisão pode ser acompanhada conforme a periodicidade cadastrada.",
+      detalhe: "Próximas revisões organizadas.",
     },
   ];
 
@@ -329,29 +327,27 @@ export function DepoisDaCompraNoProduto({
           icone={ClipboardList}
           sobretitulo="Continuidade"
           titulo="Depois da compra"
-          descricao="A relação com o equipamento continua organizada depois da entrega."
+          descricao="O básico do ciclo de vida dentro da JB."
         />
       </div>
 
-      <ul className="grid sm:grid-cols-2">
+      <ul className="grid grid-cols-2 lg:grid-cols-4">
         {passos.map((passo, indice) => {
           const Icone = passo.icone;
           return (
             <li
               key={passo.titulo}
-              className={`flex min-w-0 gap-3.5 border-graf-200 px-5 py-4 sm:px-6 ${
-                indice >= 2 ? "border-t" : ""
-              } ${indice % 2 === 1 ? "sm:border-l" : ""} ${
-                indice === 1 ? "border-t sm:border-t-0" : ""
+              className={`min-w-0 border-graf-200 px-3.5 py-3 sm:px-4 ${
+                indice % 2 === 1 ? "border-l" : ""
+              } ${indice >= 2 ? "border-t lg:border-t-0" : ""} ${
+                indice > 0 ? "lg:border-l" : ""
               }`}
             >
-              <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-graf-100 text-graf-600">
-                <Icone className="size-4" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[0.875rem] font-bold leading-5 text-graf-950">{passo.titulo}</p>
-                <p className="mt-1 text-[0.8125rem] leading-5 text-graf-500">{passo.detalhe}</p>
-              </div>
+              <Icone className="size-3.5 text-jb-600" aria-hidden />
+              <p className="mt-2 text-[0.75rem] font-extrabold leading-4 text-graf-950">
+                {passo.titulo}
+              </p>
+              <p className="mt-0.5 text-[0.6875rem] leading-4 text-graf-500">{passo.detalhe}</p>
             </li>
           );
         })}
