@@ -196,6 +196,24 @@ export function perfilAtributosDecisao(
 }
 
 /**
+ * Filtro conservador para recomendações automáticas.
+ *
+ * Se o produto atual tem um perfil técnico reconhecido, o candidato automático
+ * só é substituto quando pertence ao mesmo perfil. Isso impede que categorias
+ * amplas como `profilaxia` comparem fotopolimerizador com ultrassom. Quando o
+ * atual não tem perfil reconhecível, devolvemos `true` e a categoria continua
+ * sendo o único critério disponível — melhor que inventar uma classificação.
+ */
+export function mesmoPerfilParaAlternativaAutomatica(
+  atual: ContextoAtributosDecisao,
+  candidato: ContextoAtributosDecisao,
+) {
+  const perfilAtual = perfilAtributosDecisao(atual);
+  if (!perfilAtual) return true;
+  return perfilAtributosDecisao(candidato)?.id === perfilAtual.id;
+}
+
+/**
  * Menor valor = atributo mais decisivo.
  *
  * O perfil específico vence; atributos não cobertos por ele caem no ranking
