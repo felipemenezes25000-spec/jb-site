@@ -15,6 +15,7 @@ import type { ProdutoCard } from "@/components/loja/card-produto";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
 
 import styles from "./hero-vitrine.module.css";
+import overlapStyles from "./hero-vitrine-overlap.module.css";
 
 export type NumeroDaHome = { valor: string; rotulo: string };
 
@@ -115,12 +116,12 @@ export function HeroVitrine({
               aria-label={`Conhecer ${destaque.name}`}
               className={styles.palcoProduto}
             >
-              <span className={styles.seloProduto}>
+              <span className={`${styles.seloProduto} ${overlapStyles.badgeFix}`}>
                 <span aria-hidden />
                 {destaque.condition === "seminovo" ? "Seminovo revisado" : "Destaque JB"}
               </span>
 
-              <span className={styles.imagemProduto}>
+              <span className={`${styles.imagemProduto} ${overlapStyles.mediaFix}`}>
                 {destaque.imageUrl ? (
                   <Image
                     src={destaque.imageUrl}
@@ -138,7 +139,7 @@ export function HeroVitrine({
                 )}
               </span>
 
-              <span className={styles.calloutTopo}>
+              <span className={`${styles.calloutTopo} ${overlapStyles.calloutFix}`}>
                 <small>Compra com continuidade</small>
                 <strong>Venda + assistência JB</strong>
               </span>
