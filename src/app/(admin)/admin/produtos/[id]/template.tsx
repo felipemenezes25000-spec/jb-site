@@ -2,14 +2,43 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Network } from "lucide-react";
 
 export default function ProdutoAdminTemplate({ children }: { children: ReactNode }) {
   const params = useParams<{ id: string }>();
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const id = typeof params.id === "string" ? params.id : "";
   const naTelaDeCrossSell = pathname.endsWith("/relacionamentos");
+  const editorLegadoAberto = !naTelaDeCrossSell && searchParams.get("aba") === "relacionados";
+
+  useEffect(() => {
+    if (!id || !editorLegadoAberto) return;
+    router.replace(`/admin/produtos/${id}/relacionamentos`);
+  }, [editorLegadoAberto, id, router]);
+
+  // O formulário antigo tratava toda relação como uma lista sem intenção.
+  // Depois que acessórios/complementos passaram a ter semântica própria, salvar
+  // por ali poderia rebaixar tudo a "alternativa". A rota antiga continua
+  // reconhecida para links/favoritos, mas não renderiza mais o editor inseguro.
+  if (editorLegadoAberto) {
+    return (
+      <div className="flex min-h-48 items-center justify-center rounded-2xl border border-graf-200 bg-white p-6 text-center">
+        <div className="max-w-lg">
+          <span className="mx-auto flex size-11 items-center justify-center rounded-xl bg-jb-50 text-jb-700">
+            <Network className="size-5" aria-hidden />
+          </span>
+          <p className="mt-4 text-base font-extrabold text-graf-950">Abrindo o novo editor de cross-sell…</p>
+          <p className="mt-1 text-sm leading-6 text-graf-500">
+            Relacionados agora são classificados como alternativa, acessório ou complemento para a loja não misturar intenções de compra.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
