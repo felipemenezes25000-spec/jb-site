@@ -35,6 +35,26 @@ async function abrirProduto(page: import("@playwright/test").Page) {
   await expect(page.locator(HEADER)).toBeVisible();
 }
 
+async function alvosPrincipaisTem44px(page: import("@playwright/test").Page) {
+  const seletores = [
+    `${HEADER} button[aria-expanded]:not([aria-haspopup="dialog"])`,
+    `${HEADER} a[aria-label*="Área da Clínica"]`,
+    `${HEADER} a[aria-label^="Carrinho"]`,
+    `${HEADER} button[aria-haspopup="dialog"]`,
+  ];
+
+  for (const seletor of seletores) {
+    const alvo = page.locator(seletor).first();
+    await expect(alvo).toBeVisible();
+    const caixa = await alvo.boundingBox();
+    expect(caixa, `controle ${seletor} precisa ter caixa mensurável`).not.toBeNull();
+    expect(
+      Math.min(caixa!.width, caixa!.height),
+      `controle ${seletor} precisa preservar pelo menos 44px de alvo de toque`,
+    ).toBeGreaterThanOrEqual(44);
+  }
+}
+
 test.describe("Cabeçalho da página de produto", () => {
   test("não altera o cabeçalho aprovado da Home", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -111,10 +131,7 @@ test.describe("Cabeçalho da página de produto", () => {
       await expect(page.locator(`${HEADER} ${BUSCA_DESKTOP}`)).toBeHidden();
       await expect(page.locator(`${HEADER} button[aria-haspopup="dialog"]`)).toBeVisible();
 
-      const botoes = page.locator(`${HEADER} button:visible, ${HEADER} a:visible`);
-      const total = await botoes.count();
-      expect(total).toBeGreaterThan(0);
-
+      await alvosPrincipaisTem44px(page);
       await semRolagemHorizontal(page);
     });
   }
