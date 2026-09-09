@@ -4,9 +4,8 @@ import { ArrowRight, BookOpen, SearchX, Stethoscope, Wrench } from "lucide-react
 
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
-import { type Parcelamento } from "@/components/loja/card-produto";
-import { GradeVitrine } from "@/components/loja/card-vitrine";
-import { colunasAte } from "@/components/ui/grade";
+import { GradeMarketplace } from "@/components/loja/marketplace/grade-marketplace";
+import type { ParcelamentoMarketplace } from "@/components/loja/marketplace/tipos";
 import { Secao } from "@/components/ui/secao";
 import {
   ORDEM_POR_INTENCAO,
@@ -89,7 +88,7 @@ function Grupo({
   /** O termo buscado, para levar junto ao catálogo. */
   consulta: string;
   /** Regras de parcelamento da loja — as mesmas do catálogo. */
-  parcelamento: Parcelamento;
+  parcelamento: ParcelamentoMarketplace;
 }) {
   if (grupo === "produtos") {
     if (resultado.produtos.length === 0) return null;
@@ -100,32 +99,14 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.produtos.length}
         />
-        {/* Esta lista responde "achei isto"; o catálogo é onde se refina por
-            condição, marca, voltagem e preço. Os links de "ver o catálogo" da
-            página iam para /loja sem o termo, então quem quisesse filtrar
-            recomeçava a busca do zero.
-
-            O cartão é o MESMO da vitrine. Antes esta página desenhava uma
-            linha estreita com miniatura de 64px: o resultado de uma busca por
-            equipamento parecia item de lista de sistema, e não o equipamento
-            que a pessoa está procurando comprar. */}
-        {/* Com um ou dois achados, a grade cheia deixaria cada cartão com
-            700px de largura — o equipamento vira cartaz e a foto some no
-            branco. As colunas acompanham a quantidade e, abaixo de três, a
-            faixa para de esticar. É a mesma regra dos relacionados da ficha. */}
-        <GradeVitrine
-          produtos={resultado.produtos}
-          parcelamento={parcelamento}
-          colunas={colunasAte(resultado.produtos.length, { base: 1, sm: 2, lg: 3, xl: 4 })}
-          className={
-            resultado.produtos.length < 3 ? "mt-6 max-w-3xl" : "mt-6"
-          }
-        />
+        <div className="mt-5 max-w-[112rem]">
+          <GradeMarketplace produtos={resultado.produtos} parcelamento={parcelamento} />
+        </div>
 
         <p className="mt-4">
           <Link
             href={`/loja?q=${encodeURIComponent(consulta)}`}
-            className="foco-jb inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
+            className="foco-jb inline-flex min-h-11 items-center gap-2 text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
           >
             Refinar no catálogo, com filtros
             <ArrowRight className="size-4" aria-hidden />
@@ -294,7 +275,7 @@ export default async function BuscaPage({
   /* O parcelamento sai da configuração da loja, igual ao catálogo: prometer
      12× aqui e 6× na ficha seria mentira de vitrine. */
   const [resultado, s] = await Promise.all([buscarTudo(validada.consulta), getSettings()]);
-  const parcelamento: Parcelamento = {
+  const parcelamento: ParcelamentoMarketplace = {
     max: Math.min(12, Math.max(1, Number(s.parcelas_max) || 1)),
     minimoCents: paraCentavos(s.parcela_minima),
   };

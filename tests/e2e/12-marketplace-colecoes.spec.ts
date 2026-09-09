@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { fixtures } from "./fixtures";
+
 test.describe("Marketplace — coleções", () => {
   test("usa quatro colunas no desktop e duas no celular de 390 px", async ({ page }) => {
     await page.goto("/loja");
@@ -80,5 +82,29 @@ test.describe("Marketplace — coleções", () => {
     await expect(page.locator("[data-marketplace-shell]:visible")).toBeVisible();
     await expect(page.locator("[data-cabecalho-colecao]:visible")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 }).filter({ visible: true })).toBeVisible();
+  });
+
+  test("a busca usa o card do marketplace e permite refinar no catálogo", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.goto(`/busca?q=${encodeURIComponent(produto.nome)}`);
+    await expect(page.locator("[data-marketplace-card]").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Refinar no catálogo/ })).toBeVisible();
+  });
+
+  test("as condições públicas compartilham o shell", async ({ page }) => {
+    for (const rota of [
+      "/novos",
+      "/seminovos",
+      "/usados",
+      "/recondicionados",
+      "/pecas-e-acessorios",
+    ]) {
+      await page.goto(rota);
+      await expect(page.locator("[data-marketplace-shell]:visible"), rota).toBeVisible();
+      await expect(
+        page.getByRole("heading", { level: 1 }).filter({ visible: true }),
+        rota,
+      ).toBeVisible();
+    }
   });
 });

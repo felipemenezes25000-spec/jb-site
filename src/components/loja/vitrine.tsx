@@ -534,9 +534,6 @@ export async function Vitrine({
   travarCategoria,
   travarCondicao,
   travarMarca,
-  variante = "padrao",
-  semCabecalho,
-  apoioNoFiltro,
 }: {
   /** Degrau acima do título — "Catálogo", "Por condição", "Marca". */
   sobretitulo?: string;
@@ -554,27 +551,6 @@ export async function Vitrine({
   travarCategoria?: boolean;
   travarCondicao?: boolean;
   travarMarca?: boolean;
-  /**
-   * `"colecao"` e `"vitrine"` para as páginas que trazem o próprio cabeçalho:
-   * a vitrine entra só como lista, sem repetir trilha, título e atalhos. Em
-   * `"colecao"` o cartão ganha o botão cheio; em `"vitrine"` ele troca de
-   * desenho inteiro (`CardVitrine`).
-   *
-   * Antes esse recorte era feito por CSS, escondendo o cabeçalho já
-   * renderizado. Escondido ele continuava no HTML, com dois `h1` na mesma
-   * página e um título anunciado a quem navega por leitor de tela.
-   */
-  variante?: "padrao" | "colecao" | "vitrine";
-  /**
-   * A página traz o próprio cabeçalho e a vitrine entra só como lista.
-   *
-   * É separado de  de propósito: /loja e /seminovos abrem com um
-   * cabeçalho de coleção escrito na página, enquanto /categoria e /busca usam
-   * o cabeçalho daqui — as quatro querem o MESMO desenho de cartão.
-   */
-  semCabecalho?: boolean;
-  /** Bloco extra no pé da coluna de filtros — apoio, não filtro. */
-  apoioNoFiltro?: React.ReactNode;
 }) {
   const pagina = Math.max(1, Number(texto(parametros.pagina) ?? 1) || 1);
   const ordem = (texto(parametros.ordem) as Ordenacao | undefined) ?? "relevancia";
@@ -675,31 +651,22 @@ export async function Vitrine({
     return consultaTexto ? `${caminho}?${consultaTexto}` : caminho;
   })();
 
-  /* As duas variantes tiram o cabeçalho interno: a página traz o seu. */
-  const semCabecalhoInterno = semCabecalho || variante === "colecao";
-
   return (
     <div
       data-marketplace-shell
-      className={cn(
-        marketplaceStyles.shell,
-        "container-jb",
-        semCabecalhoInterno ? "pb-10 lg:pb-14" : "py-8 lg:py-12",
-      )}
+      className={cn(marketplaceStyles.shell, "container-jb py-8 lg:py-12")}
     >
-      {semCabecalhoInterno ? null : (
-        <CabecalhoColecao
-          sobretitulo={sobretitulo}
-          titulo={titulo}
-          descricao={descricao}
-          trilha={trilha}
-          imagem={imagem}
-          atalhos={atalhos}
-          rotuloAtalhos={rotuloAtalhos}
-        />
-      )}
+      <CabecalhoColecao
+        sobretitulo={sobretitulo}
+        titulo={titulo}
+        descricao={descricao}
+        trilha={trilha}
+        imagem={imagem}
+        atalhos={atalhos}
+        rotuloAtalhos={rotuloAtalhos}
+      />
 
-      <div className={cn(semCabecalhoInterno ? "mt-5 lg:mt-6" : "mt-7 lg:mt-8")}>
+      <div className="mt-7 lg:mt-8">
         <ControlesColecao grupos={grupos} parametros={parametros} {...travas} />
 
         <div className="mt-6 min-w-0">
@@ -715,8 +682,6 @@ export async function Vitrine({
             />
           </Suspense>
         </div>
-
-        {apoioNoFiltro ? <div className="mt-6">{apoioNoFiltro}</div> : null}
       </div>
     </div>
   );
