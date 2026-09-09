@@ -20,6 +20,8 @@ import { ETIQUETA_CATALOGO, ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { JsonLd, localNegocioJsonLd, organizacaoJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
+import styles from "./home-experience.module.css";
+
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
@@ -56,7 +58,7 @@ export default async function HomePage() {
   ].filter((slug): slug is string => Boolean(slug));
 
   return (
-    <>
+    <main className={styles.home}>
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
       <HeroVitrine
@@ -79,14 +81,15 @@ export default async function HomePage() {
         rotuloDoLink="Ver tudo"
         produtos={catalogo.ofertas.slice(0, 4)}
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
+        variante="ofertas"
       />
 
       <ChamadaDestacada
-        sobretitulo="Ferramenta de comparação"
-        titulo="Coloque até 3 equipamentos frente a frente"
-        texto="Preço, potência, capacidade, garantia, prazo e instalação na mesma tabela — sem abrir cinco abas."
+        sobretitulo="Compare antes de decidir"
+        titulo="Três equipamentos. Uma decisão muito mais clara."
+        texto="Preço, potência, capacidade, garantia, prazo e instalação na mesma leitura — sem abrir cinco abas nem perder o contexto da compra."
         href="/comparar"
-        rotulo="Abrir comparação"
+        rotulo="Abrir comparador"
       />
 
       <FaixaVitrine
@@ -98,6 +101,7 @@ export default async function HomePage() {
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
         colunas={{ base: 1, sm: 2, lg: 4 }}
         fundo="nevoa"
+        variante="seminovos"
       />
 
       <FaixaVitrine
@@ -107,6 +111,7 @@ export default async function HomePage() {
         rotuloDoLink="Catálogo completo"
         produtos={catalogo.procurados.slice(0, 8)}
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
+        variante="procurados"
       />
 
       <VistosRecentemente
@@ -120,6 +125,6 @@ export default async function HomePage() {
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
       </Suspense>
-    </>
+    </main>
   );
 }
