@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   grupoSemanticoAtributo,
+  mesmoPerfilParaAlternativaAutomatica,
   perfilAtributosDecisao,
   prioridadeAtributoDecisao,
 } from "@/lib/marketplace/atributos-decisao";
@@ -47,6 +48,39 @@ describe("matriz de atributos de decisão", () => {
         rotulos: ["Torque", "Rotação", "Redução", "Irrigação", "Pedal"],
       })?.id,
     ).toBe("motor-implante");
+  });
+
+  it("não trata outro subtipo da mesma categoria como substituto automático", () => {
+    const fotopolimerizador = {
+      nome: "Fotopolimerizador LED 1200 mW",
+      categoriaSlug: "profilaxia",
+      rotulos: ["Intensidade", "Modos", "Bateria", "Ponteira"],
+    };
+
+    expect(
+      mesmoPerfilParaAlternativaAutomatica(fotopolimerizador, {
+        nome: "Fotopolimerizador LED 1600 mW",
+        categoriaSlug: "profilaxia",
+        rotulos: ["Intensidade", "Modos", "Bateria", "Ponteira"],
+      }),
+    ).toBe(true);
+
+    expect(
+      mesmoPerfilParaAlternativaAutomatica(fotopolimerizador, {
+        nome: "Ultrassom com jato de bicarbonato",
+        categoriaSlug: "profilaxia",
+        rotulos: ["Frequência", "Insertos", "Reservatório", "Pedal"],
+      }),
+    ).toBe(false);
+  });
+
+  it("mantém fallback por categoria quando o produto não tem perfil reconhecível", () => {
+    expect(
+      mesmoPerfilParaAlternativaAutomatica(
+        { nome: "Equipamento clínico X", rotulos: ["Cor", "Material"] },
+        { nome: "Equipamento clínico Y", rotulos: ["Peso", "Voltagem"] },
+      ),
+    ).toBe(true);
   });
 
   it("atributo específico vence o ranking genérico", () => {
