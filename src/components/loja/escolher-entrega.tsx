@@ -42,7 +42,7 @@ export function EscolherEntrega({
 
           <form action={consultar} className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="w-full sm:max-w-52">
-              <CampoCep name="cep" required valor={estado.cep ?? cepInicial ?? ""} />
+              <CampoCep name="cep" required valorInicial={estado.cep ?? cepInicial ?? ""} buscarEndereco={false} />
             </div>
             <Botao type="submit" carregando={consultando} className="sm:mb-px">
               Calcular frete
