@@ -74,6 +74,97 @@
   content: "";
 }
 
+/* ========================================================================== */
+/* HOME — produto sem moldura / sem fundo branco                              */
+/* ========================================================================== */
+
+/* Fotos de produto da home: JPEG branco se funde ao palco; PNG/WebP já
+   transparentes continuam transparentes. A sombra fica no equipamento, não
+   numa caixa em volta dele. */
+:global([data-jb-home="true"] a[href^="/loja/"] img),
+:global([data-jb-home="true"] article.placa > div:first-child img) {
+  mix-blend-mode: multiply;
+  background: transparent !important;
+  filter: drop-shadow(0 1.6rem 1.45rem rgb(67 18 22 / 0.14));
+}
+
+/* Palcos de imagem que eram cartões/retângulos claros passam a ser palco
+   aberto. Textos, preço e CTA continuam com a própria hierarquia. */
+:global([data-jb-home="true"] a[href^="/loja/"] > div:has(> img)),
+:global([data-jb-home="true"] a[href^="/loja/"] > span:has(> img)),
+:global([data-jb-home="true"] a[href^="/loja/"] span:has(> img)),
+:global([data-jb-home="true"] article.placa > div:first-child:has(img)) {
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  --tw-ring-color: transparent !important;
+}
+
+/* O hero tinha uma massa branca orgânica atrás da foto. Sem ela o produto
+   fica realmente solto no layout; permanecem somente halo e grafismos da JB. */
+:global([data-jb-home="true"] a[href^="/loja/"]:has(> span > img)::before) {
+  display: none !important;
+}
+
+/* Cards de vitrine compartilhados continuam sendo cards nas páginas de loja,
+   mas na HOME a área da fotografia não vira uma placa branca. */
+:global([data-jb-home="true"] article.placa > div:first-child) {
+  background: transparent !important;
+}
+
+/* ========================================================================== */
+/* TOPO — sem barra de busca gigante                                          */
+/* ========================================================================== */
+
+@media (min-width: 1024px) {
+  /* Remove a busca fixa do desktop. A busca principal continua disponível no
+     hero, onde ela faz sentido como intenção de compra. */
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)) {
+    display: none !important;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div) {
+    grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  /* Em desktop largo a própria navegação sobe para o centro da linha
+     principal. Resultado: logo | menus | área da clínica/carrinho/assistência.
+     Nada de um buraco vazio onde antes ficava o campo de busca. */
+  :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"])) {
+    position: absolute !important;
+    z-index: 4;
+    top: 0;
+    left: 50%;
+    width: min(58vw, 61rem);
+    border: 0 !important;
+    background: transparent !important;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) > div) {
+    min-height: 78px !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  :global([data-jb-home-header-v2="true"] nav[aria-label="Principal da home"]) {
+    justify-content: center !important;
+    gap: 0.15rem !important;
+    pointer-events: auto;
+  }
+
+  /* Comparar e Marcas deixam de competir com as ações primárias do topo;
+     seguem disponíveis nos mega menus e nas seções da home. */
+  :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) > div > div:last-child) {
+    display: none !important;
+  }
+}
+
 @keyframes tickerFlagship {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -93,5 +184,10 @@
   .tickerTrack {
     animation: none;
     transform: none;
+  }
+
+  :global([data-jb-home="true"] a[href^="/loja/"] img),
+  :global([data-jb-home="true"] article.placa > div:first-child img) {
+    transition: none !important;
   }
 }
