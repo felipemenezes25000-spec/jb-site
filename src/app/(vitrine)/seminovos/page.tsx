@@ -4,22 +4,18 @@ import {
   ArrowRight,
   CalendarClock,
   Camera,
-  ChevronRight,
   ClipboardCheck,
   Gauge,
   NotebookPen,
   PackageCheck,
-  RefreshCcw,
   ScanLine,
   ShieldCheck,
-  Wrench,
 } from "lucide-react";
 
 import { Vitrine, type ParametrosVitrine } from "@/components/loja/vitrine";
 import { PUBLICADO, dadosDaColecao } from "@/lib/catalogo";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
-import { cn } from "@/lib/utils";
 
 /*
  * Migração para Cache Components — esta rota ainda não foi migrada.
@@ -164,63 +160,6 @@ async function fatosDaRevisao(): Promise<Fato[]> {
   }
 }
 
-/** O mesmo apoio da /loja: a saída de quem chegou com equipamento parado. */
-function ApoioDaAssistencia() {
-  return (
-    <div className="mt-4 rounded-lg border border-jb-200 bg-jb-50/60 p-5">
-      <p className="micro text-jb-700">Assistência JB</p>
-      <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-700">
-        Tem um equipamento parado para dar de entrada ou consertar? A equipe técnica faz a
-        triagem antes de qualquer orçamento.
-      </p>
-      <Link
-        href="/assistencia-tecnica/solicitar"
-        className="micro mt-4 flex h-11 items-center justify-center gap-2 rounded-lg bg-jb-500 text-white transition-colors hover:bg-jb-600"
-      >
-        <Wrench className="size-3.5" aria-hidden />
-        Abrir chamado
-      </Link>
-    </div>
-  );
-}
-
-function AbaDeColecao({
-  href,
-  ativa,
-  icone: Icone,
-  rotulo,
-  quantidade,
-}: {
-  href: string;
-  ativa: boolean;
-  icone: React.ComponentType<{ className?: string }>;
-  rotulo: string;
-  quantidade: number;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={ativa ? "page" : undefined}
-      className={cn(
-        "micro flex h-11 items-center gap-2 rounded-lg px-4 transition-colors",
-        ativa
-          ? "bg-jb-500 text-white"
-          : "border border-hairline bg-white text-graf-600 hover:border-graf-400 hover:text-graf-950",
-      )}
-    >
-      <Icone className="size-3.5" aria-hidden />
-      {rotulo}
-      {/* Na pastilha ativa o número é branco cheio: branco a 50% sobre o
-          vermelho da marca dá 2,2:1 e a 70% dá 2,9:1 — os dois reprovam o
-          4,5:1 da WCAG para texto de 12px. A hierarquia continua existindo
-          pelo peso, que é o do rótulo ao lado. */}
-      <span className={cn("tabular font-normal", ativa ? "text-white" : "text-graf-500")}>
-        {quantidade}
-      </span>
-    </Link>
-  );
-}
-
 export default async function Pagina({
   searchParams,
 }: {
@@ -241,134 +180,37 @@ export default async function Pagina({
     <div className="vitrine">
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
-      <div className="container-jb pt-2 lg:pt-3">
-        {/* Trilha em lista de verdade, como a do componente `Trilha`
-            compartilhado: os links soltos dentro do `<nav>` não eram só um
-            deslize semântico — eram 42x16px de alvo de toque, reprovados pelo
-            portão de responsividade em 320, 360, 390 e 768. Em `<li>`, com
-            44px de altura, a fileira fica tocável e o respiro em volta
-            encolhe na mesma medida, sem empurrar o catálogo para baixo. */}
-        <nav aria-label="Trilha" className="micro text-graf-500">
-          <ol className="flex flex-wrap items-center gap-2">
-            <li>
-              <Link
-                href="/"
-                className="inline-flex min-h-11 items-center rounded-sm transition-colors hover:text-graf-700"
-              >
-                Início
-              </Link>
-            </li>
-            <li className="flex items-center gap-2">
-              <ChevronRight className="size-3" aria-hidden />
-              <Link
-                href="/loja"
-                className="inline-flex min-h-11 items-center rounded-sm transition-colors hover:text-graf-700"
-              >
-                Equipamentos
-              </Link>
-            </li>
-            <li className="flex items-center gap-2">
-              <ChevronRight className="size-3" aria-hidden />
-              <span className="text-graf-700" aria-current="page">
-                Seminovos
-              </span>
-            </li>
-          </ol>
-        </nav>
-
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-x-10 gap-y-4 border-b border-hairline pb-4 lg:mt-3 lg:gap-y-5 lg:pb-5">
-          <div className="max-w-3xl">
-            <h1 className="manchete text-[clamp(2rem,1.4rem+2.6vw,3.25rem)] text-graf-950">
-              Seminovos revisados pela JB
-            </h1>
-            <p className="micro mt-3 text-graf-500">
-              {colecao.totalSeminovos}{" "}
-              {colecao.totalSeminovos === 1 ? "unidade disponível" : "unidades disponíveis"}
-              {promessas.length > 0 ? ` · ${promessas.join(" · ")}` : ""}
-            </p>
-
-            {/* A unidade vendida saiu da lista, e a página diz isso em vez de
-                deixar a contagem encolher em silêncio. O histórico continua
-                a um clique: é prova de bancada, não estoque. */}
-            {colecao.vendidos > 0 ? (
-              <p className="mt-2 text-[0.8125rem] text-graf-500">
-                {colecao.vendidos}{" "}
-                {colecao.vendidos === 1
-                  ? "unidade já foi vendida e saiu da lista."
-                  : "unidades já foram vendidas e saíram da lista."}{" "}
-                <Link
-                  href="/seminovos?vendidos=1"
-                  className="font-semibold text-jb-600 underline-offset-4 transition-colors hover:text-jb-700 hover:underline"
-                >
-                  Ver o que a JB já revisou e vendeu
-                </Link>
-              </p>
-            ) : null}
-            {/* Some no celular: a linha técnica logo acima já diz o essencial,
-                e três linhas de apoio antes do primeiro cartão são o pedágio
-                que a auditoria pediu para tirar do topo do catálogo. O texto
-                continua no HTML para leitor de tela e busca. */}
-            <p className="mt-4 hidden max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600 sm:block">
-              Aqui cada anúncio é uma unidade específica, não um modelo de catálogo. O
-              equipamento passa pela bancada da JB antes de ser publicado, e o que a equipe
-              verificou fica escrito na página dele.
-            </p>
-          </div>
-
-          <nav aria-label="Escolher coleção por condição" className="flex gap-2">
-            <AbaDeColecao
-              href="/loja"
-              ativa={false}
-              icone={PackageCheck}
-              rotulo="Novos"
-              quantidade={colecao.totalNovos}
-            />
-            <AbaDeColecao
-              href="/seminovos"
-              ativa
-              icone={RefreshCcw}
-              rotulo="Seminovo JB"
-              quantidade={colecao.totalSeminovos}
-            />
-          </nav>
-        </div>
-
-        {colecao.categorias.length > 0 ? (
-          <nav
-            aria-label="Categorias desta coleção"
-            className="scrollbar-none -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0"
-          >
-            {colecao.categorias.map((categoria) => (
-              <Link
-                key={categoria.slug}
-                href={categoria.href}
-                className="micro flex h-11 shrink-0 items-center gap-2 rounded-lg border border-hairline bg-white px-4 text-graf-700 transition-colors hover:border-graf-400 hover:text-graf-950"
-              >
-                {categoria.nome}
-                <span className="tabular text-graf-500">{categoria.quantidade}</span>
-              </Link>
-            ))}
-            <Link
-              href="/marcas"
-              className="micro flex h-11 shrink-0 items-center gap-1.5 px-2 text-jb-600 transition-colors hover:text-jb-700"
-            >
-              Ver marcas
-              <ArrowRight className="size-3" aria-hidden />
-            </Link>
-          </nav>
-        ) : null}
-      </div>
-
       <Vitrine
+        sobretitulo="Seminovos JB"
         titulo="Seminovos revisados pela JB"
+        descricao={`${colecao.totalSeminovos} ${
+          colecao.totalSeminovos === 1 ? "unidade disponível" : "unidades disponíveis"
+        }. Cada anúncio representa uma unidade específica${
+          promessas.length ? `, com ${promessas.join(", ")}` : ""
+        }.`}
         trilha={TRILHA}
         caminho={CAMINHO}
         parametros={parametros}
         filtrosFixos={{ condicao: "seminovo" }}
+        atalhos={[
+          ...colecao.categorias.map((categoria) => ({
+            rotulo: categoria.nome,
+            href: categoria.href,
+            quantidade: categoria.quantidade,
+          })),
+          { rotulo: "Equipamentos novos", href: "/loja", quantidade: colecao.totalNovos },
+          ...(colecao.vendidos
+            ? [
+                {
+                  rotulo: "Unidades já vendidas",
+                  href: "/seminovos?vendidos=1",
+                  quantidade: colecao.vendidos,
+                },
+              ]
+            : []),
+        ]}
+        rotuloAtalhos="Categorias e atalhos desta coleção"
         travarCondicao
-        variante="vitrine"
-        semCabecalho
-        apoioNoFiltro={<ApoioDaAssistencia />}
       />
 
       {/* A faixa só existe quando há o que mostrar: ela é montada a partir dos

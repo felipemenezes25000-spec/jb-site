@@ -1,5 +1,3 @@
-import Image from "next/image";
-import Link from "next/link";
 import { Suspense } from "react";
 import type { Prisma, ProductCondition } from "@prisma/client";
 import { ArrowRight, PackageSearch, SearchX, TriangleAlert } from "lucide-react";
@@ -9,13 +7,14 @@ import type {
   ParametrosCatalogo,
 } from "@/components/loja/filtros-catalogo";
 import { ControlesColecao } from "@/components/loja/marketplace/controles-colecao";
+import { CabecalhoColecao } from "@/components/loja/marketplace/cabecalho-colecao";
 import {
   EsqueletoGradeMarketplace,
   GradeMarketplace,
 } from "@/components/loja/marketplace/grade-marketplace";
 import type { ParcelamentoMarketplace } from "@/components/loja/marketplace/tipos";
 import { LinkBotao } from "@/components/ui/button";
-import { Esqueleto, Trilha, Vazio, type Migalha } from "@/components/ui/data";
+import { Esqueleto, Vazio, type Migalha } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
 import {
   buscarProdutosMarketplace,
@@ -65,9 +64,6 @@ const CONDICOES_ROTA: Record<ProductCondition, string> = {
 };
 
 const ORDEM_CONDICAO: ProductCondition[] = ["novo", "seminovo", "recondicionado", "usado"];
-
-/** Só existe uma fileira de atalhos por página — o id fixo dá nome à navegação. */
-const ID_ATALHOS = "atalhos-da-colecao";
 
 export type ParametrosVitrine = ParametrosCatalogo;
 
@@ -412,21 +408,22 @@ function SemResultado({
 /** O convite comercial que fecha toda coleção com resultado. */
 function ChamadaCatalogo() {
   return (
-    <div className="mt-14 rounded-xl border border-graf-200 bg-surface-muted px-6 py-9 sm:mt-16 sm:px-9 sm:py-10">
-      <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-6">
-        <div className="max-w-xl">
-          <h2 className="text-title text-graf-950">Não encontrou o que procura?</h2>
-          <p className="mt-3 text-base leading-relaxed text-graf-600">
-            O catálogo publicado é uma parte do que a JB fornece. Diga o equipamento, a marca e
-            o modelo e a equipe responde com preço e prazo.
-          </p>
-        </div>
-        <LinkBotao href="/orcamento" tamanho="lg" className="shrink-0">
+    <aside
+      data-convite-orcamento
+      className="mt-8 flex flex-col justify-between gap-4 border-y border-graf-200 bg-graf-50 px-5 py-5 sm:flex-row sm:items-center"
+    >
+      <div className="max-w-3xl">
+        <p className="font-bold text-graf-950">Não encontrou a configuração certa?</p>
+        <p className="mt-1 text-sm leading-6 text-graf-600">
+          Informe equipamento, voltagem e necessidade da clínica. A equipe responde com
+          disponibilidade e prazo.
+        </p>
+      </div>
+      <LinkBotao href="/orcamento" tamanho="sm" className="shrink-0">
           Pedir orçamento
           <ArrowRight className="size-4" aria-hidden />
-        </LinkBotao>
-      </div>
-    </div>
+      </LinkBotao>
+    </aside>
   );
 }
 
@@ -473,10 +470,6 @@ async function Resultados({
 
   const paginas = Math.ceil(dados.total / POR_PAGINA);
 
-  /* Lista curta: o convite entra na grade, no lugar da coluna vazia, e a
-     faixa de baixo sai — senão o mesmo pedido apareceria duas vezes. */
-  const listaCurta = dados.total > 0 && dados.total < 3;
-
   return (
     <div>
       {/* cabeçalho da listagem: quantidade à esquerda, posição na lista à
@@ -518,7 +511,7 @@ async function Resultados({
         />
       ) : null}
 
-      {listaCurta ? null : <ChamadaCatalogo />}
+      <ChamadaCatalogo />
     </div>
   );
 }
@@ -682,7 +675,6 @@ export async function Vitrine({
     return consultaTexto ? `${caminho}?${consultaTexto}` : caminho;
   })();
 
-  const daVitrine = variante === "vitrine";
   /* As duas variantes tiram o cabeçalho interno: a página traz o seu. */
   const semCabecalhoInterno = semCabecalho || variante === "colecao";
 
@@ -696,75 +688,15 @@ export async function Vitrine({
       )}
     >
       {semCabecalhoInterno ? null : (
-        <>
-          <Trilha itens={trilha} className="mb-5" />
-
-          <header className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
-            <div className="max-w-2xl">
-              {/* `text-section`, não `text-display`: numa listagem o título nomeia
-                  a coleção, não abre a marca. O degrau de hero fica reservado para
-                  a página principal, e o sobretítulo devolve a hierarquia que o
-                  título sozinho perdia. */}
-              {sobretitulo ? (
-                <p className={cn(daVitrine ? "micro text-jb-600" : "sobretitulo", "mb-3")}>
-                  {sobretitulo}
-                </p>
-              ) : null}
-              <h1
-                className={cn(
-                  daVitrine ? "manchete text-[clamp(2rem,1.4rem+2.6vw,3.25rem)]" : "text-section",
-                  "text-graf-950",
-                )}
-              >
-                {titulo}
-              </h1>
-              {descricao ? <p className="texto-guia mt-4 text-graf-600">{descricao}</p> : null}
-            </div>
-
-            {imagem ? (
-              <div className="flex h-22 w-44 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white p-5">
-                <Image
-                  src={imagem.url}
-                  alt={imagem.alt}
-                  width={176}
-                  height={72}
-                  className="h-full w-auto object-contain"
-                />
-              </div>
-            ) : null}
-          </header>
-
-          {atalhos && atalhos.length > 0 ? (
-            <nav aria-labelledby={ID_ATALHOS} className="mt-8">
-              {/* o rótulo da fileira vira texto na tela: sem ele, uma linha de
-                  pastilhas soltas embaixo do título não explica o que é. O mesmo
-                  texto serve de nome acessível da navegação, sem repetição */}
-              <p
-                id={ID_ATALHOS}
-                className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
-              >
-                {rotuloAtalhos}
-              </p>
-              <ul className="scrollbar-none -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-                {atalhos.map((atalho) => (
-                  <li key={atalho.href} className="shrink-0">
-                    <Link
-                      href={atalho.href}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-                    >
-                      {atalho.rotulo}
-                      {atalho.quantidade !== undefined ? (
-                        <span className="tabular text-[0.8125rem] font-medium text-graf-500">
-                          {atalho.quantidade}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ) : null}
-        </>
+        <CabecalhoColecao
+          sobretitulo={sobretitulo}
+          titulo={titulo}
+          descricao={descricao}
+          trilha={trilha}
+          imagem={imagem}
+          atalhos={atalhos}
+          rotuloAtalhos={rotuloAtalhos}
+        />
       )}
 
       <div className={cn(semCabecalhoInterno ? "mt-5 lg:mt-6" : "mt-7 lg:mt-8")}>

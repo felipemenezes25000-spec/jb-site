@@ -56,4 +56,29 @@ test.describe("Marketplace — coleções", () => {
     await page.keyboard.press("Escape");
     await expect(abrir).toBeFocused();
   });
+
+  test("coloca o primeiro produto na primeira tela e não simula orçamento como card", async ({ page }) => {
+    await page.goto("/loja");
+    const primeiro = page.locator("[data-marketplace-card]").first();
+    await expect(primeiro).toBeVisible();
+    expect((await primeiro.boundingBox())!.y).toBeLessThan(900);
+    await expect(
+      page.locator("[data-marketplace-card] [data-convite-orcamento]"),
+    ).toHaveCount(0);
+  });
+
+  test("usa o mesmo cabeçalho compacto na loja e nas categorias", async ({ page }) => {
+    await page.goto("/loja");
+    await expect(page.locator("[data-cabecalho-colecao]")).toBeVisible();
+
+    const categoria = page
+      .getByRole("navigation", { name: /Categorias/ })
+      .getByRole("link")
+      .first();
+    await categoria.click();
+    await page.waitForURL(/\/categoria\//);
+    await expect(page.locator("[data-marketplace-shell]:visible")).toBeVisible();
+    await expect(page.locator("[data-cabecalho-colecao]:visible")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 }).filter({ visible: true })).toBeVisible();
+  });
 });
