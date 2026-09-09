@@ -92,4 +92,21 @@ test.describe("Marketplace — página do produto", () => {
     const padding = await page.evaluate(() => getComputedStyle(document.body).paddingBottom);
     expect(Number.parseFloat(padding)).toBeGreaterThan(0);
   });
+
+  test("o produto comprável não mistura orçamento ou indisponibilidade", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.goto(`/loja/${produto.slug}`);
+
+    const painel = page.locator("[data-pdp-buybox]");
+    await expect(painel.getByRole("button", { name: "Comprar agora" })).toBeEnabled();
+    await expect(painel.getByText("Disponível sob orçamento")).toHaveCount(0);
+    await expect(painel.getByText("Indisponível", { exact: true })).toHaveCount(0);
+  });
+
+  test("não exibe número de série fora de uma unidade identificável", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.goto(`/loja/${produto.slug}`);
+
+    await expect(page.getByText(/Número de série/i)).toHaveCount(0);
+  });
 });
