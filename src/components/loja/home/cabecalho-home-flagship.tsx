@@ -107,6 +107,9 @@ export function CabecalhoHomeFlagship({
   const [buscaMobile, setBuscaMobile] = useState(false);
   const fecharTimer = useRef<number | null>(null);
   const botaoBusca = useRef<HTMLButtonElement>(null);
+  const refHeader = useRef<HTMLElement>(null);
+  const refMarca = useRef<HTMLDivElement>(null);
+  const refAcoes = useRef<HTMLDivElement>(null);
 
   const menu = centralPublicada
     ? MENU_PRINCIPAL
@@ -159,6 +162,59 @@ export function CabecalhoHomeFlagship({
     fecharTimer.current = window.setTimeout(() => setMega(null), 150);
   }, []);
 
+  /* Quanto espaço a faixa de menus tem de deixar livre nas duas pontas.
+     
+     A faixa sobe para a linha principal em posição absoluta, então ela mede a
+     partir da borda da TELA — e precisa saber onde o logotipo termina e onde
+     as ações da conta começam. Isso já foi tentado com número fixo em CSS e
+     falha sempre pelo mesmo motivo: a largura do bloco da conta depende de
+     quem está logado. Com "Entrar" ele mede 412px; com "Olá, FELIPE" ele
+     cresce, e a navegação encostava nele — 9px de sobreposição em 1920, que é
+     o que aparecia como "Marcas" grudado na Área da Clínica.
+
+     Medir é exato e se corrige sozinho: nome mais longo, janela diferente,
+     atalhos que só existem em tela larga — tudo entra na conta. O `+ 24`
+     é o respiro entre os blocos. */
+  useEffect(() => {
+    const alvo = refHeader.current;
+    if (!alvo) return;
+
+    const medir = () => {
+      const marca = refMarca.current?.getBoundingClientRect();
+      if (marca && marca.width > 0) {
+        alvo.style.setProperty("--jb-topo-esq", `${Math.round(marca.right) + 24}px`);
+      }
+
+      /* O bloco das ações é alinhado à direita dentro de um trilho que começa
+         bem antes dele: medir a caixa do contêiner devolveria a borda do
+         TRILHO, não a do conteúdo, e a reserva sairia gigante. O que
+         interessa é onde o primeiro filho visível começa. */
+      const filhos = [...(refAcoes.current?.children ?? [])]
+        .map((filho) => filho.getBoundingClientRect())
+        .filter((caixa) => caixa.width > 0);
+
+      if (filhos.length > 0) {
+        const inicio = Math.min(...filhos.map((caixa) => caixa.left));
+        alvo.style.setProperty(
+          "--jb-topo-dir",
+          `${Math.round(window.innerWidth - inicio) + 24}px`,
+        );
+      }
+    };
+
+    medir();
+
+    const observador = new ResizeObserver(medir);
+    if (refMarca.current) observador.observe(refMarca.current);
+    if (refAcoes.current) observador.observe(refAcoes.current);
+    window.addEventListener("resize", medir);
+
+    return () => {
+      observador.disconnect();
+      window.removeEventListener("resize", medir);
+    };
+  }, []);
+
   return (
     <>
       <a
@@ -170,7 +226,7 @@ export function CabecalhoHomeFlagship({
 
       <div className="relative z-[61] bg-gradient-to-r from-jb-800 via-jb-500 to-jb-700 text-white">
         <div className="mx-auto grid h-10 max-w-[112rem] grid-cols-[minmax(0,1fr)] items-center px-4 sm:px-6 lg:grid-cols-[max-content_minmax(0,1fr)_max-content] lg:gap-7 lg:px-10">
-          <div className="hidden items-center gap-2 border-r border-white/15 pr-5 text-[0.68rem] font-extrabold text-white/90 lg:flex">
+          <div className="hidden items-center gap-2 border-r border-white/15 pr-5 text-[0.75rem] font-extrabold text-white/90 lg:flex">
             <Clock3 className="size-3.5" aria-hidden />
             {horario || "Atendimento JB"}
           </div>
@@ -190,7 +246,7 @@ export function CabecalhoHomeFlagship({
             </div>
           </div>
 
-          <div className="hidden items-center gap-4 border-l border-white/15 pl-5 text-[0.68rem] font-extrabold lg:flex">
+          <div className="hidden items-center gap-4 border-l border-white/15 pl-5 text-[0.75rem] font-extrabold lg:flex">
             {telefone ? (
               <a href={telHref(telefone)} className="inline-flex items-center gap-1.5 text-white/90 transition hover:text-white">
                 <Phone className="size-3.5" aria-hidden />
@@ -213,6 +269,7 @@ export function CabecalhoHomeFlagship({
       </div>
 
       <header
+        ref={refHeader}
         className={cn(
           "sticky top-0 z-[60] border-b border-jb-100/90 bg-white/97 backdrop-blur-2xl transition-shadow duration-200",
           compacto && "shadow-[0_18px_50px_-38px_rgba(92,8,14,0.45)]",
@@ -230,10 +287,10 @@ export function CabecalhoHomeFlagship({
               compacto ? "h-[64px]" : "h-[78px]",
             )}
           >
-            <div className="flex min-w-0 items-center justify-between gap-3 lg:justify-start">
+            <div ref={refMarca} className="flex min-w-0 items-center justify-between gap-3 lg:justify-start">
               <Link href="/" aria-label="JB Soluções Odontológicas — início" className="group flex min-h-12 shrink-0 items-center">
                 <Logo altura={compacto ? 32 : 38} prioridade />
-                <span className="ml-4 hidden border-l border-jb-100 pl-4 text-[0.52rem] font-black uppercase leading-[1.28] tracking-[0.13em] text-jb-700 2xl:block">
+                <span className="ml-4 hidden border-l border-jb-100 pl-4 text-[0.75rem] font-black uppercase leading-[1.2] tracking-[0.08em] text-jb-700 2xl:block">
                   Marketplace<br />odontológico
                 </span>
               </Link>
@@ -273,7 +330,7 @@ export function CabecalhoHomeFlagship({
               />
             </div>
 
-            <div className="hidden items-center justify-end gap-1.5 lg:flex">
+            <div ref={refAcoes} className="hidden items-center justify-end gap-1.5 lg:flex">
               <div className="rounded-full transition hover:bg-jb-50">{acessoDaConta}</div>
               <div className="rounded-full transition hover:bg-jb-50">{contadorDoCarrinho}</div>
               <Link
@@ -350,10 +407,10 @@ export function CabecalhoHomeFlagship({
             </nav>
 
             <div className="hidden shrink-0 items-center gap-2 2xl:flex">
-              <Link href="/comparar" className="inline-flex min-h-9 items-center gap-2 rounded-full px-3 text-[0.69rem] font-black uppercase tracking-[0.08em] text-jb-700 transition hover:bg-jb-50">
+              <Link href="/comparar" className="inline-flex min-h-9 items-center gap-2 rounded-full px-3 text-[0.75rem] font-black uppercase tracking-[0.08em] text-jb-700 transition hover:bg-jb-50">
                 <Sparkles className="size-3.5" aria-hidden /> Comparar
               </Link>
-              <Link href="/marcas" className="inline-flex min-h-9 items-center gap-2 rounded-full px-3 text-[0.69rem] font-black uppercase tracking-[0.08em] text-graf-950 transition hover:bg-jb-50 hover:text-jb-700">
+              <Link href="/marcas" className="inline-flex min-h-9 items-center gap-2 rounded-full px-3 text-[0.75rem] font-black uppercase tracking-[0.08em] text-graf-950 transition hover:bg-jb-50 hover:text-jb-700">
                 <Tag className="size-3.5" aria-hidden /> Marcas
               </Link>
             </div>
@@ -404,7 +461,7 @@ export function CabecalhoHomeFlagship({
 function CabecalhoMega({ etiqueta, titulo, texto }: { etiqueta: string; titulo: string; texto: string }) {
   return (
     <div>
-      <p className="text-[0.64rem] font-black uppercase tracking-[0.17em] text-jb-700">{etiqueta}</p>
+      <p className="text-[0.75rem] font-black uppercase tracking-[0.17em] text-jb-700">{etiqueta}</p>
       <h2 className="mt-2 max-w-[22ch] font-display text-[clamp(1.55rem,2.1vw,2.35rem)] font-black leading-[0.98] tracking-[-0.045em] text-graf-950">{titulo}</h2>
       <p className="mt-3 max-w-[45rem] text-sm font-medium leading-relaxed text-graf-950/62">{texto}</p>
     </div>
@@ -429,7 +486,7 @@ function LinkLinha({
       <span className="grid size-10 shrink-0 place-items-center rounded-full bg-jb-50 text-jb-700 transition group-hover:bg-jb-500 group-hover:text-white">{icone}</span>
       <span className="min-w-0 flex-1">
         <strong className="block text-sm font-black text-graf-950 transition group-hover:text-jb-700">{titulo}</strong>
-        {apoio ? <small className="mt-1 block text-[0.72rem] font-semibold leading-snug text-graf-950/55">{apoio}</small> : null}
+        {apoio ? <small className="mt-1 block text-[0.75rem] font-semibold leading-snug text-graf-950/55">{apoio}</small> : null}
       </span>
       {final ?? <ArrowRight className="size-3.5 shrink-0 text-jb-600 transition-transform group-hover:translate-x-1" aria-hidden />}
     </Link>
@@ -480,7 +537,7 @@ function MegaCatalogo({ categorias, condicoes }: { categorias: CategoriaMenuHome
       </section>
 
       <section className="border-l border-jb-100 bg-[#fffafa] p-7 xl:p-8">
-        <p className="text-[0.63rem] font-black uppercase tracking-[0.16em] text-jb-700">Condição</p>
+        <p className="text-[0.75rem] font-black uppercase tracking-[0.16em] text-jb-700">Condição</p>
         <h3 className="mt-2 text-xl font-black tracking-[-0.035em] text-graf-950">Como quer comprar?</h3>
         <div className="mt-5">
           {condicoes.slice(0, 4).map((condicao) => (
@@ -498,7 +555,7 @@ function MegaCatalogo({ categorias, condicoes }: { categorias: CategoriaMenuHome
       <aside className="relative overflow-hidden border-l border-jb-100 p-7 xl:p-8">
         <div className="absolute -right-16 -top-16 size-52 rounded-full bg-jb-50 blur-2xl" aria-hidden />
         <div className="relative">
-          <span className="inline-flex items-center gap-2 rounded-full bg-jb-50 px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.13em] text-jb-700">
+          <span className="inline-flex items-center gap-2 rounded-full bg-jb-50 px-3 py-1.5 text-[0.75rem] font-black uppercase tracking-[0.13em] text-jb-700">
             <Sparkles className="size-3.5" aria-hidden /> Decisão
           </span>
           <h3 className="mt-5 font-display text-[1.75rem] font-black leading-[1.02] tracking-[-0.045em] text-graf-950">Compare antes de gastar.</h3>
@@ -528,7 +585,7 @@ function MegaSeminovos({ categorias }: { categorias: CategoriaMenuHome[] }) {
       </section>
 
       <section className="border-l border-jb-100 p-8">
-        <p className="text-[0.63rem] font-black uppercase tracking-[0.16em] text-jb-700">Por categoria</p>
+        <p className="text-[0.75rem] font-black uppercase tracking-[0.16em] text-jb-700">Por categoria</p>
         <h3 className="mt-2 text-xl font-black tracking-[-0.035em] text-graf-950">Vá direto ao tipo de equipamento.</h3>
         <div className="mt-5 grid gap-x-7 sm:grid-cols-2">
           {categorias.slice(0, 6).map((categoria) => (
@@ -538,7 +595,7 @@ function MegaSeminovos({ categorias }: { categorias: CategoriaMenuHome[] }) {
       </section>
 
       <aside className="border-l border-jb-100 bg-[#fffafa] p-8">
-        <p className="text-[0.63rem] font-black uppercase tracking-[0.16em] text-jb-700">Ferramentas</p>
+        <p className="text-[0.75rem] font-black uppercase tracking-[0.16em] text-jb-700">Ferramentas</p>
         <div className="mt-4">
           <LinkLinha href="/comparar" icone={<Sparkles className="size-4" aria-hidden />} titulo="Comparar" apoio="Novo x seminovo lado a lado" />
           <LinkLinha href="/simulador-de-custo" icone={<RefreshCw className="size-4" aria-hidden />} titulo="Simular decisão" apoio="Reparar, seminovo ou novo" />
@@ -562,7 +619,7 @@ function MegaAssistencia({ telefone, whatsapp, horario }: { telefone: string; wh
       </section>
 
       <section className="border-l border-jb-100 bg-[#fffafa] p-8">
-        <p className="text-[0.63rem] font-black uppercase tracking-[0.16em] text-jb-700">Fluxo JB</p>
+        <p className="text-[0.75rem] font-black uppercase tracking-[0.16em] text-jb-700">Fluxo JB</p>
         <ol className="mt-6 space-y-5">
           {["Abra o chamado", "A equipe analisa", "Você acompanha"].map((etapa, indice) => (
             <li key={etapa} className="flex gap-3">
@@ -608,7 +665,7 @@ function MegaManutencao() {
       <aside className="relative overflow-hidden border-l border-jb-100 bg-[#fffafa] p-8">
         <div className="absolute -right-14 -top-14 size-52 rounded-full bg-jb-100/70 blur-3xl" aria-hidden />
         <div className="relative">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.13em] text-jb-700 ring-1 ring-jb-100"><ShieldCheck className="size-3.5" aria-hidden /> Continuidade</span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[0.75rem] font-black uppercase tracking-[0.13em] text-jb-700 ring-1 ring-jb-100"><ShieldCheck className="size-3.5" aria-hidden /> Continuidade</span>
           <h3 className="mt-5 max-w-[14ch] font-display text-[2rem] font-black leading-[0.98] tracking-[-0.045em] text-graf-950">Compra, instalação e manutenção no mesmo relacionamento.</h3>
           <Link href="/manutencao-preventiva" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-jb-500 px-5 text-sm font-black text-white">Conhecer manutenção <ArrowRight className="size-4" aria-hidden /></Link>
         </div>
@@ -745,7 +802,7 @@ function MenuMobileHome({
                         <div className="flex min-h-[62px] items-center gap-2">
                           <Link href={item.href} className="flex min-w-0 flex-1 items-center gap-3 py-3">
                             <span className="grid size-9 shrink-0 place-items-center rounded-full bg-jb-50 text-jb-700"><IconeMenu chave={chave} className="size-4" /></span>
-                            <span className="min-w-0"><strong className="block text-sm font-black text-graf-950">{item.rotulo}</strong><small className="mt-0.5 block truncate text-[0.68rem] font-semibold text-graf-950/50">{item.descricao}</small></span>
+                            <span className="min-w-0"><strong className="block text-sm font-black text-graf-950">{item.rotulo}</strong><small className="mt-0.5 block truncate text-[0.75rem] font-semibold text-graf-950/50">{item.descricao}</small></span>
                           </Link>
                           <button type="button" onClick={() => setSecao(abertoSecao ? null : chave)} aria-expanded={abertoSecao} className="grid size-10 place-items-center rounded-full text-graf-950/55 hover:bg-jb-50 hover:text-jb-700"><ChevronDown className={cn("size-4 transition-transform", abertoSecao && "rotate-180")} aria-hidden /><span className="sr-only">Opções de {item.rotulo}</span></button>
                         </div>
@@ -765,7 +822,7 @@ function MenuMobileHome({
               </nav>
 
               <div className="mt-5">
-                <p className="text-[0.62rem] font-black uppercase tracking-[0.15em] text-jb-700">Minha JB</p>
+                <p className="text-[0.75rem] font-black uppercase tracking-[0.15em] text-jb-700">Minha JB</p>
                 <div className="mt-2 grid grid-cols-2 gap-1">
                   {ATALHOS_CLIENTE.map((item) => <Link key={item.href} href={item.href} className="flex min-h-10 items-center rounded-full px-3 text-sm font-bold text-graf-950 transition hover:bg-jb-50 hover:text-jb-700">{item.rotulo}</Link>)}
                 </div>

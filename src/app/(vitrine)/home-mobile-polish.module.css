@@ -81,7 +81,7 @@
   }
 
   .mobilePolish > :global(section:first-of-type) dl[aria-label="Catálogo JB agora"] dt {
-    font-size: 0.58rem !important;
+    font-size: 0.75rem !important;
     line-height: 1.25 !important;
   }
 
@@ -299,7 +299,7 @@
   }
 
   .mobilePolish > :global(section:first-of-type) dl[aria-label="Catálogo JB agora"] dt {
-    font-size: 0.54rem !important;
+    font-size: 0.75rem !important;
   }
 
   .mobilePolish :global(nav[aria-label="Acesso rápido à loja"] li) {

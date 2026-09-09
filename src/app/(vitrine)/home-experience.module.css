@@ -109,7 +109,7 @@
   padding-block: 0.65rem;
   color: #fff;
   content: "EQUIPAMENTOS + ASSISTÊNCIA + PÓS-VENDA  •  COMPARE ATÉ 3 EQUIPAMENTOS  •  SEMINOVOS REVISADOS PELA JB  •  ASSISTÊNCIA TÉCNICA PRÓPRIA  •  ACOMPANHE TUDO NA ÁREA DA CLÍNICA  •  EQUIPAMENTOS + ASSISTÊNCIA + PÓS-VENDA  •  COMPARE ATÉ 3 EQUIPAMENTOS  •  SEMINOVOS REVISADOS PELA JB  •  ASSISTÊNCIA TÉCNICA PRÓPRIA  •  ACOMPANHE TUDO NA ÁREA DA CLÍNICA  •  ";
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.105em;
   line-height: 1;
@@ -417,7 +417,7 @@
     padding-left: 1rem;
     color: var(--color-jb-700);
     content: "MARKETPLACE ODONTOLÓGICO";
-    font-size: 0.56rem;
+    font-size: 0.75rem;
     font-weight: 900;
     letter-spacing: 0.12em;
     line-height: 1.25;
@@ -446,7 +446,7 @@
 
   :global(body):has(.home) [data-jb-utility-bar="true"] p[class*="min-w-0"]::before {
     padding-block: 0.54rem;
-    font-size: 0.59rem;
+    font-size: 0.75rem;
     animation-duration: 26s;
   }
 }

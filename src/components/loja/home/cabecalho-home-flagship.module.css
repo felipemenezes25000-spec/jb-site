@@ -29,7 +29,7 @@
   align-items: center;
   gap: 0.65rem;
   color: white;
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.115em;
   line-height: 1;
@@ -142,7 +142,7 @@
     left: 1.05rem;
     color: var(--color-graf-950);
     content: "Buscar";
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 900;
     letter-spacing: 0.01em;
     transform: translateY(-50%);
@@ -215,15 +215,48 @@
     grid-template-columns: max-content minmax(0, 1fr) max-content !important;
   }
 
+  /* A faixa dos menus sobe para a linha principal — mas ancorada no espaço
+     que sobra, não numa porcentagem da janela.
+
+     Ela vinha centrada em `left: 44%` com `width: min(42vw, 46rem)`, dois
+     valores que não sabem nada sobre onde as ações da conta começam. E o
+     `display: none` da busca logo acima piora: um item removido da grade não
+     ocupa trilho nenhum, então o bloco de ações escorrega para o trilho DO
+     MEIO — exatamente o espaço em que a navegação estava sendo centrada. O
+     resultado media 85px de sobreposição em 1280 e 96px em 1536: "Manutenção"
+     por cima de "Área da Clínica".
+
+     Agora a faixa ocupa a linha inteira e RESERVA as duas pontas. Os dois
+     valores saíram de medição, não de estimativa: o bloco de ações mede
+     412px (conta + carrinho + botão) tanto em 1280 quanto em 1536, e o
+     logotipo mede 69px até 1535 e 182px daí para cima, quando a assinatura
+     ao lado da marca aparece.
+
+     A reserva da direita é medida da borda da JANELA até onde as ações
+     começam — 495px — e não a largura do bloco: a faixa é absoluta em cima do
+     `<header>`, então ela enxerga a borda da tela, e não a margem interna do
+     contêiner. Sobram 512px de reserva para 495px de necessidade.
+
+     A diferença que importa não é o número: é que ele agora falha para o lado
+     seguro. Se o nome de quem entrou for mais longo e as ações crescerem, a
+     navegação se comprime no espaço restante em vez de deslizar por baixo
+     delas. */
   :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"])) {
     position: absolute !important;
     z-index: 4;
     top: 0;
-    left: 44%;
-    width: min(42vw, 46rem);
+    left: 0;
+    right: 0;
+    width: auto;
+    /* As duas reservas vêm medidas do componente (`--jb-topo-esq` e
+       `--jb-topo-dir`). Os valores fixos são só o primeiro quadro, antes de a
+       medição acontecer: com "Entrar" o bloco de ações mede 412px, e a
+       diferença some no mesmo instante em que o `ResizeObserver` responde. */
+    padding-left: var(--jb-topo-esq, 7.5rem);
+    padding-right: var(--jb-topo-dir, 32rem);
     border: 0 !important;
     background: transparent !important;
-    transform: translateX(-50%);
+    transform: none;
     pointer-events: none;
   }
 
@@ -234,10 +267,20 @@
     padding-inline: 0 !important;
   }
 
+  /* `pointer-events` volta a valer para TUDO que a faixa contém, e não só
+     para a navegação. Os atalhos "Comparar" e "Marcas" ficam no mesmo
+     contêiner e herdavam o `none` do pai: eles apareciam na tela e não
+     respondiam ao clique. A faixa em si continua transparente ao ponteiro —
+     é ela que cobre a linha principal, e sem isso a busca e a conta atrás
+     dela deixariam de receber clique. */
+  :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) > div > *) {
+    pointer-events: auto;
+  }
+
   :global([data-jb-home-header-v2="true"] nav[aria-label="Principal da home"]) {
     justify-content: center !important;
     gap: 0.05rem !important;
-    pointer-events: auto;
+    max-width: 100%;
   }
 
   :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) > div > div:last-child) {
@@ -245,9 +288,31 @@
   }
 }
 
+/* Faixa apertada: entre 1280 e 1399 a composição LOGO | MENUS | AÇÕES cabe
+   por poucos pixels, e os quatro destinos somavam 675px num vão de 633 —
+   "Manutenção" transbordava 10px por cima de "Área da Clínica" mesmo com as
+   pontas reservadas.
+
+   O que sai é o ícone de cada destino, e não o rótulo: ele é decorativo,
+   `aria-hidden`, e custa 24px por item — 96px, o dobro do que falta. Cortar
+   texto para caber seria trocar um defeito visível por um pior. */
+@media (min-width: 1280px) and (max-width: 1399px) {
+  :global([data-jb-home-header-v2="true"] nav[aria-label="Principal da home"] > div > a > svg) {
+    display: none;
+  }
+
+  :global([data-jb-home-header-v2="true"] nav[aria-label="Principal da home"] > div > a) {
+    gap: 0 !important;
+  }
+}
+
 @media (min-width: 1536px) {
+  /* Daí para cima o logotipo ganha a assinatura "Marketplace odontológico" ao
+     lado e passa de 69px para 182px. O primeiro quadro acompanha; do segundo
+     em diante quem manda é a medição. */
   :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"])) {
-    left: 50%;
+    padding-left: var(--jb-topo-esq, max(15rem, calc((100vw - 112rem) / 2 + 15rem)));
+    padding-right: var(--jb-topo-dir, max(32rem, calc((100vw - 112rem) / 2 + 29rem)));
   }
 }
 
@@ -305,7 +370,7 @@
   }
 
   .tickerItem {
-    font-size: 0.58rem;
+    font-size: 0.75rem;
   }
 }
 

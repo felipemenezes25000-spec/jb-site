@@ -4,16 +4,18 @@
 
 /* ========================================================================== */
 /* HOME — ocupar de verdade o espaço nobre do cabeçalho                       */
+/*                                                                            */
+/* Este arquivo cuida de COMO os destinos se distribuem; ONDE a faixa começa e */
+/* termina é de `cabecalho-home-flagship.module.css`, que a ancora nas duas    */
+/* pontas reservadas. As quatro reescritas de `left`/`width` por porcentagem   */
+/* da janela que moravam aqui empurravam a navegação por cima do bloco da      */
+/* conta — 85px de sobreposição em 1280.                                      */
 /* ========================================================================== */
 
 @media (min-width: 1280px) {
   /* A barra central deixa de ser um grupo curto flutuando no meio. Os destinos
      principais dividem entre si a largura disponível e viram uma navegação
      contínua, sem aumentar a fonte artificialmente. */
-  :global(body):has(.headerFill) [data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) {
-    width: min(51vw, 52rem) !important;
-  }
-
   :global(body):has(.headerFill) [data-jb-home-header-v2="true"] nav[aria-label="Principal da home"] {
     width: 100%;
     justify-content: stretch !important;
@@ -53,30 +55,9 @@
   }
 }
 
-/* Notebook largo: mantém distância segura das ações da conta. */
-@media (min-width: 1280px) and (max-width: 1535px) {
-  :global(body):has(.headerFill) [data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) {
-    left: 43.5% !important;
-    width: min(50vw, 47rem) !important;
-  }
-}
-
-/* Desktop comum: usa o espaço extra para os menus respirarem mais. */
-@media (min-width: 1536px) and (max-width: 1919px) {
-  :global(body):has(.headerFill) [data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) {
-    left: 47% !important;
-    width: min(55vw, 58rem) !important;
-  }
-}
-
 /* Em monitor realmente largo, os dois atalhos comerciais que já existem no
    JSX deixam de ficar escondidos: Comparar e Marcas completam a composição. */
 @media (min-width: 1920px) {
-  :global(body):has(.headerFill) [data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) {
-    left: 46.5% !important;
-    width: min(60vw, 66rem) !important;
-  }
-
   :global(body):has(.headerFill) [data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) > div {
     gap: 0.55rem !important;
   }
@@ -103,9 +84,4 @@
   }
 }
 
-@media (min-width: 2200px) {
-  :global(body):has(.headerFill) [data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) {
-    left: 48% !important;
-    width: min(62vw, 70rem) !important;
-  }
-}
+

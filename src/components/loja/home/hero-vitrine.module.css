@@ -69,7 +69,7 @@
   align-items: center;
   gap: 0.7rem;
   color: var(--color-jb-700);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -232,7 +232,7 @@
   gap: 0.7rem 1.15rem;
   margin-top: 1.25rem;
   color: var(--color-graf-950);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 
@@ -285,7 +285,7 @@
 .numeros dt {
   margin-top: 0.42rem;
   color: var(--color-graf-950);
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 730;
   line-height: 1.35;
   opacity: 0.58;
@@ -386,7 +386,7 @@
   color: var(--color-jb-700);
   background: rgb(255 255 255 / 0.94);
   box-shadow: 0 0.85rem 2rem -1.5rem rgb(88 9 14 / 0.34);
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -447,7 +447,7 @@
 }
 
 .calloutTopo small {
-  font-size: 0.58rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -456,7 +456,7 @@
 
 .calloutTopo strong {
   margin-top: 0.26rem;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 900;
 }
 
@@ -491,7 +491,7 @@
 .precoProduto small {
   overflow: hidden;
   color: var(--color-graf-950);
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -626,7 +626,7 @@
 .faixaConfianca small {
   margin-top: 0.2rem;
   color: var(--color-graf-950);
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 650;
   line-height: 1.35;
   opacity: 0.58;
