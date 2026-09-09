@@ -26,6 +26,7 @@
     "e2e:relatorio": "playwright show-report tests/.relatorio",
     "prova:atomicidade": "tsx --conditions=react-server scripts/prova-atomicidade.ts",
     "responsivo": "node scripts/responsivo.mjs",
+    "responsivo:pdp": "node scripts/responsivo-pdp.mjs",
     "a11y": "node scripts/acessibilidade.mjs",
     "conteudo:prever": "tsx scripts/migrar-conteudo-institucional.ts",
     "conteudo:migrar": "tsx scripts/migrar-conteudo-institucional.ts --aplicar",
