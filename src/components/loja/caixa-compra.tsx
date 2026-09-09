@@ -26,27 +26,24 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    Caixa de compra
 
-   O bloco que decide a venda: disponibilidade, preço, parcelamento, serviços
-   que entram junto, quantidade, entrega e os botões. É a ÚNICA moldura da
-   coluna da direita — o resto da coluna corre sem borda, separado por fios.
-   Empilhar quatro cartões diferentes um sobre o outro é o que fazia a página
-   parecer um painel, e não a ficha de um equipamento caro.
+   O bloco que decide a venda: disponibilidade, preço, parcelamento, entrega,
+   quantidade, ação e, por último, personalização com serviços. É a ÚNICA
+   moldura da coluna da direita — o resto da coluna corre sem borda, separado
+   por fios. Empilhar cartões dentro de cartões faz uma ficha de equipamento
+   parecer painel de SaaS; aqui a compra precisa continuar sendo o protagonista.
 
-   Dentro da moldura, cada degrau é separado por um fio: estado e preço em
-   cima, pacote de serviços e quantidade no meio, ação e entrega embaixo.
+   SERVIÇOS SÃO UMA CAMADA OPCIONAL DA DECISÃO
 
-   OS SERVIÇOS VIRARAM UMA ESCOLHA, NÃO TRÊS CAIXAS SOLTAS
-
-   Instalação, preventiva e orientação são o diferencial da JB, e apareciam
-   como três `checkbox` ao lado do botão — ou seja, como taxa extra. Agora são
-   duas alternativas explícitas: só o equipamento, ou equipamento + JB Care com
-   a lista do que entra e o total já somado. Quem quiser escolher item a item
-   abre "montar do meu jeito" e recebe as mesmas caixas de antes.
+   Instalação, preventiva e orientação são diferenciais da JB, mas não podem
+   competir com preço, entrega e CTA. Por isso ficam atrás de uma única linha
+   progressiva "Adicionar serviços JB". Quem quer só o equipamento entende a
+   compra sem atravessar configuração; quem quer acompanhamento abre a linha e
+   recebe exatamente as mesmas escolhas e preços de antes.
 
    A regra que isso NÃO pode quebrar: **serviço pago nunca vem marcado.** O
    estado inicial é "só o equipamento" com os adicionais obrigatórios (os que
    a JB marcou como parte do produto), e nada além disso. Marcar o pacote por
-   padrão seria dark pattern, e o escopo proíbe com todas as letras.
+   padrão seria dark pattern.
 
    Preço e total aqui são só exibição. Quem soma para valer é o servidor, em
    `calcularTotais` e em `criarPedido` — este componente reproduz a MESMA
@@ -289,8 +286,8 @@ export function CaixaCompra({
         )}
       </div>
 
-      {/* Consultar entrega é parte da decisão e vem antes dos complementos e
-          dos botões. Fica fora do formulário para Enter no CEP nunca comprar. */}
+      {/* Consultar entrega é parte da decisão e vem imediatamente depois do
+          preço. Fica fora do formulário para Enter no CEP nunca comprar. */}
       {podeComprar ? <EntregaPorCep produtoId={produtoId} /> : null}
 
       {podeComprar ? (
@@ -300,27 +297,6 @@ export function CaixaCompra({
           {escolhidos.map((id) => (
             <input key={id} type="hidden" name="addons" value={id} />
           ))}
-
-          {addons.length > 0 ? (
-            <PacoteDeServicos
-              obrigatorios={addons.filter((a) => a.obrigatorio)}
-              opcionais={opcionais}
-              escolhidos={escolhidos}
-              pacoteAtivo={pacoteAtivo}
-              precoDoPacote={precoDoPacote}
-              semPreco={semPrecoNoPacote.map((a) => a.nome)}
-              detalhando={detalhando}
-              aoDetalhar={() => setDetalhando((v) => !v)}
-              aoEscolherPacote={escolherPacote}
-              aoAlternar={(serviceId) =>
-                setEscolhidos((atuais) =>
-                  atuais.includes(serviceId)
-                    ? atuais.filter((s) => s !== serviceId)
-                    : [...atuais, serviceId],
-                )
-              }
-            />
-          ) : null}
 
           {!unico ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -355,6 +331,48 @@ export function CaixaCompra({
                 </button>
               </div>
             </div>
+          ) : null}
+
+          {addons.length > 0 ? (
+            <details className="group overflow-hidden rounded-xl border border-graf-200 bg-graf-50/45">
+              <summary className="foco-jb flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2 text-sm font-bold text-graf-900">
+                    <Sliders className="size-4 shrink-0 text-jb-600" aria-hidden />
+                    Adicionar serviços JB
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-5 text-graf-500">
+                    Instalação, orientação e manutenção, quando disponíveis.
+                  </span>
+                </span>
+                <span className="shrink-0 text-xs font-bold text-jb-700 group-open:hidden">
+                  Personalizar
+                </span>
+                <span className="hidden shrink-0 text-xs font-bold text-graf-500 group-open:inline">
+                  Recolher
+                </span>
+              </summary>
+              <div className="border-t border-graf-200 bg-white p-4">
+                <PacoteDeServicos
+                  obrigatorios={addons.filter((a) => a.obrigatorio)}
+                  opcionais={opcionais}
+                  escolhidos={escolhidos}
+                  pacoteAtivo={pacoteAtivo}
+                  precoDoPacote={precoDoPacote}
+                  semPreco={semPrecoNoPacote.map((a) => a.nome)}
+                  detalhando={detalhando}
+                  aoDetalhar={() => setDetalhando((v) => !v)}
+                  aoEscolherPacote={escolherPacote}
+                  aoAlternar={(serviceId) =>
+                    setEscolhidos((atuais) =>
+                      atuais.includes(serviceId)
+                        ? atuais.filter((s) => s !== serviceId)
+                        : [...atuais, serviceId],
+                    )
+                  }
+                />
+              </div>
+            </details>
           ) : null}
 
           {mostrarTotal ? (
@@ -454,7 +472,6 @@ export function CaixaCompra({
           </span>
         </p>
       ) : null}
-
     </div>
   );
 }
