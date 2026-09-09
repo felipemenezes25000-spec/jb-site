@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { Cabecalho } from "@/components/loja/cabecalho";
+import { CabecalhoVitrine } from "@/components/loja/cabecalho-vitrine";
 import {
   AcessoDaConta,
   AcessoDaContaEsqueleto,
@@ -21,14 +21,9 @@ import "./vitrine.css";
 /**
  * Casca das telas de catálogo.
  *
- * É a MESMA casca da loja — mesmo cabeçalho, mesmo rodapé, mesmo comparador.
- * O grupo de rota existe pelo acabamento das listas (`vitrine.css`) e pela
- * densidade do catálogo, não para uma segunda identidade visual.
- *
- * Ele já teve cromo próprio, preto, copiado de um protótipo. Durou pouco: numa
- * tela inteira, fundo escuro com texto branco cansa e ainda briga com a foto
- * do equipamento, que é clara sobre branco. O preto voltou a ser o que o
- * design system sempre disse — bloco pontual, nunca a moldura do site.
+ * A home recebe um cabeçalho estrutural próprio, selecionado no cliente pela
+ * rota atual. As demais páginas continuam usando o cabeçalho compartilhado da
+ * loja, sem herdar a direção flagship da página inicial.
  */
 export default async function VitrineLayout({ children }: { children: React.ReactNode }) {
   const [s, categorias, condicoes, centralPublicada] = await Promise.all([
@@ -41,7 +36,7 @@ export default async function VitrineLayout({ children }: { children: React.Reac
   return (
     <ComparadorProvider>
       <div className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]">
-        <Cabecalho
+        <CabecalhoVitrine
           categorias={categorias}
           condicoes={condicoes}
           centralPublicada={centralPublicada}
