@@ -29,6 +29,13 @@ export async function GET(
               priceCents: true,
               allowDirectPurchase: true,
               shortDescription: true,
+              trackInventory: true,
+              stock: true,
+              addons: {
+                where: { required: true },
+                take: 1,
+                select: { id: true },
+              },
               media: {
                 orderBy: { order: "asc" },
                 take: 1,
@@ -48,27 +55,21 @@ export async function GET(
     return NextResponse.json({ acessorios: [], complementos: [] }, { status: 404 });
   }
 
+  type ItemPublico = {
+    id: string;
+    slug: string;
+    nome: string;
+    descricao: string;
+    precoCents: number | null;
+    imagem: string | null;
+    alt: string;
+    ordem: number;
+    compraRapida: boolean;
+  };
+
   const grupos = {
-    acessorios: [] as Array<{
-      id: string;
-      slug: string;
-      nome: string;
-      descricao: string;
-      precoCents: number | null;
-      imagem: string | null;
-      alt: string;
-      ordem: number;
-    }>,
-    complementos: [] as Array<{
-      id: string;
-      slug: string;
-      nome: string;
-      descricao: string;
-      precoCents: number | null;
-      imagem: string | null;
-      alt: string;
-      ordem: number;
-    }>,
+    acessorios: [] as ItemPublico[],
+    complementos: [] as ItemPublico[],
   };
 
   for (const relacao of produto.relatedFrom) {
@@ -76,18 +77,26 @@ export async function GET(
     const { tipo, ordem } = decodificarOrdemRelacao(relacao.order);
     if (tipo === "alternativa") continue;
 
-    const item = {
+    const compravel =
+      relacao.target.allowDirectPurchase &&
+      relacao.target.priceCents > 0 &&
+      (!relacao.target.trackInventory || relacao.target.stock > 0);
+
+    // Compra rápida só é segura quando o produto não depende de uma escolha
+    // adicional obrigatória. Caso contrário, a pessoa abre a PDP do acessório
+    // e passa pelo configurador normal, em vez de pular uma condição comercial.
+    const compraRapida = tipo === "acessorio" && compravel && relacao.target.addons.length === 0;
+
+    const item: ItemPublico = {
       id: relacao.target.id,
       slug: relacao.target.slug,
       nome: relacao.target.name,
       descricao: relacao.target.shortDescription,
-      precoCents:
-        relacao.target.allowDirectPurchase && relacao.target.priceCents > 0
-          ? relacao.target.priceCents
-          : null,
+      precoCents: compravel ? relacao.target.priceCents : null,
       imagem: relacao.target.media[0]?.media.url ?? null,
       alt: relacao.target.media[0]?.alt || relacao.target.name,
       ordem,
+      compraRapida,
     };
 
     if (tipo === "acessorio") grupos.acessorios.push(item);
