@@ -1,31 +1,16 @@
-/*
- * Cabeçalho público JB — composição premium e responsiva.
- *
- * O componente já separa corretamente utilidade, ação e navegação. Este
- * arquivo dá hierarquia visual para esses três níveis sem duplicar markup nem
- * alterar o comportamento de busca, conta, carrinho, mega menu ou assistência.
- *
- * Breakpoints de intenção:
- *   < 64rem   celular/tablet: ações essenciais + busca expansível + drawer
- *   64–79rem  desktop compacto: busca em linha + conta compacta
- *   >= 80rem  desktop completo: assinatura da marca + CTA + busca ampla
- */
+/* Cabeçalho público: três níveis claros — utilidade, ação e navegação. */
 
-/* ---------------------------------------------------------------- utilidade */
 [data-jb-utility-bar="true"] {
   position: relative;
-  isolation: isolate;
   overflow: hidden;
-  background:
-    linear-gradient(100deg, var(--color-jb-800), var(--color-jb-600) 54%, var(--color-jb-800)) !important;
-  box-shadow: inset 0 -1px rgb(255 255 255 / 0.11);
+  background: linear-gradient(100deg, var(--color-jb-800), var(--color-jb-600) 54%, var(--color-jb-800)) !important;
+  box-shadow: inset 0 -1px rgb(255 255 255 / 0.1);
 }
 
 [data-jb-utility-bar="true"]::after {
   position: absolute;
-  z-index: -1;
   inset: 0;
-  background: linear-gradient(110deg, transparent 28%, rgb(255 255 255 / 0.055) 48%, transparent 66%);
+  background: linear-gradient(110deg, transparent 28%, rgb(255 255 255 / 0.06) 48%, transparent 66%);
   content: "";
   pointer-events: none;
 }
@@ -35,26 +20,13 @@
   text-shadow: 0 1px 1px rgb(70 0 0 / 0.14);
 }
 
-/* -------------------------------------------------------------- superfície */
 header[data-jb-premium-header="true"] {
-  border-bottom-color: rgb(196 14 21 / 0.1) !important;
-  background: rgb(255 255 255 / 0.985) !important;
-  box-shadow:
-    0 1px 0 rgb(26 28 30 / 0.035),
-    0 7px 24px -24px rgb(26 28 30 / 0.32);
+  border-bottom-color: rgb(196 14 21 / 0.09) !important;
+  background: rgb(255 255 255 / 0.97) !important;
+  box-shadow: 0 1px 0 rgb(26 28 30 / 0.035);
 }
 
-/* A linha que contém os três ganchos semânticos do cabeçalho. Usar :has aqui
-   evita amarrar o acabamento à posição de uma div específica na árvore. */
-header[data-jb-premium-header="true"] div:has(> .jb-logo):has(> .jb-busca-topo) {
-  gap: clamp(0.75rem, 1.35vw, 1.55rem) !important;
-}
-
-/* ------------------------------------------------------------------- marca */
 header[data-jb-premium-header="true"] .jb-logo {
-  position: relative;
-  gap: 0.9rem;
-  min-width: 0;
   transition: transform 180ms var(--ease-out-quint), filter 180ms ease;
   filter: drop-shadow(0 4px 8px rgb(111 15 19 / 0.08));
 }
@@ -64,359 +36,114 @@ header[data-jb-premium-header="true"] .jb-logo:hover {
   filter: drop-shadow(0 7px 12px rgb(111 15 19 / 0.12));
 }
 
-/* Em desktop largo, a assinatura preenche o espaço morto ao lado do símbolo e
-   explica imediatamente que a JB é um marketplace odontológico. */
-header[data-jb-premium-header="true"] .jb-logo::after {
-  display: none;
-  min-width: 7.65rem;
-  padding-left: 0.9rem;
-  border-left: 1px solid rgb(196 14 21 / 0.14);
-  content: "MARKETPLACE\A ODONTOLÓGICO";
-  white-space: pre;
-  color: var(--color-jb-700);
-  font-size: 0.625rem;
-  font-weight: 850;
-  line-height: 1.22;
-  letter-spacing: 0.14em;
-}
-
-/* ------------------------------------------------------------------- busca */
-/* header-search.css tinha uma largura fixa de 21–27rem. Em páginas de produto
-   isso deixava centenas de pixels vazios. O campo agora absorve o espaço útil
-   entre marca e ações, mas continua podendo encolher em desktop compacto. */
-header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
-  flex: 1 1 42rem !important;
-  width: auto !important;
-  min-width: 18rem !important;
-  max-width: none !important;
-  margin-left: 0 !important;
+header[data-jb-premium-header="true"] .jb-busca-topo {
+  max-width: 44rem !important;
 }
 
 header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div {
-  height: 3rem !important;
   overflow: hidden;
-  border: 1px solid var(--color-graf-300) !important;
-  border-radius: 0.82rem !important;
-  background:
-    linear-gradient(180deg, #fff, rgb(250 250 250 / 0.78)) !important;
-  box-shadow:
-    0 1px 2px rgb(26 28 30 / 0.025),
-    0 0.55rem 1.5rem -1.25rem rgb(26 28 30 / 0.35) !important;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  border-radius: 0.75rem !important;
+  border-color: var(--color-graf-300) !important;
+  background: var(--color-surface) !important;
+  box-shadow: 0 0.5rem 1.5rem -1.2rem rgb(26 28 30 / 0.34) !important;
 }
 
 header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div:hover {
   border-color: var(--color-graf-450) !important;
-  box-shadow:
-    0 1px 2px rgb(26 28 30 / 0.03),
-    0 0.7rem 1.7rem -1.2rem rgb(26 28 30 / 0.42) !important;
 }
 
 header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div:focus-within {
   border-color: var(--color-jb-400) !important;
-  background: #fff !important;
-  box-shadow:
-    0 0 0 3px rgb(224 20 27 / 0.085),
-    0 0.75rem 1.8rem -1.2rem rgb(26 28 30 / 0.3) !important;
+  box-shadow: 0 0 0 3px rgb(224 20 27 / 0.09) !important;
 }
 
 header[data-jb-premium-header="true"] #busca-cabecalho {
-  min-width: 0;
-  padding-left: 0.25rem !important;
-  font-size: 0.84rem !important;
-  font-weight: 560;
-  letter-spacing: -0.012em;
+  font-weight: 550;
+  letter-spacing: -0.01em;
 }
 
-/* Reativa o submit escondido pelo acabamento antigo. Ele vira botão textual
-   apenas quando há largura suficiente e permanece compacto nos desktops
-   menores. Enter continua funcionando normalmente. */
 header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) button[type="submit"][aria-label="Buscar"] {
-  display: inline-flex !important;
   width: auto !important;
-  min-width: 6.5rem;
+  min-width: 6.75rem;
   height: calc(100% - 0.4rem) !important;
   margin-right: 0.2rem !important;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  border-radius: 0.62rem !important;
-  padding-inline: 0.9rem !important;
+  gap: 0.42rem;
+  border-radius: 0.55rem !important;
+  padding-inline: 0.95rem;
   color: white !important;
-  background: linear-gradient(135deg, var(--color-jb-500), var(--color-jb-600)) !important;
+  background: var(--color-jb-500) !important;
   box-shadow: 0 0.45rem 1rem -0.7rem rgb(165 9 12 / 0.62);
-  transition: transform 160ms var(--ease-out-quint), filter 160ms ease, box-shadow 160ms ease;
+  transition: transform 160ms var(--ease-out-quint), background-color 160ms ease;
 }
 
 header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) button[type="submit"][aria-label="Buscar"]::after {
   content: "Buscar";
   font-size: 0.75rem;
-  font-weight: 850;
-  letter-spacing: -0.01em;
+  font-weight: 800;
 }
 
 header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) button[type="submit"][aria-label="Buscar"]:hover {
   transform: translateY(-1px);
-  filter: brightness(0.96);
-  box-shadow: 0 0.65rem 1.15rem -0.65rem rgb(165 9 12 / 0.7);
-}
-
-/* ------------------------------------------------------------------ ações */
-header[data-jb-premium-header="true"] div:has(> .jb-logo):has(> .jb-busca-topo) > .jb-busca-topo + div {
-  gap: 0.3rem !important;
-}
-
-header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"],
-header[data-jb-premium-header="true"] a[aria-label^="Carrinho"] {
-  border-radius: 0.78rem !important;
-}
-
-header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"] {
-  border-color: rgb(196 14 21 / 0.1) !important;
-  box-shadow: 0 0.45rem 1.25rem -1.05rem rgb(26 28 30 / 0.42) !important;
-}
-
-header[data-jb-premium-header="true"] a[aria-label^="Carrinho"]:hover {
-  color: var(--color-jb-700);
-  background: var(--color-jb-50);
+  background: var(--color-jb-600) !important;
 }
 
 header[data-jb-premium-header="true"] .jb-cta-topo {
   border: 1px solid var(--color-jb-500);
-  background: linear-gradient(135deg, var(--color-jb-500), var(--color-jb-600));
+  background: var(--color-jb-500);
   box-shadow: 0 0.75rem 1.5rem -1rem rgb(165 9 12 / 0.72) !important;
-  transition: transform 170ms var(--ease-out-quint), filter 170ms ease, box-shadow 170ms ease;
+  transition: transform 170ms var(--ease-out-quint), background-color 170ms ease, box-shadow 170ms ease;
 }
 
 header[data-jb-premium-header="true"] .jb-cta-topo:hover {
   transform: translateY(-1px);
-  filter: brightness(0.96);
+  background: var(--color-jb-600);
   box-shadow: 0 0.95rem 1.8rem -1rem rgb(165 9 12 / 0.82) !important;
 }
 
-/* --------------------------------------------------------------- navegação */
-/* Garante navegação de desktop entre 1700–1839px também. O CSS legado a
-   escondia exatamente nessa faixa e fazia monitores grandes parecerem mobile. */
-@media (width >= 64rem) {
-  header[data-jb-premium-header="true"] nav[aria-label="Principal"] {
-    display: flex !important;
-  }
-
-  header[data-jb-premium-header="true"] div:has(> .jb-logo):has(> .jb-busca-topo) > .jb-busca-topo + div > button[aria-haspopup="dialog"] {
-    display: none !important;
-  }
-}
-
 header[data-jb-premium-header="true"] nav[aria-label="Principal"] {
-  width: 100%;
-  min-height: 2.9rem;
-  justify-content: space-between !important;
-  gap: clamp(0.15rem, 0.8vw, 0.8rem) !important;
+  min-height: 2.75rem;
+  justify-content: center;
+  gap: clamp(1.25rem, 3vw, 3.75rem);
 }
 
 header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div {
   position: relative;
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 0 auto;
   justify-content: center;
-  border-radius: 0.7rem 0.7rem 0 0;
-}
-
-header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div + div::before {
-  position: absolute;
-  left: -0.2rem;
-  top: 50%;
-  width: 1px;
-  height: 1.15rem;
-  translate: 0 -50%;
-  background: var(--color-graf-200);
-  content: "";
 }
 
 header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div > a {
-  min-width: 0;
-  justify-content: center;
   transition: color 150ms ease, background-color 150ms ease;
-}
-
-header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div:hover {
-  background: linear-gradient(180deg, rgb(255 245 245 / 0.92), rgb(255 255 255 / 0));
 }
 
 header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div:hover > a {
   color: var(--color-jb-700);
+  background: linear-gradient(180deg, rgb(255 241 241 / 0.75), transparent);
 }
 
 header[data-jb-premium-header="true"] .jb-mega-painel > div {
   border-top: 2px solid rgb(224 20 27 / 0.32) !important;
-  box-shadow:
-    0 1.75rem 5rem rgb(26 28 30 / 0.17),
-    0 0.25rem 0.9rem rgb(196 14 21 / 0.05) !important;
+  box-shadow: 0 1.75rem 5rem rgb(26 28 30 / 0.17), 0 0.25rem 0.9rem rgb(196 14 21 / 0.05) !important;
 }
 
-/* ======================================================= desktop compacto */
-@media (width >= 64rem) and (width < 80rem) {
-  header[data-jb-premium-header="true"] div:has(> .jb-logo):has(> .jb-busca-topo) {
-    gap: 0.65rem !important;
-  }
-
-  header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
-    flex-basis: 30rem !important;
-    min-width: 16rem !important;
-  }
-
-  header[data-jb-premium-header="true"] .jb-cta-topo {
-    display: none !important;
-  }
-
-  header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"] {
-    width: 2.75rem !important;
-    min-width: 2.75rem !important;
-    padding-inline: 0 !important;
-    justify-content: center !important;
-  }
-
-  header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"] > span:last-child {
-    display: none !important;
+@media (max-width: 74.99rem) {
+  header[data-jb-premium-header="true"] .jb-busca-topo {
+    max-width: 32rem !important;
   }
 
   header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) button[type="submit"][aria-label="Buscar"] {
-    width: 2.7rem !important;
-    min-width: 2.7rem !important;
-    padding: 0 !important;
+    width: 2.9rem !important;
+    min-width: 2.9rem;
+    padding: 0;
   }
 
   header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) button[type="submit"][aria-label="Buscar"]::after {
     display: none;
   }
-
-  header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div > a {
-    padding-left: 0.5rem !important;
-  }
-
-  header[data-jb-premium-header="true"] nav[aria-label="Principal"] > div > a span {
-    font-size: 0.76rem;
-  }
 }
 
-/* ============================================================= desktop cheio */
-@media (width >= 80rem) {
-  header[data-jb-premium-header="true"] .jb-logo::after {
-    display: block;
-  }
-
-  header[data-jb-premium-header="true"] .jb-logo {
-    min-width: clamp(11.5rem, 13vw, 13.75rem);
-  }
-
-  header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
-    min-width: 22rem !important;
-  }
-}
-
-@media (width >= 80rem) and (width < 90rem) {
-  header[data-jb-premium-header="true"] .jb-logo::after {
-    min-width: 6.5rem;
-    padding-left: 0.65rem;
-    font-size: 0.56rem;
-    letter-spacing: 0.105em;
-  }
-
-  header[data-jb-premium-header="true"] .jb-logo {
-    min-width: 10.8rem;
-  }
-
-  header[data-jb-premium-header="true"] .jb-cta-topo {
-    min-width: 2.85rem !important;
-    width: 2.85rem !important;
-    padding-inline: 0 !important;
-    overflow: hidden;
-    color: transparent !important;
-    gap: 0 !important;
-  }
-
-  header[data-jb-premium-header="true"] .jb-cta-topo svg {
-    margin: 0 !important;
-    color: white;
-  }
-
-  header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"] > span:last-child {
-    max-width: 6.75rem !important;
-  }
-}
-
-@media (width >= 90rem) {
-  header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
-    min-width: 26rem !important;
-  }
-}
-
-/* ============================================================ tablet/mobile */
-@media (width < 64rem) {
-  header[data-jb-premium-header="true"] {
-    background: rgb(255 255 255 / 0.99) !important;
-  }
-
-  header[data-jb-premium-header="true"] div:has(> .jb-logo):has(> .jb-busca-topo) {
-    gap: 0.35rem !important;
-  }
-
-  header[data-jb-premium-header="true"] .jb-logo {
-    min-width: 0;
-    margin-right: auto;
-  }
-
-  header[data-jb-premium-header="true"] .jb-logo::after {
-    display: none;
-  }
-
-  header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"],
-  header[data-jb-premium-header="true"] a[aria-label^="Carrinho"],
-  header[data-jb-premium-header="true"] button[aria-haspopup="dialog"] {
-    width: 2.75rem !important;
-    min-width: 2.75rem !important;
-    height: 2.75rem !important;
-  }
-
-  /* Mantém a busca expansível com área de toque confortável. */
-  header[data-jb-premium-header="true"] button[aria-expanded]:not([aria-haspopup="dialog"]) {
-    min-width: 2.75rem;
-    min-height: 2.75rem;
-  }
-
-  header[data-jb-premium-header="true"] form[role="search"]:has(#busca-celular) > div {
-    min-height: 3rem;
-    border-radius: 0.85rem !important;
-    border-color: var(--color-graf-300) !important;
-    box-shadow: 0 0.5rem 1.4rem -1.2rem rgb(26 28 30 / 0.34) !important;
-  }
-}
-
-@media (width < 30rem) {
-  header[data-jb-premium-header="true"] div:has(> .jb-logo):has(> .jb-busca-topo) {
-    gap: 0.1rem !important;
-  }
-
-  header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"],
-  header[data-jb-premium-header="true"] a[aria-label^="Carrinho"],
-  header[data-jb-premium-header="true"] button[aria-haspopup="dialog"],
-  header[data-jb-premium-header="true"] button[aria-expanded]:not([aria-haspopup="dialog"]) {
-    width: 2.5rem !important;
-    min-width: 2.5rem !important;
-    height: 2.5rem !important;
-    min-height: 2.5rem !important;
-  }
-}
-
-/* ----------------------------------------------------------- acessibilidade */
 @media (prefers-reduced-motion: reduce) {
-  header[data-jb-premium-header="true"] *,
-  header[data-jb-premium-header="true"] *::before,
-  header[data-jb-premium-header="true"] *::after,
-  [data-jb-utility-bar="true"] * {
+  header[data-jb-premium-header="true"] * {
     scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
   }
 }
