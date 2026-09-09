@@ -186,7 +186,13 @@ export function CaixaCompra({
   const mostrarTotal = totalAddons > 0 || quantidade > 1;
   const servicosComPreco = selecionados.filter((a) => (a.precoCents ?? 0) > 0).length;
 
-  const podeComprar = !soOrcamento && !semEstoque;
+  /* No catálogo JB, adicional com valor <= 0 significa "sob orçamento". Ele
+     pode continuar selecionável para o cliente entender/configurar o pedido,
+     mas a compra direta não pode seguir como se o serviço custasse zero. O
+     Server Action repete esta trava com os dados do banco. */
+  const servicoSobOrcamento = selecionados.find((a) => (a.precoCents ?? 0) <= 0) ?? null;
+  const baseCompravel = !soOrcamento && !semEstoque;
+  const podeComprar = baseCompravel && !servicoSobOrcamento;
 
   /* ------------------------------------------------------------- JB Care */
 
@@ -288,9 +294,9 @@ export function CaixaCompra({
 
       {/* Consultar entrega é parte da decisão e vem imediatamente depois do
           preço. Fica fora do formulário para Enter no CEP nunca comprar. */}
-      {podeComprar ? <EntregaPorCep produtoId={produtoId} /> : null}
+      {baseCompravel ? <EntregaPorCep produtoId={produtoId} /> : null}
 
-      {podeComprar ? (
+      {baseCompravel ? (
         <form action={acao} className={`${CLASSE_SECAO_COMPRA} space-y-4`}>
           <input type="hidden" name="produtoId" value={produtoId} />
           <input type="hidden" name="quantidade" value={quantidade} />
@@ -392,19 +398,30 @@ export function CaixaCompra({
             </div>
           ) : null}
 
+          {servicoSobOrcamento ? (
+            <Aviso
+              tom="atencao"
+              titulo={
+                servicoSobOrcamento.obrigatorio
+                  ? "Há um serviço obrigatório sob orçamento"
+                  : "O serviço selecionado ainda precisa de orçamento"
+              }
+            >
+              {servicoSobOrcamento.obrigatorio
+                ? "A compra direta fica bloqueada até a JB definir o valor desse serviço. Solicite uma proposta para receber equipamento e serviço separados."
+                : "Desmarque esse serviço para comprar o equipamento agora, ou solicite uma proposta com o serviço incluído."}
+            </Aviso>
+          ) : null}
+
           {estado.erro ? <Aviso tom="erro">{estado.erro}</Aviso> : null}
 
           <div className={CLASSE_ACOES_COMPRA}>
-            {/* Comprar agora é o primário; adicionar ao carrinho é a
-                alternativa de quem ainda vai juntar itens. O `onClick` só
-                define o destino — quem envia é o `type="submit"`, para o
-                formulário continuar funcionando sem JavaScript pronto. */}
             <Botao
               type="submit"
               tamanho="lg"
               larguraTotal
-              disabled={enviando}
-              carregando={enviando && irParaPagamento}
+              disabled={enviando || !podeComprar}
+              carregando={enviando && irParaPagamento && podeComprar}
               onClick={() => {
                 destinoRef.current = "checkout";
                 setIrParaPagamento(true);
@@ -419,8 +436,8 @@ export function CaixaCompra({
               variante="secundario"
               tamanho="lg"
               larguraTotal
-              disabled={enviando}
-              carregando={enviando && !irParaPagamento}
+              disabled={enviando || !podeComprar}
+              carregando={enviando && !irParaPagamento && podeComprar}
               onClick={() => {
                 destinoRef.current = "carrinho";
                 setIrParaPagamento(false);
@@ -532,7 +549,7 @@ function PacoteDeServicos({
                 obrigatoriamente neste equipamento
                 {(addon.precoCents ?? 0) > 0
                   ? ` (+ ${formatarPreco(addon.precoCents ?? 0)})`
-                  : ""}
+                  : " — sob orçamento"}
               </span>
             </li>
           ))}
@@ -670,9 +687,6 @@ function AlternativaDoPacote({
           <span className="text-[0.9375rem] font-bold text-graf-900">{titulo}</span>
           {valor !== null ? (
             <span className="shrink-0 text-right text-[0.9375rem] font-bold tabular text-graf-800">
-              {/* "a partir de" numa linha própria: colado ao valor virava
-                  "A PARTIR DE + R$ 770,00", em que o sinal de mais parece parte
-                  da frase e não do preço. */}
               {aPartirDe ? (
                 <span className="block text-[0.75rem] font-semibold uppercase tracking-wide text-graf-500">
                   a partir de
