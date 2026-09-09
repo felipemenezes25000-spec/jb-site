@@ -78,9 +78,6 @@
 /* HOME — produto sem moldura / sem fundo branco                              */
 /* ========================================================================== */
 
-/* Fotos de produto da home: JPEG branco se funde ao palco; PNG/WebP já
-   transparentes continuam transparentes. A sombra fica no equipamento, não
-   numa caixa em volta dele. */
 :global([data-jb-home="true"] a[href^="/loja/"] img),
 :global([data-jb-home="true"] article.placa > div:first-child img),
 :global([data-jb-home="true"] div[class*="grid-cols-3"][class*="divide-x"] img) {
@@ -89,8 +86,6 @@
   filter: drop-shadow(0 1.6rem 1.45rem rgb(67 18 22 / 0.14));
 }
 
-/* Palcos de imagem que eram cartões/retângulos claros passam a ser palco
-   aberto. Textos, preço e CTA continuam com a própria hierarquia. */
 :global([data-jb-home="true"] a[href^="/loja/"] > div:has(> img)),
 :global([data-jb-home="true"] a[href^="/loja/"] > span:has(> img)),
 :global([data-jb-home="true"] a[href^="/loja/"] span:has(> img)),
@@ -103,27 +98,95 @@
   --tw-ring-color: transparent !important;
 }
 
-/* O hero tinha uma massa branca orgânica atrás da foto. Sem ela o produto
-   fica realmente solto no layout; permanecem somente halo e grafismos da JB. */
 :global([data-jb-home="true"] a[href^="/loja/"]:has(> span > img)::before) {
   display: none !important;
 }
 
-/* Cards de vitrine compartilhados continuam sendo cards nas páginas de loja,
-   mas na HOME a área da fotografia não vira uma placa branca. */
 :global([data-jb-home="true"] article.placa > div:first-child) {
   background: transparent !important;
 }
 
 /* ========================================================================== */
-/* TOPO — sem barra de busca gigante                                          */
+/* TOPO — menu protagonista + busca compacta expansível                       */
 /* ========================================================================== */
 
 @media (min-width: 1024px) {
-  /* Remove a busca fixa do desktop. A busca principal continua disponível no
-     hero, onde ela faz sentido como intenção de compra. */
+  /* O campo deixa de ser uma barra fixa. Em repouso vira uma pequena ação
+     "Buscar"; ao receber foco cresce para a esquerda e volta a oferecer todas
+     as sugestões do componente original. */
   :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)) {
-    display: none !important;
+    position: relative;
+    z-index: 12;
+    display: block !important;
+    width: 7.25rem !important;
+    max-width: 7.25rem !important;
+    justify-self: end;
+    overflow: visible;
+    transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1), max-width 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2))::before {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 1.05rem;
+    color: var(--color-graf-950);
+    content: "Buscar";
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    transform: translateY(-50%);
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)):focus-within {
+    width: min(34rem, 43vw) !important;
+    max-width: min(34rem, 43vw) !important;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)):focus-within::before {
+    opacity: 0;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)) form > div {
+    position: relative;
+    height: 3rem !important;
+    border-color: var(--color-jb-100) !important;
+    background: linear-gradient(180deg, #fff, #fff8f8) !important;
+    box-shadow: 0 14px 30px -26px rgb(92 8 14 / 0.45);
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)) form > div > svg:first-of-type {
+    display: none;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)) input {
+    position: absolute;
+    z-index: 4;
+    inset: 0;
+    width: 100%;
+    padding: 0;
+    opacity: 0;
+    cursor: text;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)):focus-within form > div > svg:first-of-type {
+    display: block;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)):focus-within input {
+    position: static;
+    width: auto;
+    padding-inline: 0.75rem;
+    opacity: 1;
+  }
+
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)) button[type="submit"] {
+    position: relative;
+    z-index: 5;
+    margin-left: auto;
+    background: transparent !important;
   }
 
   :global([data-jb-home-header-v2="true"] > div:first-of-type > div) {
@@ -132,9 +195,6 @@
 }
 
 @media (min-width: 1280px) {
-  /* Em desktop largo a própria navegação sobe para o centro da linha
-     principal. Resultado: logo | menus | área da clínica/carrinho/assistência.
-     Nada de um buraco vazio onde antes ficava o campo de busca. */
   :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"])) {
     position: absolute !important;
     z-index: 4;
@@ -160,11 +220,58 @@
     pointer-events: auto;
   }
 
-  /* Comparar e Marcas deixam de competir com as ações primárias do topo;
-     seguem disponíveis nos mega menus e nas seções da home. */
   :global([data-jb-home-header-v2="true"] > div:has(> div > nav[aria-label="Principal da home"]) > div > div:last-child) {
     display: none !important;
   }
+
+  /* Quando a busca está aberta ela sobe acima da navegação central e ganha um
+     fundo próprio, sem empurrar os menus. */
+  :global([data-jb-home-header-v2="true"] > div:first-of-type > div > div:nth-child(2)):focus-within {
+    z-index: 18;
+  }
+}
+
+/* ========================================================================== */
+/* RODAPÉ — links precisam parecer links                                      */
+/* ========================================================================== */
+
+:global(body):has([data-jb-home="true"]) footer nav[aria-label="Rodapé"] a {
+  position: relative;
+  margin-inline: -0.55rem;
+  padding-inline: 0.55rem 0.65rem;
+  border-radius: 999px !important;
+  cursor: pointer;
+  transition:
+    color 170ms ease,
+    background-color 170ms ease,
+    transform 170ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 170ms ease !important;
+}
+
+:global(body):has([data-jb-home="true"]) footer nav[aria-label="Rodapé"] a::after {
+  display: inline-block;
+  margin-left: auto;
+  color: var(--color-jb-600);
+  content: "→";
+  font-size: 0.85rem;
+  font-weight: 900;
+  opacity: 0;
+  transform: translateX(-0.35rem);
+  transition: opacity 160ms ease, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:global(body):has([data-jb-home="true"]) footer nav[aria-label="Rodapé"] a:hover,
+:global(body):has([data-jb-home="true"]) footer nav[aria-label="Rodapé"] a:focus-visible {
+  color: var(--color-jb-700) !important;
+  background: linear-gradient(90deg, #fff0f0, #fff8f8);
+  box-shadow: inset 0 0 0 1px rgb(216 25 34 / 0.075);
+  transform: translateX(0.28rem);
+}
+
+:global(body):has([data-jb-home="true"]) footer nav[aria-label="Rodapé"] a:hover::after,
+:global(body):has([data-jb-home="true"]) footer nav[aria-label="Rodapé"] a:focus-visible::after {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 @keyframes tickerFlagship {
@@ -190,7 +297,9 @@
 
   :global([data-jb-home="true"] a[href^="/loja/"] img),
   :global([data-jb-home="true"] article.placa > div:first-child img),
-  :global([data-jb-home="true"] div[class*="grid-cols-3"][class*="divide-x"] img) {
+  :global([data-jb-home="true"] div[class*="grid-cols-3"][class*="divide-x"] img),
+  :global(body):has([data-jb-home="true"]) footer nav[aria-label="Rodapé"] a,
+  :global(body):has([data-jb-home="true"]) footer nav[aria-label="Rodapé"] a::after {
     transition: none !important;
   }
 }
