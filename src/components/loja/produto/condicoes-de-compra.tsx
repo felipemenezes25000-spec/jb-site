@@ -1,4 +1,4 @@
-import { PackageCheck, Plug, ShieldCheck, Store, Truck, Wrench } from "lucide-react";
+import { PackageCheck, Plug, ShieldCheck, Store, Truck } from "lucide-react";
 
 import { formatarPreco } from "@/lib/format";
 
@@ -89,12 +89,6 @@ export function CondicoesDeCompra({
       detalhe: "Confira a rede elétrica da sala antes da compra.",
     });
   }
-
-  linhas.push({
-    icone: Wrench,
-    titulo: "Assistência técnica própria",
-    detalhe: "Venda e suporte técnico com a mesma equipe JB.",
-  });
 
   return (
     <section

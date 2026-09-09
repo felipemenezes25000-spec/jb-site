@@ -52,4 +52,28 @@ test.describe("Marketplace — página do produto", () => {
     expect(caixaPreco!.y).toBeLessThan(caixaCep!.y);
     expect(caixaCep!.y).toBeLessThan(caixaComprar!.y);
   });
+
+  test("organiza conteúdo técnico antes de relacionados e evita chamadas repetidas", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.goto(`/loja/${produto.slug}`);
+
+    const preparo = page.locator("#preparo");
+    const entrega = page.locator("#entrega-e-garantia");
+    const relacionados = page.locator("#relacionados");
+    await expect(preparo).toBeVisible();
+    await expect(entrega).toBeVisible();
+    await expect(relacionados).toBeVisible();
+
+    const candidatos = [page.locator("#ficha-tecnica"), preparo, entrega];
+    for (const candidato of candidatos) {
+      if (await candidato.count()) {
+        expect((await candidato.boundingBox())!.y).toBeLessThan(
+          (await relacionados.boundingBox())!.y,
+        );
+      }
+    }
+    expect(
+      await page.getByText("Assistência técnica própria", { exact: true }).count(),
+    ).toBeLessThanOrEqual(1);
+  });
 });
