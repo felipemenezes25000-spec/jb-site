@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, PackagePlus, Puzzle, ShieldCheck, ShoppingCart } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState } from "react";
 
 import {
   adicionarAoCarrinho,
@@ -11,7 +11,7 @@ import {
 } from "@/app/acoes/carrinho";
 import { formatarPreco } from "@/lib/format";
 
-type ItemCrossSell = {
+export type ItemCrossSell = {
   id: string;
   slug: string;
   nome: string;
@@ -23,7 +23,7 @@ type ItemCrossSell = {
   compraRapida: boolean;
 };
 
-type Resposta = {
+export type DadosCrossSell = {
   acessorios: ItemCrossSell[];
   complementos: ItemCrossSell[];
 };
@@ -42,7 +42,7 @@ function AdicionarAcessorio({ item }: { item: ItemCrossSell }) {
         <button
           type="submit"
           disabled={pendente}
-          className="foco-jb inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-graf-950 px-3 text-xs font-extrabold text-white transition-colors hover:bg-graf-800 disabled:cursor-wait disabled:opacity-65"
+          className="foco-jb inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-graf-950 px-3 text-xs font-extrabold text-white transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-graf-800 disabled:cursor-wait disabled:translate-y-0 disabled:opacity-65"
         >
           {estado.ok ? (
             <Check className="size-3.5" aria-hidden />
@@ -78,7 +78,7 @@ function CartaoProduto({
   const compraDireta = tipo === "acessorio" && item.compraRapida;
 
   return (
-    <article className="group grid min-w-0 grid-cols-[5.75rem_minmax(0,1fr)] gap-4 rounded-2xl border border-graf-200 bg-white p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-[0_10px_30px_rgba(15,23,42,0.07)] sm:grid-cols-1 sm:p-4">
+    <article className="group grid min-w-0 grid-cols-[5.75rem_minmax(0,1fr)] gap-4 rounded-2xl border border-graf-200 bg-white p-3 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-[0_10px_30px_rgba(15,23,42,0.07)] sm:grid-cols-1 sm:p-4">
       <Link
         href={`/loja/${item.slug}`}
         className="foco-jb relative aspect-square overflow-hidden rounded-xl bg-graf-50 sm:aspect-[4/3]"
@@ -161,19 +161,24 @@ function Secao({
   return (
     <section
       id={id}
-      className="scroll-mt-32 border-t border-graf-200 py-9 lg:py-11"
+      className="scroll-mt-32 border-t border-graf-200 py-9 lg:py-10"
       aria-labelledby={`${id}-titulo`}
     >
-      <div className="mb-5 flex items-start gap-3">
-        <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700">
-          <Icone className="size-5" aria-hidden />
-        </span>
-        <div>
-          <h2 id={`${id}-titulo`} className="text-xl font-extrabold tracking-[-0.025em] text-graf-950 lg:text-2xl">
-            {titulo}
-          </h2>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-graf-500">{subtitulo}</p>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700">
+            <Icone className="size-5" aria-hidden />
+          </span>
+          <div>
+            <h2 id={`${id}-titulo`} className="text-xl font-extrabold tracking-[-0.025em] text-graf-950 lg:text-2xl">
+              {titulo}
+            </h2>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-graf-500">{subtitulo}</p>
+          </div>
         </div>
+        <span className="hidden shrink-0 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-400 sm:block">
+          Seleção JB
+        </span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -195,35 +200,11 @@ function Secao({
   );
 }
 
-export function CrossSellIntencional({ slug }: { slug: string }) {
-  const [dados, setDados] = useState<Resposta | null>(null);
-
-  useEffect(() => {
-    const controlador = new AbortController();
-
-    void fetch(`/api/loja/${encodeURIComponent(slug)}/cross-sell`, {
-      signal: controlador.signal,
-      cache: "no-store",
-    })
-      .then(async (resposta) => {
-        if (!resposta.ok) return null;
-        return (await resposta.json()) as Resposta;
-      })
-      .then((resultado) => {
-        if (resultado) setDados(resultado);
-      })
-      .catch((erro: unknown) => {
-        if (erro instanceof DOMException && erro.name === "AbortError") return;
-        console.error("Falha ao carregar cross-sell da PDP", erro);
-      });
-
-    return () => controlador.abort();
-  }, [slug]);
-
-  if (!dados || (dados.acessorios.length === 0 && dados.complementos.length === 0)) return null;
+export function CrossSellIntencional({ dados }: { dados: DadosCrossSell }) {
+  if (dados.acessorios.length === 0 && dados.complementos.length === 0) return null;
 
   return (
-    <div className="container-jb max-w-[112rem]">
+    <>
       <Secao
         tipo="acessorio"
         titulo="Complete sua compra"
@@ -236,6 +217,6 @@ export function CrossSellIntencional({ slug }: { slug: string }) {
         subtitulo="Produtos que complementam o fluxo da clínica sem competir com este equipamento."
         itens={dados.complementos}
       />
-    </div>
+    </>
   );
 }
