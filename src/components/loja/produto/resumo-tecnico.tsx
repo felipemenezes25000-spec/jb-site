@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { BadgeCheck, ChevronDown, Star } from "lucide-react";
 
 import { CONDICAO_PDP, type CondicaoProduto } from "@/components/loja/produto/condicao";
 import { Etiqueta } from "@/components/ui/data";
 import { normalizar } from "@/lib/busca/intencao";
+import { carregarResumoAvaliacoesProdutoPorSku } from "@/lib/marketplace/avaliacoes-produto";
 import type { DestaqueProduto } from "@/lib/marketplace/resumo-produto";
 
 type Props = {
@@ -26,7 +27,7 @@ type Identificador = {
   valor: string;
 };
 
-export function ResumoTecnicoProduto({
+export async function ResumoTecnicoProduto({
   nome,
   resumo,
   modelo,
@@ -42,6 +43,7 @@ export function ResumoTecnicoProduto({
 }: Props) {
   const desenho = CONDICAO_PDP[condicao];
   const modeloUtil = modelo.trim() && normalizar(modelo) !== normalizar(categoria?.nome ?? "");
+  const avaliacao = await carregarResumoAvaliacoesProdutoPorSku(sku);
 
   const principais: (Identificador | null)[] = [
     modeloUtil ? { rotulo: "Modelo", valor: modelo.trim() } : null,
@@ -92,6 +94,28 @@ export function ResumoTecnicoProduto({
       >
         {nome}
       </h1>
+
+      {avaliacao ? (
+        <a
+          href="#avaliacoes-verificadas"
+          aria-label={`${avaliacao.media.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} de 5 em ${avaliacao.total} ${avaliacao.total === 1 ? "avaliação verificada" : "avaliações verificadas"}`}
+          className="foco-jb mt-3 inline-flex min-h-8 items-center gap-2 rounded-lg text-sm font-semibold text-graf-700 transition-colors hover:text-jb-700"
+        >
+          <span className="inline-flex items-center gap-1 font-extrabold tabular text-graf-950">
+            <Star className="size-4 fill-current text-graf-900" aria-hidden />
+            {avaliacao.media.toLocaleString("pt-BR", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+          </span>
+          <span className="text-graf-300" aria-hidden>·</span>
+          <span className="underline decoration-graf-300 underline-offset-4">
+            {avaliacao.total} {avaliacao.total === 1 ? "avaliação" : "avaliações"}
+          </span>
+          <BadgeCheck className="size-4 text-ok-700" aria-hidden />
+          <span className="sr-only"> verificadas</span>
+        </a>
+      ) : null}
 
       {resumo ? (
         <p className="mt-3 max-w-[48ch] text-[0.9375rem] leading-6 text-graf-600">{resumo}</p>
