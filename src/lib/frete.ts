@@ -1,40 +1,34 @@
 import "server-only";
 
+import { cookies } from "next/headers";
 import type { Prisma, ShippingKind } from "@prisma/client";
 
+import { lerCarrinho } from "@/lib/carrinho";
 import { somenteDigitos } from "@/lib/format";
+import {
+  cotacoesMelhorEnvio,
+  rotuloDaOpcaoMelhorEnvio,
+  statusMelhorEnvio,
+  type ItemCotacaoMelhorEnvio,
+} from "@/lib/melhor-envio";
 import { prisma } from "@/lib/prisma";
+import { COOKIE_ESCOLHA_FRETE, lerEscolhaFrete } from "@/lib/selecao-frete";
 
-/**
- * Cálculo do frete.
- *
- * A JB cadastra em /admin/frete um `ShippingProfile` (a regra) com N
- * `ShippingZone` (faixa de CEP com preço e prazo fixos). Até aqui nada lia
- * esses dados: o checkout mandava `sob_orcamento` para todo mundo e a loja
- * vendia com frete a combinar mesmo tendo tabela cadastrada.
- *
- * Três decisões sustentam este arquivo:
- *
- * 1. `calcularFrete` é pura — recebe os perfis já lidos e devolve o valor.
- *    É ela que o teste exercita, e é ela que o servidor chama. Não existe uma
- *    segunda conta em lugar nenhum.
- *
- * 2. Na dúvida, `sob_orcamento`. CEP fora de toda faixa, produto sem perfil e
- *    sem padrão, perfil marcado como "sob orçamento": tudo cai no
- *    comportamento de hoje. Errar para menos aqui é a JB pagar frete que não
- *    cobrou; errar para "orçar depois" é só um telefonema.
- *
- * 3. O CEP é comparado como texto de 8 dígitos, exatamente como
- *    `salvarZonaFrete` grava (início completado com zeros, fim com noves).
- *    Comparar número perderia o zero à esquerda de todo CEP do Sudeste.
- */
+/* ============================================================================
+   Frete
 
-/* ------------------------------------------------------------------ tipos */
+   A tabela própria da JB continua existindo e continua testável como função
+   pura. Quando o Melhor Envio está configurado, o checkout tenta a cotação
+   real primeiro; se a API estiver fora, o cadastro estiver incompleto ou a
+   pessoa tiver escolhido explicitamente a tabela, a regra local assume.
+
+   O preço sempre nasce no servidor. O navegador só informa CEP e a modalidade
+   que a pessoa escolheu antes do checkout.
+   ============================================================================ */
 
 export type FaixaDeFrete = {
   id: string;
   nome: string;
-  /** 8 dígitos, sem máscara — como o admin grava. */
   cepInicio: string;
   cepFim: string;
   valorCents: number;
@@ -46,24 +40,21 @@ export type PerfilDeFrete = {
   id: string;
   nome: string;
   tipo: ShippingKind;
-  /** a partir deste subtotal o frete deste perfil zera; `null` = nunca */
   gratisAcimaCents: number | null;
   faixas: FaixaDeFrete[];
 };
 
-/** Um item do carrinho, do ponto de vista do frete. */
 export type ItemDoFrete = {
-  /** perfil próprio do produto; `null` cai no perfil padrão da loja */
   perfil: PerfilDeFrete | null;
 };
 
 export type MotivoDoFrete =
-  | "faixa" // casou com uma faixa de CEP e tem preço
-  | "gratis" // acima do mínimo, ou perfil do tipo grátis
-  | "retirada" // o próprio perfil só admite retirada
-  | "sem_frete" // não há nada físico para transportar
-  | "cep_invalido" // CEP ausente ou com menos de 8 dígitos
-  | "sem_faixa"; // CEP fora de toda faixa, ou perfil sem regra de preço
+  | "faixa"
+  | "gratis"
+  | "retirada"
+  | "sem_frete"
+  | "cep_invalido"
+  | "sem_faixa";
 
 export type Frete = {
   tipo: ShippingKind;
@@ -73,45 +64,23 @@ export type Frete = {
   motivo: MotivoDoFrete;
 };
 
-/**
- * O recorte que a tela usa.
- *
- * A loja não precisa do enum do banco nem do motivo — precisa saber o que
- * escrever, quanto somar e se o valor ainda vai ser orçado. Manter este tipo
- * separado deixa o componente cliente importar só um `type`.
- */
 export type FreteExibido = {
   rotulo: string;
   valorCents: number;
   prazoDias: number | null;
-  /** `true` quando a JB ainda vai orçar — o valor NÃO entra no total. */
   orcadoDepois: boolean;
 };
 
-/* --------------------------------------------------------------- rótulos */
-
-/** Mesmo texto que o checkout gravava antes de existir cálculo. */
 export const ROTULO_SOB_ORCAMENTO = "Entrega — frete calculado após análise";
 export const ROTULO_RETIRADA = "Retirada na JB";
 export const ROTULO_GRATIS = "Entrega — frete grátis";
 export const ROTULO_SEM_FRETE = "Entrega — sem custo de transporte";
 
-/* ------------------------------------------------------------- utilitários */
-
-/** 8 dígitos ou `null`. Nada de "quase um CEP". */
 export function normalizarCep(cep: string | null | undefined): string | null {
   const digitos = somenteDigitos(cep ?? "");
   return digitos.length === 8 ? digitos : null;
 }
 
-/**
- * Limites da faixa em 8 dígitos.
- *
- * O admin exige no mínimo 5 dígitos e completa: início com zeros, fim com
- * noves. Faixa gravada fora desse formato (importação antiga, edição direta no
- * banco) é ignorada — deixá-la passar como "00000000–99999999" faria uma
- * linha quebrada cobrir o Brasil inteiro.
- */
 function limitesDaFaixa(faixa: FaixaDeFrete): { inicio: string; fim: string } | null {
   const inicio = somenteDigitos(faixa.cepInicio);
   const fim = somenteDigitos(faixa.cepFim);
@@ -122,13 +91,6 @@ function limitesDaFaixa(faixa: FaixaDeFrete): { inicio: string; fim: string } | 
   return ate < de ? null : { inicio: de, fim: ate };
 }
 
-/**
- * Faixa que atende o CEP dentro de um perfil.
- *
- * Faixas podem se sobrepor — o cadastro não impede. Quando isso acontece vence
- * a de menor `ordem`, que é a coluna com que a JB ordena a tabela; empatou,
- * vence a mais barata, para nunca cobrar a mais por acidente de cadastro.
- */
 export function faixaParaCep(perfil: PerfilDeFrete, cep: string): FaixaDeFrete | null {
   const candidatas = perfil.faixas.filter((faixa) => {
     const limites = limitesDaFaixa(faixa);
@@ -155,7 +117,6 @@ function sobOrcamento(motivo: MotivoDoFrete): Frete {
   };
 }
 
-/** Retirada não passa por faixa nenhuma: é sempre zero. */
 export function freteDeRetirada(): Frete {
   return {
     tipo: "retirada",
@@ -175,8 +136,6 @@ export function paraExibicao(frete: Frete): FreteExibido {
   };
 }
 
-/* ------------------------------------------------------------- o cálculo */
-
 type Contribuicao = {
   tipo: ShippingKind;
   rotulo: string;
@@ -184,29 +143,15 @@ type Contribuicao = {
   prazoDias: number | null;
 };
 
-/**
- * Quanto custa entregar este carrinho neste CEP.
- *
- * `subtotalCents` é o que a pessoa paga pelos itens (já sem o cupom): é sobre
- * esse valor que o "frete grátis acima de X" decide. Usar o subtotal cheio
- * daria frete grátis a quem, com o desconto, não chegou ao mínimo.
- *
- * Com perfis diferentes no mesmo carrinho, é uma entrega só: vale o perfil
- * mais caro e o prazo mais longo. Somar os perfis cobraria dois fretes de
- * quem comprou duas coisas que vão no mesmo caminhão.
- */
+/** Regra própria da JB, pura e sem rede. */
 export function calcularFrete(entrada: {
   cep: string;
   subtotalCents: number;
   produtos: readonly ItemDoFrete[];
-  /** perfil marcado como padrão em /admin/frete, para quem não tem o seu */
   perfilPadrao?: PerfilDeFrete | null;
 }): Frete {
   const cep = normalizarCep(entrada.cep);
   const perfilPadrao = entrada.perfilPadrao ?? null;
-
-  // o mesmo perfil em três produtos é um perfil só: cobrar por item seria
-  // cobrar três fretes da mesma tabela
   const efetivos = new Map<string, PerfilDeFrete>();
   let semPerfil = false;
 
@@ -216,13 +161,10 @@ export function calcularFrete(entrada: {
       semPerfil = true;
       continue;
     }
-    // `nao_aplicavel` é o produto que não viaja (licença, serviço embutido):
-    // não exige frete e não impede o cálculo dos outros
     if (perfil.tipo === "nao_aplicavel") continue;
     efetivos.set(perfil.id, perfil);
   }
 
-  // produto sem perfil e sem padrão: ninguém sabe quanto custa levar isso
   if (semPerfil) return sobOrcamento("sem_faixa");
 
   if (efetivos.size === 0) {
@@ -251,7 +193,6 @@ export function calcularFrete(entrada: {
     if (perfil.tipo === "sob_orcamento") return sobOrcamento("sem_faixa");
 
     if (perfil.tipo === "gratis") {
-      // grátis é grátis em qualquer lugar; a faixa entra só pelo prazo
       const faixa = cep ? faixaParaCep(perfil, cep) : null;
       contribuicoes.push({
         tipo: "gratis",
@@ -262,9 +203,7 @@ export function calcularFrete(entrada: {
       continue;
     }
 
-    // entrega_local e transportadora precisam da faixa para ter preço
     if (!cep) return sobOrcamento("cep_invalido");
-
     const faixa = faixaParaCep(perfil, cep);
     if (!faixa) return sobOrcamento("sem_faixa");
 
@@ -280,8 +219,6 @@ export function calcularFrete(entrada: {
   }
 
   const cobrancas = contribuicoes.filter((c) => c.tipo !== "retirada");
-
-  // todo item do carrinho é de perfil "só retirada"
   if (cobrancas.length === 0) return freteDeRetirada();
 
   const dominante = cobrancas.reduce((maior, atual) =>
@@ -311,8 +248,6 @@ export function calcularFrete(entrada: {
     motivo: "faixa",
   };
 }
-
-/* --------------------------------------------------------- leitura do banco */
 
 const SELECAO_PERFIL = {
   id: true,
@@ -354,19 +289,13 @@ function paraPerfil(bruto: PerfilBruto | null): PerfilDeFrete | null {
   };
 }
 
-/**
- * Lê os perfis do banco e calcula. É a porta que o servidor usa.
- *
- * Só entram produtos: serviço não tem perfil de frete, e carrinho sem produto
- * nenhum não tem o que transportar.
- */
-export async function calcularFreteDePedido(entrada: {
+/** Calcula só pela tabela interna; usado também como fallback do agregador. */
+export async function calcularFreteTabelaDePedido(entrada: {
   cep: string;
   subtotalCents: number;
   produtoIds: readonly string[];
 }): Promise<Frete> {
   const ids = [...new Set(entrada.produtoIds)];
-
   if (ids.length === 0) {
     return calcularFrete({ cep: entrada.cep, subtotalCents: entrada.subtotalCents, produtos: [] });
   }
@@ -376,12 +305,6 @@ export async function calcularFreteDePedido(entrada: {
       where: { id: { in: ids } },
       select: { id: true, shippingProfile: { select: SELECAO_PERFIL } },
     }),
-    /**
-     * `salvarPerfilFrete` garante um padrão só por transação, mas o banco não
-     * tem índice único para isso. `orderBy` fixo faz duas leituras seguidas
-     * escolherem o mesmo perfil, em vez de alternarem conforme o plano do
-     * Postgres — o cliente veria o frete mudar sem mexer em nada.
-     */
     prisma.shippingProfile.findFirst({
       where: { isDefault: true },
       select: SELECAO_PERFIL,
@@ -395,4 +318,82 @@ export async function calcularFreteDePedido(entrada: {
     produtos: produtos.map((produto) => ({ perfil: paraPerfil(produto.shippingProfile) })),
     perfilPadrao: paraPerfil(padrao),
   });
+}
+
+/**
+ * Monta os itens reais do carrinho, incluindo QUANTIDADE. O método antigo
+ * recebia só IDs e portanto não tinha informação suficiente para uma API de
+ * transportadora cobrar duas unidades do mesmo SKU corretamente.
+ */
+async function itensDoCarrinhoParaMelhorEnvio(): Promise<ItemCotacaoMelhorEnvio[]> {
+  const carrinho = await lerCarrinho();
+  if (!carrinho) return [];
+
+  return carrinho.items.flatMap((item) => {
+    if (item.parentId || !item.productId || item.product?.status !== "active") return [];
+    const produto = item.product;
+    return [
+      {
+        id: produto.id,
+        name: produto.name,
+        quantity: item.quantity,
+        unitPriceCents: produto.priceCents,
+        weightGrams: produto.weightGrams,
+        widthMm: produto.widthMm,
+        heightMm: produto.heightMm,
+        depthMm: produto.depthMm,
+      },
+    ];
+  });
+}
+
+/**
+ * Porta única usada pelo checkout.
+ *
+ * Melhor Envio primeiro quando há integração e modalidade selecionada. Falha
+ * externa nunca quebra a compra: cai na tabela própria da JB. O checkout ainda
+ * recalcula esta função na confirmação, então o valor exibido não é aceito de
+ * volta do navegador.
+ */
+export async function calcularFreteDePedido(entrada: {
+  cep: string;
+  subtotalCents: number;
+  produtoIds: readonly string[];
+}): Promise<Frete> {
+  const status = statusMelhorEnvio();
+
+  if (status.quoteReady) {
+    try {
+      const jar = await cookies();
+      const escolha = lerEscolhaFrete(jar.get(COOKIE_ESCOLHA_FRETE)?.value);
+      const usarMelhorEnvio = escolha?.kind !== "tabela" && escolha?.kind !== "retirada";
+
+      if (usarMelhorEnvio) {
+        const itens = await itensDoCarrinhoParaMelhorEnvio();
+        if (itens.length > 0) {
+          const opcoes = await cotacoesMelhorEnvio({ postalCode: entrada.cep, items: itens });
+          const opcao =
+            escolha?.kind === "melhor_envio"
+              ? opcoes.find((item) => item.serviceId === escolha.serviceId)
+              : opcoes[0];
+
+          if (opcao) {
+            return {
+              tipo: "transportadora",
+              rotulo: rotuloDaOpcaoMelhorEnvio(opcao),
+              valorCents: opcao.priceCents,
+              prazoDias: opcao.deliveryDays,
+              motivo: "faixa",
+            };
+          }
+        }
+      }
+    } catch (erro) {
+      // Cotação externa é uma dependência; a loja não fica indisponível quando
+      // ela cai. O erro fica no servidor e a tabela interna assume.
+      console.error("[frete/melhor-envio] fallback para tabela", erro);
+    }
+  }
+
+  return calcularFreteTabelaDePedido(entrada);
 }
