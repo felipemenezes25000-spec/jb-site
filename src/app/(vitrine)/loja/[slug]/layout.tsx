@@ -18,8 +18,9 @@ import { prisma } from "@/lib/prisma";
  * Segunda camada da PDP.
  *
  * A página principal continua responsável pela compra e pela ficha completa.
- * Este layout acrescenta duas decisões que não devem aumentar a sensação de
- * "página infinita": comparação rápida e prova social verificável.
+ * Este layout acrescenta decisões que não devem aumentar a sensação de
+ * "página infinita": comparação rápida, prova social verificável e a
+ * continuidade do pós-venda JB.
  *
  * Avaliação só entra aqui quando as três condições são verdadeiras:
  * 1. a pessoa autorizou uso público;
@@ -137,6 +138,7 @@ function preco(produto: ProdutoComparavel) {
 function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
   if (produtos.length < 2) return null;
   const linhas = linhasDaComparacao(produtos);
+  const atual = produtos[0];
   const hrefCompleto = `/comparar?${produtos
     .slice(0, 3)
     .map((produto) => `p=${encodeURIComponent(produto.slug)}`)
@@ -173,7 +175,64 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
         </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-graf-200 bg-white">
+      {/* No celular, uma tabela de 720px obrigaria o usuário a descobrir a
+          comparação arrastando horizontalmente. Cada alternativa vira uma
+          leitura direta "este × outro", mantendo os rótulos sempre visíveis. */}
+      <div className="space-y-3 md:hidden">
+        {produtos.slice(1, 3).map((alternativa) => (
+          <article key={alternativa.id} className="overflow-hidden rounded-2xl border border-graf-200 bg-white">
+            <div className="grid grid-cols-2 border-b border-graf-200">
+              <div className="bg-jb-50/45 p-4">
+                <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
+                  Este modelo
+                </span>
+                <p className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950">
+                  {atual.name}
+                </p>
+                <p className="tabular mt-2 text-sm font-extrabold text-graf-950">{preco(atual)}</p>
+              </div>
+              <div className="p-4">
+                <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
+                  Alternativa
+                </span>
+                <Link
+                  href={`/loja/${alternativa.slug}`}
+                  className="foco-jb mt-1 block line-clamp-2 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
+                >
+                  {alternativa.name}
+                </Link>
+                <p className="tabular mt-2 text-sm font-extrabold text-graf-950">
+                  {preco(alternativa)}
+                </p>
+              </div>
+            </div>
+
+            <dl className="divide-y divide-graf-100">
+              {linhas.map((linha) => (
+                <div key={linha.id} className="p-3.5">
+                  <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-graf-500">
+                    {linha.rotulo}
+                  </dt>
+                  <dd className="mt-2 grid grid-cols-2 gap-3 text-sm font-semibold text-graf-800">
+                    <span className="min-w-0 break-words">{valorDaLinha(atual, linha.id)}</span>
+                    <span className="min-w-0 break-words">{valorDaLinha(alternativa, linha.id)}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <Link
+              href={`/loja/${alternativa.slug}`}
+              className="foco-jb flex min-h-11 items-center justify-center gap-2 border-t border-graf-200 px-4 text-sm font-bold text-jb-700 hover:bg-graf-50"
+            >
+              Ver {alternativa.name}
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-graf-200 bg-white md:block">
         <table className="w-full min-w-[720px] border-collapse text-left">
           <thead>
             <tr>
