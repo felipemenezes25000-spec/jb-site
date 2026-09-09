@@ -9,7 +9,6 @@ import {
   BookOpen,
   ChevronDown,
   Clock,
-  Headset,
   Menu,
   MessageCircle,
   Package,
@@ -20,7 +19,6 @@ import {
   ShieldCheck,
   Sparkles,
   Tag,
-  Truck,
   User,
   Wrench,
   X,
@@ -68,114 +66,6 @@ type Props = {
 type ChaveMegaPremium = "catalogo" | "seminovos" | "assistencia" | "manutencao" | "central";
 
 const MENSAGEM_WHATSAPP = "Olá! Vim pelo site da JB.";
-
-/* ============================================================================
-   Nível 4 — o que a JB garante em toda compra
-
-   Quatro promessas fixas, escritas à mão de propósito: elas não dependem do
-   catálogo, valem para o site inteiro e é por isso que moram no cabeçalho e
-   não numa vitrine.
-
-   A faixa nasceu como um componente separado que procurava o `<header>` no
-   DOM e injetava esta seção por portal, montado no layout raiz. Funcionava,
-   mas custava caro: um MutationObserver ficava rodando em toda rota — painel
-   e Área da Clínica inclusive, onde este cabeçalho nem existe —, o estado de
-   "compacto" passava a existir duas vezes (o do React e um `data-` escrito à
-   mão no scroll) e o acabamento se prendia à estrutura das `div` do header,
-   quebrando em silêncio a cada mexida no layout. Aqui ela é o que sempre foi:
-   o quarto nível do cabeçalho, renderizado pelo cabeçalho.
-
-   Some ao rolar. É apresentação de marca, não navegação: quem já está lendo a
-   página precisa da barra grudada curta, e o que tem de sobreviver ali é
-   busca, conta, carrinho e direção do catálogo.
-   ============================================================================ */
-
-const DESTAQUES = [
-  { titulo: "Ofertas especiais", descricao: "Equipamentos com condições exclusivas", Icone: Tag },
-  { titulo: "Frete para todo o Brasil", descricao: "Agilidade e segurança na entrega", Icone: Truck },
-  { titulo: "Suporte especializado", descricao: "Fale com a equipe técnica JB", Icone: Headset },
-  { titulo: "Pós-venda de confiança", descricao: "Seu consultório sempre funcionando", Icone: ShieldCheck },
-] as const;
-
-const TEMPO_DESTAQUE_MS = 4600;
-
-function FaixaDestaques({ recolhida }: { recolhida: boolean }) {
-  const reduzido = useReducedMotion();
-  const [atual, setAtual] = useState(0);
-
-  /* O rodízio vive aqui, e não no cabeçalho inteiro: um `setInterval` no
-     componente de cima redesenharia busca, conta, carrinho e mega menu a cada
-     4,6 segundos para trocar duas linhas de texto.
-
-     Ele para quando a faixa está recolhida — nada de contar tempo para
-     animar o que ninguém está vendo — e quando a pessoa pediu menos
-     movimento, caso em que a primeira promessa fica fixa. */
-  useEffect(() => {
-    if (reduzido || recolhida) return;
-    const relogio = window.setInterval(
-      () => setAtual((indice) => (indice + 1) % DESTAQUES.length),
-      TEMPO_DESTAQUE_MS,
-    );
-    return () => window.clearInterval(relogio);
-  }, [reduzido, recolhida]);
-
-  const { titulo, descricao, Icone } = DESTAQUES[atual];
-
-  return (
-    <section
-      className="jb-promo-ticker"
-      data-recolhida={recolhida ? "true" : "false"}
-      aria-label="O que a JB garante"
-    >
-      {/* Acima de 1400px cabem as quatro lado a lado; abaixo disso elas se
-          revezam. Só uma das duas versões existe por vez — a outra sai do
-          desenho e da árvore de acessibilidade por `display: none`, então
-          ninguém ouve a mesma promessa duas vezes. */}
-      <div className="jb-promo-ticker__desktop">
-        {DESTAQUES.map(({ titulo: t, descricao: d, Icone: I }, indice) => (
-          <div className="jb-promo-ticker__item" key={t}>
-            <span className="jb-promo-ticker__icon">
-              <I aria-hidden />
-            </span>
-            <span className="jb-promo-ticker__copy">
-              <strong>{t}</strong>
-              <small>{d}</small>
-            </span>
-            {indice < DESTAQUES.length - 1 ? (
-              <span className="jb-promo-ticker__divider" aria-hidden />
-            ) : null}
-          </div>
-        ))}
-      </div>
-
-      <div className="jb-promo-ticker__compact">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={titulo}
-            initial={reduzido ? false : { opacity: 0, y: 7 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduzido ? undefined : { opacity: 0, y: -7 }}
-            transition={{ duration: reduzido ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="jb-promo-ticker__compact-item"
-          >
-            <span className="jb-promo-ticker__icon">
-              <Icone aria-hidden />
-            </span>
-            <span className="jb-promo-ticker__copy">
-              <strong>{titulo}</strong>
-              <small>{descricao}</small>
-            </span>
-            <span className="jb-promo-ticker__progress" aria-hidden>
-              {DESTAQUES.map((item, indice) => (
-                <i key={item.titulo} data-active={indice === atual ? "true" : "false"} />
-              ))}
-            </span>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </section>
-  );
-}
 
 function chaveDoItem(item: ItemMenu): ChaveMegaPremium {
   if (item.href === "/loja") return "catalogo";
@@ -328,9 +218,9 @@ export function Cabecalho({
       {temBarraUtilidade ? (
         <div
           data-jb-utility-bar="true"
-          className="hidden bg-gradient-to-r from-jb-700 via-jb-600 to-jb-700 text-white lg:block"
+          className="hidden bg-jb-700 text-white lg:block"
         >
-          <div className="mx-auto flex h-10 max-w-[105rem] items-center gap-7 px-8 lg:px-10 text-[0.78rem]">
+          <div className="mx-auto flex h-9 max-w-[105rem] items-center gap-7 px-8 text-[0.75rem] lg:px-10">
             {horario ? (
               <p className="flex shrink-0 items-center gap-2 font-semibold text-white/90">
                 <Clock className="size-4" aria-hidden />
@@ -384,9 +274,9 @@ export function Cabecalho({
         )}
       >
         <div className="mx-auto max-w-[105rem] px-5 sm:px-8 lg:px-10">
-          <div className={cn("flex items-center gap-4 transition-[height] duration-200", compacto ? "h-[64px]" : "h-[78px]")}>
+          <div className={cn("flex items-center gap-4 transition-[height] duration-200", compacto ? "h-[60px]" : "h-[70px]")}>
             <Link href="/" aria-label="JB Soluções Odontológicas — início" className="jb-logo flex min-h-11 shrink-0 items-center rounded-lg">
-              <Logo altura={compacto ? 34 : 42} prioridade />
+              <Logo altura={compacto ? 32 : 38} prioridade />
             </Link>
 
 
@@ -462,7 +352,7 @@ export function Cabecalho({
                        cabeçalho. Aqui é texto, com um filete vermelho embaixo
                        de quem está aberto ou ativo — o mesmo sinal que a
                        marca usa em todo o resto do site. */
-                    className="relative flex h-12 items-center"
+                    className="relative flex h-11 items-center"
                     onMouseEnter={() => {
                       cancelarFechamento();
                       setMega(chave);
@@ -472,7 +362,7 @@ export function Cabecalho({
                       href={item.href}
                       aria-current={estaAtivo ? "page" : undefined}
                       className={cn(
-                        "group relative flex h-12 items-center gap-2 rounded-t-lg px-3 text-[0.8125rem] font-bold transition-colors",
+                        "group relative flex h-11 items-center gap-2 rounded-t-lg px-3 text-[0.8125rem] font-bold transition-colors",
                         "after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors after:content-['']",
                         aberto || estaAtivo
                           ? "text-jb-700 after:bg-jb-500"
@@ -508,8 +398,6 @@ export function Cabecalho({
             </nav>
           </div>
         </div>
-
-        <FaixaDestaques recolhida={compacto} />
 
         <AnimatePresence initial={false}>
           {buscaAberta ? (
