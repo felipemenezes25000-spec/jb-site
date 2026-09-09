@@ -3,12 +3,13 @@
 import {
   consultarFrete as consultarFreteBase,
   finalizarCompra as finalizarCompraBase,
+  tentarPagamentoNovamente as tentarPagamentoNovamenteBase,
   type EstadoCheckout,
   type RespostaFrete,
 } from "@/app/acoes/checkout-base";
 import { ErroFreteSelecionado } from "@/lib/frete";
 
-export * from "@/app/acoes/checkout-base";
+export type { EstadoCheckout, RespostaFrete } from "@/app/acoes/checkout-base";
 
 /**
  * A prévia e o fechamento usam a mesma conta no servidor. Quando a modalidade
@@ -36,10 +37,20 @@ export async function finalizarCompra(
     if (erro instanceof ErroFreteSelecionado) {
       return {
         erro: erro.message,
-        // O checkout leva a pessoa de volta à etapa de entrega e foca o CEP.
         campo: "cep",
       };
     }
     throw erro;
   }
+}
+
+/**
+ * Mantém a ação pública de nova tentativa de pagamento sem reexportar o módulo
+ * inteiro. Em arquivo `use server`, todo export de runtime precisa ser async.
+ */
+export async function tentarPagamentoNovamente(
+  anterior: EstadoCheckout,
+  formData: FormData,
+): Promise<EstadoCheckout> {
+  return tentarPagamentoNovamenteBase(anterior, formData);
 }
