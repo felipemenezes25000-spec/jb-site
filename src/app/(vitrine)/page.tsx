@@ -23,6 +23,7 @@ import { ETIQUETA_CATALOGO, ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { JsonLd, localNegocioJsonLd, organizacaoJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
+import headerStyles from "./home-header-flagship.module.css";
 import styles from "./home-experience.module.css";
 
 export const metadata: Metadata = {
@@ -68,7 +69,7 @@ export default async function HomePage() {
   ].slice(0, 3);
 
   return (
-    <div className={styles.home} data-jb-home="true">
+    <div className={`${styles.home} ${headerStyles.flagship}`} data-jb-home="true">
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
       <HeroVitrine
