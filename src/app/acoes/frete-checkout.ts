@@ -23,6 +23,8 @@ import { getSettings, ligado } from "@/lib/settings";
 export type OpcaoEntregaCheckout = {
   key: string;
   provider: "melhor_envio" | "tabela";
+  companyId?: number;
+  serviceId?: number;
   companyName: string;
   serviceName: string;
   priceCents: number;
@@ -73,6 +75,8 @@ async function montarOpcoes(cep: string): Promise<OpcaoEntregaCheckout[]> {
         ...externas.map((item) => ({
           key: item.key,
           provider: "melhor_envio" as const,
+          companyId: item.companyId,
+          serviceId: item.serviceId,
           companyName: item.companyName,
           serviceName: item.serviceName,
           priceCents: item.priceCents,
@@ -177,8 +181,14 @@ export async function escolherEntrega(formData: FormData) {
   const valida = opcoes.find(
     (item) => item.provider === "melhor_envio" && item.key === `me:${serviceId}`,
   );
-  if (!valida) throw new Error("A modalidade escolhida não está mais disponível para este CEP.");
+  if (!valida || !valida.companyId || !valida.serviceId) {
+    throw new Error("A modalidade escolhida não está mais disponível para este CEP.");
+  }
 
-  await salvarCookie({ kind: "melhor_envio", serviceId });
+  await salvarCookie({
+    kind: "melhor_envio",
+    serviceId: valida.serviceId,
+    companyId: valida.companyId,
+  });
   redirect("/checkout");
 }
