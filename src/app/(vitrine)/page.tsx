@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 
+import { AtalhosHome } from "@/components/loja/home/atalhos-home";
 import { lerParcelamento } from "@/components/loja/home/comum";
 import { ChamadaDestacada, FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
 import { HeroVitrine, type NumeroDaHome } from "@/components/loja/home/hero-vitrine";
@@ -19,6 +20,8 @@ import { formatarPreco } from "@/lib/format";
 import { ETIQUETA_CATALOGO, ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { JsonLd, localNegocioJsonLd, organizacaoJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
+
+import styles from "./home-experience.module.css";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -55,8 +58,14 @@ export default async function HomePage() {
     ...catalogo.procurados.map((produto) => produto.slug),
   ].filter((slug): slug is string => Boolean(slug));
 
+  const paraComparar = [
+    ...catalogo.ofertas,
+    ...catalogo.seminovos,
+    ...catalogo.procurados,
+  ].slice(0, 3);
+
   return (
-    <>
+    <div className={styles.home}>
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
       <HeroVitrine
@@ -67,6 +76,7 @@ export default async function HomePage() {
       />
 
       <TickerHome />
+      <AtalhosHome />
 
       <Suspense fallback={<EsqueletoCategoriasHome />}>
         <SecaoCategorias />
@@ -79,14 +89,16 @@ export default async function HomePage() {
         rotuloDoLink="Ver tudo"
         produtos={catalogo.ofertas.slice(0, 4)}
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
+        variante="ofertas"
       />
 
       <ChamadaDestacada
-        sobretitulo="Ferramenta de comparação"
-        titulo="Coloque até 3 equipamentos frente a frente"
-        texto="Preço, potência, capacidade, garantia, prazo e instalação na mesma tabela — sem abrir cinco abas."
+        sobretitulo="Compare antes de decidir"
+        titulo="Três equipamentos. Uma decisão muito mais clara."
+        texto="Preço, potência, capacidade, garantia, prazo e instalação na mesma leitura — sem abrir cinco abas nem perder o contexto da compra."
         href="/comparar"
-        rotulo="Abrir comparação"
+        rotulo="Abrir comparador"
+        produtos={paraComparar}
       />
 
       <FaixaVitrine
@@ -98,6 +110,7 @@ export default async function HomePage() {
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
         colunas={{ base: 1, sm: 2, lg: 4 }}
         fundo="nevoa"
+        variante="seminovos"
       />
 
       <FaixaVitrine
@@ -107,6 +120,7 @@ export default async function HomePage() {
         rotuloDoLink="Catálogo completo"
         produtos={catalogo.procurados.slice(0, 8)}
         parcelamento={{ max: parcelamento.max, minimoCents: parcelamento.minimaCents }}
+        variante="procurados"
       />
 
       <VistosRecentemente
@@ -120,6 +134,6 @@ export default async function HomePage() {
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
       </Suspense>
-    </>
+    </div>
   );
 }

@@ -1,0 +1,70 @@
+.home {
+  position: relative;
+  overflow: clip;
+  color: var(--color-graf-950);
+  background: #fff;
+}
+
+/* A home usa uma paleta deliberadamente rígida: preto para leitura, vermelho
+   para ação/estado e branco para superfície. Isso vale só dentro da home e não
+   contamina catálogo, checkout, conta ou backoffice. */
+.home :global([class*="text-graf-"]),
+.home :global([class*="text-ok-"]),
+.home :global([class*="text-warn-"]) {
+  color: var(--color-graf-950) !important;
+}
+
+.home :global([class*="bg-ok-"]),
+.home :global([class*="bg-warn-"]),
+.home :global([class*="bg-graf-950"]) {
+  background-color: var(--color-jb-500) !important;
+}
+
+.home :global([class*="ring-ok-"]),
+.home :global([class*="ring-warn-"]) {
+  --tw-ring-color: var(--color-jb-500) !important;
+}
+
+.home::before {
+  position: absolute;
+  z-index: 0;
+  top: 42rem;
+  left: 50%;
+  width: min(94vw, 112rem);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-jb-200), transparent);
+  content: "";
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.home > :global(section) {
+  position: relative;
+  z-index: 1;
+}
+
+@supports (animation-timeline: view()) {
+  .home > :global(section:not(:first-child)) {
+    animation: revelarHome linear both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 24%;
+  }
+}
+
+@keyframes revelarHome {
+  from {
+    opacity: 0.86;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home > :global(section) {
+    animation: none !important;
+    transform: none !important;
+  }
+}
