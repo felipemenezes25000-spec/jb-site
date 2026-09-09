@@ -29,28 +29,33 @@ test.describe("Marketplace — página do produto", () => {
     ).toBeVisible();
   });
 
-  test("mantém preço, CEP e ações na ordem de decisão", async ({ page }) => {
+  test("mantém preço, ações, entrega e personalização na ordem de decisão", async ({ page }) => {
     const { frete } = fixtures();
     await page.goto(`/loja/${frete.slug}`);
 
     const painel = page.locator("[data-pdp-buybox]");
     const preco = painel.getByText(emReais(frete.precoCents)).first();
-    const cep = painel.getByRole("textbox", { name: /CEP/ });
     const comprar = painel.getByRole("button", { name: "Comprar agora" });
+    const cep = painel.getByRole("textbox", { name: /CEP/ });
+    const personalizar = painel.getByText("Personalize a compra", { exact: true });
+
     await expect(preco).toBeVisible();
-    await expect(cep).toBeVisible();
     await expect(comprar).toBeVisible();
     await expect(
       painel.getByRole("button", { name: "Adicionar ao carrinho" }),
     ).toBeVisible();
+    await expect(cep).toBeVisible();
+    await expect(personalizar).toBeVisible();
 
-    const [caixaPreco, caixaCep, caixaComprar] = await Promise.all([
+    const [caixaPreco, caixaComprar, caixaCep, caixaPersonalizar] = await Promise.all([
       preco.boundingBox(),
-      cep.boundingBox(),
       comprar.boundingBox(),
+      cep.boundingBox(),
+      personalizar.boundingBox(),
     ]);
-    expect(caixaPreco!.y).toBeLessThan(caixaCep!.y);
-    expect(caixaCep!.y).toBeLessThan(caixaComprar!.y);
+    expect(caixaPreco!.y).toBeLessThan(caixaComprar!.y);
+    expect(caixaComprar!.y).toBeLessThan(caixaCep!.y);
+    expect(caixaCep!.y).toBeLessThan(caixaPersonalizar!.y);
   });
 
   test("usa hub técnico progressivo e não recupera relacionados genéricos", async ({ page }) => {
