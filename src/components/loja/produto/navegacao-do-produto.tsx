@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ShoppingCart } from "lucide-react";
 
 import { formatarPreco } from "@/lib/format";
@@ -15,17 +15,48 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   preparo: "Antes de comprar",
   "entrega-e-garantia": "Entrega e garantia",
   duvidas: "Dúvidas",
-  relacionados: "Alternativas",
+  relacionados: "Explorar",
+  "comparacao-rapida": "Comparar",
+  "avaliacoes-verificadas": "Avaliações",
 };
+
+const EXTRAS_DA_PDP: AncoraDoProduto[] = [
+  { id: "comparacao-rapida", rotulo: "Comparar" },
+  { id: "avaliacoes-verificadas", rotulo: "Avaliações" },
+];
 
 export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) {
   const [ativa, setAtiva] = useState<string | null>(null);
+  const [extrasVisiveis, setExtrasVisiveis] = useState<string[]>([]);
   const trilhoRef = useRef<HTMLUListElement>(null);
 
+  /*
+   * Comparação e avaliações são renderizadas pela camada complementar da PDP.
+   * Elas só entram na navegação quando existem de verdade no DOM: produto sem
+   * avaliação pública não ganha uma âncora vazia e produto sem alternativa não
+   * promete comparação inexistente.
+   */
   useEffect(() => {
-    if (ancoras.length === 0) return;
+    const ids = EXTRAS_DA_PDP
+      .filter((ancora) => document.querySelector(`main #${CSS.escape(ancora.id)}`))
+      .map((ancora) => ancora.id);
+    setExtrasVisiveis(ids);
+  }, []);
 
-    const alvos = ancoras
+  const ancorasEfetivas = useMemo(() => {
+    const existentes = new Set(ancoras.map((ancora) => ancora.id));
+    return [
+      ...ancoras,
+      ...EXTRAS_DA_PDP.filter(
+        (ancora) => extrasVisiveis.includes(ancora.id) && !existentes.has(ancora.id),
+      ),
+    ];
+  }, [ancoras, extrasVisiveis]);
+
+  useEffect(() => {
+    if (ancorasEfetivas.length === 0) return;
+
+    const alvos = ancorasEfetivas
       .map((ancora) => document.querySelector<HTMLElement>(`main #${CSS.escape(ancora.id)}`))
       .filter((elemento): elemento is HTMLElement => elemento !== null);
 
@@ -43,7 +74,7 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
 
     for (const alvo of alvos) observador.observe(alvo);
     return () => observador.disconnect();
-  }, [ancoras]);
+  }, [ancorasEfetivas]);
 
   useEffect(() => {
     if (!ativa) return;
@@ -66,7 +97,7 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
     if (detalhes) detalhes.open = true;
   }
 
-  if (ancoras.length < 2) return null;
+  if (ancorasEfetivas.length < 2) return null;
 
   return (
     <nav
@@ -77,7 +108,7 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
         ref={trilhoRef}
         className="container-jb scrollbar-none flex min-h-12 max-w-[112rem] gap-5 overflow-x-auto"
       >
-        {ancoras.map((ancora) => (
+        {ancorasEfetivas.map((ancora) => (
           <li key={ancora.id} className="shrink-0">
             <a
               href={`#${ancora.id}`}
