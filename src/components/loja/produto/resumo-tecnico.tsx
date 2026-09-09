@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BadgeCheck, Barcode, Boxes, Hash } from "lucide-react";
 
 import { CONDICAO_PDP, type CondicaoProduto } from "@/components/loja/produto/condicao";
 import { Etiqueta } from "@/components/ui/data";
@@ -24,7 +23,6 @@ type Props = {
 type Identificador = {
   rotulo: string;
   valor: string;
-  icone: React.ComponentType<{ className?: string }>;
 };
 
 export function ResumoTecnicoProduto({
@@ -44,14 +42,14 @@ export function ResumoTecnicoProduto({
   const desenho = CONDICAO_PDP[condicao];
   const modeloUtil = modelo.trim() && normalizar(modelo) !== normalizar(categoria?.nome ?? "");
   const candidatos: (Identificador | null)[] = [
-    modeloUtil ? { rotulo: "Modelo", valor: modelo.trim(), icone: Boxes } : null,
-    { rotulo: "SKU", valor: sku, icone: Hash },
+    modeloUtil ? { rotulo: "Modelo", valor: modelo.trim() } : null,
+    { rotulo: "SKU", valor: sku },
     codigoDoFabricante?.trim()
-      ? { rotulo: "Fabricante", valor: codigoDoFabricante.trim(), icone: Boxes }
+      ? { rotulo: "Cód. fabricante", valor: codigoDoFabricante.trim() }
       : null,
-    gtin?.trim() ? { rotulo: "GTIN", valor: gtin.trim(), icone: Barcode } : null,
+    gtin?.trim() ? { rotulo: "GTIN", valor: gtin.trim() } : null,
     numeroDeSerie?.trim()
-      ? { rotulo: "Nº de série", valor: numeroDeSerie.trim(), icone: BadgeCheck }
+      ? { rotulo: "Nº de série", valor: numeroDeSerie.trim() }
       : null,
   ];
   const identificadores = candidatos.filter(
@@ -87,35 +85,45 @@ export function ResumoTecnicoProduto({
         {nome}
       </h1>
 
-      {resumo ? <p className="mt-3 text-sm leading-6 text-graf-600">{resumo}</p> : null}
+      {resumo ? (
+        <p className="mt-3 max-w-[46ch] text-[0.9375rem] leading-6 text-graf-600">{resumo}</p>
+      ) : null}
 
       {destaques.length > 0 ? (
-        <dl aria-label="Destaques técnicos" className="mt-5 divide-y divide-graf-200 border-y border-graf-200">
-          {destaques.map((destaque) => (
-            <div key={`${destaque.rotulo}-${destaque.valor}`} className="flex items-baseline justify-between gap-3 py-2.5">
-              <dt className="text-xs font-semibold text-graf-500">{destaque.rotulo}</dt>
-              <dd className="text-right text-sm font-extrabold text-graf-900">{destaque.valor}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="mt-5">
+          <p className="mb-3 text-[0.65rem] font-extrabold uppercase tracking-[0.11em] text-graf-500">
+            O essencial deste equipamento
+          </p>
+          <dl
+            aria-label="Principais características técnicas"
+            className="grid grid-cols-2 gap-x-5 gap-y-4 border-y border-graf-200 py-4"
+          >
+            {destaques.map((destaque) => (
+              <div key={`${destaque.rotulo}-${destaque.valor}`} className="min-w-0">
+                <dd className="break-words text-[0.9375rem] font-extrabold leading-5 text-graf-950">
+                  {destaque.valor}
+                </dd>
+                <dt className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.055em] text-graf-500">
+                  {destaque.rotulo}
+                </dt>
+              </div>
+            ))}
+          </dl>
+        </div>
       ) : null}
 
       {identificadores.length > 0 ? (
-        <dl className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-          {identificadores.map((identificador) => {
-            const Icone = identificador.icone;
-            return (
-              <div key={identificador.rotulo} className="min-w-0">
-                <dt className="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.08em] text-graf-500">
-                  <Icone className="size-3" aria-hidden />
-                  {identificador.rotulo}
-                </dt>
-                <dd className="label-mono mt-1 break-words text-xs text-graf-800">
-                  {identificador.valor}
-                </dd>
-              </div>
-            );
-          })}
+        <dl className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-b border-graf-100 pb-4">
+          {identificadores.map((identificador) => (
+            <div key={identificador.rotulo} className="flex min-w-0 items-baseline gap-1.5">
+              <dt className="text-[0.62rem] font-bold uppercase tracking-[0.07em] text-graf-400">
+                {identificador.rotulo}
+              </dt>
+              <dd className="label-mono break-all text-[0.7rem] text-graf-700">
+                {identificador.valor}
+              </dd>
+            </div>
+          ))}
         </dl>
       ) : null}
 
@@ -127,4 +135,3 @@ export function ResumoTecnicoProduto({
     </div>
   );
 }
-
