@@ -36,28 +36,31 @@ export function BlocoDecisao({ id, titulo, resumo, children, lateral }: Props) {
   if (recolhivel) {
     return (
       <section id={id} aria-labelledby={`${id}-titulo`} className="scroll-mt-32 border-t border-graf-200">
+        <h2 id={`${id}-titulo`} className="sr-only">
+          {tituloExibido}
+        </h2>
+
         <details className="group">
           <summary className="foco-jb flex min-h-[5.25rem] cursor-pointer list-none items-center justify-between gap-5 py-4 [&::-webkit-details-marker]:hidden">
-            <div className="min-w-0">
-              <h2
-                id={`${id}-titulo`}
-                className="text-lg font-extrabold tracking-[-0.02em] text-graf-950 lg:text-xl"
-              >
+            <span className="min-w-0">
+              <span className="block text-lg font-extrabold tracking-[-0.02em] text-graf-950 lg:text-xl">
                 {tituloExibido}
-              </h2>
+              </span>
               {resumo ? (
-                <p className="mt-1 max-w-3xl text-sm leading-5 text-graf-500">{resumo}</p>
+                <span className="mt-1 block max-w-3xl text-sm leading-5 text-graf-500">
+                  {resumo}
+                </span>
               ) : null}
-            </div>
+            </span>
 
-            <div className="flex shrink-0 items-center gap-2 text-xs font-bold text-graf-600 transition-colors group-open:text-jb-700">
+            <span className="flex shrink-0 items-center gap-2 text-xs font-bold text-graf-600 transition-colors group-open:text-jb-700">
               <span className="hidden sm:inline group-open:hidden">Ver detalhes</span>
-              <span className="hidden group-open:sm:inline">Recolher</span>
+              <span className="hidden sm:group-open:inline">Recolher</span>
               <ChevronDown
                 className="size-5 transition-transform duration-200 group-open:rotate-180"
                 aria-hidden
               />
-            </div>
+            </span>
           </summary>
 
           <div className="grid gap-6 pb-8 pt-1 lg:grid-cols-12 lg:gap-10 lg:pb-10">
