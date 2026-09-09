@@ -5,6 +5,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { AtalhosHome } from "@/components/loja/home/atalhos-home";
 import { lerParcelamento } from "@/components/loja/home/comum";
 import { ChamadaDestacada, FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
+import { FechamentoHome } from "@/components/loja/home/fechamento-home";
 import { HeroVitrine, type NumeroDaHome } from "@/components/loja/home/hero-vitrine";
 import { TickerHome } from "@/components/loja/home/ticker-home";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
@@ -65,7 +66,7 @@ export default async function HomePage() {
   ].slice(0, 3);
 
   return (
-    <div className={styles.home}>
+    <div className={styles.home} data-jb-home="true">
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
       <HeroVitrine
@@ -134,6 +135,8 @@ export default async function HomePage() {
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
       </Suspense>
+
+      <FechamentoHome />
     </div>
   );
 }
