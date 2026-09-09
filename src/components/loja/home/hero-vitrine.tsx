@@ -1,6 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, CreditCard, ImageOff, ShieldCheck, Wrench } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck,
+  CreditCard,
+  ImageOff,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Wrench,
+} from "lucide-react";
 
 import type { ProdutoCard } from "@/components/loja/card-produto";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
@@ -35,76 +44,40 @@ export function HeroVitrine({
 
   return (
     <section className={styles.hero}>
+      <div className={styles.gradeFundo} aria-hidden />
       <div className={`container-jb ${styles.composicao}`}>
-        <div className={styles.introducao}>
-          <p className={styles.contexto}>
-            <span aria-hidden />
-            Equipamentos odontológicos{cidade ? ` em ${cidade}` : ""}
-          </p>
-          <h1 className={styles.titulo}>Equipamentos à altura da sua clínica.</h1>
-        </div>
-
-        {destaque ? (
-          <Link
-            href={`/loja/${destaque.slug}`}
-            aria-label={`Conhecer ${destaque.name}`}
-            className={styles.palcoProduto}
-          >
-            <span className={styles.arcoProduto} aria-hidden />
-            <span className={styles.seloProduto}>Escolha JB</span>
-            <span className={styles.imagemProduto}>
-              {destaque.imageUrl ? (
-                <Image
-                  src={destaque.imageUrl}
-                  alt={destaque.imageAlt || destaque.name}
-                  fill
-                  preload
-                  unoptimized={destaque.imageUrl.startsWith("/")}
-                  sizes="(max-width: 1024px) 88vw, 43rem"
-                  className="object-contain"
-                />
-              ) : (
-                <span className={styles.semImagem}>
-                  <ImageOff aria-hidden />
-                </span>
-              )}
-            </span>
-
-            <span className={styles.fichaProduto}>
-              <span className={styles.identificacaoProduto}>
-                <span>
-                  {destaque.condition === "seminovo" ? "Seminovo revisado" : "Em destaque"}
-                  {destaque.brandName ? ` · ${destaque.brandName}` : ""}
-                </span>
-                <strong>{destaque.name}</strong>
-              </span>
-              <span className={styles.precoProduto}>
-                <strong>{temPreco ? formatarPreco(destaque.priceCents) : "Sob consulta"}</strong>
-                {parcelas ? (
-                  <span>
-                    até {parcelas.parcelas}x de {formatarPreco(parcelas.valorCents)}
-                  </span>
-                ) : null}
-              </span>
-              <span className={styles.abrirProduto} aria-hidden>
-                <ArrowRight />
-              </span>
-            </span>
-          </Link>
-        ) : (
-          <div className={styles.palcoVazio}>
-            <ShieldCheck aria-hidden />
-            <p>Catálogo técnico atualizado pela equipe JB.</p>
+        <div className={styles.copy}>
+          <div className={styles.contexto}>
+            <span className={styles.pontoVivo} aria-hidden />
+            <p>Marketplace técnico odontológico{cidade ? ` · ${cidade}` : ""}</p>
           </div>
-        )}
 
-        <div className={styles.acoes}>
+          <h1 className={styles.titulo}>
+            Escolha melhor.
+            <span>Equipe sua clínica sem dúvida.</span>
+          </h1>
+
           <p className={styles.resumo}>
-            Novos e seminovos revisados, com informação técnica para decidir e uma equipe que
+            Novos e seminovos revisados, comparação objetiva, parcelamento claro e uma equipe que
             continua ao seu lado depois da compra.
           </p>
 
-          <nav aria-label="Comece sua busca" className={styles.caminhos}>
+          <form action="/busca" method="get" className={styles.busca} role="search">
+            <Search aria-hidden />
+            <label htmlFor="busca-home" className="sr-only">
+              Buscar no catálogo JB
+            </label>
+            <input
+              id="busca-home"
+              name="q"
+              type="search"
+              minLength={3}
+              placeholder="Busque por equipamento, marca ou modelo"
+            />
+            <button type="submit">Buscar</button>
+          </form>
+
+          <nav aria-label="Comece sua compra" className={styles.caminhos}>
             <Link href="/loja" className={styles.acaoPrincipal}>
               Explorar equipamentos
               <ArrowRight aria-hidden />
@@ -114,17 +87,87 @@ export function HeroVitrine({
             </Link>
           </nav>
 
+          <div className={styles.provasRapidas} aria-label="Diferenciais da JB">
+            <span><ShieldCheck aria-hidden /> Garantia clara</span>
+            <span><Wrench aria-hidden /> Assistência própria</span>
+            <span><Sparkles aria-hidden /> Revisão técnica</span>
+          </div>
+
           {numeros.length > 0 ? (
             <dl className={styles.numeros} aria-label="Catálogo JB agora">
               {numeros.slice(0, 3).map((numero) => (
                 <div key={numero.rotulo}>
-                  <dt>{numero.rotulo}</dt>
                   <dd>{numero.valor}</dd>
+                  <dt>{numero.rotulo}</dt>
                 </div>
               ))}
             </dl>
           ) : null}
         </div>
+
+        {destaque ? (
+          <div className={styles.palcoWrapper}>
+            <span className={styles.numeroEditorial} aria-hidden>01</span>
+            <span className={styles.haloProduto} aria-hidden />
+
+            <Link
+              href={`/loja/${destaque.slug}`}
+              aria-label={`Conhecer ${destaque.name}`}
+              className={styles.palcoProduto}
+            >
+              <span className={styles.seloProduto}>
+                <span aria-hidden />
+                {destaque.condition === "seminovo" ? "Seminovo revisado" : "Destaque JB"}
+              </span>
+
+              <span className={styles.imagemProduto}>
+                {destaque.imageUrl ? (
+                  <Image
+                    src={destaque.imageUrl}
+                    alt={destaque.imageAlt || destaque.name}
+                    fill
+                    preload
+                    unoptimized={destaque.imageUrl.startsWith("/")}
+                    sizes="(max-width: 1024px) 92vw, 48rem"
+                    className="object-contain"
+                  />
+                ) : (
+                  <span className={styles.semImagem}>
+                    <ImageOff aria-hidden />
+                  </span>
+                )}
+              </span>
+
+              <span className={styles.calloutTopo}>
+                <small>Compra com continuidade</small>
+                <strong>Venda + assistência JB</strong>
+              </span>
+
+              <span className={styles.fichaProduto}>
+                <span className={styles.identificacaoProduto}>
+                  <small>{destaque.brandName || "Equipamento selecionado"}</small>
+                  <strong>{destaque.name}</strong>
+                </span>
+                <span className={styles.precoProduto}>
+                  <strong>{temPreco ? formatarPreco(destaque.priceCents) : "Sob consulta"}</strong>
+                  {parcelas ? (
+                    <small>
+                      até {parcelas.parcelas}x de {formatarPreco(parcelas.valorCents)}
+                    </small>
+                  ) : null}
+                </span>
+                <span className={styles.abrirProduto} aria-hidden>
+                  <ArrowRight />
+                </span>
+              </span>
+            </Link>
+          </div>
+        ) : (
+          <div className={styles.palcoVazio}>
+            <ShieldCheck aria-hidden />
+            <p>Catálogo técnico atualizado pela equipe JB.</p>
+          </div>
+        )}
       </div>
 
       <div className={styles.faixaConfianca}>
