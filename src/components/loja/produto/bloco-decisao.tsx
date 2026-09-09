@@ -9,23 +9,34 @@ type Props = {
   lateral?: ReactNode;
 };
 
-const SECOES_DE_CONSULTA = new Set(["ficha-tecnica", "preparo", "entrega-e-garantia"]);
+/*
+ * Tudo que é consulta, aprofundamento ou exploração secundária fica visível
+ * pelo título/resumo, mas não ocupa metros de página por padrão. Isso inclui
+ * os relacionados genéricos: a comparação rápida dedicada é a experiência
+ * principal para alternativas; o carrossel amplo continua disponível aqui
+ * para quem quiser explorar mais opções.
+ */
+const SECOES_DE_CONSULTA = new Set([
+  "ficha-tecnica",
+  "preparo",
+  "entrega-e-garantia",
+  "relacionados",
+]);
 
 const TITULOS_ORIENTADOS_A_COMPRA: Record<string, string> = {
   "ficha-tecnica": "Especificações e documentos",
   preparo: "Antes de comprar",
   "entrega-e-garantia": "Entrega, garantia e suporte",
-  relacionados: "Outras opções para comparar",
+  relacionados: "Explorar outras opções",
 };
 
 /**
  * A PDP tem dois ritmos diferentes:
  *
- * - conteúdo de decisão/descoberta (sobre, dúvidas, relacionados) continua
- *   aberto no fluxo normal;
- * - conteúdo de consulta (ficha, preparo e entrega) aparece como um hub
- *   progressivo. O comprador sabe que a informação existe sem precisar
- *   atravessar todas as tabelas para chegar à próxima decisão.
+ * - conteúdo de decisão/descoberta (sobre e dúvidas) continua aberto no fluxo;
+ * - conteúdo de consulta (ficha, preparo, entrega e exploração ampla de outras
+ *   opções) aparece como hub progressivo. O comprador sabe que a informação
+ *   existe sem precisar atravessar tudo para chegar à próxima decisão.
  *
  * `details/summary` mantém teclado, semântica e funcionamento sem JavaScript.
  */
