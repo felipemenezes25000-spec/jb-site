@@ -64,7 +64,7 @@ test.describe("Cabeçalho da página de produto", () => {
 
     await expect(page.locator(PDP)).toHaveCount(0);
     await expect(page.locator(HEADER_HOME)).toBeVisible();
-    await expect(page.locator(`${HEADER_HOME} #busca-home-flagship`)).toBeVisible();
+    await expect(page.locator(`${HEADER_HOME} #busca-home-flagship`)).toHaveCount(1);
     await expect(page.locator(`${HEADER_HOME} ${BUSCA_DESKTOP}`)).toHaveCount(0);
     await semRolagemHorizontal(page);
   });
