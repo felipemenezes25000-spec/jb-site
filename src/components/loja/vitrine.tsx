@@ -4,20 +4,22 @@ import { Suspense } from "react";
 import type { Prisma, ProductCondition } from "@prisma/client";
 import { ArrowRight, PackageSearch, SearchX, TriangleAlert } from "lucide-react";
 
-import { GradeProdutos, type Parcelamento } from "@/components/loja/card-produto";
-import { GradeVitrine } from "@/components/loja/card-vitrine";
 import {
   BarraCatalogo,
   PainelFiltros,
   type GruposFiltro,
   type ParametrosCatalogo,
 } from "@/components/loja/filtros-catalogo";
+import {
+  EsqueletoGradeMarketplace,
+  GradeMarketplace,
+} from "@/components/loja/marketplace/grade-marketplace";
+import type { ParcelamentoMarketplace } from "@/components/loja/marketplace/tipos";
 import { LinkBotao } from "@/components/ui/button";
 import { Esqueleto, Trilha, Vazio, type Migalha } from "@/components/ui/data";
-import { EsqueletoGradeProdutos } from "@/components/ui/esqueletos";
 import { Paginacao } from "@/components/ui/paginacao";
 import {
-  buscarProdutos,
+  buscarProdutosMarketplace,
   expandirCategorias,
   expandirMarcas,
   montarFiltro,
@@ -31,6 +33,8 @@ import { unificarPorNome } from "@/lib/homonimos";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
+
+import marketplaceStyles from "./marketplace/marketplace.module.css";
 
 /* ============================================================================
    Vitrine
@@ -297,10 +301,9 @@ function EsqueletoResultados() {
       <div className="border-b border-graf-200 pb-3">
         <Esqueleto className="h-4 w-40" />
       </div>
-      <EsqueletoGradeProdutos
-        quantidade={6}
-        className="mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-      />
+      <div className="mt-6">
+        <EsqueletoGradeMarketplace />
+      </div>
     </div>
   );
 }
@@ -428,39 +431,11 @@ function ChamadaCatalogo() {
   );
 }
 
-/**
- * O mesmo convite, mas como célula da grade.
- *
- * Coleção com um ou dois equipamentos publicados deixava metade da fileira em
- * branco — o vazio ao lado do cartão parecia carregamento que não terminou.
- * Aqui o convite ocupa a coluna que sobrou e vira o próximo passo de quem não
- * encontrou o equipamento na lista curta. A borda tracejada e a ausência de
- * preço deixam claro que não é produto.
- */
-function ConviteNaGrade() {
-  return (
-    <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-jb-200 bg-jb-50/40 p-6 text-center sm:p-7">
-      <span className="flex size-11 items-center justify-center rounded-full bg-white text-jb-600 shadow-card">
-        <PackageSearch className="size-5" aria-hidden />
-      </span>
-      <h3 className="mt-4 text-lg font-bold text-graf-950">Não é o que você procura?</h3>
-      <p className="mt-2 max-w-xs text-[0.9375rem] leading-relaxed text-graf-600">
-        O catálogo publicado é uma parte do que a JB fornece. Diga o equipamento, a marca e o
-        modelo e a equipe responde com preço e prazo.
-      </p>
-      <LinkBotao href="/orcamento" className="mt-5">
-        Pedir orçamento
-        <ArrowRight className="size-4" aria-hidden />
-      </LinkBotao>
-    </div>
-  );
-}
-
 /* ============================================================================
    Resultados — o bloco que muda a cada filtro
    ============================================================================ */
 
-type Busca = Awaited<ReturnType<typeof buscarProdutos>>;
+type Busca = Awaited<ReturnType<typeof buscarProdutosMarketplace>>;
 type Resposta = { ok: true; dados: Busca } | { ok: false };
 
 async function Resultados({
@@ -471,19 +446,14 @@ async function Resultados({
   caminho,
   endereco,
   pagina,
-  chamadaDestacada,
-  daVitrine,
 }: {
   consulta: Promise<Resposta>;
-  parcelamento: Parcelamento;
+  parcelamento: ParcelamentoMarketplace;
   busca?: string;
   temFiltro: boolean;
   caminho: string;
   endereco: string;
   pagina: number;
-  chamadaDestacada?: boolean;
-  /** Cartão da vitrine, com a apresentação preta e condensada. */
-  daVitrine?: boolean;
 }) {
   const resposta = await consulta;
   if (!resposta.ok) return <ErroCatalogo caminho={caminho} />;
@@ -532,24 +502,11 @@ async function Resultados({
         ) : null}
       </div>
 
-      {daVitrine ? (
-        <GradeVitrine
-          produtos={dados.produtos}
-          parcelamento={parcelamento}
-          colunas={{ base: 1, sm: 2, lg: 2, xl: 3 }}
-          extra={listaCurta ? <ConviteNaGrade /> : null}
-          className="mt-5"
-        />
-      ) : (
-        <GradeProdutos
-          produtos={dados.produtos}
-          parcelamento={parcelamento}
-          colunas={{ base: 1, sm: 2, lg: 2, xl: 3 }}
-          chamadaDestacada={chamadaDestacada}
-          extra={listaCurta ? <ConviteNaGrade /> : null}
-          className="mt-6"
-        />
-      )}
+      <GradeMarketplace
+        produtos={dados.produtos}
+        parcelamento={parcelamento}
+        className="mt-5"
+      />
 
       {dados.total > POR_PAGINA ? (
         <Paginacao
@@ -684,7 +641,7 @@ export async function Vitrine({
 
   // a consulta começa antes dos grupos e só é aguardada dentro do Suspense:
   // a moldura da página aparece de imediato e apenas a lista espera o banco
-  const consulta: Promise<Resposta> = buscarProdutos({
+  const consulta: Promise<Resposta> = buscarProdutosMarketplace({
     filtros,
     ordem,
     pagina,
@@ -707,7 +664,7 @@ export async function Vitrine({
     getSettings().catch(() => null),
   ]);
 
-  const parcelamento: Parcelamento = {
+  const parcelamento: ParcelamentoMarketplace = {
     max: Math.max(1, Number(configuracoes?.parcelas_max ?? 12) || 12),
     minimoCents: paraCentavos(configuracoes?.parcela_minima ?? "50,00") || 5000,
   };
@@ -731,7 +688,14 @@ export async function Vitrine({
   const semCabecalhoInterno = semCabecalho || variante === "colecao";
 
   return (
-    <div className={cn("container-jb", semCabecalhoInterno ? "pb-10 lg:pb-14" : "py-8 lg:py-12")}>
+    <div
+      data-marketplace-shell
+      className={cn(
+        marketplaceStyles.shell,
+        "container-jb",
+        semCabecalhoInterno ? "pb-10 lg:pb-14" : "py-8 lg:py-12",
+      )}
+    >
       {semCabecalhoInterno ? null : (
         <>
           <Trilha itens={trilha} className="mb-5" />
@@ -827,8 +791,6 @@ export async function Vitrine({
               caminho={caminho}
               endereco={enderecoPrimeiraPagina}
               pagina={pagina}
-              chamadaDestacada={variante === "colecao"}
-              daVitrine={daVitrine}
             />
           </Suspense>
         </div>
