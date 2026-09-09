@@ -65,7 +65,7 @@ export default async function HomePage() {
   ].slice(0, 3);
 
   return (
-    <main className={styles.home}>
+    <div className={styles.home}>
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
       <HeroVitrine
@@ -134,6 +134,6 @@ export default async function HomePage() {
       <Suspense fallback={<EsqueletoMarcasHome />}>
         <SecaoMarcas />
       </Suspense>
-    </main>
+    </div>
   );
 }
