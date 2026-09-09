@@ -113,8 +113,8 @@ export async function salvarRelacionamentosTipados(
       acao: "editar",
       entidade: "produto_relacionamentos",
       entidadeId: sourceId,
-      antes,
-      depois,
+      antes: { relacionamentos: antes },
+      depois: { relacionamentos: depois },
       resumo: `Atualizou o cross-sell de ${produto.name}`,
     });
 
