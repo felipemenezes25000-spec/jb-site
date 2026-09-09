@@ -19,6 +19,7 @@ describe("destaquesDaPdp", () => {
       { rotulo: "Rotação", valor: "2.000 rpm" },
       { rotulo: "Voltagem", valor: "Bivolt" },
       { rotulo: "Garantia", valor: "6 meses" },
+      { rotulo: "Registro", valor: "12345678901" },
     ]);
   });
 
