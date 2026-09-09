@@ -2,9 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, PackagePlus, Puzzle, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowRight, Check, PackagePlus, Puzzle, ShieldCheck, ShoppingCart } from "lucide-react";
+import { useActionState, useEffect, useState } from "react";
 
+import {
+  adicionarAoCarrinho,
+  type EstadoCarrinho,
+} from "@/app/acoes/carrinho";
 import { formatarPreco } from "@/lib/format";
 
 type ItemCrossSell = {
@@ -16,6 +20,7 @@ type ItemCrossSell = {
   imagem: string | null;
   alt: string;
   ordem: number;
+  compraRapida: boolean;
 };
 
 type Resposta = {
@@ -23,7 +28,55 @@ type Resposta = {
   complementos: ItemCrossSell[];
 };
 
-function CartaoProduto({ item, selo }: { item: ItemCrossSell; selo: string }) {
+function AdicionarAcessorio({ item }: { item: ItemCrossSell }) {
+  const [estado, acao, pendente] = useActionState<EstadoCarrinho, FormData>(
+    adicionarAoCarrinho,
+    {},
+  );
+
+  return (
+    <div className="mt-2">
+      <form action={acao}>
+        <input type="hidden" name="produtoId" value={item.id} />
+        <input type="hidden" name="quantidade" value="1" />
+        <button
+          type="submit"
+          disabled={pendente}
+          className="foco-jb inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-graf-950 px-3 text-xs font-extrabold text-white transition-colors hover:bg-graf-800 disabled:cursor-wait disabled:opacity-65"
+        >
+          {estado.ok ? (
+            <Check className="size-3.5" aria-hidden />
+          ) : (
+            <ShoppingCart className="size-3.5" aria-hidden />
+          )}
+          {pendente ? "Adicionando…" : estado.ok ? "Adicionado" : "Adicionar ao carrinho"}
+        </button>
+      </form>
+
+      <div aria-live="polite" className="mt-1.5 min-h-4 text-[0.6875rem] leading-4">
+        {estado.ok ? (
+          <Link href="/carrinho" className="font-bold text-ok-700 underline underline-offset-2">
+            Ver carrinho
+          </Link>
+        ) : estado.erro ? (
+          <span className="text-perigo-700">{estado.erro}</span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function CartaoProduto({
+  item,
+  selo,
+  tipo,
+}: {
+  item: ItemCrossSell;
+  selo: string;
+  tipo: "acessorio" | "complemento";
+}) {
+  const compraDireta = tipo === "acessorio" && item.compraRapida;
+
   return (
     <article className="group grid min-w-0 grid-cols-[5.75rem_minmax(0,1fr)] gap-4 rounded-2xl border border-graf-200 bg-white p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-[0_10px_30px_rgba(15,23,42,0.07)] sm:grid-cols-1 sm:p-4">
       <Link
@@ -63,13 +116,27 @@ function CartaoProduto({ item, selo }: { item: ItemCrossSell; selo: string }) {
           <p className="text-sm font-extrabold tabular text-graf-950">
             {item.precoCents === null ? "Sob orçamento" : formatarPreco(item.precoCents)}
           </p>
-          <Link
-            href={`/loja/${item.slug}`}
-            className="foco-jb mt-2 inline-flex items-center gap-1.5 text-xs font-extrabold text-jb-700 hover:text-jb-800"
-          >
-            Ver produto
-            <ArrowRight className="size-3.5" aria-hidden />
-          </Link>
+
+          {compraDireta ? (
+            <>
+              <AdicionarAcessorio item={item} />
+              <Link
+                href={`/loja/${item.slug}`}
+                className="foco-jb mt-1 inline-flex items-center gap-1 text-[0.6875rem] font-bold text-graf-500 hover:text-jb-700"
+              >
+                Ver detalhes
+                <ArrowRight className="size-3" aria-hidden />
+              </Link>
+            </>
+          ) : (
+            <Link
+              href={`/loja/${item.slug}`}
+              className="foco-jb mt-2 inline-flex items-center gap-1.5 text-xs font-extrabold text-jb-700 hover:text-jb-800"
+            >
+              {tipo === "acessorio" ? "Ver e configurar" : "Ver produto"}
+              <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          )}
         </div>
       </div>
     </article>
@@ -114,6 +181,7 @@ function Secao({
           <CartaoProduto
             key={item.id}
             item={item}
+            tipo={tipo}
             selo={tipo === "acessorio" ? "Compatível" : "Funciona junto"}
           />
         ))}
