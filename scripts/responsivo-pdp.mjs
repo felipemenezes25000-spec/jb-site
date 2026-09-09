@@ -2,9 +2,9 @@
 /**
  * Auditoria focada no cabeçalho da página de produto.
  *
- * A Home já está aprovada e não deve herdar o redesign. Este script valida os
- * dois lados do contrato:
- *   1) `/` continua com o header normal;
+ * A Home e o catálogo já têm o cabeçalho aprovado e não devem herdar o
+ * redesign. Este script valida os dois lados do contrato:
+ *   1) `/` e `/loja` continuam com o header normal;
  *   2) `/loja/[slug]` ganha o header especial e não quebra de 320 a 2560px.
  *
  * Uso:
@@ -69,24 +69,29 @@ try {
 
   console.log(`PDP: ${caminhoProduto}`);
 
-  // ---------------------------------------------------------- Home intocada
-  {
+  // ------------------------------------------- Home e catálogo permanecem iguais
+  for (const rotaNormal of ["/", "/loja"]) {
     const { contexto, page } = await novaPagina({ width: 1440, height: 900 });
-    await page.goto(absoluto("/"), { waitUntil: "domcontentloaded" });
+    try {
+      await page.goto(absoluto(rotaNormal), { waitUntil: "domcontentloaded" });
 
-    if ((await page.locator(PDP).count()) !== 0) {
-      achados.push("Home: marcador de PDP apareceu fora da ficha de produto.");
-    }
-
-    const busca = page.locator(`${HEADER} .jb-busca-topo`).first();
-    if (await busca.isVisible()) {
-      const maxWidth = await busca.evaluate((el) => getComputedStyle(el).maxWidth);
-      if (maxWidth === "none") {
-        achados.push("Home: regra de largura exclusiva da PDP vazou para a busca do header.");
+      if ((await page.locator(PDP).count()) !== 0) {
+        achados.push(`${rotaNormal}: marcador de PDP apareceu fora da ficha de produto.`);
       }
-    }
 
-    await contexto.close();
+      const busca = page.locator(`${HEADER} .jb-busca-topo`).first();
+      if (await busca.isVisible()) {
+        const maxWidth = await busca.evaluate((el) => getComputedStyle(el).maxWidth);
+        if (maxWidth === "none") {
+          achados.push(`${rotaNormal}: regra de largura exclusiva da PDP vazou para o header normal.`);
+        }
+      }
+
+      const rolou = await medirRolagemHorizontal(page);
+      if (rolou > 1) achados.push(`${rotaNormal}: documento rola ${rolou}px na horizontal.`);
+    } finally {
+      await contexto.close();
+    }
   }
 
   // ----------------------------------------------------------- PDP por tela
@@ -164,4 +169,4 @@ if (achados.length) {
   process.exit(1);
 }
 
-console.log("\nCabeçalho da PDP aprovado de 320px a 2560px; Home permaneceu isolada.");
+console.log("\nCabeçalho da PDP aprovado de 320px a 2560px; Home e catálogo permaneceram isolados.");
