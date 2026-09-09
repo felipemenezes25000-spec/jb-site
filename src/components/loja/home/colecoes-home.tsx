@@ -105,7 +105,7 @@ export function SeminovosHome({
                       {produto.name}
                     </strong>
                     {produto.model ? (
-                      <small className="mt-2 block text-[0.72rem] font-semibold text-graf-950/58">
+                      <small className="mt-2 block text-xs font-semibold text-graf-950/58">
                         {produto.model}
                       </small>
                     ) : null}
@@ -121,7 +121,7 @@ export function SeminovosHome({
                         {preco(produto)}
                       </strong>
                       {parcelas ? (
-                        <small className="mt-1 block text-[0.66rem] font-bold text-graf-950/58">
+                        <small className="mt-1 block text-xs font-bold text-graf-950/58">
                           {parcelas.parcelas}x de {formatarPreco(parcelas.valorCents)}
                         </small>
                       ) : null}
@@ -163,7 +163,7 @@ export function ProcuradosHome({
           </div>
           <Link
             href="/loja"
-            className="group inline-flex items-center gap-2 text-[0.76rem] font-black uppercase tracking-[0.08em] text-jb-700 lg:mb-1"
+            className="group inline-flex min-h-11 items-center gap-2 rounded-lg text-[0.76rem] font-black uppercase tracking-[0.08em] text-jb-700 lg:mb-1"
           >
             Catálogo completo
             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" aria-hidden />
@@ -206,7 +206,7 @@ export function ProcuradosHome({
                   </span>
                 </div>
                 {produto.brandName ? (
-                  <p className="mt-4 text-[0.61rem] font-black uppercase tracking-[0.15em] text-jb-700">
+                  <p className="mt-4 text-[0.625rem] font-black uppercase tracking-[0.15em] text-jb-700">
                     {produto.brandName}
                   </p>
                 ) : null}
@@ -217,7 +217,7 @@ export function ProcuradosHome({
                   {preco(produto)}
                 </p>
                 {parcelas ? (
-                  <p className="mt-1 text-[0.65rem] font-bold text-graf-950/58">
+                  <p className="mt-1 text-xs font-bold text-graf-950/58">
                     {parcelas.parcelas}x de {formatarPreco(parcelas.valorCents)}
                   </p>
                 ) : null}

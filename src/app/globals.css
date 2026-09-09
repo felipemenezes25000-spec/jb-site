@@ -649,3 +649,11 @@
 [data-jb-publico="true"] .line-through {
   color: var(--color-graf-700);
 }
+
+[data-jb-publico="true"] :where(.texto-suave, .prose-jb) {
+  color: var(--color-graf-950);
+}
+
+[data-jb-publico="true"] .on-dark :where(.texto-suave, .prose-jb) {
+  color: var(--color-graf-300);
+}

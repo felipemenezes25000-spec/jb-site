@@ -48,6 +48,60 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
     }
   });
 
+  test("módulos visuais não recuperam texto cinza", async ({ page }) => {
+    const cinzasSecundarios = new Set([
+      "rgb(102, 109, 118)",
+      "rgb(99, 104, 112)",
+      "rgb(81, 86, 92)",
+    ]);
+
+    for (const largura of [320, 1440]) {
+      await page.setViewportSize({ width: largura, height: largura === 320 ? 844 : 900 });
+
+      for (const caminho of [
+        "/",
+        "/loja",
+        "/categoria/cirurgia",
+        "/loja/motor-de-implante-35ncm",
+      ]) {
+        await page.goto(caminho);
+
+        const cinzas = await page.locator('[data-jb-publico="true"]').evaluate(
+          (raiz, cores) =>
+            Array.from(raiz.querySelectorAll<HTMLElement>("*"))
+              .filter((elemento) => {
+                const estilo = getComputedStyle(elemento);
+                const caixa = elemento.getBoundingClientRect();
+                const temTextoProprio = Array.from(elemento.childNodes).some(
+                  (no) =>
+                    no.nodeType === Node.TEXT_NODE &&
+                    (no.textContent?.trim().length ?? 0) > 3,
+                );
+
+                return (
+                  temTextoProprio &&
+                  cores.includes(estilo.color) &&
+                  !elemento.closest("[disabled], [aria-disabled=true], .line-through") &&
+                  caixa.width > 0 &&
+                  caixa.height > 0 &&
+                  estilo.display !== "none" &&
+                  estilo.visibility !== "hidden"
+                );
+              })
+              .map((elemento) => ({
+                texto: elemento.textContent?.trim().slice(0, 60),
+                cor: getComputedStyle(elemento).color,
+                classe: String(elemento.className).slice(0, 100),
+                pai: String(elemento.parentElement?.className ?? "").slice(0, 100),
+              })),
+          [...cinzasSecundarios],
+        );
+
+        expect(cinzas, `texto cinza encontrado em ${caminho} a ${largura}px`).toEqual([]);
+      }
+    }
+  });
+
   test("texto e botão do menu desktop não dividem a mesma área de clique", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/loja");
@@ -79,5 +133,133 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
     expect(caixaOrdem).not.toBeNull();
     expect(caixaFiltros!.width).toBeLessThanOrEqual(112);
     expect(caixaOrdem!.width).toBeGreaterThanOrEqual(160);
+  });
+
+  test("ticker permanece legível quando o sistema reduz animações", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 844 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+
+    const textos = page
+      .getByRole("region", { name: "Diferenciais da JB" })
+      .locator('ul:not([aria-hidden="true"]) li span');
+    const caixas = await textos.evaluateAll((elementos) =>
+      elementos.map((elemento) => {
+        const caixa = elemento.getBoundingClientRect();
+        return { esquerda: caixa.left, direita: caixa.right };
+      }),
+    );
+
+    for (let indice = 1; indice < caixas.length; indice += 1) {
+      expect(caixas[indice].esquerda).toBeGreaterThanOrEqual(caixas[indice - 1].direita);
+    }
+  });
+
+  test("textos informativos não ficam menores que 12px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 844 });
+
+    for (const caminho of ["/", "/loja", "/seminovos", "/busca?q=autoclave"]) {
+      await page.goto(caminho);
+
+      const pequenos = await page.locator('[data-jb-publico="true"]').evaluate((raiz) =>
+        Array.from(raiz.querySelectorAll<HTMLElement>("*"))
+          .filter((elemento) => {
+            const caixa = elemento.getBoundingClientRect();
+            const estilo = getComputedStyle(elemento);
+            const temTextoProprio = Array.from(elemento.childNodes).some(
+              (no) => no.nodeType === Node.TEXT_NODE && (no.textContent?.trim().length ?? 0) > 3,
+            );
+            const rotuloTipografico =
+              estilo.textTransform === "uppercase" && parseFloat(estilo.letterSpacing) > 0.4;
+
+            return (
+              temTextoProprio &&
+              !rotuloTipografico &&
+              caixa.width > 0 &&
+              caixa.height > 0 &&
+              estilo.display !== "none" &&
+              estilo.visibility !== "hidden" &&
+              parseFloat(estilo.fontSize) < 12
+            );
+          })
+          .map((elemento) => ({
+            texto: elemento.textContent?.trim().slice(0, 60),
+            tamanho: getComputedStyle(elemento).fontSize,
+            tag: elemento.tagName.toLowerCase(),
+          })),
+      );
+
+      expect(pequenos, `texto abaixo de 12px em ${caminho}`).toEqual([]);
+    }
+  });
+
+  test("controles de toque mantêm alvo mínimo de 44px", async ({ browser }) => {
+    const contexto = await browser.newContext({
+      hasTouch: true,
+      isMobile: true,
+      locale: "pt-BR",
+      viewport: { width: 320, height: 844 },
+    });
+    const page = await contexto.newPage();
+
+    for (const caminho of ["/", "/loja", "/seminovos", "/busca?q=autoclave"]) {
+      await page.goto(caminho);
+
+      const pequenos = await page.locator('[data-jb-publico="true"]').evaluate((raiz) => {
+        const caminhoElemento = (elemento: Element) =>
+          [elemento.parentElement, elemento]
+            .filter(Boolean)
+            .map((item) => {
+              const el = item as HTMLElement;
+              return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${Array.from(el.classList).slice(0, 2).join(".")}`;
+            })
+            .join(" > ");
+
+        return Array.from(
+          raiz.querySelectorAll<HTMLElement>(
+            'a[href], button, input, select, textarea, [role="button"], [role="tab"], [role="link"]',
+          ),
+        )
+          .filter((elemento) => {
+            const estilo = getComputedStyle(elemento);
+            const caixa = elemento.getBoundingClientRect();
+            const dentroDeTexto =
+              elemento.tagName === "A" &&
+              elemento.parentElement &&
+              /^(P|LI|SPAN|TD|DD|DT|H[1-6])$/.test(elemento.parentElement.tagName);
+            const esticado =
+              getComputedStyle(elemento, "::after").position === "absolute" &&
+              Boolean(elemento.closest("article, li, .group"));
+            const recortado =
+              (estilo.clipPath && estilo.clipPath !== "none") ||
+              (estilo.clip && estilo.clip !== "auto");
+
+            return (
+              !elemento.hasAttribute("disabled") &&
+              !dentroDeTexto &&
+              !esticado &&
+              !recortado &&
+              estilo.display !== "none" &&
+              estilo.visibility !== "hidden" &&
+              estilo.pointerEvents !== "none" &&
+              caixa.width > 2 &&
+              caixa.height > 2 &&
+              Math.min(caixa.width, caixa.height) < 44
+            );
+          })
+          .map((elemento) => {
+            const caixa = elemento.getBoundingClientRect();
+            return {
+              nome: elemento.getAttribute("aria-label") || elemento.textContent?.trim().slice(0, 40),
+              tamanho: `${Math.round(caixa.width)}x${Math.round(caixa.height)}`,
+              seletor: caminhoElemento(elemento),
+            };
+          });
+      });
+
+      expect(pequenos, `alvo de toque menor que 44px em ${caminho}`).toEqual([]);
+    }
+
+    await contexto.close();
   });
 });

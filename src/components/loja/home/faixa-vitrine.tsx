@@ -69,7 +69,7 @@ export function FaixaVitrine({
               <span className="h-[2px] w-9 bg-jb-600" aria-hidden />
               <p className="micro text-jb-700">{sobretitulo}</p>
               {etiqueta ? (
-                <span className="rounded-full bg-jb-50 px-2.5 py-1 text-[0.6rem] font-black tracking-[0.15em] text-jb-700 ring-1 ring-jb-100">
+                <span className="rounded-full bg-jb-50 px-2.5 py-1 text-xs font-black uppercase tracking-[0.15em] text-jb-700 ring-1 ring-jb-100">
                   {etiqueta}
                 </span>
               ) : null}
@@ -218,7 +218,7 @@ export function ChamadaDestacada({
                         <span className="absolute inset-0 grid place-items-center text-[0.62rem] font-black uppercase text-graf-950/55">Adicionar</span>
                       )}
                     </div>
-                    <p className="mt-3 line-clamp-2 min-h-9 text-[0.7rem] font-black leading-tight text-graf-950 sm:text-[0.8rem]">
+                    <p className="mt-3 line-clamp-2 min-h-9 text-xs font-black leading-tight text-graf-950 sm:text-[0.8rem]">
                       {produto?.name ?? "Escolha um equipamento"}
                     </p>
                     <p className="mt-2 text-[0.78rem] font-black text-jb-700 sm:text-[0.93rem]">
@@ -236,7 +236,7 @@ export function ChamadaDestacada({
             <div className="relative mt-5 rounded-[1.35rem] bg-[#fff9f9] px-3 py-1 ring-1 ring-jb-100/80">
               {["Preço", "Condição", "Garantia", "Instalação"].map((item) => (
                 <div key={item} className="grid grid-cols-[1.2fr_repeat(3,1fr)] items-center border-b border-jb-100 px-1 py-3 last:border-b-0">
-                  <span className="text-[0.61rem] font-black uppercase tracking-[0.12em] text-graf-950">{item}</span>
+                  <span className="text-[0.625rem] font-black uppercase tracking-[0.12em] text-graf-950">{item}</span>
                   {[0, 1, 2].map((coluna) => (
                     <span key={coluna} className="mx-auto grid size-5 place-items-center rounded-full bg-jb-500 text-white">
                       <Check className="size-3" aria-hidden />

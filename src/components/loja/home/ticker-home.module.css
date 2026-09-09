@@ -57,6 +57,7 @@
 
 .trilha li {
   display: flex;
+  flex: none;
   min-height: 3.5rem;
   align-items: center;
   gap: 0.7rem;

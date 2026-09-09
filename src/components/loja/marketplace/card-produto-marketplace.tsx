@@ -83,7 +83,7 @@ export function CardProdutoMarketplace({
         </div>
 
         {desconto >= 5 ? (
-          <span className="absolute bottom-2.5 left-2.5 rounded-md bg-jb-500 px-2 py-1 text-[0.6875rem] font-extrabold text-white sm:bottom-3 sm:left-3 sm:text-xs">
+          <span className="absolute bottom-2.5 left-2.5 rounded-md bg-jb-500 px-2 py-1 text-xs font-extrabold text-white sm:bottom-3 sm:left-3">
             −{desconto}%
           </span>
         ) : null}
@@ -107,7 +107,7 @@ export function CardProdutoMarketplace({
             {produto.destaques.map((item) => (
               <div
                 key={`${item.rotulo}-${item.valor}`}
-                className="flex min-w-0 justify-between gap-2 text-[0.6875rem] sm:text-xs"
+                className="flex min-w-0 justify-between gap-2 text-xs"
               >
                 <dt className="truncate text-graf-500">{item.rotulo}</dt>
                 <dd className="truncate font-semibold text-graf-800">{item.valor}</dd>
@@ -115,21 +115,21 @@ export function CardProdutoMarketplace({
             ))}
           </dl>
         ) : (
-          <p className="mt-3 border-t border-graf-100 pt-3 text-[0.6875rem] text-graf-500 sm:text-xs">
+          <p className="mt-3 border-t border-graf-100 pt-3 text-xs text-graf-500">
             Ficha técnica no produto
           </p>
         )}
 
         <div className="mt-auto pt-4">
           {anterior ? (
-            <p className="truncate text-[0.6875rem] text-graf-500 line-through sm:text-xs">
+            <p className="truncate text-xs text-graf-500 line-through">
               {formatarPreco(anterior)}
             </p>
           ) : null}
           <p className="tabular truncate text-lg font-extrabold leading-7 text-graf-950 sm:text-2xl">
             {sobOrcamento ? "Sob orçamento" : formatarPreco(produto.priceCents)}
           </p>
-          <p className="min-h-5 truncate text-[0.625rem] text-graf-500 sm:text-xs">
+          <p className="min-h-5 truncate text-xs text-graf-500">
             {parcelas
               ? `${parcelas.parcelas}× de ${formatarPreco(parcelas.valorCents)} sem juros`
               : sobOrcamento
@@ -137,7 +137,7 @@ export function CardProdutoMarketplace({
                 : "Pagamento à vista"}
           </p>
 
-          <div className="mt-2.5 flex min-h-5 items-center gap-1.5 text-[0.6875rem] font-semibold text-graf-700 sm:text-xs">
+          <div className="mt-2.5 flex min-h-5 items-center gap-1.5 text-xs font-semibold text-graf-700">
             <span
               className={`size-1.5 shrink-0 rounded-full ${indisponivel ? "bg-graf-400" : "bg-ok-500"}`}
               aria-hidden

@@ -71,7 +71,7 @@ export function AtalhosHome() {
                   <strong className="mt-0.5 block text-[0.82rem] font-black leading-tight text-graf-950">
                     {rotulo}
                   </strong>
-                  <small className="mt-1 block text-[0.69rem] font-semibold leading-tight text-graf-950/65">
+                  <small className="mt-1 block text-xs font-semibold leading-tight text-graf-950/65">
                     {apoio}
                   </small>
                 </span>
