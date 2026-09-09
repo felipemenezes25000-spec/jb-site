@@ -101,9 +101,13 @@ export function CardVitrine({
           celular tira ~30px por cartão sem apertar a fotografia, e do `sm`
           para cima — onde a grade tem duas ou três colunas — a proporção
           cheia volta. */}
-      <div className="relative aspect-3/2 max-h-72 overflow-hidden bg-white sm:aspect-4/3">
+      <div
+        data-palco-imagem-produto
+        className="relative aspect-3/2 max-h-72 overflow-hidden bg-[#fff9f9] sm:aspect-4/3"
+      >
         {produto.imageUrl ? (
           <Image
+            data-imagem-produto
             src={produto.imageUrl}
             alt={produto.imageAlt || produto.name}
             fill

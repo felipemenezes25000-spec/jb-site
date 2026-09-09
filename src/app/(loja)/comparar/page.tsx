@@ -356,9 +356,13 @@ export default async function CompararPage({ searchParams }: Props) {
                         defaultChecked={escolhidos.includes(produto.slug)}
                         className="size-4 shrink-0 accent-jb-600"
                       />
-                      <span className="relative size-12 shrink-0 overflow-hidden rounded-md bg-white">
+                      <span
+                        data-palco-imagem-produto
+                        className="relative size-12 shrink-0 overflow-hidden rounded-md bg-graf-50/50"
+                      >
                         {produto.foto ? (
                           <Image
+                            data-imagem-produto
                             src={produto.foto}
                             alt=""
                             fill
@@ -532,9 +536,13 @@ export default async function CompararPage({ searchParams }: Props) {
               {ordenados.map((produto, indice) => (
                 <Cartao key={produto.slug} className="p-5">
                   <div className="flex items-center gap-4">
-                    <span className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-graf-200 bg-white p-1.5">
+                    <span
+                      data-palco-imagem-produto
+                      className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-graf-50/50 p-1.5"
+                    >
                       {produto.media[0] ? (
                         <Image
+                          data-imagem-produto
                           src={produto.media[0].media.url}
                           alt={produto.media[0].alt || produto.media[0].media.alt || produto.name}
                           width={160}
@@ -601,9 +609,13 @@ export default async function CompararPage({ searchParams }: Props) {
                           href={`/loja/${produto.slug}`}
                           className="group block hover:text-jb-700"
                         >
-                          <span className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-lg border border-graf-200 bg-white p-2">
+                          <span
+                            data-palco-imagem-produto
+                            className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-lg bg-graf-50/50 p-2"
+                          >
                             {produto.media[0] ? (
                               <Image
+                                data-imagem-produto
                                 src={produto.media[0].media.url}
                                 alt={
                                   produto.media[0].alt ||

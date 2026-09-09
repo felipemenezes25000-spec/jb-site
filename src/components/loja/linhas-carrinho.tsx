@@ -58,13 +58,15 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                   interno é curto de propósito — quem compra equipamento decide
                   pela foto, e a foto precisa ocupar a moldura */}
               <div
+                data-palco-imagem-produto
                 className={cn(
-                  "relative size-24 shrink-0 overflow-hidden rounded-xl border border-graf-200 bg-white sm:size-32",
+                  "relative size-24 shrink-0 overflow-hidden rounded-xl bg-graf-50/50 sm:size-32",
                   !linha.disponivel && "opacity-60",
                 )}
               >
                 {linha.imagem ? (
                   <Image
+                    data-imagem-produto
                     src={linha.imagem}
                     alt=""
                     fill

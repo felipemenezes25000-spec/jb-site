@@ -106,9 +106,19 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
           {/* a moldura recorta a foto; o selo de quantidade fica FORA dela,
               senão o `overflow-hidden` corta metade do círculo */}
           <div className="relative size-16 shrink-0">
-            <div className="relative size-full overflow-hidden rounded-lg border border-graf-200 bg-white">
+            <div
+              data-palco-imagem-produto
+              className="relative size-full overflow-hidden rounded-lg bg-graf-50/50"
+            >
               {linha.imagem ? (
-                <Image src={linha.imagem} alt="" fill sizes="64px" className="object-contain p-1" />
+                <Image
+                  data-imagem-produto
+                  src={linha.imagem}
+                  alt=""
+                  fill
+                  sizes="64px"
+                  className="object-contain p-1"
+                />
               ) : (
                 <span className="flex size-full items-center justify-center text-graf-500">
                   <ImageOff className="size-4" aria-hidden />

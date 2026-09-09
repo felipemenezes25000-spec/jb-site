@@ -71,9 +71,13 @@ export function SeminovosHome({
                     0{indice + 1}
                   </span>
 
-                  <span className="relative aspect-[4/3] overflow-hidden rounded-[1.45rem] bg-white shadow-[0_18px_42px_-34px_rgba(105,10,16,0.55)] ring-1 ring-jb-100">
+                  <span
+                    data-palco-imagem-produto
+                    className="relative aspect-[4/3] overflow-hidden rounded-[1.45rem] bg-[#fff9f9] ring-1 ring-jb-100"
+                  >
                     {produto.imageUrl ? (
                       <Image
+                        data-imagem-produto
                         src={produto.imageUrl}
                         alt={produto.imageAlt || produto.name}
                         fill
@@ -178,18 +182,22 @@ export function ProcuradosHome({
                 href={`/loja/${produto.slug}`}
                 className="group min-w-[72vw] snap-start border-t border-jb-100 pt-4 sm:min-w-[19rem] lg:min-w-0"
               >
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.8rem] bg-[#fff9f9]">
+                <div
+                  data-palco-imagem-produto
+                  className="relative aspect-[4/5] overflow-hidden rounded-[1.8rem] bg-[#fff9f9]"
+                >
                   <span className="absolute left-4 top-4 z-10 text-[0.58rem] font-black uppercase tracking-[0.15em] text-jb-700">
                     0{indice + 1}
                   </span>
                   {produto.imageUrl ? (
                     <Image
+                      data-imagem-produto
                       src={produto.imageUrl}
                       alt={produto.imageAlt || produto.name}
                       fill
                       unoptimized={produto.imageUrl.startsWith("/")}
                       sizes="(max-width: 1024px) 72vw, 20vw"
-                      className="object-contain p-[9%] drop-shadow-[0_22px_22px_rgba(57,17,20,0.12)] transition-transform duration-600 ease-out-quint group-hover:-translate-y-1.5 group-hover:scale-[1.045]"
+                      className="object-contain p-[9%] transition-transform duration-600 ease-out-quint group-hover:-translate-y-1.5 group-hover:scale-[1.045]"
                     />
                   ) : null}
                   <span className="absolute bottom-4 right-4 grid size-9 place-items-center rounded-full bg-white text-jb-700 shadow-[0_12px_28px_-22px_rgba(105,10,16,0.6)] transition-transform group-hover:translate-x-1">

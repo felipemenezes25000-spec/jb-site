@@ -180,6 +180,7 @@ export function GaleriaProduto({
       <div className="placa relative min-w-0 flex-1 overflow-hidden">
         <div
           data-pdp-gallery-main
+          data-palco-imagem-produto
           className="group/palco relative aspect-square"
           onTouchStart={aoEncostar}
           onTouchEnd={aoSoltar}
@@ -205,6 +206,7 @@ export function GaleriaProduto({
           }}
         >
           <Image
+            data-imagem-produto
             src={foto.url}
             alt={foto.alt || nome}
             fill
@@ -294,6 +296,7 @@ export function GaleriaProduto({
           {fotos.map((imagem, indice) => (
             <li key={`${imagem.url}-${indice}`} className="shrink-0 snap-start lg:w-full">
               <button
+                data-palco-imagem-produto
                 type="button"
                 onClick={() => setAtual(indice)}
                 aria-label={`Ver imagem ${indice + 1} de ${total}`}
@@ -307,6 +310,7 @@ export function GaleriaProduto({
                 )}
               >
                 <Image
+                  data-imagem-produto
                   src={imagem.url}
                   alt=""
                   fill

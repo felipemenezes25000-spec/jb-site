@@ -53,9 +53,13 @@ export function CardProdutoMarketplace({
       data-marketplace-card
       className={`${styles.card} group relative flex w-full flex-col overflow-hidden`}
     >
-      <div className="relative aspect-[4/3] border-b border-graf-100 bg-white">
+      <div
+        data-palco-imagem-produto
+        className="relative aspect-[4/3] bg-[linear-gradient(145deg,#fff_0%,#fff8f8_100%)]"
+      >
         {produto.imageUrl ? (
           <Image
+            data-imagem-produto
             src={produto.imageUrl}
             alt={produto.imageAlt || produto.name}
             fill

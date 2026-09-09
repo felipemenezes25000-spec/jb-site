@@ -92,6 +92,7 @@ export function DestaqueOfertaHome({
       <Link
         href={`/loja/${produto.slug}`}
         aria-label={`Ver ${produto.name}`}
+        data-palco-imagem-produto
         className="relative min-h-[21rem] overflow-hidden bg-[linear-gradient(145deg,#fff_0%,#fff9f9_48%,#fff1f2_100%)] lg:min-h-full"
       >
         <span className="absolute -right-28 -top-28 size-[28rem] rounded-full bg-jb-50/80" aria-hidden />
@@ -101,12 +102,13 @@ export function DestaqueOfertaHome({
         </span>
         {produto.imageUrl ? (
           <Image
+            data-imagem-produto
             src={produto.imageUrl}
             alt={produto.imageAlt || produto.name}
             fill
             unoptimized={produto.imageUrl.startsWith("/")}
             sizes="(max-width: 1024px) 100vw, 52vw"
-            className="object-contain p-[8%] drop-shadow-[0_28px_28px_rgba(58,18,20,0.14)] transition-transform duration-700 ease-out-quint group-hover:scale-[1.055] group-hover:-rotate-[0.35deg]"
+            className="object-contain p-[8%] transition-transform duration-700 ease-out-quint group-hover:scale-[1.055] group-hover:-rotate-[0.35deg]"
           />
         ) : null}
       </Link>

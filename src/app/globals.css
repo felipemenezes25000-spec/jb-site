@@ -627,3 +627,22 @@
     animation: none;
   }
 }
+
+/* ============================================================================
+   Fotografia de produto sem o retângulo do arquivo
+
+   Parte do catálogo legado usa JPG com fundo branco opaco. Em superfícies
+   rosadas ou cinza esse branco denunciava o quadrado inteiro do arquivo. O
+   modo multiply integra o branco ao palco sem alterar ou recomprimir a mídia.
+
+   O atributo é restrito a produto: logos, fotos de ambiente e conteúdo
+   editorial preservam a cor original.
+   ============================================================================ */
+
+[data-palco-imagem-produto] {
+  isolation: isolate;
+}
+
+img[data-imagem-produto] {
+  mix-blend-mode: multiply;
+}

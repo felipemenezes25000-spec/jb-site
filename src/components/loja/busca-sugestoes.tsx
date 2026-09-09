@@ -534,9 +534,13 @@ function LinhaProduto({
         ativa ? "bg-jb-50" : "hover:bg-graf-50",
       )}
     >
-      <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-graf-200 bg-white">
+      <span
+        data-palco-imagem-produto
+        className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-graf-50/50"
+      >
         {produto.imagem ? (
           <Image
+            data-imagem-produto
             src={produto.imagem}
             alt=""
             fill

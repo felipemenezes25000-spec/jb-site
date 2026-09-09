@@ -129,9 +129,13 @@ export function CardProduto({
         className,
       )}
     >
-      <div className="relative aspect-5/4 max-h-72 overflow-hidden bg-white">
+      <div
+        data-palco-imagem-produto
+        className="relative aspect-5/4 max-h-72 overflow-hidden bg-graf-50/40"
+      >
         {produto.imageUrl ? (
           <Image
+            data-imagem-produto
             src={produto.imageUrl}
             alt={produto.imageAlt || produto.name}
             fill

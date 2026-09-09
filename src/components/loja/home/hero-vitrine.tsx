@@ -126,9 +126,13 @@ export function HeroVitrine({
                 {destaque.condition === "seminovo" ? "Seminovo revisado" : "Destaque JB"}
               </span>
 
-              <span className={`${styles.imagemProduto} ${overlapStyles.mediaFix}`}>
+              <span
+                data-palco-imagem-produto
+                className={`${styles.imagemProduto} ${overlapStyles.mediaFix}`}
+              >
                 {destaque.imageUrl ? (
                   <Image
+                    data-imagem-produto
                     src={destaque.imageUrl}
                     alt={destaque.imageAlt || destaque.name}
                     fill

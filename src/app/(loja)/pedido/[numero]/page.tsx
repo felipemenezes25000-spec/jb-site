@@ -636,9 +636,13 @@ export default async function PedidoPage({ params }: Props) {
             <ul className="mt-5 divide-y divide-graf-200">
               {pedido.items.map((item) => (
                 <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                  <div className="relative size-20 shrink-0 overflow-hidden rounded-lg border border-graf-200 bg-white sm:size-24">
+                  <div
+                    data-palco-imagem-produto
+                    className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-graf-50/50 sm:size-24"
+                  >
                     {item.imageUrl ? (
                       <Image
+                        data-imagem-produto
                         src={item.imageUrl}
                         alt=""
                         fill

@@ -199,9 +199,13 @@ export function ChamadaDestacada({
                 return (
                   <div key={produto?.slug ?? `slot-${indice}`} className="min-w-0 px-2 sm:px-4">
                     <span className="text-[0.56rem] font-black uppercase tracking-[0.15em] text-jb-700">0{indice + 1}</span>
-                    <div className="relative mt-2 aspect-square overflow-hidden rounded-[1.25rem] bg-[#fff9f9]">
+                    <div
+                      data-palco-imagem-produto
+                      className="relative mt-2 aspect-square overflow-hidden rounded-[1.25rem] bg-[#fff9f9]"
+                    >
                       {produto?.imageUrl ? (
                         <Image
+                          data-imagem-produto
                           src={produto.imageUrl}
                           alt={produto.imageAlt || produto.name}
                           fill

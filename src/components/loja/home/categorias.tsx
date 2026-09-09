@@ -277,6 +277,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
       </div>
 
       <div
+        data-palco-imagem-produto
         className="relative min-h-72 overflow-hidden border-t border-graf-100 min-[640px]:min-h-full min-[640px]:border-l min-[640px]:border-t-0"
         style={{
           background:
@@ -285,6 +286,7 @@ function CategoriaPrincipal({ categoria }: { categoria: CategoriaHome }) {
       >
         {foto ? (
           <Image
+            data-imagem-produto
             src={foto.url}
             alt={foto.alt}
             fill
@@ -329,7 +331,7 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
         </p>
       </div>
 
-      <div className="relative overflow-hidden bg-[#f6f3f4]">
+      <div data-palco-imagem-produto className="relative overflow-hidden bg-[#f6f3f4]">
         <div
           className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(50%_56%_at_50%_50%,transparent_42%,rgba(246,243,244,0.9)_84%,#f6f3f4_100%)]"
           aria-hidden
@@ -337,6 +339,7 @@ function CategoriaCompacta({ categoria, numero }: { categoria: CategoriaHome; nu
 
         {foto ? (
           <Image
+            data-imagem-produto
             src={foto.url}
             alt={foto.alt}
             fill
