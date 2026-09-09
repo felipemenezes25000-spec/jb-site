@@ -11,6 +11,7 @@ import { Trilha } from "@/components/ui/data";
 import { sessaoCliente } from "@/lib/auth-cliente";
 import { calcularTotais, lerCarrinho } from "@/lib/carrinho";
 import { calcularParcelas, paraCentavos } from "@/lib/format";
+import { statusMelhorEnvio } from "@/lib/melhor-envio";
 import { pagamentoEhSimulado, provedorPagamento } from "@/lib/pagamento";
 import { prisma } from "@/lib/prisma";
 import { COOKIE_ESCOLHA_FRETE, lerEscolhaFrete } from "@/lib/selecao-frete";
@@ -38,15 +39,18 @@ export default async function CheckoutPage() {
   const totais = calcularTotais(carrinho);
   if (totais.linhas.length === 0) redirect("/carrinho");
 
-  // A modalidade é escolhida ANTES do checkout. Assim o cliente vê todas as
-  // transportadoras juntas e o formulário final trabalha com uma opção já
-  // definida, que ainda será recotada no servidor antes de cobrar.
   const jar = await cookies();
   const escolha = lerEscolhaFrete(jar.get(COOKIE_ESCOLHA_FRETE)?.value);
-  if (!escolha) redirect("/escolher-entrega");
+  const melhorEnvioAtivo = statusMelhorEnvio().quoteReady;
+
+  // Quando o agregador está operacional, a transportadora precisa ser escolhida
+  // antes do checkout para o servidor conseguir recotar exatamente o mesmo
+  // serviço. Sem credenciais do Melhor Envio, preservamos o fluxo legado da JB:
+  // tabela própria + retirada continuam funcionando e a loja não fica bloqueada.
+  if (!escolha && melhorEnvioAtivo) redirect("/escolher-entrega");
 
   const [sessao, s] = await Promise.all([sessaoCliente(), getSettings()]);
-  if (escolha.kind === "retirada" && !ligado(s.retirada_disponivel)) {
+  if (escolha?.kind === "retirada" && !ligado(s.retirada_disponivel)) {
     redirect("/escolher-entrega");
   }
 
@@ -83,7 +87,8 @@ export default async function CheckoutPage() {
     valorCents: Math.floor(totais.totalCents / (i + 1)),
   }));
 
-  const retiradaEscolhida = escolha.kind === "retirada";
+  const retiradaEscolhida = escolha?.kind === "retirada";
+  const retiradaNoCheckout = escolha ? retiradaEscolhida : ligado(s.retirada_disponivel);
 
   return (
     <div className="container-jb py-8 lg:py-12">
@@ -91,7 +96,9 @@ export default async function CheckoutPage() {
         itens={[
           { rotulo: "Início", href: "/" },
           { rotulo: "Carrinho", href: "/carrinho" },
-          { rotulo: "Entrega", href: "/escolher-entrega" },
+          ...(escolha || melhorEnvioAtivo
+            ? [{ rotulo: "Entrega", href: "/escolher-entrega" }]
+            : []),
           { rotulo: "Fechar pedido" },
         ]}
         className="mb-5"
@@ -102,18 +109,24 @@ export default async function CheckoutPage() {
         <p className="texto-guia mt-3 text-graf-600">
           Cinco etapas curtas. Você confere tudo antes de confirmar, e nada é cobrado até lá.
         </p>
-        <Link
-          href="/escolher-entrega"
-          className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-jb-700 underline-offset-4 hover:underline"
-        >
-          Alterar transportadora ou forma de entrega
-        </Link>
+        {escolha || melhorEnvioAtivo ? (
+          <Link
+            href="/escolher-entrega"
+            className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-jb-700 underline-offset-4 hover:underline"
+          >
+            Alterar transportadora ou forma de entrega
+          </Link>
+        ) : null}
       </header>
 
       <ul className="mt-4 flex flex-wrap gap-x-8 gap-y-2.5 text-sm text-graf-600">
         <li className="flex items-center gap-2">
           <Truck className="size-4 shrink-0 text-graf-500" aria-hidden />
-          {retiradaEscolhida ? "Retirada na JB selecionada" : "Transportadora selecionada e recotada pelo CEP"}
+          {retiradaEscolhida
+            ? "Retirada na JB selecionada"
+            : escolha?.kind === "melhor_envio"
+              ? "Transportadora selecionada e recotada pelo CEP"
+              : "Frete calculado pelo CEP no checkout"}
         </li>
         <li className="flex items-center gap-2">
           <Headset className="size-4 shrink-0 text-graf-500" aria-hidden />
@@ -158,9 +171,9 @@ export default async function CheckoutPage() {
             uf: endereco?.state ?? "",
             referencia: endereco?.reference ?? "",
           }}
-          // Para entrega, a decisão já aconteceu na tela anterior: esconder
-          // retirada aqui impede trocar de modalidade sem recotar.
-          retiradaDisponivel={retiradaEscolhida}
+          // Com Melhor Envio escolhido, trocar entrega/retirada aqui quebraria a
+          // recotação. No modo legado, o checkout mantém a escolha que já existia.
+          retiradaDisponivel={retiradaNoCheckout}
           enderecoJb={enderecoCompleto(s)}
           instrucoesRetirada={s.retirada_instrucoes}
           horarioJb={s.horario}
