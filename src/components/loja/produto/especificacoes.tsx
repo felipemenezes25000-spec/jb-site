@@ -9,13 +9,9 @@ import {
 /* ============================================================================
    Ficha técnica do produto
 
-   A ficha pública precisa ser escaneável em segundos. Em vez de espalhar
-   rótulo e valor em linhas longas e soltas, todos os blocos usam o mesmo
-   padrão visual: cartão, título claro e grade de dados. Assim especificações,
-   medidas, regulatório e documentos parecem partes da mesma ficha — não quatro
-   pedaços diferentes da página.
-
-   Campo vazio nunca vira linha. A ordem cadastrada continua sendo respeitada.
+   O conteúdo continua completo, mas com densidade de catálogo técnico: menos
+   molduras, menos padding e títulos menores. Quem abre esta área quer consultar
+   informação, não entrar em uma sequência de cards de dashboard.
    ============================================================================ */
 
 export type EspecificacaoAgrupada = {
@@ -63,15 +59,15 @@ function CartaoFicha({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
-      <header className="flex items-start gap-3 border-b border-graf-200 bg-graf-50/70 px-5 py-4 sm:px-6">
-        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white text-jb-700 shadow-sm">
-          <Icone className="size-[18px]" aria-hidden />
+    <section className="overflow-hidden rounded-xl border border-graf-200 bg-white">
+      <header className="flex items-center gap-3 border-b border-graf-200 bg-white px-4 py-3 sm:px-5">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">
+          <Icone className="size-4" aria-hidden />
         </span>
         <div className="min-w-0">
-          <h3 className="text-[0.9375rem] font-bold leading-5 text-graf-950">{titulo}</h3>
+          <h3 className="text-[0.875rem] font-extrabold leading-5 text-graf-950">{titulo}</h3>
           {subtitulo ? (
-            <p className="mt-0.5 text-[0.8125rem] leading-5 text-graf-500">{subtitulo}</p>
+            <p className="mt-0.5 text-[0.75rem] leading-4 text-graf-500">{subtitulo}</p>
           ) : null}
         </div>
       </header>
@@ -99,15 +95,15 @@ function Dado({
   mono?: boolean;
 }) {
   return (
-    <div className="min-w-0 border-graf-200 px-5 py-4 sm:px-6 sm:py-5">
-      <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+    <div className="min-w-0 border-graf-200 px-4 py-3 sm:px-5 sm:py-3.5">
+      <dt className="text-[0.625rem] font-bold uppercase tracking-[0.075em] text-graf-500">
         {rotulo}
       </dt>
       <dd
         className={
           mono
-            ? "label-mono mt-1.5 break-words text-[0.9375rem] text-graf-950"
-            : "mt-1.5 break-words text-[1rem] font-semibold leading-6 text-graf-950"
+            ? "label-mono mt-1 break-words text-[0.875rem] text-graf-950"
+            : "mt-1 break-words text-[0.9375rem] font-semibold leading-5 text-graf-950"
         }
       >
         {valor}
@@ -120,7 +116,7 @@ export function FichaTecnica({ grupos }: { grupos: EspecificacaoAgrupada[] }) {
   if (grupos.length === 0) return null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {grupos.map((grupo, indice) => {
         const titulo =
           grupos.length === 1 && grupo.grupo.toLowerCase() === "ficha técnica"
@@ -131,7 +127,7 @@ export function FichaTecnica({ grupos }: { grupos: EspecificacaoAgrupada[] }) {
           <CartaoFicha
             key={grupo.grupo}
             titulo={titulo}
-            subtitulo={indice === 0 ? "Principais dados do equipamento" : undefined}
+            subtitulo={indice === 0 ? "Dados para comparar este modelo" : undefined}
             icone={SlidersHorizontal}
           >
             <GradeDados>
@@ -189,7 +185,7 @@ export function MedidasEPeso({
   return (
     <CartaoFicha
       titulo="Dimensões e peso"
-      subtitulo="Confira o espaço necessário antes da instalação"
+      subtitulo="Espaço físico necessário"
       icone={Ruler}
     >
       <GradeDados>
@@ -227,7 +223,7 @@ export function Regulatorio({
   return (
     <CartaoFicha
       titulo="Informações regulatórias"
-      subtitulo="Identificação sanitária e responsabilidade do produto"
+      subtitulo="Identificação sanitária"
       icone={ShieldCheck}
     >
       {linhas.length > 0 ? (
@@ -244,11 +240,17 @@ export function Regulatorio({
       ) : null}
 
       {observacao ? (
-        <div className={linhas.length > 0 ? "border-t border-graf-200 px-5 py-4 sm:px-6" : "px-5 py-4 sm:px-6"}>
-          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+        <div
+          className={
+            linhas.length > 0
+              ? "border-t border-graf-200 px-4 py-3 sm:px-5"
+              : "px-4 py-3 sm:px-5"
+          }
+        >
+          <p className="text-[0.625rem] font-bold uppercase tracking-[0.075em] text-graf-500">
             Observação
           </p>
-          <p className="mt-1.5 text-sm leading-6 text-graf-700">{observacao}</p>
+          <p className="mt-1 text-[0.8125rem] leading-5 text-graf-700">{observacao}</p>
         </div>
       ) : null}
     </CartaoFicha>
@@ -278,7 +280,7 @@ export function Documentacao({ documentos }: { documentos: DocumentoProduto[] })
   return (
     <CartaoFicha
       titulo="Documentos do equipamento"
-      subtitulo="Manuais, certificados e arquivos disponibilizados pelo cadastro"
+      subtitulo={`${documentos.length} ${documentos.length === 1 ? "arquivo disponível" : "arquivos disponíveis"}`}
       icone={FileText}
     >
       <ul className="divide-y divide-graf-200">
@@ -291,23 +293,23 @@ export function Documentacao({ documentos }: { documentos: DocumentoProduto[] })
                 href={documento.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="foco-jb group flex min-h-14 items-center gap-3 px-5 py-3.5 transition-colors duration-150 hover:bg-graf-50 sm:px-6"
+                className="foco-jb group flex min-h-12 items-center gap-3 px-4 py-2.5 transition-colors duration-150 hover:bg-graf-50 sm:px-5"
               >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-graf-200 bg-white text-graf-500">
-                  <FileText className="size-4" aria-hidden />
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-graf-500">
+                  <FileText className="size-3.5" aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[0.9375rem] font-semibold text-graf-950 transition-colors duration-150 group-hover:text-jb-700">
+                  <span className="block text-[0.875rem] font-semibold text-graf-950 transition-colors duration-150 group-hover:text-jb-700">
                     {documento.titulo}
                   </span>
                   {tipo ? (
-                    <span className="mt-0.5 block text-[0.75rem] font-medium uppercase tracking-[0.06em] text-graf-500">
+                    <span className="mt-0.5 block text-[0.6875rem] font-medium uppercase tracking-[0.055em] text-graf-500">
                       {tipo}
                     </span>
                   ) : null}
                 </span>
                 <Download
-                  className="size-[18px] shrink-0 text-graf-400 transition-colors duration-150 group-hover:text-jb-600"
+                  className="size-4 shrink-0 text-graf-400 transition-colors duration-150 group-hover:text-jb-600"
                   aria-hidden
                 />
                 <span className="sr-only">(abre em nova aba)</span>
