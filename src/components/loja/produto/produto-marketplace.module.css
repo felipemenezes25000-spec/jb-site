@@ -9,8 +9,20 @@
   min-width: 0;
 }
 
+/* No celular o contexto vem antes da imagem: marca, nome e os atributos que
+   decidem se vale continuar. A galeria segue logo depois e a compra fecha a
+   sequência. No desktop a composição volta para o padrão marketplace. */
 .resumo {
+  order: 1;
   align-self: start;
+}
+
+.galeria {
+  order: 2;
+}
+
+.compra {
+  order: 3;
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
@@ -21,21 +33,32 @@
   }
 
   .galeria {
+    order: 0;
     grid-column: 1;
     grid-row: 1 / span 2;
   }
 
   .resumo,
   .compra {
+    order: 0;
     grid-column: 2;
   }
 }
 
 @media (min-width: 1024px) {
   .topo {
-    grid-template-columns: minmax(0, 5fr) minmax(14rem, 3fr) minmax(20rem, 4fr);
+    /* Galeria é protagonista; resumo explica; buy box conclui. A coluna de
+       compra continua larga o bastante para preço, CEP e ações sem parecer um
+       painel maior do que o próprio produto. */
+    grid-template-columns: minmax(0, 1.45fr) minmax(15rem, 0.86fr) minmax(20rem, 1fr);
     align-items: start;
-    gap: clamp(1.25rem, 2vw, 2.5rem);
+    gap: clamp(1.25rem, 1.8vw, 2.25rem);
+  }
+
+  .galeria,
+  .resumo,
+  .compra {
+    order: 0;
   }
 
   .compra {
@@ -44,3 +67,9 @@
   }
 }
 
+@media (min-width: 1440px) {
+  .topo {
+    grid-template-columns: minmax(0, 1.55fr) minmax(16rem, 0.9fr) minmax(21rem, 1fr);
+    gap: 2.5rem;
+  }
+}
