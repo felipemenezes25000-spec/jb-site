@@ -56,21 +56,23 @@ async function alvosPrincipaisTem44px(page: import("@playwright/test").Page) {
 }
 
 test.describe("Cabeçalho da página de produto", () => {
-  test("não altera o cabeçalho aprovado da Home", async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/");
+  for (const rota of ["/", "/loja"]) {
+    test(`não deixa o redesign da PDP vazar para ${rota}`, async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto(rota);
 
-    await expect(page.locator(PDP)).toHaveCount(0);
+      await expect(page.locator(PDP)).toHaveCount(0);
 
-    const maxWidthDaBusca = await page.locator(BUSCA_DESKTOP).evaluate((el) =>
-      getComputedStyle(el).maxWidth,
-    );
+      const busca = page.locator(BUSCA_DESKTOP);
+      await expect(busca).toBeVisible();
+      const maxWidthDaBusca = await busca.evaluate((el) => getComputedStyle(el).maxWidth);
 
-    // Na Home continua valendo o limite do header original. Na PDP o CSS
-    // exclusivo troca esse valor para `none` e deixa a busca absorver espaço.
-    expect(maxWidthDaBusca).not.toBe("none");
-    await semRolagemHorizontal(page);
-  });
+      // Fora da ficha continua valendo o limite do header original. Na PDP o
+      // CSS exclusivo troca esse valor para `none` e deixa a busca absorver espaço.
+      expect(maxWidthDaBusca).not.toBe("none");
+      await semRolagemHorizontal(page);
+    });
+  }
 
   test("em 1440px ativa somente a composição premium da PDP", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
