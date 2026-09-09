@@ -14,22 +14,18 @@ import {
 import { formatarPreco } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
-/*
- * Segunda camada da PDP.
+/**
+ * Camada complementar da PDP.
  *
- * A página principal continua responsável pela compra e pela ficha completa.
- * Este layout acrescenta decisões que não devem aumentar a sensação de
- * "página infinita": comparação rápida, prova social verificável e a
- * continuidade do pós-venda JB.
+ * A página principal cuida da decisão imediata (galeria, key specs, preço,
+ * estoque, entrega e compra). Este layout entra depois dela com três tarefas:
+ * comparar alternativas reais, provar confiança com avaliações verificadas e
+ * explicar a continuidade do pós-venda JB.
  *
- * Avaliação só entra aqui quando as três condições são verdadeiras:
- * 1. a pessoa autorizou uso público;
- * 2. a equipe publicou a resposta;
- * 3. o convite veio de um pedido que continha ESTE produto.
- *
- * Assim, "compra verificada" não é um selo editorial: é uma relação do banco.
+ * Importante: ProductRelation com order < 1000 é alternativa. Acessórios e
+ * complementos usam as faixas seguintes e são renderizados pelo cross-sell
+ * intencional. Assim um acessório nunca entra numa tabela de substitutos.
  */
-
 type Props = {
   children: ReactNode;
   params: Promise<{ slug: string }>;
@@ -46,15 +42,24 @@ type ProdutoComparavel = {
   specs: { label: string; value: string; order: number }[];
 };
 
+type AvaliacaoPublica = {
+  id: string;
+  score: number;
+  comment: string;
+  displayName: string;
+  publishedAt: Date | null;
+  createdAt: Date;
+};
+
 const PRIORIDADE_ATRIBUTOS = [
-  /intensidade|irradiancia/,
+  /intensidade|irradiancia|luminosidade/,
   /torque/,
   /capacidade|volume|litros/,
-  /modos|programas/,
+  /modos|programas|ciclos/,
   /rotacao|rpm|velocidade/,
-  /potencia/,
   /pressao/,
-  /ponteira|diametro/,
+  /potencia/,
+  /ponteira|diametro|alcance/,
   /bateria|autonomia/,
   /frequencia/,
   /vazao/,
@@ -63,17 +68,17 @@ const PRIORIDADE_ATRIBUTOS = [
 ];
 
 function chave(texto: string) {
-  return texto
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .trim();
+  return texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
 }
 
 function prioridade(rotulo: string) {
-  const normalizado = chave(rotulo);
-  const indice = PRIORIDADE_ATRIBUTOS.findIndex((padrao) => padrao.test(normalizado));
+  const indice = PRIORIDADE_ATRIBUTOS.findIndex((padrao) => padrao.test(chave(rotulo)));
   return indice < 0 ? PRIORIDADE_ATRIBUTOS.length : indice;
+}
+
+function preco(produto: ProdutoComparavel) {
+  if (!produto.allowDirectPurchase || produto.priceCents <= 0) return "Sob orçamento";
+  return formatarPreco(produto.priceCents);
 }
 
 function linhasDaComparacao(produtos: ProdutoComparavel[]) {
@@ -83,12 +88,12 @@ function linhasDaComparacao(produtos: ProdutoComparavel[]) {
   >();
 
   for (const produto of produtos) {
-    const vistosNoProduto = new Set<string>();
+    const vistos = new Set<string>();
     for (const spec of produto.specs) {
       if (!spec.label.trim() || !spec.value.trim()) continue;
       const id = chave(spec.label);
-      if (!id || vistosNoProduto.has(id)) continue;
-      vistosNoProduto.add(id);
+      if (!id || vistos.has(id)) continue;
+      vistos.add(id);
 
       const atual = candidatos.get(id);
       candidatos.set(id, {
@@ -100,7 +105,7 @@ function linhasDaComparacao(produtos: ProdutoComparavel[]) {
     }
   }
 
-  const especificacoes = [...candidatos.entries()]
+  const specs = [...candidatos.entries()]
     .sort(([, a], [, b]) =>
       a.prioridade - b.prioridade ||
       b.ocorrencias - a.ocorrencias ||
@@ -110,7 +115,7 @@ function linhasDaComparacao(produtos: ProdutoComparavel[]) {
     .map(([id, dado]) => ({ id, rotulo: dado.rotulo }));
 
   return [
-    ...especificacoes,
+    ...specs,
     ...(produtos.some((produto) => produto.voltage?.trim())
       ? [{ id: "__voltagem", rotulo: "Voltagem" }]
       : []),
@@ -126,19 +131,15 @@ function valorDaLinha(produto: ProdutoComparavel, id: string) {
     const meses = produto.warrantyMonths ?? 0;
     return meses > 0 ? `${meses} ${meses === 1 ? "mês" : "meses"}` : "—";
   }
-
   return produto.specs.find((spec) => chave(spec.label) === id)?.value.trim() || "—";
-}
-
-function preco(produto: ProdutoComparavel) {
-  if (!produto.allowDirectPurchase || produto.priceCents <= 0) return "Sob orçamento";
-  return formatarPreco(produto.priceCents);
 }
 
 function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
   if (produtos.length < 2) return null;
-  const linhas = linhasDaComparacao(produtos);
+
   const atual = produtos[0];
+  const alternativas = produtos.slice(1, 3);
+  const linhas = linhasDaComparacao(produtos);
   const hrefCompleto = `/comparar?${produtos
     .slice(0, 3)
     .map((produto) => `p=${encodeURIComponent(produto.slug)}`)
@@ -148,7 +149,7 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
     <section
       id="comparacao-rapida"
       aria-labelledby="comparacao-rapida-titulo"
-      className="border-t border-graf-200 py-10 lg:py-12"
+      className="scroll-mt-32 border-t border-graf-200 py-10 lg:py-12"
     >
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -162,9 +163,10 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
             Compare as diferenças que realmente importam
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-graf-600">
-            Uma leitura curta com atributos do próprio catálogo. Para a ficha inteira, abra o comparador completo.
+            Só entram aqui substitutos do equipamento. Acessórios e itens complementares aparecem em blocos próprios.
           </p>
         </div>
+
         <Link
           href={hrefCompleto}
           className="foco-jb inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-xl border border-graf-300 px-4 text-sm font-bold text-graf-900 transition-colors hover:border-graf-500 hover:bg-graf-50 sm:self-auto"
@@ -175,21 +177,16 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
         </Link>
       </div>
 
-      {/* No celular, uma tabela de 720px obrigaria o usuário a descobrir a
-          comparação arrastando horizontalmente. Cada alternativa vira uma
-          leitura direta "este × outro", mantendo os rótulos sempre visíveis. */}
       <div className="space-y-3 md:hidden">
-        {produtos.slice(1, 3).map((alternativa) => (
+        {alternativas.map((alternativa) => (
           <article key={alternativa.id} className="overflow-hidden rounded-2xl border border-graf-200 bg-white">
             <div className="grid grid-cols-2 border-b border-graf-200">
               <div className="bg-jb-50/45 p-4">
                 <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
                   Este modelo
                 </span>
-                <p className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950">
-                  {atual.name}
-                </p>
-                <p className="tabular mt-2 text-sm font-extrabold text-graf-950">{preco(atual)}</p>
+                <p className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950">{atual.name}</p>
+                <p className="mt-2 text-sm font-extrabold tabular text-graf-950">{preco(atual)}</p>
               </div>
               <div className="p-4">
                 <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
@@ -201,9 +198,7 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
                 >
                   {alternativa.name}
                 </Link>
-                <p className="tabular mt-2 text-sm font-extrabold text-graf-950">
-                  {preco(alternativa)}
-                </p>
+                <p className="mt-2 text-sm font-extrabold tabular text-graf-950">{preco(alternativa)}</p>
               </div>
             </div>
 
@@ -225,7 +220,7 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
               href={`/loja/${alternativa.slug}`}
               className="foco-jb flex min-h-11 items-center justify-center gap-2 border-t border-graf-200 px-4 text-sm font-bold text-jb-700 hover:bg-graf-50"
             >
-              Ver {alternativa.name}
+              Ver alternativa
               <ArrowRight className="size-4" aria-hidden />
             </Link>
           </article>
@@ -242,9 +237,7 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
               {produtos.slice(0, 3).map((produto, indice) => (
                 <th
                   key={produto.id}
-                  className={`border-b border-graf-200 px-5 py-5 align-top ${
-                    indice === 0 ? "bg-jb-50/45" : "bg-white"
-                  }`}
+                  className={`border-b border-graf-200 px-5 py-5 align-top ${indice === 0 ? "bg-jb-50/45" : "bg-white"}`}
                 >
                   {indice === 0 ? (
                     <span className="mb-2 inline-flex rounded-full bg-jb-100 px-2.5 py-1 text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
@@ -257,7 +250,7 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
                   >
                     {produto.name}
                   </Link>
-                  <p className="tabular mt-2 text-base font-extrabold text-graf-950">{preco(produto)}</p>
+                  <p className="mt-2 text-base font-extrabold tabular text-graf-950">{preco(produto)}</p>
                 </th>
               ))}
             </tr>
@@ -265,15 +258,11 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
           <tbody className="divide-y divide-graf-100">
             {linhas.map((linha) => (
               <tr key={linha.id}>
-                <th className="bg-graf-50/55 px-5 py-3.5 text-xs font-semibold text-graf-600">
-                  {linha.rotulo}
-                </th>
+                <th className="bg-graf-50/55 px-5 py-3.5 text-xs font-semibold text-graf-600">{linha.rotulo}</th>
                 {produtos.slice(0, 3).map((produto, indice) => (
                   <td
                     key={produto.id}
-                    className={`px-5 py-3.5 text-sm font-semibold text-graf-800 ${
-                      indice === 0 ? "bg-jb-50/20" : ""
-                    }`}
+                    className={`px-5 py-3.5 text-sm font-semibold text-graf-800 ${indice === 0 ? "bg-jb-50/20" : ""}`}
                   >
                     {valorDaLinha(produto, linha.id)}
                   </td>
@@ -286,15 +275,6 @@ function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
     </section>
   );
 }
-
-type AvaliacaoPublica = {
-  id: string;
-  score: number;
-  comment: string;
-  displayName: string;
-  publishedAt: Date | null;
-  createdAt: Date;
-};
 
 function Estrelas({ nota }: { nota: number }) {
   return (
@@ -324,22 +304,17 @@ function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] 
     <section
       id="avaliacoes-verificadas"
       aria-labelledby="avaliacoes-verificadas-titulo"
-      className="border-t border-graf-200 py-10 lg:py-12"
+      className="scroll-mt-32 border-t border-graf-200 py-10 lg:py-12"
     >
       <div className="grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-12">
         <div>
-          <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-jb-700">
-            Quem comprou conta
-          </p>
-          <h2
-            id="avaliacoes-verificadas-titulo"
-            className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-graf-950"
-          >
+          <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-jb-700">Quem comprou conta</p>
+          <h2 id="avaliacoes-verificadas-titulo" className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-graf-950">
             Avaliações verificadas
           </h2>
 
           <div className="mt-6 flex items-end gap-3">
-            <span className="tabular text-5xl font-extrabold leading-none tracking-[-0.04em] text-graf-950">
+            <span className="text-5xl font-extrabold leading-none tracking-[-0.04em] tabular text-graf-950">
               {media.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
             </span>
             <div className="pb-0.5">
@@ -357,12 +332,9 @@ function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] 
                 <div key={nota} className="grid grid-cols-[2rem_1fr_2.5rem] items-center gap-2 text-xs">
                   <span className="font-semibold text-graf-600">{nota}★</span>
                   <span className="h-1.5 overflow-hidden rounded-full bg-graf-100">
-                    <span
-                      className="block h-full rounded-full bg-graf-800"
-                      style={{ width: `${percentual}%` }}
-                    />
+                    <span className="block h-full rounded-full bg-graf-800" style={{ width: `${percentual}%` }} />
                   </span>
-                  <span className="tabular text-right text-graf-500">{quantidade}</span>
+                  <span className="text-right tabular text-graf-500">{quantidade}</span>
                 </div>
               );
             })}
@@ -377,10 +349,7 @@ function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] 
         {comentarios.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {comentarios.map((avaliacao) => (
-              <article
-                key={avaliacao.id}
-                className="rounded-2xl border border-graf-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.025)]"
-              >
+              <article key={avaliacao.id} className="rounded-2xl border border-graf-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.025)]">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Estrelas nota={avaliacao.score} />
                   <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-bold text-ok-700">
@@ -390,9 +359,7 @@ function AvaliacoesVerificadas({ avaliacoes }: { avaliacoes: AvaliacaoPublica[] 
                 </div>
                 <p className="mt-4 text-sm leading-6 text-graf-700">“{avaliacao.comment.trim()}”</p>
                 <div className="mt-4 border-t border-graf-100 pt-3">
-                  <p className="text-xs font-bold text-graf-800">
-                    {avaliacao.displayName.trim() || "Cliente JB"}
-                  </p>
+                  <p className="text-xs font-bold text-graf-800">{avaliacao.displayName.trim() || "Cliente JB"}</p>
                   <p className="mt-0.5 text-[0.6875rem] text-graf-400">
                     {(avaliacao.publishedAt ?? avaliacao.createdAt).toLocaleDateString("pt-BR", {
                       month: "long",
@@ -423,7 +390,7 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
     {
       icone: ShieldCheck,
       titulo: garantiaMeses && garantiaMeses > 0 ? `Garantia de ${garantiaMeses} meses` : "Garantia acompanhada",
-      texto: "O histórico da compra mantém a origem e as informações de garantia organizadas.",
+      texto: "O histórico da compra mantém origem e informações de garantia organizadas.",
     },
     {
       icone: Wrench,
@@ -442,13 +409,8 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
       <div className="overflow-hidden rounded-3xl border border-graf-200 bg-graf-950 text-white">
         <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.85fr_1.4fr] lg:gap-12 lg:p-10">
           <div>
-            <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-white/55">
-              O diferencial não termina na entrega
-            </p>
-            <h2
-              id="pos-venda-jb-titulo"
-              className="mt-3 text-2xl font-extrabold tracking-[-0.035em] text-white lg:text-3xl"
-            >
+            <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-white/55">O diferencial não termina na entrega</p>
+            <h2 id="pos-venda-jb-titulo" className="mt-3 text-2xl font-extrabold tracking-[-0.035em] text-white lg:text-3xl">
               O equipamento continua dentro do ecossistema JB
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/65">
@@ -481,46 +443,41 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
   );
 }
 
+const SELECT_COMPARAVEL = {
+  id: true,
+  slug: true,
+  name: true,
+  priceCents: true,
+  allowDirectPurchase: true,
+  voltage: true,
+  warrantyMonths: true,
+  specs: {
+    orderBy: { order: "asc" as const },
+    select: { label: true, value: true, order: true },
+  },
+};
+
 export default async function ProdutoLayout({ children, params }: Props) {
   const { slug } = await params;
 
   const produto = await prisma.product.findUnique({
     where: { slug },
     select: {
-      id: true,
-      slug: true,
-      name: true,
+      ...SELECT_COMPARAVEL,
       status: true,
-      priceCents: true,
-      allowDirectPurchase: true,
       categoryId: true,
       brandId: true,
       condition: true,
       trackInventory: true,
-      voltage: true,
-      warrantyMonths: true,
-      specs: {
-        orderBy: { order: "asc" },
-        select: { label: true, value: true, order: true },
-      },
       relatedFrom: {
+        where: { order: { lt: 1_000 } },
         orderBy: { order: "asc" },
-        take: 3,
+        take: 2,
         select: {
           target: {
             select: {
-              id: true,
-              slug: true,
-              name: true,
+              ...SELECT_COMPARAVEL,
               status: true,
-              priceCents: true,
-              allowDirectPurchase: true,
-              voltage: true,
-              warrantyMonths: true,
-              specs: {
-                orderBy: { order: "asc" },
-                select: { label: true, value: true, order: true },
-              },
             },
           },
         },
@@ -530,18 +487,24 @@ export default async function ProdutoLayout({ children, params }: Props) {
 
   if (!produto || produto.status === "draft") return <>{children}</>;
 
-  const manuais = produto.relatedFrom
+  const alternativasManuais = produto.relatedFrom
     .map((relacao) => relacao.target)
     .filter((alvo) => alvo.status === "active")
     .slice(0, 2);
 
-  const faltam = 2 - manuais.length;
-  const complementares =
+  const todasRelacoes = await prisma.productRelation.findMany({
+    where: { sourceId: produto.id },
+    select: { targetId: true },
+  });
+  const relacionadosIds = todasRelacoes.map((relacao) => relacao.targetId);
+
+  const faltam = 2 - alternativasManuais.length;
+  const alternativasAutomaticas =
     faltam > 0 && (produto.categoryId || produto.brandId)
       ? await prisma.product.findMany({
           where: {
             status: "active",
-            id: { notIn: [produto.id, ...manuais.map((item) => item.id)] },
+            id: { notIn: [produto.id, ...relacionadosIds] },
             OR: [
               ...(produto.categoryId ? [{ categoryId: produto.categoryId }] : []),
               ...(produto.brandId ? [{ brandId: produto.brandId }] : []),
@@ -549,19 +512,7 @@ export default async function ProdutoLayout({ children, params }: Props) {
           },
           orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
           take: faltam,
-          select: {
-            id: true,
-            slug: true,
-            name: true,
-            priceCents: true,
-            allowDirectPurchase: true,
-            voltage: true,
-            warrantyMonths: true,
-            specs: {
-              orderBy: { order: "asc" },
-              select: { label: true, value: true, order: true },
-            },
-          },
+          select: SELECT_COMPARAVEL,
         })
       : [];
 
@@ -572,9 +523,7 @@ export default async function ProdutoLayout({ children, params }: Props) {
       request: {
         kind: "compra",
         order: {
-          items: {
-            some: { productId: produto.id, kind: "produto" },
-          },
+          items: { some: { productId: produto.id, kind: "produto" } },
         },
       },
     },
@@ -592,8 +541,8 @@ export default async function ProdutoLayout({ children, params }: Props) {
 
   const comparaveis: ProdutoComparavel[] = [
     produto,
-    ...manuais,
-    ...complementares,
+    ...alternativasManuais,
+    ...alternativasAutomaticas,
   ].slice(0, 3);
 
   const geraEquipamento = produto.condition !== "novo" || produto.trackInventory;
