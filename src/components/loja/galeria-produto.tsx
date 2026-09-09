@@ -179,6 +179,7 @@ export function GaleriaProduto({
     <div className="flex flex-col gap-4 lg:flex-row-reverse lg:items-start lg:gap-4">
       <div className="placa relative min-w-0 flex-1 overflow-hidden">
         <div
+          data-pdp-gallery-main
           className="group/palco relative aspect-square"
           onTouchStart={aoEncostar}
           onTouchEnd={aoSoltar}

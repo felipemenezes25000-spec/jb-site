@@ -1,0 +1,46 @@
+.topo {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.galeria,
+.resumo,
+.compra {
+  min-width: 0;
+}
+
+.resumo {
+  align-self: start;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .topo {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 1fr);
+    align-items: start;
+    gap: 1.5rem;
+  }
+
+  .galeria {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .resumo,
+  .compra {
+    grid-column: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .topo {
+    grid-template-columns: minmax(0, 5fr) minmax(14rem, 3fr) minmax(20rem, 4fr);
+    align-items: start;
+    gap: clamp(1.25rem, 2vw, 2.5rem);
+  }
+
+  .compra {
+    position: sticky;
+    top: 6.5rem;
+  }
+}
+

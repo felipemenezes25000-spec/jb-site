@@ -3,7 +3,6 @@ import type { Prisma } from "@prisma/client";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, Wrench } from "lucide-react";
 
 import { CaixaCompra, type AddonProduto } from "@/components/loja/caixa-compra";
 import { GaleriaProduto, type FotoProduto } from "@/components/loja/galeria-produto";
@@ -12,7 +11,6 @@ import {
   AcoesDoProduto,
   AcoesDoProdutoEsqueleto,
 } from "@/components/loja/produto/acoes-do-produto";
-import { AjudaDaEquipe } from "@/components/loja/produto/ajuda-da-equipe";
 import {
   AntesDeComprar,
   DepoisDaCompraNoProduto,
@@ -21,7 +19,6 @@ import {
 } from "@/components/loja/produto/antes-e-depois";
 import { AssistenciaRelacionada } from "@/components/loja/produto/assistencia-relacionada";
 import { definicaoDaCondicao } from "@/components/loja/produto/condicao";
-import { CondicoesDeCompra } from "@/components/loja/produto/condicoes-de-compra";
 import {
   agruparEspecificacoes,
   Documentacao,
@@ -30,7 +27,8 @@ import {
   Regulatorio,
 } from "@/components/loja/produto/especificacoes";
 import { ForaDeLinha, SemEstoque } from "@/components/loja/produto/estados";
-import { IdentidadeProduto } from "@/components/loja/produto/identidade";
+import { ResumoTecnicoProduto } from "@/components/loja/produto/resumo-tecnico";
+import { TopoMarketplace } from "@/components/loja/produto/topo-marketplace";
 import { MotivosJB } from "@/components/loja/produto/motivos-jb";
 import {
   BarraCompraMobile,
@@ -72,8 +70,9 @@ import {
   type DadosJsonLd,
 } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
-import { getSettings, ligado } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
 import { colunasAte } from "@/components/ui/grade";
+import { destaquesDaPdp } from "@/lib/marketplace/resumo-produto";
 
 /*
  * Migração para Cache Components — esta rota ainda não foi migrada.
@@ -455,198 +454,90 @@ export default async function ProdutoPage({ params }: Props) {
       <JsonLd dados={estruturados} />
 
       {/* ==================================================== PRIMEIRA DOBRA */}
-      {/* `espaco="nenhum"` de propósito: o respiro é escrito aqui inteiro, para
-          o `pb` não disputar com o `md:py` do preset e perder no desktop. */}
-      <Secao
-        como="div"
-        id="visao-geral"
-        espaco="nenhum"
-        className="scroll-mt-36 pt-6 pb-16 lg:pt-8 lg:pb-24"
-      >
-        <Trilha itens={trilha} className="mb-6 lg:mb-8" />
-
-        {/* A ordem do DOM é a do celular: nome e condição, depois a foto,
-            depois o preço. No desktop as posições explícitas montam o outro
-            desenho — galeria à esquerda ocupando as duas linhas, identidade e
-            compra empilhadas na coluna da direita. */}
-        <div className="grid gap-y-8 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-10 xl:gap-x-16">
-          {/* A ordem do DOM é a do celular: foto, identidade e compra, e só
-              então as condições. No desktop as posições explícitas montam o
-              outro desenho — foto em cima à esquerda, coluna de compra
-              atravessando as duas linhas à direita, e as condições fechando o
-              vão embaixo da foto.
-
-              NADA gruda nesta página. A galeria já foi `sticky`, com o
-              argumento de que a foto deve acompanhar cada decisão que a coluna
-              de compra pede. O argumento é bom no papel e ruim na tela: a
-              pessoa rola, o texto anda e a foto não, e a página inteira dá a
-              impressão de estar travada. Foi a primeira coisa que apareceu na
-              revisão, duas vezes. */}
-          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-1">
-            <GaleriaProduto fotos={fotos} nome={produto.name} />
-          </div>
-
-          {/* A coluna que decide: quem é o equipamento, o que dá para fazer com
-              ele e quanto custa — sem quebra entre as três coisas. Ela
-              atravessa as duas linhas da grade, e é isso que faz a foto e as
-              condições dividirem a coluna da esquerda em vez de deixarem meia
-              tela em branco embaixo da imagem. */}
-          <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1">
-              <IdentidadeProduto
+      <TopoMarketplace
+        trilha={<Trilha itens={trilha} />}
+        galeria={<GaleriaProduto fotos={fotos} nome={produto.name} />}
+        resumo={
+          <ResumoTecnicoProduto
+            nome={produto.name}
+            resumo={produto.shortDescription}
+            modelo={produto.model}
+            sku={produto.sku}
+            codigoDoFabricante={produto.mpn}
+            gtin={produto.gtin}
+            numeroDeSerie={unidade?.serialNumber ?? null}
+            condicao={produto.condition}
+            definicao={definicao}
+            marca={produto.brand ? { nome: produto.brand.name, slug: produto.brand.slug } : null}
+            categoria={
+              produto.category
+                ? { nome: produto.category.name, slug: produto.category.slug }
+                : null
+            }
+            destaques={destaquesDaPdp({
+              specs: produto.specs,
+              voltage: produto.voltage,
+              warrantyMonths: garantiaMeses,
+              anvisaCode: produto.anvisaCode,
+            })}
+          />
+        }
+        acoes={
+          arquivado ? null : (
+            <Suspense fallback={<AcoesDoProdutoEsqueleto />}>
+              <AcoesDoProduto
+                produtoId={produto.id}
                 nome={produto.name}
-                modelo={produto.model}
-                sku={produto.sku}
-                codigoDoFabricante={produto.mpn}
-                gtin={produto.gtin}
-                codigoAnvisa={produto.anvisaCode}
-                numeroDeSerie={unidade?.serialNumber ?? null}
-                condicao={produto.condition}
-                definicaoDaCondicao={definicao}
-                marca={
-                  produto.brand
-                    ? {
-                        nome: produto.brand.name,
-                        slug: produto.brand.slug,
-                        logo: produto.brand.logo
-                          ? {
-                              url: produto.brand.logo.url,
-                              alt: produto.brand.logo.alt || produto.brand.name,
-                              largura: produto.brand.logo.width,
-                              altura: produto.brand.logo.height,
-                            }
-                          : null,
-                      }
-                    : null
-                }
-                categoria={
-                  produto.category
-                    ? { nome: produto.category.name, slug: produto.category.slug }
-                    : null
-                }
-                resumo={produto.shortDescription}
+                slug={produto.slug}
               />
-
-              {/* Guardar e comparar ficam com a identidade, não com o preço: são
-                  gestos de quem ainda está decidindo, e a caixa de compra é de
-                  quem já decidiu. O `<Suspense>` mantém a casca prerenderizada —
-                  só o estado do favorito depende de sessão. */}
-              {arquivado ? null : (
-                <div className="mt-5">
-                  <Suspense fallback={<AcoesDoProdutoEsqueleto />}>
-                    <AcoesDoProduto
-                      produtoId={produto.id}
-                      nome={produto.name}
-                      slug={produto.slug}
-                    />
-                  </Suspense>
-                </div>
-              )}
-
-              <div id="caixa-de-compra" className="scroll-mt-32 space-y-8">
-                {arquivado ? (
-                  <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
-                ) : (
-                  <CaixaCompra
-                    produtoId={produto.id}
-                    precoCents={produto.priceCents}
-                    compareAtCents={produto.compareAtCents}
-                    permiteCompra={produto.allowDirectPurchase}
-                    permiteOrcamento={produto.allowQuoteRequest}
-                    estoque={produto.stock}
-                    controlaEstoque={produto.trackInventory}
-                    unico={produto.unique}
-                    addons={addons}
-                    hrefOrcamento={hrefOrcamento}
-                    maxParcelas={maxParcelas}
-                    minParcelaCents={minParcelaCents}
-                    garantia={
-                      garantiaMeses && garantiaMeses > 0
-                        ? { meses: garantiaMeses, daUnidade: Boolean(unidade?.warrantyMonths) }
-                        : null
-                    }
-                  />
-                )}
-
-                {!arquivado && semEstoque ? (
-                  <SemEstoque
-                    unico={produto.unique}
-                    hrefAlternativas={
-                      produto.condition === "novo"
-                        ? "/loja"
-                        : produto.condition === "seminovo"
-                          ? "/seminovos"
-                          : produto.condition === "recondicionado"
-                            ? "/recondicionados"
-                            : "/usados"
-                    }
-                  />
-                ) : null}
-
-                {/* O selo fica na coluna que decide, não só na faixa lá
-                    embaixo: quem está olhando o preço de um seminovo está
-                    pesando exatamente o risco que ele responde. */}
-                {certificado ? <SeloCertificado certificado={certificado} /> : null}
-              </div>
-          </div>
-
-          {/* Condições e contato fecham o vão debaixo da foto.
-
-              Empilhados no trilho de compra, eles faziam a coluna da direita
-              medir quase o dobro da imagem, e sobrava meia tela branca — o
-              buraco que aparecia em toda ficha. Aqui eles também leem melhor,
-              lado a lado: garantia, frete e voltagem são o que se confere
-              ANTES de clicar em comprar. */}
-          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-2">
-            <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
-              <CondicoesDeCompra
-                garantiaMeses={garantiaMeses}
-                garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
-                frete={
-                  produto.shippingProfile
-                    ? {
-                        nome: produto.shippingProfile.name,
-                        tipo: produto.shippingProfile.kind,
-                        descricao: produto.shippingProfile.description,
-                        gratisAcimaCents: produto.shippingProfile.freeAboveCents,
-                      }
+            </Suspense>
+          )
+        }
+        compra={
+          <>
+            {arquivado ? (
+              <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
+            ) : (
+              <CaixaCompra
+                produtoId={produto.id}
+                precoCents={produto.priceCents}
+                compareAtCents={produto.compareAtCents}
+                permiteCompra={produto.allowDirectPurchase}
+                permiteOrcamento={produto.allowQuoteRequest}
+                estoque={produto.stock}
+                controlaEstoque={produto.trackInventory}
+                unico={produto.unique}
+                addons={addons}
+                hrefOrcamento={hrefOrcamento}
+                maxParcelas={maxParcelas}
+                minParcelaCents={minParcelaCents}
+                garantia={
+                  garantiaMeses && garantiaMeses > 0
+                    ? { meses: garantiaMeses, daUnidade: Boolean(unidade?.warrantyMonths) }
                     : null
                 }
-                retirada={
-                  ligado(s.retirada_disponivel)
-                    ? s.retirada_instrucoes.trim() || null
-                    : null
-                }
-                voltagem={produto.voltage}
               />
+            )}
 
-              <div>
-                <AjudaDaEquipe
-                  nomeDoProduto={produto.name}
-                  sku={produto.sku}
-                  telefone={s.telefone}
-                  whatsapp={s.whatsapp}
-                  email={s.email}
-                  horario={s.horario}
-                />
+            {!arquivado && semEstoque ? (
+              <SemEstoque
+                unico={produto.unique}
+                hrefAlternativas={
+                  produto.condition === "novo"
+                    ? "/loja"
+                    : produto.condition === "seminovo"
+                      ? "/seminovos"
+                      : produto.condition === "recondicionado"
+                        ? "/recondicionados"
+                        : "/usados"
+                }
+              />
+            ) : null}
 
-                {/* Atalho para quem já tem o equipamento e caiu aqui
-                    procurando conserto — sem virar mais um cartão. */}
-                <Link
-                  href="/assistencia-tecnica"
-                  className="foco-jb group mt-6 inline-flex min-h-11 items-center gap-2 rounded-md text-[0.9375rem] font-semibold text-jb-700 transition-colors duration-150 hover:text-jb-500"
-                >
-                  <Wrench className="size-4 shrink-0" aria-hidden />
-                  Já tem este equipamento? Ver assistência técnica
-                  <ArrowRight
-                    className="size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
-                    aria-hidden
-                  />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Secao>
+            {certificado ? <SeloCertificado certificado={certificado} /> : null}
+          </>
+        }
+      />
 
       {/* ============================================ NAVEGAÇÃO DAS SEÇÕES */}
       {/* Fora de qualquer `Secao`: o `sticky` precisa de um pai que atravesse
