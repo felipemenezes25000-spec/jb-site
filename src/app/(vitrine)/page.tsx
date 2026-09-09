@@ -24,6 +24,7 @@ import { JsonLd, localNegocioJsonLd, organizacaoJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
 import styles from "./home-experience.module.css";
+import mobileStyles from "./home-mobile-polish.module.css";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -68,7 +69,7 @@ export default async function HomePage() {
   ].slice(0, 3);
 
   return (
-    <div className={styles.home} data-jb-home="true">
+    <div className={`${styles.home} ${mobileStyles.mobilePolish}`} data-jb-home="true">
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
       <HeroVitrine
