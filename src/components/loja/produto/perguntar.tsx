@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { MessageCircleQuestion } from "lucide-react";
+import { ChevronDown, MessageCircleQuestion } from "lucide-react";
 
 import {
   perguntarSobreProduto,
@@ -15,15 +15,10 @@ import { CampoTelefone } from "@/components/ui/campos-br";
 /* ============================================================================
    Perguntar sobre este equipamento
 
-   A ficha respondia o que a JB já tinha escrito. A dúvida que ainda não foi
-   escrita é justamente a que faz alguém fechar a aba — e ela não tinha para
-   onde ir sem sair da página.
-
-   O texto abaixo do formulário não é enfeite: ele diz o que acontece com a
-   pergunta. Quem escreve num formulário público de "perguntas e respostas"
-   costuma imaginar que o texto aparece na hora, e não aparece — nada escrito
-   por visitante entra no site sem passar por alguém da JB. Dizer isso antes
-   evita a decepção de procurar a própria pergunta na página e não achar.
+   O formulário é importante numa compra consultiva, mas não precisa ocupar a
+   página inteira de quem só veio ler as respostas já publicadas. A entrada é
+   uma ação progressiva: o comprador vê que pode falar com a equipe e abre o
+   formulário apenas quando realmente precisar.
    ============================================================================ */
 
 export function PerguntarSobreProduto({
@@ -38,86 +33,107 @@ export function PerguntarSobreProduto({
     {},
   );
 
+  const concluido = Boolean(estado.ok);
+
   return (
-    <div className="rounded-xl border border-graf-200 bg-white p-5 sm:p-6">
-      <h3 className="flex items-center gap-2.5 text-[1.0625rem] font-bold text-graf-950">
-        <MessageCircleQuestion className="size-5 shrink-0 text-jb-600" aria-hidden />
-        Ficou alguma dúvida sobre este equipamento?
-      </h3>
-      <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
-        Pergunte à equipe técnica da JB — a mesma que instala e faz a manutenção
-        deste tipo de equipamento.
-      </p>
+    <details
+      className="group overflow-hidden rounded-xl border border-graf-200 bg-white"
+      open={concluido || undefined}
+    >
+      <summary className="foco-jb flex min-h-[4.75rem] cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 sm:px-5 [&::-webkit-details-marker]:hidden">
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
+            <MessageCircleQuestion className="size-[18px]" aria-hidden />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[0.9375rem] font-bold text-graf-950">
+              Não encontrou sua dúvida?
+            </span>
+            <span className="mt-0.5 block text-[0.8125rem] leading-5 text-graf-500">
+              Pergunte diretamente à equipe técnica da JB.
+            </span>
+          </span>
+        </span>
 
-      {estado.ok ? (
-        <div className="mt-4">
-          <Aviso tom="sucesso">{estado.ok}</Aviso>
-        </div>
-      ) : (
-        <form action={acao} className="mt-5 grid gap-4">
-          <input type="hidden" name="produtoId" value={produtoId} />
-
-          {/* Armadilha: fica fora da tela e sem foco por tabulação. */}
-          <input
-            type="text"
-            name="assunto_alternativo"
-            tabIndex={-1}
-            autoComplete="off"
+        <span className="flex shrink-0 items-center gap-2 text-xs font-bold text-jb-700">
+          <span className="hidden sm:inline group-open:hidden">Perguntar</span>
+          <span className="hidden sm:group-open:inline">Recolher</span>
+          <ChevronDown
+            className="size-4 transition-transform duration-200 group-open:rotate-180"
             aria-hidden
-            className="sr-only"
           />
+        </span>
+      </summary>
 
-          <Area
-            name="pergunta"
-            rotulo="Sua pergunta"
-            required
-            rows={3}
-            maxLength={1200}
-            placeholder={`Ex.: o ${nomeDoProduto} precisa de ponto de água próprio?`}
-            erro={estado.campo === "pergunta" ? estado.erro : undefined}
-          />
+      <div className="border-t border-graf-200 px-4 pb-5 pt-4 sm:px-5 sm:pb-6">
+        {estado.ok ? (
+          <Aviso tom="sucesso">{estado.ok}</Aviso>
+        ) : (
+          <form action={acao} className="grid gap-4">
+            <input type="hidden" name="produtoId" value={produtoId} />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo
-              name="nome"
-              rotulo="Seu nome"
-              required
-              autoComplete="name"
-              maxLength={120}
-              erro={estado.campo === "nome" ? estado.erro : undefined}
+            {/* Armadilha: fica fora da tela e sem foco por tabulação. */}
+            <input
+              type="text"
+              name="assunto_alternativo"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden
+              className="sr-only"
             />
-            <Campo
-              name="email"
-              type="email"
-              rotulo="E-mail"
+
+            <Area
+              name="pergunta"
+              rotulo="Sua pergunta"
               required
-              autoComplete="email"
-              maxLength={160}
-              ajuda="É por aqui que a resposta chega."
-              erro={estado.campo === "email" ? estado.erro : undefined}
+              rows={3}
+              maxLength={1200}
+              placeholder={`Ex.: o ${nomeDoProduto} precisa de ponto de água próprio?`}
+              erro={estado.campo === "pergunta" ? estado.erro : undefined}
             />
-          </div>
 
-          <CampoTelefone
-            name="telefone"
-            rotulo="Telefone (opcional)"
-            autoComplete="tel"
-            erro={estado.campo === "telefone" ? estado.erro : undefined}
-          />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo
+                name="nome"
+                rotulo="Seu nome"
+                required
+                autoComplete="name"
+                maxLength={120}
+                erro={estado.campo === "nome" ? estado.erro : undefined}
+              />
+              <Campo
+                name="email"
+                type="email"
+                rotulo="E-mail"
+                required
+                autoComplete="email"
+                maxLength={160}
+                ajuda="A resposta chega por aqui."
+                erro={estado.campo === "email" ? estado.erro : undefined}
+              />
+            </div>
 
-          {estado.erro && !estado.campo ? <Aviso tom="erro">{estado.erro}</Aviso> : null}
+            <CampoTelefone
+              name="telefone"
+              rotulo="Telefone (opcional)"
+              autoComplete="tel"
+              erro={estado.campo === "telefone" ? estado.erro : undefined}
+            />
 
-          <div className="flex flex-wrap items-center gap-4">
-            <Botao type="submit" carregando={enviando}>
-              Enviar pergunta
-            </Botao>
-            <p className="min-w-0 flex-1 text-[0.8125rem] leading-relaxed text-graf-500">
-              A resposta vai para o seu e-mail. Quando ela for útil para outras clínicas, a
-              JB publica a pergunta nesta página — sem o seu nome.
-            </p>
-          </div>
-        </form>
-      )}
-    </div>
+            {estado.erro && !estado.campo ? <Aviso tom="erro">{estado.erro}</Aviso> : null}
+
+            <div className="flex flex-wrap items-center gap-4">
+              <Botao type="submit" carregando={enviando}>
+                Enviar pergunta
+              </Botao>
+              <p className="min-w-0 flex-1 text-[0.75rem] leading-5 text-graf-500">
+                A resposta vai para o seu e-mail. Se ajudar outras clínicas, a JB pode publicar
+                a pergunta nesta página sem o seu nome.
+              </p>
+            </div>
+          </form>
+        )}
+      </div>
+    </details>
   );
 }
