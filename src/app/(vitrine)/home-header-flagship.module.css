@@ -1,0 +1,518 @@
+.flagship {
+  position: relative;
+}
+
+/* ========================================================================== */
+/* FLAGSHIP HEADER — somente na HOME                                          */
+/* ========================================================================== */
+
+:global(body):has(.flagship) [data-jb-utility-bar="true"] {
+  display: block !important;
+  min-height: 2.5rem;
+  overflow: hidden;
+  border: 0 !important;
+  color: #fff;
+  background:
+    radial-gradient(circle at 18% 0%, rgb(255 255 255 / 0.13), transparent 18rem),
+    linear-gradient(92deg, var(--color-jb-800) 0%, var(--color-jb-600) 28%, var(--color-jb-500) 55%, var(--color-jb-700) 100%) !important;
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.13);
+}
+
+:global(body):has(.flagship) [data-jb-utility-bar="true"] > div {
+  display: grid !important;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  width: 100%;
+  max-width: 112rem !important;
+  height: 2.5rem !important;
+  align-items: center;
+  gap: clamp(1rem, 2.2vw, 2.6rem) !important;
+  padding-inline: clamp(1rem, 3.4vw, 3.5rem) !important;
+}
+
+:global(body):has(.flagship) [data-jb-utility-bar="true"] > div > :first-child,
+:global(body):has(.flagship) [data-jb-utility-bar="true"] > div > :last-child {
+  position: relative;
+  z-index: 4;
+}
+
+:global(body):has(.flagship) [data-jb-utility-bar="true"] > div > :first-child {
+  min-height: 2.5rem;
+  padding-right: 1rem;
+  border-right: 1px solid rgb(255 255 255 / 0.18);
+  font-size: 0.69rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.015em;
+}
+
+:global(body):has(.flagship) [data-jb-utility-bar="true"] > div > :last-child {
+  min-height: 2.5rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgb(255 255 255 / 0.18);
+}
+
+:global(body):has(.flagship) [data-jb-utility-bar="true"] > div > :last-child a {
+  font-size: 0.69rem !important;
+  font-weight: 820 !important;
+}
+
+/* Ticker real no centro da faixa. O texto original permanece no DOM para
+   leitores de tela; visualmente a trilha abaixo assume o movimento. */
+:global(body):has(.flagship) [data-jb-utility-bar="true"] p[class*="min-w-0"] {
+  display: block !important;
+  position: relative;
+  height: 2.5rem;
+  min-width: 0;
+  overflow: hidden;
+  color: transparent !important;
+  font-size: 0 !important;
+  white-space: nowrap;
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+
+:global(body):has(.flagship) [data-jb-utility-bar="true"] p[class*="min-w-0"]::before {
+  display: inline-flex;
+  height: 2.5rem;
+  align-items: center;
+  color: #fff;
+  content: "EQUIPAMENTOS + ASSISTÊNCIA + PÓS-VENDA   •   COMPARE ATÉ 3 EQUIPAMENTOS   •   SEMINOVOS REVISADOS PELA JB   •   ASSISTÊNCIA TÉCNICA PRÓPRIA   •   ÁREA DA CLÍNICA PARA PEDIDOS E CHAMADOS   •   EQUIPAMENTOS + ASSISTÊNCIA + PÓS-VENDA   •   COMPARE ATÉ 3 EQUIPAMENTOS   •   SEMINOVOS REVISADOS PELA JB   •   ASSISTÊNCIA TÉCNICA PRÓPRIA   •   ÁREA DA CLÍNICA PARA PEDIDOS E CHAMADOS   •   ";
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  animation: flagshipTicker 34s linear infinite;
+  will-change: transform;
+}
+
+:global(body):has(.flagship) [data-jb-utility-bar="true"]:hover p[class*="min-w-0"]::before {
+  animation-play-state: paused;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Linha principal: logo | busca protagonista | ações                         */
+/* -------------------------------------------------------------------------- */
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] {
+  border-color: var(--color-jb-100) !important;
+  background:
+    radial-gradient(circle at 52% -220%, rgb(216 25 34 / 0.12), transparent 23rem),
+    rgb(255 255 255 / 0.975) !important;
+  box-shadow: 0 22px 55px -46px rgb(89 7 13 / 0.48) !important;
+  backdrop-filter: blur(22px) saturate(1.14);
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] > div:first-of-type {
+  width: 100%;
+  max-width: 112rem !important;
+  padding-inline: clamp(1rem, 3.4vw, 3.5rem) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] > div:first-of-type > div {
+  display: grid !important;
+  grid-template-columns: minmax(11.5rem, 15.5rem) minmax(28rem, 1fr) max-content;
+  height: 5rem !important;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 2.2rem) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-logo) {
+  position: relative;
+  display: inline-flex !important;
+  width: max-content;
+  min-height: 3.3rem !important;
+  align-items: center;
+  padding-right: 1.1rem;
+  border-right: 1px solid var(--color-jb-100);
+  border-radius: 0 !important;
+  transition: transform 180ms ease;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-logo):hover {
+  transform: translateY(-1px);
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-logo)::after {
+  display: block;
+  width: 5.8rem;
+  margin-left: 1rem;
+  color: var(--color-jb-700);
+  content: "MARKETPLACE\AODONTOLÓGICO";
+  font-size: 0.52rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  white-space: pre;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) form > div {
+  height: 3.35rem !important;
+  border: 1px solid var(--color-jb-100) !important;
+  border-radius: 999px !important;
+  background:
+    linear-gradient(180deg, #fff 0%, #fffafa 100%) !important;
+  box-shadow:
+    0 17px 40px -33px rgb(114 8 15 / 0.68),
+    inset 0 0 0 1px rgb(255 255 255 / 0.96) !important;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) form > div:hover {
+  border-color: var(--color-jb-200) !important;
+  box-shadow: 0 20px 44px -31px rgb(114 8 15 / 0.7) !important;
+  transform: translateY(-1px);
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) form > div:focus-within {
+  border-color: var(--color-jb-300) !important;
+  box-shadow:
+    0 22px 48px -30px rgb(114 8 15 / 0.72),
+    0 0 0 4px rgb(218 25 34 / 0.075) !important;
+  transform: translateY(-1px);
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) input {
+  font-size: 0.9rem !important;
+  font-weight: 650 !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) [role="listbox"] {
+  border-color: var(--color-jb-100) !important;
+  border-radius: 0 0 1.5rem 1.5rem !important;
+  background: rgb(255 255 255 / 0.99) !important;
+  box-shadow: 0 30px 70px -42px rgb(79 7 12 / 0.42) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) + div {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.42rem !important;
+  margin-left: 0 !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) + div > *:not(.jb-cta-topo) {
+  transition: transform 180ms ease, background-color 180ms ease, color 180ms ease !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-busca-topo) + div > *:not(.jb-cta-topo):hover {
+  transform: translateY(-1px);
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-cta-topo) {
+  min-height: 3rem !important;
+  margin-left: 0.45rem !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  padding-inline: 1.2rem !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--color-jb-500), var(--color-jb-700)) !important;
+  box-shadow: 0 17px 34px -23px rgb(151 8 18 / 0.7) !important;
+  font-size: 0.76rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.01em;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-cta-topo):hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 21px 38px -21px rgb(151 8 18 / 0.75) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Navegação de descoberta                                                    */
+/* -------------------------------------------------------------------------- */
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] > div:nth-of-type(2) {
+  border-top: 1px solid var(--color-jb-100) !important;
+  border-bottom: 0 !important;
+  background:
+    linear-gradient(90deg, #fff 0%, #fff9f9 48%, #fff 100%);
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] > div:nth-of-type(2) > div {
+  max-width: 112rem !important;
+  padding-inline: clamp(1rem, 3.4vw, 3.5rem) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] {
+  position: relative;
+  display: flex !important;
+  min-height: 3.7rem;
+  align-items: center;
+  justify-content: space-between !important;
+  gap: 0.35rem !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"]::before {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  margin-right: 0.25rem;
+  color: var(--color-jb-700);
+  content: "EXPLORE";
+  font-size: 0.57rem;
+  font-weight: 950;
+  letter-spacing: 0.17em;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] > div {
+  height: 3.7rem !important;
+  border-radius: 999px;
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] > div:hover,
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] > div:has(button[aria-expanded="true"]) {
+  background: linear-gradient(180deg, #fff6f6, #ffeded);
+  transform: translateY(-1px);
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] a {
+  height: 3.05rem !important;
+  border-radius: 999px !important;
+  padding-inline: clamp(0.8rem, 1.3vw, 1.35rem) !important;
+  color: var(--color-graf-950) !important;
+  font-size: 0.78rem !important;
+  font-weight: 880 !important;
+  letter-spacing: -0.012em;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] a::after {
+  right: 1rem !important;
+  left: 1rem !important;
+  bottom: 0.3rem !important;
+  height: 2px !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] a svg {
+  color: var(--color-jb-600) !important;
+  transition: transform 180ms ease !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] > div:hover a svg {
+  transform: translateY(-1px) rotate(-5deg) scale(1.1);
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"] button {
+  border-radius: 999px !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Mega menus: menos caixa, mais navegação                                    */
+/* -------------------------------------------------------------------------- */
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) {
+  padding: 0.55rem 1rem 0 !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) > div {
+  position: relative;
+  max-width: 109rem !important;
+  max-height: min(74dvh, 49rem) !important;
+  overflow-y: auto;
+  border: 1px solid var(--color-jb-100) !important;
+  border-radius: 2rem !important;
+  background:
+    radial-gradient(circle at 92% 5%, rgb(216 25 34 / 0.065), transparent 23rem),
+    radial-gradient(circle at 8% 95%, rgb(216 25 34 / 0.035), transparent 20rem),
+    linear-gradient(135deg, #fff 0%, #fff 70%, #fff8f8 100%) !important;
+  box-shadow:
+    0 42px 96px -55px rgb(57 5 10 / 0.46),
+    0 18px 42px -34px rgb(112 8 16 / 0.24) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) > div::before {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: block;
+  width: calc(100% - 4rem);
+  height: 3px;
+  margin-inline: 2rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--color-jb-500) 34%, var(--color-jb-300) 66%, transparent);
+  content: "";
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) h2 {
+  max-width: 24ch;
+  font-size: clamp(1.35rem, 1.5vw, 1.8rem) !important;
+  line-height: 1.03 !important;
+  letter-spacing: -0.045em !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) section,
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) aside {
+  border-color: var(--color-jb-100) !important;
+}
+
+/* Links que eram cartões viram faixas de navegação mais leves. */
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) a[class*="rounded-2xl"][class*="border"] {
+  min-height: 4.55rem !important;
+  border: 0 !important;
+  border-radius: 1.15rem !important;
+  background: rgb(255 255 255 / 0.74) !important;
+  box-shadow: inset 0 0 0 1px rgb(215 25 33 / 0.075) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) a[class*="rounded-2xl"][class*="border"]:hover {
+  background: #fff !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(215 25 33 / 0.14),
+    0 16px 36px -31px rgb(102 7 14 / 0.5) !important;
+  transform: translateX(2px) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) a[class*="rounded-2xl"] > span:first-child {
+  border-radius: 999px !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) [class*="bg-graf-50"] {
+  background-color: #fff6f6 !important;
+}
+
+/* Seminovos: nenhum fundo preto. */
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) [class*="from-graf-950"] {
+  border: 1px solid var(--color-jb-100) !important;
+  color: var(--color-graf-950) !important;
+  background:
+    radial-gradient(circle at 90% 0%, rgb(215 25 33 / 0.105), transparent 12rem),
+    linear-gradient(145deg, #fff2f2, #fff) !important;
+  box-shadow: 0 20px 46px -38px rgb(105 7 14 / 0.5) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) [class*="from-graf-950"] [class*="text-white"] {
+  color: var(--color-graf-950) !important;
+}
+
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) [class*="from-graf-950"] a[class*="bg-white"] {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--color-jb-500), var(--color-jb-700)) !important;
+}
+
+/* Contato técnico pode ser vermelho sólido — continua dentro da paleta. */
+:global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-mega-painel) [class*="from-jb-700"] {
+  border: 0 !important;
+  background:
+    radial-gradient(circle at 80% 0%, rgb(255 255 255 / 0.15), transparent 12rem),
+    linear-gradient(145deg, var(--color-jb-600), var(--color-jb-800)) !important;
+  box-shadow: 0 24px 50px -30px rgb(117 8 16 / 0.62) !important;
+}
+
+/* Menu mobile da home — menos caixas e mais áreas tocáveis. */
+:global(body):has(.flagship) div[role="dialog"][aria-label="Menu de navegação"] {
+  background:
+    radial-gradient(circle at 90% 5%, rgb(215 25 33 / 0.06), transparent 18rem),
+    linear-gradient(180deg, #fff, #fffafa) !important;
+}
+
+:global(body):has(.flagship) div[role="dialog"][aria-label="Menu de navegação"] li[class*="rounded-2xl"] {
+  border-color: var(--color-jb-100) !important;
+  border-radius: 1.35rem !important;
+  box-shadow: 0 14px 30px -29px rgb(98 8 14 / 0.52);
+}
+
+:global(body):has(.flagship) div[role="dialog"][aria-label="Menu de navegação"] a[class*="bg-gradient"] {
+  border-color: var(--color-jb-100) !important;
+  background: linear-gradient(135deg, #fff3f3, #fff) !important;
+}
+
+@keyframes flagshipTicker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 1399px) {
+  :global(body):has(.flagship) [data-jb-premium-header="true"] > div:first-of-type > div {
+    grid-template-columns: 11rem minmax(24rem, 1fr) max-content;
+    gap: 1rem !important;
+  }
+
+  :global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-logo)::after {
+    display: none;
+  }
+
+  :global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-logo) {
+    padding-right: 0.7rem;
+  }
+}
+
+@media (max-width: 1180px) {
+  :global(body):has(.flagship) [data-jb-premium-header="true"] > div:first-of-type > div {
+    grid-template-columns: 9.5rem minmax(20rem, 1fr) max-content;
+  }
+
+  :global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-cta-topo) {
+    padding-inline: 0.9rem !important;
+    font-size: 0.69rem !important;
+  }
+
+  :global(body):has(.flagship) [data-jb-premium-header="true"] nav[aria-label="Principal"]::before {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  :global(body):has(.flagship) [data-jb-utility-bar="true"] > div {
+    grid-template-columns: minmax(0, 1fr);
+    height: 2.15rem !important;
+    padding-inline: 0.6rem !important;
+  }
+
+  :global(body):has(.flagship) [data-jb-utility-bar="true"] > div > :first-child,
+  :global(body):has(.flagship) [data-jb-utility-bar="true"] > div > :last-child {
+    display: none !important;
+  }
+
+  :global(body):has(.flagship) [data-jb-utility-bar="true"] p[class*="min-w-0"],
+  :global(body):has(.flagship) [data-jb-utility-bar="true"] p[class*="min-w-0"]::before {
+    height: 2.15rem;
+  }
+
+  :global(body):has(.flagship) [data-jb-utility-bar="true"] p[class*="min-w-0"]::before {
+    font-size: 0.56rem;
+    animation-duration: 28s;
+  }
+
+  :global(body):has(.flagship) [data-jb-premium-header="true"] > div:first-of-type > div {
+    display: flex !important;
+    height: 4.15rem !important;
+    gap: 0.55rem !important;
+  }
+
+  :global(body):has(.flagship) [data-jb-premium-header="true"] :global(.jb-logo) {
+    min-height: 2.8rem !important;
+    padding-right: 0 !important;
+    border-right: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  :global(body):has(.flagship) [data-jb-premium-header="true"] > div:first-of-type {
+    padding-inline: 0.85rem !important;
+  }
+
+  :global(body):has(.flagship) [data-jb-utility-bar="true"] p[class*="min-w-0"]::before {
+    font-size: 0.53rem;
+    letter-spacing: 0.1em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(body):has(.flagship) [data-jb-utility-bar="true"] p[class*="min-w-0"]::before {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  :global(body):has(.flagship) [data-jb-premium-header="true"] *,
+  :global(body):has(.flagship) [data-jb-premium-header="true"] *::before,
+  :global(body):has(.flagship) [data-jb-premium-header="true"] *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
