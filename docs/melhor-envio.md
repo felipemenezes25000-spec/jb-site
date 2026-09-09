@@ -1,79 +1,129 @@
 # Melhor Envio — configuração da JB
 
-A integração foi implementada de ponta a ponta sem remover a tabela própria de frete. A tabela local continua como contingência; quando o Melhor Envio está configurado, o cliente escolhe a modalidade antes do checkout e o servidor recota o mesmo serviço antes de cobrar.
+A integração foi implementada de ponta a ponta sem remover a tabela própria de frete. A tabela local continua como contingência; quando o Melhor Envio está configurado, o cliente escolhe a modalidade antes do checkout e o servidor recota **a mesma modalidade** antes de cobrar.
 
-## Variáveis de ambiente
+> O arquivo `docs/melhor-envio.env.example` contém um bloco pronto para copiar para a Vercel/ambiente. Nunca commite o token real.
+
+## Variáveis principais
 
 ```env
-# ativa o agregador. Sem token, a loja usa a tabela própria.
 SHIPPING_PROVIDER="melhor_envio"
-
-# sandbox | production
-MELHOR_ENVIO_ENV="sandbox"
+MELHOR_ENVIO_ENV="sandbox"                 # sandbox | production
 MELHOR_ENVIO_TOKEN=""
-
-# obrigatório pela API. Use identificação real + contato técnico.
 MELHOR_ENVIO_USER_AGENT="JB Solucoes Odontologicas (tecnologia@seudominio.com.br)"
+MELHOR_ENVIO_SERVICES=""                   # opcional: IDs separados por vírgula
+MELHOR_ENVIO_NON_COMMERCIAL="0"            # 0 = comercial/NF-e
 
-# opcional: IDs de serviços separados por vírgula, conforme a conta do Melhor Envio.
-MELHOR_ENVIO_SERVICES=""
-
-# 0 = venda comercial com NF-e; 1 = envio não comercial/conteúdo.
-# Não use 1 apenas para contornar a exigência fiscal.
-MELHOR_ENVIO_NON_COMMERCIAL="0"
-
-# remetente usado para comprar a etiqueta
 MELHOR_ENVIO_FROM_NAME="JB Soluções Odontológicas"
 MELHOR_ENVIO_FROM_EMAIL=""
 MELHOR_ENVIO_FROM_PHONE=""
-MELHOR_ENVIO_FROM_DOCUMENT=""                  # CPF ou CNPJ, só números
-MELHOR_ENVIO_FROM_STATE_REGISTER=""            # IE; obrigatória no fluxo comercial
-MELHOR_ENVIO_FROM_ECONOMIC_ACTIVITY_CODE=""    # quando aplicável
+MELHOR_ENVIO_FROM_DOCUMENT=""              # CPF ou CNPJ
+MELHOR_ENVIO_FROM_STATE_REGISTER=""        # IE no fluxo comercial
+MELHOR_ENVIO_FROM_ECONOMIC_ACTIVITY_CODE=""
 MELHOR_ENVIO_FROM_ADDRESS=""
 MELHOR_ENVIO_FROM_NUMBER=""
 MELHOR_ENVIO_FROM_COMPLEMENT=""
 MELHOR_ENVIO_FROM_DISTRICT=""
-MELHOR_ENVIO_FROM_CITY=""
+MELHOR_ENVIO_FROM_CITY="São Paulo"
 MELHOR_ENVIO_FROM_STATE="SP"
-MELHOR_ENVIO_FROM_POSTAL_CODE=""               # 8 dígitos
+MELHOR_ENVIO_FROM_POSTAL_CODE=""           # 8 dígitos
 ```
 
-O token nunca é enviado ao navegador. O painel `/admin/frete` mostra somente se a configuração está completa e lista o nome das variáveis ausentes.
+O token é usado apenas no servidor. O navegador nunca recebe token, saldo da carteira, dados internos do Melhor Envio ou preço aceito como verdade.
+
+## Agência de postagem
+
+Quando a integração usa **token gerado diretamente no painel do Melhor Envio**, LATAM Cargo, Azul Cargo e Buslog podem exigir uma agência/unidade de postagem. A agência é uma escolha operacional da JB e não pode ser inventada pelo código.
+
+Configure por `companyId`:
+
+```env
+# CSV
+MELHOR_ENVIO_AGENCY_BY_COMPANY="6:123,9:456"
+
+# ou JSON
+MELHOR_ENVIO_AGENCY_BY_COMPANY='{"6":123,"9":456}'
+```
+
+Consulte os IDs reais da conta pelo endpoint de agências/transportadoras do Melhor Envio. Não use nome da transportadora como chave de regra.
 
 ## Fluxo implementado
 
-1. Produto recebe peso embalado, largura, altura e comprimento no painel de frete.
-2. `/escolher-entrega` consulta `POST /api/v2/me/shipment/calculate` com quantidade, peso, dimensões e valor segurado.
-3. Cliente escolhe transportadora/serviço. A escolha fica em cookie HTTP-only.
-4. Checkout recalcula no servidor. O navegador nunca envia o preço do frete.
-5. O pedido grava um rótulo persistente `Melhor Envio · Transportadora · Serviço`.
-6. Pagamento aprovado chama a rotina idempotente de logística.
-7. A rotina recota o serviço escolhido, insere em `/api/v2/me/cart`, compra em `/api/v2/me/shipment/checkout`, gera em `/api/v2/me/shipment/generate` e obtém a impressão em `/api/v2/me/shipment/print`.
-8. IDs, URL da etiqueta, chave da NF-e, estado e rastreio ficam em metadados internos do pedido; não foi criada migração só para integrar o provedor.
-9. O webhook tenta a etiqueta imediatamente. O worker `/api/fila` faz retry e rastreio periódico como rede de segurança.
-10. `/admin/frete` permite informar NF-e, reprocessar sem duplicar compra, abrir etiqueta e atualizar rastreio manualmente.
+1. Cada produto recebe **peso e dimensões da embalagem de transporte** no painel.
+2. `/escolher-entrega` consulta `POST /api/v2/me/shipment/calculate` usando origem, destino, quantidade, dimensões, peso e valor segurado.
+3. Só as opções realmente devolvidas pela API aparecem ao cliente; preço usa `custom_price` e prazo usa `custom_delivery_time`.
+4. Cliente escolhe transportadora/serviço. A escolha fica em cookie HTTP-only com IDs, nunca com preço confiável.
+5. No fechamento o servidor recota a modalidade escolhida. Se ela sumiu ou a API não consegue confirmar o preço, **não troca silenciosamente por outro frete e não cobra**.
+6. O pedido grava `Melhor Envio · Transportadora · Serviço`; os IDs técnicos e demais estados ficam no bloco interno de logística.
+7. Pagamento confirmado aciona a rotina de logística independentemente de ter vindo de cartão síncrono, webhook ou confirmação manual.
+8. A rotina insere em `/api/v2/me/cart`, compra em `/api/v2/me/shipment/checkout`, gera em `/api/v2/me/shipment/generate` e obtém a impressão em `/api/v2/me/shipment/print`.
+9. IDs, pacotes, URL da etiqueta, NF-e, rastreios e estado ficam em metadata interna do pedido.
+10. O worker `/api/fila` reprocessa falhas, atualiza rastreio e tenta novamente cancelamentos pendentes.
+11. `/admin/frete` permite testar cotação, preencher peso/dimensões, informar NF-e, emitir/reprocessar e atualizar rastreio.
+
+## Concorrência e idempotência
+
+Pagamento síncrono, webhook, botão do admin e worker podem chegar quase juntos. Para impedir compra duplicada, a emissão usa um **lock otimista na linha do pedido**, com TTL curto, sem manter transação de banco aberta durante HTTP externo.
+
+Cada ID criado no carrinho do Melhor Envio é persistido imediatamente. Num envio com vários pacotes, se o processo cair depois do primeiro volume, o retry continua dos volumes faltantes em vez de comprar tudo outra vez.
+
+## Múltiplos volumes
+
+A cotação do Melhor Envio pode devolver vários `packages`. O sistema preserva dimensões, peso e mapeamento `packages[].products`.
+
+- Transportadoras/serviços que aceitam volumes agrupados recebem todos os volumes na mesma inserção.
+- Correios (serviços 1, 2 e 17) e serviço 27 são separados automaticamente pacote a pacote conforme a regra atual da API.
+- Para J&T/Loggi ou qualquer serviço que recuse o agrupamento com `422`, o sistema faz fallback seguro para uma etiqueta por pacote, desde que a cotação tenha informado quais produtos pertencem a cada pacote.
+- IDs adicionais conhecidos na sua conta podem ser declarados em `MELHOR_ENVIO_SINGLE_VOLUME_COMPANY_IDS`.
+
+O sistema não duplica a lista inteira de produtos em cada pacote: isso geraria declaração fiscal incorreta.
 
 ## Venda comercial e NF-e
 
-No modo padrão (`MELHOR_ENVIO_NON_COMMERCIAL=0`) o sistema não compra etiqueta comercial sem a chave de 44 dígitos da NF-e. O pedido fica como `aguardando_nfe` nos metadados e pode ser retomado no painel assim que a chave for informada.
+No modo padrão (`MELHOR_ENVIO_NON_COMMERCIAL=0`) o sistema não compra etiqueta comercial sem chave NF-e de 44 dígitos. O pedido fica aguardando NF-e e retoma do ponto correto quando a chave é informada.
 
-Essa espera é intencional: a automação não deve transformar uma venda comercial em declaração de conteúdo apenas para conseguir emitir o frete.
+A automação não transforma venda comercial em declaração de conteúdo para contornar regra fiscal.
+
+### Azul Cargo
+
+A documentação atual do Melhor Envio mantém restrições adicionais para compra comercial da Azul e cita `options.invoice.xml_content` em determinados fluxos. Esta implementação trabalha com **chave NF-e**, não XML completo; por segurança, `companyId 9` fica bloqueado por padrão em cotação comercial:
+
+```env
+MELHOR_ENVIO_COMMERCIAL_DISABLED_COMPANY_IDS="9"
+```
+
+Não remova esse bloqueio até o fluxo da JB fornecer exatamente o documento exigido pela API vigente.
+
+## Cancelamento
+
+Ao cancelar ou estornar um pedido, a operação comercial/estoque é concluída primeiro. Depois o sistema solicita o cancelamento das etiquetas do Melhor Envio (`reason_id=2`).
+
+Se a transportadora estiver fora ou a etiqueta não puder ser cancelada naquele momento, **o cancelamento do pedido não é revertido**: a pendência fica registrada e o worker tenta novamente. Etiquetas já postadas/coletadas podem não ser canceláveis e exigem tratamento operacional.
+
+## Rastreamento
+
+O sistema aceita uma ou várias etiquetas por pedido. Guarda todos os códigos de rastreio e só marca o pedido como **entregue** quando todos os volumes acompanhados estiverem entregues. Também evita criar eventos de entrega duplicados a cada rodada do worker.
 
 ## Carteira do Melhor Envio
 
-O fluxo totalmente automático usa o checkout da carteira do Melhor Envio. A conta precisa ter saldo suficiente para comprar as etiquetas. Saldo insuficiente fica registrado como erro operacional no pedido e o reprocessamento é idempotente.
+O fluxo automático usa o checkout da carteira do Melhor Envio. A conta precisa ter saldo suficiente. Saldo insuficiente fica registrado como erro operacional e o retry não volta a criar novos itens de carrinho quando os IDs já foram persistidos.
 
 ## Sandbox antes de produção
 
-Use `MELHOR_ENVIO_ENV=sandbox` até validar:
+Use `MELHOR_ENVIO_ENV=sandbox` e valide pelo menos:
 
-- cotação com CEPs reais de teste;
-- produtos leves e equipamentos maiores;
-- pedido com quantidade maior que 1;
+- PAC/SEDEX e Jadlog no ambiente de teste;
+- CEP atendido e CEP não atendido;
+- produto sem dimensão (deve bloquear cotação);
+- quantidade maior que 1;
+- cotação retornando mais de um pacote;
+- mudança/indisponibilidade da modalidade antes do pagamento (não pode haver fallback silencioso);
 - NF-e comercial;
-- compra e geração de etiqueta;
+- saldo insuficiente;
+- dupla confirmação de pagamento/webhook simultâneo;
 - reprocessamento do mesmo pedido;
-- rastreio;
-- fallback da tabela própria com token removido ou API indisponível.
+- cancelamento antes da postagem;
+- rastreio com uma e várias etiquetas;
+- tabela própria com integração desativada.
 
-Depois troque token/ambiente para produção e refaça um pedido pequeno de ponta a ponta.
+Depois troque token/ambiente para produção e faça um pedido pequeno de ponta a ponta antes de liberar o fluxo para todos os produtos.
