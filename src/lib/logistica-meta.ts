@@ -24,7 +24,10 @@ export type MetaMelhorEnvio = {
   updatedAt?: string;
 };
 
-const REGEX = /\[\[JB_MELHOR_ENVIO:(\{.*?\})\]\]/s;
+// Evita a flag `s` para continuar compatível com o target TS atual do projeto.
+// O JSON gerado é uma linha, mas [\s\S] também tolera blocos legados quebrados
+// em várias linhas sem depender de ES2018.
+const REGEX = /\[\[JB_MELHOR_ENVIO:(\{[\s\S]*?\})\]\]/;
 
 export function lerMetaMelhorEnvio(nota: string | null | undefined): MetaMelhorEnvio | null {
   const achou = (nota ?? "").match(REGEX);
