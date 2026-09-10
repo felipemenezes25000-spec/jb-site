@@ -1,31 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  CalendarCheck,
-  CreditCard,
-  ImageOff,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, ImageOff, Search, ShieldCheck, Truck, Wrench } from "lucide-react";
 
 import type { ProdutoCard } from "@/components/loja/card-produto";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
 import styles from "./hero-vitrine.module.css";
-import overlapStyles from "./hero-vitrine-overlap.module.css";
 
 export type NumeroDaHome = { valor: string; rotulo: string };
-
-const GARANTIAS = [
-  { icone: ShieldCheck, titulo: "Laudo técnico", apoio: "Seminovos revisados item a item" },
-  { icone: Wrench, titulo: "Assistência própria", apoio: "Equipe JB, sem terceirização" },
-  { icone: CreditCard, titulo: "Até 12x sem juros", apoio: "Condições claras para sua clínica" },
-  { icone: CalendarCheck, titulo: "Entrega agendada", apoio: "Instalação combinada com você" },
-];
 
 export function HeroVitrine({
   cidade,
@@ -46,63 +29,47 @@ export function HeroVitrine({
 
   return (
     <section className={styles.hero}>
-      <div className={styles.gradeFundo} aria-hidden />
       <div className={`container-jb ${styles.composicao}`}>
         <div className={styles.copy}>
-          <div className={styles.contexto}>
-            <span className={styles.pontoVivo} aria-hidden />
-            <p>Marketplace técnico odontológico{cidade ? ` · ${cidade}` : ""}</p>
-          </div>
+          <p className={styles.sobretitulo}>
+            Loja odontológica{cidade ? ` · ${cidade}` : ""}
+          </p>
 
-          <h1 className={styles.titulo}>
-            Escolha melhor.
-            <span>Equipe sua clínica sem dúvida.</span>
-          </h1>
+          <h1 className={styles.titulo}>Produtos odontológicos para comprar com clareza.</h1>
 
           <p className={styles.resumo}>
-            Novos e seminovos revisados, comparação objetiva, parcelamento claro e uma equipe que
-            continua ao seu lado depois da compra.
+            Compare opções, confira preço, condição e especificações e siga para a compra sem
+            perder o suporte técnico da JB depois da decisão.
           </p>
 
           <form action="/busca" method="get" className={styles.busca} role="search">
             <Search aria-hidden />
             <label htmlFor="busca-home" className="sr-only">
-              Buscar no catálogo JB
+              Buscar na loja JB
             </label>
             <input
               id="busca-home"
               name="q"
               type="search"
               minLength={3}
-              placeholder="Busque por equipamento, marca ou modelo"
+              placeholder="Produto, marca, modelo, peça ou SKU"
             />
             <button type="submit">Buscar</button>
           </form>
 
-          <nav aria-label="Comece sua compra" className={styles.caminhos}>
+          <div className={styles.acoes}>
             <Link href="/loja" className={styles.acaoPrincipal}>
-              Explorar equipamentos
+              Explorar loja
               <ArrowRight aria-hidden />
             </Link>
             <Link href="/seminovos" className={styles.acaoSecundaria}>
-              Ver seminovos revisados
+              Ver seminovos
             </Link>
-          </nav>
-
-          <div className={styles.provasRapidas} aria-label="Diferenciais da JB">
-            <span><ShieldCheck aria-hidden /> Garantia clara</span>
-            <span><Wrench aria-hidden /> Assistência própria</span>
-            <span><Sparkles aria-hidden /> Revisão técnica</span>
           </div>
 
           {numeros.length > 0 ? (
-            <dl className={styles.numeros} aria-label="Catálogo JB agora">
+            <dl className={styles.numeros} aria-label="Catálogo JB">
               {numeros.slice(0, 3).map((numero) => (
-                /* `dt` antes de `dd` no HTML: numa lista de definição o termo
-                   vem antes da definição, e é assim que leitor de tela e o
-                   próprio teste desta peça esperam ler. A ordem VISUAL — número
-                   grande em cima, rótulo embaixo — é do CSS
-                   (`.numeros > div`, `column-reverse`). */
                 <div key={numero.rotulo}>
                   <dt>{numero.rotulo}</dt>
                   <dd>{numero.valor}</dd>
@@ -113,87 +80,78 @@ export function HeroVitrine({
         </div>
 
         {destaque ? (
-          <div className={styles.palcoWrapper}>
-            <span className={styles.numeroEditorial} aria-hidden>01</span>
-            <span className={styles.haloProduto} aria-hidden />
-
-            <Link
-              href={`/loja/${destaque.slug}`}
-              aria-label={`Conhecer ${destaque.name}`}
-              className={styles.palcoProduto}
-            >
-              <span className={`${styles.seloProduto} ${overlapStyles.badgeFix}`}>
-                <span aria-hidden />
-                {destaque.condition === "seminovo" ? "Seminovo revisado" : "Destaque JB"}
+          <Link
+            href={`/loja/${destaque.slug}`}
+            aria-label={`Conhecer ${destaque.name}`}
+            className={styles.destaque}
+          >
+            <div className={styles.topoDestaque}>
+              <span className={styles.etiqueta}>
+                {destaque.condition === "seminovo" ? "Seminovo" : "Destaque"}
               </span>
+              {destaque.brandName ? <span className={styles.marca}>{destaque.brandName}</span> : null}
+            </div>
 
-              <span
-                data-palco-imagem-produto
-                className={`${styles.imagemProduto} ${overlapStyles.mediaFix}`}
-              >
-                {destaque.imageUrl ? (
-                  <Image
-                    data-imagem-produto
-                    src={imagemProdutoSemFundo(destaque.imageUrl)}
-                    alt={destaque.imageAlt || destaque.name}
-                    fill
-                    preload
-                    unoptimized={destaque.imageUrl.startsWith("/")}
-                    sizes="(max-width: 1024px) 92vw, 48rem"
-                    className="object-contain"
-                  />
-                ) : (
-                  <span className={styles.semImagem}>
-                    <ImageOff aria-hidden />
-                  </span>
-                )}
-              </span>
-
-              <span className={`${styles.calloutTopo} ${overlapStyles.calloutFix}`}>
-                <small>Compra com continuidade</small>
-                <strong>Venda + assistência JB</strong>
-              </span>
-
-              <span className={styles.fichaProduto}>
-                <span className={styles.identificacaoProduto}>
-                  <small>{destaque.brandName || "Equipamento selecionado"}</small>
-                  <strong>{destaque.name}</strong>
+            <div data-palco-imagem-produto className={styles.imagemProduto}>
+              {destaque.imageUrl ? (
+                <Image
+                  data-imagem-produto
+                  src={imagemProdutoSemFundo(destaque.imageUrl)}
+                  alt={destaque.imageAlt || destaque.name}
+                  fill
+                  preload
+                  unoptimized={destaque.imageUrl.startsWith("/")}
+                  sizes="(max-width: 1024px) 92vw, 42rem"
+                  className="object-contain"
+                />
+              ) : (
+                <span className={styles.semImagem}>
+                  <ImageOff aria-hidden />
                 </span>
-                <span className={styles.precoProduto}>
-                  <strong>{temPreco ? formatarPreco(destaque.priceCents) : "Sob consulta"}</strong>
-                  {parcelas ? (
-                    <small>
-                      até {parcelas.parcelas}x de {formatarPreco(parcelas.valorCents)}
-                    </small>
-                  ) : null}
-                </span>
-                <span className={styles.abrirProduto} aria-hidden>
-                  <ArrowRight />
-                </span>
+              )}
+            </div>
+
+            <div className={styles.rodapeDestaque}>
+              <div className={styles.identificacaoProduto}>
+                <strong>{destaque.name}</strong>
+                {destaque.model ? <small>{destaque.model}</small> : null}
+              </div>
+              <div className={styles.precoProduto}>
+                <strong>{temPreco ? formatarPreco(destaque.priceCents) : "Sob consulta"}</strong>
+                {parcelas ? (
+                  <small>
+                    até {parcelas.parcelas}x de {formatarPreco(parcelas.valorCents)}
+                  </small>
+                ) : null}
+              </div>
+              <span className={styles.abrirProduto} aria-hidden>
+                <ArrowRight />
               </span>
-            </Link>
-          </div>
+            </div>
+          </Link>
         ) : (
-          <div className={styles.palcoVazio}>
+          <div className={styles.destaqueVazio}>
             <ShieldCheck aria-hidden />
-            <p>Catálogo técnico atualizado pela equipe JB.</p>
+            <strong>Catálogo JB</strong>
+            <p>Produtos publicados pela equipe aparecem aqui em destaque.</p>
           </div>
         )}
       </div>
 
       <div className={styles.faixaConfianca}>
         <ul className="container-jb">
-          {GARANTIAS.map((garantia) => (
-            <li key={garantia.titulo}>
-              <span className={styles.iconeGarantia}>
-                <garantia.icone aria-hidden />
-              </span>
-              <span>
-                <strong>{garantia.titulo}</strong>
-                <small>{garantia.apoio}</small>
-              </span>
-            </li>
-          ))}
+          <li>
+            <ShieldCheck aria-hidden />
+            <span>Condição e informações na página do produto</span>
+          </li>
+          <li>
+            <Truck aria-hidden />
+            <span>Entrega definida antes do pagamento</span>
+          </li>
+          <li>
+            <Wrench aria-hidden />
+            <span>Assistência técnica JB disponível</span>
+          </li>
         </ul>
       </div>
     </section>
