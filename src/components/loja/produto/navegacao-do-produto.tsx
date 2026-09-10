@@ -33,9 +33,6 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
   const [extrasVisiveis, setExtrasVisiveis] = useState<string[]>([]);
   const trilhoRef = useRef<HTMLUListElement>(null);
 
-  /* Todos os complementos da PDP agora nascem no HTML do servidor. Basta
-     conferir uma vez depois da hidratação quais existem de fato; produto sem
-     avaliação, alternativa ou cross-sell continua sem uma âncora vazia. */
   useEffect(() => {
     setExtrasVisiveis(
       EXTRAS_DA_PDP
@@ -45,8 +42,6 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
   }, []);
 
   const ancorasEfetivas = useMemo(() => {
-    // O chamador antigo ainda declara `relacionados` durante a migração, mas o
-    // bloco genérico foi aposentado: cada intenção comercial tem sua seção.
     const base = ancoras.filter((ancora) => ancora.id !== "relacionados");
     const existentes = new Set(base.map((ancora) => ancora.id));
     return [
@@ -105,12 +100,12 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
 
   return (
     <nav
-      aria-label="Seções deste equipamento"
+      aria-label="Seções deste produto"
       className="sticky top-[72px] z-30 border-y border-graf-200 bg-white/95 backdrop-blur"
     >
       <ul
         ref={trilhoRef}
-        className="container-jb scrollbar-none flex min-h-12 max-w-[112rem] gap-5 overflow-x-auto"
+        className="container-jb scrollbar-none flex min-h-12 max-w-[100rem] gap-5 overflow-x-auto"
       >
         {ancorasEfetivas.map((ancora) => (
           <li key={ancora.id} className="shrink-0">

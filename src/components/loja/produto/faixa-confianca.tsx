@@ -18,49 +18,38 @@ export function FaixaConfianca({
   temFrete,
   temInstalacao,
 }: Props) {
-  const candidatos: (ItemConfianca | null)[] = [
-    certificado ? { icone: BadgeCheck, titulo: "Inspecionado pela JB" } : null,
-    garantiaMeses
-      ? {
+  const itens: ItemConfianca[] = [
+    ...(certificado ? [{ icone: BadgeCheck, titulo: "Inspecionado pela JB" }] : []),
+    ...(garantiaMeses
+      ? [{
           icone: ShieldCheck,
           titulo: `${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"} de garantia`,
-        }
-      : null,
+        }]
+      : []),
     { icone: Wrench, titulo: "Assistência técnica própria" },
-    temFrete ? { icone: Truck, titulo: "Entrega por CEP" } : null,
-    temInstalacao ? { icone: PlugZap, titulo: "Instalação disponível" } : null,
-  ];
-  const itens = candidatos.filter((item): item is ItemConfianca => item !== null).slice(0, 4);
-  const colunas =
-    itens.length === 1
-      ? "lg:grid-cols-1"
-      : itens.length === 2
-        ? "lg:grid-cols-2"
-        : itens.length === 3
-          ? "lg:grid-cols-3"
-          : "lg:grid-cols-4";
+    ...(temFrete ? [{ icone: Truck, titulo: "Entrega por CEP" }] : []),
+    ...(temInstalacao ? [{ icone: PlugZap, titulo: "Instalação disponível" }] : []),
+  ].slice(0, 4);
 
   if (itens.length === 0) return null;
 
   return (
-    <div className="border-y border-graf-200 bg-graf-50/55">
+    <div className="border-y border-graf-150 bg-white">
       <ul
-        aria-label="Confiança desta compra"
-        className={`container-jb scrollbar-none flex max-w-[112rem] snap-x gap-2 overflow-x-auto py-2.5 sm:grid sm:grid-cols-2 sm:gap-0 sm:overflow-visible sm:py-0 ${colunas}`}
+        aria-label="Benefícios desta compra"
+        className="container-jb scrollbar-none flex max-w-[100rem] items-center gap-0 overflow-x-auto py-2 sm:justify-center sm:overflow-visible"
       >
         {itens.map((item, indice) => {
           const Icone = item.icone;
           return (
             <li
               key={item.titulo}
-              className={`flex min-h-11 shrink-0 snap-start items-center gap-2.5 rounded-full border border-graf-200 bg-white px-3.5 py-2 sm:min-h-14 sm:shrink sm:rounded-none sm:border-0 sm:bg-transparent sm:px-4 sm:py-3 ${
-                indice > 0 ? "sm:border-l" : ""
-              } ${indice === 2 ? "sm:border-t lg:border-t-0" : ""}`}
+              className={`flex min-h-10 shrink-0 items-center gap-2 px-3 text-xs font-semibold text-graf-700 sm:px-5 sm:text-[0.8125rem] ${
+                indice > 0 ? "border-l border-graf-200" : ""
+              }`}
             >
               <Icone className="size-4 shrink-0 text-jb-600" aria-hidden />
-              <span className="whitespace-nowrap text-[0.8125rem] font-semibold text-graf-800 sm:whitespace-normal sm:text-sm">
-                {item.titulo}
-              </span>
+              <span className="whitespace-nowrap">{item.titulo}</span>
             </li>
           );
         })}

@@ -9,19 +9,6 @@ import { calcularParcelas, formatarPreco } from "@/lib/format";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
-/* ============================================================================
-   Cartão de produto
-
-   É a peça mais repetida da loja: aparece na home, na vitrine, na busca, na
-   página do produto e nos favoritos. A ordem de leitura é sempre a mesma —
-   imagem, condição, marca, nome, preço, parcelamento, disponibilidade e o
-   convite para abrir o equipamento.
-
-   A foto manda. Equipamento de alto valor não pode aparecer como miniatura no
-   meio de uma caixa vazia: a moldura mantém proporção estável e a imagem usa o
-   máximo da área disponível sem cortar o equipamento.
-   ============================================================================ */
-
 export type ProdutoCard = {
   slug: string;
   name: string;
@@ -38,14 +25,8 @@ export type ProdutoCard = {
   imageAlt: string;
 };
 
-/**
- * Regras de parcelamento da loja, vindas de `getSettings`. Quem renderiza em
- * Server Component passa os valores reais; sem isso vale o padrão de
- * `calcularParcelas`, que é o mesmo do cadastro inicial.
- */
 export type Parcelamento = { max: number; minimoCents: number };
 
-/** Rótulo e tom de cada condição. Texto sempre presente — nunca só a cor. */
 export const CONDICAO = {
   novo: { rotulo: "Novo", tom: "neutro" as const },
   seminovo: { rotulo: "Seminovo JB", tom: "marca" as const },
@@ -53,7 +34,6 @@ export const CONDICAO = {
   recondicionado: { rotulo: "Recondicionado JB", tom: "alerta" as const },
 };
 
-/** Uma frase curta sobre a disponibilidade — ou nada, quando não se sabe. */
 function disponibilidade(produto: ProdutoCard) {
   if (!produto.trackInventory) return null;
   if (produto.stock <= 0) {
@@ -84,18 +64,8 @@ export function CardProduto({
   className,
 }: {
   produto: ProdutoCard;
-  /** Carrega a imagem sem esperar — só nos primeiros cartões da primeira dobra. */
   prioridade?: boolean;
   parcelamento?: Parcelamento;
-  /**
-   * Transforma o convite do rodapé em botão cheio.
-   *
-   * Nas coleções comerciais (/loja e /seminovos) o cartão é o produto inteiro
-   * na tela e o botão fecha a leitura; nas faixas de apoio — relacionados,
-   * vistos recentemente, favoritos — ele competiria com o botão real da
-   * página. O texto do botão é sempre `chamada`, então produto sob orçamento
-   * continua convidando a pedir orçamento, e não a "ver detalhes".
-   */
   chamadaDestacada?: boolean;
   className?: string;
 }) {
@@ -107,32 +77,29 @@ export function CardProduto({
   const condicao = CONDICAO[produto.condition];
   const estado = disponibilidade(produto);
   const imagemLocal = Boolean(produto.imageUrl?.startsWith("/"));
-
   const precoAnterior =
     !soOrcamento && produto.compareAtCents && produto.compareAtCents > produto.priceCents
       ? produto.compareAtCents
       : null;
-
   const desconto =
     !semEstoque && precoAnterior
       ? Math.round(((precoAnterior - produto.priceCents) / precoAnterior) * 100)
       : 0;
-
-  const chamada = soOrcamento ? "Pedir orçamento" : "Ver detalhes";
+  const chamada = soOrcamento ? "Pedir orçamento" : "Ver produto";
 
   return (
     <article
       className={cn(
         "group relative isolate flex flex-col overflow-hidden rounded-xl border border-graf-200 bg-white",
         "transition-[border-color,box-shadow,transform] duration-200 ease-out-quint",
-        "hover:-translate-y-px hover:border-graf-300 hover:shadow-raised",
-        "has-[a:focus-visible]:border-jb-500 has-[a:focus-visible]:shadow-raised",
+        "hover:-translate-y-px hover:border-graf-300 hover:shadow-card",
+        "has-[a:focus-visible]:border-jb-500 has-[a:focus-visible]:shadow-card",
         className,
       )}
     >
       <div
         data-palco-imagem-produto
-        className="relative aspect-5/4 max-h-72 overflow-hidden bg-graf-50/40"
+        className="relative aspect-[4/3] max-h-72 overflow-hidden bg-graf-50/45"
       >
         {produto.imageUrl ? (
           <Image
@@ -145,49 +112,46 @@ export function CardProduto({
             unoptimized={imagemLocal}
             sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, (max-width: 1536px) 30vw, 25vw"
             className={cn(
-              "object-contain p-1 transition-transform duration-500 ease-out-quint sm:p-1.5",
-              "group-hover:scale-[1.025]",
+              "object-contain p-2.5 transition-transform duration-300 ease-out-quint sm:p-3",
+              "group-hover:scale-[1.02]",
               semEstoque && "opacity-60 grayscale",
             )}
           />
         ) : (
-          /* Produto sem foto não pode virar um buraco no meio da grade. A
-             moldura mantém a mesma altura dos outros cartões e diz o que
-             falta — quadro vazio parece imagem quebrada, e o cartão inteiro
-             passa a parecer desligado. */
-          <div className="flex size-full flex-col items-center justify-center gap-2.5 text-graf-500">
-            <span className="flex size-12 items-center justify-center rounded-full border border-graf-200 bg-white/70 text-graf-400">
+          <div className="flex size-full flex-col items-center justify-center gap-2 text-graf-500">
+            <span className="flex size-11 items-center justify-center rounded-full border border-graf-200 bg-white text-graf-400">
               <ImageOff className="size-5" aria-hidden />
             </span>
-            <span className="text-[0.8125rem] font-semibold text-graf-500">Foto em cadastro</span>
+            <span className="text-xs font-semibold">Foto em cadastro</span>
           </div>
         )}
 
         <div className="absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-2">
-          <span className="flex flex-wrap items-start gap-1.5">
-            <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-          </span>
+          <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
           <BotaoComparar slug={produto.slug} nome={produto.name} />
         </div>
 
+        {desconto >= 5 ? (
+          <span className="absolute bottom-3 left-3 rounded-md bg-jb-500 px-2 py-1 text-xs font-extrabold text-white">
+            −{desconto}%
+          </span>
+        ) : null}
+
         {semEstoque ? (
-          <p
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 z-10 border-t border-white/15 bg-graf-950/90 py-2 text-center text-[0.8125rem] font-semibold uppercase tracking-[0.16em] text-white"
-          >
+          <p className="absolute inset-x-0 bottom-0 z-10 bg-graf-950/90 py-2 text-center text-xs font-semibold uppercase tracking-[0.12em] text-white">
             {produto.unique ? "Vendido" : "Indisponível"}
           </p>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col border-t border-graf-100 p-4 sm:p-5">
+      <div className="flex flex-1 flex-col border-t border-graf-100 p-4">
         {produto.brandName ? (
-          <p className="mb-1.5 truncate text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+          <p className="truncate text-[0.6875rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
             {produto.brandName}
           </p>
         ) : null}
 
-        <h3 className="line-2 min-h-11 text-base font-bold leading-snug text-graf-950 sm:min-h-[3.125rem] sm:text-lg">
+        <h3 className="mt-1 line-clamp-2 min-h-10 text-[0.9375rem] font-bold leading-5 text-graf-950 sm:text-base">
           <Link
             href={`/loja/${produto.slug}`}
             className="rounded-xs after:absolute after:inset-0 after:content-['']"
@@ -197,114 +161,74 @@ export function CardProduto({
         </h3>
 
         {produto.model ? (
-          <p className="mt-1 truncate text-[0.8125rem] text-graf-500">{produto.model}</p>
+          <p className="mt-1 truncate text-xs text-graf-500">{produto.model}</p>
         ) : null}
 
         <div className="mt-auto pt-4">
-          <div className="flex h-6 items-center gap-2">
-            {precoAnterior ? (
-              <span className="tabular text-[0.8125rem] text-graf-500 line-through">
-                {formatarPreco(precoAnterior)}
-              </span>
-            ) : null}
-            {desconto >= 5 ? (
-              <Etiqueta tom="ok" className="px-2 py-0.5 text-xs">
-                −{desconto}%
-              </Etiqueta>
-            ) : null}
-          </div>
-
-          {soOrcamento ? (
-            <p className="text-xl font-extrabold leading-8 tracking-tight text-graf-950">
-              Sob orçamento
+          {precoAnterior ? (
+            <p className="text-xs tabular text-graf-500 line-through">
+              {formatarPreco(precoAnterior)}
             </p>
-          ) : (
-            <p className="tabular text-2xl font-extrabold leading-8 tracking-tight text-graf-950">
-              {formatarPreco(produto.priceCents)}
-            </p>
-          )}
+          ) : null}
 
-          <div className="flex h-5 items-center">
-            {soOrcamento ? (
-              <span className="truncate text-[0.8125rem] text-graf-500">
-                A equipe responde com preço e prazo.
+          <p className="tabular text-xl font-extrabold leading-7 tracking-tight text-graf-950 sm:text-2xl">
+            {soOrcamento ? "Sob orçamento" : formatarPreco(produto.priceCents)}
+          </p>
+
+          <p className="min-h-5 truncate text-xs text-graf-500">
+            {soOrcamento
+              ? "Preço e prazo com a equipe JB"
+              : parcelas
+                ? `${parcelas.parcelas}× de ${formatarPreco(parcelas.valorCents)} sem juros`
+                : "Pagamento à vista"}
+          </p>
+
+          <div className="mt-3 flex min-h-6 items-center justify-between gap-3 border-t border-graf-100 pt-3">
+            {estado ? (
+              <span className={cn("flex min-w-0 items-center gap-1.5 text-xs font-semibold", estado.classe)}>
+                <span className={cn("size-1.5 shrink-0 rounded-full", estado.pontoClasse)} aria-hidden />
+                <span className="truncate">{estado.texto}</span>
               </span>
-            ) : parcelas ? (
-              <span className="tabular truncate text-[0.8125rem] text-graf-500">
-                em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
-              </span>
-            ) : null}
-          </div>
+            ) : (
+              <span aria-hidden />
+            )}
 
-          <div className="mt-4 border-t border-graf-100 pt-3">
-            <div className="flex h-6 items-center justify-between gap-3">
-              {estado ? (
-                <span
-                  className={cn(
-                    "flex min-w-0 items-center gap-1.5 text-[0.8125rem] font-semibold",
-                    estado.classe,
-                  )}
-                >
-                  <span
-                    className={cn("size-1.5 shrink-0 rounded-full", estado.pontoClasse)}
-                    aria-hidden
-                  />
-                  <span className="truncate">{estado.texto}</span>
-                </span>
-              ) : (
-                <span aria-hidden />
-              )}
-
-              {chamadaDestacada ? null : (
-                <span
-                  aria-hidden
-                  className={cn(
-                    "flex shrink-0 items-center gap-1.5 text-[0.8125rem] font-bold text-graf-800",
-                    "transition-colors duration-150 group-hover:text-jb-600",
-                  )}
-                >
-                  {chamada}
-                  <ArrowRight className="size-4 shrink-0 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5" />
-                </span>
-              )}
-            </div>
-
-            {chamadaDestacada ? (
+            {chamadaDestacada ? null : (
               <span
                 aria-hidden
-                className={cn(
-                  "mt-3 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3",
-                  "bg-gradient-to-b from-jb-500 to-jb-600 text-[0.8125rem] font-extrabold text-white",
-                  "shadow-[0_10px_20px_-14px_rgb(196_14_21_/_0.65)] transition-colors duration-150",
-                  "group-hover:from-jb-600 group-hover:to-jb-700",
-                  semEstoque && "from-graf-400 to-graf-500 shadow-none",
-                )}
+                className="flex shrink-0 items-center gap-1 text-xs font-bold text-graf-800 transition-colors group-hover:text-jb-600"
               >
                 {chamada}
-                <ArrowRight className="size-4 shrink-0 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5" />
+                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
               </span>
-            ) : null}
+            )}
           </div>
+
+          {chamadaDestacada ? (
+            <span
+              aria-hidden
+              className={cn(
+                "mt-3 flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-bold",
+                semEstoque
+                  ? "bg-graf-200 text-graf-700"
+                  : "bg-jb-500 text-white transition-colors group-hover:bg-jb-600",
+              )}
+            >
+              {chamada}
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          ) : null}
         </div>
       </div>
     </article>
   );
 }
 
-/**
- * Larguras máximas para lista curta.
- *
- * Fechar a fileira resolve o buraco ao lado do cartão órfão, mas sozinho cria
- * outro: um único produto ocupando a coluna inteira vira cartaz, com a foto
- * ampliada muito além do que o arquivo aguenta. O teto devolve ao cartão a
- * largura que ele teria numa grade cheia.
- */
 const LARGURA_LISTA_CURTA: Record<number, string> = {
   1: "sm:max-w-sm",
   2: "sm:max-w-3xl",
 };
 
-/** Vitrine de cartões. Uma coluna no celular — equipamento caro pede leitura confortável. */
 export function GradeProdutos({
   produtos,
   colunas,
@@ -316,9 +240,7 @@ export function GradeProdutos({
   produtos: ProdutoCard[];
   colunas?: ColunasPorTela;
   parcelamento?: Parcelamento;
-  /** Repassado a cada cartão — ver `CardProduto`. */
   chamadaDestacada?: boolean;
-  /** Célula final da grade — entra na conta das colunas, como um cartão. */
   extra?: React.ReactNode;
   className?: string;
 }) {
@@ -329,11 +251,7 @@ export function GradeProdutos({
     <Grade
       como="ul"
       espaco="md"
-      /* A quantidade que veio do banco escolhe a grade: catálogo pequeno não
-         pode desenhar colunas vazias ao lado do único produto publicado. */
       colunas={colunasAte(celulas, teto)}
-      /* Com a célula extra a fileira já fecha sozinha: limitar a largura aí
-         só devolveria, à direita, o vazio que a célula veio tapar. */
       className={cn(extra ? undefined : LARGURA_LISTA_CURTA[celulas], className)}
     >
       {produtos.map((produto, indice) => (
