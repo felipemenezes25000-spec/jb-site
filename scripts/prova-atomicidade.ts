@@ -44,6 +44,7 @@ async function pedidoDescartavel(quantidade: number) {
           kind: "produto",
           productId: produto.id,
           name: produto.name,
+          isEquipment: true,
           unitPriceCents: produto.priceCents,
           quantity: quantidade,
           totalCents: produto.priceCents * quantidade,
@@ -232,7 +233,6 @@ async function main() {
       data: { stock: produto.stock, unique: produto.unique },
     });
   }
-
 
   console.log("\n5. item marcado como não equipamento não cria prontuário técnico");
   {
