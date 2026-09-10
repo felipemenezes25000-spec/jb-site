@@ -202,38 +202,51 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
       className="border-t border-graf-200 py-9 lg:py-10"
       aria-labelledby="pos-venda-jb-titulo"
     >
-      <div className="overflow-hidden rounded-3xl border border-graf-200 bg-graf-950 text-white">
+      {/* Painel claro, e não um bloco preto.
+
+          `globals.css` abre dizendo que a interface é predominantemente clara e
+          que preto é "faixa pontual, nunca a moldura do site" — e a pele preta
+          do protótipo já tinha sido testada e cortada uma vez. Este painel
+          ocupava 1360×385 na ficha do equipamento: não é pontual, é a maior
+          superfície da página depois da foto, e com texto em branco a 55% de
+          opacidade em cima.
+
+          O que sustenta a hierarquia aqui é o mesmo que sustenta o resto da
+          loja: superfície clara, filete fino e o vermelho da marca no sinal —
+          o sobretítulo e o ícone de cada garantia. */}
+      <div className="overflow-hidden rounded-3xl border border-graf-200 bg-surface-muted">
         <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.85fr_1.4fr] lg:gap-12 lg:p-10">
           <div>
-            <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-white/55">
-              O diferencial não termina na entrega
-            </p>
+            <p className="sobretitulo">O diferencial não termina na entrega</p>
             <h2
               id="pos-venda-jb-titulo"
-              className="mt-3 text-2xl font-extrabold tracking-[-0.035em] text-white lg:text-3xl"
+              className="mt-3 text-2xl font-extrabold tracking-[-0.035em] text-graf-950 lg:text-3xl"
             >
               O equipamento continua dentro do ecossistema JB
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/65">
+            <p className="mt-3 max-w-xl text-sm leading-6 text-graf-600">
               Compra, documentos e assistência deixam de ser etapas soltas. A Área da Clínica mantém a continuidade do relacionamento com o equipamento.
             </p>
             <Link
               href="/minha-jb"
-              className="foco-jb mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-extrabold text-graf-950 transition-transform hover:-translate-y-0.5"
+              className="foco-jb mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-jb-500 px-4 text-sm font-extrabold text-white transition-colors hover:bg-jb-600"
             >
               Conhecer a Área da Clínica
               <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
 
-          <div className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2">
+          {/* `gap-px` sobre a cor da borda é o que desenha os filetes entre as
+              quatro células — com fundo claro, a cor do vão passa a ser a
+              borda, e não branco a 10%. */}
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-graf-200 bg-graf-200 sm:grid-cols-2">
             {itens.map((item) => {
               const Icone = item.icone;
               return (
-                <div key={item.titulo} className="bg-graf-950 p-5 sm:p-6">
-                  <Icone className="size-5 text-white/75" aria-hidden />
-                  <h3 className="mt-4 text-sm font-extrabold text-white">{item.titulo}</h3>
-                  <p className="mt-1.5 text-xs leading-5 text-white/55">{item.texto}</p>
+                <div key={item.titulo} className="bg-surface p-5 sm:p-6">
+                  <Icone className="size-5 text-jb-600" aria-hidden />
+                  <h3 className="mt-4 text-sm font-extrabold text-graf-950">{item.titulo}</h3>
+                  <p className="mt-1.5 text-xs leading-5 text-graf-600">{item.texto}</p>
                 </div>
               );
             })}
