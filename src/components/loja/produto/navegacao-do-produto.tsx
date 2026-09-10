@@ -10,47 +10,19 @@ export type AncoraDoProduto = { id: string; rotulo: string };
 
 const ROTULOS_COMPACTOS: Record<string, string> = {
   "visao-geral": "Visão geral",
-  sobre: "Sobre",
   "ficha-tecnica": "Especificações",
   preparo: "Antes de comprar",
   "entrega-e-garantia": "Entrega e garantia",
   duvidas: "Dúvidas",
-  "comparacao-rapida": "Comparar",
-  "avaliacoes-verificadas": "Avaliações",
-  "acessorios-compativeis": "Acessórios",
-  "produtos-complementares": "Use junto",
 };
-
-const EXTRAS_DA_PDP: AncoraDoProduto[] = [
-  { id: "comparacao-rapida", rotulo: "Comparar" },
-  { id: "avaliacoes-verificadas", rotulo: "Avaliações" },
-  { id: "acessorios-compativeis", rotulo: "Acessórios" },
-  { id: "produtos-complementares", rotulo: "Use junto" },
-];
 
 export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) {
   const [ativa, setAtiva] = useState<string | null>(null);
-  const [extrasVisiveis, setExtrasVisiveis] = useState<string[]>([]);
   const trilhoRef = useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    setExtrasVisiveis(
-      EXTRAS_DA_PDP
-        .filter((ancora) => document.querySelector(`main #${CSS.escape(ancora.id)}`))
-        .map((ancora) => ancora.id),
-    );
-  }, []);
-
   const ancorasEfetivas = useMemo(() => {
-    const base = ancoras.filter((ancora) => ancora.id !== "relacionados");
-    const existentes = new Set(base.map((ancora) => ancora.id));
-    return [
-      ...base,
-      ...EXTRAS_DA_PDP.filter(
-        (ancora) => extrasVisiveis.includes(ancora.id) && !existentes.has(ancora.id),
-      ),
-    ];
-  }, [ancoras, extrasVisiveis]);
+    return ancoras.filter((ancora) => ancora.id !== "relacionados");
+  }, [ancoras]);
 
   useEffect(() => {
     if (ancorasEfetivas.length === 0) return;

@@ -1,4 +1,4 @@
-import { BadgeCheck, PlugZap, ShieldCheck, Truck, Wrench } from "lucide-react";
+import { PlugZap, ShieldCheck, Wrench } from "lucide-react";
 
 type Props = {
   certificado: boolean;
@@ -13,13 +13,10 @@ type ItemConfianca = {
 };
 
 export function FaixaConfianca({
-  certificado,
   garantiaMeses,
-  temFrete,
   temInstalacao,
 }: Props) {
   const itens: ItemConfianca[] = [
-    ...(certificado ? [{ icone: BadgeCheck, titulo: "Inspecionado pela JB" }] : []),
     ...(garantiaMeses
       ? [{
           icone: ShieldCheck,
@@ -27,9 +24,8 @@ export function FaixaConfianca({
         }]
       : []),
     { icone: Wrench, titulo: "Assistência técnica própria" },
-    ...(temFrete ? [{ icone: Truck, titulo: "Entrega por CEP" }] : []),
     ...(temInstalacao ? [{ icone: PlugZap, titulo: "Instalação disponível" }] : []),
-  ].slice(0, 4);
+  ].slice(0, 3);
 
   if (itens.length === 0) return null;
 
