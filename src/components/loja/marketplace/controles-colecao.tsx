@@ -87,7 +87,7 @@ export function ControlesColecao({
             defaultValue={busca}
             key={busca}
             placeholder="Buscar produto, marca ou modelo"
-            className="h-11 w-full rounded-lg border border-graf-300 bg-white pl-10 pr-3 text-base text-graf-950 transition-colors placeholder:text-graf-500 hover:border-graf-450 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 sm:text-sm"
+            className="h-11 w-full rounded-lg border border-graf-300 bg-white pl-10 pr-3 text-base text-graf-950 transition-colors placeholder:text-graf-500 hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 sm:text-sm"
           />
         </form>
 
@@ -129,7 +129,7 @@ export function ControlesColecao({
                 )
               }
               aria-label="Ordenar resultados"
-              className="h-11 w-full min-w-0 rounded-lg border border-graf-300 bg-white pl-3 pr-8 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-450 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 lg:w-auto"
+              className="h-11 w-full min-w-0 rounded-lg border border-graf-300 bg-white pl-3 pr-8 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 lg:w-auto"
             >
               {ORDENS.map((opcao) => (
                 <option key={opcao.valor} value={opcao.valor}>
