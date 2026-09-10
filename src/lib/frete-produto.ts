@@ -2,6 +2,7 @@ import "server-only";
 
 import { calcularFreteTabelaDePedido, type Frete } from "@/lib/frete-core";
 import {
+  itemAptoParaCotacaoExterna,
   itemDaPdpParaCotacao,
   type ProdutoParaCotacao,
 } from "@/lib/frete-produto-item";
@@ -47,12 +48,13 @@ export async function calcularFreteDaPdp(entrada: {
   produto: ProdutoParaCotacao;
 }): Promise<Frete> {
   const { cep, produto } = entrada;
+  const item = itemDaPdpParaCotacao(produto);
 
-  if (statusMelhorEnvio().quoteReady) {
+  if (statusMelhorEnvio().quoteReady && itemAptoParaCotacaoExterna(item)) {
     try {
       const opcoes = await cotacoesMelhorEnvio({
         postalCode: cep,
-        items: [itemDaPdpParaCotacao(produto)],
+        items: [item],
       });
       if (opcoes[0]) return paraFreteMelhorEnvio(opcoes[0]);
     } catch (erro) {
