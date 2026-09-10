@@ -82,7 +82,6 @@ export default async function HomePage() {
         rotuloDoLink="Ver catálogo"
         produtos={catalogo.ofertas.slice(0, 4)}
         parcelamento={parcelamentoHome}
-        variante="ofertas"
       />
 
       <SeminovosHome produtos={catalogo.seminovos} parcelamento={parcelamentoHome} />
