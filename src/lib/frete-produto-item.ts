@@ -27,3 +27,20 @@ export function itemDaPdpParaCotacao(produto: ProdutoParaCotacao) {
     depthMm: produto.depthMm,
   };
 }
+
+/**
+ * Melhor Envio exige peso e três dimensões positivas. Se o cadastro não tem
+ * isso, a PDP usa a tabela JB diretamente em vez de fazer uma chamada que já
+ * sabemos que será recusada.
+ */
+export function itemAptoParaCotacaoExterna(
+  item: ReturnType<typeof itemDaPdpParaCotacao>,
+) {
+  return (
+    item.quantity > 0 &&
+    (item.weightGrams ?? 0) > 0 &&
+    (item.widthMm ?? 0) > 0 &&
+    (item.heightMm ?? 0) > 0 &&
+    (item.depthMm ?? 0) > 0
+  );
+}
