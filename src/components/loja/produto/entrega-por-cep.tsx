@@ -8,32 +8,6 @@ import { mascararCep } from "@/components/ui/campos-br";
 import { formatarPreco, plural, somenteDigitos } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/* ============================================================================
-   Entrega por CEP
-
-   "Chega até mim, e quando?" era pergunta sem resposta antes do checkout. Quem
-   compra equipamento de dezenas de milhares de reais não cria conta para
-   descobrir se a JB entrega na cidade dele.
-
-   O número vem de `estimarEntrega`, que roda o MESMO cálculo do pedido sobre
-   as faixas cadastradas em /admin/frete. Quando não há faixa para aquele CEP,
-   a resposta é "a JB confere e informa" — nunca um valor inventado, e nunca um
-   prazo que a operação não assumiu.
-
-   Três separações que o texto mantém, porque misturá-las é o erro comum do
-   setor:
-
-     entrega do equipamento  ≠  deslocamento do técnico  ≠  instalação
-
-   Esta caixa fala só da primeira. Instalação é adicional de pedido e aparece
-   na caixa de compra, com preço próprio; deslocamento entra em orçamento de
-   assistência. Escrever "entrega e instalação em 5 dias" criaria uma obrigação
-   que a JB não vendeu.
-
-   O CEP fica no `localStorage` desta pessoa e não sai daqui: nenhuma chamada
-   grava CEP no servidor, e a estimativa é uma leitura pura.
-   ============================================================================ */
-
 const CHAVE_CEP = "jb:cep";
 
 export function EntregaPorCep({ produtoId }: { produtoId: string }) {
@@ -45,15 +19,12 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   const digitos = somenteDigitos(cep);
   const completo = digitos.length === 8;
 
-  /* O CEP da última consulta volta preenchido, mas NÃO recalcula sozinho: um
-     resultado que aparece antes de a pessoa pedir parece resposta a outra
-     pergunta. O botão continua sendo o gatilho. */
   useEffect(() => {
     try {
       const guardado = window.localStorage.getItem(CHAVE_CEP);
       if (guardado) setCep(mascararCep(guardado));
     } catch {
-      /* navegação privada: segue sem memória do CEP */
+      // O cálculo continua funcionando mesmo quando o navegador bloqueia storage.
     }
   }, []);
 
@@ -62,27 +33,26 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
       campoRef.current?.focus();
       return;
     }
+
     try {
       window.localStorage.setItem(CHAVE_CEP, digitos);
     } catch {
-      /* idem */
+      // Sem persistência local, seguimos com a consulta atual.
     }
+
     startTransition(async () => {
       setResultado(await estimarEntrega(produtoId, digitos));
     });
   }
 
   return (
-    <section aria-labelledby="entrega-cep" className="border-t border-graf-200 px-5 py-4">
-      <h3
-        id="entrega-cep"
-        className="flex items-center gap-2 text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
-      >
-        <Truck className="size-4 text-graf-500" aria-hidden />
-        Entrega do equipamento
+    <section aria-labelledby="entrega-cep" className="border-t border-graf-150 px-5 py-4 sm:px-6">
+      <h3 id="entrega-cep" className="flex items-center gap-2 text-sm font-bold text-graf-800">
+        <Truck className="size-4 shrink-0 text-jb-600" aria-hidden />
+        Calcular frete
       </h3>
 
-      <div className="mt-2.5 flex flex-col gap-2 min-[375px]:flex-row">
+      <div className="mt-2.5 flex gap-2">
         <div className="relative min-w-0 flex-1">
           <label htmlFor="cep-entrega" className="sr-only">
             CEP de entrega
@@ -110,7 +80,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
               evento.preventDefault();
               calcular();
             }}
-            className="h-11 w-full rounded-md border border-graf-450 bg-white pl-9 pr-3 text-sm tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/15"
+            className="h-11 w-full rounded-lg border border-graf-300 bg-white pl-9 pr-3 text-sm tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/10"
           />
         </div>
         <button
@@ -118,10 +88,10 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
           onClick={calcular}
           disabled={!completo || calculando}
           className={cn(
-            "foco-jb flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-md border border-graf-300 px-4 text-sm font-bold transition-colors duration-150 min-[375px]:w-auto",
+            "foco-jb flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-graf-300 px-3.5 text-sm font-bold transition-colors",
             completo && !calculando
-              ? "text-graf-900 hover:border-graf-450 hover:bg-graf-50"
-              : "cursor-not-allowed text-graf-500",
+              ? "text-graf-900 hover:border-graf-400 hover:bg-graf-50"
+              : "cursor-not-allowed text-graf-400",
           )}
         >
           {calculando ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
@@ -134,61 +104,42 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
       </p>
 
       {resultado && !resultado.ok ? (
-        <p className="mt-2.5 text-[0.8125rem] font-semibold text-jb-700">{resultado.erro}</p>
+        <p className="mt-2 text-xs font-semibold text-jb-700">{resultado.erro}</p>
       ) : null}
 
       {resultado?.ok ? (
-        <div className="mt-2.5 border-l-2 border-jb-500 bg-graf-50 px-3 py-2.5">
+        <div className="mt-3 rounded-lg bg-graf-50 px-3.5 py-3">
           {resultado.orcadoDepois ? (
-            <>
-              <p className="text-[0.9375rem] font-semibold text-graf-900">
-                A JB confere o frete para este CEP.
+            <div>
+              <p className="text-sm font-semibold text-graf-900">Frete sob consulta para este CEP</p>
+              <p className="mt-0.5 text-xs leading-5 text-graf-600">
+                A JB confirma o valor antes da cobrança.
               </p>
-              <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-600">
-                Este endereço está fora das faixas com preço fechado. O valor entra na
-                confirmação do pedido, antes da cobrança — nada é cobrado por estimativa.
-              </p>
-            </>
+            </div>
           ) : (
-            <>
+            <div>
               <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <span className="text-[0.9375rem] font-semibold text-graf-900">
-                  {resultado.rotulo}
-                </span>
-                <span className="tabular text-[0.9375rem] font-bold text-graf-950">
+                <span className="text-sm font-semibold text-graf-900">{resultado.rotulo}</span>
+                <span className="tabular text-sm font-extrabold text-graf-950">
                   {resultado.valorCents > 0 ? formatarPreco(resultado.valorCents) : "Grátis"}
                 </span>
               </p>
-              {resultado.prazoDias !== null ? (
-                <p className="mt-1 text-[0.8125rem] text-graf-600">
-                  Prazo estimado de{" "}
-                  <span className="font-semibold text-graf-800">
-                    {plural(resultado.prazoDias, "dia útil", "dias úteis")}
-                  </span>{" "}
-                  após a confirmação do pagamento.
-                </p>
-              ) : (
-                <p className="mt-1 text-[0.8125rem] text-graf-600">
-                  O prazo é confirmado junto com o pedido.
-                </p>
-              )}
-            </>
+              <p className="mt-0.5 text-xs leading-5 text-graf-600">
+                {resultado.prazoDias !== null
+                  ? `${plural(resultado.prazoDias, "dia útil", "dias úteis")} após a confirmação do pagamento.`
+                  : "Prazo confirmado junto com o pedido."}
+              </p>
+            </div>
           )}
 
           {resultado.retirada ? (
-            <p className="mt-3 flex gap-2 border-t border-graf-200 pt-3 text-[0.8125rem] leading-relaxed text-graf-600">
+            <p className="mt-2.5 flex gap-2 border-t border-graf-200 pt-2.5 text-xs leading-5 text-graf-600">
               <Store className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
               <span>
-                <span className="font-semibold text-graf-800">Retirada na JB</span> —{" "}
-                {resultado.retirada}
+                <span className="font-semibold text-graf-800">Retirada na JB:</span> {resultado.retirada}
               </span>
             </p>
           ) : null}
-
-          <p className="mt-3 border-t border-graf-200 pt-3 text-[0.75rem] leading-relaxed text-graf-500">
-            Entrega do equipamento. Instalação, quando contratada, é serviço à parte e tem
-            agendamento próprio.
-          </p>
         </div>
       ) : null}
     </section>

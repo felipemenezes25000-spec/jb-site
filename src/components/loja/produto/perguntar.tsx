@@ -12,15 +12,6 @@ import { Botao } from "@/components/ui/button";
 import { Area, Campo } from "@/components/ui/form";
 import { CampoTelefone } from "@/components/ui/campos-br";
 
-/* ============================================================================
-   Perguntar sobre este equipamento
-
-   O formulário é importante numa compra consultiva, mas não precisa ocupar a
-   página inteira de quem só veio ler as respostas já publicadas. A entrada é
-   uma ação progressiva: o comprador vê que pode falar com a equipe e abre o
-   formulário apenas quando realmente precisar.
-   ============================================================================ */
-
 export function PerguntarSobreProduto({
   produtoId,
   nomeDoProduto,
@@ -36,43 +27,33 @@ export function PerguntarSobreProduto({
   const concluido = Boolean(estado.ok);
 
   return (
-    <details
-      className="group overflow-hidden rounded-xl border border-graf-200 bg-white"
-      open={concluido || undefined}
-    >
-      <summary className="foco-jb flex min-h-[4.75rem] cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 sm:px-5 [&::-webkit-details-marker]:hidden">
+    <details className="group border-y border-graf-200" open={concluido || undefined}>
+      <summary className="foco-jb flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-3 [&::-webkit-details-marker]:hidden">
         <span className="flex min-w-0 items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
-            <MessageCircleQuestion className="size-[18px]" aria-hidden />
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">
+            <MessageCircleQuestion className="size-4" aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block text-[0.9375rem] font-bold text-graf-950">
-              Não encontrou sua dúvida?
-            </span>
-            <span className="mt-0.5 block text-[0.8125rem] leading-5 text-graf-500">
-              Pergunte diretamente à equipe técnica da JB.
+            <span className="block text-sm font-bold text-graf-950">Ainda ficou alguma dúvida?</span>
+            <span className="mt-0.5 block text-xs leading-5 text-graf-500">
+              Envie uma pergunta para a equipe JB.
             </span>
           </span>
         </span>
 
-        <span className="flex shrink-0 items-center gap-2 text-xs font-bold text-jb-700">
+        <span className="flex shrink-0 items-center gap-1.5 text-xs font-bold text-jb-700">
           <span className="hidden sm:inline group-open:hidden">Perguntar</span>
           <span className="hidden sm:group-open:inline">Recolher</span>
-          <ChevronDown
-            className="size-4 transition-transform duration-200 group-open:rotate-180"
-            aria-hidden
-          />
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
         </span>
       </summary>
 
-      <div className="border-t border-graf-200 px-4 pb-5 pt-4 sm:px-5 sm:pb-6">
+      <div className="border-t border-graf-150 pb-4 pt-4">
         {estado.ok ? (
           <Aviso tom="sucesso">{estado.ok}</Aviso>
         ) : (
           <form action={acao} className="grid gap-4">
             <input type="hidden" name="produtoId" value={produtoId} />
-
-            {/* Armadilha: fica fora da tela e sem foco por tabulação. */}
             <input
               type="text"
               name="assunto_alternativo"
@@ -88,7 +69,7 @@ export function PerguntarSobreProduto({
               required
               rows={3}
               maxLength={1200}
-              placeholder={`Ex.: o ${nomeDoProduto} precisa de ponto de água próprio?`}
+              placeholder={`Ex.: o ${nomeDoProduto} precisa de alguma preparação antes do uso?`}
               erro={estado.campo === "pergunta" ? estado.erro : undefined}
             />
 
@@ -126,9 +107,8 @@ export function PerguntarSobreProduto({
               <Botao type="submit" carregando={enviando}>
                 Enviar pergunta
               </Botao>
-              <p className="min-w-0 flex-1 text-[0.75rem] leading-5 text-graf-500">
-                A resposta vai para o seu e-mail. Se ajudar outras clínicas, a JB pode publicar
-                a pergunta nesta página sem o seu nome.
+              <p className="min-w-0 flex-1 text-xs leading-5 text-graf-500">
+                A resposta vai para o seu e-mail. A JB pode publicar a pergunta sem identificar você.
               </p>
             </div>
           </form>
