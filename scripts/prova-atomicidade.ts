@@ -44,6 +44,7 @@ async function pedidoDescartavel(quantidade: number) {
           kind: "produto",
           productId: produto.id,
           name: produto.name,
+          isEquipment: true,
           unitPriceCents: produto.priceCents,
           quantity: quantidade,
           totalCents: produto.priceCents * quantidade,
@@ -232,6 +233,32 @@ async function main() {
       data: { stock: produto.stock, unique: produto.unique },
     });
   }
+
+  console.log("\n5. item marcado como não equipamento não cria prontuário técnico");
+  {
+    const { pedido, cliente } = await pedidoDescartavel(1);
+    await prisma.orderItem.updateMany({
+      where: { orderId: pedido.id, kind: "produto" },
+      data: { isEquipment: false },
+    });
+
+    await confirmarPagamento(pedido.id);
+
+    const equipamentos = await prisma.equipment.count({ where: { orderId: pedido.id } });
+    const aviso = await prisma.notification.findFirst({
+      where: { customerId: cliente.id, title: { contains: pedido.number } },
+      select: { body: true },
+    });
+    conferir("não criou equipamento", equipamentos === 0, `${equipamentos}`);
+    conferir(
+      "mensagem fala em pedido, não equipamento",
+      aviso?.body === "Já estamos preparando seu pedido.",
+      aviso?.body ?? "sem aviso",
+    );
+
+    await limpar(pedido.id, cliente.id, pedido.number);
+  }
+
   console.log(`\n${falhas === 0 ? "TUDO OK" : `${falhas} FALHA(S)`}\n`);
 }
 

@@ -25,21 +25,27 @@ import { COOKIE_ESCOLHA_FRETE, lerEscolhaFrete } from "@/lib/selecao-frete";
 export * from "@/lib/pedido-base";
 
 /**
- * Cria o pedido pelo domínio original e, logo depois do commit, guarda os IDs
- * técnicos da modalidade do Melhor Envio. O preço não vem do cookie: ele já
- * foi recotado pelo servidor e está em `input.entrega.valorCents`.
+ * Cria o pedido pelo domínio original e, só depois do commit, tenta guardar os
+ * IDs técnicos da modalidade do Melhor Envio.
  *
- * Guardar `serviceId`/`companyId` aqui evita depender do nome comercial da
- * transportadora dias depois, quando um Pix pode ser confirmado.
+ * Esta ordem é deliberada: cookie/contexto HTTP é detalhe da borda web e nunca
+ * pode impedir a transação de pedido/estoque. Chamadores internos (scripts,
+ * jobs, testes ou integrações) não possuem Request Async Storage; nesses casos
+ * o pedido continua válido e simplesmente não recebe o metadado auxiliar da
+ * cotação.
+ *
+ * O preço não vem do cookie: ele já foi recotado pelo servidor e está em
+ * `input.entrega.valorCents`.
  */
 export async function criarPedido(input: Parameters<typeof criarPedidoBase>[0]) {
-  const jar = await cookies();
-  const escolha = lerEscolhaFrete(jar.get(COOKIE_ESCOLHA_FRETE)?.value);
   const pedido = await criarPedidoBase(input);
 
-  const partes = partesDoRotuloMelhorEnvio(input.entrega.rotulo);
-  if (escolha?.kind === "melhor_envio" && partes) {
-    try {
+  try {
+    const jar = await cookies();
+    const escolha = lerEscolhaFrete(jar.get(COOKIE_ESCOLHA_FRETE)?.value);
+    const partes = partesDoRotuloMelhorEnvio(input.entrega.rotulo);
+
+    if (escolha?.kind === "melhor_envio" && partes) {
       const atual = await prisma.order.findUnique({
         where: { id: pedido.id },
         select: { internalNote: true },
@@ -60,12 +66,12 @@ export async function criarPedido(input: Parameters<typeof criarPedidoBase>[0]) 
           },
         });
       }
-    } catch (erro) {
-      // O pedido já está transacionado. Não desfazemos venda/estoque por uma
-      // anotação auxiliar: o processador ainda consegue reencontrar a opção
-      // pela cotação e pelo rótulo, enquanto o erro fica visível no log.
-      console.error("[pedido/logistica] não foi possível salvar IDs da cotação", erro);
     }
+  } catch (erro) {
+    // O pedido já está transacionado. Ausência de contexto HTTP (scripts/jobs),
+    // falha de cookie ou anotação auxiliar não desfaz venda/estoque. O
+    // processador de logística ainda consegue trabalhar pelo rótulo do frete.
+    console.error("[pedido/logistica] não foi possível salvar IDs da cotação", erro);
   }
 
   return pedido;

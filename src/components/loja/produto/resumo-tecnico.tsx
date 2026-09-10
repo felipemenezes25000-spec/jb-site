@@ -68,12 +68,12 @@ export async function ResumoTecnicoProduto({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+      <div className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1.5">
         <Etiqueta tom={desenho.tom}>{desenho.rotulo}</Etiqueta>
         {marca ? (
           <Link
             href={`/marcas/${marca.slug}`}
-            className="foco-jb text-xs font-extrabold uppercase tracking-[0.08em] text-graf-700 hover:text-jb-700"
+            className="foco-jb inline-flex min-h-11 items-center text-xs font-extrabold uppercase tracking-[0.08em] text-graf-700 hover:text-jb-700"
           >
             {marca.nome}
           </Link>
@@ -81,7 +81,7 @@ export async function ResumoTecnicoProduto({
         {categoria ? (
           <Link
             href={`/categoria/${categoria.slug}`}
-            className="foco-jb text-xs font-semibold text-graf-500 hover:text-graf-900"
+            className="foco-jb inline-flex min-h-11 items-center text-xs font-semibold text-graf-500 hover:text-graf-900"
           >
             · {categoria.nome}
           </Link>
@@ -99,7 +99,7 @@ export async function ResumoTecnicoProduto({
         <a
           href="#avaliacoes-verificadas"
           aria-label={`${avaliacao.media.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} de 5 em ${avaliacao.total} ${avaliacao.total === 1 ? "avaliação verificada" : "avaliações verificadas"}`}
-          className="foco-jb mt-3 inline-flex min-h-8 items-center gap-2 rounded-lg text-sm font-semibold text-graf-700 transition-colors hover:text-jb-700"
+          className="foco-jb mt-2 inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-graf-700 transition-colors hover:text-jb-700"
         >
           <span className="inline-flex items-center gap-1 font-extrabold tabular text-graf-950">
             <Star className="size-4 fill-current text-graf-900" aria-hidden />
@@ -123,14 +123,14 @@ export async function ResumoTecnicoProduto({
 
       {essenciais.length > 0 ? (
         <div className="mt-5">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="mb-2 flex min-h-11 flex-wrap items-center justify-between gap-2">
             <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.11em] text-graf-500">
               O essencial deste equipamento
             </p>
             {destaques.length > essenciais.length ? (
               <a
                 href="#ficha-tecnica"
-                className="foco-jb text-[0.6875rem] font-bold text-jb-700 underline decoration-jb-300 underline-offset-4 hover:text-jb-800"
+                className="foco-jb inline-flex min-h-11 items-center text-[0.6875rem] font-bold text-jb-700 underline decoration-jb-300 underline-offset-4 hover:text-jb-800"
               >
                 Ver ficha completa
               </a>
@@ -170,8 +170,8 @@ export async function ResumoTecnicoProduto({
       ) : null}
 
       {identificadoresSecundarios.length > 0 ? (
-        <details className="group mt-3 border-t border-graf-100 pt-3">
-          <summary className="foco-jb flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 text-[0.6875rem] font-bold text-graf-500 hover:text-graf-900 [&::-webkit-details-marker]:hidden">
+        <details className="group mt-3 border-t border-graf-100 pt-2">
+          <summary className="foco-jb flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 text-[0.6875rem] font-bold text-graf-500 hover:text-graf-900 [&::-webkit-details-marker]:hidden">
             Identificação técnica
             <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden />
           </summary>

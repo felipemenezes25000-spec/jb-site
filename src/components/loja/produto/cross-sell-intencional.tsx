@@ -42,7 +42,7 @@ function AdicionarAcessorio({ item }: { item: ItemCrossSell }) {
         <button
           type="submit"
           disabled={pendente}
-          className="foco-jb inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-graf-950 px-3 text-xs font-extrabold text-white transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-graf-800 disabled:cursor-wait disabled:translate-y-0 disabled:opacity-65"
+          className="foco-jb inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-graf-950 px-3 text-xs font-extrabold text-white transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-graf-800 disabled:cursor-wait disabled:translate-y-0 disabled:opacity-65"
         >
           {estado.ok ? (
             <Check className="size-3.5" aria-hidden />
@@ -55,7 +55,10 @@ function AdicionarAcessorio({ item }: { item: ItemCrossSell }) {
 
       <div aria-live="polite" className="mt-1.5 min-h-4 text-[0.6875rem] leading-4">
         {estado.ok ? (
-          <Link href="/carrinho" className="font-bold text-ok-700 underline underline-offset-2">
+          <Link
+            href="/carrinho"
+            className="foco-jb inline-flex min-h-11 items-center font-bold text-ok-700 underline underline-offset-2"
+          >
             Ver carrinho
           </Link>
         ) : estado.erro ? (
@@ -105,7 +108,7 @@ function CartaoProduto({
         </span>
         <Link
           href={`/loja/${item.slug}`}
-          className="foco-jb line-clamp-2 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
+          className="foco-jb line-clamp-2 min-h-11 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
         >
           {item.nome}
         </Link>
@@ -122,7 +125,7 @@ function CartaoProduto({
               <AdicionarAcessorio item={item} />
               <Link
                 href={`/loja/${item.slug}`}
-                className="foco-jb mt-1 inline-flex items-center gap-1 text-[0.6875rem] font-bold text-graf-500 hover:text-jb-700"
+                className="foco-jb mt-1 inline-flex min-h-11 items-center gap-1 text-[0.6875rem] font-bold text-graf-500 hover:text-jb-700"
               >
                 Ver detalhes
                 <ArrowRight className="size-3" aria-hidden />
@@ -131,7 +134,7 @@ function CartaoProduto({
           ) : (
             <Link
               href={`/loja/${item.slug}`}
-              className="foco-jb mt-2 inline-flex items-center gap-1.5 text-xs font-extrabold text-jb-700 hover:text-jb-800"
+              className="foco-jb mt-2 inline-flex min-h-11 items-center gap-1.5 text-xs font-extrabold text-jb-700 hover:text-jb-800"
             >
               {tipo === "acessorio" ? "Ver e configurar" : "Ver produto"}
               <ArrowRight className="size-3.5" aria-hidden />

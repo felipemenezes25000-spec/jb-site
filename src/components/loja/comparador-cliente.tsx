@@ -14,37 +14,7 @@ import { Scale, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-/* ============================================================================
-   Seleção de comparação
-
-   O comparador já existia e é bom: /comparar lê `?p=slug&p=slug`, não
-   transforma ausência de dado em zero e explica por que indica um ou outro. O
-   que faltava era o caminho até ele. Para comparar dois equipamentos era
-   preciso abrir /comparar e procurar os dois numa lista — ou seja, decorar o
-   nome de dois equipamentos que a pessoa acabou de ver em outra página.
-
-   Agora a seleção acompanha a navegação: marca-se no cartão da vitrine ou na
-   página do equipamento, e uma barra fixa mostra o que está selecionado e leva
-   para a comparação. A URL continua sendo a fonte da verdade em /comparar —
-   isto aqui só a monta.
-
-   POR QUE `localStorage` E NÃO O BANCO
-
-   Comparar é decisão de sessão de navegação, não é dado da clínica: quem
-   compara três autoclaves numa terça não quer encontrar essa lista de volta em
-   outro computador na semana seguinte. Favorito é que é dado da clínica, e
-   favorito continua no banco, com conta. Aqui não há nada a sincronizar, não
-   há PII e não há motivo para uma escrita no servidor a cada clique.
-
-   O acesso é embrulhado em `try` porque `localStorage` lança em navegação
-   privada de alguns navegadores e em iframe com cookies bloqueados. Falhar ali
-   não pode derrubar a vitrine: sem armazenamento, a seleção vale só enquanto a
-   aba estiver aberta.
-   ============================================================================ */
-
 const CHAVE = "jb:comparar";
-
-/** O mesmo teto de /comparar. Acima disto a tabela não cabe no celular. */
 export const MAXIMO_COMPARACAO = 3;
 
 export type ItemComparado = { slug: string; nome: string };
@@ -85,14 +55,12 @@ function gravar(itens: ItemComparado[]) {
   try {
     window.localStorage.setItem(CHAVE, JSON.stringify(itens));
   } catch {
-    /* sem armazenamento a seleção vive só nesta aba — e isso é aceitável */
+    /* sem armazenamento a seleção vive só nesta aba */
   }
 }
 
 export function ComparadorProvider({ children }: { children: React.ReactNode }) {
   const [itens, setItens] = useState<ItemComparado[]>([]);
-  /* `pronto` evita o pisca-pisca de hidratação: o servidor não conhece a
-     seleção, então o botão só muda de estado depois da primeira leitura. */
   const [pronto, setPronto] = useState(false);
 
   useEffect(() => {
@@ -100,8 +68,6 @@ export function ComparadorProvider({ children }: { children: React.ReactNode }) 
     setPronto(true);
   }, []);
 
-  /* Duas abas abertas na mesma loja compartilham a seleção. Sem isto, marcar
-     numa aba e comparar na outra levaria à lista antiga. */
   useEffect(() => {
     function aoMudar(evento: StorageEvent) {
       if (evento.key === CHAVE) setItens(ler());
@@ -110,17 +76,6 @@ export function ComparadorProvider({ children }: { children: React.ReactNode }) 
     return () => window.removeEventListener("storage", aoMudar);
   }, []);
 
-  /**
-   * Toda alteração é função do estado anterior, nunca de uma cópia capturada
-   * no render. Dois cliques no mesmo quadro — marcar dois cartões seguidos —
-   * calculavam ambos a partir da mesma lista antiga, e o segundo apagava o
-   * primeiro. Com o atualizador, o segundo enxerga o resultado do primeiro.
-   *
-   * A gravação acontece dentro do atualizador porque é ali que a lista final
-   * existe. É efeito colateral em `setState`, e é deliberado: `localStorage`
-   * não é estado do React, é o mesmo dado escrito no lugar onde ele sobrevive
-   * ao recarregamento.
-   */
   const aplicar = useCallback(
     (mudanca: (atuais: ItemComparado[]) => ItemComparado[]) => {
       setItens((atuais) => {
@@ -143,7 +98,6 @@ export function ComparadorProvider({ children }: { children: React.ReactNode }) 
           if (atuais.some((atual) => atual.slug === item.slug)) {
             return atuais.filter((atual) => atual.slug !== item.slug);
           }
-          // no teto, o mais antigo sai — recusar em silêncio parece defeito
           const base = atuais.length >= MAXIMO_COMPARACAO ? atuais.slice(1) : atuais;
           return [...base, item];
         }),
@@ -156,12 +110,6 @@ export function ComparadorProvider({ children }: { children: React.ReactNode }) 
   return <ComparadorContexto.Provider value={valor}>{children}</ComparadorContexto.Provider>;
 }
 
-/**
- * Fora do provedor devolve uma seleção vazia e inerte em vez de lançar. O
- * cartão de produto aparece em página de erro e em pré-visualização do admin,
- * onde a casca da loja não existe — e ali ele deve renderizar sem comparação,
- * não quebrar a página inteira.
- */
 export function useComparador(): Contexto {
   const contexto = useContext(ComparadorContexto);
   return (
@@ -182,8 +130,6 @@ export function hrefDaComparacao(itens: ItemComparado[]): string {
   return busca ? `/comparar?${busca}` : "/comparar";
 }
 
-/* ========================================================== botão de marcar */
-
 export function BotaoComparar({
   slug,
   nome,
@@ -192,13 +138,11 @@ export function BotaoComparar({
 }: {
   slug: string;
   nome: string;
-  /** `icone` para o canto do cartão; `linha` para a coluna de compra. */
   forma?: "icone" | "linha";
   className?: string;
 }) {
   const { contem, alternar, pronto } = useComparador();
   const marcado = pronto && contem(slug);
-
   const rotulo = marcado ? "Remover da comparação" : "Adicionar à comparação";
 
   if (forma === "linha") {
@@ -225,8 +169,6 @@ export function BotaoComparar({
     <button
       type="button"
       onClick={(evento) => {
-        /* O cartão inteiro é um link (pseudo-elemento sobre a área). Sem parar
-           a propagação, marcar para comparar abriria o equipamento. */
         evento.preventDefault();
         evento.stopPropagation();
         alternar({ slug, nome });
@@ -235,9 +177,6 @@ export function BotaoComparar({
       aria-label={`${rotulo}: ${nome}`}
       title={rotulo}
       className={cn(
-        /* 36px no ponteiro fino, 44px no dedo: o alvo mínimo da WCAG 2.2
-           (2.5.8) vale para toque, e no desktop um botão de 44px sobre a foto
-           do equipamento vira um segundo protagonista no cartão. */
         "foco-jb relative z-10 flex size-9 items-center justify-center rounded-full border bg-white/90 backdrop-blur transition-colors duration-150",
         "pointer-coarse:size-11",
         marcado
@@ -251,16 +190,6 @@ export function BotaoComparar({
   );
 }
 
-/* ============================================================ barra fixa */
-
-/**
- * Barra da seleção.
- *
- * Fica fora da página de comparação (lá a seleção já está na tela) e some
- * quando não há nada marcado. O `bottom` respeita `--jb-barra-inferior`, que a
- * barra de compra do celular publica quando existe — duas barras fixas
- * empilhadas no mesmo lugar escondem uma à outra.
- */
 export function BarraComparar() {
   const { itens, remover, limpar } = useComparador();
   const pathname = usePathname();
@@ -287,7 +216,7 @@ export function BarraComparar() {
                   type="button"
                   onClick={() => remover(item.slug)}
                   aria-label={`Tirar ${item.nome} da comparação`}
-                  className="foco-jb flex size-6 shrink-0 items-center justify-center rounded-full text-graf-500 transition-colors hover:bg-graf-200 hover:text-graf-900"
+                  className="foco-jb flex size-6 shrink-0 items-center justify-center rounded-full text-graf-500 transition-colors hover:bg-graf-200 hover:text-graf-900 pointer-coarse:size-11"
                 >
                   <X className="size-3.5" aria-hidden />
                 </button>
@@ -300,21 +229,20 @@ export function BarraComparar() {
           <button
             type="button"
             onClick={limpar}
-            className="foco-jb hidden min-h-9 items-center rounded-lg px-2.5 text-[0.8125rem] font-semibold text-graf-500 transition-colors hover:bg-graf-50 hover:text-graf-800 sm:inline-flex"
+            className="foco-jb hidden min-h-11 items-center rounded-lg px-2.5 text-[0.8125rem] font-semibold text-graf-500 transition-colors hover:bg-graf-50 hover:text-graf-800 sm:inline-flex"
           >
             Limpar
           </button>
           <Link
             href={hrefDaComparacao(itens)}
             className={cn(
-              "foco-jb inline-flex min-h-10 items-center rounded-lg px-4 text-[0.875rem] font-bold transition-colors duration-150",
+              "foco-jb inline-flex min-h-11 items-center rounded-lg px-4 text-[0.875rem] font-bold transition-colors duration-150",
               itens.length < 2
                 ? "bg-graf-100 text-graf-500"
                 : "bg-jb-500 text-white hover:bg-jb-600",
             )}
             aria-disabled={itens.length < 2}
             onClick={(evento) => {
-              // com um item só não há comparação: o clique não leva a lugar nenhum
               if (itens.length < 2) evento.preventDefault();
             }}
           >

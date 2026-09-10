@@ -250,14 +250,10 @@ export function CaixaCompra({
                 <span className="text-sm text-graf-500 line-through">
                   {formatarPreco(precoAnteriorCents)}
                 </span>
-                {/* mesmo piso do cartão da vitrine: abaixo de 5% o selo vira
-                    ruído e a diferença já está no valor riscado */}
                 {desconto >= 5 ? <Etiqueta tom="ok">−{desconto}%</Etiqueta> : null}
               </p>
             ) : null}
 
-            {/* 44px só a partir de `xl`: em 1024px a coluna tem ~345px úteis,
-                e um preço de seis dígitos nesse corpo não caberia na linha. */}
             <p className="numero text-[2.25rem] leading-none text-graf-950 xl:text-[2.5rem]">
               {formatarPreco(precoCents)}
             </p>
@@ -286,11 +282,6 @@ export function CaixaCompra({
         )}
       </div>
 
-      {/* A ação principal vem antes de CEP e personalização. O cliente não deve
-          atravessar logística e JB Care para descobrir como comprar. Quantidade
-          e serviços continuam em estado React e alimentam estes `hidden`, então
-          personalizar mais abaixo atualiza o MESMO formulário sem duplicar
-          regra de compra. */}
       {baseCompravel ? (
         <form action={acao} className={`${CLASSE_SECAO_COMPRA} space-y-3`}>
           <input type="hidden" name="produtoId" value={produtoId} />
@@ -384,8 +375,6 @@ export function CaixaCompra({
           </p>
         </div>
       ) : (
-        /* Sem compra direta e sem orçamento, a caixa ficaria sem saída
-           nenhuma. O contato é o próximo passo que sempre existe. */
         <div className="border-t border-graf-200 p-5 sm:p-6">
           <LinkBotao href="/contato" variante="secundario" tamanho="lg" larguraTotal>
             Falar com a equipe
@@ -393,8 +382,6 @@ export function CaixaCompra({
         </div>
       )}
 
-      {/* Garantia é prova de confiança da decisão, então acompanha a ação e não
-          fica escondida depois de configuração opcional. */}
       {garantia && garantia.meses > 0 ? (
         <p className={CLASSE_GARANTIA_COMPRA}>
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
@@ -407,12 +394,8 @@ export function CaixaCompra({
         </p>
       ) : null}
 
-      {/* CEP é importante para decidir, mas já não empurra o CTA. Continua fora
-          do formulário de compra para Enter no campo nunca disparar pedido. */}
       {baseCompravel ? <EntregaPorCep produtoId={produtoId} /> : null}
 
-      {/* Configuração vem depois da ação e da entrega. Ela atualiza os mesmos
-          estados usados pelos hidden inputs do formulário acima. */}
       {baseCompravel && (!unico || addons.length > 0) ? (
         <div className={`${CLASSE_SECAO_COMPRA} space-y-4`}>
           <div>
@@ -512,10 +495,6 @@ export function CaixaCompra({
   );
 }
 
-/* ==========================================================================
-   Pacote de serviços (JB Care)
-   ========================================================================== */
-
 function PacoteDeServicos({
   obrigatorios,
   opcionais,
@@ -533,16 +512,12 @@ function PacoteDeServicos({
   escolhidos: string[];
   pacoteAtivo: boolean;
   precoDoPacote: number;
-  /** Nomes dos opcionais sem preço cadastrado — o pacote vira "a partir de". */
   semPreco: string[];
   detalhando: boolean;
   aoDetalhar: () => void;
   aoEscolherPacote: (ligar: boolean) => void;
   aoAlternar: (serviceId: string) => void;
 }) {
-  /* Com um opcional só, o par de alternativas não ajuda: "só o equipamento"
-     versus "equipamento + instalação" é a mesma caixa de seleção com mais
-     palavras. Nesse caso a lista simples é mais honesta. */
   const vaiDeAlternativas = opcionais.length >= 2;
   const mostrarLista = opcionais.length > 0 && (!vaiDeAlternativas || detalhando);
 
@@ -603,7 +578,7 @@ function PacoteDeServicos({
             type="button"
             onClick={aoDetalhar}
             aria-expanded={detalhando}
-            className="foco-jb inline-flex min-h-9 items-center gap-1.5 rounded-md text-[0.8125rem] font-semibold text-graf-600 transition-colors hover:text-jb-700"
+            className="foco-jb inline-flex min-h-11 items-center gap-1.5 rounded-md text-[0.8125rem] font-semibold text-graf-600 transition-colors hover:text-jb-700"
           >
             <Sliders className="size-3.5" aria-hidden />
             {detalhando ? "Esconder os serviços" : "Escolher serviço por serviço"}
@@ -612,8 +587,6 @@ function PacoteDeServicos({
       ) : null}
 
       {mostrarLista ? (
-        /* Uma moldura só, com fio entre as linhas: três serviços não podem
-           virar três caixas dentro da caixa de compra. */
         <div
           className={cn(
             "divide-y divide-graf-200 overflow-hidden rounded-lg border border-graf-200",
@@ -677,11 +650,8 @@ function AlternativaDoPacote({
   marcada: boolean;
   titulo: string;
   descricao: string;
-  /** `null` quando a alternativa não acrescenta nada ao preço fechado. */
   valor: number | null;
-  /** O valor é um piso, não o total: há item ainda sem preço no pacote. */
   aPartirDe?: boolean;
-  /** Uma frase dizendo o que ainda será orçado. */
   ressalva?: string;
   itens?: string[];
   aoEscolher: () => void;
