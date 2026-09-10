@@ -195,6 +195,12 @@ async function main() {
       referencia: "",
     };
 
+    /* Guardar o motivo importa: aqui se espera que ALGUMAS chamadas falhem
+       por disputa da unidade, então engolir o erro é proposital. Mas quando
+       falham todas, "0 de 5" sozinho não diz se foi a trava do banco fazendo
+       seu trabalho ou o fixture quebrado — e sem o motivo o passo seguinte é
+       adivinhação. */
+    const recusas: unknown[] = [];
     const pedidos = await Promise.all(
       carrinhos.map((carrinho) =>
         criarPedido({
@@ -203,11 +209,17 @@ async function main() {
           comprador,
           entrega,
           observacao: "",
-        }).catch(() => null),
+        }).catch((erro) => {
+          recusas.push(erro);
+          return null;
+        }),
       ),
     );
 
     const criados = pedidos.filter((p) => p !== null);
+    if (criados.length === 0 && recusas.length > 0) {
+      console.log(`  motivo da primeira recusa: ${String(recusas[0]).slice(0, 200)}`);
+    }
     const unidade = await prisma.inventoryUnit.findFirst({
       where: { serialNumber: "PROVA-UNIDADE" },
       select: { status: true, orderItemId: true },

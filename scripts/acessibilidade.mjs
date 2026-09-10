@@ -293,8 +293,16 @@ async function percorrer(grupo, rotas, login) {
     for (const [ctx, etiqueta] of [[contexto, "1280"], [comDedo, "390 dedo"]]) {
       const pagina = await ctx.newPage();
       try {
-        await pagina.goto(BASE + rota, { waitUntil: "networkidle", timeout: 60000 });
-        await pagina.waitForTimeout(400); // deixa a hidratação assentar
+        /* `domcontentloaded` e não `networkidle`, igual ao portão de
+           responsividade. Com `networkidle` uma única requisição pendurada
+           cega a rota inteira: em /loja o otimizador de imagem do modo dev
+           trava ao converter um PNG específico para webp, e a rota saía como
+           `falha-ao-medir` — um problema de servidor local reportado como se
+           fosse acessibilidade, escondendo o que havia de verdade na página.
+           O axe lê DOM e CSS, que já estão prontos aqui; a espera abaixo é o
+           que dá tempo à hidratação. */
+        await pagina.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 60000 });
+        await pagina.waitForTimeout(800); // deixa a hidratação assentar
 
         // o axe só roda na largura de mesa; no dedo interessa só o alvo de toque
         if (etiqueta === "1280") {
