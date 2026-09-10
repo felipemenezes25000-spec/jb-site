@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowRight, MessageCircle, ShoppingBag, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
