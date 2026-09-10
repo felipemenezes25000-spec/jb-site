@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { PaymentMethod } from "@prisma/client";
-import { FlaskConical, Headset, ShieldCheck, Truck } from "lucide-react";
+import { FlaskConical, ShieldCheck } from "lucide-react";
 
 import { Checkout, type MetodoCheckout } from "@/components/loja/checkout";
 import { ResumoCheckout } from "@/components/loja/checkout-resumo";
@@ -20,7 +20,7 @@ import { enderecoCompleto, getSettings, ligado } from "@/lib/settings";
 export const instant = false;
 
 export const metadata: Metadata = {
-  title: "Fechar pedido",
+  title: "Finalizar compra",
   robots: { index: false, follow: false },
 };
 
@@ -43,10 +43,6 @@ export default async function CheckoutPage() {
   const escolha = lerEscolhaFrete(jar.get(COOKIE_ESCOLHA_FRETE)?.value);
   const melhorEnvioAtivo = statusMelhorEnvio().quoteReady;
 
-  // Quando o agregador está operacional, a transportadora precisa ser escolhida
-  // antes do checkout para o servidor conseguir recotar exatamente o mesmo
-  // serviço. Sem credenciais do Melhor Envio, preservamos o fluxo legado da JB:
-  // tabela própria + retirada continuam funcionando e a loja não fica bloqueada.
   if (!escolha && melhorEnvioAtivo) redirect("/escolher-entrega");
 
   const [sessao, s] = await Promise.all([sessaoCliente(), getSettings()]);
@@ -91,7 +87,7 @@ export default async function CheckoutPage() {
   const retiradaNoCheckout = escolha ? retiradaEscolhida : ligado(s.retirada_disponivel);
 
   return (
-    <div className="container-jb py-8 lg:py-12">
+    <div className="container-jb py-7 lg:py-10">
       <Trilha
         itens={[
           { rotulo: "Início", href: "/" },
@@ -99,59 +95,45 @@ export default async function CheckoutPage() {
           ...(escolha || melhorEnvioAtivo
             ? [{ rotulo: "Entrega", href: "/escolher-entrega" }]
             : []),
-          { rotulo: "Fechar pedido" },
+          { rotulo: "Finalizar compra" },
         ]}
-        className="mb-5"
+        className="mb-4"
       />
 
-      <header className="max-w-2xl">
-        <h1 className="manchete text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">Fechar pedido</h1>
-        <p className="texto-guia mt-3 text-graf-600">
-          Cinco etapas curtas. Você confere tudo antes de confirmar, e nada é cobrado até lá.
-        </p>
+      <header className="flex max-w-5xl flex-col gap-3 border-b border-graf-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <h1 className="manchete text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">Finalizar compra</h1>
+          <p className="mt-2.5 max-w-xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+            Preencha os dados, confira entrega e pagamento e revise tudo antes de confirmar.
+          </p>
+        </div>
+
         {escolha || melhorEnvioAtivo ? (
           <Link
             href="/escolher-entrega"
-            className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-jb-700 underline-offset-4 hover:underline"
+            className="foco-jb inline-flex min-h-10 shrink-0 items-center text-sm font-semibold text-jb-700 hover:underline"
           >
-            Alterar transportadora ou forma de entrega
+            Alterar entrega
           </Link>
         ) : null}
       </header>
 
-      <ul className="mt-4 flex flex-wrap gap-x-8 gap-y-2.5 text-sm text-graf-600">
-        <li className="flex items-center gap-2">
-          <Truck className="size-4 shrink-0 text-graf-500" aria-hidden />
-          {retiradaEscolhida
-            ? "Retirada na JB selecionada"
-            : escolha?.kind === "melhor_envio"
-              ? "Transportadora selecionada e recotada pelo CEP"
-              : "Frete calculado pelo CEP no checkout"}
-        </li>
-        <li className="flex items-center gap-2">
-          <Headset className="size-4 shrink-0 text-graf-500" aria-hidden />
-          Equipe técnica própria em São Paulo
-        </li>
-        <li className="flex items-center gap-2">
-          <ShieldCheck className="size-4 shrink-0 text-graf-500" aria-hidden />
-          Acompanhamento do pedido do pagamento à entrega
-        </li>
-      </ul>
+      <p className="mt-3 flex max-w-2xl items-start gap-2 text-[0.8125rem] leading-5 text-graf-500">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+        O pedido só é confirmado depois da revisão final. Valores de frete e pagamento são conferidos no servidor.
+      </p>
 
       {simulado ? (
-        <div className="mt-6 flex items-start gap-3 rounded-xl border border-dashed border-warn-500/50 bg-warn-50 px-4 py-3.5">
+        <div className="mt-5 flex max-w-3xl items-start gap-3 rounded-xl border border-dashed border-warn-500/50 bg-warn-50 px-4 py-3.5">
           <FlaskConical className="mt-0.5 size-5 shrink-0 text-warn-700" aria-hidden />
-          <div className="min-w-0 text-sm leading-relaxed text-graf-700">
+          <div className="min-w-0 text-sm leading-5 text-graf-700">
             <p className="font-bold text-warn-700">Ambiente de demonstração</p>
-            <p className="mt-1">
-              Você pode percorrer o pedido inteiro, mas o pagamento não é processado de verdade:
-              nenhuma cobrança acontece e nenhum dado de cartão é pedido.
-            </p>
+            <p className="mt-1">Nenhuma cobrança real é feita e nenhum dado de cartão é solicitado.</p>
           </div>
         </div>
       ) : null}
 
-      <div className="mt-8 grid gap-8 pb-32 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start lg:gap-10 lg:pb-0">
+      <div className="mt-7 grid gap-7 pb-32 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-9 lg:pb-0">
         <Checkout
           logado={Boolean(sessao)}
           nomeCliente={sessao?.name ?? ""}
@@ -171,8 +153,6 @@ export default async function CheckoutPage() {
             uf: endereco?.state ?? "",
             referencia: endereco?.reference ?? "",
           }}
-          // Com Melhor Envio escolhido, trocar entrega/retirada aqui quebraria a
-          // recotação. No modo legado, o checkout mantém a escolha que já existia.
           retiradaDisponivel={retiradaNoCheckout}
           enderecoJb={enderecoCompleto(s)}
           instrucoesRetirada={s.retirada_instrucoes}

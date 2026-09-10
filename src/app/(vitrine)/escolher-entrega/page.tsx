@@ -29,24 +29,23 @@ export default async function EscolherEntregaPage() {
     : null;
 
   return (
-    <div className="container-jb py-8 lg:py-12">
+    <div className="container-jb py-7 lg:py-10">
       <Trilha
         itens={[
           { rotulo: "Início", href: "/" },
           { rotulo: "Carrinho", href: "/carrinho" },
           { rotulo: "Entrega" },
         ]}
-        className="mb-5"
+        className="mb-4"
       />
 
-      <header className="mb-8 max-w-3xl">
-        <p className="text-sm font-bold uppercase tracking-[0.12em] text-jb-700">Antes do checkout</p>
-        <h1 className="manchete mt-2 text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">
-          Escolha a transportadora e veja o frete real
+      <header className="mb-7 max-w-2xl border-b border-graf-200 pb-5">
+        <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.1em] text-jb-600">Entrega</p>
+        <h1 className="manchete mt-1.5 text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">
+          Escolha como receber
         </h1>
-        <p className="texto-guia mt-3 text-graf-600">
-          A cotação usa peso, dimensões e quantidade cadastrados nos produtos. Depois da escolha,
-          o checkout confere o preço novamente no servidor antes de abrir a cobrança.
+        <p className="mt-2.5 max-w-xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+          Informe o CEP para comparar as opções disponíveis. A modalidade escolhida é conferida novamente antes do pagamento.
         </p>
       </header>
 
