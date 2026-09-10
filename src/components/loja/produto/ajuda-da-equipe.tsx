@@ -59,7 +59,7 @@ export function AjudaDaEquipe({
               href={linkWhatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className="foco-jb group inline-flex min-h-10 items-center gap-2 rounded-lg bg-jb-600 px-3.5 text-[0.8125rem] font-bold text-white transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-700"
+              className="foco-jb group inline-flex min-h-11 items-center gap-2 rounded-lg bg-jb-600 px-3.5 text-[0.8125rem] font-bold text-white transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-700"
             >
               <MessageCircle className="size-4 shrink-0" aria-hidden />
               WhatsApp
@@ -73,7 +73,7 @@ export function AjudaDaEquipe({
           {linkTelefone ? (
             <a
               href={linkTelefone}
-              className="foco-jb inline-flex min-h-10 items-center gap-2 rounded-lg border border-jb-100 bg-white px-3.5 text-[0.8125rem] font-semibold text-graf-900 transition-colors hover:border-jb-200 hover:bg-jb-50"
+              className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border border-jb-100 bg-white px-3.5 text-[0.8125rem] font-semibold text-graf-900 transition-colors hover:border-jb-200 hover:bg-jb-50"
             >
               <Phone className="size-4 shrink-0 text-jb-600" aria-hidden />
               {telefone}
@@ -83,7 +83,7 @@ export function AjudaDaEquipe({
           {email ? (
             <Link
               href="/contato"
-              className="foco-jb inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:bg-white hover:text-jb-700"
+              className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:bg-white hover:text-jb-700"
             >
               <Mail className="size-4 text-jb-600" aria-hidden />
               Escrever
