@@ -83,6 +83,19 @@
   font-size: 0.9rem;
 }
 
+/* O `outline: 0` acima existe para o anel do navegador não cortar a pílula.
+   Só que o realce de `:focus-within` mora no contêiner, e quem recebe o foco
+   é o campo: o botão ao lado mantém o anel nativo, então hoje o teclado vê um
+   indicador forte no botão e nenhum no campo. O anel volta para dentro
+   (`outline-offset: -2px`), porque entre os 2.75rem do campo e os 2.91rem
+   úteis da pílula sobra 1px de cada lado — desenhado para fora ele encostaria
+   na borda. */
+.busca input:focus-visible {
+  outline: 2px solid var(--color-jb-500);
+  outline-offset: -2px;
+  border-radius: 0.55rem;
+}
+
 .busca input::placeholder {
   color: var(--color-graf-500);
 }

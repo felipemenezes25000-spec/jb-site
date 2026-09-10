@@ -156,7 +156,11 @@ export function ControlesColecao({
                 href={href}
                 scroll={false}
                 prefetch={false}
-                aria-pressed={selecionado}
+                /* `aria-pressed` só existe em role="button"; num link o axe
+                   acusa como crítico (`aria-allowed-attr`), e o leitor de tela
+                   ignora o estado. O equivalente válido para "este é o filtro
+                   aplicado" é `aria-current`. */
+                aria-current={selecionado ? "true" : undefined}
                 className={cn(
                   "foco-jb inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[0.8125rem] font-semibold transition-colors",
                   selecionado
