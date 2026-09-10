@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, SearchX, Stethoscope, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
-import { Cartao, Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
+import { Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
 import { GradeMarketplace } from "@/components/loja/marketplace/grade-marketplace";
 import type { ParcelamentoMarketplace } from "@/components/loja/marketplace/tipos";
 import { Secao } from "@/components/ui/secao";
@@ -20,31 +20,12 @@ import { ROTULO_EQUIPAMENTO } from "@/lib/rotulos-equipamento";
 import { metadataDePagina } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- * Ver docs/evolucao-jb/cobertura.md, fase 5.
- */
 export const instant = false;
-
-/* ============================================================================
-   Busca universal
-
-   Quatro grupos numa página só: catálogo, Central Técnica, serviços e — para
-   quem tem sessão — os equipamentos da própria clínica.
-
-   A intenção da consulta **ordena** os grupos e não esconde nenhum. Quem
-   digita "compressor fazendo barulho" vê o texto técnico primeiro e os
-   compressores logo abaixo; quem digita "compressor 40 litros" vê o contrário.
-   Nenhuma das duas buscas fica sem o outro lado.
-
-   `noindex`: página de resultado não é conteúdo, e uma busca indexada compete
-   com a própria categoria que ela lista.
-   ============================================================================ */
 
 export const metadata: Metadata = {
   ...metadataDePagina({
     titulo: "Busca",
-    descricao: "Equipamentos, textos técnicos, serviços e o prontuário da sua clínica.",
+    descricao: "Produtos, conteúdo técnico, serviços e equipamentos da sua clínica em uma única busca.",
     caminho: "/busca",
   }),
   robots: { index: false, follow: true },
@@ -62,17 +43,14 @@ function CabecalhoDoGrupo({
   quantidade: number;
 }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-      {/* O `id` vem daqui e o `aria-labelledby` da seção aponta para ele.
-          Sem esta linha o rótulo da seção referencia um id inexistente, e o
-          leitor de tela anuncia a região sem nome. */}
-      <h2 id={`g-${grupo}`} className="text-title texto-forte">
+    <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1.5 border-b border-graf-200 pb-3">
+      <h2 id={`g-${grupo}`} className="text-xl font-extrabold tracking-[-0.02em] text-graf-950">
         {ROTULO_DO_GRUPO[grupo]}
-        <span className="tabular ml-2 text-base font-semibold text-graf-500">{quantidade}</span>
+        <span className="tabular ml-2 text-sm font-semibold text-graf-500">{quantidade}</span>
       </h2>
-      {/* Por que este grupo é útil para ESTA busca. O escopo pede que o
-          resultado explique a própria pertinência. */}
-      <p className="text-[0.875rem] text-graf-500">{porQueEsteGrupo(grupo, intencao)}</p>
+      <p className="max-w-xl text-[0.8125rem] leading-5 text-graf-500">
+        {porQueEsteGrupo(grupo, intencao)}
+      </p>
     </div>
   );
 }
@@ -85,9 +63,7 @@ function Grupo({
 }: {
   grupo: GrupoDeResultado;
   resultado: ResultadoUniversal;
-  /** O termo buscado, para levar junto ao catálogo. */
   consulta: string;
-  /** Regras de parcelamento da loja — as mesmas do catálogo. */
   parcelamento: ParcelamentoMarketplace;
 }) {
   if (grupo === "produtos") {
@@ -102,13 +78,12 @@ function Grupo({
         <div className="mt-5 max-w-[112rem]">
           <GradeMarketplace produtos={resultado.produtos} parcelamento={parcelamento} />
         </div>
-
         <p className="mt-4">
           <Link
             href={`/loja?q=${encodeURIComponent(consulta)}`}
-            className="foco-jb inline-flex min-h-11 items-center gap-2 text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
+            className="foco-jb inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-jb-700 underline-offset-4 hover:underline"
           >
-            Refinar no catálogo, com filtros
+            Ver no catálogo com filtros
             <ArrowRight className="size-4" aria-hidden />
           </Link>
         </p>
@@ -125,27 +100,25 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.conteudo.length}
         />
-        <ul className="mt-4 space-y-3">
+        <ul className="divide-y divide-graf-150">
           {resultado.conteudo.map((artigo) => (
             <li key={artigo.slug}>
-              <Cartao>
               <Link
                 href={`/central-tecnica/${artigo.slug}`}
-                className="flex items-start gap-3.5 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                className="foco-jb flex min-h-16 items-start gap-3.5 rounded-lg px-1 py-4 transition-colors hover:bg-graf-50 sm:px-3"
               >
-                <BookOpen className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
+                <BookOpen className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-semibold text-graf-950">
+                  <span className="block text-[0.9375rem] font-bold text-graf-950">
                     {artigo.titulo}
                   </span>
                   {artigo.chamada ? (
-                    <span className="mt-0.5 block text-[0.875rem] leading-relaxed text-graf-600">
+                    <span className="mt-0.5 block text-[0.8125rem] leading-5 text-graf-600">
                       {artigo.chamada}
                     </span>
                   ) : null}
                 </span>
               </Link>
-              </Cartao>
             </li>
           ))}
         </ul>
@@ -162,27 +135,25 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.servicos.length}
         />
-        <ul className="mt-4 space-y-3">
+        <ul className="divide-y divide-graf-150">
           {resultado.servicos.map((servico) => (
             <li key={servico.href}>
-              <Cartao>
               <Link
                 href={servico.href}
-                className="flex items-start gap-3.5 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                className="foco-jb flex min-h-16 items-start gap-3.5 rounded-lg px-1 py-4 transition-colors hover:bg-graf-50 sm:px-3"
               >
-                <Wrench className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
+                <Wrench className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-semibold text-graf-950">
+                  <span className="block text-[0.9375rem] font-bold text-graf-950">
                     {servico.titulo}
                   </span>
                   {servico.descricao ? (
-                    <span className="mt-0.5 block text-[0.875rem] leading-relaxed text-graf-600">
+                    <span className="mt-0.5 block text-[0.8125rem] leading-5 text-graf-600">
                       {servico.descricao}
                     </span>
                   ) : null}
                 </span>
               </Link>
-              </Cartao>
             </li>
           ))}
         </ul>
@@ -190,9 +161,6 @@ function Grupo({
     );
   }
 
-  /* Equipamentos da própria clínica. A consulta que os produz filtra por
-     `customerId` da sessão; sem sessão a lista vem vazia e este bloco não
-     existe. Nunca há sugestão de equipamento de terceiro. */
   if (resultado.meusEquipamentos.length === 0) return null;
 
   return (
@@ -202,21 +170,20 @@ function Grupo({
         intencao={resultado.intencao}
         quantidade={resultado.meusEquipamentos.length}
       />
-      <ul className="mt-4 space-y-3">
+      <ul className="divide-y divide-graf-150">
         {resultado.meusEquipamentos.map((equipamento) => (
           <li key={equipamento.id}>
-            <Cartao>
             <Link
               href={`/minha-jb/equipamentos/${equipamento.id}`}
-              className="flex items-center justify-between gap-4 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+              className="foco-jb flex min-h-16 items-center justify-between gap-4 rounded-lg px-1 py-4 transition-colors hover:bg-graf-50 sm:px-3"
             >
               <span className="flex min-w-0 items-start gap-3.5">
-                <Stethoscope className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
+                <Stethoscope className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-semibold text-graf-950">
+                  <span className="block text-[0.9375rem] font-bold text-graf-950">
                     {equipamento.nome}
                   </span>
-                  <span className="mt-0.5 block text-[0.875rem] text-graf-600">
+                  <span className="mt-0.5 block text-[0.8125rem] text-graf-600">
                     {[equipamento.marca, equipamento.modelo].filter(Boolean).join(" ") ||
                       "Marca e modelo não cadastrados"}
                   </span>
@@ -226,7 +193,6 @@ function Grupo({
                 {ROTULO_EQUIPAMENTO[equipamento.situacao as keyof typeof ROTULO_EQUIPAMENTO]}
               </Etiqueta>
             </Link>
-            </Cartao>
           </li>
         ))}
       </ul>
@@ -246,20 +212,20 @@ export default async function BuscaPage({
   if (!validada.ok) {
     return (
       <Secao espaco="sm">
-        <Trilha itens={TRILHA} className="mb-6" />
+        <Trilha itens={TRILHA} className="mb-5" />
         <TituloSecao
           como="h1"
           sobretitulo="Busca"
           titulo="O que você procura?"
           descricao={
             validada.motivo === "curta"
-              ? "Escreva pelo menos três letras. Com menos que isso, o resultado seria o catálogo inteiro."
-              : "Procure por equipamento, marca, modelo — ou descreva o que está acontecendo com o aparelho. A busca entende as duas coisas."
+              ? "Escreva pelo menos três letras para encontrar resultados úteis."
+              : "Procure por produto, marca ou modelo. Para assistência técnica, você também pode descrever o sintoma do equipamento."
           }
         />
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap gap-2.5">
           <LinkBotao href="/loja" variante="secundario" tamanho="sm">
-            Ver o catálogo
+            Ver catálogo
           </LinkBotao>
           <LinkBotao href="/central-tecnica" variante="secundario" tamanho="sm">
             Central Técnica
@@ -272,40 +238,39 @@ export default async function BuscaPage({
     );
   }
 
-  /* O parcelamento sai da configuração da loja, igual ao catálogo: prometer
-     12× aqui e 6× na ficha seria mentira de vitrine. */
   const [resultado, s] = await Promise.all([buscarTudo(validada.consulta), getSettings()]);
   const parcelamento: ParcelamentoMarketplace = {
     max: Math.min(12, Math.max(1, Number(s.parcelas_max) || 1)),
     minimoCents: paraCentavos(s.parcela_minima),
   };
   const ordem = ORDEM_POR_INTENCAO[resultado.intencao];
+  const gruposComResultado = ordem.filter((grupo) => temAlgo(grupo, resultado)).length;
 
   return (
     <>
       <Secao espaco="sm">
-        <Trilha itens={TRILHA} className="mb-6" />
+        <Trilha itens={TRILHA} className="mb-5" />
         <TituloSecao
           como="h1"
           sobretitulo="Busca"
           titulo={`Resultados para “${validada.consulta}”`}
           descricao={
             resultado.total > 0
-              ? `${resultado.total} ${resultado.total === 1 ? "resultado" : "resultados"} em ${ordem.filter((grupo) => temAlgo(grupo, resultado)).length} ${ordem.filter((grupo) => temAlgo(grupo, resultado)).length === 1 ? "categoria" : "categorias"}.`
+              ? `${resultado.total} ${resultado.total === 1 ? "resultado" : "resultados"} em ${gruposComResultado} ${gruposComResultado === 1 ? "categoria" : "categorias"}.`
               : undefined
           }
         />
 
         {resultado.total === 0 ? (
           <Vazio
-            className="mt-8"
+            className="mt-7"
             icone={SearchX}
             titulo="Nada encontrado com esse termo"
-            descricao="Tente outra palavra, ou descreva o que está acontecendo com o equipamento. Se for um sintoma, a equipe responde por chamado — sem exigir cadastro."
+            descricao="Tente outro nome, marca ou modelo. Se você estiver descrevendo um problema de um equipamento, a equipe técnica também pode ajudar por chamado."
             acao={
               <div className="flex flex-wrap justify-center gap-2">
                 <LinkBotao href="/loja" tamanho="sm" variante="secundario">
-                  Ver o catálogo
+                  Ver catálogo
                 </LinkBotao>
                 <LinkBotao href="/assistencia-tecnica/solicitar" tamanho="sm">
                   Abrir chamado
@@ -314,7 +279,7 @@ export default async function BuscaPage({
             }
           />
         ) : (
-          <div className="mt-8 space-y-10">
+          <div className="mt-7 space-y-9 lg:space-y-11">
             {ordem.map((grupo) => (
               <Grupo
                 key={grupo}
@@ -328,16 +293,15 @@ export default async function BuscaPage({
         )}
       </Secao>
 
-      {/* Quem buscou um sintoma sai daqui com o caminho do atendimento à
-          vista, independentemente de ter achado texto ou não. */}
       {resultado.intencao === "problema" || resultado.intencao === "meu_equipamento" ? (
         <Secao fundo="clara" espaco="sm">
-          <div className="flex flex-wrap items-center justify-between gap-6">
+          <div className="flex flex-wrap items-center justify-between gap-5">
             <div className="max-w-xl">
-              <h2 className="text-title texto-forte">Prefere falar com a equipe?</h2>
-              <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
-                Descrever o sintoma por escrito costuma resolver mais rápido do que procurar o
-                texto certo — e você pode anexar foto ou vídeo.
+              <h2 className="text-xl font-extrabold tracking-[-0.02em] text-graf-950">
+                Precisa de ajuda técnica?
+              </h2>
+              <p className="mt-1.5 text-sm leading-6 text-graf-600">
+                Envie o sintoma e, se quiser, uma foto ou vídeo. A equipe recebe o contexto sem você precisar procurar o artigo certo.
               </p>
             </div>
             <LinkBotao href="/assistencia-tecnica/solicitar">
