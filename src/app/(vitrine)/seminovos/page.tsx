@@ -17,30 +17,20 @@ import { PUBLICADO, dadosDaColecao } from "@/lib/catalogo";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- *
- * `instant = false` desliga a validação de navegação instantânea para este
- * segmento. É a saída documentada para migrar rota a rota
- * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
- * "Following validation"): a casca da loja já foi migrada e prerenderiza, e
- * cada página vai deixando de precisar disto conforme a leitura dela ganha
- * `use cache` ou um `<Suspense>`.
- */
 export const instant = false;
 
 const CAMINHO = "/seminovos";
 
 const TRILHA = [
   { rotulo: "Início", href: "/" },
-  { rotulo: "Equipamentos", href: "/loja" },
-  { rotulo: "Seminovos revisados pela JB" },
+  { rotulo: "Loja", href: "/loja" },
+  { rotulo: "Seminovos JB" },
 ];
 
 export const metadata: Metadata = metadataDePagina({
-  titulo: "Seminovos revisados pela JB",
+  titulo: "Seminovos JB",
   descricao:
-    "Cada anúncio é uma unidade específica: passa pela bancada da JB antes de entrar no catálogo e é publicada com o que a equipe verificou.",
+    "Unidades seminovas anunciadas individualmente, com os dados que a equipe registrou para cada unidade.",
   caminho: CAMINHO,
 });
 
@@ -50,15 +40,6 @@ type Fato = {
   texto: string;
 };
 
-/**
- * O que a JB de fato registra nas unidades seminovas que estão publicadas.
- *
- * Nenhuma linha desta faixa é escrita à mão: cada uma só entra se existir ao
- * menos uma unidade no catálogo com aquele campo preenchido. Sem seminovo
- * cadastrado, a lista volta vazia e a faixa inteira desaparece — é melhor não
- * falar de revisão nenhuma do que prometer um cuidado que não está anotado
- * em lugar algum.
- */
 async function fatosDaRevisao(): Promise<Fato[]> {
   try {
     const unidades = await prisma.inventoryUnit.findMany({
@@ -83,7 +64,7 @@ async function fatosDaRevisao(): Promise<Fato[]> {
         icone: PackageCheck,
         titulo: "Uma unidade por anúncio",
         texto:
-          "Seminovo não é lote. O equipamento da página é aquele equipamento — com a história dele, e não a de um modelo genérico.",
+          "Cada anúncio representa uma unidade específica. As informações da página pertencem àquela unidade, não a um lote genérico.",
       },
     ];
 
@@ -92,7 +73,7 @@ async function fatosDaRevisao(): Promise<Fato[]> {
         icone: ScanLine,
         titulo: "Número de série",
         texto:
-          "A unidade entra no catálogo identificada pelo número de série, e é a mesma que sai daqui para a sua clínica.",
+          "Quando o número de série está registrado, ele aparece na identificação da unidade antes da compra.",
       });
     }
 
@@ -101,7 +82,7 @@ async function fatosDaRevisao(): Promise<Fato[]> {
         icone: CalendarClock,
         titulo: "Ano de fabricação",
         texto:
-          "Confirmado no próprio equipamento, o ano de fabricação vai para a ficha da unidade. Não confirmado, ele não é publicado.",
+          "O ano só aparece quando está confirmado no cadastro da unidade. Sem confirmação, a informação não é exibida.",
       });
     }
 
@@ -110,7 +91,7 @@ async function fatosDaRevisao(): Promise<Fato[]> {
         icone: Gauge,
         titulo: "Uso acumulado",
         texto:
-          "Nos equipamentos que contam horas ou ciclos de trabalho, o número lido na revisão é publicado junto com a unidade.",
+          "Nos equipamentos que registram horas ou ciclos, o dado cadastrado pode acompanhar a unidade na página.",
       });
     }
 
@@ -119,7 +100,7 @@ async function fatosDaRevisao(): Promise<Fato[]> {
         icone: ClipboardCheck,
         titulo: "Checklist da revisão",
         texto:
-          "Item a item: o que foi verificado, o que foi reparado e o que foi substituído antes de o equipamento voltar a ser vendido.",
+          "Quando existe checklist cadastrado, a página da unidade mostra o que foi verificado durante a revisão.",
       });
     }
 
@@ -130,9 +111,9 @@ async function fatosDaRevisao(): Promise<Fato[]> {
     ) {
       fatos.push({
         icone: NotebookPen,
-        titulo: "Estado descrito por escrito",
+        titulo: "Condição descrita",
         texto:
-          "Marcas de uso, detalhes de acabamento e observações da inspeção, escritos por quem revisou a unidade.",
+          "Marcas de uso e observações da inspeção ficam registradas por escrito quando foram informadas pela equipe.",
       });
     }
 
@@ -141,7 +122,7 @@ async function fatosDaRevisao(): Promise<Fato[]> {
         icone: Camera,
         titulo: "Fotos da unidade",
         texto:
-          "Além das imagens do modelo, a página mostra fotos da própria unidade que está à venda.",
+          "Quando há mídia própria cadastrada, a página mostra imagens da unidade que está à venda.",
       });
     }
 
@@ -150,7 +131,7 @@ async function fatosDaRevisao(): Promise<Fato[]> {
         icone: ShieldCheck,
         titulo: "Garantia da unidade",
         texto:
-          "Quando a unidade sai com prazo de garantia da JB, o prazo fica escrito na ficha dela antes da compra.",
+          "Se houver prazo de garantia cadastrado para a unidade, ele aparece na página antes da compra.",
       });
     }
 
@@ -171,10 +152,7 @@ export default async function Pagina({
     fatosDaRevisao(),
   ]);
 
-  /* A linha técnica do topo é montada com o que a apuração encontrou nas
-     unidades publicadas — não é promessa escrita à mão. Sem seminovo no
-     catálogo, sobra só a contagem. */
-  const promessas = fatos.slice(0, 3).map((fato) => fato.titulo.toLowerCase());
+  const destaques = fatos.slice(0, 3).map((fato) => fato.titulo.toLowerCase());
 
   return (
     <div className="vitrine">
@@ -182,11 +160,11 @@ export default async function Pagina({
 
       <Vitrine
         sobretitulo="Seminovos JB"
-        titulo="Seminovos revisados pela JB"
+        titulo="Seminovos revisados"
         descricao={`${colecao.totalSeminovos} ${
           colecao.totalSeminovos === 1 ? "unidade disponível" : "unidades disponíveis"
         }. Cada anúncio representa uma unidade específica${
-          promessas.length ? `, com ${promessas.join(", ")}` : ""
+          destaques.length ? `, com ${destaques.join(", ")}` : ""
         }.`}
         trilha={TRILHA}
         caminho={CAMINHO}
@@ -198,7 +176,7 @@ export default async function Pagina({
             href: categoria.href,
             quantidade: categoria.quantidade,
           })),
-          { rotulo: "Equipamentos novos", href: "/loja", quantidade: colecao.totalNovos },
+          { rotulo: "Produtos novos", href: "/loja", quantidade: colecao.totalNovos },
           ...(colecao.vendidos
             ? [
                 {
@@ -213,41 +191,41 @@ export default async function Pagina({
         travarCondicao
       />
 
-      {/* A faixa só existe quando há o que mostrar: ela é montada a partir dos
-          campos realmente preenchidos nas unidades publicadas. */}
       {fatos.length >= 2 ? (
-        <section className="border-t border-graf-200 bg-surface-muted">
-          <div className="container-jb py-14 lg:py-20">
-            <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
+        <section className="border-t border-graf-200 bg-white">
+          <div className="container-jb py-10 lg:py-12">
+            <div className="flex flex-wrap items-end justify-between gap-5 border-b border-graf-200 pb-5">
               <div className="max-w-2xl">
-                <p className="micro text-jb-600">Antes de entrar no catálogo</p>
-                <h2 className="manchete mt-4 text-[clamp(1.75rem,1.3rem+1.9vw,2.5rem)] text-graf-950">
-                  O que fica registrado em cada unidade
+                <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-600">
+                  Transparência da unidade
+                </p>
+                <h2 className="mt-2 text-[clamp(1.5rem,1.25rem+1vw,2rem)] font-extrabold tracking-[-0.03em] text-graf-950">
+                  O que pode acompanhar cada seminovo
                 </h2>
-                <p className="mt-4 text-[0.9375rem] leading-relaxed text-graf-600">
-                  Comprar seminovo é uma decisão técnica, e decisão técnica precisa de
-                  informação por escrito. É por isso que a revisão de cada equipamento vira
-                  registro — e o que não foi registrado não vira promessa.
+                <p className="mt-2 text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+                  A página mostra somente os dados realmente registrados para aquela unidade.
                 </p>
               </div>
 
               <Link
                 href="/assistencia-tecnica"
-                className="micro flex h-12 items-center gap-2 rounded-lg border border-graf-300 bg-white px-5 text-graf-800 transition-colors hover:border-graf-450 hover:bg-graf-50"
+                className="foco-jb inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-graf-700 transition-colors hover:text-jb-700"
               >
-                Conheça a assistência técnica
-                <ArrowRight className="size-3.5" aria-hidden />
+                Conhecer a assistência técnica
+                <ArrowRight className="size-4" aria-hidden />
               </Link>
             </div>
 
-            <ul className="mt-12 grid gap-x-10 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-6 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
               {fatos.map((fato) => (
-                <li key={fato.titulo} className="border-t border-graf-200 pt-5">
-                  <fato.icone className="size-5 text-jb-600" aria-hidden />
-                  <h3 className="mt-4 text-base font-bold text-graf-950">{fato.titulo}</h3>
-                  <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
-                    {fato.texto}
-                  </p>
+                <li key={fato.titulo} className="flex items-start gap-3 border-b border-graf-100 pb-5 lg:border-b-0 lg:pb-0">
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">
+                    <fato.icone className="size-4.5" aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-graf-950">{fato.titulo}</h3>
+                    <p className="mt-1 text-sm leading-6 text-graf-600">{fato.texto}</p>
+                  </div>
                 </li>
               ))}
             </ul>

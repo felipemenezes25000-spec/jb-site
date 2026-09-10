@@ -13,27 +13,13 @@ import { logoDaMarca } from "@/lib/marcas";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- *
- * `instant = false` desliga a validação de navegação instantânea para este
- * segmento. É a saída documentada para migrar rota a rota
- * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
- * "Following validation"): a casca da loja já foi migrada e prerenderiza, e
- * cada página vai deixando de precisar disto conforme a leitura dela ganha
- * `use cache` ou um `<Suspense>`.
- *
- * A lista do que ainda depende desta linha está em
- * docs/evolucao-jb/cobertura.md, fase 5. Ela é pendência declarada, não
- * conclusão.
- */
 export const instant = false;
 
 const TRILHA = [{ rotulo: "Início", href: "/" }, { rotulo: "Marcas" }];
 
 export const metadata: Metadata = metadataDePagina({
   titulo: "Marcas",
-  descricao: "Marcas de equipamentos odontológicos vendidas e atendidas pela JB.",
+  descricao: "Marcas com produtos odontológicos publicados no catálogo da JB.",
   caminho: "/marcas",
 });
 
@@ -53,19 +39,10 @@ async function buscarMarcas(): Promise<Marca[] | null> {
         slug: true,
         name: true,
         logo: { select: { url: true, alt: true } },
-        /* "3 itens no catálogo" precisa bater com a lista da marca, e a lista
-           não mostra unidade já vendida. */
         _count: { select: { products: { where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA } } } },
       },
     });
 
-    /* A parede mostrava "Schuster" duas vezes — uma com 3 equipamentos e
-       outra sob consulta — porque o banco tem dois cadastros com o mesmo
-       nome, herdados de cargas diferentes. Para quem visita não existe um
-       cadastro certo: existem duas placas iguais, e escolher a errada leva a
-       uma prateleira vazia. Aqui vira uma placa só, a do cadastro que tem os
-       equipamentos. A limpeza definitiva é no banco:
-       `pnpm duplicatas:prever`. */
     const unificadas = unificarPorNome(
       linhas.map((linha) => ({
         slug: linha.slug,
@@ -86,57 +63,37 @@ async function buscarMarcas(): Promise<Marca[] | null> {
   }
 }
 
-/**
- * Painel de marca.
- *
- * A placa branca ocupa a maior parte do cartão e o logotipo é o que se vê
- * primeiro — uma parede de marcas, não uma lista de links.
- *
- * Sem logotipo enviado, a placa mostra o NOME por extenso, em caixa alta,
- * como uma marca-palavra. Antes mostrava as iniciais, e a parede exibia
- * "KAV", "GNA", "DA", "OLS", "CRI" — cinco siglas que ninguém reconhece, ao
- * lado de dois logotipos de verdade. Sigla parece imagem que não carregou;
- * "CRISTÓFOLI" escrito é uma marca sem arte enviada, que é o que de fato é.
- * A repetição com a linha de baixo se resolve pelo peso: placa em cinza
- * médio, nome do cartão em preto — e o nome do cartão continua sendo o que
- * o leitor de tela anuncia.
- */
 function CartaoMarca({ marca }: { marca: Marca }) {
   return (
     <Link
       href={`/marcas/${marca.slug}`}
       className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-graf-200 bg-white transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
     >
-      <span className="flex h-28 items-center justify-center px-5 sm:h-32 sm:px-7">
+      <span className="flex h-24 items-center justify-center px-5 sm:h-28 sm:px-6">
         {logoDaMarca(marca) ? (
-          /* Caixa óptica igual para todos: um logotipo largo e um compacto
-             pesavam diferente na parede porque só a altura estava limitada.
-             Com teto nos dois eixos, ALT e Sugmaster ocupam a mesma área. */
           <Image
             src={logoDaMarca(marca)!.url}
             alt=""
             width={240}
             height={96}
-            className="max-h-12 w-auto max-w-[80%] object-contain transition-transform duration-300 group-hover:scale-[1.03] sm:max-h-14"
+            className="max-h-11 w-auto max-w-[78%] object-contain transition-transform duration-300 group-hover:scale-[1.03] sm:max-h-12"
           />
         ) : (
           <span
             aria-hidden
-            className="text-pretty text-center text-lg font-extrabold uppercase leading-tight tracking-[0.02em] text-graf-500 sm:text-xl"
+            className="text-pretty text-center text-base font-extrabold uppercase leading-tight tracking-[0.02em] text-graf-500 sm:text-lg"
           >
             {marca.name}
           </span>
         )}
       </span>
 
-      <span className="flex flex-col gap-0.5 border-t border-graf-100 px-4 py-3.5">
-        <span className="text-[0.9375rem] font-bold leading-snug text-graf-950">
-          {marca.name}
-        </span>
+      <span className="flex flex-col gap-0.5 border-t border-graf-100 px-4 py-3">
+        <span className="text-sm font-bold leading-snug text-graf-950">{marca.name}</span>
         <span className="text-[0.8125rem] text-graf-500">
           {marca.itens === 0
             ? "Sob consulta"
-            : `${marca.itens} ${marca.itens === 1 ? "item no catálogo" : "itens no catálogo"}`}
+            : `${marca.itens} ${marca.itens === 1 ? "produto no catálogo" : "produtos no catálogo"}`}
         </span>
       </span>
     </Link>
@@ -152,44 +109,41 @@ export default async function MarcasPage() {
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
       <Secao espaco="sm">
-        <Trilha itens={TRILHA} className="mb-6" />
+        <Trilha itens={TRILHA} className="mb-5" />
         <TituloSecao
           como="h1"
           sobretitulo="Catálogo"
           titulo="Marcas"
-          descricao="As marcas que estão no catálogo da JB agora. A assistência técnica atende equipamento de marca que não aparece nesta lista — basta informar marca e modelo ao pedir o atendimento."
+          descricao="Explore as marcas com produtos publicados na loja. Para assistência técnica, a JB também pode atender equipamentos de marcas que não aparecem nesta lista."
         />
       </Secao>
 
-      <Secao fundo="clara" espaco="md" rotulo="Marcas do catálogo">
+      <Secao fundo="clara" espaco="sm" rotulo="Marcas do catálogo">
         {marcas === null ? (
-          <div className="rounded-xl border border-jb-200 bg-jb-50/60 px-6 py-14 text-center">
-            <span className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-white text-jb-600 shadow-card">
+          <div className="rounded-xl border border-jb-200 bg-jb-50/60 px-6 py-12 text-center">
+            <span className="mx-auto mb-4 flex size-11 items-center justify-center rounded-full bg-white text-jb-600 shadow-card">
               <TriangleAlert className="size-5" aria-hidden />
             </span>
-            <p className="text-base font-semibold text-graf-900">
-              Não foi possível carregar as marcas agora
-            </p>
+            <p className="text-base font-semibold text-graf-900">Não foi possível carregar as marcas</p>
             <p className="mx-auto mt-1.5 max-w-md text-sm leading-relaxed text-graf-600">
-              A falha é nossa, não sua. Tente de novo em instantes — o catálogo completo
-              continua disponível.
+              Tente novamente em instantes ou continue pelo catálogo completo.
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <div className="mt-5 flex flex-wrap justify-center gap-2.5">
               <LinkBotao href="/marcas" variante="secundario">
                 Tentar de novo
               </LinkBotao>
-              <LinkBotao href="/loja">Ver o catálogo</LinkBotao>
+              <LinkBotao href="/loja">Ver catálogo</LinkBotao>
             </div>
           </div>
         ) : marcas.length === 0 ? (
           <Vazio
             icone={Tag}
             titulo="Nenhuma marca publicada ainda"
-            descricao="As marcas aparecem aqui conforme os equipamentos vão sendo cadastrados. Enquanto isso, diga o que a clínica procura e a equipe responde com preço e prazo."
+            descricao="As marcas aparecem aqui conforme os produtos entram no catálogo. Enquanto isso, a equipe pode ajudar por orçamento."
             acao={
-              <div className="flex flex-wrap justify-center gap-3">
+              <div className="flex flex-wrap justify-center gap-2.5">
                 <LinkBotao href="/loja" variante="secundario">
-                  Ver o catálogo
+                  Ver catálogo
                 </LinkBotao>
                 <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
               </div>
@@ -197,28 +151,24 @@ export default async function MarcasPage() {
           />
         ) : (
           <>
-            {/* O número precisa descrever a parede que está logo abaixo. Contar
-                só as marcas com produto no ar enquanto a grade mostra todas as
-                publicadas fazia a frase brigar com o que se vê. */}
-            <p className="text-[0.8125rem] text-graf-500">
-              <span className="tabular font-bold text-graf-950">{marcas.length}</span>{" "}
-              {marcas.length === 1 ? "marca" : "marcas"}
+            <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-graf-200 pb-3">
+              <p className="text-sm text-graf-600">
+                <span className="tabular font-bold text-graf-950">{marcas.length}</span>{" "}
+                {marcas.length === 1 ? "marca publicada" : "marcas publicadas"}
+              </p>
               {comItens > 0 && comItens < marcas.length ? (
-                <>
-                  {" · "}
-                  <span className="tabular font-bold text-graf-950">{comItens}</span>{" "}
-                  {comItens === 1
-                    ? "com equipamento no catálogo"
-                    : "com equipamentos no catálogo"}
-                </>
+                <p className="text-[0.8125rem] text-graf-500">
+                  <span className="tabular font-bold text-graf-800">{comItens}</span>{" "}
+                  {comItens === 1 ? "com produto disponível" : "com produtos disponíveis"}
+                </p>
               ) : null}
-            </p>
+            </div>
 
             <Grade
               como="ul"
               espaco="md"
               colunas={{ base: 2, sm: 3, lg: 4, xl: 5 }}
-              className="mt-6"
+              className="mt-5"
             >
               {marcas.map((marca) => (
                 <li key={marca.slug} className="flex">
@@ -230,24 +180,24 @@ export default async function MarcasPage() {
         )}
       </Secao>
 
-      <Secao fundo="afundada" espaco="md">
-        <TituloSecao
-          tamanho="titulo"
-          sobretitulo="Fora da lista"
-          titulo="Procura equipamento de uma marca que não está aqui?"
-          descricao="A JB vende além do que está publicado e atende equipamento de outras marcas na bancada. Diga a marca, o modelo e o que a clínica precisa."
-          acao={
-            <div className="flex flex-wrap gap-3">
-              <LinkBotao href="/orcamento" variante="primario">
-                Pedir orçamento
-                <ArrowRight className="size-4" aria-hidden />
-              </LinkBotao>
-              <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario">
-                Pedir atendimento técnico
-              </LinkBotao>
-            </div>
-          }
-        />
+      <Secao espaco="sm">
+        <div className="flex flex-wrap items-center justify-between gap-5 border-t border-graf-200 pt-6">
+          <div className="max-w-2xl">
+            <h2 className="text-xl font-extrabold tracking-[-0.02em] text-graf-950">Não encontrou a marca?</h2>
+            <p className="mt-1.5 text-sm leading-6 text-graf-600">
+              Para compra, informe o produto ou modelo. Para assistência técnica, descreva o equipamento e o atendimento necessário.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            <LinkBotao href="/orcamento" variante="primario" tamanho="sm">
+              Pedir orçamento
+              <ArrowRight className="size-4" aria-hidden />
+            </LinkBotao>
+            <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario" tamanho="sm">
+              Assistência técnica
+            </LinkBotao>
+          </div>
+        </div>
       </Secao>
     </>
   );
