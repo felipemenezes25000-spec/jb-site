@@ -144,6 +144,20 @@ jobs:
     # paralelo. Fica anotado; primeiro o pipeline precisa fechar verde uma vez.
     timeout-minutes: 45
     needs: estatico
+    # ONDE ELE RODA, e por que não é em todo push.
+    #
+    # Este job leva mais de 30 minutos. Medindo a fatura de setembro: o
+    # repositório consumiu 2.160 minutos, e ~70 execuções deste job a 30
+    # minutos explicam praticamente o total sozinhas. Num dia de commits em
+    # rajada — e houve dias assim — ele rodava inteiro a cada push da branch de
+    # trabalho, sendo cancelado no meio pelo push seguinte e cobrando o tempo
+    # que já tinha rodado.
+    #
+    # Agora roda onde a resposta muda uma decisão: no pull_request, antes de
+    # entrar, e no push para main, depois de entrar. Push em branch de trabalho
+    # continua com lint, tipos, unitários, build e atomicidade — que é o
+    # retorno rápido que se quer enquanto se escreve.
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v5
