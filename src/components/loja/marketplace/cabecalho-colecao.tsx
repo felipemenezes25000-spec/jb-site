@@ -24,34 +24,36 @@ export function CabecalhoColecao({
   rotuloAtalhos: string;
 }) {
   return (
-    <header data-cabecalho-colecao className="pt-4 lg:pt-5">
+    <header data-cabecalho-colecao className="pt-2 lg:pt-3">
       <Trilha itens={trilha} />
 
-      <div className="mt-2 flex min-w-0 items-end justify-between gap-6 border-b border-graf-200 pb-4">
+      <div className="mt-3 grid min-w-0 gap-5 border-b border-graf-200 pb-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:gap-8 lg:pb-6">
         <div className="min-w-0 max-w-4xl">
           {sobretitulo ? (
-            <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.1em] text-jb-600">
+            <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-600">
               {sobretitulo}
             </p>
           ) : null}
-          <h1 className="mt-1 text-[clamp(1.75rem,1.3rem+2vw,2.75rem)] font-extrabold leading-[1.08] tracking-[-0.035em] text-graf-950">
+          <h1 className="mt-1.5 text-[clamp(1.85rem,1.4rem+1.8vw,2.85rem)] font-extrabold leading-[1.04] tracking-[-0.04em] text-graf-950">
             {titulo}
           </h1>
           {descricao ? (
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+            <p className="mt-2.5 max-w-3xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
               {descricao}
             </p>
           ) : null}
         </div>
 
         {imagem ? (
-          <Image
-            src={imagemProdutoSemFundo(imagem.url)}
-            alt={imagem.alt}
-            width={160}
-            height={64}
-            className="hidden h-12 w-auto max-w-40 shrink-0 object-contain sm:block"
-          />
+          <div className="hidden min-h-16 min-w-28 items-center justify-center rounded-xl border border-graf-150 bg-graf-50/60 px-4 sm:flex">
+            <Image
+              src={imagemProdutoSemFundo(imagem.url)}
+              alt={imagem.alt}
+              width={160}
+              height={64}
+              className="h-11 w-auto max-w-36 object-contain"
+            />
+          </div>
         ) : null}
       </div>
 
@@ -64,11 +66,11 @@ export function CabecalhoColecao({
             <Link
               key={atalho.href}
               href={atalho.href}
-              className="foco-jb flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-graf-200 bg-white px-3.5 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700"
+              className="foco-jb inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 text-[0.8125rem] font-semibold text-graf-750 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700"
             >
-              {atalho.rotulo}
+              <span>{atalho.rotulo}</span>
               {atalho.quantidade === undefined ? null : (
-                <span className="tabular text-xs font-medium text-graf-500">
+                <span className="tabular inline-flex min-w-5 items-center justify-center rounded-full bg-graf-100 px-1.5 py-0.5 text-[0.6875rem] font-bold text-graf-600">
                   {atalho.quantidade}
                 </span>
               )}
