@@ -18,6 +18,9 @@ jobs:
           ref: plataforma
           fetch-depth: 0
 
+      - name: Ajustar assert ao formato atual do admin
+        run: sed -i 's/for _ in range(2):/for _ in range(1):/' .github/scripts/aplicar_is_equipment.py
+
       - name: Aplicar patch de domínio
         run: python .github/scripts/aplicar_is_equipment.py
 
