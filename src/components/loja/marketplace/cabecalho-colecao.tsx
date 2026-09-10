@@ -66,7 +66,7 @@ export function CabecalhoColecao({
             <Link
               key={atalho.href}
               href={atalho.href}
-              className="foco-jb inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 text-[0.8125rem] font-semibold text-graf-750 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700"
+              className="foco-jb inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700"
             >
               <span>{atalho.rotulo}</span>
               {atalho.quantidade === undefined ? null : (
