@@ -2,40 +2,16 @@ import "server-only";
 
 import { calcularFreteTabelaDePedido, type Frete } from "@/lib/frete-core";
 import {
+  itemDaPdpParaCotacao,
+  type ProdutoParaCotacao,
+} from "@/lib/frete-produto-item";
+import {
   cotacoesMelhorEnvio,
   rotuloDaOpcaoMelhorEnvio,
   statusMelhorEnvio,
-  type ItemCotacaoMelhorEnvio,
 } from "@/lib/melhor-envio";
 
-export type ProdutoParaCotacao = {
-  id: string;
-  name: string;
-  priceCents: number;
-  weightGrams: number | null;
-  widthMm: number | null;
-  heightMm: number | null;
-  depthMm: number | null;
-};
-
-/**
- * A PDP sempre responde sobre UMA unidade do produto aberto.
- *
- * Esta função é pura de propósito: além de deixar a regra explícita, impede
- * que uma futura refatoração volte a buscar quantidade/itens no carrinho.
- */
-export function itemDaPdpParaCotacao(produto: ProdutoParaCotacao): ItemCotacaoMelhorEnvio {
-  return {
-    id: produto.id,
-    name: produto.name,
-    quantity: 1,
-    unitPriceCents: produto.priceCents,
-    weightGrams: produto.weightGrams,
-    widthMm: produto.widthMm,
-    heightMm: produto.heightMm,
-    depthMm: produto.depthMm,
-  };
-}
+export type { ProdutoParaCotacao } from "@/lib/frete-produto-item";
 
 function paraFreteMelhorEnvio(
   opcao: Awaited<ReturnType<typeof cotacoesMelhorEnvio>>[number],
