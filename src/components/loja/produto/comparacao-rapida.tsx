@@ -174,7 +174,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                   </span>
                   <Link
                     href={`/loja/${alternativa.slug}`}
-                    className="foco-jb mt-1 block line-clamp-2 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
+                    className="foco-jb mt-1 block min-h-11 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
                   >
                     {alternativa.name}
                   </Link>
@@ -244,7 +244,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                     ) : null}
                     <Link
                       href={`/loja/${produto.slug}`}
-                      className="foco-jb block text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
+                      className="foco-jb block min-h-11 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
                     >
                       {produto.name}
                     </Link>
