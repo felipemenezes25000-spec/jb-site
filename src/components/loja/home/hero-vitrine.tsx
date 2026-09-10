@@ -57,7 +57,7 @@ export function HeroVitrine({
             <button type="submit">Buscar</button>
           </form>
 
-          <div className={styles.acoes}>
+          <nav aria-label="Comece sua compra" className={styles.acoes}>
             <Link href="/loja" className={styles.acaoPrincipal}>
               Explorar loja
               <ArrowRight aria-hidden />
@@ -65,7 +65,7 @@ export function HeroVitrine({
             <Link href="/seminovos" className={styles.acaoSecundaria}>
               Ver seminovos
             </Link>
-          </div>
+          </nav>
 
           {numeros.length > 0 ? (
             <dl className={styles.numeros} aria-label="Catálogo JB">
