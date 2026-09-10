@@ -11,20 +11,6 @@ import { textoDeHtml } from "@/lib/html";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- *
- * `instant = false` desliga a validação de navegação instantânea para este
- * segmento. É a saída documentada para migrar rota a rota
- * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
- * "Following validation"): a casca da loja já foi migrada e prerenderiza, e
- * cada página vai deixando de precisar disto conforme a leitura dela ganha
- * `use cache` ou um `<Suspense>`.
- *
- * A lista do que ainda depende desta linha está em
- * docs/evolucao-jb/cobertura.md, fase 5. Ela é pendência declarada, não
- * conclusão.
- */
 export const instant = false;
 
 type Props = {
@@ -65,12 +51,6 @@ export default async function CategoriaPage({ params, searchParams }: Props) {
   });
   if (!categoria) notFound();
 
-  /* Categoria despublicada por unificação continua tendo link antigo, índice
-     de busca e favorito apontando para ela. Quando existe uma publicada com o
-     mesmo nome — que é o caso das duplicatas que `scripts/unificar-
-     duplicatas.ts` junta — o endereço velho leva para ela em vez de bater num
-     404. Sem homônima publicada, segue sendo 404, que é a resposta certa para
-     uma prateleira que a JB tirou do ar. */
   if (!categoria.published) {
     const publicadas = await prisma.category.findMany({
       where: { published: true },
@@ -88,20 +68,16 @@ export default async function CategoriaPage({ params, searchParams }: Props) {
     atalhosDeSubcategorias(categoria.slug),
   ]);
 
-  // categoria filha mostra a mãe na trilha — a pessoa sabe de onde veio
-  const pai =
-    categoria.parent && categoria.parent.published ? categoria.parent : null;
+  const pai = categoria.parent && categoria.parent.published ? categoria.parent : null;
 
   const trilha = [
     { rotulo: "Início", href: "/" },
-    { rotulo: "Equipamentos", href: "/loja" },
+    { rotulo: "Loja", href: "/loja" },
     ...(pai ? [{ rotulo: pai.name, href: `/categoria/${pai.slug}` }] : []),
     { rotulo: categoria.name },
   ];
 
   return (
-    /* `vitrine` liga o acabamento do painel de filtros e da barra de busca —
-       a mesma camada de passagem que /loja e /seminovos usam. */
     <div className="vitrine">
       <JsonLd dados={trilhaJsonLd(trilha)} />
 

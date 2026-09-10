@@ -7,34 +7,20 @@ import {
 } from "@/components/loja/vitrine";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- *
- * `instant = false` desliga a validação de navegação instantânea para este
- * segmento. É a saída documentada para migrar rota a rota
- * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
- * "Following validation"): a casca da loja já foi migrada e prerenderiza, e
- * cada página vai deixando de precisar disto conforme a leitura dela ganha
- * `use cache` ou um `<Suspense>`.
- *
- * A lista do que ainda depende desta linha está em
- * docs/evolucao-jb/cobertura.md, fase 5. Ela é pendência declarada, não
- * conclusão.
- */
 export const instant = false;
 
 const CAMINHO = "/recondicionados";
 
 const TRILHA = [
   { rotulo: "Início", href: "/" },
-  { rotulo: "Equipamentos", href: "/loja" },
+  { rotulo: "Loja", href: "/loja" },
   { rotulo: "Recondicionados JB" },
 ];
 
 export const metadata: Metadata = metadataDePagina({
   titulo: "Recondicionados JB",
   descricao:
-    "Equipamentos recuperados na bancada da JB, com o que foi reparado e o que foi substituído registrado unidade por unidade.",
+    "Produtos recondicionados pela JB, publicados com o que foi reparado, substituído e verificado em cada unidade quando esses registros existirem.",
   caminho: CAMINHO,
 });
 
@@ -49,13 +35,13 @@ export default async function Pagina({
   ]);
 
   return (
-    <>
+    <div className="vitrine">
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
       <Vitrine
         sobretitulo="Por condição"
         titulo="Recondicionados JB"
-        descricao="Equipamentos que passaram pela bancada da JB e voltaram a funcionar. O que foi reparado e o que foi substituído fica registrado na unidade, peça por peça."
+        descricao="Itens que passaram pela bancada da JB e voltaram ao catálogo. Reparos, substituições e observações ficam vinculados à unidade sempre que esses dados estiverem registrados."
         trilha={TRILHA}
         caminho={CAMINHO}
         parametros={parametros}
@@ -64,6 +50,6 @@ export default async function Pagina({
         rotuloAtalhos="Outras condições"
         travarCondicao
       />
-    </>
+    </div>
   );
 }
