@@ -48,6 +48,7 @@ export function CardProdutoMarketplace({
   const desconto = anterior
     ? Math.round(((anterior - produto.priceCents) / anterior) * 100)
     : 0;
+  const destaques = produto.destaques.slice(0, 2);
 
   return (
     <article
@@ -91,7 +92,7 @@ export function CardProdutoMarketplace({
 
       <div className="flex flex-1 flex-col p-3 sm:p-4">
         <p className="truncate text-[0.625rem] font-extrabold uppercase tracking-[0.09em] text-graf-500 sm:text-[0.6875rem]">
-          {produto.brandName || produto.categoryName || "Equipamento odontológico"}
+          {produto.brandName || produto.categoryName || "Produto odontológico"}
         </p>
         <h2 className="mt-1.5 line-clamp-2 min-h-10 text-[0.8125rem] font-bold leading-5 text-graf-950 sm:text-[0.9375rem]">
           <Link
@@ -102,9 +103,9 @@ export function CardProdutoMarketplace({
           </Link>
         </h2>
 
-        {produto.destaques.length ? (
+        {destaques.length ? (
           <dl className="mt-3 grid gap-1.5 border-t border-graf-100 pt-3">
-            {produto.destaques.map((item) => (
+            {destaques.map((item) => (
               <div
                 key={`${item.rotulo}-${item.valor}`}
                 className="flex min-w-0 justify-between gap-2 text-xs"
@@ -116,7 +117,7 @@ export function CardProdutoMarketplace({
           </dl>
         ) : (
           <p className="mt-3 border-t border-graf-100 pt-3 text-xs text-graf-500">
-            Ficha técnica no produto
+            Detalhes técnicos na página do produto
           </p>
         )}
 
@@ -153,7 +154,7 @@ export function CardProdutoMarketplace({
                 : "bg-jb-500 text-white group-hover:bg-jb-600"
             }`}
           >
-            {sobOrcamento ? "Pedir orçamento" : "Ver equipamento"}
+            {sobOrcamento ? "Pedir orçamento" : "Ver produto"}
           </span>
         </div>
       </div>

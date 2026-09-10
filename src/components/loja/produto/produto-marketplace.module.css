@@ -10,8 +10,7 @@
   min-width: 0;
 }
 
-/* No celular, nome e decisão técnica vêm antes da imagem; depois a galeria e a
-   compra. Isso evita começar a ficha com uma foto grande sem contexto. */
+/* Mobile: contexto primeiro, imagem depois e compra por último. */
 .resumo {
   order: 1;
   align-self: start;
@@ -27,9 +26,9 @@
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .topo {
-    grid-template-columns: minmax(0, 1.08fr) minmax(20rem, 0.92fr);
+    grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
     align-items: start;
-    gap: 1.5rem;
+    gap: 1.4rem;
   }
 
   .galeria {
@@ -47,11 +46,10 @@
 
 @media (min-width: 1024px) {
   .topo {
-    /* A foto domina, o resumo explica e a buybox conclui. A coluna central
-       fica deliberadamente mais estreita para não competir com produto/preço. */
-    grid-template-columns: minmax(0, 1.58fr) minmax(16.5rem, 0.82fr) minmax(21rem, 0.98fr);
+    /* Hierarquia 45/30/25: produto visual, decisão técnica e compra. */
+    grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 1fr) minmax(21rem, 0.86fr);
     align-items: start;
-    gap: clamp(1.25rem, 1.75vw, 2rem);
+    gap: clamp(1.15rem, 1.55vw, 1.75rem);
   }
 
   .galeria,
@@ -61,7 +59,7 @@
   }
 
   .resumo {
-    padding-top: 0.2rem;
+    padding-top: 0.1rem;
   }
 
   .compra {
@@ -72,14 +70,14 @@
 
 @media (min-width: 1280px) {
   .topo {
-    grid-template-columns: minmax(0, 1.68fr) minmax(17rem, 0.84fr) minmax(21.5rem, 1fr);
-    gap: clamp(1.5rem, 1.8vw, 2.25rem);
+    grid-template-columns: minmax(0, 1.52fr) minmax(19rem, 1fr) minmax(22rem, 0.86fr);
+    gap: clamp(1.35rem, 1.6vw, 2rem);
   }
 }
 
 @media (min-width: 1600px) {
   .topo {
-    grid-template-columns: minmax(0, 1.78fr) minmax(17.5rem, 0.86fr) minmax(22rem, 1.02fr);
-    gap: 2.5rem;
+    grid-template-columns: minmax(0, 1.54fr) minmax(20rem, 1fr) minmax(22.5rem, 0.86fr);
+    gap: 2.1rem;
   }
 }
