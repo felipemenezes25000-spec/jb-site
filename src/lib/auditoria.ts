@@ -84,6 +84,7 @@ const ROTULOS_CAMPO: Record<string, string> = {
   model: "modelo",
   status: "status",
   condition: "condição",
+  isEquipment: "gera prontuário técnico",
   description: "descrição",
   shortDescription: "resumo",
   priceCents: "preço",
@@ -238,14 +239,56 @@ export async function ipAtual() {
 }
 
 /**
+ * Completa snapshots parciais de produto antes de calcular o diff.
+ *
+ * Algumas Server Actions selecionam só os campos que precisam devolver para a
+ * tela. Se o snapshot "antes" já contém `isEquipment`, mas o `select` do
+ * update não o devolveu, perderíamos justamente a mudança que define se a
+ * compra gera prontuário técnico. A auditoria consulta apenas esse campo e o
+ * injeta no snapshot final; se a consulta falhar, o registro segue normalmente.
+ */
+async function completarSnapshotDoProduto(entrada: EntradaAuditoria) {
+  let depois = entrada.depois;
+  const antesTemEquipamento = Boolean(
+    entrada.antes && Object.prototype.hasOwnProperty.call(entrada.antes, "isEquipment"),
+  );
+  const depoisTemEquipamento = Boolean(
+    depois && Object.prototype.hasOwnProperty.call(depois, "isEquipment"),
+  );
+
+  if (
+    entrada.entidade !== "produto" ||
+    !entrada.entidadeId ||
+    !entrada.antes ||
+    !depois ||
+    !antesTemEquipamento ||
+    depoisTemEquipamento
+  ) {
+    return depois;
+  }
+
+  try {
+    const atual = await prisma.product.findUnique({
+      where: { id: entrada.entidadeId },
+      select: { isEquipment: true },
+    });
+    if (atual) depois = { ...depois, isEquipment: atual.isEquipment };
+  } catch (erro) {
+    console.error("Falha ao completar snapshot de auditoria do produto", erro);
+  }
+
+  return depois;
+}
+
+/**
  * Grava a linha de auditoria. Nunca lança: perder o registro de auditoria é
  * ruim, mas derrubar a operação que estava sendo auditada é pior.
  */
 export async function registrarAuditoria(
   entrada: EntradaAuditoria,
 ): Promise<{ id: string | null; mudancas: Mudanca[] }> {
-  const mudancas =
-    entrada.antes || entrada.depois ? diffEnxuto(entrada.antes, entrada.depois) : [];
+  const depois = await completarSnapshotDoProduto(entrada);
+  const mudancas = entrada.antes || depois ? diffEnxuto(entrada.antes, depois) : [];
 
   const ip = entrada.ip ?? (await ipAtual());
   const partes = [entrada.resumo?.trim() || resumirMudancas(mudancas)].filter(Boolean);
