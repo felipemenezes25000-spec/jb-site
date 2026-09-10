@@ -68,8 +68,14 @@ test.describe("Marketplace — página do produto", () => {
     // O controle está depois de entrega/CTA no DOM, mas o estado precisa chegar
     // aos inputs hidden do formulário principal que ficou acima dele.
     await painel.getByRole("button", { name: "Aumentar quantidade" }).click();
-    await expect(painel.getByText("Total configurado", { exact: true })).toBeVisible();
-    await expect(painel.getByText(emReais(frete.precoCents * 2), { exact: true })).toBeVisible();
+    const total = painel.getByText("Total configurado", { exact: true });
+    await expect(total).toBeVisible();
+    // O valor sai de `formatarPreco`, que escreve "R$ 2.468,00" dentro de um
+    // único <strong> — procurar "2.468,00" com `exact` nunca casaria. A busca
+    // é pelo bloco do total, e o número é conferido como parte do texto dele.
+    await expect(total.locator("xpath=ancestor::div[1]")).toContainText(
+      emReais(frete.precoCents * 2),
+    );
 
     const formulario = adicionar.locator("xpath=ancestor::form");
     await expect(formulario.locator('input[name="quantidade"]')).toHaveValue("2");

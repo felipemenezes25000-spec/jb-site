@@ -38,6 +38,12 @@ test.describe("PDP — casos extremos", () => {
           // Sem controle de estoque para o pós-compra não ser usado como proxy
           // de equipamento neste caso. O objetivo aqui é ter zero dado técnico.
           trackInventory: false,
+          // `isEquipment` nasce `true` no banco, porque o catálogo real da JB é
+          // quase todo equipamento. Aqui ele precisa ser desligado à mão: o
+          // produto mínimo é justamente o que não gera prontuário, e sem esta
+          // linha a seção "Preparo" aparece sozinha — era o que a regra antiga
+          // (`condition !== "novo" || trackInventory`) dava de graça.
+          isEquipment: false,
           unique: false,
           stock: 0,
           installationPolicy: "nao_informada",
