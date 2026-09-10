@@ -7,12 +7,12 @@ import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 export const instant = false;
 
 const CAMINHO = "/loja";
-const TRILHA = [{ rotulo: "Início", href: "/" }, { rotulo: "Equipamentos" }];
+const TRILHA = [{ rotulo: "Início", href: "/" }, { rotulo: "Loja" }];
 
 export const metadata: Metadata = metadataDePagina({
-  titulo: "Equipamentos odontológicos novos",
+  titulo: "Produtos odontológicos novos",
   descricao:
-    "Equipamentos odontológicos novos, com ficha técnica completa, garantia informada e suporte da JB antes e depois da compra.",
+    "Produtos odontológicos novos com informações técnicas organizadas, condições de pagamento e suporte da JB antes e depois da compra.",
   caminho: CAMINHO,
 });
 
@@ -49,9 +49,9 @@ export default async function LojaPage({
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
       <Vitrine
-        sobretitulo="Marketplace clínico"
-        titulo="Equipamentos odontológicos"
-        descricao={`${colecao.totalNovos} equipamentos novos com nota fiscal, garantia informada, parcelamento e suporte técnico da JB.`}
+        sobretitulo="Loja JB"
+        titulo="Produtos odontológicos"
+        descricao={`${colecao.totalNovos} ${colecao.totalNovos === 1 ? "produto novo" : "produtos novos"} com informações técnicas, condições de pagamento e suporte da JB.`}
         trilha={TRILHA}
         caminho={CAMINHO}
         parametros={parametros}
