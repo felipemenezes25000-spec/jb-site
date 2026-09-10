@@ -1,43 +1,47 @@
 import { describe, expect, it } from "vitest";
 
-import { itemDaPdpParaCotacao } from "@/lib/frete-produto-item";
+import {
+  itemAptoParaCotacaoExterna,
+  itemDaPdpParaCotacao,
+} from "@/lib/frete-produto-item";
 
-describe("itemDaPdpParaCotacao", () => {
+describe("frete da PDP", () => {
   it("cota exatamente uma unidade do produto visualizado", () => {
-    expect(
-      itemDaPdpParaCotacao({
-        id: "produto-1",
-        name: "Autoclave 18 L",
-        priceCents: 7_900_00,
-        weightGrams: 42_500,
-        widthMm: 470,
-        heightMm: 420,
-        depthMm: 560,
-      }),
-    ).toEqual({
+    const item = itemDaPdpParaCotacao({
       id: "produto-1",
       name: "Autoclave 18 L",
-      quantity: 1,
-      unitPriceCents: 7_900_00,
+      priceCents: 790_000,
       weightGrams: 42_500,
       widthMm: 470,
       heightMm: 420,
       depthMm: 560,
     });
+
+    expect(item).toEqual({
+      id: "produto-1",
+      name: "Autoclave 18 L",
+      quantity: 1,
+      unitPriceCents: 790_000,
+      weightGrams: 42_500,
+      widthMm: 470,
+      heightMm: 420,
+      depthMm: 560,
+    });
+    expect(itemAptoParaCotacaoExterna(item)).toBe(true);
   });
 
-  it("preserva dimensões ausentes para o cotador decidir o fallback", () => {
-    expect(
-      itemDaPdpParaCotacao({
-        id: "produto-sem-medidas",
-        name: "Equipamento sem medidas",
-        priceCents: 100_000,
-        weightGrams: null,
-        widthMm: null,
-        heightMm: null,
-        depthMm: null,
-      }),
-    ).toMatchObject({
+  it("não chama cotador externo quando falta peso ou dimensão", () => {
+    const item = itemDaPdpParaCotacao({
+      id: "produto-sem-medidas",
+      name: "Equipamento sem medidas",
+      priceCents: 100_000,
+      weightGrams: null,
+      widthMm: null,
+      heightMm: null,
+      depthMm: null,
+    });
+
+    expect(item).toMatchObject({
       id: "produto-sem-medidas",
       quantity: 1,
       weightGrams: null,
@@ -45,5 +49,20 @@ describe("itemDaPdpParaCotacao", () => {
       heightMm: null,
       depthMm: null,
     });
+    expect(itemAptoParaCotacaoExterna(item)).toBe(false);
+  });
+
+  it("recusa dimensão zero como item transportável", () => {
+    const item = itemDaPdpParaCotacao({
+      id: "produto-altura-zero",
+      name: "Produto inválido",
+      priceCents: 100_000,
+      weightGrams: 1_000,
+      widthMm: 100,
+      heightMm: 0,
+      depthMm: 100,
+    });
+
+    expect(itemAptoParaCotacaoExterna(item)).toBe(false);
   });
 });
