@@ -543,6 +543,7 @@ async function converterEmPedido(
         brandName: produto?.brand?.name ?? "",
         modelName: produto?.model ?? "",
         condition: produto?.condition ?? null,
+        isEquipment: produto?.isEquipment ?? false,
         // preço da proposta, não o da vitrine
         unitPriceCents: item.unitPriceCents,
         quantity: item.quantity,

@@ -281,6 +281,9 @@ model Product {
   description      String           @default("") // HTML sanitizado
   status           ProductStatus    @default(draft)
   condition        ProductCondition @default(novo)
+  /// Define explicitamente se a compra gera prontuário técnico na Área da Clínica.
+  /// Peças, acessórios e consumíveis continuam sendo Product, mas ficam false.
+  isEquipment      Boolean          @default(true)
   featured         Boolean          @default(false)
   publishedAt      DateTime?
 
@@ -888,6 +891,8 @@ model OrderItem {
   brandName      String            @default("")
   modelName      String            @default("")
   condition      ProductCondition?
+  /// Snapshot: editar o produto depois da venda não muda o pós-venda do pedido antigo.
+  isEquipment    Boolean             @default(false)
   imageUrl       String            @default("")
   unitPriceCents Int
   quantity       Int               @default(1)

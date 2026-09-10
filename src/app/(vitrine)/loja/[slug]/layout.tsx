@@ -268,6 +268,7 @@ export default async function ProdutoLayout({ children, params }: Props) {
       status: true,
       categoryId: true,
       condition: true,
+      isEquipment: true,
       trackInventory: true,
       relatedFrom: {
         where: { order: { lt: 1_000 } },
@@ -406,7 +407,7 @@ export default async function ProdutoLayout({ children, params }: Props) {
     ...alternativasAutomaticas,
   ].slice(0, 3);
 
-  const geraEquipamento = produto.condition !== "novo" || produto.trackInventory;
+  const geraEquipamento = produto.isEquipment;
 
   return (
     <>

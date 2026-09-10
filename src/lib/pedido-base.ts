@@ -229,6 +229,7 @@ export async function criarPedido(input: {
             brandName: produto?.brand?.name ?? "",
             modelName: produto?.model ?? "",
             condition: produto?.condition ?? null,
+            isEquipment: produto?.isEquipment ?? false,
             imageUrl: produto?.media[0]?.media.url ?? "",
             unitPriceCents: preco,
             quantity: item.quantity,
@@ -418,7 +419,7 @@ export async function confirmarPagamento(pedidoId: string) {
   // equipamentos comprados entram no prontuário do cliente
   if (pedido.customerId) {
     for (const item of pedido.items) {
-      if (item.kind !== "produto" || !item.product) continue;
+      if (item.kind !== "produto" || !item.product || !item.isEquipment) continue;
 
       const jaExiste = await prisma.equipment.findFirst({
         where: { orderId: pedido.id, productId: item.productId },
@@ -461,7 +462,9 @@ export async function confirmarPagamento(pedidoId: string) {
         customerId: pedido.customerId,
         kind: "pedido_pago",
         title: `Pagamento do pedido ${pedido.number} aprovado`,
-        body: "Já estamos preparando seu equipamento.",
+        body: pedido.items.some((item) => item.kind === "produto" && item.isEquipment)
+          ? "Já estamos preparando seu equipamento."
+          : "Já estamos preparando seu pedido.",
         // a rota do cliente é /minha-jb/pedidos/[numero]; o id daria 404
         href: `/minha-jb/pedidos/${pedido.number}`,
       },

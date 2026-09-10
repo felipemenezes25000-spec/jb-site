@@ -318,7 +318,7 @@ export default async function ProdutoPage({ params }: Props) {
   );
   const temConteudoDaCaixa = produto.boxContents.length > 0;
   const temBlocoDeInstalacao = produto.installationPolicy !== "nao_informada";
-  const geraEquipamentoNoPosCompra = produto.condition !== "novo" || produto.trackInventory;
+  const geraEquipamentoNoPosCompra = produto.isEquipment;
   const temPreparo =
     temInfraestrutura ||
     temConteudoDaCaixa ||

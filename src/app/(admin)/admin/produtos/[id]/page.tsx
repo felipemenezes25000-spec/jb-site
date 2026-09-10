@@ -146,6 +146,7 @@ export default async function PaginaProduto({
             categoryId: produto.categoryId,
             brandId: produto.brandId,
             condition: produto.condition,
+            isEquipment: produto.isEquipment,
             status: produto.status,
             featured: produto.featured,
           }}
