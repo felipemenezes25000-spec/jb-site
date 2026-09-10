@@ -1,344 +1,108 @@
-import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  ChevronRight,
-  ClipboardCheck,
-  MessageCircle,
-  PackageCheck,
-  ShoppingCart,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, MessageCircle, ShoppingBag, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
 import { whatsappHref } from "@/lib/format";
 import type { SettingsMap } from "@/lib/settings";
 
-const FLUXO = [
-  { icone: ShoppingCart, rotulo: "Compra" },
-  { icone: PackageCheck, rotulo: "Instalação" },
-  { icone: Wrench, rotulo: "Assistência" },
-  { icone: ClipboardCheck, rotulo: "Histórico" },
+const ETAPAS = [
+  { numero: "01", rotulo: "Escolha", texto: "Produtos com preço, condição e informações técnicas organizadas." },
+  { numero: "02", rotulo: "Entrega", texto: "Frete ou retirada definidos antes do pagamento." },
+  { numero: "03", rotulo: "Pós-venda", texto: "A equipe JB continua disponível depois da compra." },
 ] as const;
-
-/* A manuscrita vem carregada em `app/layout` — antes a lista era só de fontes
-   de sistema, e o desenho mudava conforme o aparelho de quem abria o site. */
-const CURSIVA = { fontFamily: "var(--font-manuscrita), cursive" } as const;
 
 export function SecaoAssistencia({ configuracoes: s }: { configuracoes: SettingsMap }) {
   const whatsapp = s.whatsapp.trim();
 
   return (
-    <section className="relative isolate overflow-hidden border-y border-graf-100 bg-[#fffdfc] py-14 min-[768px]:py-16 min-[1024px]:py-18 min-[1440px]:py-16">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_8%,rgba(221,24,32,0.075),transparent_28%),radial-gradient(circle_at_4%_62%,rgba(221,24,32,0.055),transparent_27%),linear-gradient(120deg,rgba(255,255,255,0.97),rgba(255,249,248,0.91))]"
-        aria-hidden
-      />
-
-      <div
-        className="pointer-events-none absolute -right-[24rem] -top-[33rem] size-[67rem] rounded-full border border-jb-300/60"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -right-[18rem] -top-[27rem] size-[55rem] rounded-full border-[3.2rem] border-jb-50/80"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -bottom-[26rem] -left-[20rem] size-[46rem] rounded-full border border-jb-100"
-        aria-hidden
-      />
-
-      <div
-        className="pointer-events-none absolute bottom-0 left-0 hidden w-[clamp(11rem,13vw,16rem)] opacity-45 blur-[1.5px] min-[1280px]:block"
-        aria-hidden
-      >
-        <Image
-          src="/images/next-step/clinic-chair-left.webp"
-          alt=""
-          width={260}
-          height={566}
-          sizes="256px"
-          className="h-auto w-full object-contain object-left-bottom"
-        />
-      </div>
-
-      {/* Marginália: entra só onde sobra margem fora do container.
-
-          Ela nasceu para a malha antiga desta faixa, que empurrava o conteúdo
-          14vw para a direita acima de 1600px. Com a faixa alinhada às outras,
-          o container passa a começar em 57px num monitor de 1920 — e este
-          rótulo, ancorado a 5,5rem da borda, ficava por baixo do título. A
-          régua é a mesma do hero: 2100px, que é onde a margem lateral passa de
-          130px. */}
-      <p
-        className="pointer-events-none absolute left-[5.5rem] top-[10.5rem] hidden text-[0.6875rem] font-semibold uppercase leading-[1.9] tracking-[0.3em] text-graf-500 min-[2100px]:block"
-        aria-hidden
-      >
-        Equipamentos
-        <br />
-        Suporte
-        <br />
-        Para o seu
-        <br />
-        Melhor amanhã
-      </p>
-
-      <div
-        className="pointer-events-none absolute right-[4.5rem] top-[3.1rem] hidden -rotate-[7deg] text-right text-[1.35rem] leading-[1.08] text-graf-500 min-[1800px]:block"
-        style={CURSIVA}
-        aria-hidden
-      >
-        Tecnologia
-        <br />
-        que impulsiona
-        <br />
-        sorrisos
-        <span className="ml-auto mt-4 block h-px w-10 -rotate-[8deg] bg-graf-400" />
-      </div>
-
-      {/*
-        Mesma medida das outras faixas da home: `container-jb` com o teto de
-        112rem. Antes esta seção tinha malha própria — 90rem até 1600px e, acima
-        disso, margem editorial de 14vw à esquerda. Era composição deliberada,
-        mas custava o alinhamento: em 1920 o título começava em 301px enquanto o
-        hero e as marcas começavam em 97px, e a página inteira parecia
-        desencaixada num monitor largo. O motivo original do desvio — 90rem
-        quebrava o título em quatro linhas — deixa de existir com 112rem, que é
-        mais largo, não mais estreito.
-      */}
-      <div className="container-jb relative z-10 max-w-[112rem]">
-        <div className="grid gap-8 min-[1024px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] min-[1024px]:items-end min-[1024px]:gap-x-14 min-[1440px]:gap-x-16">
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="h-px w-8 shrink-0 bg-jb-600" aria-hidden />
-              <p className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-jb-700">
-                Escolha o caminho
-              </p>
-            </div>
-
-            <h2 className="manchete mt-4 max-w-none text-[clamp(2rem,3.2vw,3.5rem)] text-graf-950">
-              <span className="block min-[1024px]:whitespace-nowrap">O próximo passo</span>
-              <span className="block text-jb-700 min-[1024px]:whitespace-nowrap">
-                depende do que sua
-              </span>
-              <span className="block min-[1024px]:whitespace-nowrap">clínica precisa agora.</span>
+    <section className="border-b border-graf-200 bg-graf-50/50 py-12 lg:py-16">
+      <div className="container-jb max-w-[100rem]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-end">
+          <div className="max-w-2xl">
+            <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-700">
+              Compra e suporte
+            </p>
+            <h2 className="mt-2 text-[clamp(1.8rem,1.4rem+1.7vw,2.7rem)] font-extrabold tracking-[-0.04em] text-graf-950">
+              Dois caminhos claros para o que sua clínica precisa agora.
             </h2>
           </div>
-
-          <div className="min-[1024px]:pb-3">
-            <p className="max-w-[34rem] text-[clamp(1rem,1.18vw,1.2rem)] leading-[1.5] text-graf-500">
-              Comprar equipamento e resolver equipamento parado são duas conversas
-              diferentes — e as duas terminam com a mesma equipe técnica do outro lado.
-            </p>
-          </div>
+          <p className="max-w-2xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem] lg:justify-self-end">
+            Para comprar, entre na loja. Para resolver um equipamento que já está em uso, abra a
+            assistência técnica. Sem misturar as duas jornadas.
+          </p>
         </div>
 
-        <div className="mt-7 grid gap-4 min-[1024px]:grid-cols-[minmax(0,0.88fr)_minmax(0,1fr)] min-[1024px]:gap-5">
-          <article className="placa relative min-h-[24rem] overflow-hidden">
-            <div
-              className="absolute inset-0 bg-[radial-gradient(circle_at_88%_22%,rgba(227,24,32,0.09),transparent_34%),linear-gradient(135deg,#fff_0%,#fff_56%,#fff7f6_100%)]"
-              aria-hidden
-            />
-            <div
-              className="absolute -right-24 -top-28 size-72 rounded-full border-[2.7rem] border-jb-50/90"
-              aria-hidden
-            />
-            <div
-              className="absolute -right-16 -top-16 size-56 rounded-full border border-jb-200/60" aria-hidden
-            />
-            <div
-              className="absolute -bottom-40 -right-32 size-[30rem] rounded-full border border-jb-100"
-              aria-hidden
-            />
-            <div
-              className="absolute -bottom-28 -right-20 size-[22rem] rounded-full bg-[radial-gradient(circle,rgba(226,22,30,0.1),transparent_68%)]"
-              aria-hidden
-            />
-
-            <p
-              className="pointer-events-none absolute right-8 top-8 hidden max-w-[8.5rem] text-right text-[0.6875rem] font-semibold uppercase leading-[1.8] tracking-[0.25em] text-graf-500 min-[1280px]:block"
-              aria-hidden
-            >
-              Equipamentos
-              <br />
-              que transformam
-              <br />
-              consultórios
-              <span className="ml-auto mt-3 block h-px w-5 bg-jb-600" />
+        <div className="mt-7 grid gap-4 lg:grid-cols-2">
+          <article className="flex min-w-0 flex-col rounded-xl border border-graf-200 bg-white p-5 sm:p-6">
+            <span className="flex size-10 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
+              <ShoppingBag className="size-4" aria-hidden />
+            </span>
+            <p className="mt-5 text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-700">
+              Quero comprar
             </p>
+            <h3 className="mt-2 text-xl font-extrabold tracking-[-0.025em] text-graf-950 sm:text-2xl">
+              Produtos novos, seminovos, peças e acessórios.
+            </h3>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-graf-600">
+              Compare opções, confira disponibilidade e avance para a compra com as informações da
+              página do produto.
+            </p>
+            <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+              <LinkBotao href="/loja" tamanho="lg" className="rounded-lg sm:w-auto">
+                Explorar loja
+                <ArrowRight className="size-4" aria-hidden />
+              </LinkBotao>
+              <LinkBotao href="/seminovos" variante="secundario" tamanho="lg" className="rounded-lg sm:w-auto">
+                Ver seminovos
+              </LinkBotao>
+            </div>
+          </article>
 
-            <div className="relative z-10 flex min-h-[24rem] max-w-[66%] flex-col p-7 min-[640px]:p-9 min-[1024px]:p-10">
-              <span className="flex size-12 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
-                <ShoppingCart className="size-5" aria-hidden />
-              </span>
-              <p className="mt-6 text-[0.67rem] font-black uppercase tracking-[0.18em] text-jb-700">
-                Quero comprar
-              </p>
-              <h3 className="mt-2 max-w-[11ch] text-[clamp(1.9rem,2.45vw,3rem)] font-black leading-[0.95] tracking-[-0.05em] text-graf-950">
-                Equipar ou ampliar a clínica.
-              </h3>
-              <p className="mt-4 max-w-lg text-sm leading-6 text-graf-500 min-[640px]:text-[0.98rem] min-[640px]:leading-7">
-                Explore novos e seminovos, compare condição e disponibilidade e peça orientação
-                quando precisar decidir entre modelos.
-              </p>
-              <div className="mt-auto flex flex-col gap-3 pt-6 min-[640px]:flex-row min-[640px]:flex-wrap">
+          <article className="flex min-w-0 flex-col rounded-xl border border-graf-200 bg-white p-5 sm:p-6">
+            <span className="flex size-10 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
+              <Wrench className="size-4" aria-hidden />
+            </span>
+            <p className="mt-5 text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-700">
+              Preciso de suporte
+            </p>
+            <h3 className="mt-2 text-xl font-extrabold tracking-[-0.025em] text-graf-950 sm:text-2xl">
+              Assistência técnica para equipamentos odontológicos.
+            </h3>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-graf-600">
+              Abra o chamado com o contexto do equipamento para a equipe conduzir triagem,
+              orçamento e acompanhamento do atendimento.
+            </p>
+            <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+              <LinkBotao href="/assistencia-tecnica/solicitar" tamanho="lg" className="rounded-lg sm:w-auto">
+                Solicitar assistência
+                <ArrowRight className="size-4" aria-hidden />
+              </LinkBotao>
+              {whatsapp ? (
                 <LinkBotao
-                  href="/loja"
-                  tamanho="lg"
-                  className="rounded-lg"
-                >
-                  Ver equipamentos
-                  <ArrowRight className="size-4" aria-hidden />
-                </LinkBotao>
-                <LinkBotao
-                  href="/orcamento"
+                  href={whatsappHref(whatsapp, "Olá! Preciso de ajuda com um equipamento odontológico.")}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   variante="secundario"
                   tamanho="lg"
-                  className="rounded-xl"
+                  className="rounded-lg sm:w-auto"
                 >
-                  Pedir orientação
+                  <MessageCircle className="size-4" aria-hidden />
+                  WhatsApp
                 </LinkBotao>
-              </div>
-            </div>
-          </article>
-
-          <article className="placa relative min-h-[24rem] overflow-hidden">
-            <div
-              /* Grafite de ponta a ponta. Antes o degradê terminava em #1d0709 —
-                 vermelho quase preto — e duas lavagens vermelhas por cima
-                 deixavam o cartão com aspecto de fundo sujo em vez de escuro
-                 deliberado. O vermelho voltou para onde ele age: o botão. */
-              className="absolute inset-0 bg-[linear-gradient(125deg,#ffffff_0%,#fff7f7_58%,#ffeced_100%)]"
-              aria-hidden
-            />
-
-            <div
-              className="absolute inset-0 bg-[radial-gradient(circle_at_86%_44%,rgba(224,20,27,0.08),transparent_34%)]"
-              aria-hidden
-            />
-            <div
-              className="absolute -right-36 -top-36 size-[30rem] rounded-full border border-jb-200"
-              aria-hidden
-            />
-            <div
-              className="absolute -right-16 -top-16 size-[21rem] rounded-full border border-jb-100"
-              aria-hidden
-            />
-
-            <p
-              className="pointer-events-none absolute right-7 top-8 z-10 hidden text-right text-[0.6875rem] font-semibold uppercase leading-[1.8] tracking-[0.25em] text-graf-400 min-[1280px]:block"
-              aria-hidden
-            >
-              Suporte hoje
-              <br />
-              continuidade
-              <br />
-              sempre
-              <span className="ml-auto mt-3 block h-px w-5 bg-jb-500" />
-            </p>
-
-            <div className="relative z-10 flex min-h-[24rem] max-w-[60%] flex-col p-7 min-[640px]:p-9 min-[1024px]:p-10">
-              <span className="flex size-12 items-center justify-center rounded-lg bg-jb-600 text-white">
-                <Wrench className="size-5" aria-hidden />
-              </span>
-              <p className="mt-6 text-[0.67rem] font-black uppercase tracking-[0.18em] text-jb-600">
-                Preciso de suporte
-              </p>
-              <h3 className="manchete mt-2 max-w-[10ch] text-[clamp(1.9rem,2.45vw,2.75rem)] text-graf-950">
-                Resolver um equipamento.
-              </h3>
-              <p className="mt-4 max-w-lg text-sm leading-6 text-graf-600 min-[640px]:text-[0.98rem] min-[640px]:leading-7">
-                Abra o chamado no canal certo desde o início e deixe a equipe da JB conduzir a
-                triagem, o orçamento e o histórico do atendimento.
-              </p>
-              <div className="mt-auto flex flex-col gap-3 pt-6 min-[640px]:flex-row min-[640px]:flex-wrap">
-                <LinkBotao
-                  href="/assistencia-tecnica/solicitar"
-                  tamanho="lg"
-                  className="rounded-lg"
-                >
-                  Solicitar assistência
-                  <ArrowRight className="size-4" aria-hidden />
-                </LinkBotao>
-
-                {whatsapp ? (
-                  <LinkBotao
-                    href={whatsappHref(
-                      whatsapp,
-                      "Olá! Preciso de ajuda com um equipamento odontológico.",
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variante="secundario"
-                    tamanho="lg"
-                    className="rounded-xl"
-                  >
-                    <MessageCircle className="size-4" aria-hidden />
-                    WhatsApp
-                  </LinkBotao>
-                ) : (
-                  <LinkBotao
-                    href="/contato"
-                    variante="secundario"
-                    tamanho="lg"
-                    className="rounded-xl"
-                  >
-                    Falar com a JB
-                  </LinkBotao>
-                )}
-              </div>
+              ) : null}
             </div>
           </article>
         </div>
 
-        <div className="placa mt-4 overflow-hidden">
-          <div className="grid min-[640px]:grid-cols-2 min-[1024px]:grid-cols-4">
-            {FLUXO.map(({ icone: Icone, rotulo }, indice) => (
-              <div
-                key={rotulo}
-                className="relative flex min-h-[5rem] items-center gap-4 border-graf-100 px-5 py-4 min-[640px]:border-l first:min-[640px]:border-l-0 min-[1024px]:px-6"
-              >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
-                  <Icone className="size-4" aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[0.6875rem] font-black uppercase tracking-[0.15em] text-graf-500">
-                    0{indice + 1}
-                  </p>
-                  <p className="mt-0.5 text-[0.92rem] font-black text-graf-900">{rotulo}</p>
-                </div>
-                {indice < FLUXO.length - 1 ? (
-                  <ChevronRight
-                    className="absolute right-4 size-4 text-graf-300 min-[1024px]:right-5"
-                    aria-hidden
-                  />
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative mt-5 flex flex-col items-center justify-center gap-2 text-center text-xs leading-relaxed text-graf-500 min-[640px]:flex-row">
-          <span className="hidden h-px w-12 bg-graf-300 min-[640px]:block" aria-hidden />
-          <span>A mesma relação acompanha a clínica antes e depois da entrega.</span>
-          <Link
-            href="/assistencia-tecnica"
-            /* 44px de altura no dedo. O link fecha a faixa de caminhos e mede
-               20px de altura — é a linha de texto —, abaixo do alvo mínimo da
-               WCAG 2.2 (2.5.8). No ponteiro fino ele continua sendo uma frase
-               dentro do parágrafo. */
-            className="group foco-jb inline-flex items-center gap-1.5 rounded-lg font-black text-jb-700 underline-offset-4 hover:underline pointer-coarse:min-h-11"
-          >
-            Conheça a assistência técnica JB.
-            <ArrowRight
-              className="size-3.5 transition-transform group-hover:translate-x-0.5"
-              aria-hidden
-            />
-          </Link>
-          <span className="hidden h-px w-12 bg-graf-300 min-[640px]:block" aria-hidden />
-        </div>
+        <ol className="mt-6 grid overflow-hidden rounded-xl border border-graf-200 bg-white sm:grid-cols-3">
+          {ETAPAS.map((etapa) => (
+            <li key={etapa.numero} className="min-w-0 border-b border-graf-200 p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 sm:p-5">
+              <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-700">{etapa.numero} · {etapa.rotulo}</p>
+              <p className="mt-2 text-sm leading-5 text-graf-600">{etapa.texto}</p>
+            </li>
+          ))}
+        </ol>
       </div>
-
     </section>
   );
 }

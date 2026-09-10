@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { CabecalhoVitrine } from "@/components/loja/cabecalho-vitrine";
+import { Cabecalho } from "@/components/loja/cabecalho";
 import {
   AcessoDaConta,
   AcessoDaContaEsqueleto,
@@ -18,13 +18,7 @@ import {
 
 import "./vitrine.css";
 
-/**
- * Casca das telas de catálogo.
- *
- * A home recebe um cabeçalho estrutural próprio, selecionado no cliente pela
- * rota atual. As demais páginas continuam usando o cabeçalho compartilhado da
- * loja, sem herdar a direção flagship da página inicial.
- */
+/** Casca compartilhada da vitrine pública. */
 export default async function VitrineLayout({ children }: { children: React.ReactNode }) {
   const [s, categorias, condicoes, centralPublicada] = await Promise.all([
     configuracoesPublicas(),
@@ -39,7 +33,7 @@ export default async function VitrineLayout({ children }: { children: React.Reac
         data-jb-publico="true"
         className="flex min-h-dvh flex-col [&>header_.container-jb]:max-w-[112rem]"
       >
-        <CabecalhoVitrine
+        <Cabecalho
           categorias={categorias}
           condicoes={condicoes}
           centralPublicada={centralPublicada}
