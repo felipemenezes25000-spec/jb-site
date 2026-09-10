@@ -67,12 +67,15 @@ patch(
     '    condition: campo(formData, "condition"),\n    status: campo(formData, "status"),\n    featured: campo(formData, "featured"),',
     '    condition: campo(formData, "condition"),\n    isEquipment: campo(formData, "isEquipment"),\n    status: campo(formData, "status"),\n    featured: campo(formData, "featured"),',
 )
-patch(
-    "src/app/acoes/admin-catalogo.ts",
-    "      condition: true,\n      status: true,\n      featured: true,\n      publishedAt: true,",
-    "      condition: true,\n      isEquipment: true,\n      status: true,\n      featured: true,\n      publishedAt: true,",
-    count=2,
-)
+# `antes` e `depois` têm blocos visualmente iguais no fonte, mas outras
+# substituições anteriores mudam o arquivo em memória. Validamos um por vez:
+# se faltar qualquer um, o aplicador para antes do commit.
+for _ in range(2):
+    patch(
+        "src/app/acoes/admin-catalogo.ts",
+        "      condition: true,\n      status: true,\n      featured: true,\n      publishedAt: true,",
+        "      condition: true,\n      isEquipment: true,\n      status: true,\n      featured: true,\n      publishedAt: true,",
+    )
 patch(
     "src/app/acoes/admin-catalogo.ts",
     "        condition: dados.data.condition,\n        status: dados.data.status,\n        featured: dados.data.featured,",
