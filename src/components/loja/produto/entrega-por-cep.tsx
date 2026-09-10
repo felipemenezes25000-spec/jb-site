@@ -110,7 +110,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
               evento.preventDefault();
               calcular();
             }}
-            className="h-10 w-full rounded-md border border-graf-450 bg-white pl-9 pr-3 text-sm tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/15"
+            className="h-11 w-full rounded-md border border-graf-450 bg-white pl-9 pr-3 text-sm tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/15"
           />
         </div>
         <button
@@ -118,7 +118,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
           onClick={calcular}
           disabled={!completo || calculando}
           className={cn(
-            "foco-jb flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-md border border-graf-300 px-4 text-sm font-bold transition-colors duration-150 min-[375px]:w-auto",
+            "foco-jb flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-md border border-graf-300 px-4 text-sm font-bold transition-colors duration-150 min-[375px]:w-auto",
             completo && !calculando
               ? "text-graf-900 hover:border-graf-450 hover:bg-graf-50"
               : "cursor-not-allowed text-graf-500",
