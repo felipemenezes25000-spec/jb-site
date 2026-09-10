@@ -52,16 +52,16 @@ export function ControlesColecao({
 
   const promovidos: Promovido[] = [
     { chave: "estoque", valor: "1", rotulo: "Em estoque" },
-    ...(!travas.travarCondicao
-      ? grupos.condicoes.slice(0, 2).map((item) => ({ chave: "condicao" as const, ...item }))
+    ...(!travas.travarCondicao && grupos.condicoes[0]
+      ? [{ chave: "condicao" as const, ...grupos.condicoes[0] }]
       : []),
-    ...(!travas.travarMarca
-      ? grupos.marcas.slice(0, 2).map((item) => ({ chave: "marca" as const, ...item }))
+    ...(!travas.travarMarca && grupos.marcas[0]
+      ? [{ chave: "marca" as const, ...grupos.marcas[0] }]
       : []),
-    ...grupos.voltagens
-      .slice(0, 2)
-      .map((item) => ({ chave: "voltagem" as const, ...item })),
-  ];
+    ...(grupos.voltagens[0]
+      ? [{ chave: "voltagem" as const, ...grupos.voltagens[0] }]
+      : []),
+  ].slice(0, 4);
 
   function buscar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -70,12 +70,9 @@ export function ControlesColecao({
   }
 
   return (
-    <section
-      aria-label="Controles do catálogo"
-      className="border-y border-graf-200 bg-white"
-    >
-      <div className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center">
-        <form role="search" onSubmit={buscar} className="relative min-w-0 flex-1 lg:max-w-md">
+    <section aria-label="Controles do catálogo" className="border-y border-graf-200 bg-white">
+      <div className="flex flex-col gap-2.5 py-3 lg:flex-row lg:items-center">
+        <form role="search" onSubmit={buscar} className="relative min-w-0 flex-1 lg:max-w-lg">
           <label htmlFor={idBusca} className="sr-only">
             Buscar nesta coleção
           </label>
@@ -89,16 +86,16 @@ export function ControlesColecao({
             type="search"
             defaultValue={busca}
             key={busca}
-            placeholder="Buscar nome, marca ou modelo"
-            className="h-11 w-full rounded-lg border border-graf-350 bg-white pl-10 pr-3 text-base text-graf-950 transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 sm:text-sm"
+            placeholder="Buscar produto, marca ou modelo"
+            className="h-11 w-full rounded-lg border border-graf-300 bg-white pl-10 pr-3 text-base text-graf-950 transition-colors placeholder:text-graf-500 hover:border-graf-450 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 sm:text-sm"
           />
         </form>
 
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2 lg:ml-auto">
           <button
             type="button"
             onClick={() => setAberto(true)}
-            aria-label="Todos os filtros"
+            aria-label="Abrir filtros"
             aria-haspopup="dialog"
             aria-expanded={aberto}
             className={classesBotao(
@@ -108,8 +105,7 @@ export function ControlesColecao({
             )}
           >
             <SlidersHorizontal className="size-4" aria-hidden />
-            <span className="max-[359px]:hidden">Todos os filtros</span>
-            <span className="hidden max-[359px]:inline">Filtros</span>
+            <span>Filtros</span>
             {ativos ? (
               <span className="tabular ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-jb-500 text-xs font-extrabold text-white">
                 {ativos}
@@ -133,7 +129,7 @@ export function ControlesColecao({
                 )
               }
               aria-label="Ordenar resultados"
-              className="h-11 w-full min-w-0 rounded-lg border border-graf-350 bg-white pl-3 pr-8 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 lg:w-auto"
+              className="h-11 w-full min-w-0 rounded-lg border border-graf-300 bg-white pl-3 pr-8 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-450 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 lg:w-auto"
             >
               {ORDENS.map((opcao) => (
                 <option key={opcao.valor} value={opcao.valor}>
@@ -145,34 +141,36 @@ export function ControlesColecao({
         </div>
       </div>
 
-      <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto border-t border-graf-100 px-4 py-2.5 sm:mx-0 sm:px-0">
-        {promovidos.map((item) => {
-          const selecionado = valoresDe(parametros, item.chave).includes(item.valor);
-          const href = enderecoCom(caminho, parametros, {
-            [item.chave]: alternado(parametros, item.chave, item.valor),
-            ...(item.chave === "estoque" ? { vendidos: null } : {}),
-          });
+      {promovidos.length ? (
+        <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto border-t border-graf-100 px-4 py-2 sm:mx-0 sm:px-0">
+          {promovidos.map((item) => {
+            const selecionado = valoresDe(parametros, item.chave).includes(item.valor);
+            const href = enderecoCom(caminho, parametros, {
+              [item.chave]: alternado(parametros, item.chave, item.valor),
+              ...(item.chave === "estoque" ? { vendidos: null } : {}),
+            });
 
-          return (
-            <Link
-              key={`${item.chave}-${item.valor}`}
-              href={href}
-              scroll={false}
-              prefetch={false}
-              aria-pressed={selecionado}
-              className={cn(
-                "foco-jb inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-colors",
-                selecionado
-                  ? "border-jb-300 bg-jb-50 text-jb-800"
-                  : "border-graf-200 bg-white text-graf-700 hover:border-graf-400 hover:bg-graf-50",
-              )}
-            >
-              {selecionado ? <Check className="size-3.5" strokeWidth={3} aria-hidden /> : null}
-              {item.rotulo}
-            </Link>
-          );
-        })}
-      </div>
+            return (
+              <Link
+                key={`${item.chave}-${item.valor}`}
+                href={href}
+                scroll={false}
+                prefetch={false}
+                aria-pressed={selecionado}
+                className={cn(
+                  "foco-jb inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[0.8125rem] font-semibold transition-colors",
+                  selecionado
+                    ? "border-jb-300 bg-jb-50 text-jb-800"
+                    : "border-graf-200 bg-white text-graf-700 hover:border-graf-400 hover:bg-graf-50",
+                )}
+              >
+                {selecionado ? <Check className="size-3.5" strokeWidth={3} aria-hidden /> : null}
+                {item.rotulo}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
 
       {aplicados.length || busca ? (
         <FiltrosAtivos hrefLimpar={caminho} className="border-t border-graf-100 py-3">
@@ -217,8 +215,8 @@ export function ControlesColecao({
           >
             <header className="flex min-h-16 shrink-0 items-center justify-between gap-4 border-b border-graf-200 px-5">
               <div>
-                <h2 className="text-lg font-bold text-graf-950">Filtrar equipamentos</h2>
-                <p className="text-xs text-graf-500">Refine sem perder sua busca</p>
+                <h2 className="text-lg font-bold text-graf-950">Filtrar produtos</h2>
+                <p className="text-xs text-graf-500">Refine a lista sem perder sua busca</p>
               </div>
               <button
                 type="button"
