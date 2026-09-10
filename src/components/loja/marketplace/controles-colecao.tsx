@@ -51,7 +51,7 @@ export function ControlesColecao({
   const ativos = aplicados.length + (busca ? 1 : 0);
 
   const promovidos: Promovido[] = [
-    { chave: "estoque", valor: "1", rotulo: "Em estoque" },
+    { chave: "estoque" as const, valor: "1", rotulo: "Em estoque" },
     ...(!travas.travarCondicao && grupos.condicoes[0]
       ? [{ chave: "condicao" as const, ...grupos.condicoes[0] }]
       : []),

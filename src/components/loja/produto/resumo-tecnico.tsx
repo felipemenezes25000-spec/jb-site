@@ -47,7 +47,7 @@ export async function ResumoTecnicoProduto({
   );
   const avaliacao = await carregarResumoAvaliacoesProdutoPorSku(sku);
 
-  const identificadores: (Identificador | null)[] = [
+  const identificadores: Identificador[] = [
     modeloUtil ? { rotulo: "Modelo", valor: modelo.trim() } : null,
     { rotulo: "SKU", valor: sku },
     numeroDeSerie?.trim() ? { rotulo: "Nº de série", valor: numeroDeSerie.trim() } : null,
