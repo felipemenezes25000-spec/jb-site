@@ -86,6 +86,96 @@ function IconeMenu({ chave, className }: { chave: ChaveMegaPremium; className?: 
   return <BookOpen className={className} aria-hidden />;
 }
 
+/* ============================================================================
+   Ticker da faixa superior
+
+   A faixa já foi cinco recados em rolagem infinita, e a auditoria pegou o
+   defeito: num marquee horizontal as frases entram e saem CORTADAS pela borda,
+   e em 1440px a pessoa lia "…no mesmo relacionamento." de um lado e
+   "Assistência técnica p…" do outro. Máscara de fade não resolve — troca o
+   corte seco por um corte esmaecido, e segue ilegível.
+
+   Então o movimento voltou, mas mudou de eixo: em vez de a frase atravessar a
+   faixa, ela TROCA no lugar. Cada recado aparece inteiro, fica parado o tempo
+   de ser lido e some para o próximo entrar. Nunca há meia palavra na tela.
+
+   Três cuidados:
+   · a lista inteira vive num `sr-only` estático, e a parte visível é
+     `aria-hidden` — leitor de tela lê tudo uma vez em vez de ser interrompido a
+     cada troca;
+   · para o ponteiro e para o teclado, a rotação pausa: quem está lendo não
+     perde a frase no meio;
+   · com `prefers-reduced-motion` não há troca nenhuma — fica o primeiro recado,
+     que é exatamente o comportamento anterior.
+   ============================================================================ */
+const INTERVALO_DO_TICKER = 5200;
+
+/* Abaixo disto a faixa não tem largura para a frase inteira.
+   Medido: a mais longa pede ~372px e sobram 280px a 320 e 350 a 390 — o texto
+   sai com reticências. Uma frase cortada parada já era o comportamento
+   anterior; CINCO frases cortadas passando seria pior que não ter ticker.
+   A partir de 640px sobram ~600px e todas cabem. */
+const LARGURA_MINIMA_DO_TICKER = 640;
+
+function TickerDaFaixa({ recados }: { recados: string[] }) {
+  const reduzido = useReducedMotion();
+  const [indice, setIndice] = useState(0);
+  const [pausado, setPausado] = useState(false);
+  const [cabe, setCabe] = useState(false);
+
+  useEffect(() => {
+    const consulta = window.matchMedia(`(min-width: ${LARGURA_MINIMA_DO_TICKER}px)`);
+    const aplicar = () => {
+      setCabe(consulta.matches);
+      if (!consulta.matches) setIndice(0);
+    };
+    aplicar();
+    consulta.addEventListener("change", aplicar);
+    return () => consulta.removeEventListener("change", aplicar);
+  }, []);
+
+  useEffect(() => {
+    if (reduzido || pausado || !cabe || recados.length < 2) return;
+    const id = window.setInterval(
+      () => setIndice((i) => (i + 1) % recados.length),
+      INTERVALO_DO_TICKER,
+    );
+    return () => window.clearInterval(id);
+  }, [reduzido, pausado, cabe, recados.length]);
+
+  if (recados.length === 0) return null;
+
+  const atual = recados[Math.min(indice, recados.length - 1)];
+
+  return (
+    <div
+      className="relative min-w-0 flex-1 overflow-hidden"
+      onMouseEnter={() => setPausado(true)}
+      onMouseLeave={() => setPausado(false)}
+      onFocus={() => setPausado(true)}
+      onBlur={() => setPausado(false)}
+    >
+      {/* o que o leitor de tela recebe: a lista inteira, uma vez, sem rotação */}
+      <span className="sr-only">{recados.join(" · ")}</span>
+
+      <div aria-hidden className="grid px-5 py-2">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.p
+            key={atual}
+            initial={reduzido ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduzido ? undefined : { opacity: 0, y: -6 }}
+            transition={{ duration: reduzido ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
+            className="col-start-1 row-start-1 truncate text-center text-[0.75rem] font-semibold text-white/95"
+          >
+            {atual}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
 export function Cabecalho({
   categorias,
   condicoes,
@@ -211,29 +301,7 @@ export function Cabecalho({
               </p>
             ) : null}
 
-            {/* Um recado, parado.
-
-                A faixa já foi cinco recados em rolagem infinita, e a auditoria
-                de 08/09 tirou por um motivo que volta a aparecer em qualquer
-                captura: o trilho corre por baixo dos dois blocos fixos das
-                pontas — horário à esquerda, telefone e WhatsApp à direita — e
-                o texto entra e sai **cortado no meio da palavra**. A 1600px dá
-                para ler "…mentos, assistência e pós-venda no mesmo
-                relacionamento." de um lado e "Assistência técnica p…" do
-                outro.
-
-                Máscara de fade não resolve: só troca o corte seco por um corte
-                esmaecido, e continua ilegível na borda. O que resolve é o que
-                estava antes — uma frase, inteira, sem movimento. As outras
-                continuam disponíveis para quem usa leitor de tela. */}
-            <div className="min-w-0 flex-1 overflow-hidden" aria-label="Informações da JB">
-              <p className="truncate px-5 py-2 text-center text-[0.75rem] font-semibold text-white/95">
-                {recados[0]}
-              </p>
-              {recados.length > 1 ? (
-                <span className="sr-only">{recados.slice(1).join(" ")}</span>
-              ) : null}
-            </div>
+            <TickerDaFaixa recados={recados} />
 
             <div className="ml-auto hidden shrink-0 items-center gap-4 pl-6 lg:flex">
               {telefone ? (

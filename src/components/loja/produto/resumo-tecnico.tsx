@@ -39,6 +39,8 @@ type Props = {
 };
 
 type PropsDetalhes = {
+  /** HTML já sanitizado do diferencial do modelo. Vazio esconde o bloco. */
+  descricaoHtml?: string;
   modelo: string;
   sku: string;
   codigoDoFabricante?: string | null;
@@ -151,6 +153,7 @@ export async function ResumoTecnicoProduto({
  */
 export const LIMITE_NA_COLUNA = 8;
 export function DetalhesDoProduto({
+  descricaoHtml,
   modelo,
   sku,
   codigoDoFabricante,
@@ -175,13 +178,31 @@ export function DetalhesDoProduto({
 
   const essenciais = destaques.slice(0, LIMITE_NA_COLUNA);
   const restantes = destaques.length - essenciais.length;
+  const temDiferencial = Boolean(descricaoHtml?.trim());
 
-  if (essenciais.length === 0 && identificadores.length === 0) return null;
+  if (essenciais.length === 0 && identificadores.length === 0 && !temDiferencial) return null;
 
   return (
     <div className="min-w-0">
-      {essenciais.length > 0 ? (
+      {temDiferencial ? (
         <div className="border-t border-graf-200 pt-4 lg:mt-6">
+          <p className="micro text-graf-500">O que diferencia este modelo</p>
+          {/* Os tópicos do produto, ao lado do preço.
+
+              Ficavam numa seção de largura inteira a 1.100px de rolagem —
+              o argumento de venda longe de onde a decisão acontece. São 96 a
+              265 caracteres em todo produto do catálogo: cabem aqui, e é aqui
+              que Amazon e Mercado Livre os colocam. */}
+          <div
+            className="prose-jb mt-2 text-corpo [&_li]:leading-6 [&_p]:leading-6 [&>*+*]:mt-2"
+            dangerouslySetInnerHTML={{ __html: descricaoHtml! }}
+          />
+        </div>
+      ) : null}
+      {essenciais.length > 0 ? (
+        <div
+          className={`border-t border-graf-200 pt-4 ${temDiferencial ? "mt-4" : "lg:mt-6"}`}
+        >
           <p className="micro text-graf-500">Especificações</p>
           {/* Filetes, não cartões: as linhas dividem uma régua e não carregam
               moldura própria. O mesmo desenho de `GradeDados`, na ficha.

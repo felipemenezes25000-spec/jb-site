@@ -3,6 +3,47 @@ import { expect, test, type Page } from "@playwright/test";
 const PRETO_JB = "rgb(26, 28, 30)";
 
 /**
+ * Uma categoria e um produto que existem NESTE banco.
+ *
+ * O spec fixava `/categoria/biosseguranca` e `/loja/motor-de-implante-35ncm`.
+ * Os dois existem no banco de desenvolvimento e **nenhum** existe na CI, que
+ * semeia `db:seed` + `db:demo` sem `db:vitrine`: lá a categoria de
+ * biossegurança tem o slug `bioseguranca`, com um "s" só — é a duplicata de
+ * cadastro que o README descreve, herdada da carga do site em PHP — e o motor
+ * de implante simplesmente não foi semeado.
+ *
+ * Com rota inexistente a página responde "não encontrado", e aí o teste ou
+ * mede o nada ou espera 20s por um controle que aquela tela não tem motivo
+ * para desenhar. Foi o que reprovou três testes só na CI.
+ *
+ * Descobrir os dois a partir do próprio catálogo custa uma navegação por
+ * arquivo e vale em qualquer banco semeado.
+ */
+let rotasDescobertas: { categoria: string; produto: string } | null = null;
+
+async function rotasQueExistem(page: Page) {
+  if (rotasDescobertas) return rotasDescobertas;
+
+  await page.goto("/loja");
+  const categoria = await page
+    .locator('a[href^="/categoria/"]')
+    .first()
+    .getAttribute("href")
+    .catch(() => null);
+  const produto = await page
+    .locator('a[href^="/loja/"]')
+    .first()
+    .getAttribute("href")
+    .catch(() => null);
+
+  rotasDescobertas = {
+    categoria: categoria ?? "/loja",
+    produto: produto ?? "/loja",
+  };
+  return rotasDescobertas;
+}
+
+/**
  * A casca pública VISÍVEL.
  *
  * Durante uma navegação o Next mantém a árvore da rota anterior no documento
@@ -21,14 +62,16 @@ function cascaPublica(page: Page) {
 
 test.describe("Legibilidade e alinhamento da loja pública", () => {
   test("textos secundários usam preto nas principais jornadas", async ({ page }) => {
+    const { categoria, produto } = await rotasQueExistem(page);
+
     for (const caminho of [
       "/",
       "/loja",
-      "/categoria/biosseguranca",
+      categoria,
       "/busca?q=autoclave",
       "/marcas",
       "/seminovos",
-      "/loja/motor-de-implante-35ncm",
+      produto,
       "/assistencia-tecnica",
     ]) {
       await page.goto(caminho);
@@ -79,6 +122,8 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
   });
 
   test("módulos visuais não recuperam texto cinza", async ({ page }) => {
+    const { categoria, produto } = await rotasQueExistem(page);
+
     const cinzasSecundarios = new Set([
       "rgb(102, 109, 118)",
       "rgb(99, 104, 112)",
@@ -91,8 +136,8 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
       for (const caminho of [
         "/",
         "/loja",
-        "/categoria/biosseguranca",
-        "/loja/motor-de-implante-35ncm",
+        categoria,
+        produto,
       ]) {
         await page.goto(caminho);
 

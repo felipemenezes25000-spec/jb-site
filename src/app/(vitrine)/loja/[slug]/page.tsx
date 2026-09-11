@@ -218,6 +218,31 @@ export default async function ProdutoPage({ params }: Props) {
   const descricao = produto.description.trim();
   const tamanhoDaDescricao = textoLimpo(descricao, 4000).length;
   const temDescricao = tamanhoDaDescricao > 0;
+
+  /* O que diferencia o modelo sobe para a dobra, ao lado do preço.
+
+     A descrição de todo produto do catálogo tem entre 96 e 265 caracteres — um
+     parágrafo e quatro ou cinco tópicos. Isso ocupava uma seção de largura
+     inteira, 375px de altura, a 1.100px de rolagem do preço. É o argumento de
+     venda longe de onde a decisão acontece, e é justamente o bloco que Amazon e
+     Mercado Livre põem na primeira dobra.
+
+     O parágrafo de abertura costuma ser o MESMO texto de `shortDescription`,
+     que a identidade já mostra logo acima do preço. Repetir a frase a 3cm dela
+     é ruído: quando for igual, entra só a lista. */
+  const resumoCurto = produto.shortDescription.trim();
+  const aberturaRepetida = resumoCurto ? `<p>${resumoCurto}</p>` : "";
+  const descricaoNaDobra =
+    aberturaRepetida && descricao.startsWith(aberturaRepetida)
+      ? descricao.slice(aberturaRepetida.length).trim()
+      : descricao;
+
+  /* A seção de largura inteira só se justifica com texto de verdade. Abaixo
+     deste tamanho ela seria uma moldura em volta de cinco linhas que já estão
+     na dobra — e, como o corte é o mesmo para todo produto, a ficha não muda
+     de forma de um item para o outro. */
+  const DESCRICAO_LONGA = 900;
+  const descricaoMereceSecao = tamanhoDaDescricao > DESCRICAO_LONGA;
   const temEspecificacoes = grupos.length > 0;
   const temApoioTecnico = temMedidas || temRegulatorio || documentos.length > 0;
 
@@ -377,6 +402,9 @@ export default async function ProdutoPage({ params }: Props) {
         }
         detalhes={
           <DetalhesDoProduto
+            descricaoHtml={
+              descricaoNaDobra ? sanitizarHtml(descricaoNaDobra) : undefined
+            }
             modelo={produto.model}
             sku={produto.sku}
             codigoDoFabricante={produto.mpn}
@@ -470,7 +498,7 @@ export default async function ProdutoPage({ params }: Props) {
       ) : null}
 
       <div className="container-jb max-w-[100rem]">
-        {temDescricao ? (
+        {temDescricao && descricaoMereceSecao ? (
           <BlocoDecisao
             id="sobre"
             titulo="Sobre o produto"
