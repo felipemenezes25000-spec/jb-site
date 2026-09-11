@@ -210,20 +210,39 @@
 .destaque,
 .destaqueVazio {
   min-width: 0;
+  position: relative;
   border: 1px solid var(--color-graf-200);
   border-radius: 1rem;
-  background: var(--color-graf-50);
+  background: var(--color-surface);
 }
 
+/* Lâmina de cor deslocada atrás do cartão.
+
+   O destaque era um retângulo cinza sobre fundo branco, e a primeira dobra
+   terminava em dois tons de quase-branco. Uma lâmina de `jb-50` 10px abaixo e
+   à direita dá profundidade com o tint da própria marca — sem sombra pesada,
+   sem gradiente, sem cor nova.
+
+   Desenhada por `box-shadow` com desfoque zero, e não por um `::before`: um
+   pseudo-elemento com `z-index: -1` cai atrás do FUNDO do próprio cartão e não
+   aparece; e um wrapper só para isso pediria mudança de marcação. A sombra
+   sólida resolve em uma linha e não entra no fluxo. */
 .destaque {
   display: grid;
   overflow: hidden;
+  box-shadow: 10px 10px 0 0 var(--color-jb-50);
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.destaqueVazio {
+  box-shadow: 10px 10px 0 0 var(--color-jb-50);
 }
 
 .destaque:hover {
   border-color: var(--color-graf-300);
-  box-shadow: 0 18px 45px -34px rgb(26 28 30 / 0.28);
+  box-shadow:
+    14px 14px 0 0 var(--color-jb-50),
+    0 18px 45px -34px rgb(26 28 30 / 0.28);
   transform: translateY(-2px);
 }
 
