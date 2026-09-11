@@ -48,7 +48,7 @@ export default async function CarrinhoPage() {
       <header className="max-w-2xl">
         <h1 className="manchete text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">Seu carrinho</h1>
         {totais.linhas.length > 0 ? (
-          <p className="mt-2.5 max-w-xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+          <p className="mt-2.5 max-w-xl text-sm leading-6 text-graf-600 sm:text-corpo">
             Confira os produtos e quantidades. Frete e entrega são definidos antes do pagamento.
           </p>
         ) : null}
@@ -155,14 +155,14 @@ export default async function CarrinhoPage() {
 
                   <div className="flex items-start justify-between gap-4">
                     <dt className="text-graf-600">Entrega</dt>
-                    <dd className="max-w-40 text-right text-[0.8125rem] leading-5 text-graf-500">
+                    <dd className="max-w-40 text-right text-apoio leading-5 text-graf-500">
                       calculada pelo CEP na próxima etapa
                     </dd>
                   </div>
                 </dl>
 
                 {totais.cupomErro ? (
-                  <p className="mt-4 rounded-lg bg-warn-50 px-3.5 py-2.5 text-[0.8125rem] leading-5 text-warn-700 ring-1 ring-inset ring-warn-500/25">
+                  <p className="mt-4 rounded-lg bg-warn-50 px-3.5 py-2.5 text-apoio leading-5 text-warn-700 ring-1 ring-inset ring-warn-500/25">
                     {totais.cupomErro}
                   </p>
                 ) : null}
@@ -177,7 +177,7 @@ export default async function CarrinhoPage() {
                     </span>
                   </div>
                   {parcelas ? (
-                    <p className="mt-1.5 text-right text-[0.8125rem] leading-5 text-graf-500">
+                    <p className="mt-1.5 text-right text-apoio leading-5 text-graf-500">
                       até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)} sem juros
                     </p>
                   ) : null}
@@ -202,7 +202,7 @@ export default async function CarrinhoPage() {
 
               {whatsapp ? (
                 <div className="border-t border-graf-150 bg-graf-50/50 px-5 py-4 sm:px-6">
-                  <p className="text-[0.8125rem] font-bold text-graf-900">Precisa de ajuda antes de fechar?</p>
+                  <p className="text-apoio font-bold text-graf-900">Precisa de ajuda antes de fechar?</p>
                   <div className="mt-2 flex items-center justify-between gap-3">
                     <p className="text-[0.75rem] leading-5 text-graf-500">
                       A equipe JB pode orientar sobre produto, compatibilidade e entrega.

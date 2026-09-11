@@ -202,7 +202,7 @@ export function BarraComparar() {
       style={{ bottom: "calc(1rem + var(--jb-barra-inferior, 0px))" }}
     >
       <div className="pointer-events-auto flex w-full max-w-3xl flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-graf-200 bg-white p-2.5 shadow-pop sm:flex-nowrap">
-        <span className="flex shrink-0 items-center gap-2 pl-1.5 text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+        <span className="flex shrink-0 items-center gap-2 pl-1.5 text-apoio font-bold uppercase tracking-[0.08em] text-graf-500">
           <Scale className="size-4 text-jb-600" aria-hidden />
           Comparar
         </span>
@@ -210,7 +210,7 @@ export function BarraComparar() {
         <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
           {itens.map((item) => (
             <li key={item.slug}>
-              <span className="flex max-w-56 items-center gap-1 rounded-full border border-graf-200 bg-graf-50 py-1 pl-3 pr-1 text-[0.8125rem] font-semibold text-graf-800">
+              <span className="flex max-w-56 items-center gap-1 rounded-full border border-graf-200 bg-graf-50 py-1 pl-3 pr-1 text-apoio font-semibold text-graf-800">
                 <span className="truncate">{item.nome}</span>
                 <button
                   type="button"
@@ -229,7 +229,7 @@ export function BarraComparar() {
           <button
             type="button"
             onClick={limpar}
-            className="foco-jb hidden min-h-11 items-center rounded-lg px-2.5 text-[0.8125rem] font-semibold text-graf-500 transition-colors hover:bg-graf-50 hover:text-graf-800 sm:inline-flex"
+            className="foco-jb hidden min-h-11 items-center rounded-lg px-2.5 text-apoio font-semibold text-graf-500 transition-colors hover:bg-graf-50 hover:text-graf-800 sm:inline-flex"
           >
             Limpar
           </button>

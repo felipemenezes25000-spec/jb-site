@@ -39,15 +39,27 @@
   }
 }
 
+/* ============================================================================
+   Do desktop em diante a grade conta o espaço que sobra, não a janela
+
+   As faixas eram fixas por viewport — 3 colunas em 1024px, 4 em 1440px. Isso
+   funcionava enquanto a grade ocupava a largura inteira. Com a coluna de
+   filtros à esquerda comendo 17rem, a conta passou a dar errado nas duas
+   pontas: a 1024px saíam três cartões de 205px, e a 1440px o cartão
+   *encolhia* de 305px (3 colunas) para 243px (4 colunas) — a janela crescia e
+   a peça diminuía.
+
+   `auto-fill` com piso de 16,5rem tira a adivinhação: a grade cabe quantas
+   colunas couberem no espaço real, com ou sem a lateral. Fica monotônico —
+   2 colunas a 1024, 3 até 1440, 4 de 1600 em diante — e nenhum cartão abaixo
+   de 264px.
+
+   Abaixo de 1024px continua fixo em duas colunas: lá não há lateral, e o piso
+   de 16,5rem cairia para uma coluna só num celular de 390px.
+   ============================================================================ */
 @media (min-width: 1024px) {
   .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1440px) {
-  .grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
   }
 }
 

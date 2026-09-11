@@ -54,7 +54,7 @@ export function Conteudo404({
         <BuscaHero />
       </div>
 
-      <h2 className="mt-12 text-[0.8125rem] font-bold text-graf-950 sm:mt-14">
+      <h2 className="mt-12 text-apoio font-bold text-graf-950 sm:mt-14">
         Caminhos mais procurados
       </h2>
       <ul className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">

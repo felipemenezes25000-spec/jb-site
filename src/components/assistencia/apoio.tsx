@@ -136,7 +136,7 @@ function Canal({
         <Icone className="size-4" />
       </span>
       <span className="min-w-0">
-        <span className="block text-[0.8125rem] leading-tight text-graf-500">{canal}</span>
+        <span className="block text-apoio leading-tight text-graf-500">{canal}</span>
         <span className="mt-0.5 block font-semibold leading-tight text-graf-950">{valor}</span>
       </span>
     </a>
@@ -198,7 +198,7 @@ export function CabecalhoAssistencia({
             <p
               className={cn(
                 "texto-suave max-w-2xl lg:texto-guia lg:mt-5",
-                compacto ? "mt-3 text-[0.9375rem] leading-relaxed" : "texto-guia mt-5",
+                compacto ? "mt-3 text-corpo leading-relaxed" : "texto-guia mt-5",
               )}
             >
               {resumo}

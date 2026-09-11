@@ -203,7 +203,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Busc
           <span className="block truncate font-medium text-graf-900">
             {linha.companyName || linha.buyerName}
           </span>
-          <span className="block truncate text-[0.8125rem] text-graf-500">{linha.buyerEmail}</span>
+          <span className="block truncate text-apoio text-graf-500">{linha.buyerEmail}</span>
         </span>
       ),
     },
@@ -248,7 +248,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Busc
           // deixava o selo com a barriga torta.
           <span className="block">
             <Etiqueta tom="ok">Pago</Etiqueta>
-            <span className="tabular mt-1 block text-[0.8125rem] text-graf-500">
+            <span className="tabular mt-1 block text-apoio text-graf-500">
               {formatarData(linha.paidAt)}
             </span>
           </span>

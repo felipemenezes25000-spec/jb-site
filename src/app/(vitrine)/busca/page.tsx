@@ -48,7 +48,7 @@ function CabecalhoDoGrupo({
         {ROTULO_DO_GRUPO[grupo]}
         <span className="tabular ml-2 text-sm font-semibold text-graf-500">{quantidade}</span>
       </h2>
-      <p className="max-w-xl text-[0.8125rem] leading-5 text-graf-500">
+      <p className="max-w-xl text-apoio leading-5 text-graf-500">
         {porQueEsteGrupo(grupo, intencao)}
       </p>
     </div>
@@ -109,11 +109,11 @@ function Grupo({
               >
                 <BookOpen className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-bold text-graf-950">
+                  <span className="block text-corpo font-bold text-graf-950">
                     {artigo.titulo}
                   </span>
                   {artigo.chamada ? (
-                    <span className="mt-0.5 block text-[0.8125rem] leading-5 text-graf-600">
+                    <span className="mt-0.5 block text-apoio leading-5 text-graf-600">
                       {artigo.chamada}
                     </span>
                   ) : null}
@@ -144,11 +144,11 @@ function Grupo({
               >
                 <Wrench className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-bold text-graf-950">
+                  <span className="block text-corpo font-bold text-graf-950">
                     {servico.titulo}
                   </span>
                   {servico.descricao ? (
-                    <span className="mt-0.5 block text-[0.8125rem] leading-5 text-graf-600">
+                    <span className="mt-0.5 block text-apoio leading-5 text-graf-600">
                       {servico.descricao}
                     </span>
                   ) : null}
@@ -180,10 +180,10 @@ function Grupo({
               <span className="flex min-w-0 items-start gap-3.5">
                 <Stethoscope className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-bold text-graf-950">
+                  <span className="block text-corpo font-bold text-graf-950">
                     {equipamento.nome}
                   </span>
-                  <span className="mt-0.5 block text-[0.8125rem] text-graf-600">
+                  <span className="mt-0.5 block text-apoio text-graf-600">
                     {[equipamento.marca, equipamento.modelo].filter(Boolean).join(" ") ||
                       "Marca e modelo não cadastrados"}
                   </span>

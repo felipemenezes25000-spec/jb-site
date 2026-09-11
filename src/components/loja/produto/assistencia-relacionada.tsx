@@ -84,7 +84,7 @@ export function AssistenciaRelacionada({
                   {caminho.titulo}
                 </Link>
               </h3>
-              <p className="texto-suave mt-2 text-[0.9375rem] leading-relaxed">
+              <p className="texto-suave mt-2 text-base leading-relaxed">
                 {caminho.texto}
               </p>
               <span className="mt-3.5 inline-flex items-center gap-1.5 text-sm font-semibold text-jb-700">

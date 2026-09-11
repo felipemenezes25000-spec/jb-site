@@ -147,7 +147,7 @@ export default async function PaginaEditarCase({
 
         {caso.customerConsent ? (
           <>
-            <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-700">
+            <p className="mt-2 text-corpo leading-relaxed text-graf-700">
               Registrada
               {caso.customerConsentAt
                 ? ` em ${formatarDataHora(caso.customerConsentAt)}`
@@ -168,7 +168,7 @@ export default async function PaginaEditarCase({
                   variante="perigo"
                   icone={<ShieldOff className="size-4" aria-hidden />}
                 />
-                <p className="mt-2 text-[0.8125rem] text-graf-500">
+                <p className="mt-2 text-apoio text-graf-500">
                   Revogar tira o case do ar na mesma operação.
                 </p>
               </div>
@@ -176,7 +176,7 @@ export default async function PaginaEditarCase({
           </>
         ) : (
           <>
-            <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+            <p className="mt-2 text-corpo leading-relaxed text-graf-600">
               Sem autorização, este case não vai ao ar — mesmo completo e revisado. O vínculo com
               a ordem de serviço prova o que aconteceu para a JB; ele não autoriza publicar.
             </p>

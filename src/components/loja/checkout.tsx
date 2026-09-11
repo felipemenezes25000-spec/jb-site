@@ -197,7 +197,7 @@ function OpcaoDeAcesso({
       />
       <span className="min-w-0">
         <span className="block text-sm font-bold text-graf-950">{titulo}</span>
-        <span className="mt-0.5 block text-[0.8125rem] leading-relaxed text-graf-600">
+        <span className="mt-0.5 block text-apoio leading-relaxed text-graf-600">
           {detalhe}
         </span>
       </span>
@@ -287,7 +287,7 @@ function BlocoRevisao({
   return (
     <div className="rounded-xl border border-graf-200 bg-white p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="flex items-center gap-2 text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500">
+        <h3 className="flex items-center gap-2 text-apoio font-bold uppercase tracking-wider text-graf-500">
           <Icone className="size-4 shrink-0 text-graf-500" aria-hidden />
           {titulo}
         </h3>
@@ -301,7 +301,7 @@ function BlocoRevisao({
           <span className="sr-only"> {titulo.toLowerCase()}</span>
         </button>
       </div>
-      <div className="mt-3 space-y-1 text-[0.9375rem] leading-relaxed text-graf-800">
+      <div className="mt-3 space-y-1 text-corpo leading-relaxed text-graf-800">
         {children}
       </div>
     </div>
@@ -1041,7 +1041,7 @@ export function Checkout({
                       {freteEntrega.rotulo}
                       {prazoDoFrete ? ` · ${prazoDoFrete}` : ""}
                     </p>
-                    <p className="mt-1 text-[0.8125rem] text-graf-500">
+                    <p className="mt-1 text-apoio text-graf-500">
                       O valor já está somado no resumo do pedido.
                     </p>
                   </CaixaFrete>
@@ -1062,7 +1062,7 @@ export function Checkout({
             <span className="text-xl font-extrabold tabular tracking-tight text-graf-950">
               {formatarPreco(totalComFreteCents)}
             </span>
-            <span className="w-full text-[0.8125rem] leading-relaxed text-graf-500">
+            <span className="w-full text-apoio leading-relaxed text-graf-500">
               {entrega === "retirada"
                 ? "Retirada na JB, sem custo de frete."
                 : frete?.orcadoDepois

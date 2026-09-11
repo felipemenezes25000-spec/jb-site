@@ -44,7 +44,7 @@ export default async function EscolherEntregaPage() {
         <h1 className="manchete mt-1.5 text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">
           Escolha como receber
         </h1>
-        <p className="mt-2.5 max-w-xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+        <p className="mt-2.5 max-w-xl text-sm leading-6 text-graf-600 sm:text-corpo">
           Informe o CEP para comparar as opções disponíveis. A modalidade escolhida é conferida novamente antes do pagamento.
         </p>
       </header>

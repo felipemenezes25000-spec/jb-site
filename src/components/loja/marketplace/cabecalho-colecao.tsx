@@ -38,7 +38,7 @@ export function CabecalhoColecao({
             {titulo}
           </h1>
           {descricao ? (
-            <p className="mt-2.5 max-w-3xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+            <p className="mt-2.5 max-w-3xl text-sm leading-6 text-graf-600 sm:text-corpo">
               {descricao}
             </p>
           ) : null}
@@ -60,13 +60,21 @@ export function CabecalhoColecao({
       {atalhos?.length ? (
         <nav
           aria-label={rotuloAtalhos}
-          className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 py-3 sm:mx-0 sm:px-0"
+          /* A fileira rola na horizontal e não dizia isso a ninguém: a 1440px
+             o último atalho aparecia cortado a seco no meio da palavra
+             ("Todas as m…"), o que se lê como defeito, não como "tem mais para
+             o lado". A máscara transforma o corte em esmaecimento — quando os
+             atalhos cabem, ela cai sobre espaço vazio e não aparece.
+
+             `scroll-p-4` é para o teclado: sem isso o atalho focado encostava
+             na borda esmaecida. */
+          className="scrollbar-none -mx-4 flex scroll-p-4 gap-2 overflow-x-auto px-4 py-3 [mask-image:linear-gradient(to_right,#000_calc(100%-3rem),transparent)] sm:mx-0 sm:px-0"
         >
           {atalhos.map((atalho) => (
             <Link
               key={atalho.href}
               href={atalho.href}
-              className="foco-jb inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700"
+              className="foco-jb inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 text-apoio font-semibold text-graf-700 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700"
             >
               <span>{atalho.rotulo}</span>
               {atalho.quantidade === undefined ? null : (

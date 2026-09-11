@@ -7,7 +7,7 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
     for (const caminho of [
       "/",
       "/loja",
-      "/categoria/cirurgia",
+      "/categoria/biosseguranca",
       "/busca?q=autoclave",
       "/marcas",
       "/seminovos",
@@ -19,29 +19,42 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
       const casca = page.locator('[data-jb-publico="true"]');
       await expect(casca, `casca pública ausente em ${caminho}`).toHaveCount(1);
 
-      const cores = await casca.evaluate((raiz) => {
-        const seletores = [
-          ".text-graf-500",
-          ".text-graf-600",
-          ".text-graf-700",
-          '[class*="text-graf-950/"]',
-        ].join(",");
+      const amostrar = () =>
+        casca.evaluate((raiz) => {
+          const seletores = [
+            ".text-graf-500",
+            ".text-graf-600",
+            ".text-graf-700",
+            '[class*="text-graf-950/"]',
+          ].join(",");
 
-        return Array.from(raiz.querySelectorAll<HTMLElement>(seletores))
-          .filter(
-            (elemento) =>
-              elemento.textContent?.trim() &&
-              !elemento.classList.contains("line-through") &&
-              elemento.checkVisibility({
-                opacityProperty: true,
-                visibilityProperty: true,
-                contentVisibilityAuto: true,
-              }),
-          )
-          .map((elemento) => getComputedStyle(elemento).color);
-      });
+          return Array.from(raiz.querySelectorAll<HTMLElement>(seletores))
+            .filter(
+              (elemento) =>
+                elemento.textContent?.trim() &&
+                !elemento.classList.contains("line-through") &&
+                elemento.checkVisibility({
+                  opacityProperty: true,
+                  visibilityProperty: true,
+                  contentVisibilityAuto: true,
+                }),
+            )
+            .map((elemento) => getComputedStyle(elemento).color);
+        });
 
-      expect(cores.length, `sem amostra de texto em ${caminho}`).toBeGreaterThan(0);
+      /* A guarda contra amostra vazia precisa de espera, não de uma leitura
+         só. Catálogo e busca chegam por streaming: quando `goto` resolve, a
+         casca já existe mas o miolo ainda pode ser o esqueleto — e ali não há
+         texto nenhum para medir. Com a rota fria isso rendia "sem amostra de
+         texto em /busca?q=autoclave" enquanto a mesma página, medida um
+         segundo depois, oferecia 95 amostras. */
+      await expect
+        .poll(async () => (await amostrar()).length, {
+          message: `sem amostra de texto em ${caminho}`,
+        })
+        .toBeGreaterThan(0);
+
+      const cores = await amostrar();
       expect(new Set(cores), `texto cinza encontrado em ${caminho}`).toEqual(
         new Set([PRETO_JB]),
       );
@@ -61,7 +74,7 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
       for (const caminho of [
         "/",
         "/loja",
-        "/categoria/cirurgia",
+        "/categoria/biosseguranca",
         "/loja/motor-de-implante-35ncm",
       ]) {
         await page.goto(caminho);
@@ -106,11 +119,11 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/loja");
 
-    const link = page.getByRole("navigation", { name: "Principal" }).getByRole("link", {
-      name: "Equipamentos",
-      exact: true,
-    });
-    const botao = page.getByRole("button", { name: "Abrir o menu de Equipamentos" });
+    // hoje o item chama-se "Loja", e o gatilho do mega menu é um botão irmão
+    // com o mesmo nome, ao lado do link
+    const principal = page.getByRole("navigation", { name: "Principal" });
+    const link = principal.getByRole("link", { name: /^Loja$/ }).first();
+    const botao = principal.getByRole("button", { name: /Loja/ }).first();
     const [caixaLink, caixaBotao] = await Promise.all([link.boundingBox(), botao.boundingBox()]);
 
     expect(caixaLink).not.toBeNull();
@@ -120,9 +133,9 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
 
   test("ordenação continua legível na largura mínima suportada", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 844 });
-    await page.goto("/categoria/cirurgia");
+    await page.goto("/categoria/biosseguranca");
 
-    const filtros = page.getByRole("button", { name: "Todos os filtros" });
+    const filtros = page.getByRole("button", { name: "Abrir filtros" });
     const ordem = page.getByRole("combobox", { name: "Ordenar resultados" });
     const [caixaFiltros, caixaOrdem] = await Promise.all([
       filtros.boundingBox(),
@@ -140,9 +153,13 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
 
+    /* Compara os ITENS do trilho, não os `span` dentro deles: cada cartão de
+       marca tem três (logo, nome e legenda), empilhados — comparar span a span
+       acusava "sobreposição" onde só há empilhamento vertical dentro do mesmo
+       cartão. O que precisa não se sobrepor é um cartão sobre o outro. */
     const textos = page
-      .getByRole("region", { name: "Diferenciais da JB" })
-      .locator('ul:not([aria-hidden="true"]) li span');
+      .getByRole("region", { name: "Marcas no catálogo" })
+      .locator('ul:not([aria-hidden="true"]) > li');
     const caixas = await textos.evaluateAll((elementos) =>
       elementos.map((elemento) => {
         const caixa = elemento.getBoundingClientRect();
@@ -204,6 +221,29 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
 
     for (const caminho of ["/", "/loja", "/seminovos", "/busca?q=autoclave"]) {
       await page.goto(caminho);
+
+      /* Espera o estilo estar aplicado antes de medir.
+
+         No `next dev` o CSS de uma rota chega depois do HTML na primeira
+         compilação dela. Medido nessa janela, TODO controle da página aparece
+         menor que 44px: num servidor recém-subido este teste acusou 137 alvos
+         pequenos em /loja — praticamente cada link da página — e passou
+         sozinho, com a rota já quente.
+
+         O botão do menu é `size-11`, 44px por desenho. Esperar que ele MEÇA
+         44px é esperar o estilo, e não um tempo arbitrário. */
+      await expect
+        .poll(
+          async () => {
+            const caixa = await page
+              .getByRole("button", { name: /^Abrir o menu$/ })
+              .first()
+              .boundingBox();
+            return caixa ? Math.round(caixa.height) : 0;
+          },
+          { message: `o estilo de ${caminho} precisa estar aplicado antes de medir alvos` },
+        )
+        .toBeGreaterThanOrEqual(44);
 
       const pequenos = await page.locator('[data-jb-publico="true"]').evaluate((raiz) => {
         const caminhoElemento = (elemento: Element) =>

@@ -442,7 +442,7 @@ export default async function PedidoPage({ params }: Props) {
                       ) : null}
 
                       {verCustos && custoUnitario ? (
-                        <p className="mt-2 text-[0.8125rem] text-graf-500">
+                        <p className="mt-2 text-apoio text-graf-500">
                           Custo {formatarPreco(custoUnitario)} por unidade · margem do item{" "}
                           <span className="font-semibold text-graf-700">
                             {formatarPreco(item.totalCents - custoUnitario * item.quantity)}
@@ -491,7 +491,7 @@ export default async function PedidoPage({ params }: Props) {
                       rotulo={`Margem bruta (${margemPercentual}%)`}
                       valor={formatarPreco(margem)}
                     />
-                    <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-500">
+                    <p className="mt-1 text-apoio leading-relaxed text-graf-500">
                       Não inclui frete nem itens sem custo cadastrado.
                     </p>
                   </div>
@@ -573,14 +573,14 @@ export default async function PedidoPage({ params }: Props) {
                           {ROTULO_PAGAMENTO[pagamento.status]}
                         </Etiqueta>
                       </div>
-                      <p className="text-[0.8125rem] text-graf-500">
+                      <p className="text-apoio text-graf-500">
                         {rotuloProvedor(pagamento.provider)} ·{" "}
                         {formatarDataHora(pagamento.createdAt)}
                         {pagamento.installments > 1 ? ` · ${pagamento.installments}x` : ""}
                         {pagamento.cardLast4 ? ` · final ${pagamento.cardLast4}` : ""}
                       </p>
                       {pagamento.failReason ? (
-                        <p className="mt-1 text-[0.8125rem] text-jb-700">{pagamento.failReason}</p>
+                        <p className="mt-1 text-apoio text-jb-700">{pagamento.failReason}</p>
                       ) : null}
                     </li>
                   ))}
@@ -605,7 +605,7 @@ export default async function PedidoPage({ params }: Props) {
                         {ROTULO_TAREFA[tarefa.status] ?? tarefa.status}
                         {tarefa.scheduledAt ? ` — ${formatarDataHora(tarefa.scheduledAt)}` : ""}
                       </p>
-                      <p className="text-[0.8125rem] text-graf-500">
+                      <p className="text-apoio text-graf-500">
                         {tarefa.appointment?.technician?.user.name
                           ? `Técnico: ${tarefa.appointment.technician.user.name}`
                           : "Sem técnico definido"}

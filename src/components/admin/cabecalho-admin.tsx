@@ -197,7 +197,7 @@ export function CabecalhoAdmin({
               {iniciais || "JB"}
             </span>
             <span className="hidden min-w-0 leading-tight lg:block">
-              <span className="block max-w-[10rem] truncate text-[0.8125rem] font-semibold text-graf-900">
+              <span className="block max-w-[10rem] truncate text-apoio font-semibold text-graf-900">
                 {nome}
               </span>
               <span className="block max-w-[10rem] truncate text-[0.65rem] text-graf-500" title={email}>

@@ -32,7 +32,7 @@ export function CabecalhoBase({
             {etiquetas}
           </div>
           {descricao ? (
-            <p className="mt-2.5 max-w-3xl text-[0.9375rem] leading-relaxed text-graf-500">
+            <p className="mt-2.5 max-w-3xl text-corpo leading-relaxed text-graf-500">
               {descricao}
             </p>
           ) : null}
@@ -71,7 +71,7 @@ export function ParDados({
       </dt>
       <dd
         className={cn(
-          "mt-1.5 text-[0.9375rem] leading-relaxed",
+          "mt-1.5 text-corpo leading-relaxed",
           temValor ? "font-semibold text-graf-900" : "italic text-graf-500",
         )}
       >
@@ -166,7 +166,7 @@ export function BarraForm({
       )}
     >
       {ajuda ? (
-        <p className="min-w-0 flex-1 text-[0.8125rem] leading-relaxed text-graf-500">{ajuda}</p>
+        <p className="min-w-0 flex-1 text-apoio leading-relaxed text-graf-500">{ajuda}</p>
       ) : null}
       <div className={cn("flex flex-wrap items-center gap-3", !ajuda && "ml-auto")}>{children}</div>
     </div>

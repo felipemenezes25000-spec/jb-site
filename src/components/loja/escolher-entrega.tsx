@@ -60,7 +60,7 @@ export function EscolherEntrega({
           <section>
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-graf-200 pb-3">
               <h2 className="text-lg font-extrabold text-graf-950">Opções de entrega</h2>
-              <p className="text-[0.8125rem] text-graf-500">Escolha uma para continuar</p>
+              <p className="text-apoio text-graf-500">Escolha uma para continuar</p>
             </div>
 
             <div className="overflow-hidden rounded-xl border border-graf-200 bg-white">
@@ -79,7 +79,7 @@ export function EscolherEntrega({
                       </span>
                       <div className="min-w-0">
                         <p className="font-bold text-graf-950">{opcao.companyName}</p>
-                        <p className="mt-0.5 text-[0.8125rem] text-graf-600">{opcao.serviceName}</p>
+                        <p className="mt-0.5 text-apoio text-graf-600">{opcao.serviceName}</p>
                         {opcao.quotedLater ? (
                           <p className="mt-1 text-[0.75rem] font-semibold text-warn-700">
                             Valor confirmado antes do despacho
@@ -121,7 +121,7 @@ export function EscolherEntrega({
               <Store className="mt-0.5 size-4 shrink-0 text-jb-700" aria-hidden />
               <div>
                 <h2 className="text-sm font-bold text-graf-950">Retirar na JB</h2>
-                <p className="mt-1 text-[0.8125rem] leading-5 text-graf-600">
+                <p className="mt-1 text-apoio leading-5 text-graf-600">
                   Sem custo de frete. A retirada é combinada após a confirmação do pedido.
                 </p>
               </div>
@@ -135,7 +135,7 @@ export function EscolherEntrega({
         <div className="rounded-xl border border-graf-200 bg-graf-50/60 p-4">
           <PackageCheck className="size-4 text-jb-700" aria-hidden />
           <p className="mt-2 text-sm font-bold text-graf-900">Cotação vinculada ao pedido</p>
-          <p className="mt-1 text-[0.8125rem] leading-5 text-graf-600">
+          <p className="mt-1 text-apoio leading-5 text-graf-600">
             Peso, dimensões, quantidade e CEP entram no cálculo. O valor escolhido é conferido novamente antes do pagamento.
           </p>
         </div>

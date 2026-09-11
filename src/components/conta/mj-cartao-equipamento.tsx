@@ -102,39 +102,49 @@ export function CartaoEquipamento({ equipamento }: { equipamento: EquipamentoDoC
           </p>
         ) : null}
 
+        {/* Dentro de uma `<dl>`, um `<div>` de agrupamento só pode conter
+            `<dt>` e `<dd>` — e aqui havia um `<span>` com o ícone entre os
+            dois, o que o axe acusa como `definition-list` (grave). O ícone
+            passou para dentro do `<dd>`, que virou a linha em si. */}
         <dl className="mt-4 space-y-2 border-t border-graf-100 pt-3.5 text-xs">
           {lugar ? (
-            <div className="flex items-start gap-2.5">
+            <div>
               <dt className="sr-only">Local</dt>
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-graf-500">
-                <MapPin className="size-3.5" aria-hidden />
-              </span>
-              <dd className="min-w-0 pt-1 text-graf-600">{lugar}</dd>
+              <dd className="flex items-start gap-2.5 text-graf-600">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-graf-500">
+                  <MapPin className="size-3.5" aria-hidden />
+                </span>
+                <span className="min-w-0 pt-1">{lugar}</span>
+              </dd>
             </div>
           ) : null}
 
           {equipamento.warrantyUntil ? (
-            <div className="flex items-start gap-2.5">
+            <div>
               <dt className="sr-only">Garantia</dt>
-              <span className={`flex size-6 shrink-0 items-center justify-center rounded-lg ${garantiaValida ? "bg-ok-50 text-ok-700" : "bg-graf-50 text-graf-500"}`}>
-                <ShieldCheck className="size-3.5" aria-hidden />
-              </span>
-              <dd className={`pt-1 ${garantiaValida ? "text-ok-700" : "text-graf-500"}`}>
-                {garantiaValida ? "Garantia até " : "Garantia venceu em "}
-                {formatarData(equipamento.warrantyUntil)}
+              <dd className={`flex items-start gap-2.5 ${garantiaValida ? "text-ok-700" : "text-graf-500"}`}>
+                <span className={`flex size-6 shrink-0 items-center justify-center rounded-lg ${garantiaValida ? "bg-ok-50 text-ok-700" : "bg-graf-50 text-graf-500"}`}>
+                  <ShieldCheck className="size-3.5" aria-hidden />
+                </span>
+                <span className="pt-1">
+                  {garantiaValida ? "Garantia até " : "Garantia venceu em "}
+                  {formatarData(equipamento.warrantyUntil)}
+                </span>
               </dd>
             </div>
           ) : null}
 
           {equipamento.nextMaintenanceAt ? (
-            <div className="flex items-start gap-2.5">
+            <div>
               <dt className="sr-only">Próxima manutenção</dt>
-              <span className={`flex size-6 shrink-0 items-center justify-center rounded-lg ${preventivaAtrasada ? "bg-jb-50 text-jb-600" : "bg-graf-50 text-graf-500"}`}>
-                <CalendarClock className="size-3.5" aria-hidden />
-              </span>
-              <dd className={`pt-1 ${preventivaAtrasada ? "font-semibold text-jb-700" : "text-graf-600"}`}>
-                {preventivaAtrasada ? "Preventiva atrasada — " : "Preventiva "}
-                {distanciaEmDias(equipamento.nextMaintenanceAt)} ({formatarData(equipamento.nextMaintenanceAt)})
+              <dd className={`flex items-start gap-2.5 ${preventivaAtrasada ? "font-semibold text-jb-700" : "text-graf-600"}`}>
+                <span className={`flex size-6 shrink-0 items-center justify-center rounded-lg ${preventivaAtrasada ? "bg-jb-50 text-jb-600" : "bg-graf-50 text-graf-500"}`}>
+                  <CalendarClock className="size-3.5" aria-hidden />
+                </span>
+                <span className="pt-1">
+                  {preventivaAtrasada ? "Preventiva atrasada — " : "Preventiva "}
+                  {distanciaEmDias(equipamento.nextMaintenanceAt)} ({formatarData(equipamento.nextMaintenanceAt)})
+                </span>
               </dd>
             </div>
           ) : null}

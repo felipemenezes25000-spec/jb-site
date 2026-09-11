@@ -174,10 +174,10 @@ export function Casca({
           <div className="shrink-0 border-t border-graf-200/70 bg-white p-2.5">
             <LinkVerSite />
             <div className="px-3 pb-1 pt-2.5">
-              <p className="truncate text-[0.9375rem] font-semibold text-graf-900">
+              <p className="truncate text-corpo font-semibold text-graf-900">
                 {usuario.nome}
               </p>
-              <p className="truncate text-[0.8125rem] text-graf-500">{usuario.papel}</p>
+              <p className="truncate text-apoio text-graf-500">{usuario.papel}</p>
             </div>
           </div>
         </div>
@@ -215,7 +215,7 @@ function LinkVerSite({ colapsado = false }: { colapsado?: boolean }) {
       href="/"
       title={colapsado ? "Ver o site" : undefined}
       className={cn(
-        "flex h-10 items-center gap-2.5 rounded-lg text-[0.8125rem] font-medium text-graf-600 transition-colors",
+        "flex h-10 items-center gap-2.5 rounded-lg text-apoio font-medium text-graf-600 transition-colors",
         "hover:bg-graf-100 hover:text-graf-950",
         "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
         colapsado ? "justify-center px-0" : "pl-2.5 pr-2",

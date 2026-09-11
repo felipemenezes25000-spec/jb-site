@@ -330,7 +330,7 @@ export function GestorCupons({
                         .join(" · ")}
                     </p>
 
-                    <p className="mt-0.5 text-[0.8125rem] text-graf-500">
+                    <p className="mt-0.5 text-apoio text-graf-500">
                       <span className="tabular font-semibold text-graf-700">
                         {cupom.usados}
                       </span>{" "}

@@ -103,7 +103,7 @@ export default async function CheckoutPage() {
       <header className="flex max-w-5xl flex-col gap-3 border-b border-graf-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
           <h1 className="manchete text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">Finalizar compra</h1>
-          <p className="mt-2.5 max-w-xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+          <p className="mt-2.5 max-w-xl text-sm leading-6 text-graf-600 sm:text-corpo">
             Preencha os dados, confira entrega e pagamento e revise tudo antes de confirmar.
           </p>
         </div>
@@ -118,7 +118,7 @@ export default async function CheckoutPage() {
         ) : null}
       </header>
 
-      <p className="mt-3 flex max-w-2xl items-start gap-2 text-[0.8125rem] leading-5 text-graf-500">
+      <p className="mt-3 flex max-w-2xl items-start gap-2 text-apoio leading-5 text-graf-500">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
         O pedido só é confirmado depois da revisão final. Valores de frete e pagamento são conferidos no servidor.
       </p>

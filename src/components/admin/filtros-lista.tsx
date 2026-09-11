@@ -276,7 +276,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
           <div className="flex items-center gap-3 md:ml-auto md:pb-0.5">
             <p
               aria-live="polite"
-              className="flex min-h-5 items-center gap-1.5 text-[0.8125rem] font-medium text-graf-500 sm:hidden"
+              className="flex min-h-5 items-center gap-1.5 text-apoio font-medium text-graf-500 sm:hidden"
             >
               {pendente ? (
                 <>

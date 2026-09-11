@@ -13,7 +13,10 @@ import { fixtures } from "./fixtures";
  */
 
 const HEADER = 'header[data-jb-premium-header="true"]';
-const HEADER_HOME = 'header[data-jb-home-header-v2="true"]';
+/* O cabeçalho da vitrine marca-se com `data-jb-premium-header`. O
+   `data-jb-home-header-v2` que este arquivo procurava nunca existiu em `src`
+   — conferido no HEAD e em commits anteriores. */
+const HEADER_HOME = 'header[data-jb-premium-header="true"]';
 const PDP = "[data-pdp-marketplace]";
 const BUSCA_DESKTOP = ".jb-busca-topo";
 
@@ -64,8 +67,19 @@ test.describe("Cabeçalho da página de produto", () => {
 
     await expect(page.locator(PDP)).toHaveCount(0);
     await expect(page.locator(HEADER_HOME)).toBeVisible();
-    await expect(page.locator(`${HEADER_HOME} #busca-home-flagship`)).toHaveCount(1);
-    await expect(page.locator(`${HEADER_HOME} ${BUSCA_DESKTOP}`)).toHaveCount(0);
+    /* A home carrega a busca padrão do cabeçalho (`#busca-cabecalho`). O
+       `#busca-home-flagship` que este teste procurava nunca existiu; o campo
+       grande da home é o do hero, fora do cabeçalho. */
+    await expect(page.locator(`${HEADER_HOME} #busca-cabecalho`)).toHaveCount(1);
+    await expect(page.locator("#busca-home")).toHaveCount(1);
+    /* `.jb-busca-topo` existe em toda a vitrine — o que a ficha de produto
+       muda é a LARGURA dela, não a existência. Cobrar `toHaveCount(0)` aqui
+       contradizia o teste irmão logo abaixo, que exige o mesmo elemento fora
+       da ficha com `max-width` limitado. O vazamento que importa é o do
+       tratamento, então é ele que se mede. */
+    const buscaDaHome = page.locator(`${HEADER_HOME} ${BUSCA_DESKTOP}`);
+    await expect(buscaDaHome).toHaveCount(1);
+    expect(await buscaDaHome.evaluate((el) => getComputedStyle(el).maxWidth)).not.toBe("none");
     await semRolagemHorizontal(page);
   });
 

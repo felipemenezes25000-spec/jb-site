@@ -443,7 +443,7 @@ export default async function PaginaOrdem({ params }: { params: Promise<{ id: st
                 {ordem.documents.map((documento) => (
                   <li key={documento.id} className="py-2.5">
                     <p className="text-sm font-medium text-graf-900">{documento.title}</p>
-                    <p className="text-[0.8125rem] text-graf-500">
+                    <p className="text-apoio text-graf-500">
                       {formatarDataHora(documento.createdAt)}
                     </p>
                   </li>
@@ -476,7 +476,7 @@ export default async function PaginaOrdem({ params }: { params: Promise<{ id: st
                             {evento.message}
                           </p>
                         ) : null}
-                        <p className="mt-1 text-[0.8125rem] text-graf-500">
+                        <p className="mt-1 text-apoio text-graf-500">
                           {formatarDataHora(evento.createdAt)}
                           {evento.userId && nomeDoAutor.get(evento.userId)
                             ? ` · ${nomeDoAutor.get(evento.userId)}`

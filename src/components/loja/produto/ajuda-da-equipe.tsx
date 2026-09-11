@@ -25,7 +25,7 @@ export function AjudaDaEquipe({
   if (!linkWhatsapp && !linkTelefone && !email) return null;
 
   return (
-    <section aria-labelledby="falar-com-a-equipe" className="border-y border-graf-200 py-3.5">
+    <section aria-labelledby="falar-com-a-equipe" className="border-t border-graf-200 pt-3.5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
         <div className="min-w-0">
           <h3 id="falar-com-a-equipe" className="text-sm font-extrabold text-graf-950">
@@ -53,7 +53,7 @@ export function AjudaDaEquipe({
           {linkTelefone ? (
             <a
               href={linkTelefone}
-              className="foco-jb inline-flex min-h-10 items-center gap-2 rounded-lg border border-graf-250 bg-white px-3.5 text-xs font-semibold text-graf-800 hover:bg-graf-50"
+              className="foco-jb inline-flex min-h-10 items-center gap-2 rounded-lg border border-graf-300 bg-white px-3.5 text-xs font-semibold text-graf-800 hover:bg-graf-50"
             >
               <Phone className="size-4 shrink-0 text-jb-600" aria-hidden />
               {telefone}
@@ -73,7 +73,7 @@ export function AjudaDaEquipe({
       </div>
 
       {horario ? (
-        <p className="mt-3 flex items-start gap-2 border-t border-graf-150 pt-2.5 text-[0.6875rem] leading-4 text-graf-500">
+        <p className="mt-3 flex items-start gap-2 border-t border-graf-150 pt-2.5 texto-apoio text-graf-500">
           <Clock className="mt-px size-3.5 shrink-0" aria-hidden />
           {horario}
         </p>

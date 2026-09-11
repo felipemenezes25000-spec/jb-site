@@ -387,7 +387,7 @@ export default async function OrcamentoPage({ params }: Props) {
                           {evento.message}
                         </p>
                       ) : null}
-                      <p className="mt-1 text-[0.8125rem] text-graf-500">
+                      <p className="mt-1 text-apoio text-graf-500">
                         {formatarDataHora(evento.createdAt)}
                         {evento.userId && nomePorUsuario.get(evento.userId)
                           ? ` · ${nomePorUsuario.get(evento.userId)}`

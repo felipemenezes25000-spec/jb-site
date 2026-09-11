@@ -308,7 +308,7 @@ export function EnvioDeFotos({
           <CloudUpload className="size-5" />
         </span>
 
-        <p className="mt-4 text-[0.9375rem] font-bold text-graf-950">
+        <p className="mt-4 text-corpo font-bold text-graf-950">
           {cheio ? "Limite de arquivos atingido" : "Arraste as fotos até aqui"}
         </p>
         <p className="mt-1 text-sm leading-relaxed text-graf-500">
@@ -333,7 +333,7 @@ export function EnvioDeFotos({
         <label
           htmlFor={idEntrada}
           className={cn(
-            "mt-5 inline-flex min-h-11 select-none items-center justify-center rounded-lg border px-5 text-[0.9375rem] font-semibold transition-colors",
+            "mt-5 inline-flex min-h-11 select-none items-center justify-center rounded-lg border px-5 text-corpo font-semibold transition-colors",
             "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-jb-500",
             cheio
               ? "cursor-not-allowed border-graf-200 bg-graf-100 text-graf-500"
@@ -346,7 +346,7 @@ export function EnvioDeFotos({
         {/* Os limites são ditos ANTES da captura, não depois da recusa. Quem
             vai gravar um vídeo precisa saber dos 30 segundos enquanto ainda
             está com o telefone na mão. */}
-        <p id={idAjuda} className="mt-4 text-[0.8125rem] leading-relaxed text-graf-500">
+        <p id={idAjuda} className="mt-4 text-apoio leading-relaxed text-graf-500">
           Até {MAXIMO_FOTOS} fotos de {LIMITE_FOTO_MB} MB, em {ROTULO_ACEITOS}. Se quiser,
           {" "}
           {MAXIMO_VIDEOS} vídeo de até {SEGUNDOS_DE_VIDEO} segundos e {LIMITE_VIDEO_MB} MB —
@@ -357,10 +357,10 @@ export function EnvioDeFotos({
       {itens.length > 0 ? (
         <>
           <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p className="text-[0.8125rem] font-bold uppercase tracking-[0.06em] text-graf-500">
+            <p className="text-apoio font-bold uppercase tracking-[0.06em] text-graf-500">
               Arquivos do chamado
             </p>
-            <p className="tabular text-[0.8125rem] text-graf-500">
+            <p className="tabular text-apoio text-graf-500">
               {usados} de {maximo}
             </p>
           </div>
@@ -401,14 +401,14 @@ export function EnvioDeFotos({
 
                   {item.estado === "erro" ? (
                     <>
-                      <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-jb-700">
+                      <p className="mt-0.5 text-apoio leading-relaxed text-jb-700">
                         {item.erro}
                       </p>
                       {item.arquivo && !cheio ? (
                         <button
                           type="button"
                           onClick={() => tentarDeNovo(item)}
-                          className="-my-1 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-[0.8125rem] font-semibold text-jb-700 underline underline-offset-2 transition-colors hover:text-jb-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                          className="-my-1 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-apoio font-semibold text-jb-700 underline underline-offset-2 transition-colors hover:text-jb-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                         >
                           <RotateCcw className="size-3.5" aria-hidden />
                           Tentar de novo
@@ -431,12 +431,12 @@ export function EnvioDeFotos({
                           style={{ width: `${item.progresso}%` }}
                         />
                       </div>
-                      <span className="tabular w-9 shrink-0 text-right text-[0.8125rem] text-graf-500">
+                      <span className="tabular w-9 shrink-0 text-right text-apoio text-graf-500">
                         {item.progresso}%
                       </span>
                     </div>
                   ) : (
-                    <p className="mt-0.5 text-[0.8125rem] text-graf-500">
+                    <p className="mt-0.5 text-apoio text-graf-500">
                       Enviado · {formatarTamanho(item.tamanho)}
                     </p>
                   )}

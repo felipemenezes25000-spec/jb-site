@@ -47,7 +47,7 @@ export function AcompanharChamado({ numero }: { numero: string }) {
           {numero}
         </h1>
 
-        <p className="mt-5 text-[0.9375rem] leading-relaxed text-graf-600">
+        <p className="mt-5 text-corpo leading-relaxed text-graf-600">
           Para proteger os dados do atendimento, confirme o e-mail ou o telefone informado
           quando o chamado foi aberto.
         </p>
@@ -72,7 +72,7 @@ export function AcompanharChamado({ numero }: { numero: string }) {
           {pendente ? "Conferindo…" : "Ver o chamado"}
         </Botao>
 
-        <p className="mt-4 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
+        <p className="mt-4 flex items-start gap-2 text-apoio leading-relaxed text-graf-500">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             Quem tem só o número do chamado não vê os dados do atendimento — nem o

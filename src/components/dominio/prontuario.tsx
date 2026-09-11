@@ -144,7 +144,7 @@ export function SituacaoDaGarantia({
           <ShieldQuestion className="size-4 shrink-0 text-graf-500" aria-hidden />
           Garantia não informada
         </p>
-        <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-500">
+        <p className="mt-1 text-apoio leading-relaxed text-graf-500">
           {origem === "compra_jb"
             ? "O prazo ainda não foi registrado para este equipamento."
             : "Equipamento registrado pela clínica. A JB não tem o prazo de fábrica."}
@@ -164,7 +164,7 @@ export function SituacaoDaGarantia({
         />
         {vigente ? "Garantia até" : "Garantia encerrada em"} {formatarData(ate)}
       </p>
-      <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-500">
+      <p className="mt-1 text-apoio leading-relaxed text-graf-500">
         Origem: {ROTULO_ORIGEM[origem].toLowerCase()}.
       </p>
     </div>
@@ -288,7 +288,7 @@ export function LinhaDoTempo({
                 {evento.titulo}
               </p>
 
-              <p className="mt-0.5 text-[0.8125rem] text-graf-500">
+              <p className="mt-0.5 text-apoio text-graf-500">
                 {aconteceu ? (
                   <>
                     {formatarData(evento.data as Date)}

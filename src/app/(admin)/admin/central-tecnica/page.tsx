@@ -104,7 +104,7 @@ export default async function PaginaCentralTecnica({
       renderizar: (linha) => (
         <span className="block">
           <span className="block font-semibold text-graf-900">{linha.title}</span>
-          <span className="mt-0.5 block text-[0.8125rem] text-graf-500">
+          <span className="mt-0.5 block text-apoio text-graf-500">
             {ROTULO_TEMA[linha.topic]} · /central-tecnica/{linha.slug}
           </span>
         </span>
@@ -116,7 +116,7 @@ export default async function PaginaCentralTecnica({
       largura: "16rem",
       esconderNoMobile: true,
       renderizar: (linha) => (
-        <span className="block text-[0.8125rem] leading-relaxed">
+        <span className="block text-apoio leading-relaxed">
           <span className="block text-graf-700">
             {linha.autor ? `Autor: ${linha.autor}` : "Autor: a definir"}
           </span>

@@ -138,7 +138,7 @@ export function CalculadoraParada({
         <div className="p-6 sm:p-8">
           <p className="label-mono uppercase text-graf-500">Os números são seus</p>
           <h3 className="mt-2 text-title texto-forte">Preencha com a rotina da clínica</h3>
-          <p className="mt-3 max-w-prose text-[0.9375rem] leading-relaxed text-graf-600">
+          <p className="mt-3 max-w-prose text-corpo leading-relaxed text-graf-600">
             Nada do que você digitar aqui chega até a JB. A conta acontece nesta tela e
             desaparece quando a aba fecha.
           </p>
@@ -166,7 +166,7 @@ export function CalculadoraParada({
 
             {/* A frase que evita a confusão de unidade. Fica sob os dois
                 campos porque é a leitura conjunta deles que importa. */}
-            <p className="-mt-2 text-[0.8125rem] leading-relaxed text-graf-500">
+            <p className="-mt-2 text-apoio leading-relaxed text-graf-500">
               Se a clínica inteira para quando este equipamento falha, deixe 100%. Se só
               uma cadeira de quatro para, informe 25%.
             </p>
@@ -258,7 +258,7 @@ export function CalculadoraParada({
                 <p className="tabular mt-2 text-display leading-none text-graf-950">
                   {formatarPreco(conta.exposicaoAnualCents)}
                 </p>
-                <p className="mt-4 text-[0.9375rem] leading-relaxed text-graf-600">
+                <p className="mt-4 text-corpo leading-relaxed text-graf-600">
                   É a receita que ficaria em risco
                   {conta.reparosAnualCents > 0 ? ", somada ao custo dos consertos," : ""} se
                   o equipamento parasse do jeito que você descreveu.
@@ -269,7 +269,7 @@ export function CalculadoraParada({
                   informado, o total é menor do que a realidade, e quem lê
                   precisa saber disso antes de comparar com um plano. */}
               {conta.reparoDesconhecido ? (
-                <p className="mt-4 flex gap-2.5 text-[0.8125rem] leading-relaxed text-graf-600">
+                <p className="mt-4 flex gap-2.5 text-apoio leading-relaxed text-graf-600">
                   <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warn-700" aria-hidden />
                   <span>
                     O custo do reparo não foi informado, então ele não entrou na soma. O
@@ -278,7 +278,7 @@ export function CalculadoraParada({
                 </p>
               ) : null}
 
-              <p className="mt-5 text-[0.8125rem] leading-relaxed text-graf-500">
+              <p className="mt-5 text-apoio leading-relaxed text-graf-500">
                 Simulação com os dados informados. Não representa garantia de economia ou
                 ausência de falhas.
               </p>
@@ -298,7 +298,7 @@ export function CalculadoraParada({
                 </LinkBotao>
               </div>
 
-              <p className="mt-4 text-[0.8125rem] leading-relaxed text-graf-500" aria-live="polite">
+              <p className="mt-4 text-apoio leading-relaxed text-graf-500" aria-live="polite">
                 {guardado
                   ? "As premissas acima vão junto para o formulário — você confere antes de enviar."
                   : "Ao seguir, as premissas acima vão junto para o formulário, e você confere antes de enviar."}
@@ -306,7 +306,7 @@ export function CalculadoraParada({
             </>
           ) : (
             <div className="mt-6" aria-live="polite">
-              <p className="max-w-prose text-[0.9375rem] leading-relaxed text-graf-600">
+              <p className="max-w-prose text-corpo leading-relaxed text-graf-600">
                 Ainda falta informação para a conta fechar. A estimativa aparece aqui, com
                 cada multiplicação à mostra para você conferir.
               </p>
@@ -314,7 +314,7 @@ export function CalculadoraParada({
                 {problemas.map((problema) => (
                   <li
                     key={problema.campo}
-                    className="flex gap-2 text-[0.8125rem] leading-relaxed text-graf-600"
+                    className="flex gap-2 text-apoio leading-relaxed text-graf-600"
                   >
                     <span aria-hidden className="mt-1.5 size-1 shrink-0 rounded-full bg-graf-400" />
                     <span>{problema.mensagem}</span>

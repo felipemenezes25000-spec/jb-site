@@ -287,7 +287,7 @@ export default async function PaginaOrdens({
       renderizar: (linha) => (
         <span className="block">
           <span className="block text-graf-800">{distanciaEmDias(linha.openedAt)}</span>
-          <span className="block text-[0.8125rem] text-graf-500">{formatarData(linha.openedAt)}</span>
+          <span className="block text-apoio text-graf-500">{formatarData(linha.openedAt)}</span>
         </span>
       ),
     },

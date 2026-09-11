@@ -132,7 +132,7 @@ function Memoria({ cenario }: { cenario: Cenario }) {
       </div>
 
       {total.incompleto ? (
-        <p className="mt-2 text-[0.8125rem] leading-relaxed text-jb-700">
+        <p className="mt-2 text-apoio leading-relaxed text-jb-700">
           {total.linhasSemDado === 1
             ? "Um custo deste cenário não foi informado, e ele não vale zero."
             : `${total.linhasSemDado} custos deste cenário não foram informados, e eles não valem zero.`}{" "}
@@ -141,7 +141,7 @@ function Memoria({ cenario }: { cenario: Cenario }) {
       ) : null}
 
       {total.dePremissaCents > 0 ? (
-        <p className="mt-2 text-[0.8125rem] leading-relaxed text-graf-500">
+        <p className="mt-2 text-apoio leading-relaxed text-graf-500">
           {formatarPreco(total.dePremissaCents)} deste total veio de premissa sua, não de valor
           praticado.
         </p>
@@ -150,7 +150,7 @@ function Memoria({ cenario }: { cenario: Cenario }) {
       {cenario.observacoes.length > 0 ? (
         <ul className="mt-3 space-y-1 border-t border-graf-200 pt-3">
           {cenario.observacoes.map((observacao) => (
-            <li key={observacao} className="text-[0.8125rem] leading-relaxed text-graf-600">
+            <li key={observacao} className="text-apoio leading-relaxed text-graf-600">
               {observacao}
             </li>
           ))}
@@ -405,7 +405,7 @@ export default async function SimuladorPage({ searchParams }: Props) {
               {/* A guarda contra somar duas vezes o mesmo prejuízo. */}
               {/* `min-h-11`: a caixa é um alvo de toque, e 42px ficava abaixo do
                   mínimo de 44 que a WCAG 2.2 pede — a auditoria mediu em 768px. */}
-              <label className="mt-3 flex min-h-11 items-start gap-2.5 py-1 text-[0.8125rem] leading-relaxed text-graf-700">
+              <label className="mt-3 flex min-h-11 items-start gap-2.5 py-1 text-apoio leading-relaxed text-graf-700">
                 <input
                   type="checkbox"
                   name="paradaIncluida"
@@ -454,7 +454,7 @@ export default async function SimuladorPage({ searchParams }: Props) {
                         key={total.chave}
                         className="flex flex-wrap items-baseline justify-between gap-x-4 rounded-lg border border-graf-200 bg-white px-4 py-3"
                       >
-                        <span className="text-[0.9375rem] font-semibold text-graf-950">
+                        <span className="text-corpo font-semibold text-graf-950">
                           {indice + 1}. {ROTULO_DO_CENARIO[total.chave]}
                         </span>
                         <span className="tabular font-extrabold text-graf-950">
@@ -463,19 +463,19 @@ export default async function SimuladorPage({ searchParams }: Props) {
                       </li>
                     ))}
                   </ol>
-                  <p className="mt-4 flex gap-2.5 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
+                  <p className="mt-4 flex gap-2.5 border-t border-graf-200 pt-4 text-apoio leading-relaxed text-graf-500">
                     <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
                     <span>{comparacao.ressalva}</span>
                   </p>
                 </>
               ) : (
-                <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-700">
+                <p className="mt-3 text-corpo leading-relaxed text-graf-700">
                   {comparacao.motivo}
                 </p>
               )}
 
               {!decisaoDaParada.incluir && parada !== null ? (
-                <p className="mt-3 text-[0.8125rem] leading-relaxed text-graf-600">
+                <p className="mt-3 text-apoio leading-relaxed text-graf-600">
                   {decisaoDaParada.motivo}
                 </p>
               ) : null}
@@ -488,7 +488,7 @@ export default async function SimuladorPage({ searchParams }: Props) {
 
           <Secao espaco="sm">
             <h2 className="text-title texto-forte">Memória de cálculo</h2>
-            <p className="mt-1 text-[0.9375rem] leading-relaxed text-graf-600">
+            <p className="mt-1 text-corpo leading-relaxed text-graf-600">
               Cada linha diz de onde veio o número: {ROTULO_DA_ORIGEM.conhecido} —{" "}
               {EXPLICACAO_DA_ORIGEM.conhecido.toLowerCase()} {ROTULO_DA_ORIGEM.premissa} —{" "}
               {EXPLICACAO_DA_ORIGEM.premissa.toLowerCase()} {ROTULO_DA_ORIGEM.ausente} —{" "}

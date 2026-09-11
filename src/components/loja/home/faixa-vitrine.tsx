@@ -42,7 +42,7 @@ export function FaixaVitrine({
             <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-700">
               {sobretitulo}
             </p>
-            <h2 className="mt-2 text-[clamp(1.7rem,1.35rem+1.4vw,2.5rem)] font-extrabold tracking-[-0.035em] text-graf-950">
+            <h2 className="mt-2 text-section font-extrabold tracking-[-0.035em] text-graf-950">
               {titulo}
             </h2>
           </div>

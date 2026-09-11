@@ -371,7 +371,11 @@ export async function Rodape() {
                 <LinhaContato icone={Mail} apoio="Envie um e-mail">
                   <a
                     href={`mailto:${s.email}`}
-                    className="foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[0.78rem] text-graf-600 hover:text-jb-700 min-[1800px]:text-[0.85rem]"
+                    /* `min-h-6` também no mouse: o alvo tinha 17px de altura
+                       fora de toque — abaixo dos 24px do alvo mínimo, e este
+                       não é link no meio de uma frase, é item de uma lista de
+                       contato. Em toque continua valendo os 44px. */
+                    className="foco-jb inline-flex min-h-6 items-center pointer-coarse:min-h-11 text-[0.78rem] text-graf-600 hover:text-jb-700 min-[1800px]:text-[0.85rem]"
                   >
                     <span className="[overflow-wrap:anywhere]">{s.email}</span>
                   </a>

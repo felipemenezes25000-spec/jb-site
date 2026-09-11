@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { HeroVitrine } from "@/components/loja/home/hero-vitrine";
 
 const produto = {
+  id: "prod-autoclave-12l-revisada",
   slug: "autoclave-12l-revisada",
   name: "Autoclave 12L Revisada",
   model: "Vitale Class 12L",

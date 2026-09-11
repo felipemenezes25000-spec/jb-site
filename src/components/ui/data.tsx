@@ -35,7 +35,7 @@ export function Etiqueta({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.8125rem] font-semibold ring-1 ring-inset",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-apoio font-semibold ring-1 ring-inset",
         TONS[tom],
         className,
       )}
@@ -219,7 +219,7 @@ export function Trilha({ itens, className }: { itens: Migalha[]; className?: str
    envolver com `.on-dark` — as cores se invertem sozinhas.
    ============================================================================ */
 
-export type TamanhoTitulo = "secao" | "titulo" | "display" | "vitrine";
+export type TamanhoTitulo = "secao" | "titulo" | "bloco" | "display" | "vitrine";
 
 /**
  * `vitrine` é o degrau das telas de catálogo: condensada em caixa alta, no
@@ -229,6 +229,10 @@ export type TamanhoTitulo = "secao" | "titulo" | "display" | "vitrine";
 const TAMANHO_TITULO: Record<TamanhoTitulo, string> = {
   secao: "text-section",
   titulo: "text-title",
+  /* O degrau de cabeçalho de bloco. Numa ficha de produto o `h1` já é
+     `title`, e toda seção da página precisa vir abaixo dele — `secao` ali
+     sai a 44px no meio de `h2` de 22px. */
+  bloco: "text-bloco",
   display: "text-display",
   vitrine: "manchete text-[clamp(1.5rem,1.2rem+1.1vw,2rem)]",
 };

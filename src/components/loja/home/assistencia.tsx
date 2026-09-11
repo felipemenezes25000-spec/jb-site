@@ -21,11 +21,11 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
             <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-700">
               Compra e suporte
             </p>
-            <h2 className="mt-2 text-[clamp(1.8rem,1.4rem+1.7vw,2.7rem)] font-extrabold tracking-[-0.04em] text-graf-950">
+            <h2 className="mt-2 text-section font-extrabold tracking-[-0.04em] text-graf-950">
               Dois caminhos claros para o que sua clínica precisa agora.
             </h2>
           </div>
-          <p className="max-w-2xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem] lg:justify-self-end">
+          <p className="max-w-2xl text-sm leading-6 text-graf-600 sm:text-corpo lg:justify-self-end">
             Para comprar, entre na loja. Para resolver um equipamento que já está em uso, abra a
             assistência técnica. Sem misturar as duas jornadas.
           </p>

@@ -112,7 +112,7 @@ export function MenuAdmin({
                     aria-current={ativo ? "page" : undefined}
                     title={colapsado ? item.rotulo : undefined}
                     className={cn(
-                      "group relative flex h-9 items-center gap-2.5 rounded-lg text-[0.8125rem] font-medium transition-[background-color,color,box-shadow] duration-150",
+                      "group relative flex h-9 items-center gap-2.5 rounded-lg text-apoio font-medium transition-[background-color,color,box-shadow] duration-150",
                       "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
                       colapsado ? "justify-center px-0" : "pl-2.5 pr-2",
                       ativo

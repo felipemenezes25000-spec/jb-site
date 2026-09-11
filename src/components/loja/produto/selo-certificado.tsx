@@ -59,17 +59,17 @@ export function SeloCertificado({
           className,
         )}
       >
-        <p className="flex items-center gap-2 text-[0.9375rem] font-bold text-ok-700">
+        <p className="flex items-center gap-2 text-base font-bold text-ok-700">
           <BadgeCheck className="size-[18px] shrink-0" aria-hidden />
           Seminovo JB Certificado
         </p>
-        <p className="mt-1.5 text-[0.875rem] leading-relaxed text-graf-700">
+        <p className="mt-1.5 text-sm leading-relaxed text-graf-700">
           {certificado.frase}
           {certificado.tecnico ? ` · inspeção de ${certificado.tecnico}` : ""}
         </p>
         <Link
           href={href}
-          className="foco-jb mt-2.5 inline-flex min-h-11 items-center gap-1.5 rounded-md text-[0.875rem] font-bold text-jb-700 underline underline-offset-4 transition-colors hover:text-jb-500"
+          className="foco-jb mt-2.5 inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-bold text-jb-700 underline underline-offset-4 transition-colors hover:text-jb-500"
         >
           Conferir o certificado
           <ArrowUpRight className="size-4 shrink-0" aria-hidden />
@@ -80,17 +80,17 @@ export function SeloCertificado({
 
   return (
     <div className={cn("rounded-xl border border-ok-500/25 bg-ok-50/60 p-5 sm:p-6", className)}>
-      <p className="flex items-center gap-2 text-[0.9375rem] font-bold text-ok-700">
+      <p className="flex items-center gap-2 text-base font-bold text-ok-700">
         <BadgeCheck className="size-[18px] shrink-0" aria-hidden />
         Seminovo JB Certificado
       </p>
 
-      <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-700">
+      <p className="mt-2 text-base leading-relaxed text-graf-700">
         {certificado.frase}
       </p>
 
       {certificado.resumo ? (
-        <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-700">
+        <p className="mt-3 text-base leading-relaxed text-graf-700">
           {certificado.resumo}
         </p>
       ) : null}
@@ -99,7 +99,7 @@ export function SeloCertificado({
         {certificado.inspecionadoEm ? (
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 py-2.5">
             <dt className="text-sm text-graf-600">Inspecionado em</dt>
-            <dd className="text-[0.9375rem] font-semibold tabular text-graf-900">
+            <dd className="text-sm font-semibold tabular text-graf-900">
               {formatarData(certificado.inspecionadoEm)}
             </dd>
           </div>
@@ -107,7 +107,7 @@ export function SeloCertificado({
         {certificado.tecnico ? (
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 py-2.5">
             <dt className="text-sm text-graf-600">Técnico responsável</dt>
-            <dd className="text-[0.9375rem] font-semibold text-graf-900">
+            <dd className="text-sm font-semibold text-graf-900">
               {certificado.tecnico}
             </dd>
           </div>
@@ -120,13 +120,13 @@ export function SeloCertificado({
 
       <Link
         href={href}
-        className="foco-jb mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-md text-[0.9375rem] font-bold text-jb-700 underline underline-offset-4 transition-colors hover:text-jb-500"
+        className="foco-jb mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-md text-corpo font-bold text-jb-700 underline underline-offset-4 transition-colors hover:text-jb-500"
       >
         Conferir o certificado desta unidade
         <ArrowUpRight className="size-4 shrink-0" aria-hidden />
       </Link>
 
-      <p className="mt-3 text-[0.8125rem] leading-relaxed text-graf-600">
+      <p className="mt-3 texto-apoio text-graf-600">
         Programa de inspeção da própria JB. A página de conferência é pública e
         mostra o mesmo laudo, item por item — sem exigir conta.
       </p>

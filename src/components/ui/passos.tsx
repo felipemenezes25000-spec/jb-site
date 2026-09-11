@@ -153,8 +153,13 @@ export function Passos({
         {corrente.descricao && descricaoNoCelular ? (
           <p className="mt-1 text-sm leading-relaxed text-graf-500">{corrente.descricao}</p>
         ) : null}
+        {/* `aria-valuetext` diz o valor, não o nome — e `role="progressbar"`
+            exige nome próprio (axe `aria-progressbar-name`, grave). Sem ele o
+            leitor de tela anunciava "Etapa 1 de 5: Identificação" sem dizer
+            progresso de quê. O `rotulo` do `<nav>` é o mesmo texto certo. */}
         <div
           role="progressbar"
+          aria-label={rotulo}
           aria-valuemin={1}
           aria-valuemax={passos.length}
           aria-valuenow={indice + 1}
@@ -231,7 +236,7 @@ export function PassosNumerados({
               </div>
               <h3 className="texto-forte mt-5 text-lg font-bold leading-snug">{passo.titulo}</h3>
               {passo.descricao ? (
-                <p className="texto-suave mt-2 text-[0.9375rem] leading-relaxed">
+                <p className="texto-suave mt-2 text-corpo leading-relaxed">
                   {passo.descricao}
                 </p>
               ) : null}
@@ -267,7 +272,7 @@ export function PassosNumerados({
                 {passo.titulo}
               </h3>
               {passo.descricao ? (
-                <p className="texto-suave mt-2 text-[0.9375rem] leading-relaxed">
+                <p className="texto-suave mt-2 text-corpo leading-relaxed">
                   {passo.descricao}
                 </p>
               ) : null}

@@ -120,8 +120,8 @@ function ItemRecurso({ recurso }: { recurso: Recurso }) {
       </span>
 
       <span className="min-w-0">
-        <span className="block text-[0.9375rem] font-semibold text-graf-900">{titulo}</span>
-        <span className="mt-1 block text-[0.8125rem] leading-relaxed text-graf-600">{descricao}</span>
+        <span className="block text-corpo font-semibold text-graf-900">{titulo}</span>
+        <span className="mt-1 block text-apoio leading-relaxed text-graf-600">{descricao}</span>
       </span>
     </li>
   );
@@ -229,7 +229,7 @@ export async function MolduraAutenticacao({
 
         {canais.length ? (
           <div className="mt-8 border-t border-graf-200 pt-6">
-            <p className="text-[0.8125rem] font-semibold text-graf-900">
+            <p className="text-apoio font-semibold text-graf-900">
               Dificuldade para entrar? Fale com a equipe
             </p>
             <ul className="mt-2">
@@ -240,7 +240,7 @@ export async function MolduraAutenticacao({
           </div>
         ) : null}
 
-        <p className="mt-7 flex gap-3 border-t border-graf-200 pt-6 text-[0.8125rem] leading-relaxed text-graf-600">
+        <p className="mt-7 flex gap-3 border-t border-graf-200 pt-6 text-apoio leading-relaxed text-graf-600">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-900" aria-hidden />
           <span>A JB nunca pede sua senha por telefone, e-mail ou WhatsApp.</span>
         </p>

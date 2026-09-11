@@ -648,7 +648,7 @@ export function AssistenteChamado({
               )}
 
               {whatsapp ? (
-                <p className="text-[0.8125rem] leading-relaxed text-graf-500">
+                <p className="text-apoio leading-relaxed text-graf-500">
                   Tem um vídeo curto do problema? Pelo site entram imagens e PDF; o vídeo
                   vai pelo{" "}
                   <a
@@ -710,7 +710,7 @@ export function AssistenteChamado({
                 />
 
                 {unidadeEscolhida ? (
-                  <p className="text-[0.9375rem] leading-relaxed text-graf-600">
+                  <p className="text-corpo leading-relaxed text-graf-600">
                     O atendimento será no endereço cadastrado de{" "}
                     <strong className="font-semibold text-graf-950">
                       {unidadeEscolhida.nome}
@@ -919,7 +919,7 @@ export function AssistenteChamado({
               className="mt-6"
             />
 
-            <p className="mt-6 text-[0.8125rem] leading-relaxed text-graf-500">
+            <p className="mt-6 text-apoio leading-relaxed text-graf-500">
               Ao enviar, você concorda que a JB use os dados acima para o atendimento deste
               chamado.
             </p>
@@ -1009,7 +1009,7 @@ export function AssistenteChamado({
           </div>
 
           {pendente ? (
-            <p role="status" className="mt-4 text-[0.8125rem] text-graf-500">
+            <p role="status" className="mt-4 text-apoio text-graf-500">
               Estamos registrando o chamado. Não feche esta página.
             </p>
           ) : null}
@@ -1053,7 +1053,7 @@ function CabecalhoEtapa({
         {titulo}
       </h2>
       {descricao ? (
-        <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-500">{descricao}</p>
+        <p className="mt-2.5 text-corpo leading-relaxed text-graf-500">{descricao}</p>
       ) : null}
     </div>
   );
@@ -1084,7 +1084,7 @@ function Grupo({
 
   return (
     <div className={cn(divisor && "border-t border-graf-200 pt-7", className)}>
-      {titulo ? <h3 className="text-[0.9375rem] font-bold text-graf-950">{titulo}</h3> : null}
+      {titulo ? <h3 className="text-corpo font-bold text-graf-950">{titulo}</h3> : null}
       {descricao ? (
         <p className="mt-1.5 text-sm leading-relaxed text-graf-500">{descricao}</p>
       ) : null}
@@ -1110,7 +1110,7 @@ function Resumo({
     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 py-4">
       <div className="min-w-0 flex-1">
         <p className="label-mono uppercase text-graf-500">{rotulo}</p>
-        <p className="mt-1.5 whitespace-pre-line break-words text-[0.9375rem] leading-relaxed text-graf-900">
+        <p className="mt-1.5 whitespace-pre-line break-words text-corpo leading-relaxed text-graf-900">
           {texto}
         </p>
       </div>

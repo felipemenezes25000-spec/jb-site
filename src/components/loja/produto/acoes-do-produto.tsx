@@ -55,7 +55,7 @@ export async function AcoesDoProduto({
           type="submit"
           aria-pressed={favoritado}
           className={cn(
-            "foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border px-3.5 text-[0.875rem] font-semibold transition-colors duration-150",
+            "foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold transition-colors duration-150",
             favoritado
               ? "border-jb-300 bg-jb-50 text-jb-700"
               : "border-graf-300 text-graf-800 hover:border-graf-450 hover:bg-graf-50",

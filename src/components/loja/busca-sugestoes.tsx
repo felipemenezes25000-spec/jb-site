@@ -321,7 +321,7 @@ export function BuscaComSugestoes({
           {hero ? (
             <button
               type="submit"
-              className="mr-1.5 flex h-11 shrink-0 items-center rounded-lg bg-graf-900 px-4 text-[0.9375rem] font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-graf-800 active:translate-y-px active:bg-graf-950 sm:mr-2 sm:h-12 sm:px-6"
+              className="mr-1.5 flex h-11 shrink-0 items-center rounded-lg bg-graf-900 px-4 text-corpo font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-graf-800 active:translate-y-px active:bg-graf-950 sm:mr-2 sm:h-12 sm:px-6"
             >
               Buscar
             </button>
@@ -351,10 +351,23 @@ export function BuscaComSugestoes({
             : ""}
       </p>
 
+      {/* O painel pode ser mais largo que o campo.
+
+            No cabeçalho a busca é travada em ~336px a 1440, e o painel herdava
+            essa largura por `inset-x-0`. Com foto, marca, preço e modelo na
+            mesma linha, sobravam ~145px para o nome — e **todo** resultado
+            aparecia cortado: "Autoclave horizon…", "Cuba lavadora ultr…",
+            "Autoclave vertic…". Uma sugestão que não deixa ler o nome do
+            equipamento não sugere nada.
+
+            `min-w` maior que o campo, ancorado à esquerda e limitado pela
+            janela: o painel cresce para caber o nome sem empurrar o cabeçalho,
+            e no celular continua exatamente da largura do campo. */}
       {mostrarPainel ? (
         <div
           className={cn(
             "absolute inset-x-0 top-full z-50 overflow-hidden border border-graf-200 bg-white shadow-pop",
+            "sm:right-auto sm:min-w-[min(30rem,calc(100vw-2rem))]",
             hero ? "rounded-b-xl border-t-graf-100" : "rounded-b-[1.375rem] border-t-graf-100",
           )}
         >
@@ -445,14 +458,14 @@ export function BuscaComSugestoes({
                   irPara(hrefBusca);
                 }}
                 className={cn(
-                  "flex cursor-pointer items-center justify-between gap-3 border-t border-graf-100 px-4 py-3 text-[0.9375rem] font-semibold text-jb-700",
+                  "flex cursor-pointer items-center justify-between gap-3 border-t border-graf-100 px-4 py-3 text-corpo font-semibold text-jb-700",
                   ativa === opcoes.length - 1 && "bg-jb-50",
                 )}
               >
                 <span className="truncate">
                   Ver todos os resultados para “{consultaLimpa}”
                 </span>
-                <span className="flex shrink-0 items-center gap-1.5 text-[0.8125rem] font-semibold text-graf-500">
+                <span className="flex shrink-0 items-center gap-1.5 text-apoio font-semibold text-graf-500">
                   {dados.totalDeProdutos > 0 ? (
                     <span className="tabular">{dados.totalDeProdutos}</span>
                   ) : null}
@@ -463,7 +476,7 @@ export function BuscaComSugestoes({
 
             {semResultado ? (
               <li className="px-4 py-5">
-                <p className="text-[0.9375rem] font-semibold text-graf-900">
+                <p className="text-corpo font-semibold text-graf-900">
                   Nada encontrado para “{consultaLimpa}”.
                 </p>
                 <p className="mt-1.5 text-sm leading-relaxed text-graf-500">
@@ -477,7 +490,7 @@ export function BuscaComSugestoes({
                       evento.preventDefault();
                       irPara("/loja");
                     }}
-                    className="foco-jb inline-flex min-h-9 items-center rounded-full border border-graf-300 px-3.5 text-[0.8125rem] font-semibold text-graf-800 transition-colors hover:border-graf-450 hover:bg-graf-50"
+                    className="foco-jb inline-flex min-h-9 items-center rounded-full border border-graf-300 px-3.5 text-apoio font-semibold text-graf-800 transition-colors hover:border-graf-450 hover:bg-graf-50"
                   >
                     Ver o catálogo
                   </button>
@@ -489,7 +502,7 @@ export function BuscaComSugestoes({
                         `/orcamento?tipo=compra&item=${encodeURIComponent(consultaLimpa)}`,
                       );
                     }}
-                    className="foco-jb inline-flex min-h-9 items-center rounded-full border border-graf-300 px-3.5 text-[0.8125rem] font-semibold text-graf-800 transition-colors hover:border-graf-450 hover:bg-graf-50"
+                    className="foco-jb inline-flex min-h-9 items-center rounded-full border border-graf-300 px-3.5 text-apoio font-semibold text-graf-800 transition-colors hover:border-graf-450 hover:bg-graf-50"
                   >
                     Pedir este equipamento
                   </button>
@@ -567,7 +580,7 @@ function LinhaProduto({
             </span>
           ) : null}
         </span>
-        <span className="block truncate text-[0.9375rem] font-semibold text-graf-900">
+        <span className="block truncate text-corpo font-semibold text-graf-900">
           {produto.nome}
         </span>
         {produto.modelo ? (
@@ -577,11 +590,11 @@ function LinhaProduto({
 
       <span className="shrink-0 text-right">
         {produto.compraDireta && produto.precoCents > 0 ? (
-          <span className="tabular text-[0.9375rem] font-bold text-graf-950">
+          <span className="tabular text-corpo font-bold text-graf-950">
             {formatarPreco(produto.precoCents)}
           </span>
         ) : (
-          <span className="text-[0.8125rem] font-semibold text-graf-500">Sob orçamento</span>
+          <span className="text-apoio font-semibold text-graf-500">Sob orçamento</span>
         )}
       </span>
     </li>
@@ -618,8 +631,8 @@ function LinhaTaxonomia({
         ativa ? "bg-jb-50" : "hover:bg-graf-50",
       )}
     >
-      <span className="truncate text-[0.9375rem] font-semibold text-graf-800">{rotulo}</span>
-      <span className="shrink-0 tabular text-[0.8125rem] text-graf-500">
+      <span className="truncate text-corpo font-semibold text-graf-800">{rotulo}</span>
+      <span className="shrink-0 tabular text-apoio text-graf-500">
         {total} {total === 1 ? "item" : "itens"}
       </span>
     </li>

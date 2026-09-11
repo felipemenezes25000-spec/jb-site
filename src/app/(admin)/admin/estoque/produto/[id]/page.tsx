@@ -186,7 +186,7 @@ export default async function PaginaEstoqueProduto({
             <span className="block text-graf-500">Sem motivo anotado</span>
           )}
           {linha.pedido ? (
-            <span className="block text-[0.8125rem] text-graf-500">Pedido {linha.pedido}</span>
+            <span className="block text-apoio text-graf-500">Pedido {linha.pedido}</span>
           ) : null}
         </span>
       ),
@@ -230,12 +230,12 @@ export default async function PaginaEstoqueProduto({
               <p className="tabular mt-1 text-3xl font-bold leading-none text-graf-950">
                 {produto.stock}
               </p>
-              <p className="mt-1 text-[0.8125rem] text-graf-500">
+              <p className="mt-1 text-apoio text-graf-500">
                 Alerta em {produto.lowStockAlert}
               </p>
             </>
           ) : (
-            <p className="mt-2 max-w-[14rem] text-[0.8125rem] leading-snug text-graf-500">
+            <p className="mt-2 max-w-[14rem] text-apoio leading-snug text-graf-500">
               Este produto não controla saldo em estoque.
             </p>
           )}
@@ -345,7 +345,7 @@ export default async function PaginaEstoqueProduto({
                       <span className="block truncate text-sm font-semibold text-graf-900">
                         {unidade.serialNumber || "Sem número de série"}
                       </span>
-                      <span className="block text-[0.8125rem] text-graf-500">
+                      <span className="block text-apoio text-graf-500">
                         cadastrada em {formatarDataHora(unidade.createdAt)}
                       </span>
                     </span>
@@ -354,7 +354,7 @@ export default async function PaginaEstoqueProduto({
                     </Etiqueta>
                   </span>
                   {unidade.orderItem?.order ? (
-                    <span className="mt-3 text-[0.8125rem] text-graf-500">
+                    <span className="mt-3 text-apoio text-graf-500">
                       Vendida no pedido {unidade.orderItem.order.number}
                     </span>
                   ) : null}

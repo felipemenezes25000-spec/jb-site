@@ -119,7 +119,7 @@ export function Verificacao({
           </div>
 
           {telefone ? (
-            <p className="mt-4 text-[0.8125rem] leading-relaxed text-graf-600">
+            <p className="mt-4 text-apoio leading-relaxed text-graf-600">
               Não consegue ler o código? Ligue para{" "}
               <a
                 href={telHref(telefone)}

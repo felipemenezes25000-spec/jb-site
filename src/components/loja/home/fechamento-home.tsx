@@ -28,10 +28,10 @@ export function FechamentoHome() {
             <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-700">
               Depois da compra
             </p>
-            <h2 className="mt-2 text-[clamp(1.9rem,1.45rem+1.8vw,2.9rem)] font-extrabold tracking-[-0.04em] text-graf-950">
+            <h2 className="mt-2 text-section font-extrabold tracking-[-0.04em] text-graf-950">
               O pedido termina no checkout. O relacionamento com a JB, não.
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-graf-600 sm:text-corpo">
               Compra, entrega e suporte ficam conectados sem transformar a página em uma sequência de
               promessas ou etapas que não se aplicam a todos os produtos.
             </p>

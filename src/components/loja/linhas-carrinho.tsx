@@ -70,7 +70,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                       </p>
                     ) : null}
 
-                    <h3 className="mt-0.5 text-[0.9375rem] font-bold leading-5 text-graf-950 sm:text-base">
+                    <h3 className="mt-0.5 text-corpo font-bold leading-5 text-graf-950 sm:text-base">
                       {linha.slug ? (
                         <Link
                           href={`/loja/${linha.slug}`}
@@ -112,7 +112,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                 {linha.addons.length > 0 ? (
                   <ul className="space-y-1 border-l-2 border-graf-200 pl-3">
                     {linha.addons.map((addon) => (
-                      <li key={addon.id} className="flex justify-between gap-4 text-[0.8125rem] text-graf-600">
+                      <li key={addon.id} className="flex justify-between gap-4 text-apoio text-graf-600">
                         <span className="min-w-0">{addon.nome}</span>
                         <span className="shrink-0 tabular">
                           {addon.precoUnitarioCents > 0 ? formatarPreco(addon.totalCents) : "sob orçamento"}
@@ -125,7 +125,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                 {linha.disponivel ? (
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5">
                     {linha.unico ? (
-                      <p className="text-[0.8125rem] leading-5 text-graf-600">
+                      <p className="text-apoio leading-5 text-graf-600">
                         <span className="font-semibold text-graf-900">Unidade única.</span> Esta é a única unidade disponível deste produto.
                       </p>
                     ) : (
@@ -194,7 +194,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-graf-200 pt-3">
-                    <p className="min-w-0 flex-1 text-[0.8125rem] leading-5 text-graf-600">
+                    <p className="min-w-0 flex-1 text-apoio leading-5 text-graf-600">
                       Este produto saiu do catálogo depois de entrar no carrinho. Remova para continuar ou fale com a JB sobre uma alternativa.
                     </p>
                     <Botao

@@ -72,10 +72,13 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
 
   if (total === 0) {
     return (
-      <div className="flex min-h-72 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-graf-300 bg-graf-50 px-6 py-14 text-center lg:min-h-96">
+      /* `aspect-square`, igual ao palco com foto: sem isso a coluna mudava de
+         altura conforme o produto tivesse ou não imagem, e a primeira dobra
+         inteira se reorganizava junto. */
+      <div className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-graf-300 bg-graf-50 px-6 text-center">
         <ImageOff className="size-8 text-graf-400" aria-hidden />
         <p className="text-sm font-semibold text-graf-700">Foto em cadastro</p>
-        <p className="max-w-xs text-xs leading-5 text-graf-500">
+        <p className="texto-apoio max-w-xs text-graf-500">
           Fale com a JB se precisar de imagens deste produto antes da compra.
         </p>
       </div>
@@ -86,7 +89,19 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row-reverse lg:items-start lg:gap-3">
-      <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-graf-150 bg-white">
+      {/* Sem moldura desenhada em volta da foto.
+
+          O palco era `rounded-2xl border border-graf-150 bg-white`: uma caixa
+          branca com borda sobre o fundo branco da página, ao lado de outra
+          caixa (a de compra). Nenhuma das fichas de produto medidas como
+          referência emoldura a foto — Mercado Livre, Amazon, Magazine Luiza e
+          Sonos apoiam o produto direto na página.
+
+          O canto arredondado fica porque ele recorta o degradê que apoia o
+          equipamento no chão; a borda, não. A assimetria com a caixa de compra
+          — que continua sendo cartão — é de propósito: a foto é conteúdo, a
+          caixa é painel de controle. */}
+      <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl">
         <div
           data-pdp-gallery-main
           data-palco-imagem-produto
@@ -94,13 +109,18 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
           onTouchStart={aoEncostar}
           onTouchEnd={aoSoltar}
         >
+          {/* As larguras reais desta coluna depois do redesign: tela cheia no
+              celular, metade entre 768 e 1279 (duas colunas) e 39% a partir de
+              1280 (três colunas), com o container travando em 1600px — daí o
+              teto fixo no fim. O valor antigo, `48vw`, pedia 691px para um
+              espaço de 514px a 1440. */}
           <Image
             data-imagem-produto
             src={imagemProdutoSemFundo(foto.url)}
             alt={foto.alt || nome}
             fill
             priority
-            sizes="(max-width: 1023px) 100vw, 48vw"
+            sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, (max-width: 1680px) 39vw, 600px"
             className="object-contain p-5 sm:p-7 lg:p-8"
           />
 
@@ -144,6 +164,13 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
           ) : null}
         </div>
       </div>
+
+      {/* Trocar de foto não dizia nada a quem usa leitor de tela: a imagem do
+          palco troca sozinha, sem foco e sem anúncio. Esta região resolve isso
+          sem mudar nada do que se vê. */}
+      <p aria-live="polite" className="sr-only">
+        {total > 1 ? `Imagem ${atual + 1} de ${total}. ${foto.alt || nome}` : ""}
+      </p>
 
       {total > 1 ? (
         <ul

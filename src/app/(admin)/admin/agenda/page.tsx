@@ -322,7 +322,7 @@ export default async function PaginaAgenda({
 
       <Calendario visao={visao} ancora={ancora} compromissos={compromissos} hoje={hoje} />
 
-      <p className="text-[0.8125rem] text-graf-500">
+      <p className="text-apoio text-graf-500">
         A bolinha colorida é a cor cadastrada na ficha do técnico. Compromisso sem técnico — ou
         com técnico sem cor definida — aparece sem bolinha; o nome continua escrito no cartão.
       </p>

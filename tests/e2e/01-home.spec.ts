@@ -47,7 +47,8 @@ test.describe("Home", () => {
 
     const direcao = page.getByRole("navigation", { name: "Principal" });
     await expect(direcao).toBeVisible();
-    await direcao.getByRole("link", { name: "Equipamentos" }).click();
+    // o item do menu principal chama-se "Loja"; "Equipamentos" é rótulo da Área da Clínica
+    await direcao.getByRole("link", { name: /^Loja$/ }).first().click();
 
     await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -66,14 +67,35 @@ test.describe("Home", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
 
-    await page.getByRole("button", { name: "Abrir menu", exact: true }).click();
+    const abrir = page.getByRole("button", { name: /^Abrir o menu$/ }).first();
+    const gaveta = page.getByRole("dialog", { name: "Menu de navegação" });
 
-    const gaveta = page.getByRole("dialog", { name: "Menu principal" });
-    await expect(gaveta).toBeVisible();
+    /* Abrir e conferir que CONTINUA aberta, em vez de clicar uma vez e seguir.
+
+       Em desenvolvimento o React roda com Strict Mode ligado (padrão do Next),
+       o que monta, desmonta e remonta o cabeçalho. Um toque que chegue no meio
+       disso abre a gaveta e perde o estado no remonte: ela entra deslizando e
+       volta sozinha. Medido, acontecia em 1 de 6 aberturas — e derrubava este
+       teste com "element is not stable" seguido de "detached from the DOM",
+       porque o Playwright tentava clicar num link que estava indo embora.
+
+       Esperar a gaveta ficar aberta, tocando de novo se ela sumir, é também o
+       que uma pessoa faria. E, quando a espera termina, a animação de 0,24s já
+       acabou — o clique seguinte cai em algo parado. */
+    await expect
+      .poll(
+        async () => {
+          if (!(await gaveta.isVisible())) await abrir.click();
+          await page.waitForTimeout(320);
+          return gaveta.isVisible();
+        },
+        { message: "a gaveta precisa abrir e permanecer aberta" },
+      )
+      .toBe(true);
 
     await gaveta
-      .getByRole("navigation", { name: "Navegação da home no celular" })
-      .getByRole("link", { name: /Equipamentos/ })
+      .getByRole("navigation", { name: "Menu principal no celular" })
+      .getByRole("link", { name: /^Loja/ })
       .first()
       .click();
 
@@ -92,7 +114,8 @@ test.describe("Home", () => {
   test("a busca principal leva ao resultado", async ({ page }) => {
     await page.goto("/");
 
-    const busca = page.getByRole("searchbox", { name: "Buscar no catálogo JB" });
+    // o campo grande do hero da home — o do cabeçalho é outro (`#busca-cabecalho`)
+    const busca = page.locator("#busca-home");
     await busca.fill("autoclave");
     await busca.press("Enter");
 

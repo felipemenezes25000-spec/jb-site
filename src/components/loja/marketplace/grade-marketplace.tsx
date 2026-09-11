@@ -9,12 +9,18 @@ import styles from "./marketplace.module.css";
 type PropsGradeMarketplace = {
   produtos: ProdutoMarketplaceCard[];
   parcelamento: ParcelamentoMarketplace;
+  /** Ids já guardados por quem está logado. Vazio para visitante. */
+  favoritados?: Set<string>;
+  /** Para onde voltar depois de guardar — o endereço desta listagem. */
+  voltar?: string;
   className?: string;
 };
 
 export function GradeMarketplace({
   produtos,
   parcelamento,
+  favoritados,
+  voltar,
   className = "",
 }: PropsGradeMarketplace) {
   return (
@@ -25,6 +31,8 @@ export function GradeMarketplace({
             produto={produto}
             parcelamento={parcelamento}
             prioridade={indice < 4}
+            favoritado={favoritados?.has(produto.id) ?? false}
+            voltar={voltar}
           />
         </li>
       ))}

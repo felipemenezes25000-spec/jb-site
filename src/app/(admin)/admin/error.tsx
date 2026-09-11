@@ -57,7 +57,7 @@ export default function ErroDoPainel({
           Esta tela não carregou
         </h1>
 
-        <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-600">
+        <p className="mt-3 text-corpo leading-relaxed text-graf-600">
           O restante do painel continua funcionando — o problema ficou nesta página. Nenhum
           pedido, chamado ou ordem de serviço foi alterado, e o que já estava salvo continua
           salvo.
@@ -80,7 +80,7 @@ export default function ErroDoPainel({
         </div>
 
         {error.digest ? (
-          <p className="mt-7 border-t border-graf-200 pt-5 text-[0.9375rem] leading-relaxed text-graf-500">
+          <p className="mt-7 border-t border-graf-200 pt-5 text-corpo leading-relaxed text-graf-500">
             Se acontecer de novo, passe este código para quem cuida do sistema:{" "}
             <span className="label-mono rounded bg-graf-100 px-2 py-1 text-graf-700">
               {error.digest}
@@ -88,7 +88,7 @@ export default function ErroDoPainel({
           </p>
         ) : null}
 
-        <p className="mt-5 flex items-start gap-2.5 text-[0.9375rem] leading-relaxed text-graf-500">
+        <p className="mt-5 flex items-start gap-2.5 text-corpo leading-relaxed text-graf-500">
           <LifeBuoy className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             Enquanto isso, dá para chegar às outras áreas pelo menu ou pela busca do topo.

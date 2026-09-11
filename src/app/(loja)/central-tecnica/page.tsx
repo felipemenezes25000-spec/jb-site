@@ -97,10 +97,10 @@ function CartaoArtigo({ artigo }: { artigo: ArtigoDaLista }) {
           {artigo.title}
         </span>
         {artigo.lead ? (
-          <span className="text-[0.9375rem] leading-relaxed text-graf-600">{artigo.lead}</span>
+          <span className="text-corpo leading-relaxed text-graf-600">{artigo.lead}</span>
         ) : null}
         {data ? (
-          <span className="mt-auto pt-2 text-[0.8125rem] text-graf-500">
+          <span className="mt-auto pt-2 text-apoio text-graf-500">
             {data.rotulo} {formatarData(data.data)}
           </span>
         ) : null}
@@ -214,7 +214,7 @@ export default async function CentralTecnicaPage({ searchParams }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="max-w-xl">
             <h2 className="text-title texto-forte">Seu equipamento já está com sintoma?</h2>
-            <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+            <p className="mt-2 text-corpo leading-relaxed text-graf-600">
               Texto ajuda a entender o que está acontecendo. Diagnóstico é na bancada — e a JB
               abre chamado sem exigir cadastro.
             </p>

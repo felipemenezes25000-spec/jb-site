@@ -140,7 +140,7 @@ export default async function MarcaPage({ params, searchParams }: Props) {
                     height={80}
                     className="h-9 w-auto max-w-full object-contain transition-transform duration-200 group-hover:scale-[1.03]"
                   />
-                  <span className="text-center text-[0.8125rem] font-semibold text-graf-700">
+                  <span className="text-center text-apoio font-semibold text-graf-700">
                     {vizinha.name}
                   </span>
                 </Link>

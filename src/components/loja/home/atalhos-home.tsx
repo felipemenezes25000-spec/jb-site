@@ -49,7 +49,7 @@ export function AtalhosHome() {
                   <strong className="block text-sm font-bold text-graf-950 transition-colors group-hover:text-jb-700">
                     {rotulo}
                   </strong>
-                  <small className="mt-0.5 block text-[0.8125rem] text-graf-500">{apoio}</small>
+                  <small className="mt-0.5 block text-apoio text-graf-500">{apoio}</small>
                 </span>
               </Link>
             </li>

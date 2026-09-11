@@ -51,7 +51,7 @@ export function ConteudoErro({
       </div>
 
       <div className="mt-10 max-w-xl sm:mt-12">
-        <h2 className="text-[0.8125rem] font-bold text-graf-950">Ou procure direto no catálogo</h2>
+        <h2 className="text-apoio font-bold text-graf-950">Ou procure direto no catálogo</h2>
         <div className="mt-3"><BuscaHero /></div>
       </div>
 

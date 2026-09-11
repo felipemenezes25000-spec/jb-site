@@ -1,4 +1,5 @@
 import {
+  ChevronDown,
   Download,
   FileText,
   Ruler,
@@ -11,10 +12,15 @@ import { grupoSemanticoAtributo } from "@/lib/marketplace/atributos-decisao";
 /* ============================================================================
    Ficha técnica do produto
 
-   O conteúdo continua completo, mas com densidade de catálogo técnico: uma
-   moldura para a ficha e subseções semânticas dentro dela. Campo com grupo
-   definido no admin mantém a organização humana; só o campo sem grupo recebe
-   uma classificação automática.
+   O conteúdo continua completo, com densidade de catálogo técnico: subseções
+   semânticas separadas por régua, e não por moldura. Campo com grupo definido
+   no admin mantém a organização humana; só o campo sem grupo recebe uma
+   classificação automática.
+
+   A ficha aparece aberta — em nenhuma das fichas de produto usadas como
+   referência ela vem recolhida no desktop. O que encurta a página é o corte
+   em `DADOS_VISIVEIS`, que é uma lista longa virando lista curta, e não uma
+   seção inteira virando gaveta.
    ============================================================================ */
 
 export type EspecificacaoAgrupada = {
@@ -50,6 +56,15 @@ export function agruparEspecificacoes(
 
 type Icone = React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 
+/**
+ * Cabeçalho de subbloco — filete, não moldura.
+ *
+ * Cada peça desta ficha era uma `<section>` com `rounded-xl border bg-white`
+ * dentro de uma seção que já tem `border-t`, dentro do container branco da
+ * página: caixa branca com borda sobre fundo branco, três níveis. O que
+ * separa um subbloco do seguinte agora é uma régua e o espaço, que é como as
+ * fichas técnicas de referência organizam a mesma informação.
+ */
 function CartaoFicha({
   titulo,
   subtitulo,
@@ -62,15 +77,13 @@ function CartaoFicha({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-graf-200 bg-white">
-      <header className="flex items-center gap-3 border-b border-graf-200 bg-white px-4 py-3 sm:px-5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">
-          <Icone className="size-4" aria-hidden />
-        </span>
+    <section className="min-w-0">
+      <header className="flex items-start gap-2.5 border-b border-graf-200 pb-2.5">
+        <Icone className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
         <div className="min-w-0">
-          <h3 className="text-[0.875rem] font-extrabold leading-5 text-graf-950">{titulo}</h3>
+          <h3 className="text-sm font-extrabold leading-5 text-graf-950">{titulo}</h3>
           {subtitulo ? (
-            <p className="mt-0.5 text-[0.75rem] leading-4 text-graf-500">{subtitulo}</p>
+            <p className="texto-apoio mt-0.5 text-graf-500">{subtitulo}</p>
           ) : null}
         </div>
       </header>
@@ -82,7 +95,7 @@ function CartaoFicha({
 
 function GradeDados({ children }: { children: React.ReactNode }) {
   return (
-    <dl className="grid grid-cols-1 sm:grid-cols-2 [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l sm:[&>*:nth-child(n+3)]:border-t">
+    <dl className="grid grid-cols-1 border-graf-150 sm:grid-cols-2 [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l sm:[&>*:nth-child(even)]:pl-5 sm:[&>*:nth-child(n+3)]:border-t">
       {children}
     </dl>
   );
@@ -98,15 +111,13 @@ function Dado({
   mono?: boolean;
 }) {
   return (
-    <div className="min-w-0 border-graf-200 px-4 py-3 sm:px-5 sm:py-3.5">
-      <dt className="text-[0.625rem] font-bold uppercase tracking-[0.075em] text-graf-500">
-        {rotulo}
-      </dt>
+    <div className="min-w-0 border-graf-150 py-3">
+      <dt className="micro text-graf-500">{rotulo}</dt>
       <dd
         className={
           mono
-            ? "label-mono mt-1 break-words text-[0.875rem] text-graf-950"
-            : "mt-1 break-words text-[0.9375rem] font-semibold leading-5 text-graf-950"
+            ? "label-mono mt-1 break-words text-graf-950"
+            : "mt-1 break-words text-sm font-semibold leading-5 text-graf-950"
         }
       >
         {valor}
@@ -126,41 +137,122 @@ function tituloDoGrupo(grupo: string, total: number) {
   return grupo;
 }
 
+/** Quantos dados a ficha mostra antes de oferecer o resto sob um clique. */
+const DADOS_VISIVEIS = 12;
+
+/** Abaixo disto o resto não vale um clique: mostra tudo. */
+const SOBRA_MINIMA = 3;
+
+/**
+ * Reparte a ficha no limite de linhas, e não no limite de grupos.
+ *
+ * O corte precisa acontecer dentro do grupo: quase todo produto do catálogo
+ * tem as especificações num grupo só, e um corte que só sabe pular grupos
+ * inteiros nunca dispararia — uma ficha de quarenta linhas num grupo sairia
+ * inteira, que é exatamente o caso que este corte existe para resolver. Um
+ * grupo partido repete o próprio rótulo dos dois lados.
+ */
+function repartir(grupos: EspecificacaoAgrupada[], teto: number) {
+  const visiveis: EspecificacaoAgrupada[] = [];
+  const extras: EspecificacaoAgrupada[] = [];
+  let usado = 0;
+
+  for (const grupo of grupos) {
+    const cabem = Math.max(0, teto - usado);
+    if (cabem >= grupo.itens.length) visiveis.push(grupo);
+    else if (cabem === 0) extras.push(grupo);
+    else {
+      visiveis.push({ grupo: grupo.grupo, itens: grupo.itens.slice(0, cabem) });
+      extras.push({ grupo: grupo.grupo, itens: grupo.itens.slice(cabem) });
+    }
+    usado += grupo.itens.length;
+  }
+
+  const escondidos = extras.reduce((soma, grupo) => soma + grupo.itens.length, 0);
+  if (escondidos < SOBRA_MINIMA) return { visiveis: grupos, extras: [], escondidos: 0 };
+  return { visiveis, extras, escondidos };
+}
+
+function GrupoDeEspecificacoes({
+  grupo,
+  titulo,
+}: {
+  grupo: EspecificacaoAgrupada;
+  titulo: string | null;
+}) {
+  return (
+    <section aria-label={titulo ?? "Especificações técnicas"} className="pt-3 first:pt-0">
+      {titulo ? (
+        <div className="flex items-center justify-between gap-3 pb-1">
+          <h4 className="micro text-graf-600">{titulo}</h4>
+          <span className="micro tabular text-graf-400">{grupo.itens.length}</span>
+        </div>
+      ) : null}
+      <GradeDados>
+        {grupo.itens.map((item) => (
+          <Dado key={item.id} rotulo={item.rotulo} valor={item.valor} />
+        ))}
+      </GradeDados>
+    </section>
+  );
+}
+
 export function FichaTecnica({ grupos }: { grupos: EspecificacaoAgrupada[] }) {
   if (grupos.length === 0) return null;
 
   const totalDeItens = grupos.reduce((soma, grupo) => soma + grupo.itens.length, 0);
 
+  /* A divulgação progressiva vive aqui, e não na seção inteira.
+     Esconder "Especificações técnicas" atrás de uma gaveta é esconder o miolo
+     da página; encurtar uma lista de quarenta linhas para as doze primeiras é
+     o que as fichas de referência realmente fazem. Até o corte, a ficha
+     aparece inteira, sem nada para clicar. */
+  const { visiveis, extras, escondidos: itensEscondidos } = repartir(grupos, DADOS_VISIVEIS);
+
   return (
     <CartaoFicha
-      titulo="Especificações técnicas"
-      subtitulo={`${totalDeItens} ${totalDeItens === 1 ? "dado organizado" : "dados organizados"} para comparar o modelo`}
+      /* Não repete o `h2` da seção. Com a moldura de cartão, "Especificações
+         técnicas" dentro de "Especificações técnicas" passava; sem ela vira
+         gagueira — e este bloco precisa de um nome próprio de qualquer forma,
+         porque divide a seção com "Dimensões e peso" e "Documentos". */
+      titulo="Dados do modelo"
+      subtitulo={`${totalDeItens} ${totalDeItens === 1 ? "especificação cadastrada" : "especificações cadastradas"}`}
       icone={SlidersHorizontal}
     >
-      <div className="divide-y divide-graf-200">
-        {grupos.map((grupo) => {
-          const titulo = tituloDoGrupo(grupo.grupo, grupos.length);
-          return (
-            <section key={grupo.grupo} aria-label={titulo ?? "Especificações técnicas"}>
-              {titulo ? (
-                <div className="flex items-center justify-between gap-3 bg-graf-50/55 px-4 py-2.5 sm:px-5">
-                  <h4 className="text-[0.6875rem] font-extrabold uppercase tracking-[0.075em] text-graf-600">
-                    {titulo}
-                  </h4>
-                  <span className="text-[0.6875rem] tabular text-graf-400">
-                    {grupo.itens.length}
-                  </span>
-                </div>
-              ) : null}
-              <GradeDados>
-                {grupo.itens.map((item) => (
-                  <Dado key={item.id} rotulo={item.rotulo} valor={item.valor} />
-                ))}
-              </GradeDados>
-            </section>
-          );
-        })}
+      <div className="divide-y divide-graf-150">
+        {visiveis.map((grupo) => (
+          <GrupoDeEspecificacoes
+            key={grupo.grupo}
+            grupo={grupo}
+            titulo={tituloDoGrupo(grupo.grupo, grupos.length)}
+          />
+        ))}
       </div>
+
+      {extras.length > 0 ? (
+        <details className="group mt-3 border-t border-graf-200 pt-2">
+          <summary className="foco-jb flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 text-sm font-bold text-graf-700 hover:text-jb-700 [&::-webkit-details-marker]:hidden">
+            <span className="group-open:hidden">
+              Ver mais {itensEscondidos}{" "}
+              {itensEscondidos === 1 ? "especificação" : "especificações"}
+            </span>
+            <span className="hidden group-open:inline">Mostrar menos</span>
+            <ChevronDown
+              className="size-4 transition-transform group-open:rotate-180"
+              aria-hidden
+            />
+          </summary>
+          <div className="divide-y divide-graf-150">
+            {extras.map((grupo) => (
+              <GrupoDeEspecificacoes
+                key={grupo.grupo}
+                grupo={grupo}
+                titulo={tituloDoGrupo(grupo.grupo, grupos.length)}
+              />
+            ))}
+          </div>
+        </details>
+      ) : null}
     </CartaoFicha>
   );
 }
@@ -263,17 +355,9 @@ export function Regulatorio({
       ) : null}
 
       {observacao ? (
-        <div
-          className={
-            linhas.length > 0
-              ? "border-t border-graf-200 px-4 py-3 sm:px-5"
-              : "px-4 py-3 sm:px-5"
-          }
-        >
-          <p className="text-[0.625rem] font-bold uppercase tracking-[0.075em] text-graf-500">
-            Observação
-          </p>
-          <p className="mt-1 text-[0.8125rem] leading-5 text-graf-700">{observacao}</p>
+        <div className={linhas.length > 0 ? "border-t border-graf-150 py-3" : "py-3"}>
+          <p className="micro text-graf-500">Observação</p>
+          <p className="texto-apoio mt-1 text-graf-700">{observacao}</p>
         </div>
       ) : null}
     </CartaoFicha>
@@ -306,7 +390,7 @@ export function Documentacao({ documentos }: { documentos: DocumentoProduto[] })
       subtitulo={`${documentos.length} ${documentos.length === 1 ? "arquivo disponível" : "arquivos disponíveis"}`}
       icone={FileText}
     >
-      <ul className="divide-y divide-graf-200">
+      <ul className="divide-y divide-graf-150">
         {documentos.map((documento) => {
           const tipo = TIPO_DE_DOCUMENTO[documento.tipo];
 
@@ -316,19 +400,17 @@ export function Documentacao({ documentos }: { documentos: DocumentoProduto[] })
                 href={documento.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="foco-jb group flex min-h-12 items-center gap-3 px-4 py-2.5 transition-colors duration-150 hover:bg-graf-50 sm:px-5"
+                className="foco-jb group -mx-2 flex min-h-12 items-center gap-3 rounded-lg px-2 py-2.5 transition-colors duration-150 hover:bg-graf-50"
               >
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-graf-500">
                   <FileText className="size-3.5" aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[0.875rem] font-semibold text-graf-950 transition-colors duration-150 group-hover:text-jb-700">
+                  <span className="block text-sm font-semibold text-graf-950 transition-colors duration-150 group-hover:text-jb-700">
                     {documento.titulo}
                   </span>
                   {tipo ? (
-                    <span className="mt-0.5 block text-[0.6875rem] font-medium uppercase tracking-[0.055em] text-graf-500">
-                      {tipo}
-                    </span>
+                    <span className="micro mt-0.5 block text-graf-500">{tipo}</span>
                   ) : null}
                 </span>
                 <Download

@@ -20,7 +20,7 @@ export function ServicosDoProduto({ servicos }: { servicos: ServicoDoProduto[] }
   if (servicos.length === 0) return null;
 
   return (
-    <ul className="divide-y divide-graf-150 border-y border-graf-200">
+    <ul className="divide-y divide-graf-150 border-t border-graf-200">
       {servicos.map((servico) => {
         const preco = servico.precoCents ?? 0;
 
@@ -33,7 +33,7 @@ export function ServicosDoProduto({ servicos }: { servicos: ServicoDoProduto[] }
                 </span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[0.625rem] font-bold uppercase tracking-[0.09em] text-graf-500">
+                    <p className="micro text-graf-500">
                       {ROTULO_SERVICO[servico.tipo]}
                     </p>
                     {servico.obrigatorio ? <Etiqueta tom="alerta">Obrigatório</Etiqueta> : null}

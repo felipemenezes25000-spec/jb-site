@@ -94,7 +94,7 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="line-clamp-2 text-[0.8125rem] font-semibold leading-5 text-graf-900">{linha.nome}</p>
+            <p className="line-clamp-2 text-apoio font-semibold leading-5 text-graf-900">{linha.nome}</p>
             <p className="sr-only">Quantidade: {linha.quantidade}</p>
             {linha.addons.length > 0 ? (
               <p className="mt-0.5 line-clamp-1 text-[0.6875rem] text-graf-500">
@@ -103,7 +103,7 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
             ) : null}
           </div>
 
-          <p className="shrink-0 text-[0.8125rem] font-bold tabular text-graf-950">
+          <p className="shrink-0 text-apoio font-bold tabular text-graf-950">
             {formatarPreco(linha.totalCents)}
           </p>
         </li>
@@ -114,15 +114,15 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
 
 function ValorDoFrete({ frete, carregando }: EstadoFrete) {
   if (carregando) {
-    return <dd className="text-right text-[0.8125rem] text-graf-500">calculando…</dd>;
+    return <dd className="text-right text-apoio text-graf-500">calculando…</dd>;
   }
 
   if (!frete) {
-    return <dd className="max-w-36 text-right text-[0.8125rem] leading-5 text-graf-500">informe o CEP na entrega</dd>;
+    return <dd className="max-w-36 text-right text-apoio leading-5 text-graf-500">informe o CEP na entrega</dd>;
   }
 
   if (frete.orcadoDepois) {
-    return <dd className="max-w-36 text-right text-[0.8125rem] leading-5 text-warn-700">a combinar</dd>;
+    return <dd className="max-w-36 text-right text-apoio leading-5 text-warn-700">a combinar</dd>;
   }
 
   const prazo = textoDoPrazo(frete.prazoDias);
@@ -204,7 +204,7 @@ export function ResumoCheckout({
         <div className="p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 className="text-lg font-extrabold text-graf-950">Resumo</h2>
-            <p className="text-[0.8125rem] text-graf-500">{plural(quantidade, "unidade", "unidades")}</p>
+            <p className="text-apoio text-graf-500">{plural(quantidade, "unidade", "unidades")}</p>
           </div>
 
           <div className="mt-4 max-h-72 overflow-y-auto pr-1">

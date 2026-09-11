@@ -31,7 +31,7 @@ export function PerguntasDoProduto({ perguntas }: { perguntas: PerguntaDoProduto
         titulo: item.pergunta,
         resposta: (
           <div>
-            <p className="mb-3 inline-flex items-center gap-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.065em] text-jb-700">
+            <p className="mb-3 inline-flex items-center gap-1.5 micro text-jb-700">
               <BadgeCheck className="size-3.5" aria-hidden />
               Respondido pela equipe técnica JB
             </p>

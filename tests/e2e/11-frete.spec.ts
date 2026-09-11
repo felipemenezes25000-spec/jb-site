@@ -81,7 +81,7 @@ async function continuar(page: Page, tituloDaProxima: string) {
 /** Vai do carrinho até a etapa de entrega, já com o endereço escolhido. */
 async function irAteAEntrega(page: Page, email: string) {
   await page.goto("/checkout");
-  await expect(page.getByRole("heading", { name: "Fechar pedido", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Finalizar compra", level: 1 })).toBeVisible();
 
   /* Desde a fase 3, o checkout público não fecha sem conta: a etapa de
      identificação pede uma senha junto do e-mail. O que este arquivo testa é
@@ -188,8 +188,13 @@ test.describe("Frete no checkout", () => {
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/não entra no total agora/)).toBeVisible();
 
-    // o resumo diz o mesmo, e o total continua sendo só o dos itens
-    await expect(page.getByText("a combinar — a JB envia o valor antes de despachar")).toBeVisible();
+    /* O resumo diz o mesmo, em duas linhas em vez de uma: o `dt` é "Entrega" e
+       o `dd` traz só "a combinar". Casar pelo papel `definition` mantém a
+       asserção presa ao resumo — o aviso da etapa, já conferido acima, usa
+       outras palavras e não deve satisfazer esta linha por acidente. */
+    await expect(
+      page.getByRole("definition").filter({ hasText: /^a combinar$/ }).first(),
+    ).toBeVisible();
     await expect
       .poll(async () => totalDoResumo(page), {
         message: "frete por orçar não pode entrar no total",

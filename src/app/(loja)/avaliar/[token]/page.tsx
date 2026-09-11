@@ -73,7 +73,7 @@ export default async function AvaliarPage({
             <FormularioAvaliacao token={token} tipo={convite.kind as "compra" | "servico"} />
           </div>
 
-          <p className="mt-8 text-[0.8125rem] leading-relaxed text-graf-500">
+          <p className="mt-8 text-apoio leading-relaxed text-graf-500">
             A JB não oferece desconto, brinde ou vantagem em troca de avaliação, e não pede que
             ninguém mude o que escreveu. Uma resposta ruim é tão útil quanto uma boa — mais,
             normalmente.

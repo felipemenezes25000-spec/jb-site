@@ -67,7 +67,7 @@ export function TopoClinica({
             />
             <kbd
               aria-hidden
-              className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md border border-graf-200 bg-white px-1.5 py-0.5 text-[0.65rem] font-bold text-graf-400 shadow-sm"
+              className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md border border-graf-200 bg-white px-1.5 py-0.5 text-[0.65rem] font-bold text-graf-500 shadow-sm"
             >
               ⌘ K
             </kbd>

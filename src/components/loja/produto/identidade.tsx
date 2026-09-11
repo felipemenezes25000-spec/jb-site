@@ -127,7 +127,7 @@ export function IdentidadeProduto({
         {categoria ? (
           <Link
             href={`/categoria/${categoria.slug}`}
-            className="foco-jb inline-flex min-h-9 items-center rounded-full bg-graf-100 px-3 text-[0.75rem] font-bold text-graf-600 transition-colors hover:bg-graf-200 hover:text-graf-950"
+            className="foco-jb inline-flex min-h-9 items-center rounded-full bg-graf-100 px-3 text-xs font-bold text-graf-600 transition-colors hover:bg-graf-200 hover:text-graf-950"
           >
             {categoria.nome}
           </Link>
@@ -155,15 +155,15 @@ export function IdentidadeProduto({
                   indice >= 2 ? "border-t" : ""
                 } ${indice % 2 === 1 ? "border-l" : ""}`}
               >
-                <dt className="flex items-center gap-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.075em] text-graf-500">
+                <dt className="flex items-center gap-1.5 micro text-graf-500">
                   <Icone className="size-3.5 shrink-0" aria-hidden />
                   {linha.rotulo}
                 </dt>
                 <dd
                   className={
                     linha.mono
-                      ? "label-mono mt-1.5 break-words text-[0.8125rem] text-graf-900"
-                      : "mt-1.5 break-words text-[0.875rem] font-bold text-graf-900"
+                      ? "label-mono mt-1.5 break-words text-graf-900"
+                      : "mt-1.5 break-words text-sm font-bold text-graf-900"
                   }
                 >
                   {linha.valor}

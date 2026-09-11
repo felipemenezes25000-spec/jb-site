@@ -116,7 +116,7 @@ export default async function PaginaEtiquetasDeCertificacao() {
                 dangerouslySetInnerHTML={{ __html: etiqueta.qr }}
               />
 
-              <p className="text-[0.8125rem] font-bold leading-tight text-graf-950">
+              <p className="text-apoio font-bold leading-tight text-graf-950">
                 {etiqueta.unit.product.name}
               </p>
               {etiqueta.unit.product.brand ? (

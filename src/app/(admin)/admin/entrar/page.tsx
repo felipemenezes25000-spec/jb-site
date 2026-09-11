@@ -50,7 +50,7 @@ export default async function PaginaEntrar({
           <h1 className="mt-7 text-[1.75rem] font-bold leading-tight tracking-[-0.02em] text-graf-950">
             Painel interno
           </h1>
-          <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+          <p className="mt-2 text-corpo leading-relaxed text-graf-600">
             Entre com o e-mail da sua conta da equipe.
           </p>
         </div>
@@ -59,7 +59,7 @@ export default async function PaginaEntrar({
           <FormularioEntrarStaff destino={destino} />
         </div>
 
-        <p className="mt-6 flex items-start gap-2.5 rounded-xl border border-graf-200 bg-white/60 px-4 py-3 text-[0.8125rem] leading-relaxed text-graf-600">
+        <p className="mt-6 flex items-start gap-2.5 rounded-xl border border-graf-200 bg-white/60 px-4 py-3 text-apoio leading-relaxed text-graf-600">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
           <span>
             As tentativas de acesso ficam registradas. Depois de várias senhas erradas

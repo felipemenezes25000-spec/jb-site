@@ -37,7 +37,7 @@ test.describe("Marketplace — página do produto", () => {
     const preco = painel.getByText(emReais(frete.precoCents)).first();
     const comprar = painel.getByRole("button", { name: "Comprar agora" });
     const cep = painel.getByRole("textbox", { name: /CEP/ });
-    const personalizar = painel.getByText("Personalize a compra", { exact: true });
+    const personalizar = painel.getByText("Mais opções da compra", { exact: true });
 
     await expect(preco).toBeVisible();
     await expect(comprar).toBeVisible();
@@ -66,9 +66,14 @@ test.describe("Marketplace — página do produto", () => {
     const adicionar = painel.getByRole("button", { name: "Adicionar ao carrinho" });
 
     // O controle está depois de entrega/CTA no DOM, mas o estado precisa chegar
-    // aos inputs hidden do formulário principal que ficou acima dele.
+    // aos inputs hidden do formulário principal que ficou acima dele. Ele mora
+    // dentro da gaveta "Mais opções da compra", que nasce fechada — a primeira
+    // dobra não precisa carregar quantidade e serviços para quem só quer o
+    // preço.
+    await painel.getByText("Mais opções da compra", { exact: true }).click();
     await painel.getByRole("button", { name: "Aumentar quantidade" }).click();
-    const total = painel.getByText("Total configurado", { exact: true });
+    // o bloco chama-se só "Total" (com a composição na linha de baixo)
+    const total = painel.getByText("Total", { exact: true });
     await expect(total).toBeVisible();
     // O valor sai de `formatarPreco`, que escreve "R$ 2.468,00" dentro de um
     // único <strong> — procurar "2.468,00" com `exact` nunca casaria. A busca
@@ -90,7 +95,21 @@ test.describe("Marketplace — página do produto", () => {
     ).toBeVisible();
   });
 
-  test("usa hub técnico progressivo e não recupera relacionados genéricos", async ({ page }) => {
+  /**
+   * O contrato mudou em 10/09/2026, e este teste mudou junto.
+   *
+   * Antes ele exigia o oposto do que exige agora: três `<details>` recolhidos
+   * em `#ficha-tecnica`, `#preparo` e `#entrega-e-garantia`, e um clique para
+   * abrir. No desktop isso virava três gavetas de 73px empilhadas onde deveria
+   * estar o miolo técnico da página — e requisito de instalação é justamente o
+   * que o cliente precisa descobrir *antes* de comprar.
+   *
+   * Nenhuma das dez fichas de produto medidas como referência recolhe a ficha
+   * técnica no desktop. A divulgação progressiva não sumiu: ela desceu para
+   * dentro da lista longa (ver `DADOS_VISIVEIS` em `especificacoes.tsx`), que
+   * é onde as mesmas referências realmente encurtam a página.
+   */
+  test("mostra o miolo técnico aberto e não recupera relacionados genéricos", async ({ page }) => {
     const { produto } = fixtures();
     await page.goto(`/loja/${produto.slug}`);
 
@@ -110,23 +129,78 @@ test.describe("Marketplace — página do produto", () => {
       }),
     ).toHaveCount(0);
 
-    const detalhes = page.locator(
-      "#ficha-tecnica > details, #preparo > details, #entrega-e-garantia > details",
-    );
-    await expect(detalhes).toHaveCount(3);
+    // Nenhuma seção é uma gaveta.
+    await expect(
+      page.locator("#ficha-tecnica > details, #preparo > details, #entrega-e-garantia > details"),
+    ).toHaveCount(0);
 
-    const estadosIniciais = await detalhes.evaluateAll((itens) =>
-      itens.map((item) => (item as HTMLDetailsElement).open),
-    );
-    expect(estadosIniciais).toEqual([false, false, false]);
+    // E o conteúdo delas está na tela sem ninguém clicar em nada.
+    await expect(preparo.getByRole("heading", { name: "Antes de comprar" })).toBeVisible();
+    await expect(preparo.getByText("Compatibilidade com o local")).toBeVisible();
+    await expect(ficha.getByText("Dados do modelo")).toBeVisible();
 
-    await preparo.locator("summary").click();
-    await expect(preparo.locator("details")).toHaveAttribute("open", "");
-    await expect(preparo.getByText("Antes de comprar", { exact: true }).first()).toBeVisible();
+    // Um `h2` por página, e não cinco tamanhos: a régua que a auditoria pediu.
+    const tamanhosDeH2 = await page
+      .locator("main h2")
+      .evaluateAll((itens) => [...new Set(itens.map((h) => getComputedStyle(h).fontSize))]);
+    expect(tamanhosDeH2).toHaveLength(1);
+
+    // E uma largura só de container, do topo ao rodapé da ficha.
+    const largurasDeContainer = await page
+      .locator("main .container-jb")
+      .evaluateAll((itens) => [
+        ...new Set(itens.map((c) => Math.round(c.getBoundingClientRect().width))),
+      ]);
+    expect(largurasDeContainer).toHaveLength(1);
 
     expect(
       await page.getByText("Assistência técnica própria", { exact: true }).count(),
     ).toBeLessThanOrEqual(1);
+  });
+
+  /**
+   * A tira "Você viu recentemente" só existe para quem já visitou outros dois
+   * produtos — e por isso ela escapa de qualquer conferência feita em
+   * navegador limpo. Foi assim que ela passou uma revisão inteira usando
+   * `container-jb` puro (1440px) no meio de uma ficha que corre a 1600px: um
+   * degrau de 80px de cada lado, invisível para quem abre a página pela
+   * primeira vez.
+   *
+   * O teste semeia o histórico à mão e cobra a mesma régua do resto da página.
+   */
+  test("a tira de histórico respeita a largura do resto da ficha", async ({ page }) => {
+    await page.goto("/loja");
+    const slugs = await page
+      .locator('main a[href^="/loja/"]')
+      .evaluateAll((links) => [
+        ...new Set(
+          links
+            .map((a) => new URL((a as HTMLAnchorElement).href).pathname.replace("/loja/", ""))
+            .filter((s) => s && !s.includes("/")),
+        ),
+      ]);
+    test.skip(slugs.length < 3, "o catálogo precisa de três produtos para formar histórico");
+
+    const [primeiro, segundo, atual] = slugs;
+    await page.addInitScript(
+      ([a, b]) => window.localStorage.setItem("jb:vistos", JSON.stringify([a, b])),
+      [primeiro, segundo],
+    );
+
+    await page.goto(`/loja/${atual}`);
+    await expect(page.getByRole("heading", { name: "Você viu recentemente" })).toBeVisible();
+
+    const larguras = await page
+      .locator("main .container-jb")
+      .evaluateAll((itens) => [
+        ...new Set(itens.map((c) => Math.round(c.getBoundingClientRect().width))),
+      ]);
+    expect(larguras).toHaveLength(1);
+
+    const tamanhosDeH2 = await page
+      .locator("main h2")
+      .evaluateAll((itens) => [...new Set(itens.map((h) => getComputedStyle(h).fontSize))]);
+    expect(tamanhosDeH2).toHaveLength(1);
   });
 
   test("a navegação sticky não aponta para seção inexistente", async ({ page }) => {
@@ -189,7 +263,7 @@ test.describe("Marketplace — página do produto", () => {
     const campo = duvidas.getByRole("textbox", { name: "Sua pergunta" });
     await expect(campo).toBeHidden();
 
-    await duvidas.getByText("Não encontrou sua dúvida?", { exact: true }).click();
+    await duvidas.getByText("Ainda ficou alguma dúvida?", { exact: true }).click();
     await expect(campo).toBeVisible();
     await expect(duvidas.getByRole("textbox", { name: "Seu nome" })).toBeVisible();
     await expect(duvidas.getByRole("textbox", { name: "E-mail" })).toBeVisible();

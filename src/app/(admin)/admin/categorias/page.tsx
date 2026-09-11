@@ -92,7 +92,7 @@ export default async function PaginaCategorias() {
         {podeMexer ? (
           <LinkBotao href="/admin/categorias/nova">Nova categoria</LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-apoio font-semibold text-graf-600">
             Somente consulta
           </p>
         )}

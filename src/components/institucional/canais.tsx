@@ -40,7 +40,7 @@ function Linha({
     <>
       <Icone className="mt-1 size-4.5 shrink-0 text-graf-500" aria-hidden />
       <span className="min-w-0">
-        <span className="block text-[0.8125rem] leading-tight text-graf-500">{rotulo}</span>
+        <span className="block text-apoio leading-tight text-graf-500">{rotulo}</span>
         {/* E-mail e endereço são palavras longas e sem espaço. Sem quebra
             forçada, a largura mínima deles empurra a coluna inteira para fora
             da tela no celular — e corta o texto no cartão do desktop. */}

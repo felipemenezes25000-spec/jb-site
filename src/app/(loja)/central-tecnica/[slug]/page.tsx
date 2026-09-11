@@ -186,7 +186,7 @@ export default async function ArtigoPage({ params }: Props) {
             </h2>
             <ul className="mt-4 space-y-3">
               {artigo.sources.map((fonte) => (
-                <li key={fonte.title} className="text-[0.9375rem] leading-relaxed text-graf-700">
+                <li key={fonte.title} className="text-corpo leading-relaxed text-graf-700">
                   {fonte.url ? (
                     <a
                       href={fonte.url}
@@ -234,7 +234,7 @@ export default async function ArtigoPage({ params }: Props) {
                   />
                 ) : null}
                 <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-semibold leading-snug text-graf-950">
+                  <span className="block text-corpo font-semibold leading-snug text-graf-950">
                     {product.name}
                   </span>
                   {/* Preço zero significa "sob orçamento" na loja inteira, e é
@@ -254,7 +254,7 @@ export default async function ArtigoPage({ params }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-6 rounded-xl border border-graf-200 bg-graf-50 p-6">
           <div className="max-w-xl">
             <h2 className="text-title texto-forte">O sintoma continua?</h2>
-            <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+            <p className="mt-2 text-corpo leading-relaxed text-graf-600">
               A JB abre chamado sem exigir cadastro, e você pode anexar foto ou vídeo do que está
               acontecendo.
             </p>
@@ -277,7 +277,7 @@ export default async function ArtigoPage({ params }: Props) {
                   href={`/central-tecnica/${outro.slug}`}
                   className="flex h-full flex-col gap-2 p-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
-                  <span className="text-[0.9375rem] font-bold leading-snug text-graf-950">
+                  <span className="text-corpo font-bold leading-snug text-graf-950">
                     {outro.title}
                   </span>
                   {outro.lead ? (

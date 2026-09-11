@@ -87,10 +87,10 @@ export async function SecaoCategorias() {
             <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-700">
               Categorias
             </p>
-            <h2 className="mt-2 text-[clamp(1.7rem,1.35rem+1.4vw,2.5rem)] font-extrabold tracking-[-0.035em] text-graf-950">
+            <h2 className="mt-2 text-section font-extrabold tracking-[-0.035em] text-graf-950">
               Encontre pelo que a clínica precisa
             </h2>
-            <p className="mt-2 text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+            <p className="mt-2 text-sm leading-6 text-graf-600 sm:text-corpo">
               Entre por categoria para comparar produtos semelhantes com menos ruído.
             </p>
           </div>
@@ -135,7 +135,7 @@ export async function SecaoCategorias() {
                     <strong className="text-base font-bold text-graf-950 transition-colors group-hover:text-jb-700">
                       {categoria.name}
                     </strong>
-                    <small className="mt-1.5 line-clamp-2 text-[0.8125rem] leading-5 text-graf-500">
+                    <small className="mt-1.5 line-clamp-2 text-apoio leading-5 text-graf-500">
                       {detalheCategoria(categoria)}
                     </small>
                     <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-graf-700 group-hover:text-jb-700">

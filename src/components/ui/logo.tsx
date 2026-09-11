@@ -42,6 +42,11 @@ export function Logo({
       width={LOGO.largura}
       height={LOGO.altura}
       priority={prioridade}
+      /* Sem `sizes`, o Next servia o arquivo de 640px para um espaço de 69px
+         de largura no cabeçalho — em toda página do site. A largura de
+         exibição sai da altura pedida vezes a proporção real do arquivo
+         (640÷355 ≈ 1,8), com folga de 2× para tela de alta densidade. */
+      sizes={`${Math.ceil((altura * LOGO.largura) / LOGO.altura) * 2}px`}
       style={{ height: altura, width: "auto" }}
       className={cn("select-none", className)}
     />

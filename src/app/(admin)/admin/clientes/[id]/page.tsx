@@ -342,7 +342,7 @@ export default async function ClientePage({ params }: Props) {
                         >
                           {pedido.number}
                         </Link>
-                        <p className="text-[0.8125rem] text-graf-500">
+                        <p className="text-apoio text-graf-500">
                           {formatarData(pedido.placedAt)}
                           {pedido.paidAt ? ` · pago em ${formatarData(pedido.paidAt)}` : ""}
                         </p>
@@ -404,7 +404,7 @@ export default async function ClientePage({ params }: Props) {
                         >
                           {orcamento.number}
                         </Link>
-                        <p className="text-[0.8125rem] text-graf-500">
+                        <p className="text-apoio text-graf-500">
                           {orcamento.kind === "comercial" ? "Venda" : "Serviço técnico"} ·{" "}
                           {formatarData(orcamento.createdAt)}
                           {orcamento.validUntil
@@ -463,7 +463,7 @@ export default async function ClientePage({ params }: Props) {
                           {ROTULO_EQUIPAMENTO[equipamento.status]}
                         </Etiqueta>
                       </div>
-                      <p className="text-[0.8125rem] text-graf-500">
+                      <p className="text-apoio text-graf-500">
                         {[
                           equipamento.brandName,
                           equipamento.modelName,
@@ -515,7 +515,7 @@ export default async function ClientePage({ params }: Props) {
                           {ROTULO_CHAMADO[chamado.status]}
                         </Etiqueta>
                       </div>
-                      <p className="line-2 text-[0.8125rem] text-graf-500">
+                      <p className="line-2 text-apoio text-graf-500">
                         {formatarData(chamado.createdAt)} · {chamado.description}
                       </p>
                     </li>
@@ -545,7 +545,7 @@ export default async function ClientePage({ params }: Props) {
                       >
                         {contrato.number}
                       </Link>
-                      <p className="text-[0.8125rem] text-graf-500">
+                      <p className="text-apoio text-graf-500">
                         {[
                           contrato.plan?.name,
                           `${contrato._count.items} equipamento(s)`,
@@ -597,7 +597,7 @@ export default async function ClientePage({ params }: Props) {
                         <FileText className="size-4 shrink-0 text-graf-500" aria-hidden />
                         {documento.title}
                       </a>
-                      <p className="text-[0.8125rem] text-graf-500">
+                      <p className="text-apoio text-graf-500">
                         {formatarData(documento.createdAt)}
                       </p>
                     </li>
@@ -664,7 +664,7 @@ export default async function ClientePage({ params }: Props) {
                       className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-graf-200 p-3"
                     >
                       <span className="text-sm font-semibold text-graf-900">{unidade.name}</span>
-                      <span className="text-[0.8125rem] text-graf-500">
+                      <span className="text-apoio text-graf-500">
                         {unidade.address
                           ? `${[unidade.address.district, `${unidade.address.city}/${unidade.address.state}`]
                               .filter(Boolean)

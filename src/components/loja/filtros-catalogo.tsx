@@ -170,7 +170,7 @@ function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode
   return (
     <details open className="group border-b border-graf-200 pb-6 last:border-b-0 last:pb-0">
       <summary className="-mx-2 flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500">
-        <span className="text-[0.9375rem] font-bold text-graf-950">{titulo}</span>
+        <span className="text-corpo font-bold text-graf-950">{titulo}</span>
         <ChevronDown
           className="size-4 shrink-0 text-graf-500 transition-transform duration-200 group-open:rotate-180"
           aria-hidden
@@ -225,7 +225,7 @@ function OpcaoLink({
         {opcao.rotulo}
       </span>
       {opcao.quantidade !== undefined ? (
-        <span className="tabular shrink-0 text-[0.8125rem] text-graf-500">
+        <span className="tabular shrink-0 text-apoio text-graf-500">
           {opcao.quantidade}
         </span>
       ) : null}
@@ -425,7 +425,7 @@ export function ConteudoFiltros({
               <div className="min-w-0 flex-1">
                 <label
                   htmlFor={idMin}
-                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                  className="mb-1.5 block text-apoio font-semibold text-graf-700"
                 >
                   De
                 </label>
@@ -444,7 +444,7 @@ export function ConteudoFiltros({
               <div className="min-w-0 flex-1">
                 <label
                   htmlFor={idMax}
-                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                  className="mb-1.5 block text-apoio font-semibold text-graf-700"
                 >
                   Até
                 </label>
@@ -473,11 +473,11 @@ export function ConteudoFiltros({
             <p
               id={idErroFaixa}
               aria-live="polite"
-              className="mt-2 text-[0.8125rem] font-semibold text-jb-700 empty:mt-0"
+              className="mt-2 text-apoio font-semibold text-jb-700 empty:mt-0"
             >
               {erroFaixa}
             </p>
-            <p className="mt-2.5 text-[0.8125rem] text-graf-500">
+            <p className="mt-2.5 text-apoio text-graf-500">
               Catálogo de {formatarPreco(grupos.faixaPreco.minCents)} a{" "}
               {formatarPreco(grupos.faixaPreco.maxCents)}.
             </p>
@@ -537,12 +537,19 @@ export function PainelFiltros({
   const limpavel = ativos > 0;
 
   return (
-    <div className={cn("lg:sticky lg:top-24", className)}>
+    /* `top-24` são 96px fixos, e o cabeçalho grudado mede 108: o título
+       "Filtros" entrava por baixo dele. O token `--jb-topo` é o mesmo que a
+       barra de seções da ficha de produto usa, e acompanha a altura real do
+       cabeçalho em cada faixa. */
+    <div
+      data-painel-filtros
+      className={cn("lg:sticky lg:top-[calc(var(--jb-topo)+1rem)]", className)}
+    >
       <div className="mb-5 flex items-center justify-between gap-3 border-b border-graf-200 pb-3">
         <h2 className="flex items-baseline gap-2 text-base font-bold text-graf-950">
           Filtros
           {ativos > 0 ? (
-            <span className="tabular text-[0.8125rem] font-semibold text-graf-500">
+            <span className="tabular text-apoio font-semibold text-graf-500">
               {ativos} ativo{ativos > 1 ? "s" : ""}
             </span>
           ) : null}
@@ -553,7 +560,7 @@ export function PainelFiltros({
           <Link
             href={caminho}
             scroll={false}
-            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors pointer-coarse:min-h-11 hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-apoio font-semibold text-graf-700 transition-colors pointer-coarse:min-h-11 hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
             <X className="size-3.5" aria-hidden />
             Limpar
@@ -655,7 +662,7 @@ export function BarraCatalogo({
             ) : null}
           </button>
 
-          <label className="flex min-w-0 flex-1 basis-44 items-center gap-2 text-[0.8125rem] font-semibold text-graf-600 sm:basis-auto sm:flex-none">
+          <label className="flex min-w-0 flex-1 basis-44 items-center gap-2 text-apoio font-semibold text-graf-600 sm:basis-auto sm:flex-none">
             <span className="hidden shrink-0 sm:inline">Ordenar por</span>
             <select
               value={ordem}
@@ -725,7 +732,7 @@ export function BarraCatalogo({
               <p className="flex items-baseline gap-2 text-[1.0625rem] font-bold text-graf-950">
                 Filtros
                 {ativos > 0 ? (
-                  <span className="tabular text-[0.8125rem] font-semibold text-graf-500">
+                  <span className="tabular text-apoio font-semibold text-graf-500">
                     {ativos} ativo{ativos > 1 ? "s" : ""}
                   </span>
                 ) : null}
@@ -735,7 +742,7 @@ export function BarraCatalogo({
                   <Link
                     href={enderecoLimpo}
                     scroll={false}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-apoio font-semibold text-graf-700 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                   >
                     <X className="size-3.5" aria-hidden />
                     Limpar

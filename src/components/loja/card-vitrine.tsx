@@ -114,7 +114,6 @@ export function CardVitrine({
             fill
             preload={prioridade}
             loading={prioridade ? undefined : "lazy"}
-            unoptimized={produto.imageUrl.startsWith("/")}
             sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, 24vw"
             className={cn(
               "object-contain p-3 transition-transform duration-500 ease-out-quint",
@@ -155,7 +154,7 @@ export function CardVitrine({
           <p className="micro truncate text-graf-500">{produto.brandName}</p>
         ) : null}
 
-        <h3 className="mt-2 line-2 min-h-10 text-[0.9375rem] font-semibold leading-snug text-graf-950">
+        <h3 className="mt-2 line-2 min-h-10 text-corpo font-semibold leading-snug text-graf-950">
           <Link
             href={`/loja/${produto.slug}`}
             className="rounded-lg after:absolute after:inset-0 after:content-['']"

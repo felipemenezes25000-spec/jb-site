@@ -255,7 +255,7 @@ function ListaDePagamentos({ pagamentos }: { pagamentos: PagamentoDoPainel[] }) 
                 </span>{" "}
                 · {ROTULO_METODO[pagamento.metodo]}
               </span>
-              <span className="block text-[0.8125rem] text-graf-500">{pagamento.quando}</span>
+              <span className="block text-apoio text-graf-500">{pagamento.quando}</span>
             </span>
             <Etiqueta tom={TOM_PAGAMENTO[pagamento.status]}>
               {ROTULO_PAGAMENTO[pagamento.status]}

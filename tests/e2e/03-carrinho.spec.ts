@@ -38,7 +38,7 @@ test.describe("Carrinho", () => {
 
     await expect(page.getByRole("heading", { name: "Carrinho", level: 1 })).toBeVisible();
     await expect(page.getByText("Seu carrinho está vazio")).toBeVisible();
-    await expect(page.getByRole("main").getByRole("link", { name: "Ver equipamentos" })).toBeVisible();
+    await expect(page.getByRole("main").getByRole("link", { name: "Ver catálogo" })).toBeVisible();
   });
 
   test("adicionar um item mostra nome, preço e total corretos", async ({ page }) => {
@@ -71,7 +71,7 @@ test.describe("Carrinho", () => {
 
     await page.getByRole("button", { name: "Comprar agora" }).click();
     await page.waitForURL(/\/checkout$/);
-    await expect(page.getByRole("heading", { name: "Fechar pedido", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Finalizar compra", level: 1 })).toBeVisible();
     await expect(page.getByText(produto.nome).first()).toBeVisible();
   });
 

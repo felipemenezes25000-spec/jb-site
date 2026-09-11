@@ -170,7 +170,15 @@ export function CaixaCompra({
               </div>
             ) : null}
 
-            <p className="numero text-[2.35rem] leading-none tracking-[-0.035em] text-graf-950 xl:text-[2.55rem]">
+            {/* 30px, e não 40px.
+
+                O preço estava em 2.35rem subindo para 2.55rem no `xl` — maior
+                que o de qualquer ficha de produto medida como referência, e
+                praticamente do tamanho do `h1` na coluna ao lado, o que fazia
+                título e preço disputarem a primeira dobra. `text-3xl` é o
+                degrau nativo; quem dá peso ao número é `numero` (800, tabular),
+                não o tamanho. */}
+            <p className="numero text-3xl leading-none text-graf-950">
               {formatarPreco(precoCents)}
             </p>
 
@@ -205,7 +213,7 @@ export function CaixaCompra({
           {mostrarTotal ? (
             <div className="mb-3 flex items-end justify-between gap-4 rounded-xl bg-graf-50 px-3.5 py-3">
               <span>
-                <span className="block text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
+                <span className="block micro text-graf-500">
                   Total
                 </span>
                 <span className="mt-0.5 block text-xs text-graf-500">
@@ -244,6 +252,19 @@ export function CaixaCompra({
             </div>
           ) : null}
 
+          {/* Um primário, um secundário, um terciário — e não dois primários
+              e um link.
+
+              Antes os dois primeiros botões mediam 302×52 cada: mesma largura,
+              mesma altura, um vermelho sólido e o outro branco com borda. Dois
+              botões de mesmo peso não formam hierarquia, só dividem a atenção.
+
+              Nenhuma ficha de produto de referência resolve isso com contorno
+              branco: quem mantém dois botões usa preenchimento de menor
+              intensidade no segundo (Mercado Livre repete o mesmo azul a 15%),
+              e a maioria simplesmente tem um botão só. Aqui o secundário fica
+              com preenchimento neutro e 44px de altura contra os 52px do
+              primário — continua sendo um botão de verdade, sem competir. */}
           <div className="grid gap-2">
             <Botao
               type="submit"
@@ -262,8 +283,8 @@ export function CaixaCompra({
 
             <Botao
               type="submit"
-              variante="secundario"
-              tamanho="lg"
+              variante="sutil"
+              tamanho="md"
               larguraTotal
               disabled={enviando || !podeComprar}
               carregando={enviando && !irParaPagamento && podeComprar}
@@ -272,7 +293,7 @@ export function CaixaCompra({
                 setIrParaPagamento(false);
               }}
             >
-              <ShoppingCart className="size-[18px]" aria-hidden />
+              <ShoppingCart className="size-4" aria-hidden />
               Adicionar ao carrinho
             </Botao>
           </div>
@@ -562,7 +583,7 @@ function AlternativaDoPacote({
           {valor !== null ? (
             <span className="shrink-0 text-right text-sm font-bold tabular text-graf-800">
               {aPartirDe ? (
-                <span className="block text-[0.6875rem] font-semibold uppercase tracking-wide text-graf-500">
+                <span className="block micro text-graf-500">
                   a partir de
                 </span>
               ) : null}
@@ -574,14 +595,14 @@ function AlternativaDoPacote({
         </span>
         <span className="mt-1 block text-xs leading-5 text-graf-500">{descricao}</span>
         {ressalva ? (
-          <span className="mt-1.5 block text-[0.75rem] leading-5 text-graf-500">{ressalva}</span>
+          <span className="mt-1.5 block texto-apoio text-graf-500">{ressalva}</span>
         ) : null}
         {itens && itens.length > 0 ? (
           <span className="mt-2 flex flex-wrap gap-1.5">
             {itens.map((item) => (
               <span
                 key={item}
-                className="inline-flex items-center rounded-full border border-graf-200 bg-white px-2.5 py-0.5 text-[0.75rem] font-semibold text-graf-700"
+                className="inline-flex items-center rounded-full border border-graf-200 bg-white px-2.5 py-0.5 texto-apoio font-semibold text-graf-700"
               >
                 {item}
               </span>

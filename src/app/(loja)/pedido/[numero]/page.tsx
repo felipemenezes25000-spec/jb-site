@@ -554,14 +554,14 @@ export default async function PedidoPage({ params }: Props) {
 
                   <div className="min-w-0">
                     {item.brandName ? (
-                      <p className="break-words text-[0.75rem] font-semibold uppercase tracking-wide text-graf-500 sm:text-[0.8125rem]">
+                      <p className="break-words text-[0.75rem] font-semibold uppercase tracking-wide text-graf-500 sm:text-apoio">
                         {item.brandName}
                       </p>
                     ) : null}
-                    <p className="break-words text-[0.9375rem] font-bold leading-snug text-graf-950 sm:text-base">
+                    <p className="break-words text-corpo font-bold leading-snug text-graf-950 sm:text-base">
                       {item.name}
                     </p>
-                    <p className="mt-1 break-words text-[0.8125rem] text-graf-500">
+                    <p className="mt-1 break-words text-apoio text-graf-500">
                       {item.sku ? <span className="label-mono break-all">{item.sku}</span> : null}
                       {item.sku ? " · " : ""}
                       {item.quantity}× {formatarPreco(item.unitPriceCents)}
@@ -572,7 +572,7 @@ export default async function PedidoPage({ params }: Props) {
                         {item.addons.map((addon) => (
                           <li
                             key={addon.id}
-                            className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 text-[0.8125rem] text-graf-600"
+                            className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 text-apoio text-graf-600"
                           >
                             <span className="min-w-0 break-words">+ {addon.name}</span>
                             <span className="shrink-0 tabular">{formatarPreco(addon.totalCents)}</span>
@@ -631,7 +631,7 @@ export default async function PedidoPage({ params }: Props) {
 
             {pedido.customerNote ? (
               <div className="mt-6 min-w-0 rounded-lg border border-graf-200 bg-graf-50 p-4">
-                <p className="text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500">
+                <p className="text-apoio font-bold uppercase tracking-wider text-graf-500">
                   Sua observação
                 </p>
                 <p className="mt-1.5 break-words text-sm leading-relaxed text-graf-700">
@@ -687,7 +687,7 @@ export default async function PedidoPage({ params }: Props) {
               <p className="mt-1.5 break-all text-graf-600">{pedido.buyerEmail}</p>
               {pedido.buyerPhone ? <p className="text-graf-600">{pedido.buyerPhone}</p> : null}
             </div>
-            <p className="mt-4 flex items-start gap-2 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
+            <p className="mt-4 flex items-start gap-2 border-t border-graf-200 pt-4 text-apoio leading-relaxed text-graf-500">
               <Mail className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
               <span className="min-w-0">A confirmação e os avisos deste pedido vão para este e-mail.</span>
             </p>
@@ -723,7 +723,7 @@ export default async function PedidoPage({ params }: Props) {
               </LinkBotao>
             </div>
             {s.horario ? (
-              <p className="mt-4 text-center text-[0.8125rem] leading-relaxed text-graf-500">
+              <p className="mt-4 text-center text-apoio leading-relaxed text-graf-500">
                 {s.horario}
               </p>
             ) : null}

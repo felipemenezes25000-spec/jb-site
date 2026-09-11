@@ -384,7 +384,7 @@ export default async function PaginaEquipamento({
                   {equipamento.warrantyUntil ? (
                     <>
                       {formatarData(equipamento.warrantyUntil)}{" "}
-                      <span className="text-[0.8125rem] text-graf-500">
+                      <span className="text-apoio text-graf-500">
                         ({distanciaEmDias(equipamento.warrantyUntil)})
                       </span>
                     </>
@@ -404,7 +404,7 @@ export default async function PaginaEquipamento({
                   {equipamento.nextMaintenanceAt ? (
                     <>
                       {formatarData(equipamento.nextMaintenanceAt)}{" "}
-                      <span className="text-[0.8125rem] text-graf-500">
+                      <span className="text-apoio text-graf-500">
                         ({distanciaEmDias(equipamento.nextMaintenanceAt)})
                       </span>
                     </>
@@ -515,7 +515,7 @@ export default async function PaginaEquipamento({
                               {ROTULO_HISTORICO[item.tipo]}
                             </span>
                             {item.etiqueta ? (
-                              <span className="text-[0.8125rem] text-graf-500">{item.etiqueta}</span>
+                              <span className="text-apoio text-graf-500">{item.etiqueta}</span>
                             ) : null}
                           </p>
                           {item.descricao ? (
@@ -523,7 +523,7 @@ export default async function PaginaEquipamento({
                               {item.descricao}
                             </p>
                           ) : null}
-                          <p className="mt-1 text-[0.8125rem] text-graf-500">
+                          <p className="mt-1 text-apoio text-graf-500">
                             {formatarDataHora(item.quando)}
                           </p>
                         </div>
@@ -551,7 +551,7 @@ export default async function PaginaEquipamento({
                         className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-graf-200 px-3 py-2.5 transition-colors hover:border-graf-300 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                       >
                         <span className="label-mono text-graf-600">{chamado.number}</span>
-                        <span className="min-w-0 flex-1 text-[0.8125rem] text-graf-500">
+                        <span className="min-w-0 flex-1 text-apoio text-graf-500">
                           {formatarData(chamado.createdAt)}
                         </span>
                         <EtiquetaChamado status={chamado.status} />
@@ -579,7 +579,7 @@ export default async function PaginaEquipamento({
                         className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-graf-200 px-3 py-2.5 transition-colors hover:border-graf-300 hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                       >
                         <span className="label-mono text-graf-600">{item.contract.number}</span>
-                        <span className="min-w-0 flex-1 text-[0.8125rem] text-graf-500">
+                        <span className="min-w-0 flex-1 text-apoio text-graf-500">
                           {item.contract.endsAt
                             ? `até ${formatarData(item.contract.endsAt)}`
                             : "sem fim definido"}

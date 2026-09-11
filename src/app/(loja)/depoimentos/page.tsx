@@ -80,7 +80,7 @@ export default async function DepoimentosPage() {
                   <blockquote className="text-[1.0625rem] leading-relaxed text-graf-800">
                     {depoimento.comment}
                   </blockquote>
-                  <footer className="mt-auto border-t border-graf-100 pt-4 text-[0.8125rem] text-graf-500">
+                  <footer className="mt-auto border-t border-graf-100 pt-4 text-apoio text-graf-500">
                     {/* Nome vazio é anônimo, e anônimo é escolha de quem
                         respondeu — não um dado que faltou. */}
                     <span className="block font-semibold text-graf-700">

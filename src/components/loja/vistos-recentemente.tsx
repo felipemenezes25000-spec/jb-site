@@ -5,8 +5,8 @@ import { History } from "lucide-react";
 
 import { cartoesVistos, type VistosRecentes } from "@/app/acoes/vistos";
 import { CardProduto } from "@/components/loja/card-produto";
-import { Secao } from "@/components/ui/secao";
-import { TituloSecao } from "@/components/ui/data";
+import { Secao, type EspacoSecao } from "@/components/ui/secao";
+import { TituloSecao, type TamanhoTitulo } from "@/components/ui/data";
 
 /* ============================================================================
    Vistos recentemente
@@ -52,19 +52,41 @@ export function RegistrarVisita({ slug }: { slug: string }) {
     }
   }, [slug]);
 
-  return <VistosRecentemente excluir={slug} />;
+  /* Na ficha de produto esta tira é mais uma seção entre outras, e não a
+     faixa de abertura que ela é na home: o título usa o mesmo degrau dos
+     outros `h2` da página e o respiro acompanha o das seções vizinhas.
+
+     `larguraInterna` não é detalhe. Sem ela a tira cai no `container-jb` puro
+     (1440px) no meio de uma página que corre a 1600px — um degrau de 80px de
+     cada lado, que é exatamente o defeito que esta revisão veio consertar. Ela
+     só aparece para quem já visitou outros dois produtos, então passa
+     despercebida em navegador limpo. */
+  return (
+    <VistosRecentemente
+      excluir={slug}
+      tamanhoDoTitulo="bloco"
+      espaco="sm"
+      larguraInterna="max-w-[100rem]"
+    />
+  );
 }
 
 export function VistosRecentemente({
   excluir,
   titulo = "Você viu recentemente",
   larguraInterna,
+  tamanhoDoTitulo = "secao",
+  espaco = "md",
 }: {
   /** O que não deve aparecer nesta lista. */
   excluir?: string | string[];
   titulo?: string;
   /** Teto do container desta faixa. */
   larguraInterna?: string;
+  /** Degrau do título. `secao` na home; `bloco` dentro de uma ficha. */
+  tamanhoDoTitulo?: TamanhoTitulo;
+  /** Respiro vertical, para acompanhar o ritmo da página que a hospeda. */
+  espaco?: EspacoSecao;
 }) {
   const [dados, setDados] = useState<VistosRecentes | null>(null);
 
@@ -90,9 +112,10 @@ export function VistosRecentemente({
   if (!dados || dados.produtos.length < 2) return null;
 
   return (
-    <Secao espaco="md" separador classNameInterno={larguraInterna}>
+    <Secao espaco={espaco} separador classNameInterno={larguraInterna}>
       <TituloSecao
         como="h2"
+        tamanho={tamanhoDoTitulo}
         titulo={titulo}
         descricao="A lista fica só neste navegador. Preço e disponibilidade são os de agora."
       />
@@ -114,7 +137,7 @@ export function VistosRecentemente({
         </ul>
       </div>
 
-      <p className="mt-3 flex items-center gap-2 text-[0.8125rem] text-graf-500">
+      <p className="texto-apoio mt-3 flex items-center gap-2 text-graf-500">
         <History className="size-4 shrink-0 text-graf-500" aria-hidden />
         Guardado no seu navegador. Limpar os dados do site apaga esta lista.
       </p>

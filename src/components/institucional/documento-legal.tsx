@@ -48,7 +48,7 @@ export function IndiceLegal({
   return (
     /* Escondido no celular de propósito: lá o índice é o de `CorpoLegal`. */
     <Cartao className="hidden p-5 lg:block">
-      <h2 className="text-[0.8125rem] font-bold text-graf-950">{titulo}</h2>
+      <h2 className="text-apoio font-bold text-graf-950">{titulo}</h2>
       <nav aria-label={titulo}>
         {/* Sem numeração: o índice de /entrega também aponta para blocos que
             ficam fora do texto corrido, e dois sistemas de número na mesma
@@ -76,7 +76,7 @@ function IndiceRecolhido({ secoes }: { secoes: ItemIndice[] }) {
 
   return (
     <details className="group mb-10 rounded-xl border border-graf-200 bg-white lg:hidden">
-      <summary className="foco-jb flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-[0.9375rem] font-semibold text-graf-950 [&::-webkit-details-marker]:hidden">
+      <summary className="foco-jb flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-corpo font-semibold text-graf-950 [&::-webkit-details-marker]:hidden">
         Nesta página
         <ChevronDown
           className="size-5 shrink-0 text-graf-500 transition-transform duration-200 group-open:rotate-180"

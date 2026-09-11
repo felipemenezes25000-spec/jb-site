@@ -69,7 +69,7 @@ export function CampoCupom({ aplicado }: { aplicado: string }) {
           aria-describedby={estado.erro || estado.ok ? "retorno-cupom" : undefined}
           className={cn(
             // 16px no celular: abaixo disso o iOS dá zoom ao focar
-            "h-11 min-w-0 flex-1 rounded-lg border bg-white px-3.5 text-base uppercase text-graf-900 sm:text-[0.9375rem]",
+            "h-11 min-w-0 flex-1 rounded-lg border bg-white px-3.5 text-base uppercase text-graf-900 sm:text-corpo",
             "shadow-xs transition-[border-color,box-shadow] duration-150",
             "placeholder:normal-case placeholder:text-graf-500",
             "focus:outline-none focus:ring-4",
@@ -89,7 +89,7 @@ export function CampoCupom({ aplicado }: { aplicado: string }) {
         role="status"
         aria-live="polite"
         className={cn(
-          "text-[0.8125rem] leading-relaxed",
+          "text-apoio leading-relaxed",
           estado.erro || estado.ok ? "mt-2" : "",
           estado.erro ? "text-jb-700" : "text-ok-700",
         )}

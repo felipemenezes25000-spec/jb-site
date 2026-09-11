@@ -73,16 +73,16 @@ function AvaliacoesVerificadas({
     <section
       id="avaliacoes-verificadas"
       aria-labelledby="avaliacoes-verificadas-titulo"
-      className="scroll-mt-32 border-t border-graf-200 py-9 lg:py-10"
+      className="scroll-mt-[var(--jb-topo-secoes)] border-t border-graf-200 py-9 lg:py-10"
     >
       <div className="grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-10">
         <div>
-          <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-jb-700">
+          <p className="micro text-jb-700">
             Quem comprou conta
           </p>
           <h2
             id="avaliacoes-verificadas-titulo"
-            className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-graf-950"
+            className="text-bloco mt-2 text-graf-950"
           >
             Avaliações verificadas
           </h2>
@@ -130,15 +130,25 @@ function AvaliacoesVerificadas({
         </div>
 
         {comentarios.length > 0 ? (
+          /* `placa` é a superfície de catálogo do design system — branca, com a
+             borda, o canto e a sombra dele. Estas fichas usavam
+             `rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.025)]`: o
+             mesmo desenho reescrito à mão, com uma sombra em valor avulso e um
+             canto que nenhum outro cartão da loja usa.
+
+             O cartão fica, ao contrário do que aconteceu na ficha técnica: um
+             depoimento é uma unidade fechada, com autor e data, e é assim que
+             Mercado Livre e Amazon apresentam os seus. O que saiu foi a
+             reinvenção da superfície, não a superfície. */
           <div className="grid gap-3 sm:grid-cols-2">
             {comentarios.map((avaliacao) => (
               <article
                 key={avaliacao.id}
-                className="flex min-h-[13rem] flex-col rounded-2xl border border-graf-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.025)]"
+                className="placa flex flex-col p-5"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Estrelas nota={avaliacao.score} />
-                  <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-bold text-ok-700">
+                  <span className="inline-flex items-center gap-1.5 texto-apoio font-bold text-ok-700">
                     <BadgeCheck className="size-3.5" aria-hidden />
                     Compra verificada
                   </span>
@@ -150,7 +160,7 @@ function AvaliacoesVerificadas({
                   <p className="text-xs font-bold text-graf-800">
                     {avaliacao.displayName.trim() || "Cliente JB"}
                   </p>
-                  <p className="mt-0.5 text-[0.6875rem] text-graf-400">
+                  <p className="texto-apoio mt-0.5 text-graf-400">
                     {(avaliacao.publishedAt ?? avaliacao.createdAt).toLocaleDateString("pt-BR", {
                       month: "long",
                       year: "numeric",
@@ -161,7 +171,7 @@ function AvaliacoesVerificadas({
             ))}
           </div>
         ) : (
-          <div className="flex items-center rounded-2xl border border-graf-200 bg-graf-50/60 p-6 text-sm leading-6 text-graf-600">
+          <div className="flex items-center border-t border-graf-200 py-6 text-sm leading-6 text-graf-600">
             As notas publicadas já entram na média. Os clientes ainda não deixaram comentários públicos sobre este modelo.
           </div>
         )}
@@ -220,7 +230,7 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
             <p className="sobretitulo">O diferencial não termina na entrega</p>
             <h2
               id="pos-venda-jb-titulo"
-              className="mt-3 text-2xl font-extrabold tracking-[-0.035em] text-graf-950 lg:text-3xl"
+              className="text-bloco mt-3 text-graf-950"
             >
               O equipamento continua dentro do ecossistema JB
             </h2>
@@ -236,17 +246,25 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
             </Link>
           </div>
 
-          {/* `gap-px` sobre a cor da borda é o que desenha os filetes entre as
-              quatro células — com fundo claro, a cor do vão passa a ser a
-              borda, e não branco a 10%. */}
-          <div className="grid gap-px overflow-hidden rounded-2xl border border-graf-200 bg-graf-200 sm:grid-cols-2">
+          {/* Um nível de moldura a menos.
+
+              Era `rounded-2xl border bg-graf-200` com quatro células `bg-surface`
+              dentro — uma caixa com borda e canto dentro do painel que já tem
+              borda e canto, dentro de uma seção com `border-t`. Três molduras
+              para quatro frases curtas.
+
+              As células agora dividem o fundo do painel e são separadas só por
+              filete, que é a mesma gramática do resto da ficha. O painel claro
+              continua: ele é a correção deliberada da pele preta que já tinha
+              sido testada e cortada uma vez. */}
+          <div className="grid border-graf-200 sm:grid-cols-2 [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l sm:[&>*:nth-child(n+3)]:border-t">
             {itens.map((item) => {
               const Icone = item.icone;
               return (
-                <div key={item.titulo} className="bg-surface p-5 sm:p-6">
+                <div key={item.titulo} className="border-graf-200 p-5 sm:p-6">
                   <Icone className="size-5 text-jb-600" aria-hidden />
                   <h3 className="mt-4 text-sm font-extrabold text-graf-950">{item.titulo}</h3>
-                  <p className="mt-1.5 text-xs leading-5 text-graf-600">{item.texto}</p>
+                  <p className="texto-apoio mt-1.5 text-graf-600">{item.texto}</p>
                 </div>
               );
             })}
@@ -425,7 +443,14 @@ export default async function ProdutoLayout({ children, params }: Props) {
   return (
     <>
       {children}
-      <div className="container-jb max-w-[112rem]">
+      {/* Mesma largura da página principal, e não a do cabeçalho.
+
+          Esta camada usava `112rem` enquanto o topo da ficha usava `100rem`:
+          da comparação para baixo o conteúdo ficava 192px mais largo que a
+          galeria, e o eixo vertical da página quebrava na metade. `100rem` é a
+          largura que a home e o resto da vitrine já usam — quem alinha por
+          `112rem` é só o cabeçalho, por decisão própria. */}
+      <div className="container-jb max-w-[100rem]">
         <ComparacaoRapida produtos={comparaveis} />
         <AvaliacoesVerificadas
           resumo={resumoAvaliacoes}

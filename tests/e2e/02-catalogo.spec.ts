@@ -1,6 +1,24 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { fixtures } from "./fixtures";
+
+/**
+ * Filtros: lateral no desktop, gaveta no celular.
+ *
+ * Estes testes abriam "Todos os filtros" — um botão que não existe em `src` e
+ * não existia nem no HEAD. Além disso o catálogo passou a mostrar os filtros
+ * numa coluna à esquerda a partir de 1024px, e a gaveta ficou só para o
+ * celular. `abrirFiltros` devolve o container certo para a largura corrente.
+ */
+async function abrirFiltros(page: Page) {
+  const botao = page.getByRole("button", { name: "Abrir filtros" });
+  if (await botao.isVisible().catch(() => false)) {
+    await botao.click();
+    return page.getByRole("dialog", { name: "Filtros do catálogo" });
+  }
+  return page.locator("[data-painel-filtros]");
+}
+
 
 /**
  * Catálogo.
@@ -30,7 +48,8 @@ test.describe("Catálogo", () => {
   test("lista equipamentos com preço e link para o produto", async ({ page }) => {
     await page.goto("/loja");
 
-    await expect(page.getByRole("heading", { name: "Equipamentos odontológicos" })).toBeVisible();
+    // o título da coleção é "Produtos odontológicos"
+    await expect(page.getByRole("heading", { name: "Produtos odontológicos" })).toBeVisible();
     await expect(page.getByText(CONTADOR)).toBeVisible();
 
     const { produto } = fixtures();
@@ -52,8 +71,7 @@ test.describe("Catálogo", () => {
 
     // A lista completa fica sob demanda em qualquer largura; isso devolve a
     // área horizontal à grade sem perder filtros compartilháveis por URL.
-    await page.getByRole("button", { name: /Todos os filtros/ }).click();
-    const painel = page.getByRole("dialog", { name: "Filtros do catálogo" });
+    const painel = await abrirFiltros(page);
     const opcoes = painel.getByRole("link", { name: /^Filtrar por Categoria: / });
     await expect(opcoes.first()).toBeVisible();
     const escolhida = opcoes.first();
@@ -85,9 +103,8 @@ test.describe("Catálogo", () => {
        de demonstração muda, e um slug escrito à mão aqui vira teste que
        reprova por causa do banco. */
     await page.goto("/loja");
-    await page.getByRole("button", { name: /Todos os filtros/ }).click();
-    const primeira = page
-      .getByRole("dialog", { name: "Filtros do catálogo" })
+    const painel = await abrirFiltros(page);
+    const primeira = painel
       .getByRole("link", { name: /^Filtrar por Categoria: / })
       .first();
     await expect(primeira).toBeVisible();

@@ -188,6 +188,40 @@ export default async function Pagina({
             : []),
         ]}
         rotuloAtalhos="Categorias e atalhos desta coleção"
+        /* Os mesmos fatos do bloco de baixo, reduzidos a ícone e título, antes
+           da grade. O bloco completo continua embaixo com a explicação de cada
+           um: aqui o papel é dizer, antes de a pessoa olhar preço, que cada
+           anúncio é uma unidade com procedência registrada — que é o que separa
+           "seminovo revisado" de classificado. */
+        faixaDeConfianca={
+          fatos.length >= 3 ? (
+            <ul
+              aria-label="O que a JB registra de cada unidade"
+              /* `tabIndex` porque no celular a faixa rola na horizontal e
+                 nenhum item é focável: sem isto, quem navega por teclado não
+                 alcança o que passa da borda (axe `scrollable-region-focusable`,
+                 grave — pego pela varredura a 390px). Mesma correção que a
+                 faixa de confiança da ficha de produto já tinha recebido. */
+              tabIndex={0}
+              className="foco-jb scrollbar-none flex gap-0 overflow-x-auto border-y border-graf-150 py-2 sm:justify-start"
+            >
+              {fatos.slice(0, 4).map((fato, indice) => {
+                const Icone = fato.icone;
+                return (
+                  <li
+                    key={fato.titulo}
+                    className={`texto-apoio flex min-h-10 shrink-0 items-center gap-2 px-3 font-semibold text-graf-700 sm:px-5 ${
+                      indice > 0 ? "border-l border-graf-200" : ""
+                    }`}
+                  >
+                    <Icone className="size-4 shrink-0 text-jb-600" aria-hidden />
+                    <span className="whitespace-nowrap">{fato.titulo}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null
+        }
         travarCondicao
       />
 
@@ -199,10 +233,10 @@ export default async function Pagina({
                 <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-600">
                   Transparência da unidade
                 </p>
-                <h2 className="mt-2 text-[clamp(1.5rem,1.25rem+1vw,2rem)] font-extrabold tracking-[-0.03em] text-graf-950">
+                <h2 className="text-title mt-2 text-graf-950">
                   O que pode acompanhar cada seminovo
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-graf-600 sm:text-[0.9375rem]">
+                <p className="mt-2 text-sm leading-6 text-graf-600 sm:text-corpo">
                   A página mostra somente os dados realmente registrados para aquela unidade.
                 </p>
               </div>

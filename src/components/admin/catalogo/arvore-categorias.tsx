@@ -131,7 +131,7 @@ export function ArvoreCategorias({
               >
                 {no.name}
               </Link>
-              <span className="block truncate text-[0.8125rem] text-graf-500">
+              <span className="block truncate text-apoio text-graf-500">
                 /categoria/{no.slug} ·{" "}
                 {no.produtos === 0
                   ? "sem produtos"

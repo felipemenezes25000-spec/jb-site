@@ -85,7 +85,7 @@ const Imagem = Node.create({
 });
 
 const CLASSES_DA_AREA = [
-  "min-h-64 w-full px-4 py-3 text-[0.9375rem] leading-relaxed text-graf-800",
+  "min-h-64 w-full px-4 py-3 text-corpo leading-relaxed text-graf-800",
   "focus:outline-none",
   "[&_p]:my-3 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
   "[&_h2]:mb-2 [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-graf-950",

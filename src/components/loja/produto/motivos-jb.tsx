@@ -59,7 +59,7 @@ export function MotivosJB({
     <Secao fundo="clara" espaco="md" separador>
       <div className="overflow-hidden rounded-[1.75rem] bg-graf-950 text-white shadow-[0_18px_50px_rgba(15,23,42,0.14)]">
         <div className="border-b border-white/10 px-6 py-5 sm:px-8">
-          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-jb-300">
+          <p className="micro text-jb-300">
             Confiança depois da compra
           </p>
           <h2 className="mt-1.5 text-xl font-bold tracking-[-0.02em] text-white sm:text-2xl">

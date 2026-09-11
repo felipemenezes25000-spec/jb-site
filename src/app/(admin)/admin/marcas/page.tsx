@@ -71,7 +71,7 @@ export default async function PaginaMarcas() {
         {podeMexer ? (
           <LinkBotao href="/admin/marcas/nova">Nova marca</LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-apoio font-semibold text-graf-600">
             Somente consulta
           </p>
         )}
@@ -119,12 +119,12 @@ export default async function PaginaMarcas() {
                   >
                     {marca.name}
                   </Link>
-                  <p className="mt-0.5 truncate text-[0.8125rem] text-graf-500">/marcas/{marca.slug}</p>
+                  <p className="mt-0.5 truncate text-apoio text-graf-500">/marcas/{marca.slug}</p>
                   <p className="mt-2 flex flex-wrap items-center gap-2">
                     <Etiqueta tom={marca.published ? "ok" : "neutro"}>
                       {marca.published ? "Publicada" : "Oculta"}
                     </Etiqueta>
-                    <span className="text-[0.8125rem] text-graf-500">
+                    <span className="text-apoio text-graf-500">
                       {plural(marca._count.products, "produto", "produtos")}
                     </span>
                   </p>

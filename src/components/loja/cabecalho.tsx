@@ -118,7 +118,20 @@ export function Cabecalho({
     return () => window.removeEventListener("scroll", aoRolar);
   }, []);
 
+  /* Fecha o que estiver aberto ao trocar de rota — mas nunca na montagem.
+
+     O efeito também roda uma vez quando o componente monta, e é aí que ele
+     fazia estrago: quem toca em "Abrir o menu" antes de a hidratação terminar
+     abre a gaveta e vê o efeito de montagem fechá-la no mesmo instante. Dá
+     uma gaveta que entra deslizando e volta sozinha, sem toque nenhum — 2 em
+     10 aberturas, medido. Os três estados nascem fechados, então na montagem
+     não há nada para fechar: pular a primeira passagem não perde nada. */
+  const jaMontou = useRef(false);
   useEffect(() => {
+    if (!jaMontou.current) {
+      jaMontou.current = true;
+      return;
+    }
     setMenuAberto(false);
     setMega(null);
     setBuscaAberta(false);
@@ -198,32 +211,28 @@ export function Cabecalho({
               </p>
             ) : null}
 
+            {/* Um recado, parado.
+
+                A faixa já foi cinco recados em rolagem infinita, e a auditoria
+                de 08/09 tirou por um motivo que volta a aparecer em qualquer
+                captura: o trilho corre por baixo dos dois blocos fixos das
+                pontas — horário à esquerda, telefone e WhatsApp à direita — e
+                o texto entra e sai **cortado no meio da palavra**. A 1600px dá
+                para ler "…mentos, assistência e pós-venda no mesmo
+                relacionamento." de um lado e "Assistência técnica p…" do
+                outro.
+
+                Máscara de fade não resolve: só troca o corte seco por um corte
+                esmaecido, e continua ilegível na borda. O que resolve é o que
+                estava antes — uma frase, inteira, sem movimento. As outras
+                continuam disponíveis para quem usa leitor de tela. */}
             <div className="min-w-0 flex-1 overflow-hidden" aria-label="Informações da JB">
-              {reduzido || recados.length <= 1 ? (
-                <p className="truncate px-5 py-2 text-center text-[0.75rem] font-semibold text-white/95">
-                  {recados[0]}
-                </p>
-              ) : (
-                <>
-                  <span className="sr-only">{recados.join(" ")}</span>
-                  <motion.div
-                    aria-hidden
-                    className="flex w-max items-center whitespace-nowrap will-change-transform"
-                    animate={{ x: ["0%", "-50%"] }}
-                    transition={{ duration: 34, repeat: Infinity, ease: "linear" }}
-                  >
-                    {[...recados, ...recados].map((recado, indice) => (
-                      <span
-                        key={`${recado}-${indice}`}
-                        className="inline-flex items-center gap-5 px-5 py-2 text-[0.75rem] font-semibold text-white/95"
-                      >
-                        {recado}
-                        <span className="size-1 rounded-full bg-white/45" />
-                      </span>
-                    ))}
-                  </motion.div>
-                </>
-              )}
+              <p className="truncate px-5 py-2 text-center text-[0.75rem] font-semibold text-white/95">
+                {recados[0]}
+              </p>
+              {recados.length > 1 ? (
+                <span className="sr-only">{recados.slice(1).join(" ")}</span>
+              ) : null}
             </div>
 
             <div className="ml-auto hidden shrink-0 items-center gap-4 pl-6 lg:flex">
@@ -346,7 +355,7 @@ export function Cabecalho({
                       href={item.href}
                       aria-current={estaAtivo ? "page" : undefined}
                       className={cn(
-                        "group relative flex h-11 items-center gap-2 rounded-t-lg pl-3 pr-1 text-[0.8125rem] font-bold transition-colors",
+                        "group relative flex h-11 items-center gap-2 rounded-t-lg pl-3 pr-1 text-apoio font-bold transition-colors",
                         "after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors after:content-['']",
                         aberto || estaAtivo
                           ? "text-jb-700 after:bg-jb-500"

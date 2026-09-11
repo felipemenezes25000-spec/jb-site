@@ -202,7 +202,7 @@ export default async function PaginaManutencao({
           <span className="block truncate font-semibold text-graf-900">
             {linha.equipment.name}
           </span>
-          <span className="block truncate text-[0.8125rem] text-graf-500">
+          <span className="block truncate text-apoio text-graf-500">
             {linha.equipment.customer.name}
           </span>
         </span>
@@ -230,8 +230,8 @@ export default async function PaginaManutencao({
           <span
             className={
               linha.dueAt < agora && linha.status !== "concluida"
-                ? "block text-[0.8125rem] font-semibold text-jb-700"
-                : "block text-[0.8125rem] text-graf-500"
+                ? "block text-apoio font-semibold text-jb-700"
+                : "block text-apoio text-graf-500"
             }
           >
             {distanciaEmDias(linha.dueAt)}
@@ -331,7 +331,7 @@ export default async function PaginaManutencao({
                   >
                     {visita.equipment.name}
                   </Link>
-                  <span className="block truncate text-[0.8125rem] text-graf-500">
+                  <span className="block truncate text-apoio text-graf-500">
                     {visita.equipment.customer.name} · prevista para{" "}
                     {formatarData(visita.dueAt)} ({distanciaEmDias(visita.dueAt)})
                   </span>
@@ -354,7 +354,7 @@ export default async function PaginaManutencao({
             ))}
           </ul>
           {lembretes.length > 8 ? (
-            <p className="border-t border-graf-200 bg-graf-50 px-5 py-2.5 text-[0.8125rem] text-graf-500">
+            <p className="border-t border-graf-200 bg-graf-50 px-5 py-2.5 text-apoio text-graf-500">
               e mais {lembretes.length - 8} aviso(s) na fila.
             </p>
           ) : null}

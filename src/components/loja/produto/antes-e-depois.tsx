@@ -58,26 +58,22 @@ function Cabecalho({
   descricao?: string;
 }) {
   return (
-    <header className="flex items-center gap-3 border-b border-graf-200 bg-white px-4 py-3 sm:px-5">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">
-        <Icone className="size-4" aria-hidden />
-      </span>
+    <header className="flex items-start gap-2.5 border-b border-graf-200 pb-2.5">
+      <Icone className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
       <div className="min-w-0">
-        <p className="text-[0.625rem] font-bold uppercase tracking-[0.09em] text-jb-700">
-          {sobretitulo}
-        </p>
-        <h3 className="mt-0.5 text-[0.875rem] font-extrabold tracking-[-0.01em] text-graf-950">
-          {titulo}
-        </h3>
-        {descricao ? (
-          <p className="mt-0.5 text-[0.75rem] leading-4 text-graf-500">{descricao}</p>
-        ) : null}
+        <p className="micro text-jb-700">{sobretitulo}</p>
+        <h3 className="mt-0.5 text-sm font-extrabold text-graf-950">{titulo}</h3>
+        {descricao ? <p className="texto-apoio mt-0.5 text-graf-500">{descricao}</p> : null}
       </div>
     </header>
   );
 }
 
-const MOLDURA = "overflow-hidden rounded-xl border border-graf-200 bg-white";
+/* Antes: `rounded-xl border border-graf-200 bg-white` em cada peça — quatro
+   cartões brancos com borda dentro de uma seção que já tem `border-t`, dentro
+   do container branco da página. Em "Antes de comprar" eram quatro de uma vez.
+   O que separa uma peça da outra agora é a régua do cabeçalho e o espaço. */
+const MOLDURA = "min-w-0";
 
 /* -------------------------------------------------------- antes de comprar */
 
@@ -124,15 +120,15 @@ export function AntesDeComprar({
             return (
               <div
                 key={ficha.rotulo}
-                className={`min-w-0 border-graf-200 px-4 py-3 sm:px-5 ${
-                  indice > 0 ? "border-t sm:border-l sm:border-t-0" : ""
+                className={`min-w-0 border-graf-150 py-3 pr-4 ${
+                  indice > 0 ? "border-t sm:border-l sm:border-t-0 sm:pl-5" : ""
                 }`}
               >
-                <dt className="flex items-center gap-1.5 text-[0.625rem] font-bold uppercase tracking-[0.065em] text-graf-500">
+                <dt className="micro flex items-center gap-1.5 text-graf-500">
                   <Icone className="size-3 shrink-0" aria-hidden />
                   {ficha.rotulo}
                 </dt>
-                <dd className="tabular mt-1 break-words text-[0.875rem] font-bold text-graf-950">
+                <dd className="tabular mt-1 break-words text-sm font-bold text-graf-950">
                   {ficha.valor}
                 </dd>
               </div>
@@ -142,13 +138,11 @@ export function AntesDeComprar({
       ) : null}
 
       {dados.requisitos.length > 0 ? (
-        <div className="border-t border-graf-200 px-4 py-3.5 sm:px-5">
-          <p className="text-[0.625rem] font-bold uppercase tracking-[0.07em] text-graf-500">
-            Precisa estar pronto no local
-          </p>
+        <div className="border-t border-graf-150 py-3.5">
+          <p className="micro text-graf-500">Precisa estar pronto no local</p>
           <ul className="mt-2 grid gap-x-5 gap-y-1.5 sm:grid-cols-2">
             {dados.requisitos.map((item) => (
-              <li key={item} className="flex gap-2 text-[0.8125rem] leading-5 text-graf-700">
+              <li key={item} className="texto-apoio flex gap-2 text-graf-700">
                 <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-jb-600" aria-hidden />
                 <span>{item}</span>
               </li>
@@ -182,10 +176,10 @@ export function OQueVemNaCaixa({
         />
       </div>
 
-      <ul className="divide-y divide-graf-100 px-4 sm:px-5">
+      <ul className="divide-y divide-graf-150">
         {itens.map((item, indice) => (
-          <li key={item} className="flex gap-2.5 py-2.5 text-[0.8125rem] leading-5 text-graf-700">
-            <span className="tabular flex size-5 shrink-0 items-center justify-center rounded-full bg-graf-100 text-[0.625rem] font-bold text-graf-500">
+          <li key={item} className="texto-apoio flex gap-2.5 py-2.5 text-graf-700">
+            <span className="tabular flex size-5 shrink-0 items-center justify-center rounded-full bg-graf-100 text-xs font-bold leading-none text-graf-500">
               {indice + 1}
             </span>
             <span>{item}</span>
@@ -244,17 +238,17 @@ export function Instalacao({
         />
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className="py-4">
         <div className="flex items-start gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
             <Wrench className="size-4" aria-hidden />
           </span>
           <div className="min-w-0">
-            <p className="text-[0.875rem] font-extrabold text-graf-950">{base.titulo}</p>
-            <p className="mt-1 text-[0.8125rem] leading-5 text-graf-600">{base.texto}</p>
+            <p className="text-sm font-extrabold text-graf-950">{base.titulo}</p>
+            <p className="texto-apoio mt-1 text-graf-600">{base.texto}</p>
 
             {politica === "opcional" && precoCents && precoCents > 0 ? (
-              <p className="tabular mt-2 inline-flex rounded-full bg-graf-100 px-2.5 py-1 text-[0.75rem] font-bold text-graf-900">
+              <p className="texto-apoio tabular mt-2 inline-flex rounded-full bg-graf-100 px-2.5 py-1 font-bold text-graf-900">
                 {formatarPreco(precoCents)}
               </p>
             ) : null}
@@ -262,7 +256,7 @@ export function Instalacao({
         </div>
 
         {observacao ? (
-          <p className="mt-3 border-t border-graf-200 pt-3 text-[0.8125rem] leading-5 text-graf-600">
+          <p className="texto-apoio mt-3 border-t border-graf-150 pt-3 text-graf-600">
             {observacao}
           </p>
         ) : null}
@@ -337,17 +331,17 @@ export function DepoisDaCompraNoProduto({
           return (
             <li
               key={passo.titulo}
-              className={`min-w-0 border-graf-200 px-3.5 py-3 sm:px-4 ${
-                indice % 2 === 1 ? "border-l" : ""
+              className={`min-w-0 border-graf-150 py-3 pr-4 ${
+                indice % 2 === 1 ? "border-l pl-4" : ""
               } ${indice >= 2 ? "border-t lg:border-t-0" : ""} ${
-                indice > 0 ? "lg:border-l" : ""
+                indice > 0 ? "lg:border-l lg:pl-4" : ""
               }`}
             >
               <Icone className="size-3.5 text-jb-600" aria-hidden />
-              <p className="mt-2 text-[0.75rem] font-extrabold leading-4 text-graf-950">
+              <p className="mt-2 text-sm font-extrabold leading-5 text-graf-950">
                 {passo.titulo}
               </p>
-              <p className="mt-0.5 text-[0.6875rem] leading-4 text-graf-500">{passo.detalhe}</p>
+              <p className="texto-apoio mt-0.5 text-graf-500">{passo.detalhe}</p>
             </li>
           );
         })}

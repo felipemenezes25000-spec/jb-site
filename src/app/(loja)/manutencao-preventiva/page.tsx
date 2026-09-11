@@ -132,7 +132,7 @@ export default async function ManutencaoPreventivaPage() {
 
         <div className="grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 py-1.5 text-[0.8125rem] font-semibold text-graf-600 shadow-xs">
+            <p className="inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 py-1.5 text-apoio font-semibold text-graf-600 shadow-xs">
               <CalendarClock className="size-3.5 text-jb-600" aria-hidden />
               Revisão programada
             </p>
@@ -169,13 +169,13 @@ export default async function ManutencaoPreventivaPage() {
               <thead>
                 <tr className="border-b border-graf-200">
                   <th scope="col" className="pb-3 pr-5 sm:pr-8">
-                    <span className="flex items-center gap-2 text-[0.9375rem] font-bold text-ok-700">
+                    <span className="flex items-center gap-2 text-corpo font-bold text-ok-700">
                       <CircleCheck className="size-4.5 shrink-0" aria-hidden />
                       Preventiva
                     </span>
                   </th>
                   <th scope="col" className="pb-3">
-                    <span className="flex items-center gap-2 text-[0.9375rem] font-bold text-graf-700">
+                    <span className="flex items-center gap-2 text-corpo font-bold text-graf-700">
                       <CircleX className="size-4.5 shrink-0 text-jb-600" aria-hidden />
                       Corretiva
                     </span>
@@ -185,10 +185,10 @@ export default async function ManutencaoPreventivaPage() {
               <tbody>
                 {CONFRONTO.map((linha) => (
                   <tr key={linha.preventiva} className="border-b border-graf-100 last:border-b-0">
-                    <td className="py-3.5 pr-5 align-top text-[0.8125rem] font-semibold leading-relaxed text-graf-800 sm:pr-8 sm:text-sm">
+                    <td className="py-3.5 pr-5 align-top text-apoio font-semibold leading-relaxed text-graf-800 sm:pr-8 sm:text-sm">
                       {linha.preventiva}
                     </td>
-                    <td className="py-3.5 align-top text-[0.8125rem] leading-relaxed text-graf-500 sm:text-sm">
+                    <td className="py-3.5 align-top text-apoio leading-relaxed text-graf-500 sm:text-sm">
                       {linha.corretiva}
                     </td>
                   </tr>
@@ -273,22 +273,22 @@ export default async function ManutencaoPreventivaPage() {
                           rota entrou na lista auditada. */}
                       <Link
                         href={`/planos-de-manutencao#${plano.slug}`}
-                        className="inline-flex min-h-11 min-w-11 items-center text-[0.9375rem] font-bold text-graf-950 underline-offset-2 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                        className="inline-flex min-h-11 min-w-11 items-center text-corpo font-bold text-graf-950 underline-offset-2 hover:text-jb-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                       >
                         {plano.nome}
                       </Link>
-                      <p className="mt-1 text-[0.8125rem] text-graf-500">
+                      <p className="mt-1 text-apoio text-graf-500">
                         {plural(plano.mesesDeVigencia, "mês de vigência", "meses de vigência")}{" "}
                         · {plural(plano.visitasIncluidas, "visita incluída", "visitas incluídas")}
                       </p>
                     </div>
-                    <p className="text-[0.9375rem] font-semibold text-graf-800">{ritmo}</p>
+                    <p className="text-corpo font-semibold text-graf-800">{ritmo}</p>
                   </li>
                 ))}
               </ul>
             ) : (
               <Cartao className="p-6">
-                <p className="text-[0.9375rem] leading-relaxed text-graf-600">
+                <p className="text-corpo leading-relaxed text-graf-600">
                   Não há plano publicado com periodicidade definida no momento. Na prática,
                   o intervalo é decidido no diagnóstico: idade do equipamento, horas de uso
                   por dia e recomendação do fabricante entram na conta.
@@ -299,7 +299,7 @@ export default async function ManutencaoPreventivaPage() {
               </Cartao>
             )}
 
-            <p className="mt-6 text-[0.9375rem] leading-relaxed text-graf-600">
+            <p className="mt-6 text-corpo leading-relaxed text-graf-600">
               Com o contrato ativo, a agenda do período inteiro é gerada de uma vez e a
               equipe avisa antes de cada visita — você não precisa lembrar.
             </p>

@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 
 /** Só o necessário para montar um card — evita trazer descrição e ficha à toa. */
 export const SELECAO_CARD = {
+  id: true,
   slug: true,
   name: true,
   model: true,
@@ -49,6 +50,7 @@ type LinhaMarketplace = Prisma.ProductGetPayload<{
 export function paraCard(produto: LinhaCard): ProdutoCard {
   const primeira = produto.media[0];
   return {
+    id: produto.id,
     slug: produto.slug,
     name: produto.name,
     model: produto.model,

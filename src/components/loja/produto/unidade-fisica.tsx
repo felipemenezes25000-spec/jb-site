@@ -45,7 +45,7 @@ const RESULTADO: Record<string, { rotulo: string; tom: Tom }> = {
 /** Rótulo em caixa alta dos blocos internos da seção. */
 function Rotulo({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+    <h3 className="micro text-graf-500">
       {children}
     </h3>
   );
@@ -135,7 +135,18 @@ export function UnidadeFisica({
     dados.length > 0 || Boolean(notasDeEstado) || Boolean(notasDeInspecao) || Boolean(certificado);
 
   return (
-    <Secao id={id} espaco="lg" separador className="scroll-mt-32">
+    <Secao
+      id={id}
+      espaco="lg"
+      separador
+      className="scroll-mt-[var(--jb-topo-secoes)]"
+      /* `container-jb` sozinho para em 90rem, e o resto da vitrine — home
+         inclusive — alinha por 100rem. Numa ficha com unidade física isso
+         aparecia como degrau: a 1920px, "Esta unidade" media 1440 enquanto
+         topo, ficha e comparação mediam 1600. 80px de cada lado, no meio da
+         página. */
+      classNameInterno="max-w-[100rem]"
+    >
       {/* O ícone fica ACIMA do título, não ao lado.
 
           Ao lado, ele empurrava o `h2` 64px para a direita, e esta era a única
@@ -150,7 +161,7 @@ export function UnidadeFisica({
         >
           <ClipboardCheck className="size-5" />
         </span>
-        <h2 className="text-section texto-forte">
+        <h2 className="text-bloco texto-forte">
           {vendida ? "A unidade que foi vendida" : "Esta unidade, item por item"}
         </h2>
         <p className="texto-guia mt-3 text-graf-600">
@@ -159,7 +170,7 @@ export function UnidadeFisica({
             : "Os dados abaixo são da unidade que está à venda — não são a descrição do modelo."}
         </p>
         {resumo.length > 0 ? (
-          <p className="mt-3 text-[0.9375rem] font-semibold text-graf-800">
+          <p className="mt-3 text-base font-semibold text-graf-800">
             {resumo.join(" · ")}
           </p>
         ) : null}
@@ -181,7 +192,7 @@ export function UnidadeFisica({
                 return (
                   <li key={item.id} className="py-3.5">
                     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                      <span className="text-[0.9375rem] font-semibold text-graf-900">
+                      <span className="text-sm font-semibold text-graf-900">
                         {item.rotulo}
                       </span>
                       <Etiqueta tom={resultado.tom}>{resultado.rotulo}</Etiqueta>
@@ -225,7 +236,7 @@ export function UnidadeFisica({
                         className={
                           linha.mono
                             ? "label-mono text-graf-900"
-                            : "text-[0.9375rem] font-semibold tabular text-graf-900"
+                            : "text-sm font-semibold tabular text-graf-900"
                         }
                       >
                         {linha.valor}
@@ -239,7 +250,7 @@ export function UnidadeFisica({
             {notasDeEstado ? (
               <div>
                 <Rotulo>Estado de conservação</Rotulo>
-                <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-700">
+                <p className="mt-2.5 text-base leading-relaxed text-graf-700">
                   {notasDeEstado}
                 </p>
               </div>
@@ -248,7 +259,7 @@ export function UnidadeFisica({
             {notasDeInspecao ? (
               <div>
                 <Rotulo>Observações da revisão</Rotulo>
-                <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-700">
+                <p className="mt-2.5 text-base leading-relaxed text-graf-700">
                   {notasDeInspecao}
                 </p>
               </div>

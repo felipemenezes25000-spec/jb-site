@@ -119,7 +119,7 @@ export default async function CasesPage() {
                   <span className="text-[1.0625rem] font-bold leading-snug text-graf-950">
                     {caso.title}
                   </span>
-                  <span className="text-[0.9375rem] leading-relaxed text-graf-600">
+                  <span className="text-corpo leading-relaxed text-graf-600">
                     {caso.symptom}
                   </span>
                   <span className="mt-auto flex items-center gap-1.5 pt-2 text-sm font-semibold text-jb-700">
@@ -127,7 +127,7 @@ export default async function CasesPage() {
                     <ArrowRight className="size-4" aria-hidden />
                   </span>
                   {caso.publishedAt ? (
-                    <span className="text-[0.8125rem] text-graf-500">
+                    <span className="text-apoio text-graf-500">
                       {formatarData(caso.publishedAt)}
                     </span>
                   ) : null}
@@ -146,7 +146,7 @@ export default async function CasesPage() {
               <ClipboardCheck className="size-5 shrink-0 text-graf-500" aria-hidden />
               Ainda não há case publicado
             </h2>
-            <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600">
+            <p className="mt-3 max-w-2xl text-corpo leading-relaxed text-graf-600">
               Um case só vai ao ar com autorização da clínica atendida, com diagnóstico
               confirmado na bancada e com técnico e revisor identificados. Enquanto nenhum
               atendimento reúne as três coisas, esta página mostra o que a JB pode afirmar sem
@@ -178,7 +178,7 @@ export default async function CasesPage() {
           {ETAPAS.map((etapa) => (
             <li key={etapa.titulo}>
               <Cartao className="h-full p-5">
-              <h3 className="text-[0.9375rem] font-bold text-graf-950">{etapa.titulo}</h3>
+              <h3 className="text-corpo font-bold text-graf-950">{etapa.titulo}</h3>
               <p className="mt-1.5 text-[0.875rem] leading-relaxed text-graf-600">
                 {etapa.texto}
               </p>
@@ -192,7 +192,7 @@ export default async function CasesPage() {
         <div className="flex flex-wrap items-center justify-between gap-6 rounded-xl border border-graf-200 bg-graf-50 p-6">
           <div className="max-w-xl">
             <h2 className="text-title texto-forte">Seu equipamento está com algum sintoma?</h2>
-            <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+            <p className="mt-2 text-corpo leading-relaxed text-graf-600">
               A JB abre chamado sem exigir cadastro, e você pode anexar foto ou vídeo.
             </p>
           </div>

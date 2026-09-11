@@ -140,7 +140,7 @@ export function PagamentoPix({
         ) : (
           <div className="mx-auto flex aspect-square w-full max-w-56 flex-col items-center justify-center gap-2.5 rounded-xl border border-dashed border-graf-300 bg-graf-50 p-4 text-center sm:mx-0">
             <QrCode className="size-7 text-graf-500" aria-hidden />
-            <p className="text-[0.8125rem] leading-relaxed text-graf-600">Esta cobrança não tem QR Code. Use “Pix copia e cola” no app do seu banco.</p>
+            <p className="text-apoio leading-relaxed text-graf-600">Esta cobrança não tem QR Code. Use “Pix copia e cola” no app do seu banco.</p>
           </div>
         )}
 
@@ -152,7 +152,7 @@ export function PagamentoPix({
           {copiaECola ? (
             <div className="mt-5 min-w-0">
               <p className="mb-2 text-sm font-semibold text-graf-800">Pix copia e cola</p>
-              <code className="block max-h-24 max-w-full overflow-auto break-all rounded-lg border border-graf-200 bg-graf-50 p-3 text-[0.8125rem] leading-relaxed text-graf-700">{copiaECola}</code>
+              <code className="block max-h-24 max-w-full overflow-auto break-all rounded-lg border border-graf-200 bg-graf-50 p-3 text-apoio leading-relaxed text-graf-700">{copiaECola}</code>
               <div className="mt-3">
                 <BotaoCopiar texto={copiaECola} rotulo="Copiar código Pix" rotuloCopiado="Código copiado" variante="primario" tamanho="md" className="w-full sm:w-auto" />
               </div>
@@ -161,7 +161,7 @@ export function PagamentoPix({
 
           <div className="mt-6 border-t border-graf-200 pt-5"><PassosDoPix passos={passos} /></div>
           <p className="mt-5"><Etiqueta tom="andamento" ponto>Aguardando o pagamento</Etiqueta></p>
-          <p className="mt-2 text-[0.8125rem] leading-relaxed text-graf-500">A confirmação chega direto do meio de pagamento — não é preciso enviar comprovante.</p>
+          <p className="mt-2 text-apoio leading-relaxed text-graf-500">A confirmação chega direto do meio de pagamento — não é preciso enviar comprovante.</p>
         </div>
       </div>
     </div>

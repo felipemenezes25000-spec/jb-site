@@ -152,7 +152,7 @@ export default async function EtiquetasPage() {
                 dangerouslySetInnerHTML={{ __html: etiqueta.qr }}
               />
 
-              <p className="text-[0.8125rem] font-bold leading-tight text-graf-950">
+              <p className="text-apoio font-bold leading-tight text-graf-950">
                 {etiqueta.name}
               </p>
               <p className="text-xs leading-tight text-graf-600 print:text-[0.6875rem]">

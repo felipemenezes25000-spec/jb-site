@@ -23,12 +23,14 @@ import {
 } from "@/components/loja/produto/especificacoes";
 import { ForaDeLinha, SemEstoque } from "@/components/loja/produto/estados";
 import { FaixaConfianca } from "@/components/loja/produto/faixa-confianca";
-import { ResumoTecnicoProduto } from "@/components/loja/produto/resumo-tecnico";
+import { DetalhesDoProduto, ResumoTecnicoProduto } from "@/components/loja/produto/resumo-tecnico";
 import { TopoMarketplace } from "@/components/loja/produto/topo-marketplace";
+import { VendidoPelaJB } from "@/components/loja/produto/vendido-pela-jb";
 import {
   BarraCompraMobile,
   NavegacaoDoProduto,
   type AncoraDoProduto,
+  type CompraDaBarra,
 } from "@/components/loja/produto/navegacao-do-produto";
 import { PerguntarSobreProduto } from "@/components/loja/produto/perguntar";
 import { PerguntasDoProduto } from "@/components/loja/produto/perguntas";
@@ -218,6 +220,25 @@ export default async function ProdutoPage({ params }: Props) {
   const temDescricao = tamanhoDaDescricao > 0;
   const temEspecificacoes = grupos.length > 0;
   const temApoioTecnico = temMedidas || temRegulatorio || documentos.length > 0;
+
+  /* A lista de decisão sobe para a coluna do meio, junto do preço — e a ficha
+     completa CONTINUA aqui embaixo, com o mesmo nome em toda página.
+
+     Cheguei a esconder o cartão "Dados do modelo" quando a lista inteira cabia
+     na dobra, para não repetir a mesma tabela duas vezes. Foi pior: o título
+     da seção passava a depender do produto e as estruturas distintas de ficha
+     saltaram de 7 para 11 — justamente o que se quer eliminar. Mercado Livre e
+     Amazon repetem de propósito: prévia na dobra, tabela completa embaixo,
+     sempre com o mesmo nome. Repetição previsível vale mais que economia que
+     muda de página para página. */
+  const destaques = destaquesDaPdp({
+    specs: produto.specs,
+    voltage: produto.voltage,
+    warrantyMonths: garantiaMeses,
+    anvisaCode: produto.anvisaCode,
+    nome: produto.name,
+    categoriaSlug: produto.category?.slug ?? null,
+  });
   const temFichaTecnica = temEspecificacoes || temApoioTecnico;
   const duasColunasNaFicha = temEspecificacoes && temApoioTecnico;
 
@@ -300,7 +321,9 @@ export default async function ProdutoPage({ params }: Props) {
   const ancoras: AncoraDoProduto[] = [
     { id: "visao-geral", rotulo: "Visão geral" },
     ...(unidade ? [{ id: "unidade", rotulo: "Esta unidade" }] : []),
-    ...(temFichaTecnica ? [{ id: "ficha-tecnica", rotulo: "Especificações" }] : []),
+    ...(temFichaTecnica
+      ? [{ id: "ficha-tecnica", rotulo: "Especificações" }]
+      : []),
     ...(temPreparo ? [{ id: "preparo", rotulo: "Antes de comprar" }] : []),
     ...(temEntregaESuporte
       ? [{ id: "entrega-e-garantia", rotulo: "Entrega e garantia" }]
@@ -315,6 +338,13 @@ export default async function ProdutoPage({ params }: Props) {
     produto.allowDirectPurchase && produto.priceCents > 0
       ? calcularParcelas(produto.priceCents, maxParcelas, minParcelaCents)
       : null;
+
+  const compraDaBarra: CompraDaBarra = {
+    precoCents: produto.priceCents,
+    parcelas: parcelasDaBarra,
+    soOrcamento: !produto.allowDirectPurchase || produto.priceCents <= 0,
+    indisponivel: arquivado || semEstoque,
+  };
 
   const estruturados: DadosJsonLd[] = [trilhaJsonLd(trilha), dadosDoProduto];
   if (produto.faqs.length > 0) {
@@ -334,11 +364,7 @@ export default async function ProdutoPage({ params }: Props) {
           <ResumoTecnicoProduto
             nome={produto.name}
             resumo={produto.shortDescription}
-            modelo={produto.model}
             sku={produto.sku}
-            codigoDoFabricante={produto.mpn}
-            gtin={produto.gtin}
-            numeroDeSerie={unidade?.serialNumber ?? null}
             condicao={produto.condition}
             definicao={definicao}
             marca={produto.brand ? { nome: produto.brand.name, slug: produto.brand.slug } : null}
@@ -347,14 +373,21 @@ export default async function ProdutoPage({ params }: Props) {
                 ? { nome: produto.category.name, slug: produto.category.slug }
                 : null
             }
-            destaques={destaquesDaPdp({
-              specs: produto.specs,
-              voltage: produto.voltage,
-              warrantyMonths: garantiaMeses,
-              anvisaCode: produto.anvisaCode,
-              nome: produto.name,
-              categoriaSlug: produto.category?.slug ?? null,
-            })}
+          />
+        }
+        detalhes={
+          <DetalhesDoProduto
+            modelo={produto.model}
+            sku={produto.sku}
+            codigoDoFabricante={produto.mpn}
+            gtin={produto.gtin}
+            numeroDeSerie={unidade?.serialNumber ?? null}
+            categoria={
+              produto.category
+                ? { nome: produto.category.name, slug: produto.category.slug }
+                : null
+            }
+            destaques={destaques}
           />
         }
         compra={
@@ -399,6 +432,13 @@ export default async function ProdutoPage({ params }: Props) {
             ) : null}
 
             {certificado ? <SeloCertificado certificado={certificado} /> : null}
+
+            <VendidoPelaJB
+              empresa={s.empresa_nome}
+              desde={s.empresa_desde}
+              cidade={s.endereco_cidade}
+              uf={s.endereco_uf}
+            />
           </>
         }
       />
@@ -410,7 +450,7 @@ export default async function ProdutoPage({ params }: Props) {
         temInstalacao={temInstalacao}
       />
 
-      <NavegacaoDoProduto ancoras={ancoras} />
+      <NavegacaoDoProduto ancoras={ancoras} compra={compraDaBarra} />
 
       {unidade ? (
         <UnidadeFisica
@@ -449,11 +489,11 @@ export default async function ProdutoPage({ params }: Props) {
             titulo="Especificações técnicas"
             resumo="Dados organizados para conferir compatibilidade e comparar o que realmente importa."
           >
-            <div className={duasColunasNaFicha ? "grid gap-5 xl:grid-cols-2" : "max-w-4xl"}>
+            <div className={duasColunasNaFicha ? "grid gap-x-10 gap-y-8 xl:grid-cols-2" : "max-w-4xl"}>
               {temEspecificacoes ? <FichaTecnica grupos={grupos} /> : null}
 
               {temApoioTecnico ? (
-                <div className="min-w-0 space-y-4">
+                <div className="min-w-0 space-y-8">
                   <MedidasEPeso
                     larguraMm={produto.widthMm}
                     alturaMm={produto.heightMm}
@@ -479,7 +519,7 @@ export default async function ProdutoPage({ params }: Props) {
             titulo="Antes de comprar"
             resumo="Confira infraestrutura, itens inclusos, instalação e o que acontece depois da compra."
           >
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-x-10 gap-y-8 xl:grid-cols-2">
               <AntesDeComprar
                 dados={{
                   voltagem: produto.voltage,
@@ -510,7 +550,7 @@ export default async function ProdutoPage({ params }: Props) {
             titulo="Entrega, garantia e suporte"
             resumo="Condições de compra e acesso direto à equipe JB, sem repetir informação da caixa de compra."
           >
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-x-10 gap-y-8 xl:grid-cols-2">
               <CondicoesDeCompra
                 garantiaMeses={garantiaMeses}
                 garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
@@ -538,7 +578,7 @@ export default async function ProdutoPage({ params }: Props) {
             </div>
 
             {temServicos ? (
-              <div className="mt-5 border-t border-graf-200 pt-5">
+              <div className="mt-8 border-t border-graf-200 pt-6">
                 <h3 className="text-base font-extrabold text-graf-950">
                   Serviços disponíveis para este produto
                 </h3>
@@ -559,7 +599,7 @@ export default async function ProdutoPage({ params }: Props) {
             titulo="Dúvidas"
             resumo="Respostas técnicas e um canal direto para perguntar sobre este produto."
           >
-            <div className={produto.faqs.length > 0 ? "grid gap-5 xl:grid-cols-2" : "max-w-3xl"}>
+            <div className={produto.faqs.length > 0 ? "grid gap-x-10 gap-y-8 xl:grid-cols-2" : "max-w-3xl"}>
               {produto.faqs.length > 0 ? (
                 <PerguntasDoProduto
                   perguntas={produto.faqs.map((faq) => ({
@@ -578,10 +618,10 @@ export default async function ProdutoPage({ params }: Props) {
       <RegistrarVisita slug={produto.slug} />
 
       <BarraCompraMobile
-        precoCents={produto.priceCents}
-        parcelas={parcelasDaBarra}
-        soOrcamento={!produto.allowDirectPurchase || produto.priceCents <= 0}
-        indisponivel={arquivado || semEstoque}
+        precoCents={compraDaBarra.precoCents}
+        parcelas={compraDaBarra.parcelas}
+        soOrcamento={compraDaBarra.soOrcamento}
+        indisponivel={compraDaBarra.indisponivel}
       />
     </>
   );

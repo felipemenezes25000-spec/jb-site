@@ -215,7 +215,7 @@ export default async function ChamadoPage({ params }: Parametros) {
                 {chamado.number}
               </h1>
               {equipamento ? (
-                <p className="mt-4 text-[0.9375rem] font-semibold text-graf-800">
+                <p className="mt-4 text-corpo font-semibold text-graf-800">
                   {equipamento}
                 </p>
               ) : null}
@@ -299,11 +299,11 @@ export default async function ChamadoPage({ params }: Parametros) {
                   <div className="flex gap-3">
                     <CalendarClock className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
                     <div>
-                      <p className="text-[0.9375rem] font-semibold text-graf-900">
+                      <p className="text-corpo font-semibold text-graf-900">
                         {formatarDataHora(visita.startsAt)}
                       </p>
                       {visita.endsAt ? (
-                        <p className="mt-1 text-[0.8125rem] text-graf-500">
+                        <p className="mt-1 text-apoio text-graf-500">
                           Previsão de término: {formatarDataHora(visita.endsAt)}
                         </p>
                       ) : null}
@@ -314,10 +314,10 @@ export default async function ChamadoPage({ params }: Parametros) {
                     <div className="flex gap-3">
                       <Wrench className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
                       <div>
-                        <p className="text-[0.9375rem] font-semibold text-graf-900">
+                        <p className="text-corpo font-semibold text-graf-900">
                           {visita.technician.user.name}
                         </p>
-                        <p className="mt-1 text-[0.8125rem] text-graf-500">Técnico responsável</p>
+                        <p className="mt-1 text-apoio text-graf-500">Técnico responsável</p>
                       </div>
                     </div>
                   ) : null}
@@ -325,7 +325,7 @@ export default async function ChamadoPage({ params }: Parametros) {
                   {visita.addressSummary ? (
                     <div className="flex gap-3 sm:col-span-2">
                       <MapPin className="mt-0.5 size-4.5 shrink-0 text-jb-600" aria-hidden />
-                      <p className="text-[0.9375rem] leading-relaxed text-graf-700">
+                      <p className="text-corpo leading-relaxed text-graf-700">
                         {visita.addressSummary}
                       </p>
                     </div>
@@ -362,15 +362,15 @@ export default async function ChamadoPage({ params }: Parametros) {
                   {historico.map((evento) => (
                     <li key={evento.id} className="px-5 py-4">
                       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                        <p className="text-[0.9375rem] font-semibold text-graf-900">
+                        <p className="text-corpo font-semibold text-graf-900">
                           {evento.title}
                         </p>
-                        <p className="text-[0.8125rem] text-graf-500">
+                        <p className="text-apoio text-graf-500">
                           {formatarDataHora(evento.createdAt)}
                         </p>
                       </div>
                       {evento.message ? (
-                        <p className="mt-1.5 whitespace-pre-line text-[0.9375rem] leading-relaxed text-graf-600">
+                        <p className="mt-1.5 whitespace-pre-line text-corpo leading-relaxed text-graf-600">
                           {evento.message}
                         </p>
                       ) : null}
@@ -393,7 +393,7 @@ export default async function ChamadoPage({ params }: Parametros) {
               <div className="px-5 py-5">
                 {encerrado ? (
                   <div className="flex flex-wrap items-center gap-4">
-                    <p className="flex-1 text-[0.9375rem] leading-relaxed text-graf-600">
+                    <p className="flex-1 text-corpo leading-relaxed text-graf-600">
                       Se o problema voltar, abra um novo chamado citando o número{" "}
                       <strong className="font-semibold text-graf-900">{chamado.number}</strong>{" "}
                       na descrição.
@@ -413,7 +413,7 @@ export default async function ChamadoPage({ params }: Parametros) {
           <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
             <Cartao>
               <CabecalhoCartao titulo="Equipamento e local" />
-              <dl className="space-y-4 px-5 py-5 text-[0.9375rem]">
+              <dl className="space-y-4 px-5 py-5 text-corpo">
                 {equipamento || chamado.serialNumber ? (
                   <div>
                     <dt className="label-mono uppercase text-graf-500">Equipamento</dt>
@@ -502,7 +502,7 @@ export default async function ChamadoPage({ params }: Parametros) {
                 whatsapp={s.whatsapp}
                 mensagem={mensagemWhatsapp}
               />
-              <p className="mt-4 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
+              <p className="mt-4 flex items-start gap-2 text-apoio leading-relaxed text-graf-500">
                 <CircleCheck className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
                 Cite o número {chamado.number} para a equipe achar seu atendimento na hora.
               </p>
@@ -511,7 +511,7 @@ export default async function ChamadoPage({ params }: Parametros) {
             {cliente ? (
               <Link
                 href="/minha-jb/assistencia"
-                className="inline-flex min-h-11 items-center text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-800"
+                className="inline-flex min-h-11 items-center text-corpo font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-800"
               >
                 Ver todos os chamados na Área da Clínica
               </Link>

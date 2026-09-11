@@ -338,7 +338,7 @@ export default async function PaginaChamados({
       renderizar: (linha) => (
         <span className="block">
           <span className="block text-graf-800">{distanciaEmDias(linha.createdAt)}</span>
-          <span className="block text-[0.8125rem] text-graf-500">{formatarData(linha.createdAt)}</span>
+          <span className="block text-apoio text-graf-500">{formatarData(linha.createdAt)}</span>
         </span>
       ),
     },

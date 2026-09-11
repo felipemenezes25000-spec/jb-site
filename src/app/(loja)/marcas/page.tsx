@@ -90,7 +90,7 @@ function CartaoMarca({ marca }: { marca: Marca }) {
 
       <span className="flex flex-col gap-0.5 border-t border-graf-100 px-4 py-3">
         <span className="text-sm font-bold leading-snug text-graf-950">{marca.name}</span>
-        <span className="text-[0.8125rem] text-graf-500">
+        <span className="text-apoio text-graf-500">
           {marca.itens === 0
             ? "Sob consulta"
             : `${marca.itens} ${marca.itens === 1 ? "produto no catálogo" : "produtos no catálogo"}`}
@@ -157,7 +157,7 @@ export default async function MarcasPage() {
                 {marcas.length === 1 ? "marca publicada" : "marcas publicadas"}
               </p>
               {comItens > 0 && comItens < marcas.length ? (
-                <p className="text-[0.8125rem] text-graf-500">
+                <p className="text-apoio text-graf-500">
                   <span className="tabular font-bold text-graf-800">{comItens}</span>{" "}
                   {comItens === 1 ? "com produto disponível" : "com produtos disponíveis"}
                 </p>

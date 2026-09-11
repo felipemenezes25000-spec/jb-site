@@ -98,10 +98,14 @@ export function ControlesColecao({
             aria-label="Abrir filtros"
             aria-haspopup="dialog"
             aria-expanded={aberto}
+            /* Só até 1023px. A partir daí os filtros estão na coluna da
+               esquerda, à vista: manter o botão seria oferecer duas portas
+               para a mesma sala, e uma delas cobrindo a outra com uma gaveta
+               de tela cheia. */
             className={classesBotao(
               "secundario",
               "md",
-              "shrink-0 whitespace-nowrap max-[359px]:px-4",
+              "shrink-0 whitespace-nowrap max-[359px]:px-4 lg:hidden",
             )}
           >
             <SlidersHorizontal className="size-4" aria-hidden />
@@ -128,7 +132,10 @@ export function ControlesColecao({
                   { scroll: false },
                 )
               }
-              aria-label="Ordenar resultados"
+              /* Sem `aria-label` aqui: o `<label>` acima já embrulha o campo e
+                 carrega o mesmo texto em `sr-only`. Com os dois, o nome
+                 acessível ficava declarado duas vezes — o `aria-label` vencia
+                 e o `sr-only` virava peso morto. */
               className="h-11 w-full min-w-0 rounded-lg border border-graf-300 bg-white pl-3 pr-8 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 lg:w-auto"
             >
               {ORDENS.map((opcao) => (
@@ -162,7 +169,7 @@ export function ControlesColecao({
                    aplicado" é `aria-current`. */
                 aria-current={selecionado ? "true" : undefined}
                 className={cn(
-                  "foco-jb inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[0.8125rem] font-semibold transition-colors",
+                  "foco-jb inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-apoio font-semibold transition-colors",
                   selecionado
                     ? "border-jb-300 bg-jb-50 text-jb-800"
                     : "border-graf-200 bg-white text-graf-700 hover:border-graf-400 hover:bg-graf-50",
@@ -202,7 +209,7 @@ export function ControlesColecao({
       ) : null}
 
       {aberto ? (
-        <div className="fixed inset-0 z-70">
+        <div className="fixed inset-0 z-70 lg:hidden">
           <button
             type="button"
             aria-label="Fechar filtros"

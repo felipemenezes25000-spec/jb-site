@@ -318,21 +318,52 @@ export default async function CompararPage({ searchParams }: Props) {
 
   const eleito = ordenados.find((produto) => produto.slug === recomendacao.slug);
 
-  return (
-    <>
-      <Secao espaco="sm">
-        <Trilha itens={TRILHA} className="mb-6" />
-        <TituloSecao
-          como="h1"
-          sobretitulo="Comparar"
-          titulo="Lado a lado, com o que o catálogo realmente tem"
-          descricao="Célula vazia quer dizer que o dado não foi cadastrado — nunca que o valor é zero, e nunca que o equipamento leva vantagem por isso."
-        />
+  const comparando = ordenados.length >= 2;
 
-        {/* Seleção e as três perguntas num formulário GET só: o estado vive na
-            URL, o que torna a comparação compartilhável e o botão voltar
-            previsível. */}
-        <form method="get" className="mt-8 rounded-xl border border-graf-200 bg-graf-50 p-5">
+  /* ==========================================================================
+     O que muda entre os equipamentos
+
+     Numa tabela de dez atributos por três produtos, boa parte das linhas diz a
+     mesma coisa nas três colunas — e é justamente o que **não** muda que não
+     ajuda a decidir. A comparação estava com todas as linhas no mesmo peso, e
+     achar a diferença era trabalho de quem lê.
+
+     "Diferente" aqui é comparação de texto renderizado, o mesmo que aparece na
+     célula. Linha sem nenhum dado preenchido não conta como diferença: três
+     "não informado" são três buracos iguais, não uma distinção.
+
+     O recorte vive na URL (`?so=diferencas`), como o resto do estado desta
+     página — continua compartilhável, e o botão voltar continua previsível.
+     ========================================================================== */
+  const linhaTemDiferenca = (linha: LinhaDaComparacao) => {
+    const preenchidos = linha.valores.filter((valor) => valor.tipo !== "ausente");
+    if (preenchidos.length === 0) return false;
+    // um preenchido e o resto vazio já é diferença: um tem o dado, o outro não
+    if (preenchidos.length !== linha.valores.length) return true;
+    const textos = new Set(preenchidos.map((valor) => textoDoValor(valor)));
+    return textos.size > 1;
+  };
+
+  const linhasDiferentes = linhas.filter(linhaTemDiferenca);
+  const soDiferencas = primeiro(params.so) === "diferencas";
+  const linhasVisiveis = soDiferencas ? linhasDiferentes : linhas;
+
+  const enderecoCom = (so: string | null) => {
+    const busca = new URLSearchParams();
+    for (const slug of escolhidos) busca.append("p", slug);
+    for (const chave of ["volume", "infra", "prioridade"] as const) {
+      const valor = primeiro(params[chave]);
+      if (valor && valor !== "nao_sei") busca.set(chave, valor);
+    }
+    if (so) busca.set("so", so);
+    const consulta = busca.toString();
+    return consulta ? `/comparar?${consulta}` : "/comparar";
+  };
+
+  /* Seleção e as três perguntas num formulário GET só: o estado vive na URL, o
+     que torna a comparação compartilhável e o botão voltar previsível. */
+  const seletor = (
+    <form method="get" className="rounded-xl border border-graf-200 bg-graf-50 p-5">
           {/* `min-w-0` no fieldset e em cada rótulo. Sem ele, o item de grade
               assume largura mínima igual ao conteúdo, e um nome comprido de
               equipamento empurra a coluna inteira para fora da tela em 320px —
@@ -386,7 +417,7 @@ export default async function CompararPage({ searchParams }: Props) {
                         <span className="block truncate font-semibold text-graf-950">
                           {produto.nome}
                         </span>
-                        <span className="tabular block truncate text-[0.8125rem] text-graf-600">
+                        <span className="tabular block truncate text-apoio text-graf-600">
                           {produto.preco}
                         </span>
                       </span>
@@ -450,7 +481,34 @@ export default async function CompararPage({ searchParams }: Props) {
             <Scale className="size-4" aria-hidden />
             Comparar
           </button>
-        </form>
+    </form>
+  );
+
+  /* ==========================================================================
+     A resposta vem antes do formulário que a produziu
+
+     Com `?p=a&p=b&p=c` a página abria pelo seletor inteiro — as sete famílias
+     de equipamento, uma caixa por produto do catálogo, mais as três perguntas
+     — e só então a comparação. Medido a 1440px: a tabela começava em **2.359px
+     numa página de 3.966**. Quem clica em "Comparar", ou abre um link que
+     alguém mandou, rolava duas telas e meia até ver aquilo que pediu.
+
+     Agora o seletor só abre primeiro quando não há nada para comparar, que é
+     quando ele *é* a página. Com comparação montada ele desce e vira gaveta
+     fechada — continua a um clique, e some do caminho de quem já escolheu.
+     ========================================================================== */
+  return (
+    <>
+      <Secao espaco="sm">
+        <Trilha itens={TRILHA} className="mb-6" />
+        <TituloSecao
+          como="h1"
+          sobretitulo="Comparar"
+          titulo="Lado a lado, com o que o catálogo realmente tem"
+          descricao="Célula vazia quer dizer que o dado não foi cadastrado — nunca que o valor é zero, e nunca que o equipamento leva vantagem por isso."
+        />
+
+        {comparando ? null : <div className="mt-8">{seletor}</div>}
       </Secao>
 
       {ordenados.length < 2 ? (
@@ -479,7 +537,7 @@ export default async function CompararPage({ searchParams }: Props) {
                   {recomendacao.criterios.map((criterio) => (
                     <li
                       key={criterio}
-                      className="flex gap-2.5 text-[0.9375rem] leading-relaxed text-graf-700"
+                      className="flex gap-2.5 text-corpo leading-relaxed text-graf-700"
                     >
                       <span
                         aria-hidden
@@ -495,14 +553,14 @@ export default async function CompararPage({ searchParams }: Props) {
                   ela impede que a ausência de dado pareça um empate técnico. */}
               {recomendacao.lacunas.length > 0 ? (
                 <div className="mt-4 border-t border-graf-200 pt-4">
-                  <p className="text-[0.8125rem] font-semibold text-graf-700">
+                  <p className="text-apoio font-semibold text-graf-700">
                     O que não entrou na conta
                   </p>
                   <ul className="mt-2 space-y-1.5">
                     {recomendacao.lacunas.map((lacuna) => (
                       <li
                         key={lacuna}
-                        className="flex gap-2.5 text-[0.8125rem] leading-relaxed text-graf-600"
+                        className="flex gap-2.5 text-apoio leading-relaxed text-graf-600"
                       >
                         <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
                         <span>{lacuna}</span>
@@ -512,7 +570,7 @@ export default async function CompararPage({ searchParams }: Props) {
                 </div>
               ) : null}
 
-              <p className="mt-4 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
+              <p className="mt-4 border-t border-graf-200 pt-4 text-apoio leading-relaxed text-graf-500">
                 Esta orientação usa preço, garantia e requisitos de instalação cadastrados. Ela
                 não afirma que um equipamento atende a um procedimento clínico — isso depende de
                 informação que o catálogo não tem, e quem responde é a equipe técnica.
@@ -527,7 +585,29 @@ export default async function CompararPage({ searchParams }: Props) {
 
           {/* ------------------------------------------- a comparação --- */}
           <Secao espaco="sm">
-            <h2 className="text-title texto-forte">Atributo por atributo</h2>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-title texto-forte">Atributo por atributo</h2>
+                <p className="texto-apoio mt-1 text-graf-600">
+                  {linhasDiferentes.length === 0
+                    ? "Nestes atributos, os equipamentos empatam."
+                    : `${linhasDiferentes.length} de ${linhas.length} ${linhas.length === 1 ? "atributo muda" : "atributos mudam"} entre eles.`}
+                </p>
+              </div>
+
+              {linhasDiferentes.length > 0 && linhasDiferentes.length < linhas.length ? (
+                <Link
+                  href={enderecoCom(soDiferencas ? null : "diferencas")}
+                  scroll={false}
+                  aria-current={soDiferencas ? "true" : undefined}
+                  className="foco-jb inline-flex min-h-11 w-fit shrink-0 items-center gap-2 rounded-lg border px-4 text-sm font-bold transition-colors aria-[current=true]:border-jb-300 aria-[current=true]:bg-jb-50 aria-[current=true]:text-jb-800 border-graf-300 text-graf-800 hover:border-graf-400 hover:bg-graf-50"
+                >
+                  {soDiferencas
+                    ? "Mostrar todos os atributos"
+                    : `Mostrar só o que muda (${linhasDiferentes.length})`}
+                </Link>
+              ) : null}
+            </div>
 
             {/* Em telas estreitas, uma coluna por equipamento — e não uma
                 tabela de três colunas que estoura a largura. O atributo é
@@ -558,7 +638,7 @@ export default async function CompararPage({ searchParams }: Props) {
                     <h3 className="min-w-0 text-[1.0625rem] font-bold text-graf-950">{produto.name}</h3>
                   </div>
                   <dl className="mt-3 space-y-2 text-[0.875rem]">
-                    {linhas.map((linha) => (
+                    {linhasVisiveis.map((linha) => (
                       <div
                         key={linha.chave}
                         className="flex flex-wrap items-baseline justify-between gap-x-4 border-b border-graf-100 pb-2 last:border-0"
@@ -588,7 +668,18 @@ export default async function CompararPage({ searchParams }: Props) {
             </div>
 
             <div className="mt-4 hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[48rem] border-collapse text-left text-[0.9375rem]">
+              {/* `table-fixed` com as colunas de produto dividindo o que sobra em partes
+                    iguais. Com largura automática, a coluna cujas células eram
+                    curtas — no caso, a do equipamento sem dimensões nem peso
+                    cadastrados — encolhia para menos de um terço da vizinha, e a
+                    tabela parecia quebrada em vez de comparável. */}
+              <table className="w-full min-w-[48rem] table-fixed border-collapse text-left text-corpo">
+                <colgroup>
+                  <col className="w-52" />
+                  {ordenados.map((produto) => (
+                    <col key={produto.slug} style={{ width: `${(100 - 22) / ordenados.length}%` }} />
+                  ))}
+                </colgroup>
                 <caption className="sr-only">
                   Comparação de atributos entre os equipamentos escolhidos
                 </caption>
@@ -639,8 +730,19 @@ export default async function CompararPage({ searchParams }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {linhas.map((linha) => (
-                    <tr key={linha.chave} className="border-t border-graf-200">
+                  {linhasVisiveis.map((linha) => (
+                    <tr
+                      key={linha.chave}
+                      /* Sem tingir a linha que muda.
+                         Medido nesta comparação: 9 de 10 atributos mudam. Pintar
+                         nove de dez linhas não destaca nada — só deixa a tabela
+                         listrada. O destaque de verdade é o recorte "mostrar só
+                         o que muda", que remove as linhas que empatam em vez de
+                         colorir as que não empatam. `data-muda` fica para quem
+                         precisar estilizar ou testar. */
+                      data-muda={linhaTemDiferenca(linha) ? "sim" : undefined}
+                      className="border-t border-graf-200"
+                    >
                       <th scope="row" className="py-3 pr-4 align-top font-normal text-graf-600">
                         {linha.rotulo}
                         {linha.ajuda ? (
@@ -666,6 +768,23 @@ export default async function CompararPage({ searchParams }: Props) {
                 </tbody>
               </table>
             </div>
+          </Secao>
+
+          {/* O seletor, agora como controle e não como abertura. */}
+          <Secao espaco="sm">
+            <details className="group rounded-xl border border-graf-200 bg-white">
+              <summary className="foco-jb flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 text-sm font-bold text-graf-950 [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center gap-2">
+                  <Scale className="size-4 text-jb-600" aria-hidden />
+                  Trocar equipamentos ou refazer as perguntas
+                </span>
+                <ArrowRight
+                  className="size-4 shrink-0 text-graf-500 transition-transform group-open:rotate-90"
+                  aria-hidden
+                />
+              </summary>
+              <div className="border-t border-graf-200 p-5">{seletor}</div>
+            </details>
           </Secao>
         </>
       )}

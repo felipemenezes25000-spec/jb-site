@@ -95,7 +95,7 @@ export default async function PaginaUnidades({
         {podeMexer ? (
           <LinkBotao href="/admin/estoque/unidades/nova">Nova unidade</LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-apoio font-semibold text-graf-600">
             Somente consulta
           </p>
         )}
@@ -219,7 +219,7 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
           <span className="block truncate font-semibold">
             {linha.serialNumber || "Sem número de série"}
           </span>
-          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">
+          <span className="block truncate text-apoio font-normal text-graf-500">
             {linha.product.name} · {linha.product.sku}
           </span>
         </span>

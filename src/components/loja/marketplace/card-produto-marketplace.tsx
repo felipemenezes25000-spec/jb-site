@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ImageOff } from "lucide-react";
+import { Heart, ImageOff } from "lucide-react";
 
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import type {
@@ -8,6 +8,7 @@ import type {
   ProdutoMarketplaceCard,
 } from "@/components/loja/marketplace/tipos";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { alternarFavorito } from "@/app/acoes/minha-jb";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
 import styles from "./marketplace.module.css";
@@ -31,10 +32,16 @@ export function CardProdutoMarketplace({
   produto,
   parcelamento,
   prioridade,
+  favoritado = false,
+  voltar,
 }: {
   produto: ProdutoMarketplaceCard;
   parcelamento: ParcelamentoMarketplace;
   prioridade?: boolean;
+  /** Já guardado por quem está logado. */
+  favoritado?: boolean;
+  /** Endereço desta listagem, para o formulário voltar para cá. */
+  voltar?: string;
 }) {
   const indisponivel = produto.trackInventory && produto.stock <= 0;
   const sobOrcamento = !produto.allowDirectPurchase || produto.priceCents <= 0;
@@ -66,7 +73,12 @@ export function CardProdutoMarketplace({
             alt={produto.imageAlt || produto.name}
             fill
             preload={prioridade}
-            sizes="(max-width: 374px) 94vw, (max-width: 1023px) 46vw, (max-width: 1439px) 31vw, 24vw"
+            /* Larguras reais depois da coluna de filtros: uma coluna abaixo de
+               375px, duas até 1023 e, do desktop em diante, a grade adapta por
+               `auto-fill` com piso de 264px — o cartão fica entre 264 e ~340,
+               e nunca passa disso. Pedir `24vw` a 1920 era pedir 460px para um
+               espaço de 281. */
+            sizes="(max-width: 374px) 94vw, (max-width: 1023px) 46vw, 340px"
             className="object-contain p-3 transition-transform duration-200 group-hover:scale-[1.025] motion-reduce:transform-none"
           />
         ) : (
@@ -80,7 +92,44 @@ export function CardProdutoMarketplace({
           <span className="rounded-md border border-graf-200 bg-white/95 px-2 py-1 text-[0.625rem] font-extrabold uppercase tracking-[0.06em] text-graf-700 shadow-sm sm:text-xs sm:normal-case sm:tracking-normal">
             {CONDICAO[produto.condition]}
           </span>
-          <BotaoComparar slug={produto.slug} nome={produto.name} />
+          <div className="flex items-center gap-1.5">
+            {/* Guardar e comparar na mesma linha, no canto da foto: são o
+                mesmo gesto para quem está decidindo, e é o par que o briefing
+                pede no cartão. O formulário fica acima da camada que torna o
+                cartão inteiro clicável — sem `relative`, o clique no coração
+                abriria a ficha do produto. */}
+            <form action={alternarFavorito} className="relative">
+              <input type="hidden" name="produtoId" value={produto.id} />
+              {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
+              {/* 44px de alvo, 36px de desenho.
+
+                  O botão nasceu com `size-9` — 36px em tudo — e virou o maior
+                  grupo de alvos pequenos da loja: 16 de uma vez a 320px, um
+                  por cartão. A regra de toque fala do ALVO, não da tinta,
+                  então o círculo desceu para um `span` e o botão cresceu em
+                  volta dele: o canto da foto continua com a mesma aparência e
+                  o dedo ganha os 8px que faltavam. */}
+              <button
+                type="submit"
+                aria-pressed={favoritado}
+                aria-label={favoritado ? `Remover ${produto.name} dos favoritos` : `Guardar ${produto.name} nos favoritos`}
+                title={favoritado ? "Remover dos favoritos" : "Guardar nos favoritos"}
+                className="foco-jb flex size-11 items-center justify-center rounded-full"
+              >
+                <span
+                  className={`flex size-9 items-center justify-center rounded-full border shadow-sm transition-colors ${
+                    favoritado
+                      ? "border-jb-300 bg-jb-50 text-jb-700"
+                      : "border-graf-200 bg-white/95 text-graf-600 hover:border-graf-400 hover:text-jb-700"
+                  }`}
+                >
+                  <Heart className={`size-4 ${favoritado ? "fill-current" : ""}`} aria-hidden />
+                </span>
+              </button>
+            </form>
+
+            <BotaoComparar slug={produto.slug} nome={produto.name} />
+          </div>
         </div>
 
         {desconto >= 5 ? (
@@ -94,7 +143,7 @@ export function CardProdutoMarketplace({
         <p className="truncate text-[0.625rem] font-extrabold uppercase tracking-[0.09em] text-graf-500 sm:text-[0.6875rem]">
           {produto.brandName || produto.categoryName || "Produto odontológico"}
         </p>
-        <h2 className="mt-1.5 line-clamp-2 min-h-10 text-[0.8125rem] font-bold leading-5 text-graf-950 sm:text-[0.9375rem]">
+        <h2 className="mt-1.5 line-clamp-2 min-h-10 text-apoio font-bold leading-5 text-graf-950 sm:text-corpo">
           <Link
             href={`/loja/${produto.slug}`}
             className="foco-jb rounded-sm after:absolute after:inset-0 after:content-['']"
@@ -146,16 +195,22 @@ export function CardProdutoMarketplace({
             <span className="truncate">{disponibilidade(produto)}</span>
           </div>
 
-          <span
-            aria-hidden
-            className={`mt-3 flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-extrabold transition-colors sm:px-3 sm:text-sm ${
-              indisponivel
-                ? "bg-graf-200 text-graf-700"
-                : "bg-jb-500 text-white group-hover:bg-jb-600"
-            }`}
-          >
-            {sobOrcamento ? "Pedir orçamento" : "Ver produto"}
-          </span>
+          {/* O botão saiu.
+
+              Era um `<span aria-hidden>` — decoração: quem leva à ficha é o
+              link do título, que já cobre o cartão inteiro com
+              `after:inset-0`. Só que era um retângulo vermelho sólido de
+              largura inteira, e a grade mostra dezesseis deles de uma vez. O
+              vermelho da JB é sinal de ação; repetido dezesseis vezes numa
+              tela ele deixa de apontar para qualquer coisa, e a foto do
+              equipamento — que é o que a pessoa está comparando — passa a
+              disputar atenção com uma faixa de cor.
+
+              O que ficou no lugar é o que as grades medidas como referência
+              usam: nenhum CTA por cartão, o cartão inteiro clicável, e o
+              hover/foco levantando a peça. São 56px a menos de altura em cada
+              um dos dezesseis. O "Sob orçamento" que ele carregava já é o que
+              a linha do preço escreve, logo acima. */}
         </div>
       </div>
     </article>

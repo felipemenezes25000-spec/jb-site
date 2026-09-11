@@ -129,7 +129,7 @@ export default async function PaginaProdutos({
             Novo produto
           </LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-apoio font-semibold text-graf-600">
             Seu acesso ao catálogo é apenas de consulta.
           </p>
         )}
@@ -290,7 +290,7 @@ async function Lista({ parametros, podeMexer }: { parametros: Busca; podeMexer: 
       renderizar: (linha) => (
         <span className="block">
           <span className="block truncate font-semibold">{linha.name}</span>
-          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">
+          <span className="block truncate text-apoio font-normal text-graf-500">
             {linha.sku}
             {linha.brand ? ` · ${linha.brand.name}` : ""}
             {linha.featured ? " · em destaque na loja" : ""}

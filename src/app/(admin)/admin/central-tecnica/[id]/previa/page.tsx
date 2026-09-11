@@ -161,7 +161,7 @@ export default async function PaginaPrevia({ params }: { params: Promise<{ id: s
         {artigo.sources.length > 0 ? (
           <section className="mt-10">
             <h2 className="text-title texto-forte">Fontes</h2>
-            <ul className="mt-3 space-y-2 text-[0.9375rem] text-graf-700">
+            <ul className="mt-3 space-y-2 text-corpo text-graf-700">
               {artigo.sources.map((fonte) => (
                 <li key={fonte.title}>{fonte.title}</li>
               ))}

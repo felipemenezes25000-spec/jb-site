@@ -199,7 +199,16 @@
 }
 
 .shell :global(main th) {
-  color: #6f7680;
+  /* Era `#6f7680`, cravado à mão fora do sistema de tokens — e a conta não
+     fechava: sobre o `rgba(248,249,251,.98)` do `thead` acima, esse cinza dá
+     **4,35:1**, logo abaixo dos 4,5 que o AA exige. Todo cabeçalho de tabela
+     da Área da Clínica falhava no axe por causa desta linha.
+
+     `graf-500` é o token para texto de apoio em fundo claro e dá 4,97:1 no
+     mesmo fundo. O `globals.css` já avisa, no comentário da paleta, que o
+     degrau mais claro (graf-400) "é só borda, ícone decorativo e divisor:
+     nunca texto". */
+  color: var(--color-graf-500);
   font-size: 0.72rem;
   font-weight: 750;
   letter-spacing: 0.05em;

@@ -2,9 +2,10 @@ import { Suspense } from "react";
 import type { Prisma, ProductCondition } from "@prisma/client";
 import { ArrowRight, PackageSearch, SearchX, TriangleAlert } from "lucide-react";
 
-import type {
-  GruposFiltro,
-  ParametrosCatalogo,
+import {
+  PainelFiltros,
+  type GruposFiltro,
+  type ParametrosCatalogo,
 } from "@/components/loja/filtros-catalogo";
 import { ControlesColecao } from "@/components/loja/marketplace/controles-colecao";
 import { CabecalhoColecao } from "@/components/loja/marketplace/cabecalho-colecao";
@@ -26,6 +27,7 @@ import {
   type FiltrosCatalogo as Filtros,
   type Ordenacao,
 } from "@/lib/catalogo";
+import { sessaoCliente } from "@/lib/auth-cliente";
 import { paraCentavos } from "@/lib/format";
 import { unificarPorNome } from "@/lib/homonimos";
 import { prisma } from "@/lib/prisma";
@@ -456,6 +458,37 @@ async function Resultados({
 
   const { dados } = resposta;
 
+  /* ==========================================================================
+     Favoritos: uma consulta por página, não uma por cartão
+
+     A ficha de produto já guardava equipamento (`AcoesDoProduto`), e a Área da
+     Clínica já lista o que foi guardado — o que faltava era o gesto onde ele
+     mais serve: comparando opções na grade. O briefing pede
+     "favoritar/comparar" no cartão; comparar já estava lá, favoritar não.
+
+     O estado é do cliente e mora no banco, então precisa de sessão. Buscar por
+     cartão seriam 24 consultas numa página de catálogo: em vez disso vem o
+     conjunto dos ids favoritados desta página, de uma vez. Sem sessão o botão
+     continua aparecendo e leva ao login com a volta apontando para cá —
+     esconder a função de quem não entrou é como esconder o preço.
+     ========================================================================== */
+  const cliente = await sessaoCliente().catch(() => null);
+  const favoritados = cliente
+    ? new Set(
+        (
+          await prisma.favorite
+            .findMany({
+              where: {
+                customerId: cliente.id,
+                productId: { in: dados.produtos.map((produto) => produto.id) },
+              },
+              select: { productId: true },
+            })
+            .catch(() => [])
+        ).map((favorito) => favorito.productId),
+      )
+    : new Set<string>();
+
   if (dados.produtos.length === 0) {
     return (
       <SemResultado
@@ -476,7 +509,7 @@ async function Resultados({
           direita. O filete embaixo separa a contagem dos cartões sem pedir
           mais uma caixa na tela */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-graf-200 pb-3">
-        <p className="text-[0.9375rem] text-graf-600" aria-live="polite">
+        <p className="text-corpo text-graf-600" aria-live="polite">
           <span className="tabular text-base font-bold text-graf-950">{dados.total}</span>{" "}
           {busca || temFiltro
             ? dados.total === 1
@@ -488,13 +521,15 @@ async function Resultados({
         </p>
 
         {paginas > 1 ? (
-          <p className="tabular text-[0.8125rem] text-graf-500">
+          <p className="tabular text-apoio text-graf-500">
             Página {pagina} de {paginas}
           </p>
         ) : null}
       </div>
 
       <GradeMarketplace
+        favoritados={favoritados}
+        voltar={endereco}
         produtos={dados.produtos}
         parcelamento={parcelamento}
         className="mt-5"
@@ -531,6 +566,7 @@ export async function Vitrine({
   imagem,
   atalhos,
   rotuloAtalhos = "Coleções relacionadas",
+  faixaDeConfianca,
   travarCategoria,
   travarCondicao,
   travarMarca,
@@ -548,6 +584,8 @@ export async function Vitrine({
   imagem?: { url: string; alt: string };
   atalhos?: Atalho[];
   rotuloAtalhos?: string;
+  /** Faixa entre o cabeçalho e os controles — sinais que precisam vir antes da grade. */
+  faixaDeConfianca?: React.ReactNode;
   travarCategoria?: boolean;
   travarCondicao?: boolean;
   travarMarca?: boolean;
@@ -654,7 +692,11 @@ export async function Vitrine({
   return (
     <div
       data-marketplace-shell
-      className={cn(marketplaceStyles.shell, "container-jb py-8 lg:py-12")}
+      /* `container-jb` sozinho para em 90rem, e a home, a ficha de produto e o
+         resto da vitrine alinham por 100rem. A 1920 o catálogo saía 160px mais
+         estreito que a página de onde a pessoa acabou de vir — o mesmo degrau
+         que a ficha já tinha corrigido. */
+      className={cn(marketplaceStyles.shell, "container-jb max-w-[100rem] py-8 lg:py-12")}
     >
       <CabecalhoColecao
         sobretitulo={sobretitulo}
@@ -666,21 +708,52 @@ export async function Vitrine({
         rotuloAtalhos={rotuloAtalhos}
       />
 
+      {/* Faixa opcional entre o cabeçalho e os controles.
+
+          Existe por causa dos seminovos: a página tinha sete sinais de
+          procedência — unidade por anúncio, número de série, ano de fabricação,
+          uso acumulado, checklist da revisão, condição descrita e garantia —
+          gerados a partir do que está mesmo cadastrado, e todos **no rodapé da
+          página**, a 2.100px de rolagem. Quem chega via "Seminovos" vê uma
+          grade de catálogo primeiro e o motivo de confiar por último. */}
+      {faixaDeConfianca ? <div className="mt-6">{faixaDeConfianca}</div> : null}
+
       <div className="mt-7 lg:mt-8">
         <ControlesColecao grupos={grupos} parametros={parametros} {...travas} />
 
-        <div className="mt-6 min-w-0">
-          <Suspense key={chave} fallback={<EsqueletoResultados />}>
-            <Resultados
-              consulta={consulta}
-              parcelamento={parcelamento}
-              busca={busca}
-              temFiltro={temFiltro}
-              caminho={caminho}
-              endereco={enderecoPrimeiraPagina}
-              pagina={pagina}
-            />
-          </Suspense>
+        {/* Duas colunas a partir de 1024px.
+
+            `PainelFiltros` já existia, com `lg:sticky lg:top-24` pronto, e
+            estava órfão: nenhuma tela do projeto o usava. O catálogo escondia
+            categoria, marca, preço, condição, voltagem e disponibilidade
+            atrás de um botão — inclusive a 1920px, onde sobram 1.600px de
+            largura e a coluna de filtros custa 17rem.
+
+            É o padrão de todo marketplace medido como referência, e é o que a
+            barra de controles não consegue dar: ver o que existe para filtrar
+            sem abrir nada. No celular continua sendo gaveta, que é onde
+            gaveta faz sentido. */}
+        <div className="mt-6 min-w-0 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[18.5rem_minmax(0,1fr)] xl:gap-10">
+          <PainelFiltros
+            grupos={grupos}
+            parametros={parametros}
+            className="hidden lg:block"
+            {...travas}
+          />
+
+          <div className="min-w-0">
+            <Suspense key={chave} fallback={<EsqueletoResultados />}>
+              <Resultados
+                consulta={consulta}
+                parcelamento={parcelamento}
+                busca={busca}
+                temFiltro={temFiltro}
+                caminho={caminho}
+                endereco={enderecoPrimeiraPagina}
+                pagina={pagina}
+              />
+            </Suspense>
+          </div>
         </div>
       </div>
     </div>

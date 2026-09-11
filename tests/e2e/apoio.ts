@@ -117,10 +117,19 @@ export async function adicionarAoCarrinho(
   const precoUnitarioCents = dados.produto.precoCents;
   await expect(page.getByText(emReais(precoUnitarioCents)).first()).toBeVisible();
 
-  for (let i = 1; i < quantidade; i++) {
-    await page.getByRole("button", { name: "Aumentar quantidade" }).click();
-  }
   if (quantidade > 1) {
+    /* O seletor de quantidade mora dentro de "Mais opções da compra", uma
+       gaveta que nasce fechada. O botão existe no DOM desde o primeiro
+       render, mas nunca fica clicável enquanto o <details> estiver fechado —
+       sem abrir, o clique espera os 20s inteiros por algo que não vai
+       aparecer. */
+    const gaveta = page.locator("details").filter({ hasText: "Mais opções da compra" }).first();
+    const aberta = await gaveta.evaluate((el) => (el as HTMLDetailsElement).open);
+    if (!aberta) await gaveta.locator("summary").first().click();
+
+    for (let i = 1; i < quantidade; i++) {
+      await page.getByRole("button", { name: "Aumentar quantidade" }).click();
+    }
     await expect(page.getByText(String(quantidade), { exact: true }).first()).toBeVisible();
   }
 
@@ -165,7 +174,7 @@ export async function fecharPedidoComPix(
   dados: DadosCheckout,
 ): Promise<{ numero: string; totalCents: number }> {
   await page.goto("/checkout");
-  await expect(page.getByRole("heading", { name: "Fechar pedido", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Finalizar compra", level: 1 })).toBeVisible();
 
   /* 0. identificação */
   await expect(page.getByRole("heading", { name: "Identificação" })).toBeVisible();

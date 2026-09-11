@@ -10,6 +10,8 @@ import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
 export type ProdutoCard = {
+  /** Chave do produto — usada por quem precisa agir sobre ele (guardar, etc.). */
+  id: string;
   slug: string;
   name: string;
   model: string;
@@ -76,7 +78,6 @@ export function CardProduto({
     : calcularParcelas(produto.priceCents, parcelamento?.max, parcelamento?.minimoCents);
   const condicao = CONDICAO[produto.condition];
   const estado = disponibilidade(produto);
-  const imagemLocal = Boolean(produto.imageUrl?.startsWith("/"));
   const precoAnterior =
     !soOrcamento && produto.compareAtCents && produto.compareAtCents > produto.priceCents
       ? produto.compareAtCents
@@ -109,7 +110,6 @@ export function CardProduto({
             fill
             preload={prioridade}
             loading={prioridade ? undefined : "lazy"}
-            unoptimized={imagemLocal}
             sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, (max-width: 1536px) 30vw, 25vw"
             className={cn(
               "object-contain p-2.5 transition-transform duration-300 ease-out-quint sm:p-3",
@@ -151,7 +151,7 @@ export function CardProduto({
           </p>
         ) : null}
 
-        <h3 className="mt-1 line-clamp-2 min-h-10 text-[0.9375rem] font-bold leading-5 text-graf-950 sm:text-base">
+        <h3 className="mt-1 line-clamp-2 min-h-10 text-corpo font-bold leading-5 text-graf-950 sm:text-base">
           <Link
             href={`/loja/${produto.slug}`}
             className="rounded-xs after:absolute after:inset-0 after:content-['']"

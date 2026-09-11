@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 const BASE_CAMPO =
   // 16px no celular de propósito: abaixo disso o iOS dá zoom ao focar o campo.
-  "w-full rounded-lg border bg-white text-base text-graf-900 shadow-xs sm:text-[0.9375rem] " +
+  "w-full rounded-lg border bg-white text-base text-graf-900 shadow-xs sm:text-corpo " +
   "transition-[border-color,box-shadow] duration-150 " +
   "placeholder:text-graf-500 " +
   "focus:outline-none focus:ring-4 " +
@@ -53,7 +53,7 @@ function Rotulo({
 function Ajuda({ id, texto }: { id: string; texto?: string }) {
   if (!texto) return null;
   return (
-    <p id={id} className="mt-1.5 text-[0.8125rem] leading-relaxed text-graf-500">
+    <p id={id} className="mt-1.5 text-apoio leading-relaxed text-graf-500">
       {texto}
     </p>
   );
@@ -209,7 +209,7 @@ export function Marcador({
       >
         <span className="font-medium text-graf-800">{rotulo}</span>
         {ajuda ? (
-          <span className="mt-0.5 block text-[0.8125rem] text-graf-500">{ajuda}</span>
+          <span className="mt-0.5 block text-apoio text-graf-500">{ajuda}</span>
         ) : null}
       </label>
     </div>
@@ -262,7 +262,7 @@ export function Opcoes<T extends string>({
               />
               {opcao.rotulo}
               {opcao.descricao ? (
-                <span className="mt-0.5 block text-[0.8125rem] font-normal text-graf-500">
+                <span className="mt-0.5 block text-apoio font-normal text-graf-500">
                   {opcao.descricao}
                 </span>
               ) : null}

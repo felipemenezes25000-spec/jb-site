@@ -309,7 +309,7 @@ export function resumoDoHtml(html: string | null | undefined, limite = 140): str
  * por seletor de filho, então valem para o HTML que veio do banco.
  */
 const TIPOGRAFIA = [
-  "text-[0.9375rem] leading-relaxed text-graf-700",
+  "text-corpo leading-relaxed text-graf-700",
   "[&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
   "[&_p]:my-3",
   "[&_h2]:mb-2 [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-graf-950",

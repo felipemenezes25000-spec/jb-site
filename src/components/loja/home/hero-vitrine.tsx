@@ -100,7 +100,6 @@ export function HeroVitrine({
                   alt={destaque.imageAlt || destaque.name}
                   fill
                   preload
-                  unoptimized={destaque.imageUrl.startsWith("/")}
                   sizes="(max-width: 1024px) 92vw, 42rem"
                   className="object-contain"
                 />

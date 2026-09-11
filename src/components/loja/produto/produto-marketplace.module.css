@@ -6,11 +6,24 @@
 
 .galeria,
 .resumo,
-.compra {
+.compra,
+.detalhes {
   min-width: 0;
 }
 
-/* Mobile: contexto primeiro, imagem depois e compra por último. */
+/* ============================================================================
+   Celular: identidade → foto → compra → detalhes técnicos
+
+   A ordem anterior era contexto → imagem → compra, com "Principais
+   características" e "Identificação do produto" ainda dentro do contexto. Na
+   prática isso empurrava a foto para 700px de rolagem e o preço para ~1.100px
+   a 390px de largura, porque quatro linhas de ficha entravam entre o título e
+   o equipamento. Nenhuma das fichas medidas como referência põe tabela antes
+   da foto.
+
+   `.detalhes` é slot próprio justamente para poder descer aqui e voltar para a
+   coluna do meio no desktop.
+   ============================================================================ */
 .resumo {
   order: 1;
   align-self: start;
@@ -24,9 +37,35 @@
   order: 3;
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+.detalhes {
+  order: 4;
+}
+
+/* ============================================================================
+   Duas colunas até 1279px
+
+   As três colunas começavam em 1024px e a conta não fechava: com os pisos de
+   `minmax` somando 624px para resumo e compra, sobravam 300px para a galeria —
+   a foto do equipamento saía mais estreita que a caixa de compra ao lado dela.
+
+   As fichas de produto medidas como referência concordam com o corte aqui:
+   quem usa três colunas usa a partir de 1184px (Mercado Livre), 1365 (Newegg)
+   ou 1425 (Amazon); na faixa de 1000 a 1250 todas vão de duas — Magazine Luiza
+   500/500 em 1008, Dental Cremer 538/538 em 1166, Surya 497/747 em 1244.
+
+   Em duas colunas a mesma largura de 1024px dá ~484px de galeria e ~438px para
+   resumo e compra empilhados, que é uma primeira dobra legível.
+   ============================================================================ */
+
+@media (min-width: 768px) and (max-width: 1279px) {
   .topo {
     grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
+    /* `min-content` nas faixas de cima, e não `auto`: a galeria atravessa as
+       três, e o navegador distribui a altura de um item que atravessa faixas
+       apenas entre as faixas flexíveis. Com `auto` em todas, a foto (mais alta
+       que resumo + compra) esticava a faixa do resumo e abria um vão antes das
+       características. Com `min-content` acima, a sobra cai toda na última. */
+    grid-template-rows: auto auto minmax(0, 1fr);
     align-items: start;
     gap: 1.4rem;
   }
@@ -34,27 +73,22 @@
   .galeria {
     order: 0;
     grid-column: 1;
-    grid-row: 1 / span 2;
+    grid-row: 1 / span 3;
   }
 
   .resumo,
-  .compra {
+  .compra,
+  .detalhes {
     order: 0;
     grid-column: 2;
   }
 }
 
 @media (min-width: 1024px) {
-  .topo {
-    /* Hierarquia 45/30/25: produto visual, decisão técnica e compra. */
-    grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 1fr) minmax(21rem, 0.86fr);
-    align-items: start;
-    gap: clamp(1.15rem, 1.55vw, 1.75rem);
-  }
-
   .galeria,
   .resumo,
-  .compra {
+  .compra,
+  .detalhes {
     order: 0;
   }
 
@@ -62,22 +96,67 @@
     padding-top: 0.1rem;
   }
 
+  /* Logo abaixo do cabeçalho grudado — o mesmo token que a barra de seções
+     usa, mais um respiro. Sem ele a caixa parava em 100px e deslizava por
+     baixo da segunda faixa do cabeçalho, que sozinha vai até 108px. */
   .compra {
     position: sticky;
-    top: 6.25rem;
+    top: calc(var(--jb-topo) + 1rem);
   }
 }
 
+/* ============================================================================
+   Proporção das três colunas — 39 / 33 / 28
+
+   Era 45/30/25 (`1.5fr / 1fr / 0.86fr`), o que dava 571px de galeria contra
+   376px de resumo a 1440px. Numa ficha de equipamento a coluna que decide a
+   compra não é a foto: é o texto. Amazon dá 446px para a galeria e 630px para
+   a coluna do meio; a Surya dá 497 contra 747; a B&H tira o título da coluna e
+   o joga por cima das duas, em largura inteira. Em nenhuma delas a imagem é a
+   coluna dominante.
+
+   Os 55px que saem da galeria são o que faz o `h1` caber em duas linhas em vez
+   de três e o que dá respiro às características essenciais logo abaixo dele.
+
+   `.detalhes` volta para debaixo do resumo, na mesma coluna: a galeria e a
+   compra atravessam as duas linhas, e a coluna do meio cresce para baixo.
+   ============================================================================ */
+
 @media (min-width: 1280px) {
   .topo {
-    grid-template-columns: minmax(0, 1.52fr) minmax(19rem, 1fr) minmax(22rem, 0.86fr);
+    grid-template-columns: minmax(0, 1.3fr) minmax(19rem, 1.1fr) minmax(21rem, 0.92fr);
+    /* Ver a nota da faixa de 768–1279: `min-content` na primeira linha impede
+       que galeria e caixa de compra — que atravessam as duas — estiquem a
+       linha do resumo e afastem as características técnicas dele. */
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: start;
     gap: clamp(1.35rem, 1.6vw, 2rem);
+  }
+
+  .galeria {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .resumo {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .detalhes {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .compra {
+    grid-column: 3;
+    grid-row: 1 / span 2;
   }
 }
 
 @media (min-width: 1600px) {
   .topo {
-    grid-template-columns: minmax(0, 1.54fr) minmax(20rem, 1fr) minmax(22.5rem, 0.86fr);
+    grid-template-columns: minmax(0, 1.32fr) minmax(23rem, 1.12fr) minmax(23rem, 0.94fr);
     gap: 2.1rem;
   }
 }

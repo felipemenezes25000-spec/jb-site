@@ -120,16 +120,16 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
     <section
       id="comparacao-rapida"
       aria-labelledby="comparacao-rapida-titulo"
-      className="scroll-mt-32 border-t border-graf-200 py-9 lg:py-10"
+      className="scroll-mt-[var(--jb-topo-secoes)] border-t border-graf-200 py-9 lg:py-10"
     >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.12em] text-jb-700">
+          <p className="micro text-jb-700">
             Compare sem sair da ficha
           </p>
           <h2
             id="comparacao-rapida-titulo"
-            className="mt-2 text-2xl font-extrabold tracking-[-0.03em] text-graf-950 lg:text-[1.75rem]"
+            className="text-bloco mt-2 text-graf-950"
           >
             O que muda entre este modelo e as alternativas
           </h2>
@@ -158,7 +158,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
             >
               <div className="grid grid-cols-2 border-b border-graf-200">
                 <div className="bg-jb-50/45 p-4">
-                  <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
+                  <span className="micro text-jb-800">
                     Este modelo
                   </span>
                   <p className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950">
@@ -169,7 +169,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                   </p>
                 </div>
                 <div className="p-4">
-                  <span className="text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
+                  <span className="micro text-graf-500">
                     Alternativa
                   </span>
                   <Link
@@ -182,7 +182,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                     {preco(alternativa)}
                   </p>
                   {delta ? (
-                    <p className="mt-1 text-[0.6875rem] font-bold text-graf-500">{delta}</p>
+                    <p className="texto-apoio mt-1 font-bold text-graf-500">{delta}</p>
                   ) : null}
                 </div>
               </div>
@@ -195,7 +195,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                     normalizarAtributo(valorAtual) !== normalizarAtributo(valorAlternativa);
                   return (
                     <div key={linha.id} className="p-3.5">
-                      <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-graf-500">
+                      <dt className="micro text-graf-500">
                         {linha.rotulo}
                       </dt>
                       <dd className="mt-2 grid grid-cols-2 gap-3 text-sm font-semibold text-graf-800">
@@ -223,7 +223,15 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
         })}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-2xl border border-graf-200 bg-white md:block">
+      {/* Sem a moldura de cartão. A tabela já se desenha sozinha — filete por
+          linha, faixa clara no cabeçalho — e estava dentro de um
+          `rounded-2xl border bg-white` que por sua vez estava numa seção com
+          `border-t`, no container branco da página. É a mesma caixa dentro de
+          caixa que saiu da ficha técnica e da coluna de resumo.
+
+          `overflow-x-auto` continua: a tabela tem largura mínima de 720px e
+          precisa rolar sozinha antes de empurrar a página. */}
+      <div className="hidden overflow-x-auto border-t border-graf-200 md:block">
         <table className="w-full min-w-[720px] border-collapse text-left">
           <thead>
             <tr>
@@ -238,7 +246,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                     className={`border-b border-graf-200 px-5 py-5 align-top ${indice === 0 ? "bg-jb-50/45" : "bg-white"}`}
                   >
                     {indice === 0 ? (
-                      <span className="mb-2 inline-flex rounded-full bg-jb-100 px-2.5 py-1 text-[0.625rem] font-extrabold uppercase tracking-[0.08em] text-jb-800">
+                      <span className="mb-2 inline-flex rounded-full bg-jb-100 px-2.5 py-1 micro text-jb-800">
                         Você está vendo
                       </span>
                     ) : null}
@@ -252,7 +260,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                       {preco(produto)}
                     </p>
                     {delta ? (
-                      <p className="mt-1 text-[0.6875rem] font-bold text-graf-500">{delta}</p>
+                      <p className="texto-apoio mt-1 font-bold text-graf-500">{delta}</p>
                     ) : null}
                   </th>
                 );

@@ -27,7 +27,7 @@ export function PerguntarSobreProduto({
   const concluido = Boolean(estado.ok);
 
   return (
-    <details className="group border-y border-graf-200" open={concluido || undefined}>
+    <details className="group border-t border-graf-200" open={concluido || undefined}>
       <summary className="foco-jb flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-3 [&::-webkit-details-marker]:hidden">
         <span className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">

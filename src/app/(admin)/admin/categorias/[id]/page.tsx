@@ -209,7 +209,7 @@ export default async function PaginaCategoria({
                     <span className="block truncate text-sm font-semibold text-graf-900">
                       {produto.name}
                     </span>
-                    <span className="block truncate text-[0.8125rem] text-graf-500">
+                    <span className="block truncate text-apoio text-graf-500">
                       {produto.sku}
                     </span>
                   </span>

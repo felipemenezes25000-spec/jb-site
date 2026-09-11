@@ -16,9 +16,66 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   duvidas: "Dúvidas",
 };
 
-export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) {
+/** Altura das faixas grudadas no topo, lida do token de `globals.css`. */
+function ocupadoNoTopo() {
+  const bruto = getComputedStyle(document.documentElement).getPropertyValue("--jb-topo-secoes");
+  return Number.parseInt(bruto, 10) || 136;
+}
+
+export type CompraDaBarra = {
+  precoCents: number;
+  parcelas: { parcelas: number; valorCents: number } | null;
+  soOrcamento: boolean;
+  indisponivel: boolean;
+};
+
+/**
+ * A caixa de compra sai de vista e não volta — no desktop.
+ *
+ * `.compra` é `position: sticky` dentro do grid do topo, e o grid termina onde
+ * termina a coluna mais alta: da barra de seções para baixo (especificações,
+ * instalação, entrega, dúvidas, comparação, avaliações, cross-sell) não havia
+ * preço nem botão em ~5.400px de página a 1440. O celular tinha
+ * `BarraCompraMobile`; o desktop não tinha nada.
+ *
+ * As fichas medidas resolvem isso sem inventar uma segunda faixa: a Peloton
+ * gruda 1440×72 com título, âncoras e "Add to cart" no mesmo trilho; a Herman
+ * Miller usa 1440×86 com título e âncoras; a Kabum gruda a própria caixa
+ * (320×240 em `top:96`). O denominador comum é *uma* faixa, não duas.
+ *
+ * Por isso o preço e o botão entram aqui dentro, à direita das âncoras, na
+ * faixa que já existe e já está grudada — sem nenhum pixel a mais de altura.
+ */
+function useForaDeVista(alvo: string) {
+  const [fora, setFora] = useState(false);
+
+  useEffect(() => {
+    const caixa = document.querySelector<HTMLElement>(`main #${CSS.escape(alvo)}`);
+    if (!caixa) return;
+
+    const observador = new IntersectionObserver(
+      ([entrada]) => setFora(!entrada.isIntersecting),
+      { rootMargin: "-80px 0px 0px 0px", threshold: 0 },
+    );
+    observador.observe(caixa);
+    return () => observador.disconnect();
+  }, [alvo]);
+
+  return fora;
+}
+
+export function NavegacaoDoProduto({
+  ancoras,
+  compra,
+  alvoDaCompra = "caixa-de-compra",
+}: {
+  ancoras: AncoraDoProduto[];
+  compra?: CompraDaBarra;
+  alvoDaCompra?: string;
+}) {
   const [ativa, setAtiva] = useState<string | null>(null);
   const trilhoRef = useRef<HTMLUListElement>(null);
+  const compraForaDeVista = useForaDeVista(alvoDaCompra);
 
   const ancorasEfetivas = useMemo(() => {
     return ancoras.filter((ancora) => ancora.id !== "relacionados");
@@ -40,7 +97,9 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
         if (visiveis[0]) setAtiva(visiveis[0].target.id);
       },
-      { rootMargin: "-136px 0px -60% 0px", threshold: 0 },
+      // A margem superior é a mesma altura que o `scroll-mt` das seções: o
+      // que está atrás do cabeçalho e da barra não conta como visível.
+      { rootMargin: `-${ocupadoNoTopo()}px 0px -60% 0px`, threshold: 0 },
     );
 
     for (const alvo of alvos) observador.observe(alvo);
@@ -62,37 +121,81 @@ export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) 
     }
   }, [ativa]);
 
-  function abrirSecao(id: string) {
-    const secao = document.querySelector<HTMLElement>(`main #${CSS.escape(id)}`);
-    const detalhes = secao?.querySelector<HTMLDetailsElement>("details");
-    if (detalhes) detalhes.open = true;
-  }
-
   if (ancorasEfetivas.length < 2) return null;
+
+  const mostrarCompra = Boolean(compra) && compraForaDeVista;
 
   return (
     <nav
       aria-label="Seções deste produto"
-      className="sticky top-[72px] z-30 border-y border-graf-200 bg-white/95 backdrop-blur"
+      className="sticky top-[var(--jb-topo)] z-30 border-y border-graf-200 bg-white/95 backdrop-blur"
     >
-      <ul
-        ref={trilhoRef}
-        className="container-jb scrollbar-none flex min-h-12 max-w-[100rem] gap-5 overflow-x-auto"
-      >
-        {ancorasEfetivas.map((ancora) => (
-          <li key={ancora.id} className="shrink-0">
+      <div className="container-jb flex max-w-[100rem] items-stretch gap-4">
+        <ul
+          ref={trilhoRef}
+          className="scrollbar-none flex min-h-12 min-w-0 flex-1 gap-5 overflow-x-auto"
+        >
+          {ancorasEfetivas.map((ancora) => (
+            <li key={ancora.id} className="shrink-0">
+              <a
+                href={`#${ancora.id}`}
+                data-ancora={ancora.id}
+                aria-current={ativa === ancora.id ? "true" : undefined}
+                className="foco-jb flex min-h-12 items-center whitespace-nowrap border-b-2 border-transparent text-sm font-semibold text-graf-600 transition-colors hover:text-graf-950 aria-[current=true]:border-jb-500 aria-[current=true]:text-jb-700"
+              >
+                {ROTULOS_COMPACTOS[ancora.id] ?? ancora.rotulo}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        {/* Só no desktop: no celular quem faz esse papel é `BarraCompraMobile`,
+            que fica no rodapé, onde o polegar alcança. */}
+        {compra ? (
+          <div
+            aria-hidden={!mostrarCompra}
+            className={cn(
+              "hidden shrink-0 items-center gap-3 transition-opacity duration-150 lg:flex",
+              mostrarCompra ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+          >
+            {compra.indisponivel ? (
+              <span className="text-sm font-bold text-graf-600">Indisponível</span>
+            ) : compra.soOrcamento ? (
+              <span className="text-sm font-bold text-graf-950">Sob orçamento</span>
+            ) : (
+              <span className="hidden text-right leading-tight xl:block">
+                <span className="tabular block text-sm font-extrabold text-graf-950">
+                  {formatarPreco(compra.precoCents)}
+                </span>
+                {compra.parcelas ? (
+                  <span className="tabular block text-[0.6875rem] text-graf-500">
+                    {compra.parcelas.parcelas}× de {formatarPreco(compra.parcelas.valorCents)}
+                  </span>
+                ) : null}
+              </span>
+            )}
+
             <a
-              href={`#${ancora.id}`}
-              data-ancora={ancora.id}
-              aria-current={ativa === ancora.id ? "true" : undefined}
-              onClick={() => abrirSecao(ancora.id)}
-              className="foco-jb flex min-h-12 items-center whitespace-nowrap border-b-2 border-transparent text-sm font-semibold text-graf-600 transition-colors hover:text-graf-950 aria-[current=true]:border-jb-500 aria-[current=true]:text-jb-700"
+              href={`#${alvoDaCompra}`}
+              tabIndex={mostrarCompra ? undefined : -1}
+              className={cn(
+                "foco-jb inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-extrabold transition-colors",
+                compra.indisponivel
+                  ? "border border-graf-300 text-graf-800 hover:bg-graf-50"
+                  : "bg-jb-500 text-white hover:bg-jb-600",
+              )}
             >
-              {ROTULOS_COMPACTOS[ancora.id] ?? ancora.rotulo}
+              {compra.indisponivel ? null : <ShoppingCart className="size-4" aria-hidden />}
+              {compra.indisponivel
+                ? "Ver alternativas"
+                : compra.soOrcamento
+                  ? "Pedir orçamento"
+                  : "Comprar"}
             </a>
-          </li>
-        ))}
-      </ul>
+          </div>
+        ) : null}
+      </div>
     </nav>
   );
 }
@@ -110,20 +213,8 @@ export function BarraCompraMobile({
   indisponivel: boolean;
   alvo?: string;
 }) {
-  const [visivel, setVisivel] = useState(false);
+  const visivel = useForaDeVista(alvo);
   const barraRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const caixa = document.querySelector<HTMLElement>(`main #${CSS.escape(alvo)}`);
-    if (!caixa) return;
-
-    const observador = new IntersectionObserver(
-      ([entrada]) => setVisivel(!entrada.isIntersecting),
-      { rootMargin: "-80px 0px 0px 0px", threshold: 0 },
-    );
-    observador.observe(caixa);
-    return () => observador.disconnect();
-  }, [alvo]);
 
   useEffect(() => {
     const raiz = document.documentElement;
@@ -147,20 +238,21 @@ export function BarraCompraMobile({
   return (
     <div
       ref={barraRef}
+      data-pdp-barra-compra
       className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 px-4 py-2.5 shadow-[0_-10px_30px_rgba(15,23,42,0.1)] backdrop-blur-xl lg:hidden"
       style={{ paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))" }}
     >
       <div className="mx-auto flex max-w-xl items-center gap-3">
         <div className="min-w-0 flex-1">
           {soOrcamento ? (
-            <p className="text-[0.9375rem] font-bold text-graf-950">Sob orçamento</p>
+            <p className="text-base font-bold text-graf-950">Sob orçamento</p>
           ) : (
             <>
               <p className="tabular text-lg font-extrabold leading-tight text-graf-950">
                 {formatarPreco(precoCents)}
               </p>
               {parcelas ? (
-                <p className="tabular truncate text-[0.75rem] text-graf-500">
+                <p className="tabular truncate text-xs text-graf-500">
                   {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)} sem juros
                 </p>
               ) : null}
@@ -171,7 +263,7 @@ export function BarraCompraMobile({
         <a
           href={`#${alvo}`}
           className={cn(
-            "foco-jb inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl px-5 text-[0.9375rem] font-bold shadow-sm transition-all duration-150",
+            "foco-jb inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl px-5 text-corpo font-bold shadow-sm transition-all duration-150",
             indisponivel
               ? "border border-graf-300 bg-white text-graf-800 hover:bg-graf-50"
               : "bg-jb-500 text-white hover:-translate-y-0.5 hover:bg-jb-600",

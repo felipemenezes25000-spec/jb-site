@@ -123,6 +123,44 @@
   --text-title--line-height: 1.22;
   --text-title--letter-spacing: -0.018em;
   --text-title--font-weight: 700;
+
+  /* O quinto degrau: cabeçalho de bloco dentro de uma página.
+
+     A escala acima foi desenhada para faixa de abertura — quatro degraus que
+     começam em 22px e vão até 68px. Numa ficha de produto o `h1` já é o degrau
+     `title`, e o `h2` de cada seção precisa vir *abaixo* dele. Sem este degrau
+     era isso que acontecia: a PDP inventava um tamanho por seção, e a mesma
+     página terminava com sete `h2` em cinco tamanhos diferentes.
+
+     18→22px é onde as fichas de produto que valem como referência se
+     estabilizam — 24px no Mercado Livre, 22px no Magazine Luiza, 20px na
+     Newegg, 18px na Dental Cremer, e um tamanho só para a página inteira em
+     todas elas. */
+  --text-bloco: clamp(1.125rem, 1.06rem + 0.29vw, 1.375rem);
+  --text-bloco--line-height: 1.3;
+  --text-bloco--letter-spacing: -0.014em;
+  --text-bloco--font-weight: 700;
+
+  /* ==========================================================================
+     Os dois degraus abaixo de `text-base` que o código já usava sem nome
+
+     Contados em `src/`: `text-apoio` aparecia **324 vezes** e
+     `text-corpo` **147**. São os dois tamanhos mais usados do projeto
+     inteiro — mais do que qualquer degrau nomeado — e nenhum dos dois tinha
+     nome. A escala nativa do Tailwind pula de 0,875rem (`text-sm`) para 1rem
+     (`text-base`), e é justamente entre eles que o texto de apoio da JB vive.
+
+     Existe `@utility texto-apoio`, mas ela **também** fixa `line-height: 1.55`
+     — trocar os 324 usos por ela mudaria a entrelinha em todo lugar que já
+     traz um `leading-*` próprio, que é a maioria. Por isso aqui entram como
+     tokens de TAMANHO puro: `text-apoio` e `text-corpo` produzem exatamente o
+     mesmo CSS que os valores avulsos produziam, e a troca vira renomeação sem
+     efeito colateral.
+
+     `texto-apoio` continua existindo para quem quer o par tamanho+entrelinha.
+     ========================================================================== */
+  --text-apoio: 0.8125rem;
+  --text-corpo: 0.9375rem;
 }
 
 /* ============================================================================
@@ -132,6 +170,32 @@
 @layer base {
   * {
     border-color: var(--color-graf-200);
+  }
+
+  /* ==========================================================================
+     Quanto do topo já está ocupado
+
+     O cabeçalho da loja é `sticky top-0` e mede 60px no celular; a partir de
+     `lg` ganha a segunda faixa, com o menu de departamentos, e vai a 108px.
+     Duas peças precisam desse número e nenhuma delas consegue medi-lo sozinha:
+     a barra de seções da ficha de produto, que gruda logo abaixo do cabeçalho,
+     e o `scroll-mt` de cada seção ancorada, que precisa somar as duas.
+
+     Sem isto a barra de seções ficava em `top: 72px` — atrás da segunda faixa
+     do cabeçalho, invisível no desktop inteiro. Com a ficha de produto
+     mostrando todas as seções abertas, ela é a navegação da página, e não um
+     enfeite.
+     ========================================================================== */
+  :root {
+    --jb-topo: 60px;
+    --jb-topo-secoes: 110px;
+  }
+
+  @media (width >= 64rem) {
+    :root {
+      --jb-topo: 108px;
+      --jb-topo-secoes: 160px;
+    }
   }
 
   html {
