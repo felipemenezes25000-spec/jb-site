@@ -31,7 +31,7 @@ export function FaixaVitrine({
   return (
     <section
       className={cn(
-        "border-b border-graf-200 py-12 lg:py-16",
+        "border-b border-graf-200 py-12 lg:py-14",
         fundo === "nevoa" ? "bg-graf-50/60" : "bg-white",
         className,
       )}

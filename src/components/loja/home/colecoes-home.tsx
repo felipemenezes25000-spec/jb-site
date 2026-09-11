@@ -50,7 +50,7 @@ export function SeminovosHome({
   if (produtos.length === 0) return null;
 
   return (
-    <section className="border-b border-graf-200 bg-graf-50/50 py-12 lg:py-16">
+    <section className="border-b border-graf-200 bg-graf-50/50 py-12 lg:py-14">
       <div className="container-jb max-w-[100rem]">
         <CabecalhoColecao
           sobretitulo="Seminovos JB"
@@ -81,7 +81,7 @@ export function ProcuradosHome({
   if (produtos.length === 0) return null;
 
   return (
-    <section className="border-b border-graf-200 bg-white py-12 lg:py-16">
+    <section className="border-b border-graf-200 bg-white py-12 lg:py-14">
       <div className="container-jb max-w-[100rem]">
         <CabecalhoColecao
           sobretitulo="Mais procurados"

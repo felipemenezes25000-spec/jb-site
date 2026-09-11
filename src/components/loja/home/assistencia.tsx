@@ -14,7 +14,7 @@ export function SecaoAssistencia({ configuracoes: s }: { configuracoes: Settings
   const whatsapp = s.whatsapp.trim();
 
   return (
-    <section className="border-b border-graf-200 bg-graf-50/50 py-12 lg:py-16">
+    <section className="border-b border-graf-200 bg-graf-50/50 py-14 lg:py-20">
       <div className="container-jb max-w-[100rem]">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-end">
           <div className="max-w-2xl">

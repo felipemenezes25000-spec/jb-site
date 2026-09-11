@@ -117,10 +117,22 @@ test.describe("Cabeçalho da página de produto", () => {
     expect(estado.maxWidth).toBe("none");
     expect(estado.largura).toBeGreaterThanOrEqual(420);
 
+    /* A marca fica só com a logo.
+
+       Este teste cobrava `content` contendo "MARKETPLACE": `header-product.css`
+       injetava "MARKETPLACE ODONTOLÓGICO" ao lado do logotipo em toda ficha
+       larga. Saiu por dois motivos. O primeiro é de fato: a JB é vendedor
+       único, com assistência própria — não há seller, comissão nem split em
+       lugar nenhum do código, e o texto prometia o contrário. O segundo é
+       técnico: escrito em `content:` de CSS, ele não existia para leitor de
+       tela nem para busca, e `grep` no código não encontrava a palavra que
+       estava na tela.
+
+       A asserção agora é a inversa: a assinatura não volta. */
     const assinatura = await page.locator(`${HEADER} .jb-logo`).evaluate((el) =>
       getComputedStyle(el, "::after").content,
     );
-    expect(assinatura).toContain("MARKETPLACE");
+    expect(assinatura).not.toContain("MARKETPLACE");
 
     await expect(page.locator(`${HEADER} nav[aria-label="Principal"]`)).toBeVisible();
     await semRolagemHorizontal(page);

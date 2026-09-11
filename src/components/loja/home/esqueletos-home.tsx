@@ -20,7 +20,7 @@ function CabecalhoFalso() {
 
 export function EsqueletoCategoriasHome() {
   return (
-    <section className="border-b border-graf-200 bg-white py-12 lg:py-16">
+    <section className="border-b border-graf-200 bg-white py-12 lg:py-14">
       <div className="container-jb max-w-[100rem]">
         <Aviso texto="Carregando as categorias do catálogo." />
         <div aria-hidden>
@@ -42,7 +42,7 @@ export function EsqueletoCategoriasHome() {
 
 export function EsqueletoMarcasHome() {
   return (
-    <section className="border-b border-graf-200 bg-white py-12 lg:py-16">
+    <section className="border-b border-graf-200 bg-white py-12 lg:py-14">
       <div className="container-jb max-w-[100rem]">
         <Aviso texto="Carregando as marcas do catálogo." />
         <div aria-hidden>

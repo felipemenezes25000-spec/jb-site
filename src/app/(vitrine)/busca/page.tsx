@@ -75,7 +75,7 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.produtos.length}
         />
-        <div className="mt-5 max-w-[112rem]">
+        <div className="mt-5 max-w-[100rem]">
           <GradeMarketplace produtos={resultado.produtos} parcelamento={parcelamento} />
         </div>
         <p className="mt-4">
@@ -211,7 +211,7 @@ export default async function BuscaPage({
 
   if (!validada.ok) {
     return (
-      <Secao espaco="sm">
+      <Secao espaco="sm" classNameInterno="max-w-[100rem]">
         <Trilha itens={TRILHA} className="mb-5" />
         <TituloSecao
           como="h1"
@@ -248,7 +248,7 @@ export default async function BuscaPage({
 
   return (
     <>
-      <Secao espaco="sm">
+      <Secao espaco="sm" classNameInterno="max-w-[100rem]">
         <Trilha itens={TRILHA} className="mb-5" />
         <TituloSecao
           como="h1"

@@ -80,7 +80,12 @@ export async function SecaoCategorias() {
   if (categorias.length === 0) return null;
 
   return (
-    <section className="border-b border-graf-200 bg-white py-12 lg:py-16">
+    /* Ritmo da home: lista é densa, narrativa respira.
+       As sete seções tinham exatamente 64px em cima e embaixo — um metrônomo,
+       em que nada sinaliza qual pesa mais. Grade de produto ou de categoria já
+       carrega a informação no próprio desenho e fica em `lg:py-14`; assistência e
+       fechamento, que são argumento e não vitrine, vão a `lg:py-20`. */
+    <section className="border-b border-graf-200 bg-white py-12 lg:py-14">
       <div className="container-jb max-w-[100rem]">
         <div className="flex flex-wrap items-end justify-between gap-5 border-b border-graf-200 pb-5">
           <div className="max-w-2xl">

@@ -30,23 +30,8 @@ body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] > div:fir
 body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo {
   position: relative;
   min-width: 0;
-  gap: 0.85rem;
 }
 
-/* Em PDP larga a marca deixa de ficar como uma ilha solta no canto. */
-body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo::after {
-  display: none;
-  min-width: 7.5rem;
-  padding-left: 0.85rem;
-  border-left: 1px solid rgb(196 14 21 / 0.15);
-  content: "MARKETPLACE\A ODONTOLÓGICO";
-  white-space: pre;
-  color: var(--color-jb-700);
-  font-size: 0.6rem;
-  font-weight: 850;
-  line-height: 1.2;
-  letter-spacing: 0.13em;
-}
 
 /* ------------------------------------------------------------------- busca */
 body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
@@ -223,13 +208,7 @@ body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-mega-
 
 /* ================================================================ >=1280 */
 @media (width >= 80rem) {
-  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo::after {
-    display: block;
-  }
 
-  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo {
-    min-width: clamp(10.8rem, 12.5vw, 13.4rem);
-  }
 
   body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
     min-width: 22rem !important;
@@ -238,16 +217,7 @@ body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-mega-
 
 /* 1280–1439: mantém tudo, mas comprime o CTA em ícone antes de esmagar busca. */
 @media (width >= 80rem) and (width < 90rem) {
-  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo::after {
-    min-width: 6.2rem;
-    padding-left: 0.6rem;
-    font-size: 0.54rem;
-    letter-spacing: 0.1em;
-  }
 
-  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo {
-    min-width: 10.2rem;
-  }
 
   body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-cta-topo {
     width: 2.9rem !important;
@@ -292,9 +262,6 @@ body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-mega-
     margin-right: auto;
   }
 
-  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo::after {
-    display: none;
-  }
 
   body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"],
   body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label^="Carrinho"],
