@@ -1,6 +1,23 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const PRETO_JB = "rgb(26, 28, 30)";
+
+/**
+ * A casca pública VISÍVEL.
+ *
+ * Durante uma navegação o Next mantém a árvore da rota anterior no documento
+ * para o voltar instantâneo, e por um instante existem DUAS cascas com
+ * `data-jb-publico`. O modo estrito do Playwright recusa o localizador ambíguo
+ * — e só na CI, que é mais lenta e segura a árvore antiga por mais tempo:
+ * aqui passava 7/7 e lá reprovava três testes com
+ * `resolved to 2 elements`.
+ *
+ * Filtrar por visibilidade escolhe a casca que a pessoa está vendo, que é a
+ * que se quer medir.
+ */
+function cascaPublica(page: Page) {
+  return page.locator('[data-jb-publico="true"]').filter({ visible: true });
+}
 
 test.describe("Legibilidade e alinhamento da loja pública", () => {
   test("textos secundários usam preto nas principais jornadas", async ({ page }) => {
@@ -16,7 +33,7 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
     ]) {
       await page.goto(caminho);
 
-      const casca = page.locator('[data-jb-publico="true"]');
+      const casca = cascaPublica(page).first();
       await expect(casca, `casca pública ausente em ${caminho}`).toHaveCount(1);
 
       const amostrar = () =>
@@ -79,7 +96,7 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
       ]) {
         await page.goto(caminho);
 
-        const cinzas = await page.locator('[data-jb-publico="true"]').evaluate(
+        const cinzas = await cascaPublica(page).first().evaluate(
           (raiz, cores) =>
             Array.from(raiz.querySelectorAll<HTMLElement>("*"))
               .filter((elemento) => {
@@ -133,7 +150,15 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
 
   test("ordenação continua legível na largura mínima suportada", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 844 });
-    await page.goto("/categoria/biosseguranca");
+
+    /* `/loja`, e não uma categoria: a CI semeia `db:seed` + `db:demo`, sem
+       `db:vitrine`, e uma categoria específica pode não ter produto nenhum lá.
+       Sem resultado os controles da coleção não renderizam, e o teste reprovava
+       esperando 20s por um botão que a página não tinha motivo para desenhar.
+       O que se mede aqui é a legibilidade do par filtro/ordenação a 320px —
+       qualquer listagem com resultado serve, e o catálogo inteiro é a única
+       que tem resultado em qualquer banco semeado. */
+    await page.goto("/loja");
 
     const filtros = page.getByRole("button", { name: "Abrir filtros" });
     const ordem = page.getByRole("combobox", { name: "Ordenar resultados" });
@@ -178,7 +203,7 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
     for (const caminho of ["/", "/loja", "/seminovos", "/busca?q=autoclave"]) {
       await page.goto(caminho);
 
-      const pequenos = await page.locator('[data-jb-publico="true"]').evaluate((raiz) =>
+      const pequenos = await cascaPublica(page).first().evaluate((raiz) =>
         Array.from(raiz.querySelectorAll<HTMLElement>("*"))
           .filter((elemento) => {
             const caixa = elemento.getBoundingClientRect();
@@ -245,7 +270,7 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
         )
         .toBeGreaterThanOrEqual(44);
 
-      const pequenos = await page.locator('[data-jb-publico="true"]').evaluate((raiz) => {
+      const pequenos = await cascaPublica(page).first().evaluate((raiz) => {
         const caminhoElemento = (elemento: Element) =>
           [elemento.parentElement, elemento]
             .filter(Boolean)
