@@ -74,16 +74,28 @@
   background: rgba(247, 248, 250, 0.96);
 }
 
+/* O piso de 12px vale aqui também.
+
+   `th` estava em 0,7rem — 11,2px — e `td` em 0,79rem, 12,64px. O `th` reprovava
+   o portão de responsividade em toda rota de lista do painel: 155 ocorrências,
+   todas desta linha, multiplicadas por rota e por largura.
+
+   E há um detalhe que esta regra escondia: a marcação já pede `text-apoio` no
+   cabeçalho da tabela, mas um seletor de CSS Module com `:global(th)` vence a
+   classe utilitária. Quem lesse o JSX veria 13px e a tela mostrava 11,2.
+
+   A cor também sai do hex cravado à mão para o token: #66707c dava 4,4:1 sobre
+   o fundo do cabeçalho, abaixo dos 4,5 exigidos. */
 .shell :global(th) {
-  color: #66707c;
-  font-size: 0.7rem;
+  color: var(--color-graf-500);
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.025em;
 }
 
 .shell :global(td) {
-  color: #303743;
-  font-size: 0.79rem;
+  color: var(--color-graf-800);
+  font-size: 0.8125rem;
 }
 
 .shell :global(th),

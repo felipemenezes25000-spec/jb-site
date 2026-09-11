@@ -56,7 +56,7 @@ export function Destaques({
               Icone && "pl-[4.35rem]",
             )}
           >
-            <dt className="text-[0.69rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
+            <dt className="text-xs font-extrabold uppercase tracking-[0.08em] text-graf-500">
               {Icone ? (
                 <span
                   aria-hidden

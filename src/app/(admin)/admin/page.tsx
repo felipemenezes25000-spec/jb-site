@@ -170,7 +170,7 @@ function Secao({
         {relatorioHref ? (
           <Link
             href={relatorioHref}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[0.75rem] font-semibold text-graf-600 transition-colors hover:bg-white hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[0.75rem] font-semibold text-graf-600 transition-colors hover:bg-white hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
             Ver relatório completo
             <ArrowRight className="size-3.5" aria-hidden />
@@ -206,7 +206,7 @@ function Linha({
       >
         <span className="min-w-[11rem] flex-1">
           <span className="block truncate text-[0.78rem] font-semibold text-graf-900">{titulo}</span>
-          <span className="block truncate text-[0.68rem] text-graf-500">{detalhe}</span>
+          <span className="block truncate text-xs text-graf-500">{detalhe}</span>
         </span>
         {valor ? (
           <span className="tabular shrink-0 text-[0.75rem] font-semibold text-graf-800">{valor}</span>
@@ -223,7 +223,7 @@ function LinhaStatusPedido({ status, quantidade }: { status: OrderStatus; quanti
     <li>
       <Link
         href={`/admin/pedidos?status=${status}`}
-        className="flex min-h-9 items-center gap-2.5 px-4 py-2 text-[0.75rem] transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
+        className="flex min-h-11 items-center gap-2.5 px-4 py-2 text-[0.75rem] transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
       >
         <span className={cn("size-2 shrink-0 rounded-full", pontoDoPedido(status))} aria-hidden />
         <span className="min-w-0 flex-1 truncate font-medium text-graf-700">{ROTULO_STATUS[status]}</span>
@@ -280,7 +280,7 @@ export default async function PaginaPainel({
     <div className="space-y-7">
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <header>
-          <p className="text-[0.72rem] font-medium text-graf-500">
+          <p className="text-xs font-medium text-graf-500">
             {formatarDataExtensa(new Date())}
           </p>
           <h1 className="mt-1.5 text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.035em] text-graf-950 sm:text-[2.1rem]">
@@ -303,7 +303,7 @@ export default async function PaginaPainel({
               <span className="block text-[0.8rem] font-bold text-graf-950">
                 Mais vendas, mais equipamentos em movimento
               </span>
-              <span className="mt-0.5 block text-[0.68rem] text-graf-500">
+              <span className="mt-0.5 block text-xs text-graf-500">
                 Acompanhe seus resultados em tempo real.
               </span>
             </span>
@@ -583,16 +583,16 @@ async function BlocoComercial({
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-[0.74rem] font-semibold text-graf-900">
+                          <p className="truncate text-xs font-semibold text-graf-900">
                             {orcamento.number} · {orcamento.customer?.name ?? (orcamento.contactName || "Contato não informado")}
                           </p>
-                          <p className="mt-1 text-[0.66rem] text-graf-500">
+                          <p className="mt-1 text-xs text-graf-500">
                             {orcamento.validUntil
                               ? `Válido até ${formatarData(orcamento.validUntil)} (${distanciaEmDias(orcamento.validUntil)})`
                               : "Sem prazo de validade"}
                           </p>
                         </div>
-                        <span className="tabular shrink-0 text-[0.72rem] font-semibold text-graf-800">
+                        <span className="tabular shrink-0 text-xs font-semibold text-graf-800">
                           {formatarPreco(orcamento.totalCents)}
                         </span>
                       </div>
@@ -603,7 +603,7 @@ async function BlocoComercial({
             )}
             <Link
               href="/admin/orcamentos"
-              className="mx-4 mb-3 mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg text-[0.72rem] font-semibold text-graf-700 hover:text-jb-700"
+              className="mx-4 mb-3 mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-xs font-semibold text-graf-700 hover:text-jb-700"
             >
               Ver todos os orçamentos
               <ArrowRight className="size-3.5" aria-hidden />
@@ -754,7 +754,7 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
 
               {urgentes.length > 0 ? (
                 <div className="border-t border-graf-200 bg-graf-50/60 px-4 py-3">
-                  <p className="mb-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-graf-500">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-graf-500">
                     Precisa de resposta
                   </p>
                   <ul className="space-y-1">
@@ -762,13 +762,13 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
                       <li key={chamado.id}>
                         <Link
                           href={`/admin/assistencia/${chamado.id}`}
-                          className="flex min-h-9 flex-wrap items-center gap-x-2.5 gap-y-0.5 rounded text-[0.72rem] text-graf-700 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                          className="flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-0.5 rounded text-xs text-graf-700 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                         >
                           <span className="label-mono text-graf-500">{chamado.number}</span>
                           <span className="min-w-0 flex-1 truncate font-medium">
                             {chamado.customer?.name ?? chamado.contactName}
                           </span>
-                          <span className="text-[0.66rem] text-graf-500">
+                          <span className="text-xs text-graf-500">
                             aberto {distanciaEmDias(chamado.createdAt)}
                           </span>
                         </Link>

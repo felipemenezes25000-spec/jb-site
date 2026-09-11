@@ -93,7 +93,7 @@ export function Casca({
             ) : (
               <>
                 <Logo altura={27} />
-                <span className="min-w-0 border-l border-graf-200 pl-2.5 text-[0.62rem] font-medium leading-[1.25] text-graf-500">
+                <span className="min-w-0 border-l border-graf-200 pl-2.5 text-xs font-medium leading-[1.25] text-graf-500">
                   Soluções que mantêm
                   <br />
                   seu mundo em movimento
@@ -147,7 +147,7 @@ export function Casca({
           <div className="flex h-14 shrink-0 items-center justify-between border-b border-graf-200/70 pl-4 pr-2">
             <div className="flex items-center gap-2.5">
               <Logo altura={27} />
-              <span className="border-l border-graf-200 pl-2.5 text-[0.62rem] font-medium leading-[1.25] text-graf-500">
+              <span className="border-l border-graf-200 pl-2.5 text-xs font-medium leading-[1.25] text-graf-500">
                 Soluções que mantêm
                 <br />
                 seu mundo em movimento

@@ -94,7 +94,7 @@ export function MenuAdmin({
               <div className="mx-4 mb-2.5 h-px bg-graf-200/80" role="presentation" />
             ) : null
           ) : (
-            <p className="sticky top-0 z-10 bg-white/95 px-4 pb-1.5 pt-1 text-[0.625rem] font-bold uppercase tracking-[0.14em] text-graf-500 backdrop-blur-sm">
+            <p className="sticky top-0 z-10 bg-white/95 px-4 pb-1.5 pt-1 text-xs font-bold uppercase tracking-[0.14em] text-graf-500 backdrop-blur-sm">
               {grupo.rotulo}
             </p>
           )}
@@ -112,7 +112,7 @@ export function MenuAdmin({
                     aria-current={ativo ? "page" : undefined}
                     title={colapsado ? item.rotulo : undefined}
                     className={cn(
-                      "group relative flex h-9 items-center gap-2.5 rounded-lg text-apoio font-medium transition-[background-color,color,box-shadow] duration-150",
+                      "group relative flex h-11 items-center gap-2.5 rounded-lg text-apoio font-medium transition-[background-color,color,box-shadow] duration-150",
                       "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
                       colapsado ? "justify-center px-0" : "pl-2.5 pr-2",
                       ativo
@@ -144,7 +144,7 @@ export function MenuAdmin({
                           <>
                             <span
                               aria-hidden
-                              className="ml-auto shrink-0 rounded-full bg-graf-100 px-1.5 py-0.5 text-[0.6rem] font-semibold text-graf-600"
+                              className="ml-auto shrink-0 rounded-full bg-graf-100 px-1.5 py-0.5 text-xs font-semibold text-graf-600"
                             >
                               leitura
                             </span>

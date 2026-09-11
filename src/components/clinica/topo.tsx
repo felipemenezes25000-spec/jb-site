@@ -43,7 +43,7 @@ export function TopoClinica({
             <Logo altura={30} />
             <span className="hidden min-w-0 sm:block">
               <span className="block truncate text-sm font-extrabold text-graf-950">Área da Clínica</span>
-              <span className="mt-0.5 block truncate text-[0.68rem] font-medium text-graf-500">Tecnologia que cuida</span>
+              <span className="mt-0.5 block truncate text-xs font-medium text-graf-500">Tecnologia que cuida</span>
             </span>
           </Link>
 
@@ -63,11 +63,11 @@ export function TopoClinica({
               type="search"
               name="q"
               placeholder="Buscar equipamentos..."
-              className="h-10 w-full rounded-xl border border-transparent bg-graf-50 pl-10 pr-14 text-sm text-graf-900 outline-none transition-all placeholder:text-graf-400 hover:border-graf-200 hover:bg-white focus:border-jb-300 focus:bg-white focus:ring-4 focus:ring-jb-500/10"
+              className="h-11 w-full rounded-xl border border-transparent bg-graf-50 pl-10 pr-14 text-sm text-graf-900 outline-none transition-all placeholder:text-graf-400 hover:border-graf-200 hover:bg-white focus:border-jb-300 focus:bg-white focus:ring-4 focus:ring-jb-500/10"
             />
             <kbd
               aria-hidden
-              className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md border border-graf-200 bg-white px-1.5 py-0.5 text-[0.65rem] font-bold text-graf-500 shadow-sm"
+              className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md border border-graf-200 bg-white px-1.5 py-0.5 text-xs font-bold text-graf-500 shadow-sm"
             >
               ⌘ K
             </kbd>
@@ -81,13 +81,13 @@ export function TopoClinica({
                   ? `Avisos — ${naoLidas} ${naoLidas === 1 ? "não lido" : "não lidos"}`
                   : "Avisos"
               }
-              className="relative flex size-10 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-graf-100"
+              className="relative flex size-11 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-graf-100"
             >
               <Bell className="size-[18px]" aria-hidden />
               {naoLidas > 0 ? (
                 <span
                   aria-hidden
-                  className="tabular absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-jb-500 px-1 text-[0.62rem] font-bold leading-none text-white ring-2 ring-white"
+                  className="tabular absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-jb-500 px-1 text-xs font-bold leading-none text-white ring-2 ring-white"
                 >
                   {naoLidas > 99 ? "99+" : naoLidas}
                 </span>
@@ -98,7 +98,7 @@ export function TopoClinica({
 
             <Link
               href="/loja"
-              className="hidden h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-graf-700 transition-all hover:bg-graf-50 hover:text-graf-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 md:inline-flex"
+              className="hidden h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-graf-700 transition-all hover:bg-graf-50 hover:text-graf-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500 md:inline-flex"
             >
               <Store className="size-[17px] shrink-0" aria-hidden />
               Ir para a loja
@@ -107,7 +107,7 @@ export function TopoClinica({
             <Link
               href="/loja"
               aria-label="Ir para a loja"
-              className="flex size-10 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-graf-100 md:hidden"
+              className="flex size-11 items-center justify-center rounded-xl text-graf-700 transition-colors hover:bg-graf-100 md:hidden"
             >
               <Store className="size-5" aria-hidden />
             </Link>
@@ -129,7 +129,7 @@ export function TopoClinica({
               </span>
               <span className="hidden max-w-44 text-left leading-tight lg:block">
                 <span className="block truncate text-sm font-bold text-graf-950">{nome || "Minha conta"}</span>
-                <span className="block truncate text-[0.6875rem] text-graf-500">{email}</span>
+                <span className="block truncate text-xs text-graf-500">{email}</span>
               </span>
               <ChevronDown className="hidden size-4 text-graf-400 xl:block" aria-hidden />
               <span className="sr-only">Meus dados</span>
@@ -149,7 +149,7 @@ export function BotaoSairTopo() {
       type="submit"
       aria-label="Sair da Área da Clínica"
       title="Sair da Área da Clínica"
-      className="flex size-10 items-center justify-center rounded-xl text-graf-600 transition-colors hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+      className="flex size-11 items-center justify-center rounded-xl text-graf-600 transition-colors hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
     >
       <LogOut className="size-5" aria-hidden />
     </button>

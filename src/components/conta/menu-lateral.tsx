@@ -102,7 +102,7 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
         onClick={aoNavegar}
         aria-current={item.ativo ? "page" : undefined}
         className={cn(
-          "group relative flex min-h-10 items-center gap-2.5 rounded-xl px-3 py-2 text-[0.84rem] font-semibold transition-all duration-150",
+          "group relative flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-[0.84rem] font-semibold transition-all duration-150",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
           item.ativo
             ? "bg-gradient-to-r from-jb-50 via-[#fff7f7] to-white text-jb-700 shadow-[inset_3px_0_0_#e51b23,0_1px_2px_rgba(18,24,35,0.025)]"
@@ -129,7 +129,7 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
 
 function TituloGrupo({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 pb-1.5 pt-4 text-[0.66rem] font-extrabold uppercase tracking-[0.15em] text-graf-500">
+    <p className="px-3 pb-1.5 pt-4 text-xs font-extrabold uppercase tracking-[0.15em] text-graf-500">
       {children}
     </p>
   );
@@ -262,7 +262,7 @@ export function MenuLateral({
             <Logo altura={32} />
             <span className="min-w-0 border-l border-graf-200 pl-3">
               <span className="block truncate text-[0.86rem] font-extrabold tracking-[-0.015em] text-graf-950">Área da Clínica</span>
-              <span className="mt-0.5 block truncate text-[0.66rem] font-medium text-graf-500">Tecnologia que cuida</span>
+              <span className="mt-0.5 block truncate text-xs font-medium text-graf-500">Tecnologia que cuida</span>
             </span>
           </Link>
 
@@ -306,7 +306,7 @@ export function MenuLateral({
         >
           <IconeAtual className="size-5 shrink-0 text-jb-600" aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="block text-[0.72rem] font-bold uppercase tracking-[0.1em] text-graf-500">Área da Clínica</span>
+            <span className="block text-xs font-bold uppercase tracking-[0.1em] text-graf-500">Área da Clínica</span>
             <span className="block truncate text-sm font-bold text-graf-950">{atual?.rotulo ?? "Visão geral"}</span>
           </span>
           {pendencias > 0 ? (

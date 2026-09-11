@@ -66,7 +66,7 @@ export function ParDados({
 
   return (
     <div className={cn("min-w-0 rounded-xl bg-graf-50/55 px-4 py-3.5", className)}>
-      <dt className="text-[0.7rem] font-bold uppercase tracking-[0.075em] text-graf-500">
+      <dt className="text-xs font-bold uppercase tracking-[0.075em] text-graf-500">
         {rotulo}
       </dt>
       <dd

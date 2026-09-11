@@ -30,7 +30,7 @@ function BotaoSair() {
       aria-label={pending ? "Saindo do painel" : "Sair do painel"}
       title={pending ? "Saindo…" : "Sair"}
       className={cn(
-        "inline-flex size-10 items-center justify-center rounded-lg text-graf-500 transition-colors",
+        "inline-flex size-11 items-center justify-center rounded-lg text-graf-500 transition-colors",
         "hover:bg-jb-50 hover:text-jb-700",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
         "disabled:cursor-not-allowed disabled:opacity-60",
@@ -96,7 +96,7 @@ export function CabecalhoAdmin({
         <BotaoIcone
           rotulo="Abrir menu"
           onClick={aoAbrirGaveta}
-          className="size-10 rounded-lg lg:hidden"
+          className="size-11 rounded-lg lg:hidden"
           variante="texto"
         >
           <Menu className="size-[18px]" aria-hidden />
@@ -148,7 +148,7 @@ export function CabecalhoAdmin({
             onChange={(evento) => setTermo(evento.target.value)}
             placeholder="Buscar pedido, cliente, produto, OS…"
             className={cn(
-              "h-9 w-full rounded-lg border border-graf-200 bg-[#f7f8fa] pl-9 pr-14 text-sm text-graf-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
+              "h-11 w-full rounded-lg border border-graf-200 bg-[#f7f8fa] pl-9 pr-14 text-sm text-graf-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
               "placeholder:text-graf-500",
               "transition-[background-color,border-color,box-shadow] hover:border-graf-300 hover:bg-white",
               "focus:border-jb-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-jb-500/8",
@@ -156,7 +156,7 @@ export function CabecalhoAdmin({
           />
           <kbd
             aria-hidden
-            className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-graf-200 bg-white px-1.5 py-0.5 text-[0.625rem] font-semibold text-graf-500 shadow-sm md:block"
+            className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-graf-200 bg-white px-1.5 py-0.5 text-xs font-semibold text-graf-500 shadow-sm md:block"
           >
             ⌘ K
           </kbd>
@@ -166,7 +166,7 @@ export function CabecalhoAdmin({
           <Link
             href="/admin/mensagens"
             aria-label="Notificações e mensagens"
-            className="relative hidden size-10 items-center justify-center rounded-lg text-graf-600 transition-colors hover:bg-graf-100 hover:text-graf-950 sm:flex"
+            className="relative hidden size-11 items-center justify-center rounded-lg text-graf-600 transition-colors hover:bg-graf-100 hover:text-graf-950 sm:flex"
           >
             <Bell className="size-[18px]" aria-hidden />
           </Link>
@@ -174,7 +174,7 @@ export function CabecalhoAdmin({
           <Link
             href="/admin/suporte"
             aria-label="Ajuda"
-            className="hidden size-10 items-center justify-center rounded-lg text-graf-600 transition-colors hover:bg-graf-100 hover:text-graf-950 md:flex"
+            className="hidden size-11 items-center justify-center rounded-lg text-graf-600 transition-colors hover:bg-graf-100 hover:text-graf-950 md:flex"
           >
             <CircleHelp className="size-[18px]" aria-hidden />
           </Link>
@@ -192,7 +192,7 @@ export function CabecalhoAdmin({
           >
             <span
               aria-hidden
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-jb-50 to-[#ffe4e6] text-[0.72rem] font-bold text-jb-700 ring-1 ring-inset ring-jb-500/10"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-jb-50 to-[#ffe4e6] text-xs font-bold text-jb-700 ring-1 ring-inset ring-jb-500/10"
             >
               {iniciais || "JB"}
             </span>
@@ -200,7 +200,7 @@ export function CabecalhoAdmin({
               <span className="block max-w-[10rem] truncate text-apoio font-semibold text-graf-900">
                 {nome}
               </span>
-              <span className="block max-w-[10rem] truncate text-[0.65rem] text-graf-500" title={email}>
+              <span className="block max-w-[10rem] truncate text-xs text-graf-500" title={email}>
                 {papel}
               </span>
             </span>
@@ -213,7 +213,7 @@ export function CabecalhoAdmin({
             aria-label="Minha conta"
             title="Minha conta"
             className={cn(
-              "inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-graf-700 transition-colors sm:hidden",
+              "inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-graf-700 transition-colors sm:hidden",
               "hover:bg-graf-100 hover:text-jb-700",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
             )}

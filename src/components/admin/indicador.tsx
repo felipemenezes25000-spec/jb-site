@@ -122,12 +122,12 @@ export function Indicador({
       <div className="relative mt-2.5">
         {variacao ? <SeloVariacao {...variacao} /> : null}
         {detalhe ? (
-          <p className="mt-1.5 text-[0.72rem] leading-relaxed text-graf-500">{detalhe}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-graf-500">{detalhe}</p>
         ) : null}
       </div>
 
       {href ? (
-        <p className="relative mt-auto flex items-center gap-1.5 pt-3 text-[0.72rem] font-semibold text-graf-700 transition-colors group-hover:text-jb-700">
+        <p className="relative mt-auto flex items-center gap-1.5 pt-3 text-xs font-semibold text-graf-700 transition-colors group-hover:text-jb-700">
           {hrefRotulo ?? "Ver lista"}
           <ArrowRight
             className="size-3.5 transition-transform duration-150 group-hover:translate-x-0.5"
@@ -167,7 +167,7 @@ function SeloVariacao({ percentual, rotulo, quedaEhBoa }: Variacao) {
   const sinal = subiu ? "+" : "−";
 
   return (
-    <p className="flex flex-wrap items-center gap-1.5 text-[0.7rem]">
+    <p className="flex flex-wrap items-center gap-1.5 text-xs">
       <span
         className={cn(
           "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold",

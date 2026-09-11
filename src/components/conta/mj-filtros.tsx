@@ -122,7 +122,7 @@ export function Filtros({
         <div className={cn(busca && "mt-4 border-t border-graf-100 pt-4", "space-y-3")}>
           {grupos.map((grupo) => (
             <nav key={grupo.nome} aria-label={grupo.rotulo}>
-              <p className="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
                 {grupo.rotulo}
               </p>
               <ul className="flex flex-wrap gap-2">
@@ -134,7 +134,7 @@ export function Filtros({
                         href={montarHref(base, parametros, grupo.nome, opcao.valor)}
                         aria-current={ativo ? "true" : undefined}
                         className={cn(
-                          "inline-flex min-h-10 items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold transition-all",
+                          "inline-flex min-h-11 items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold transition-all",
                           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
                           ativo
                             ? "border-jb-200 bg-jb-50 text-jb-800 shadow-[inset_0_0_0_1px_rgba(229,27,35,0.04)]"
@@ -145,7 +145,7 @@ export function Filtros({
                         {typeof opcao.quantidade === "number" ? (
                           <span
                             className={cn(
-                              "tabular rounded-full px-1.5 py-0.5 text-[0.7rem] font-bold",
+                              "tabular rounded-full px-1.5 py-0.5 text-xs font-bold",
                               ativo ? "bg-jb-500 text-white" : "bg-graf-100 text-graf-600",
                             )}
                           >

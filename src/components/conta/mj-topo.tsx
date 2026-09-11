@@ -22,7 +22,7 @@ export function Topo({
 
   const cabecalho = (
     <div className="min-w-0">
-      <p className="mb-1.5 text-[0.67rem] font-extrabold uppercase tracking-[0.15em] text-graf-500">
+      <p className="mb-1.5 text-xs font-extrabold uppercase tracking-[0.15em] text-graf-500">
         {visaoGeral ? "Bem-vindo(a) de volta" : "Área da Clínica"}
       </p>
       <div className="flex flex-wrap items-center gap-3">
@@ -42,7 +42,7 @@ export function Topo({
       {voltar ? (
         <Link
           href={voltar.href}
-          className="-ml-2 mb-2 inline-flex min-h-10 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-graf-600 transition-all hover:bg-white hover:text-jb-700 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+          className="-ml-2 mb-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-graf-600 transition-all hover:bg-white hover:text-jb-700 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
         >
           <ChevronLeft className="size-4" aria-hidden />
           {voltar.rotulo}
@@ -65,7 +65,7 @@ export function Topo({
               <p className="text-[1.02rem] font-extrabold leading-tight tracking-[-0.02em] text-graf-950">
                 Equipamentos em boas mãos para uma clínica que não para.
               </p>
-              <p className="mt-3 inline-flex items-center gap-2 text-[0.72rem] font-bold text-graf-600">
+              <p className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-graf-600">
                 <span className="h-0.5 w-5 rounded-full bg-jb-500" aria-hidden />
                 JB · Parceira da sua clínica
               </p>

@@ -168,7 +168,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                 >
                   <label
                     htmlFor={`filtro-${campo.nome}`}
-                    className="mb-1.5 block text-[0.72rem] font-bold uppercase tracking-[0.055em] text-graf-600"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.055em] text-graf-600"
                   >
                     {campo.rotulo}
                   </label>
@@ -202,7 +202,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                 <div key={campo.nome} className="min-w-0 md:w-52">
                   <label
                     htmlFor={`filtro-${campo.nome}`}
-                    className="mb-1.5 block text-[0.72rem] font-bold uppercase tracking-[0.055em] text-graf-600"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.055em] text-graf-600"
                   >
                     {campo.rotulo}
                   </label>
@@ -232,7 +232,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
                 <div key={campo.nome} className="min-w-0 md:w-44">
                   <label
                     htmlFor={`filtro-${campo.nome}`}
-                    className="mb-1.5 block text-[0.72rem] font-bold uppercase tracking-[0.055em] text-graf-600"
+                    className="mb-1.5 block text-xs font-bold uppercase tracking-[0.055em] text-graf-600"
                   >
                     {campo.rotulo}
                   </label>
@@ -247,7 +247,7 @@ function Barra({ campos, className }: { campos: CampoFiltro[]; className?: strin
 
             return (
               <fieldset key={campo.nome} className="min-w-0">
-                <legend className="mb-1.5 text-[0.72rem] font-bold uppercase tracking-[0.055em] text-graf-600">
+                <legend className="mb-1.5 text-xs font-bold uppercase tracking-[0.055em] text-graf-600">
                   {campo.rotulo}
                 </legend>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
