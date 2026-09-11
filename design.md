@@ -4,7 +4,7 @@ Referência da linguagem visual da plataforma. O que está aqui foi lido do
 código, não de memória: a fonte da verdade é `src/app/globals.css`, e cada
 número abaixo sai de lá ou de medição no navegador.
 
-Estado: 11/09/2026, commit `8858eee` na branch `plataforma`.
+Estado: 11/09/2026, commit `d5ff4ad` na branch `plataforma`.
 
 ---
 
@@ -17,11 +17,12 @@ diferencia a plataforma não é sortimento, é o laço entre a compra e o
 pós-venda. A ficha de produto termina no prontuário da Área da Clínica, e é
 esse laço que o desenho precisa deixar visível.
 
-> Há um resquício do enquadramento errado no código:
-> `src/app/header-product.css:37` injeta `content: "MARKETPLACE\A ODONTOLÓGICO"`
-> ao lado da logo, em toda página de produto larga. Está errado de fato e é
-> invisível para leitor de tela e para busca, porque vive num `::after`.
-> Pendente de remoção.
+> **Resolvido em 11/09/2026.** `header-product.css` injetava
+> `content: "MARKETPLACE\A ODONTOLÓGICO"` ao lado da logo em toda página de
+> produto larga — errado de fato, e invisível para leitor de tela e para busca
+> porque vivia num `::after`. Saiu o bloco, três regras de media query que o
+> reativavam e a reserva de largura que existia só para caber o texto. O teste
+> `13-cabecalho-pdp` **cobrava** a assinatura; a asserção foi invertida.
 
 ---
 
@@ -111,9 +112,14 @@ Regra prática: **`-500` é grafismo, `-700` é texto.** Branco sobre `ok-500` d
 
 | Token | Fonte | Uso |
 |---|---|---|
-| `--font-sans` | Manrope | tudo |
-| `--font-display` | Oswald | reservada; hoje sem uso na loja |
+| `--font-sans` | Manrope | corpo, rótulo, número — tudo que não é título |
+| `--font-display` | **Bricolage Grotesque** | `h1`, `h2` e `h3`, por `@layer base` |
 | `--font-mono` | JetBrains Mono | SKU, código de pedido, nº de série (`label-mono`) |
+
+O título ganhou desenho próprio em 11/09/2026. Até então título e corpo eram a
+mesma Manrope, e a hierarquia se apoiava só em tamanho e peso. **`h4` para baixo
+continua em Manrope**: são rótulos de bloco dentro de cartão, e ali a fonte de
+display vira ruído. Texto corrido também — a JB tem ficha técnica para ler.
 
 ### A escala
 
@@ -121,13 +127,17 @@ Cinco degraus grandes, cada um com entrelinha, espaçamento e peso embutidos —
 pedir `text-hero` entrega o título afinado. A redução no celular é
 proporcional, nunca "encolhe para caber".
 
-| Token | Celular (360px) | Desktop | Papel |
-|---|---|---|---|
-| `text-hero` | 40px | 68px (≥1280) | manchete da home |
-| `text-display` | 32px | 48px (≥1440) | abertura de página |
-| `text-section` | 31px | 44px (≥1440) | título de faixa |
-| `text-title` | 22px | 30px (≥1440) | `h1` de ficha de produto |
-| `text-bloco` | 18px | 22px | `h2` de seção **dentro** de uma página |
+| Token | Celular (360px) | Desktop | Peso | Papel |
+|---|---|---|---|---|
+| `text-hero` | 40px | 68px (≥1280) | 800 | manchete da home |
+| `text-display` | 32px | 48px (≥1440) | 800 | abertura de página |
+| `text-section` | **31px** | 44px (≥1440) | **800** | título de faixa |
+| `text-title` | 22px | 30px (≥1440) | **800** | `h1` de ficha de produto |
+| `text-bloco` | 18px | 22px | 700 | `h2` de seção **dentro** de uma página |
+
+O piso de `text-section` subiu de 1,75 para 1,9375rem e o peso de 700 para 800
+quando a Bricolage entrou: num título de seção ela pede mais corpo que a Manrope
+para ter a mesma presença.
 
 `text-bloco` é o degrau que faltava. Sem ele a ficha de produto inventava um
 tamanho por seção e terminava com sete `h2` em cinco tamanhos.
@@ -193,20 +203,44 @@ silêncio. O sintoma é sutil: o texto cai para os 16px herdados e ninguém vê.
 
 | Classe | Largura máxima |
 |---|---|
-| `container-jb` | **90rem** = 1440px |
+| `container-jb` | **90rem** = 1440px — **conteúdo**: institucional, formulário, texto |
+| `container-jb max-w-[100rem]` | **1600px** — **catálogo**: a grade precisa de área |
 | `container-estreito` | **56rem** = 896px — texto corrido não passa de ~75 caracteres por linha |
 
 Respiro lateral: 16px → 20px (≥400) → 28px (≥640) → **40px** (≥1024).
 
-> **Problema aberto e medido.** Na prática convivem **três** larguras:
-> `container-jb` sozinho (1440px, 34 usos), `+ max-w-[100rem]` (1600px, 18
-> usos) e `+ max-w-[112rem]` (1792px, 3 usos). A 1920px isso põe conteúdo em
-> **x=280, x=200 e x=104** — degraus de 80 e 96px sem cartão nem coluna que os
-> justifique. A conta fecha exata: `(1792−1600)/2 = 96`.
+**São duas larguras de conteúdo, e a diferença é de papel, não de acidente.**
+Página de texto a 1600px daria linha longa demais; grade de produto a 1440px
+perde uma coluna. O cabeçalho é a única exceção: `max-w-[112rem]` (1792px) nos
+layouts de `(vitrine)` e `(loja)`, porque moldura pode ser mais larga que miolo.
+
+> **O que já foi um problema, e como foi resolvido.** Em 10/09/2026 a medição a
+> 1920px mostrava conteúdo em **x=280, x=200 e x=104** — degraus de 80 e 96px
+> sem cartão nem coluna que os justificasse. O diagnóstico inicial foi "três
+> larguras arbitrárias, unificar em uma", e estava **errado**: eram duas rotas
+> no balde errado. A faixa de marcas usava 1792px no meio de uma home a 1600, e
+> a busca usava 1440px para mostrar grade de produto, vinda de um catálogo a
+> 1600. Corrigida a classificação, `/`, `/loja` e `/busca` começam todas em
+> **x=160**.
 >
-> Abaixo de ~1600px as três batem na borda da viewport e coincidem — por isso
-> o site parece alinhado no notebook e só se abre em monitor grande.
-> Recomendação: unificar em `100rem`.
+> Abaixo de ~1600px as larguras batem na borda da viewport e coincidem — por
+> isso um desalinho desses só aparece em monitor grande, e passa despercebido
+> em notebook. **Ao criar seção nova, a pergunta não é "que largura fica
+> bonita": é se aquilo é conteúdo ou catálogo.**
+
+### Ritmo vertical da home
+
+**Lista é densa, narrativa respira.** As sete seções tinham exatamente 64px em
+cima e embaixo — um metrônomo, em que nada sinaliza qual pesa mais.
+
+| Tipo de seção | Respiro |
+|---|---|
+| Grade de produto ou categoria | `py-12 lg:py-14` — 56px |
+| Argumento e fechamento | `py-14 lg:py-20` — 80px |
+
+A grade já carrega a informação no próprio desenho e não precisa de tanto ar;
+assistência e fechamento são argumento, não vitrine. A página total não mudou de
+altura: o que a lista economizou foi gasto onde o texto precisa respirar.
 
 ### Altura do topo
 
@@ -248,6 +282,15 @@ resumo e abria um vão.
 | `--shadow-card` | elevação de cartão em repouso |
 | `--shadow-raised` | menu, popover |
 | `--shadow-pop` | diálogo |
+
+Os três usam **desfoque largo com espalhamento negativo**, não sombra curta e
+dura. A peça continua presa ao papel; o que some é a borda visível da sombra,
+que fazia o cartão parecer recortado e colado.
+
+Há um quarto uso, que não é elevação: o cartão de destaque do hero desenha uma
+**lâmina de `jb-50` deslocada 10px** com `box-shadow` de desfoque zero. Um
+`::before` com `z-index: -1` cairia atrás do fundo do próprio cartão e não
+apareceria — testado.
 | `--color-surface` | `#ffffff` |
 | `--color-surface-muted` | `#fafafa` |
 | `--color-surface-sunken` | `#f4f4f5` |
@@ -397,7 +440,6 @@ que casa zero elementos faz o teste passar dizendo nada.
 
 | Item | Situação |
 |---|---|
-| **Três larguras de container** | 1440 / 1600 / 1792px convivendo; degraus de 80 e 96px a partir de 1600px. Recomendação: unificar em `100rem` |
 | **`MARKETPLACE ODONTOLÓGICO`** | injetado por `content:` em `header-product.css:37`. Factualmente errado e invisível para leitor de tela |
 | **Quatro CSS de cabeçalho** | `header-premium`, `header-product` (12,9 kB), `header-product-mobile`, `header-search` repintam o cabeçalho global de fora, com `!important`. Deveria ser prop |
 | **~90 valores tipográficos avulsos** | espalhados por 20 tamanhos (`text-[1.02rem]`, `text-[11px]`…). Poucos usos cada — nomear degrau que aparece três vezes é inventar escala |

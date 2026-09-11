@@ -701,15 +701,6 @@ dado, a tela mostra estado vazio com uma ação útil.
   Postgres de pé; rode-os antes de dar a frente por fechada. `pnpm responsivo
   --so=publico` separa loja de painel. Ver
   [`docs/evolucao-jb/validacao.md`](docs/evolucao-jb/validacao.md).
-- **Sobrou um "marketplace" na ficha de produto.** A home já foi corrigida — abre
-  com "Loja odontológica" e "Produtos odontológicos para comprar com clareza". Mas
-  `src/app/header-product.css:42` ainda injeta
-  `content: "MARKETPLACE\A ODONTOLÓGICO"` ao lado da logo, em toda página de
-  produto larga. Está errado de fato — o modelo é de vendedor único — e, por
-  viver num `::after`, é invisível para leitor de tela e para busca: `grep` no
-  código não encontra a palavra na tela. Some junto com a limpeza dos quatro CSS
-  de cabeçalho abaixo.
-
 - **Quatro folhas de estilo repintam o cabeçalho de fora.** `header-premium.css`,
   `header-product.css` (12,9 kB), `header-product-mobile.css` e
   `header-search.css` alcançam o cabeçalho global por
@@ -717,8 +708,11 @@ dado, a tela mostra estado vazio com uma ação útil.
   aparece: a busca do topo mede 300px em todo o site e 563px na ficha. Deveria
   ser prop do componente, não seletor de fora com `!important`.
 
-- **Três larguras de container convivendo.** `container-jb` sozinho (1440px, 34
-  usos), `+ max-w-[100rem]` (1600px, 18) e `+ max-w-[112rem]` (1792px, 3). A
-  1920px isso põe conteúdo em x=280, x=200 e x=104 — degraus de 80 e 96px sem
-  nada que os justifique. Abaixo de ~1600px as três coincidem, e é por isso que
-  o desalinho só aparece em monitor grande. Ver [`design.md`](design.md).
+- ~~**Três larguras de container convivendo**~~ — **resolvido em 11/09/2026**,
+  e o diagnóstico estava errado. Não eram três larguras arbitrárias: são duas
+  intencionais — 1440px para conteúdo, 1600px para catálogo — mais 1792px só no
+  cabeçalho, que pode ser mais largo que o miolo. O defeito eram duas rotas no
+  balde errado: a faixa de marcas a 1792 no meio de uma home a 1600, e a busca
+  a 1440 mostrando grade de produto. Corrigida a classificação, `/`, `/loja` e
+  `/busca` começam todas em x=160 a 1920px. Ao criar seção nova a pergunta é se
+  aquilo é conteúdo ou catálogo — ver [`design.md`](design.md).

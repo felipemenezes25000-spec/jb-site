@@ -108,12 +108,16 @@ dependem da JB.
    ecossistema". No compressor a conta é 40% de institucional contra 18% de
    conteúdo do produto. É decisão editorial, não técnica.
 10. **Quatro CSS repintando o cabeçalho de fora** — `header-premium`,
-    `header-product` (12,9 kB), `header-product-mobile` e `header-search`
-    alcançam o cabeçalho global com `!important`. Junto com eles sai o
-    `content: "MARKETPLACE\A ODONTOLÓGICO"` da ficha, que contradiz o modelo de
-    vendedor único.
-11. **Três larguras de container convivendo** — 1440, 1600 e 1792px. A 1920
-    isso põe conteúdo em três bordas diferentes. Ver `design.md`.
+    `header-product` (11,4 kB), `header-product-mobile` e `header-search`
+    alcançam o cabeçalho global com `!important`: 22 kB, 99 regras, 145
+    `!important`. Deveria ser prop do componente. Conferido em 11/09 que não há
+    regra morta ali — os oito ganchos estão vivos —, então é refatoração pura,
+    sem ganho visual, e o cabeçalho é área sensível. Fazer em etapa própria, um
+    arquivo por vez, com a suíte entre cada um.
+11. ~~**Três larguras de container**~~ — resolvido em 11/09, e o diagnóstico
+    estava errado: são duas larguras intencionais (conteúdo 1440, catálogo
+    1600) mais o cabeçalho a 1792, e o defeito eram duas rotas no balde
+    errado. Ver `design.md`.
 
 **O que depende da JB, e não de código:** revisor técnico para os 19
 rascunhos, autorização de cliente para o primeiro case, acervo fotográfico,
