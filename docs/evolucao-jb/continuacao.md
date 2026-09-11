@@ -100,7 +100,20 @@ dependem da JB.
    `estatico`.
 8. **Portões de `(admin)` e `/minha-jb`** — alvos de 40×40px e rótulos abaixo
    de 12px na casca das duas áreas. É o que impede a CI de fechar verde, e é
-   decisão de densidade da JB, não defeito acidental.
+   decisão de densidade da JB, não defeito acidental. O lado público saiu do
+   vermelho em 10/09 (ver `validacao.md`); esta frente é a que resta.
+9. **Texto institucional repetido na ficha de produto** — 30 a 40% de cada
+   página de produto é o mesmo texto da JB, igual em todas: "Antes de comprar",
+   "Entrega, garantia e suporte", "Dúvidas" e "O equipamento continua dentro do
+   ecossistema". No compressor a conta é 40% de institucional contra 18% de
+   conteúdo do produto. É decisão editorial, não técnica.
+10. **Quatro CSS repintando o cabeçalho de fora** — `header-premium`,
+    `header-product` (12,9 kB), `header-product-mobile` e `header-search`
+    alcançam o cabeçalho global com `!important`. Junto com eles sai o
+    `content: "MARKETPLACE\A ODONTOLÓGICO"` da ficha, que contradiz o modelo de
+    vendedor único.
+11. **Três larguras de container convivendo** — 1440, 1600 e 1792px. A 1920
+    isso põe conteúdo em três bordas diferentes. Ver `design.md`.
 
 **O que depende da JB, e não de código:** revisor técnico para os 19
 rascunhos, autorização de cliente para o primeiro case, acervo fotográfico,
@@ -137,6 +150,10 @@ decisão sobre provedor de OCR, marco da garantia (P10) e as pendências P1 a P9
 | Reserva de espaço em porcentagem da janela | navegação do cabeçalho por cima do bloco da conta, e só em certas larguras | medir as duas pontas e publicar em variável CSS; o bloco da conta muda de largura conforme o nome de quem entrou |
 | Seletor CSS preso à estrutura da árvore | acabamento some sem erro nenhum quando o JSX ganha um invólucro | prender a gancho declarado: `data-*` ou classe própria |
 | Página pré-gerada depois de mexer no banco | endereço antigo continua servindo o HTML anterior | reconstruir; `generateStaticParams` só é reavaliado na construção |
+| Apagar `.next` com o `next dev` de pé | rota estática some e o `[id]` irmão responde 404 — com o arquivo no lugar | parar o servidor, apagar, subir; foi o que fez 9 testes de painel reprovarem |
+| Teste visual medindo logo após o `goto` | conteúdo por streaming ainda é esqueleto; "0 amostras" vira falha ou, pior, aprovação vazia | `expect.poll` esperando o resultado, e guarda de amostra mínima |
+| Grupo de rota novo sem os `data-*` da casca antiga | regra global de CSS deixa de valer, sem erro e sem teste | comparar os atributos das duas cascas antes de dar por pronto |
+| Degrau tipográfico novo fora de `src/lib/utils.ts` | `tailwind-merge` o confunde com cor e o descarta quando há `text-<cor>` | registrar em `classGroups["font-size"]` |
 
 ---
 

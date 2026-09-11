@@ -443,3 +443,92 @@ dois valores que não sabem nada sobre onde as ações começam, ainda mais com 
 largura do bloco variando conforme o nome de quem entrou. Agora o componente
 mede as duas pontas com um `ResizeObserver` e publica `--jb-topo-esq` e
 `--jb-topo-dir`; o CSS reserva o que foi medido.
+
+---
+
+## 24. Checkout tem casca própria — e o atributo que ela quase perdeu
+
+`/checkout` e `/escolher-entrega` saíram de `(vitrine)` para o grupo
+`(checkout)`. A casca é mínima de propósito: marca, selo de compra segura,
+contato, e um rodapé com telefone, horário e as três políticas. Sem menu, sem
+busca, sem carrinho — quem está pagando não precisa de mais nada para clicar, e
+cada saída a mais é uma chance de abandonar. O funil foi de 40 saídas possíveis
+para 4.
+
+O que essa mudança ensinou custa mais que a mudança: **grupo de rota carrega
+comportamento que não está escrito na página**. Enquanto o checkout morava em
+`(vitrine)`, herdava `data-jb-publico` da casca de lá, e com ele a regra de
+`globals.css` que faz o texto secundário da loja pública ser preto em vez de
+cinza. Ao ganhar casca própria, perdeu — em silêncio, sem teste que cobrisse,
+porque a rota exige carrinho cheio e nenhuma varredura automática chega lá.
+
+A regra prática: **ao criar um grupo de rota, compare os atributos da casca
+antiga com os da nova antes de dar por pronto.** Um `data-*` que nenhum
+componente lê, mas que uma folha de estilo global procura, não aparece em
+nenhuma busca por referência.
+
+## 25. O piso de toque fala do alvo, não da tinta
+
+44px é o mínimo de alvo de toque da plataforma, medido a 320px em contexto
+móvel. O erro natural ao corrigir uma violação é engordar o desenho — e aí um
+ícone discreto no canto de uma foto vira um botão pesado.
+
+O botão de favoritar do cartão de produto nasceu `size-9`: 36px em tudo, e 16
+alvos pequenos por página de catálogo. A correção não mexeu no desenho. O
+círculo de 36px desceu para um `<span>` e o **botão** cresceu em volta dele até
+44px, transparente:
+
+```tsx
+<button className="foco-jb flex size-11 items-center justify-center rounded-full">
+  <span className="flex size-9 items-center justify-center rounded-full border …">
+    <Heart className="size-4" aria-hidden />
+  </span>
+</button>
+```
+
+O canto da foto ficou idêntico; o dedo ganhou os 8px que faltavam. O padrão a
+copiar já existia no projeto: o tamanho `sm` do botão usa
+`min-h-10 pointer-coarse:min-h-11` — 40px com mouse, 44px com dedo.
+
+## 26. Repetição previsível vale mais que economia que muda de página
+
+A ficha de produto mostrava 4 das 5–6 especificações de decisão na dobra e
+repetia a lista inteira 1.100px abaixo, dentro de "Especificações técnicas".
+Subir a lista completa para a coluna do meio resolveu a dobra — e criou a
+tentação de esconder o cartão de baixo, já que viraria a mesma tabela duas
+vezes.
+
+Foi feito, medido e **desfeito**: com o cartão condicional, o título da seção
+passava a depender do produto, e as estruturas distintas de ficha saltaram de
+**7 para 11**. O ganho era economia de pixel; o custo era a ficha de cada
+produto ter uma forma diferente — exatamente a queixa que a rodada começou
+tentando resolver.
+
+Mercado Livre e Amazon repetem de propósito: prévia na dobra, tabela completa
+embaixo, sempre com o mesmo nome. **Numa página que a pessoa vai ver dez vezes
+seguidas, previsibilidade é a feature.**
+
+## 27. Token de tamanho puro, para poder renomear sem mudar desenho
+
+`text-[0.8125rem]` aparecia 325 vezes no código e `text-[0.9375rem]`, 148 — os
+dois tamanhos mais usados do projeto, nenhum com nome. Já existia
+`@utility texto-apoio` com o mesmo tamanho, mas ela **também** fixa
+`line-height: 1.55`, e a maioria dos 325 usos traz um `leading-*` próprio:
+trocar por ela mudaria entrelinha em centenas de pontos.
+
+A saída foi criar `--text-apoio` e `--text-corpo` como tokens de **tamanho
+puro**. O CSS gerado é idêntico ao do valor avulso, então a troca vira
+renomeação — e renomeação se prova: uma assinatura tipográfica (quantos
+elementos visíveis em cada tamanho de fonte) foi tirada de 11 rotas × 2 larguras
+antes e depois, **22 de 22 idênticas**.
+
+A renomeação revelou um bug que estava lá havia semanas. `tailwind-merge` não
+conhece tamanho customizado: classifica como cor e descarta quando a classe
+também traz `text-<cor>`. `src/lib/utils.ts` já documentava a armadilha e
+registrava `hero, display, section, title` — mas **`bloco` nunca entrou na
+lista**. O token criado para o `h2` de seção da ficha era jogado fora em
+silêncio em qualquer `cn("text-bloco", "text-graf-950")`, e o texto caía para os
+16px herdados sem ninguém ver.
+
+**Todo degrau tipográfico novo precisa entrar naquela lista.** É a única parte
+do design system que falha sem erro.

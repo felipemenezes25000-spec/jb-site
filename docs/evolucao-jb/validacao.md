@@ -466,3 +466,80 @@ quem o estava escrevendo.
 | `--so=publico` limpo, completo vermelho | painel ou Área da Clínica |
 | `--so=publico` acusando `/`, `/loja` ou `/seminovos` | tipografia do redesenho da vitrine |
 | `texto-miudo` | algum `font-size` abaixo de 12px; o piso é `0.75rem` |
+
+---
+
+## Redesenho da ficha e do catálogo — 10 e 11 de setembro de 2026
+
+Rodada longa, com quatro frentes: ficha de produto, catálogo, checkout e
+Área da Clínica, mais a limpeza do design system. As decisões que sobreviveram a
+ela estão em [`../decisoes.md`](../decisoes.md) (itens 24 a 27) e em
+[`../../design.md`](../../design.md); aqui ficam os portões.
+
+### Execuções
+
+| Comando | Resultado | Observação |
+|---|---|---|
+| `pnpm typecheck` | **exit 0** | — |
+| `pnpm lint` | **exit 0** | zero erro, 51 avisos — um a menos que no início da rodada |
+| `pnpm test:unit` | **exit 0** | 39 arquivos, **621 testes** (eram 581) |
+| `pnpm e2e` | **exit 0** | **99 cenários** (eram 53), build limpo, `retries: 0` |
+| axe — varredura pública | **limpo** | 28 rotas × 2 larguras: zero violação, zero rolagem horizontal, zero erro de console |
+| axe — Área da Clínica | **limpo** | 10 rotas × 2 larguras. Começou a rodada com **as 10 reprovando** |
+| `15-legibilidade` | **7/7** | cinza, piso de 12px e alvo de 44px em `/`, `/loja`, `/seminovos`, `/busca` |
+| `pnpm a11y` · `pnpm responsivo` | **não reconferidos** | precisam do Postgres; o Docker estava parado no fechamento da rodada |
+
+### A suíte saiu de 80/99 para 99/99, e quase nada era regressão
+
+Oito causas-raiz. Só duas eram defeito no produto:
+
+| # | Causa | Testes | Natureza |
+|---|---|---|---|
+| 1 | `h1` do checkout: o teste pedia `Fechar pedido`, a tela diz `Finalizar compra` | **13** | deriva de copy, commit `e71e734` |
+| 2 | CTA do carrinho vazio: `Ver equipamentos` → `Ver catálogo` | 1 | deriva de copy, commit `d584fa1` |
+| 3 | Seletor de quantidade dentro de `<details>` fechado — existe no DOM, nunca clicável | 2 | afordância que o helper ignorava |
+| 4 | Resumo do frete: a linha longa virou só `a combinar` | 1 | deriva de copy, escondida atrás da #1 |
+| 5 | CSS Module trazendo cinza de volta na home | 1 | **defeito de estilo** |
+| 6 | CSS Module a 11,52px na home | 1 | **defeito de estilo** |
+| 7 | Amostragem antes de o streaming entregar o miolo | 1 | asserção instável |
+| 8 | Primeiro `Tab` antes de o documento assumir o foco | 1 | corrida, 1 em 3 medido |
+
+A #1 valia 13 testes por **uma linha**: `tests/e2e/apoio.ts:168` é o portão de
+entrada de `fecharPedidoComPix`, e todo arquivo que fecha pedido passa por ele.
+
+### O que isso ensina sobre "flake"
+
+Três das falhas eram testes medindo antes de a página existir — streaming, foco,
+hidratação — e duas delas eu teria classificado como ruído sem medir. A do foco
+falhava **1 vez em 3** e nem apareceu na primeira execução completa: passou por
+sorte. Em compensação, o que mais parecia ruído era defeito: `01-home › a gaveta
+leva ao catálogo` caía com `element is not stable` seguido de `detached from the
+DOM`, passava 6/6 sozinha, e a medição quadro a quadro mostrou a gaveta
+**abrindo e fechando sozinha** em 2 de 10 aberturas.
+
+Causa em produção: um efeito de troca de rota em `src/components/loja/cabecalho.tsx`
+que **também rodava na montagem** e fechava o que um toque durante a hidratação
+acabara de abrir. Some com Strict Mode no `next dev`, que monta, desmonta e
+remonta — esse lado é só de desenvolvimento.
+
+### Duas falhas em massa que não eram do código
+
+Registradas porque custam horas a quem as encontrar de novo:
+
+- **68 falhas de uma vez**: o `next dev` morreu no meio do run
+  (`ERR_CONNECTION_REFUSED` a partir do 32º cenário). As 31 que passaram rodaram
+  antes.
+- **9 falhas em fluxos de painel**: `/admin/clientes/novo` e
+  `/admin/assistencia/novo` devolvendo **404** com o arquivo no lugar. Causa:
+  `.next` apagado **com o servidor de pé** — o manifesto de rotas quebrou e o
+  `[id]` passou a engolir as rotas estáticas `/novo`, respondendo `notFound()`.
+  Subir limpo devolveu 200 nas três.
+
+### O que saiu do vermelho, e o que não saiu
+
+Saiu: o texto de 11,52px do hero da vitrine, os chips de 40px do catálogo e o
+botão de favoritar do cartão, que nasceu com 36px — corrigido com alvo de 44px e
+o círculo de 36px num `<span>`, porque a regra fala do **alvo**, não da tinta.
+
+Não saiu: a densidade de 40px na casca do painel e da Área da Clínica, que foi
+escolha de desenho daquelas telas e continua sendo decisão em aberto.

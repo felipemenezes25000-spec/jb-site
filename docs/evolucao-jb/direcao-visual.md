@@ -5,6 +5,13 @@ sistema novo: o sistema já existe em `src/app/globals.css` e foi amostrado da
 logo oficial. O que falta é dizer como esse sistema conta a história de
 "comprar é só o começo" em cada fluxo.
 
+> **Onde está o sistema, desde 11/09/2026.** O que antes se lia direto no
+> `globals.css` está escrito e medido em [`../../design.md`](../../design.md):
+> paleta com o contraste de cada degrau e onde ele pode ou não ser usado, escala
+> tipográfica com a armadilha do `tailwind-merge`, containers, grid da ficha,
+> movimento e as regras de acessibilidade que a suíte cobra. Este documento
+> continua sendo a **intenção**; o `design.md` é o **estado**.
+
 ---
 
 ## 1. O que já está decidido no código, e fica

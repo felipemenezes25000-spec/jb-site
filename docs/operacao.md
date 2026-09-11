@@ -24,14 +24,36 @@ usá-lo.
 
 ## Deploy
 
-Hospedagem: Vercel, projeto `jb-site`. **Todo `git push` para `main` publica.**
-Branch publica em preview.
+Hospedagem: Vercel, projeto `jb-site`.
+
+**Onde cada coisa está hoje, antes de qualquer push:**
+
+| | Endereço | Branch |
+|---|---|---|
+| Site oficial — **ainda o legado** | https://jbsolucoesodontologicas.com.br | `main` |
+| **A plataforma** | https://jb-plataforma.vercel.app | `plataforma` |
+
+`git push` para `main` **publica no domínio oficial**, que hoje serve o site
+antigo — não a plataforma. A plataforma vive na branch `plataforma`, centenas de
+commits à frente, e `jb-plataforma.vercel.app` é um domínio amarrado a ela: não
+se move à mão, acompanha a branch.
+
+Levar a plataforma para o domínio oficial é uma decisão, não um `push`, e tem um
+pré-requisito que não é código: **o banco de produção ainda não recebeu a
+migração de conteúdo institucional** aplicada no preview em 06/09/2026. Código
+novo contra banco velho mostra texto velho, e o sintoma parece bug de deploy
+quando é de dado. Ver a seção de migração abaixo.
+
+Uma trava prática: o plano da Vercel é o gratuito, **100 deploys por dia**.
+Estourado o limite, o push deixa de virar build — em silêncio, sem erro no
+terminal e sem aviso no painel.
 
 Antes de subir:
 
 ```bash
 pnpm typecheck
 pnpm build          # o build é o que pega erro de tipo em página e ação
+pnpm test           # 621 unitários + 99 cenários de ponta a ponta
 ```
 
 Variáveis que precisam existir no ambiente de produção (lista completa e

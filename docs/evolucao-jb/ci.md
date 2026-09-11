@@ -83,19 +83,32 @@ dizer **onde** ele para:
 | `atomicidade` | passa | — |
 | `ponta-a-ponta` | **reprova** | `pnpm responsivo` e `pnpm a11y` acusam `(admin)` e `/minha-jb` |
 
-Os testes de ponta a ponta em si passam (53/53). O que derruba o job são os
-dois portões de auditoria, e eles acusam **duas** frentes:
+> **Atualizado em 11/09/2026.** A suíte de ponta a ponta passou de 53 para
+> **99 cenários** e voltou ao verde — esteve vermelha por dias, e quase nada era
+> regressão de código: 13 dos testes caíam por **uma linha** de copy
+> desatualizada no helper de checkout. O histórico da rodada está em
+> `validacao.md`.
+
+Os testes de ponta a ponta em si passam (**99/99**, com `retries: 0`). O que
+derruba o job são os dois portões de auditoria, e depois da rodada de 10–11/09
+sobrou **uma** frente:
 
 - **Painel e Área da Clínica** — alvos de 40×40px e rótulos entre 9,9 e
   10,4px na casca das duas áreas. Densidade escolhida no redesenho daqueles
   painéis; decisão da JB.
-- **Home e catálogo, desde o redesenho de 09/09** — texto abaixo do piso de
-  12px. Parte já foi elevada; o que resta está no cartão de marketplace, que
-  seguia em escrita no momento da medição.
+- ~~**Home e catálogo**, texto abaixo do piso de 12px~~ — **resolvido em
+  10/09**. Eram 6 nós a 11,52px, todos em `hero-vitrine.module.css`, elevados a
+  12px. Na mesma rodada saíram os chips de 40px do catálogo e o botão de
+  favoritar do cartão, que media 36px.
 
 Rodar `pnpm responsivo --so=publico` separa as duas: se ele acusa `/`, `/loja`
 ou `/seminovos`, é tipografia da vitrine; se está limpo, a falha é do painel.
 Detalhe por execução em `validacao.md`.
+
+**Local roda com `retries: 0` e a CI com 1.** Uma falha intermitente aparece
+numa e some na outra — e a inversa também. Três testes desta suíte já reprovaram
+por medir antes de a página existir (streaming, foco, hidratação); um deles
+falhava 1 vez em 3.
 
 ## O que este arquivo NÃO prova
 
