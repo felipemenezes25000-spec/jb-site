@@ -56,9 +56,19 @@ export function SemEstoque({
     <div className="flex gap-3 border-t border-graf-150 pt-3.5">
       <PackageX className="mt-0.5 size-[18px] shrink-0 text-graf-500" aria-hidden />
       <div className="min-w-0">
-        <h2 className="text-sm font-bold text-graf-950">
+        {/* `p`, e não `h2`.
+
+            Isto é o estado da compra dentro da caixa de preço, não uma seção da
+            página. Como `h2` ele entrava no mesmo nível de "Especificações
+            técnicas" e "Dúvidas" — e a 14px, contra os 22px das seções de
+            verdade, o documento ficava com dois tamanhos de `h2` e o sumário
+            de quem usa leitor de tela ganhava um item que não é seção nenhuma.
+
+            O peso e a cor seguram o destaque sem prometer hierarquia que não
+            existe. */}
+        <p className="text-sm font-bold text-graf-950">
           {unico ? "Esta unidade já foi vendida" : "Sem estoque no momento"}
-        </h2>
+        </p>
         <p className="mt-1 text-xs leading-5 text-graf-600">
           {unico
             ? "Veja outras opções disponíveis ou fale com a JB para encontrar uma alternativa equivalente."

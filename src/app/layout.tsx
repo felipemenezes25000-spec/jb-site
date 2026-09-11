@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, JetBrains_Mono, Manrope } from "next/font/google";
+import { Bricolage_Grotesque, Caveat, JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { cacheLife, cacheTag } from "next/cache";
@@ -20,6 +20,24 @@ const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
   display: "swap",
+});
+
+/**
+ * A fonte dos títulos.
+ *
+ * Até aqui título e corpo eram a mesma Manrope, e a hierarquia se apoiava só em
+ * tamanho e peso. A Bricolage Grotesque dá ao título um desenho próprio — mais
+ * estreita e de contraste maior — sem sair da família grotesca do corpo, que é
+ * o que mantém a página como uma peça só.
+ *
+ * Só nos degraus de título. Corpo, rótulo e número continuam em Manrope: fonte
+ * de display em texto corrido cansa, e a JB tem ficha técnica para ler.
+ */
+const display = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  display: "swap",
+  axes: ["opsz"],
 });
 
 /**
@@ -129,7 +147,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       /* o CSS define scroll-behavior: smooth; isto avisa o Next de que a
          escolha é deliberada e não deve ser desligada na troca de rota */
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${mono.variable} ${manuscrita.variable}`}
+      className={`${manrope.variable} ${display.variable} ${mono.variable} ${manuscrita.variable}`}
     >
       <body className="antialiased">
         {children}
