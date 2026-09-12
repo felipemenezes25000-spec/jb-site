@@ -5,7 +5,11 @@ import Link from "next/link";
 import { ArrowRight, Check, ShieldCheck, ShoppingCart } from "lucide-react";
 import { useActionState } from "react";
 
-import { adicionarAoCarrinho, type EstadoCarrinho } from "@/app/acoes/carrinho";
+import {
+  adicionarAoCarrinho,
+  adicionarConjuntoAoCarrinho,
+  type EstadoCarrinho,
+} from "@/app/acoes/carrinho";
 import { formatarPreco } from "@/lib/format";
 
 /* ============================================================================
@@ -145,13 +149,50 @@ function LinhaProduto({ item }: { item: ItemComTipo }) {
   );
 }
 
-export function CrossSellIntencional({ dados }: { dados: DadosCrossSell }) {
+export type ProdutoDoConjunto = {
+  id: string;
+  nome: string;
+  precoCents: number | null;
+  imagem: string | null;
+  alt: string;
+};
+
+export function CrossSellIntencional({
+  dados,
+  produto,
+}: {
+  dados: DadosCrossSell;
+  /** O próprio equipamento da ficha. Sem ele não há conjunto — só lista. */
+  produto?: ProdutoDoConjunto;
+}) {
   const itens: ItemComTipo[] = [
     ...dados.acessorios.map((item) => ({ ...item, tipo: "acessorio" as const })),
     ...dados.complementos.map((item) => ({ ...item, tipo: "complemento" as const })),
   ];
 
   if (itens.length === 0) return null;
+
+  /* O conjunto lista EXATAMENTE o que o botão vai adicionar.
+
+     A primeira versão exigia que todos os relacionados fossem compráveis, e
+     com isso o bloco não aparecia nunca: o catálogo tem acessório vinculado
+     que está sob orçamento ou sem estoque. Somar esses no total anunciaria um
+     número que a pessoa não consegue pagar; escondê-los do total mas
+     adicioná-los ao carrinho seria pior.
+
+     Então o conjunto é o equipamento mais os relacionados que dá para comprar
+     agora — e o total é a soma desses. Quem ficou de fora continua na lista
+     acima, com "Ver produto". */
+  const compraveis = itens.filter((item) => item.compraRapida && (item.precoCents ?? 0) > 0);
+  const conjunto =
+    produto && (produto.precoCents ?? 0) > 0 && compraveis.length > 0
+      ? {
+          itens: compraveis,
+          totalCents:
+            (produto.precoCents ?? 0) +
+            compraveis.reduce((soma, item) => soma + (item.precoCents ?? 0), 0),
+        }
+      : null;
 
   return (
     <section
@@ -179,6 +220,73 @@ export function CrossSellIntencional({ dados }: { dados: DadosCrossSell }) {
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-ok-700" aria-hidden />
         Compatibilidade conferida pela equipe técnica da JB.
       </p>
+
+      {/* O conjunto como uma linha só.
+
+          Levar o equipamento mais os acessórios para o carrinho eram três
+          cliques em três formulários, cada um recarregando a página no meio da
+          decisão. Aqui é o total somado e uma ação — que continua dentro da
+          loja, em vez de jogar a pessoa no WhatsApp com um texto pronto. */}
+      {conjunto ? (
+        <div className="mt-6 rounded-2xl border border-graf-200 bg-surface p-5 sm:p-6">
+          <p className="micro text-jb-700">Curadoria JB</p>
+          <ul className="mt-3 grid gap-2">
+            <li className="flex items-center gap-4 rounded-xl border border-jb-500 bg-jb-50 p-3.5">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-apoio font-bold text-graf-950">
+                  {produto!.nome}
+                </span>
+                <span className="micro text-graf-500">Este equipamento</span>
+              </span>
+              <span className="tabular shrink-0 text-apoio font-black text-graf-950">
+                {formatarPreco(produto!.precoCents!)}
+              </span>
+            </li>
+            {conjunto.itens.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center gap-4 rounded-xl border border-graf-200 p-3.5"
+              >
+                <span className="min-w-0 flex-1">
+                  <Link
+                    href={`/loja/${item.slug}`}
+                    className="foco-jb block truncate text-apoio font-bold text-graf-950 hover:text-jb-700"
+                  >
+                    {item.nome}
+                  </Link>
+                  <span className="micro text-graf-500">{SELO[item.tipo]}</span>
+                </span>
+                <span className="tabular shrink-0 text-apoio font-black text-graf-950">
+                  {formatarPreco(item.precoCents!)}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <form
+            action={adicionarConjuntoAoCarrinho}
+            className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-graf-200 pt-5"
+          >
+            <input type="hidden" name="produtoId" value={produto!.id} />
+            {conjunto.itens.map((item) => (
+              <input key={item.id} type="hidden" name="produtoId" value={item.id} />
+            ))}
+            <p className="text-apoio text-graf-700">
+              Conjunto completo:{" "}
+              <strong className="tabular text-lg text-graf-950">
+                {formatarPreco(conjunto.totalCents)}
+              </strong>
+            </p>
+            <button
+              type="submit"
+              className="botao-jb foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg px-5 text-apoio"
+            >
+              <ShoppingCart className="size-4" aria-hidden />
+              Adicionar o conjunto
+            </button>
+          </form>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -8,6 +8,7 @@ import { lerParcelamento } from "@/components/loja/home/comum";
 import { FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
 import { FechamentoHome } from "@/components/loja/home/fechamento-home";
 import { HeroVitrine, type NumeroDaHome } from "@/components/loja/home/hero-vitrine";
+import { BancadaJB, ChamadaComparador } from "@/components/loja/home/bancada-home";
 import { FaixaCorrendo, ManifestoJB } from "@/components/loja/home/manifesto-home";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
 import { SecaoCategorias } from "@/components/loja/home/categorias";
@@ -119,8 +120,14 @@ export default async function HomePage() {
         parcelamento={parcelamentoHome}
       />
 
+      {/* A bancada vem ANTES dos seminovos: é ela que explica por que comprar
+          um equipamento usado da JB não é a mesma coisa que comprar usado. */}
+      <BancadaJB />
+
       <SeminovosHome produtos={catalogo.seminovos} parcelamento={parcelamentoHome} />
       <ProcuradosHome produtos={catalogo.procurados} parcelamento={parcelamentoHome} />
+
+      <ChamadaComparador />
 
       <VistosRecentemente
         titulo="Continue de onde parou"

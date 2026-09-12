@@ -234,3 +234,26 @@ export async function aplicarCupom(
 export async function adicionarAoCarrinhoDoCartao(formData: FormData): Promise<void> {
   await adicionarAoCarrinho({}, formData);
 }
+
+/**
+ * Adicionar o conjunto inteiro de uma vez.
+ *
+ * A seção "Para completar este equipamento" mostra o modelo mais os acessórios
+ * que a JB vinculou a ele. Até aqui, levar os três para o carrinho era três
+ * cliques em três formulários — e cada um recarregava a página no meio da
+ * decisão.
+ *
+ * Os itens entram um a um, pela mesma `adicionarAoCarrinho`, então cada um
+ * passa pela sua própria checagem de estoque, unidade única e serviço
+ * obrigatório. O que falhar fica de fora sem derrubar o resto: é melhor o
+ * carrinho receber dois dos três do que nenhum.
+ */
+export async function adicionarConjuntoAoCarrinho(formData: FormData): Promise<void> {
+  const ids = formData.getAll("produtoId").map(String).filter(Boolean);
+  for (const produtoId of ids) {
+    const item = new FormData();
+    item.set("produtoId", produtoId);
+    item.set("quantidade", "1");
+    await adicionarAoCarrinho({}, item);
+  }
+}

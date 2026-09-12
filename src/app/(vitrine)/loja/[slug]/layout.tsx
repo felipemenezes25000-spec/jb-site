@@ -456,7 +456,17 @@ export default async function ProdutoLayout({ children, params }: Props) {
           resumo={resumoAvaliacoes}
           comentarios={comentariosAvaliacoes}
         />
-        <CrossSellIntencional dados={crossSell} />
+        <CrossSellIntencional
+          dados={crossSell}
+          produto={{
+            id: produto.id,
+            nome: produto.name,
+            precoCents:
+              produto.allowDirectPurchase && produto.priceCents > 0 ? produto.priceCents : null,
+            imagem: null,
+            alt: produto.name,
+          }}
+        />
         {geraEquipamento ? <PosVendaJB garantiaMeses={produto.warrantyMonths} /> : null}
       </div>
     </>
