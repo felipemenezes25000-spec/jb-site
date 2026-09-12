@@ -31,7 +31,7 @@ const ATALHOS = [
 export function AtalhosHome() {
   return (
     <nav aria-label="Acesso rápido" className="border-b border-graf-200 bg-white">
-      <div className="container-jb max-w-[100rem]">
+      <div className="container-loja">
         <ul className="grid sm:grid-cols-2 lg:grid-cols-4">
           {ATALHOS.map(({ href, icone: Icone, rotulo, apoio }, indice) => (
             <li

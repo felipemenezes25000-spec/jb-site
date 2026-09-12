@@ -450,7 +450,7 @@ export default async function ProdutoLayout({ children, params }: Props) {
           galeria, e o eixo vertical da página quebrava na metade. `100rem` é a
           largura que a home e o resto da vitrine já usam — quem alinha por
           `112rem` é só o cabeçalho, por decisão própria. */}
-      <div className="container-jb max-w-[100rem]">
+      <div className="container-loja">
         <ComparacaoRapida produtos={comparaveis} />
         <AvaliacoesVerificadas
           resumo={resumoAvaliacoes}

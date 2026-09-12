@@ -696,7 +696,7 @@ export async function Vitrine({
          resto da vitrine alinham por 100rem. A 1920 o catálogo saía 160px mais
          estreito que a página de onde a pessoa acabou de vir — o mesmo degrau
          que a ficha já tinha corrigido. */
-      className={cn(marketplaceStyles.shell, "container-jb max-w-[100rem] py-8 lg:py-12")}
+      className={cn(marketplaceStyles.shell, "container-loja py-8 lg:py-12")}
     >
       <CabecalhoColecao
         sobretitulo={sobretitulo}

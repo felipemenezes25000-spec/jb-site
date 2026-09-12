@@ -75,7 +75,7 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.produtos.length}
         />
-        <div className="mt-5 max-w-[100rem]">
+        <div className="mt-5">
           <GradeMarketplace produtos={resultado.produtos} parcelamento={parcelamento} />
         </div>
         <p className="mt-4">
@@ -100,7 +100,7 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.conteudo.length}
         />
-        <ul className="divide-y divide-graf-150">
+        <ul className="divide-y divide-hairline">
           {resultado.conteudo.map((artigo) => (
             <li key={artigo.slug}>
               <Link
@@ -135,7 +135,7 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.servicos.length}
         />
-        <ul className="divide-y divide-graf-150">
+        <ul className="divide-y divide-hairline">
           {resultado.servicos.map((servico) => (
             <li key={servico.href}>
               <Link
@@ -170,7 +170,7 @@ function Grupo({
         intencao={resultado.intencao}
         quantidade={resultado.meusEquipamentos.length}
       />
-      <ul className="divide-y divide-graf-150">
+      <ul className="divide-y divide-hairline">
         {resultado.meusEquipamentos.map((equipamento) => (
           <li key={equipamento.id}>
             <Link
@@ -211,7 +211,7 @@ export default async function BuscaPage({
 
   if (!validada.ok) {
     return (
-      <Secao espaco="sm" classNameInterno="max-w-[100rem]">
+      <Secao espaco="sm" largura="loja">
         <Trilha itens={TRILHA} className="mb-5" />
         <TituloSecao
           como="h1"
@@ -248,7 +248,7 @@ export default async function BuscaPage({
 
   return (
     <>
-      <Secao espaco="sm" classNameInterno="max-w-[100rem]">
+      <Secao espaco="sm" largura="loja">
         <Trilha itens={TRILHA} className="mb-5" />
         <TituloSecao
           como="h1"

@@ -120,7 +120,7 @@ export function AntesDeComprar({
             return (
               <div
                 key={ficha.rotulo}
-                className={`min-w-0 border-graf-150 py-3 pr-4 ${
+                className={`min-w-0 border-hairline py-3 pr-4 ${
                   indice > 0 ? "border-t sm:border-l sm:border-t-0 sm:pl-5" : ""
                 }`}
               >
@@ -138,7 +138,7 @@ export function AntesDeComprar({
       ) : null}
 
       {dados.requisitos.length > 0 ? (
-        <div className="border-t border-graf-150 py-3.5">
+        <div className="border-t border-hairline py-3.5">
           <p className="micro text-graf-500">Precisa estar pronto no local</p>
           <ul className="mt-2 grid gap-x-5 gap-y-1.5 sm:grid-cols-2">
             {dados.requisitos.map((item) => (
@@ -176,7 +176,7 @@ export function OQueVemNaCaixa({
         />
       </div>
 
-      <ul className="divide-y divide-graf-150">
+      <ul className="divide-y divide-hairline">
         {itens.map((item, indice) => (
           <li key={item} className="texto-apoio flex gap-2.5 py-2.5 text-graf-700">
             <span className="tabular flex size-5 shrink-0 items-center justify-center rounded-full bg-graf-100 text-xs font-bold leading-none text-graf-500">
@@ -256,7 +256,7 @@ export function Instalacao({
         </div>
 
         {observacao ? (
-          <p className="texto-apoio mt-3 border-t border-graf-150 pt-3 text-graf-600">
+          <p className="texto-apoio mt-3 border-t border-hairline pt-3 text-graf-600">
             {observacao}
           </p>
         ) : null}
@@ -331,7 +331,7 @@ export function DepoisDaCompraNoProduto({
           return (
             <li
               key={passo.titulo}
-              className={`min-w-0 border-graf-150 py-3 pr-4 ${
+              className={`min-w-0 border-hairline py-3 pr-4 ${
                 indice % 2 === 1 ? "border-l pl-4" : ""
               } ${indice >= 2 ? "border-t lg:border-t-0" : ""} ${
                 indice > 0 ? "lg:border-l lg:pl-4" : ""

@@ -17,7 +17,7 @@ export function TopoMarketplace({ trilha, galeria, resumo, detalhes, acoes, comp
       id="visao-geral"
       aria-labelledby="titulo-produto"
       data-pdp-marketplace
-      className="container-jb max-w-[100rem] scroll-mt-[var(--jb-topo-secoes)] pb-7 pt-3 lg:pb-9 lg:pt-4"
+      className="container-loja scroll-mt-[var(--jb-topo-secoes)] pb-7 pt-3 lg:pb-9 lg:pt-4"
     >
       <div className="mb-4 text-graf-500 lg:mb-5">{trilha}</div>
 
@@ -28,7 +28,7 @@ export function TopoMarketplace({ trilha, galeria, resumo, detalhes, acoes, comp
 
         <div data-pdp-summary className={styles.resumo}>
           {resumo}
-          {acoes ? <div className="mt-4 border-t border-graf-150 pt-3">{acoes}</div> : null}
+          {acoes ? <div className="mt-4 border-t border-hairline pt-3">{acoes}</div> : null}
         </div>
 
         <aside

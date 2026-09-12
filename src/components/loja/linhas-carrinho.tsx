@@ -65,7 +65,7 @@ export function LinhasCarrinho({ linhas }: { linhas: LinhaCarrinho[] }) {
                 <div className="flex flex-wrap items-start justify-between gap-x-5 gap-y-2">
                   <div className="min-w-0 flex-1 basis-44">
                     {linha.marca ? (
-                      <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
+                      <p className="micro text-graf-500">
                         {linha.marca}
                       </p>
                     ) : null}

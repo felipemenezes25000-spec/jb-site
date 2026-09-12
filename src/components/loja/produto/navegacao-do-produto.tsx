@@ -130,7 +130,7 @@ export function NavegacaoDoProduto({
       aria-label="Seções deste produto"
       className="sticky top-[var(--jb-topo)] z-30 border-y border-graf-200 bg-white/95 backdrop-blur"
     >
-      <div className="container-jb flex max-w-[100rem] items-stretch gap-4">
+      <div className="container-loja flex items-stretch gap-4">
         <ul
           ref={trilhoRef}
           className="scrollbar-none flex min-h-12 min-w-0 flex-1 gap-5 overflow-x-auto"
@@ -169,7 +169,7 @@ export function NavegacaoDoProduto({
                   {formatarPreco(compra.precoCents)}
                 </span>
                 {compra.parcelas ? (
-                  <span className="tabular block text-[0.6875rem] text-graf-500">
+                  <span className="tabular block text-xs text-graf-500">
                     {compra.parcelas.parcelas}× de {formatarPreco(compra.parcelas.valorCents)}
                   </span>
                 ) : null}

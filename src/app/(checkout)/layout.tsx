@@ -127,7 +127,7 @@ export default async function CheckoutLayout({ children }: { children: React.Rea
             </nav>
           </div>
 
-          <p className="texto-apoio mt-6 border-t border-graf-150 pt-4 text-graf-500">
+          <p className="texto-apoio mt-6 border-t border-hairline pt-4 text-graf-500">
             {s.empresa_nome}
             {s.empresa_desde ? ` · no mercado odontológico desde ${s.empresa_desde}` : ""}
           </p>

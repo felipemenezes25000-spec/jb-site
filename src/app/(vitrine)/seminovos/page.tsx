@@ -155,7 +155,7 @@ export default async function Pagina({
   const destaques = fatos.slice(0, 3).map((fato) => fato.titulo.toLowerCase());
 
   return (
-    <div className="vitrine">
+    <>
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
       <Vitrine
@@ -203,7 +203,7 @@ export default async function Pagina({
                  grave — pego pela varredura a 390px). Mesma correção que a
                  faixa de confiança da ficha de produto já tinha recebido. */
               tabIndex={0}
-              className="foco-jb scrollbar-none flex gap-0 overflow-x-auto border-y border-graf-150 py-2 sm:justify-start"
+              className="foco-jb scrollbar-none flex gap-0 overflow-x-auto border-y border-hairline py-2 sm:justify-start"
             >
               {fatos.slice(0, 4).map((fato, indice) => {
                 const Icone = fato.icone;
@@ -227,10 +227,10 @@ export default async function Pagina({
 
       {fatos.length >= 2 ? (
         <section className="border-t border-graf-200 bg-white">
-          <div className="container-jb py-10 lg:py-12">
+          <div className="container-loja py-10 lg:py-12">
             <div className="flex flex-wrap items-end justify-between gap-5 border-b border-graf-200 pb-5">
               <div className="max-w-2xl">
-                <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-600">
+                <p className="sobretitulo">
                   Transparência da unidade
                 </p>
                 <h2 className="text-title mt-2 text-graf-950">
@@ -266,6 +266,6 @@ export default async function Pagina({
           </div>
         </section>
       ) : null}
-    </div>
+    </>
   );
 }

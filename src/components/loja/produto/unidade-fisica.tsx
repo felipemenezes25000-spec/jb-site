@@ -154,7 +154,7 @@ export function UnidadeFisica({
          aparecia como degrau: a 1920px, "Esta unidade" media 1440 enquanto
          topo, ficha e comparação mediam 1600. 80px de cada lado, no meio da
          página. */
-      classNameInterno="max-w-[100rem]"
+      largura="loja"
     >
       {/* O ícone fica ACIMA do título, não ao lado.
 

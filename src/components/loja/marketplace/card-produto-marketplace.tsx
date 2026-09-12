@@ -102,7 +102,7 @@ export function CardProdutoMarketplace({
       </div>
 
       <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <p className="truncate text-[0.625rem] font-extrabold uppercase tracking-[0.09em] text-graf-500 sm:text-[0.6875rem]">
+        <p className="micro truncate tracking-[0.09em] text-graf-500">
           {produto.brandName || produto.categoryName || "Produto odontológico"}
         </p>
         <h2 className="mt-1.5 line-clamp-2 min-h-10 text-apoio font-bold leading-5 text-graf-950 sm:text-corpo">

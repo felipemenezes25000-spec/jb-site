@@ -36,7 +36,7 @@ export function VendidoPelaJB({ empresa, desde, cidade, uf, garantiaMeses }: Pro
   return (
     <section
       aria-label="Quem vende este produto"
-      className="border-t border-graf-150 pt-4"
+      className="border-t border-hairline pt-4"
     >
       <p className="texto-apoio text-graf-500">
         Vendido e entregue por{" "}

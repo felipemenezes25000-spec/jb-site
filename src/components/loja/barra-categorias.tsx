@@ -49,7 +49,7 @@ export function BarraDeCategorias({ categorias }: { categorias: CategoriaDoMenu[
        o mesmo nome deixam quem navega por marco sem saber qual é qual, e
        derrubaram um teste que clicava no primeiro link do nome errado. */
     <nav aria-label="Catálogo" className="hidden bg-jb-500 xl:block">
-      <div className="container-jb flex items-stretch">
+      <div className="container-loja flex items-stretch">
         <Link
           href="/loja"
           className="foco-jb inline-flex min-h-11 items-center px-4 text-[0.75rem] font-black tracking-wider whitespace-nowrap text-white uppercase transition-colors hover:bg-jb-600"

@@ -390,7 +390,7 @@ export function BuscaComSugestoes({
 
             {dados.produtos.length > 0 ? (
               <li>
-                <p className="px-4 pb-1 pt-2 text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-graf-500">
+                <p className="px-4 pb-1 pt-2 micro text-graf-500">
                   Equipamentos
                 </p>
                 <ul>
@@ -410,7 +410,7 @@ export function BuscaComSugestoes({
 
             {dados.categorias.length > 0 ? (
               <li>
-                <p className="border-t border-graf-100 px-4 pb-1 pt-2.5 text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-graf-500">
+                <p className="border-t border-graf-100 px-4 pb-1 pt-2.5 micro text-graf-500">
                   Categorias
                 </p>
                 <ul>
@@ -434,7 +434,7 @@ export function BuscaComSugestoes({
 
             {dados.marcas.length > 0 ? (
               <li>
-                <p className="border-t border-graf-100 px-4 pb-1 pt-2.5 text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-graf-500">
+                <p className="border-t border-graf-100 px-4 pb-1 pt-2.5 micro text-graf-500">
                   Marcas
                 </p>
                 <ul>
@@ -559,7 +559,7 @@ function LinhaProduto({
     >
       <span
         data-palco-imagem-produto
-        className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-graf-50/50"
+        className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted"
       >
         {produto.imagem ? (
           <Image
@@ -578,7 +578,7 @@ function LinhaProduto({
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
           {produto.marca ? (
-            <span className="truncate text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+            <span className="truncate micro text-graf-500">
               {produto.marca}
             </span>
           ) : null}

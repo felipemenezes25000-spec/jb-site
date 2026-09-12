@@ -66,7 +66,7 @@ export function freteQueSoma(frete: FreteExibido | null): number {
 
 function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
   return (
-    <ul className="divide-y divide-graf-150">
+    <ul className="divide-y divide-hairline">
       {linhas.map((linha) => (
         <li key={linha.id} className="flex gap-3 py-3 first:pt-0 last:pb-0">
           <div className="relative size-14 shrink-0">
@@ -87,7 +87,7 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
               )}
             </div>
             {linha.quantidade > 1 ? (
-              <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-graf-900 text-[0.6875rem] font-bold tabular text-white ring-2 ring-white" aria-hidden>
+              <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-graf-900 text-xs font-bold tabular text-white ring-2 ring-white" aria-hidden>
                 {linha.quantidade}
               </span>
             ) : null}
@@ -97,7 +97,7 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
             <p className="line-clamp-2 text-apoio font-semibold leading-5 text-graf-900">{linha.nome}</p>
             <p className="sr-only">Quantidade: {linha.quantidade}</p>
             {linha.addons.length > 0 ? (
-              <p className="mt-0.5 line-clamp-1 text-[0.6875rem] text-graf-500">
+              <p className="mt-0.5 line-clamp-1 text-xs text-graf-500">
                 + {linha.addons.map((addon) => addon.nome).join(" · ")}
               </p>
             ) : null}
@@ -212,7 +212,7 @@ export function ResumoCheckout({
           </div>
         </div>
 
-        <div className="border-t border-graf-150 bg-graf-50/45 p-5">
+        <div className="border-t border-hairline bg-graf-50/45 p-5">
           <Totais
             subtotalCents={subtotalCents}
             descontoCents={descontoCents}
@@ -232,7 +232,7 @@ export function ResumoCheckout({
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 shadow-raised backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-4 px-4 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
           <div className="min-w-0">
-            <p className="text-[0.6875rem] uppercase tracking-[0.06em] text-graf-500">Total do pedido</p>
+            <p className="micro text-graf-500">Total do pedido</p>
             <p className="text-xl font-extrabold tabular leading-tight text-graf-950">{formatarPreco(total)}</p>
           </div>
           <Botao type="button" variante="secundario" onClick={() => setGaveta(true)}>

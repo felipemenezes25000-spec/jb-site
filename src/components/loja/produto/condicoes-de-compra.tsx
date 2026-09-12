@@ -85,7 +85,7 @@ export function CondicoesDeCompra({
 
   return (
     <section aria-label="Condições do produto" className="border-t border-graf-200">
-      <ul className="divide-y divide-graf-150">
+      <ul className="divide-y divide-hairline">
         {linhas.map((linha) => {
           const Icone = linha.icone;
           return (

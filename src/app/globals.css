@@ -343,6 +343,38 @@
   }
 }
 
+/* Mesma família, caixa da LOJA — 1600px.
+
+   A vitrine pede mais área que uma página de texto: a fileira de quatro
+   equipamentos, a grade de categorias e a ficha de produto com coluna de
+   compra foram desenhadas para 100rem, e o CSS da abertura já media isso à
+   mão em dois lugares.
+
+   Existia como `container-jb max-w-[100rem]`, repetido 25 vezes — e as faixas
+   que esqueciam o acréscimo (abertura, manifesto, bancada e a chamada do
+   comparador) ficavam 80px mais para dentro que as vizinhas. Num monitor de
+   1600px a home tinha título começando em 40px e título começando em 120px,
+   alternando faixa a faixa: a borda esquerda da página serrilhava ao rolar.
+   Abaixo de 1440px os dois valores coincidem, e foi por isso que passou.
+
+   Regra: faixa da loja pública usa esta; formulário, política, checkout e
+   painel seguem em `container-jb`. */
+@utility container-loja {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 100rem;
+  padding-inline: 1rem;
+  @media (width >= 25rem) {
+    padding-inline: 1.25rem;
+  }
+  @media (width >= 40rem) {
+    padding-inline: 1.75rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
 /* Mesma família, coluna mais curta — formulário longo, artigo, política,
    checkout: texto corrido não deve passar de ~75 caracteres por linha. */
 @utility container-estreito {

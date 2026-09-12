@@ -132,7 +132,7 @@ export default async function HomePage() {
       <VistosRecentemente
         titulo="Continue de onde parou"
         excluir={jaNaHome}
-        larguraInterna="max-w-[100rem]"
+        largura="loja"
       />
 
       <SecaoAssistencia configuracoes={s} />

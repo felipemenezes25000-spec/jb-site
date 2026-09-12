@@ -131,7 +131,7 @@ export function HeroVitrine({
         aria-hidden
       />
 
-      <div className="container-jb relative grid items-center gap-10 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
+      <div className="container-loja relative grid items-center gap-10 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
         <div className="min-w-0">
           <p className="surge etiqueta flex items-center gap-2">
             <span className="pulso inline-block size-1.5 rounded-full bg-jb-500" aria-hidden />
@@ -398,7 +398,7 @@ export function HeroVitrine({
       {/* Faixa de provas: quatro células dividindo um filete, sem moldura
           própria — o mesmo desenho do resto do sistema. */}
       <div className="border-t border-graf-200">
-        <ul className="container-jb grid grid-cols-2 gap-px bg-graf-200 sm:grid-cols-4">
+        <ul className="container-loja grid grid-cols-2 gap-px bg-graf-200 sm:grid-cols-4">
           {PROVAS.map((prova) => (
             <li key={prova.titulo} className="bg-surface px-5 py-5">
               <prova.icone className="size-4 text-jb-500" aria-hidden />

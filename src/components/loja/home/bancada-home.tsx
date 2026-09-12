@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Secao } from "@/components/ui/secao";
 import Link from "next/link";
 import { BadgeCheck, GitCompareArrows } from "lucide-react";
 
@@ -42,48 +43,46 @@ const ETAPAS = [
 
 export function BancadaJB() {
   return (
-    <section className="filete mt-8 border-b border-graf-200 py-16">
-      <div className="container-jb grid gap-12 lg:grid-cols-2">
-        {/* A coluna da esquerda gruda: as três etapas rolam ao lado dela, e a
-            foto continua à vista enquanto se lê o processo que ela mostra. */}
-        <div className="min-w-0 lg:sticky lg:top-32 lg:h-fit">
-          <p className="etiqueta">a bancada jb</p>
-          <h2 className="fonte-display mt-3 text-[clamp(2rem,4.4vw,3.25rem)] text-graf-950">
-            O equipamento é aberto antes de ser vendido.
-          </h2>
-          <p className="mt-5 max-w-lg text-base leading-7 text-graf-700">
-            Cada seminovo passa por teste de ciclo, troca de peça de desgaste e registro
-            fotográfico. O laudo que você lê na ficha é da unidade que sai daqui — não é descrição
-            de modelo.
-          </p>
-          <div className="mt-8 overflow-hidden rounded-2xl border border-graf-200">
-            <Image
-              src="/lumina/bancada.jpg"
-              alt="Bancada técnica da JB com equipamento odontológico em teste"
-              width={1024}
-              height={640}
-              className="h-72 w-full object-cover"
-            />
-          </div>
+    <Secao largura="loja" espaco="md" separador className="filete mt-8" classNameInterno="grid gap-12 lg:grid-cols-2">
+      {/* A coluna da esquerda gruda: as três etapas rolam ao lado dela, e a
+          foto continua à vista enquanto se lê o processo que ela mostra. */}
+      <div className="min-w-0 lg:sticky lg:top-32 lg:h-fit">
+        <p className="etiqueta">a bancada jb</p>
+        <h2 className="fonte-display mt-3 text-[clamp(2rem,4.4vw,3.25rem)] text-graf-950">
+          O equipamento é aberto antes de ser vendido.
+        </h2>
+        <p className="mt-5 max-w-lg text-base leading-7 text-graf-700">
+          Cada seminovo passa por teste de ciclo, troca de peça de desgaste e registro
+          fotográfico. O laudo que você lê na ficha é da unidade que sai daqui — não é descrição
+          de modelo.
+        </p>
+        <div className="mt-8 overflow-hidden rounded-2xl border border-graf-200">
+          <Image
+            src="/lumina/bancada.jpg"
+            alt="Bancada técnica da JB com equipamento odontológico em teste"
+            width={1024}
+            height={640}
+            className="h-72 w-full object-cover"
+          />
         </div>
-
-        <ol className="min-w-0 space-y-4">
-          {ETAPAS.map((etapa) => (
-            <li key={etapa.numero} className="papel levanta acorda p-7">
-              <span className="fonte-display tabular text-5xl text-graf-200">{etapa.numero}</span>
-              <h3 className="fonte-display mt-3 text-2xl text-graf-950">{etapa.titulo}</h3>
-              <p className="mt-2 text-corpo leading-6 text-graf-700">{etapa.texto}</p>
-            </li>
-          ))}
-        </ol>
       </div>
-    </section>
+
+      <ol className="min-w-0 space-y-4">
+        {ETAPAS.map((etapa) => (
+          <li key={etapa.numero} className="papel levanta acorda p-7">
+            <span className="fonte-display tabular text-5xl text-graf-200">{etapa.numero}</span>
+            <h3 className="fonte-display mt-3 text-2xl text-graf-950">{etapa.titulo}</h3>
+            <p className="mt-2 text-corpo leading-6 text-graf-700">{etapa.texto}</p>
+          </li>
+        ))}
+      </ol>
+    </Secao>
   );
 }
 
 export function ChamadaComparador() {
   return (
-    <section className="container-jb pb-16">
+    <section className="container-loja pb-16">
       <div className="papel relative overflow-hidden p-8 lg:p-12">
         <div className="malha pointer-events-none absolute inset-0 opacity-50" aria-hidden />
         <div className="relative max-w-2xl">

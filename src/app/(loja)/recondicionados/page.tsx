@@ -35,7 +35,7 @@ export default async function Pagina({
   ]);
 
   return (
-    <div className="vitrine">
+    <>
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
       <Vitrine
@@ -50,6 +50,6 @@ export default async function Pagina({
         rotuloAtalhos="Outras condições"
         travarCondicao
       />
-    </div>
+    </>
   );
 }

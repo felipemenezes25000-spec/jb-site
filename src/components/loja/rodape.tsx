@@ -36,24 +36,28 @@ import { enderecoCompleto, getSettings, redesSociais } from "@/lib/settings";
  * Rodapé da loja — composição horizontal única, em três faixas verticais:
  * cartão de contato · navegação e ações · assinatura editorial com a cadeira.
  *
- * A cadeira é a fotografia real (`/images/footer-dental-chair.png`), posicionada
- * fora do container para sangrar pela direita. Ela nunca é desenhada em CSS: o
- * que o CSS faz aqui é só o fundo abstrato — arcos finos e gradientes.
+ * A fotografia da cadeira saiu; o que o CSS desenha aqui é só o fundo
+ * abstrato — arcos finos e gradientes.
  *
- * Três degraus de largura, porque as proporções da referência (400 / 928 / 304)
- * só cabem inteiras a partir de ~1800px:
+ * Degraus de largura:
  *   < 1024px   uma coluna
  *   ≥ 1024px   cartão + navegação, editorial embaixo
  *   ≥ 1360px   as três faixas, tipografia um degrau menor
- *   ≥ 1800px   a referência
+ *
+ * Não existe mais um degrau acima de 1800px. O rodapé tinha caixa própria de
+ * 1840px enquanto o cabeçalho corria a 1888, a barra de categorias a 1440 e o
+ * conteúdo a 1600: num monitor de 1920px a borda esquerda da página descia em
+ * degraus — logo em 56px, categorias em 200, rodapé em 79. Agora tudo usa
+ * `container-loja`, e como o conteúdo para de crescer em 1600px, a linha
+ * única de assinatura + provas + políticas que só cabia em 1840 deixou de
+ * existir: ela colidia consigo mesma.
  */
 
 type Icone = React.ComponentType<{ className?: string }>;
 
 const CLASSE_LINK =
-  "foco-jb flex min-h-[2.1rem] items-center rounded-xs text-[0.97rem] leading-snug text-graf-600 " +
-  "transition-colors hover:text-jb-700 pointer-coarse:min-h-11 " +
-  "min-[1800px]:text-[1.06rem]";
+  "foco-jb flex min-h-[2.1rem] items-center rounded-xs text-corpo leading-snug text-graf-600 " +
+  "transition-colors hover:text-jb-700 pointer-coarse:min-h-11";
 
 /** Sem dente no lucide: o traço segue a mesma gramática (24px, stroke 2, cantos redondos). */
 function IconeDente({ className }: { className?: string }) {
@@ -137,7 +141,7 @@ function Coluna({
 }) {
   return (
     <div className="min-w-0">
-      <h2 className="flex items-center gap-2.5 text-[0.9rem] font-black uppercase tracking-[0.05em] text-jb-600 min-[1800px]:gap-3 min-[1800px]:text-[1rem]">
+      <h2 className="flex items-center gap-2.5 text-sm font-black uppercase tracking-[0.05em] text-jb-600 min-[1800px]:gap-3">
         <IconeColuna className="size-[1.35rem] shrink-0 stroke-[2.1]" />
         {titulo}
       </h2>
@@ -179,9 +183,9 @@ function LinhaContato({
         <IconeLinha className="size-[1.2rem] stroke-[1.9]" />
       </span>
       <div className="min-w-0">
-        <div className="text-[0.95rem] leading-[1.35] text-graf-700">{children}</div>
+        <div className="text-corpo leading-[1.35] text-graf-700">{children}</div>
         {apoio ? (
-          <p className="mt-0.5 text-[0.8rem] leading-snug text-graf-500">{apoio}</p>
+          <p className="mt-0.5 text-xs leading-snug text-graf-500">{apoio}</p>
         ) : null}
       </div>
     </div>
@@ -201,7 +205,7 @@ function Prova({
   return (
     <li className="flex items-center gap-3 px-4 min-[1800px]:px-7">
       <IconeProva className="size-[1.3rem] shrink-0 stroke-[1.8] text-jb-600" />
-      <p className="whitespace-nowrap text-[0.8rem] leading-[1.35] text-graf-500">
+      <p className="whitespace-nowrap text-xs leading-[1.35] text-graf-500">
         <strong className="block font-semibold text-graf-800">{titulo}</strong>
         {detalhe}
       </p>
@@ -248,7 +252,7 @@ export async function Rodape() {
           rodapé. Em vez de fundo, davam riscos atravessando o bloco de contato
           e os links. O degradê acima já dá a transição de cor sem cortar nada. */}
 
-      <div className="container-jb relative z-10 max-w-[115rem] pt-9 min-[1800px]:pt-7">
+      <div className="container-loja relative z-10 pt-9 min-[1800px]:pt-7">
         {/* Duas colunas: contato e navegação.
 
             Eram três — a terceira levava a assinatura editorial e a fotografia
@@ -290,7 +294,7 @@ export async function Rodape() {
             </div>
 
             {s.empresa_resumo ? (
-              <p className="mt-3.5 max-w-[17.5rem] text-[0.97rem] leading-[1.3] text-graf-600">
+              <p className="mt-3.5 max-w-[17.5rem] text-corpo leading-[1.3] text-graf-600">
                 {s.empresa_resumo}
               </p>
             ) : null}
@@ -302,7 +306,7 @@ export async function Rodape() {
                 <LinhaContato icone={Phone} apoio="Fale com nossa equipe">
                   <a
                     href={telHref(s.telefone)}
-                    className="tabular foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[1.3rem] font-extrabold leading-tight text-jb-600 transition-colors hover:text-jb-800"
+                    className="tabular foco-jb inline-flex items-center pointer-coarse:min-h-11 text-xl font-extrabold leading-tight text-jb-600 transition-colors hover:text-jb-800"
                   >
                     {formatarTelefone(s.telefone)}
                   </a>
@@ -317,8 +321,8 @@ export async function Rodape() {
                     rel="noopener noreferrer"
                     className="foco-jb inline-flex flex-wrap items-center gap-2.5 pointer-coarse:min-h-11 font-semibold text-graf-800 hover:text-jb-700"
                   >
-                    <span className="tabular text-[1.02rem]">{formatarTelefone(s.whatsapp)}</span>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[0.78rem] font-bold text-emerald-700">
+                    <span className="tabular text-base">{formatarTelefone(s.whatsapp)}</span>
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
                       WhatsApp
                     </span>
                   </a>
@@ -327,7 +331,7 @@ export async function Rodape() {
                 <LinhaContato icone={MessageCircle} apoio="Atendimento rápido">
                   <a
                     href={telHref(s.telefone_alternativo)}
-                    className="tabular foco-jb inline-flex items-center pointer-coarse:min-h-11 text-[1.02rem] font-semibold text-graf-800 hover:text-jb-700"
+                    className="tabular foco-jb inline-flex items-center pointer-coarse:min-h-11 text-base font-semibold text-graf-800 hover:text-jb-700"
                   >
                     {formatarTelefone(s.telefone_alternativo)}
                   </a>
@@ -342,7 +346,7 @@ export async function Rodape() {
                        fora de toque — abaixo dos 24px do alvo mínimo, e este
                        não é link no meio de uma frase, é item de uma lista de
                        contato. Em toque continua valendo os 44px. */
-                    className="foco-jb inline-flex min-h-6 items-center pointer-coarse:min-h-11 text-[0.78rem] text-graf-600 hover:text-jb-700 min-[1800px]:text-[0.85rem]"
+                    className="foco-jb inline-flex min-h-6 items-center pointer-coarse:min-h-11 text-xs text-graf-600 hover:text-jb-700"
                   >
                     <span className="[overflow-wrap:anywhere]">{s.email}</span>
                   </a>
@@ -351,7 +355,7 @@ export async function Rodape() {
 
               {endereco ? (
                 <LinhaContato icone={MapPin}>
-                  <address className="not-italic text-[0.86rem] leading-[1.42] text-graf-600">
+                  <address className="not-italic text-apoio leading-[1.42] text-graf-600">
                     {logradouro}
                     {complementoEndereco ? (
                       <>
@@ -389,7 +393,7 @@ export async function Rodape() {
                           <span className="flex size-7 shrink-0 items-center justify-center" aria-hidden>
                             <Marca />
                           </span>
-                          <span className="flex items-center gap-1.5 text-[0.95rem] font-semibold text-graf-800 transition-colors group-hover:text-jb-700">
+                          <span className="flex items-center gap-1.5 text-corpo font-semibold text-graf-800 transition-colors group-hover:text-jb-700">
                             {rede.rotulo}
                             <ArrowUpRight className="size-3.5" aria-hidden />
                           </span>
@@ -398,7 +402,7 @@ export async function Rodape() {
                     );
                   })}
                 </ul>
-                <p className="pl-[2.375rem] text-[0.8rem] text-graf-500">
+                <p className="pl-[2.375rem] text-xs text-graf-500">
                   Acompanhe nossas novidades
                 </p>
               </div>
@@ -421,7 +425,7 @@ export async function Rodape() {
               <div className="sm:pr-9">
                 <Link
                   href="/assistencia-tecnica/solicitar"
-                  className="group foco-jb flex min-h-[3.4rem] items-center justify-between gap-4 rounded-[0.7rem] bg-jb-600 px-6 text-[0.97rem] font-bold text-white shadow-[0_16px_30px_-18px_rgba(164,10,16,0.75)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-700"
+                  className="group foco-jb flex min-h-[3.4rem] items-center justify-between gap-4 rounded-lg bg-jb-600 px-6 text-corpo font-bold text-white shadow-[0_16px_30px_-18px_rgba(164,10,16,0.75)] transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-700"
                 >
                   <span className="flex items-center gap-3">
                     <Wrench className="size-[1.15rem] stroke-[2]" aria-hidden />
@@ -432,7 +436,7 @@ export async function Rodape() {
                     aria-hidden
                   />
                 </Link>
-                <p className="mt-3.5 text-center text-[0.85rem] leading-[1.45] text-graf-500">
+                <p className="mt-3.5 text-center text-apoio leading-[1.45] text-graf-500">
                   Suporte técnico especializado
                   <br />e atendimento ágil.
                 </p>
@@ -441,7 +445,7 @@ export async function Rodape() {
               <div className="sm:border-l sm:border-graf-200 sm:pl-9">
                 <Link
                   href="/orcamento"
-                  className="group foco-jb flex min-h-[3.4rem] items-center justify-between gap-4 rounded-[0.7rem] border-[1.5px] border-jb-500 bg-white px-6 text-[0.97rem] font-bold text-jb-600 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-50"
+                  className="group foco-jb flex min-h-[3.4rem] items-center justify-between gap-4 rounded-lg border-[1.5px] border-jb-500 bg-white px-6 text-corpo font-bold text-jb-600 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-jb-50"
                 >
                   <span className="flex items-center gap-3">
                     <FileText className="size-[1.15rem] stroke-[2]" aria-hidden />
@@ -452,7 +456,7 @@ export async function Rodape() {
                     aria-hidden
                   />
                 </Link>
-                <p className="mt-3.5 text-center text-[0.85rem] leading-[1.45] text-graf-500">
+                <p className="mt-3.5 text-center text-apoio leading-[1.45] text-graf-500">
                   Equipamentos, peças e serviços
                   <br />
                   com as melhores condições.
@@ -464,19 +468,27 @@ export async function Rodape() {
         </div>
 
         {/* ── Faixa inferior ──────────────────────────────────────────────── */}
+        {/* Duas linhas em qualquer largura.
+
+            Existia um terceiro degrau, `min-[1840px]`, que punha assinatura,
+            provas e políticas lado a lado numa linha só. Ele foi desenhado
+            quando o rodapé tinha caixa própria de 1840px; com o rodapé na
+            mesma caixa de 1600px do resto da loja, aquela linha nunca mais
+            coube — a 1920px "Suporte técnico especializado" passava por cima
+            de "Entrega e retirada". */}
         <div className="relative z-10 mt-6 border-t border-graf-200/70 py-[1.15rem] min-[1800px]:mt-[1.1rem]">
-          <div className="grid gap-5 min-[960px]:grid-cols-2 min-[960px]:items-center min-[1840px]:grid-cols-[auto_minmax(0,1fr)_auto] min-[1840px]:gap-8">
-            <div className="min-[960px]:order-1 min-[1840px]:order-none">
-              <p className="text-[0.86rem] text-graf-600">
+          <div className="grid gap-5 min-[960px]:grid-cols-2 min-[960px]:items-center">
+            <div className="min-[960px]:order-1">
+              <p className="text-apoio text-graf-600">
                 © {ano} {s.empresa_nome}
                 {s.empresa_desde ? <> · Em atividade desde {s.empresa_desde}</> : null}
               </p>
-              <p className="mt-1 text-[0.8rem] text-graf-500">
+              <p className="mt-1 text-xs text-graf-500">
                 Qualidade • Confiança • Sempre ao lado do seu consultório
               </p>
             </div>
 
-            <ul className="grid gap-5 min-[640px]:grid-cols-2 min-[960px]:order-3 min-[960px]:col-span-2 min-[960px]:flex min-[1840px]:order-none min-[1840px]:col-span-1 min-[960px]:justify-center min-[960px]:gap-0 min-[960px]:divide-x min-[960px]:divide-graf-200 min-[960px]:border-x min-[960px]:border-graf-200">
+            <ul className="grid gap-5 min-[640px]:grid-cols-2 min-[960px]:order-3 min-[960px]:col-span-2 min-[960px]:flex min-[960px]:justify-center min-[960px]:gap-0 min-[960px]:divide-x min-[960px]:divide-graf-200 min-[960px]:border-x min-[960px]:border-graf-200">
               <Prova
                 icone={Award}
                 titulo={anosExperiencia ? `+${anosExperiencia} anos` : "Experiência"}
@@ -497,12 +509,12 @@ export async function Rodape() {
               <Prova icone={Headphones} titulo="Suporte técnico" detalhe="especializado" />
             </ul>
 
-            <ul className="flex flex-wrap gap-x-6 gap-y-1 min-[960px]:order-2 min-[960px]:justify-end min-[1840px]:order-none">
+            <ul className="flex flex-wrap gap-x-6 gap-y-1 min-[960px]:order-2 min-[960px]:justify-end">
               {RODAPE_POLITICAS.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="foco-jb inline-flex min-h-8 items-center rounded-xs text-[0.86rem] text-graf-500 transition-colors hover:text-jb-700 pointer-coarse:min-h-11"
+                    className="foco-jb inline-flex min-h-8 items-center rounded-xs text-apoio text-graf-500 transition-colors hover:text-jb-700 pointer-coarse:min-h-11"
                   >
                     {item.rotulo}
                   </Link>

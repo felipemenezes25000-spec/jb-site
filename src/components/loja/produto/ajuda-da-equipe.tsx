@@ -73,7 +73,7 @@ export function AjudaDaEquipe({
       </div>
 
       {horario ? (
-        <p className="mt-3 flex items-start gap-2 border-t border-graf-150 pt-2.5 texto-apoio text-graf-500">
+        <p className="mt-3 flex items-start gap-2 border-t border-hairline pt-2.5 texto-apoio text-graf-500">
           <Clock className="mt-px size-3.5 shrink-0" aria-hidden />
           {horario}
         </p>

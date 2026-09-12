@@ -203,7 +203,7 @@ export function CaixaCompra({
       </div>
 
       {baseCompravel ? (
-        <form action={acao} className="border-t border-graf-150 px-5 py-4 sm:px-6">
+        <form action={acao} className="border-t border-hairline px-5 py-4 sm:px-6">
           <input type="hidden" name="produtoId" value={produtoId} />
           <input type="hidden" name="quantidade" value={quantidade} />
           {escolhidos.map((id) => (
@@ -312,7 +312,7 @@ export function CaixaCompra({
           ) : null}
         </form>
       ) : permiteOrcamento ? (
-        <div className="border-t border-graf-150 p-5 sm:p-6">
+        <div className="border-t border-hairline p-5 sm:p-6">
           <LinkBotao href={hrefOrcamento} tamanho="lg" larguraTotal>
             Solicitar orçamento
           </LinkBotao>
@@ -321,7 +321,7 @@ export function CaixaCompra({
           </p>
         </div>
       ) : (
-        <div className="border-t border-graf-150 p-5 sm:p-6">
+        <div className="border-t border-hairline p-5 sm:p-6">
           <LinkBotao href="/contato" variante="secundario" tamanho="lg" larguraTotal>
             Falar com a equipe
           </LinkBotao>
@@ -331,7 +331,7 @@ export function CaixaCompra({
       {baseCompravel ? <EntregaPorCep produtoId={produtoId} /> : null}
 
       {temOpcoes ? (
-        <details className="group border-t border-graf-150">
+        <details className="group border-t border-hairline">
           <summary className="foco-jb flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 text-sm font-semibold text-graf-700 hover:bg-graf-50/70 [&::-webkit-details-marker]:hidden sm:px-6">
             <span className="flex min-w-0 items-center gap-2">
               <Sliders className="size-4 shrink-0 text-jb-600" aria-hidden />
@@ -340,7 +340,7 @@ export function CaixaCompra({
             <ChevronDown className="size-4 shrink-0 text-graf-500 transition-transform group-open:rotate-180" aria-hidden />
           </summary>
 
-          <div className="space-y-4 border-t border-graf-150 bg-graf-50/35 px-5 py-4 sm:px-6">
+          <div className="space-y-4 border-t border-hairline bg-graf-50/35 px-5 py-4 sm:px-6">
             {!unico ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="text-sm font-semibold text-graf-800" id="rotulo-quantidade">

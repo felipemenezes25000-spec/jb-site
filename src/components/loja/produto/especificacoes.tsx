@@ -95,7 +95,7 @@ function CartaoFicha({
 
 function GradeDados({ children }: { children: React.ReactNode }) {
   return (
-    <dl className="grid grid-cols-1 border-graf-150 sm:grid-cols-2 [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l sm:[&>*:nth-child(even)]:pl-5 sm:[&>*:nth-child(n+3)]:border-t">
+    <dl className="grid grid-cols-1 border-hairline sm:grid-cols-2 [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l sm:[&>*:nth-child(even)]:pl-5 sm:[&>*:nth-child(n+3)]:border-t">
       {children}
     </dl>
   );
@@ -111,7 +111,7 @@ function Dado({
   mono?: boolean;
 }) {
   return (
-    <div className="min-w-0 border-graf-150 py-3">
+    <div className="min-w-0 border-hairline py-3">
       <dt className="micro text-graf-500">{rotulo}</dt>
       <dd
         className={
@@ -219,7 +219,7 @@ export function FichaTecnica({ grupos }: { grupos: EspecificacaoAgrupada[] }) {
       subtitulo={`${totalDeItens} ${totalDeItens === 1 ? "especificação cadastrada" : "especificações cadastradas"}`}
       icone={SlidersHorizontal}
     >
-      <div className="divide-y divide-graf-150">
+      <div className="divide-y divide-hairline">
         {visiveis.map((grupo) => (
           <GrupoDeEspecificacoes
             key={grupo.grupo}
@@ -242,7 +242,7 @@ export function FichaTecnica({ grupos }: { grupos: EspecificacaoAgrupada[] }) {
               aria-hidden
             />
           </summary>
-          <div className="divide-y divide-graf-150">
+          <div className="divide-y divide-hairline">
             {extras.map((grupo) => (
               <GrupoDeEspecificacoes
                 key={grupo.grupo}
@@ -355,7 +355,7 @@ export function Regulatorio({
       ) : null}
 
       {observacao ? (
-        <div className={linhas.length > 0 ? "border-t border-graf-150 py-3" : "py-3"}>
+        <div className={linhas.length > 0 ? "border-t border-hairline py-3" : "py-3"}>
           <p className="micro text-graf-500">Observação</p>
           <p className="texto-apoio mt-1 text-graf-700">{observacao}</p>
         </div>
@@ -390,7 +390,7 @@ export function Documentacao({ documentos }: { documentos: DocumentoProduto[] })
       subtitulo={`${documentos.length} ${documentos.length === 1 ? "arquivo disponível" : "arquivos disponíveis"}`}
       icone={FileText}
     >
-      <ul className="divide-y divide-graf-150">
+      <ul className="divide-y divide-hairline">
         {documentos.map((documento) => {
           const tipo = TIPO_DE_DOCUMENTO[documento.tipo];
 

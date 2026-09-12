@@ -46,7 +46,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   }
 
   return (
-    <section aria-labelledby="entrega-cep" className="border-t border-graf-150 px-5 py-4 sm:px-6">
+    <section aria-labelledby="entrega-cep" className="border-t border-hairline px-5 py-4 sm:px-6">
       <h3 id="entrega-cep" className="flex items-center gap-2 text-sm font-bold text-graf-800">
         <Truck className="size-4 shrink-0 text-jb-600" aria-hidden />
         Calcular frete

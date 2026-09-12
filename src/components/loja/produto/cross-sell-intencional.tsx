@@ -96,7 +96,7 @@ function AdicionarAcessorio({ item }: { item: ItemCrossSell }) {
 
 function LinhaProduto({ item }: { item: ItemComTipo }) {
   return (
-    <article className="group grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)] items-start gap-4 border-t border-graf-150 py-4">
+    <article className="group grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)] items-start gap-4 border-t border-hairline py-4">
       <Link
         href={`/loja/${item.slug}`}
         className="foco-jb relative aspect-square overflow-hidden rounded-xl bg-graf-50"

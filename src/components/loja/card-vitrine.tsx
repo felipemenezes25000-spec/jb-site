@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ImageOff } from "lucide-react";
+import { ArrowRight, ImageOff, ShoppingCart } from "lucide-react";
 
+import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import type { ProdutoCard, Parcelamento } from "@/components/loja/card-produto";
-import { Grade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
+import { TrilhoOuGrade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
@@ -206,33 +207,60 @@ export function CardVitrine({
             ) : null}
           </div>
 
-          <div className="mt-3.5 flex items-center gap-1.5">
-            {/* Decorativo: o cartão inteiro já é o link do equipamento. O que
-                muda aqui é o peso — o convite passa a ter a forma de botão. */}
+          {/* Linha de ações — a mesma gramática do cartão do catálogo.
+
+              Este cartão trazia o convite como retângulo vermelho de largura
+              inteira. Numa home com nove equipamentos isso são nove faixas de
+              vermelho, e o cartão do catálogo já tinha feito o caminho de
+              volta pelo mesmo motivo, escrito lá: o vermelho da JB é sinal de
+              ação, e repetido a cada cartão deixa de apontar para coisa
+              nenhuma. Dois cartões que mostram o MESMO produto não podiam
+              continuar discordando sobre isso.
+
+              O destino segue sendo o cartão inteiro — o `after:inset-0` do
+              título cobre tudo. O que muda: o convite vira contorno, o
+              vermelho fica só no ícone do carrinho, e os três controles sobem
+              para `z-10` para o clique não cair na camada do cartão. */}
+          {/* `flex-wrap` + `shrink-0`: a 320px o cartão do trilho mede 250px,
+              e três controles numa linha só espremiam o botão de comparar de
+              44 para 18px — abaixo do alvo mínimo da WCAG 2.5.8, que o portão
+              `responsivo` pega. Agora o convite segura a primeira linha e os
+              dois ícones descem para a segunda quando não cabem. */}
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            {/* Decorativo: quem navega por teclado ou leitor de tela usa o
+                link do título, que cobre o cartão inteiro. Repetir o destino
+                aqui como âncora só duplicaria o mesmo item na lista de links. */}
             <span
               aria-hidden
               className={cn(
-                /* `whitespace-nowrap`: em caixa alta com espaçamento de letra,
-                   "VER EQUIPAMENTO" passava da coluna e quebrava em duas
-                   linhas com a seta sobrando à direita — o acabamento do
-                   cartão inteiro caía por causa de dois pixels. A largura da
-                   coluna também foi corrigida (ver `Vitrine`): em monitor
-                   largo a grade ia a 4 colunas dentro de um contêiner que
-                   para de crescer em 1440px, e o cartão ficava MENOR do que
-                   em telas menores. */
-                "micro flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap px-3",
-                "rounded-lg bg-jb-500 text-white transition-colors group-hover:bg-jb-600",
-                semEstoque && "bg-graf-400 group-hover:bg-graf-400",
+                "inline-flex h-11 min-w-[8.5rem] flex-1 items-center justify-center gap-2 whitespace-nowrap px-3",
+                "rounded-lg border border-graf-200 text-apoio font-bold text-graf-950",
+                "transition-colors group-hover:border-jb-500 group-hover:text-jb-700",
+                semEstoque && "text-graf-500 group-hover:border-graf-200 group-hover:text-graf-500",
               )}
             >
               {chamada}
               <ArrowRight className="size-3.5 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5" />
             </span>
 
+            {!soOrcamento && !semEstoque ? (
+              <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
+                <input type="hidden" name="produtoId" value={produto.id} />
+                <input type="hidden" name="quantidade" value="1" />
+                <button
+                  type="submit"
+                  aria-label={`Adicionar ${produto.name} ao carrinho`}
+                  className="foco-jb grid size-11 shrink-0 place-items-center rounded-lg border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600"
+                >
+                  <ShoppingCart className="size-4" aria-hidden />
+                </button>
+              </form>
+            ) : null}
+
             <BotaoComparar
               slug={produto.slug}
               nome={produto.name}
-              className="size-11 rounded-lg border-hairline bg-white"
+              className="relative z-10 size-11 shrink-0 rounded-lg border-graf-200 bg-white"
             />
           </div>
         </div>
@@ -241,7 +269,24 @@ export function CardVitrine({
   );
 }
 
-/** A grade da vitrine. Fecha a fileira pela quantidade, como a do catálogo. */
+/* ============================================================================
+   A grade da vitrine
+
+   Fecha a fileira pela quantidade, como a do catálogo — e, abaixo de `sm`,
+   deixa de ser grade.
+
+   Em coluna única de 390px cada cartão mede ~430px de altura. Quatro deles,
+   numa faixa só, são 1.720px de rolagem para mostrar quatro equipamentos; a
+   home tem quatro dessas faixas, e o total passava de 18.000px. Quem chega
+   pelo celular desiste antes de ver a assistência técnica, que é o argumento
+   comercial da JB.
+
+   `TrilhoOuGrade` existia no sistema para exatamente isto, escrito e
+   documentado, e nenhuma tela o usava. No trilho o cartão continua largo, a
+   foto continua grande, e o pedaço do próximo cartão aparecendo na borda é o
+   convite para arrastar. É rolagem nativa com encaixe: sem biblioteca, sem
+   botão, sem estado, e o foco do teclado leva o trilho junto.
+   ============================================================================ */
 export function GradeVitrine({
   produtos,
   colunas,
@@ -258,8 +303,27 @@ export function GradeVitrine({
   const teto = colunas ?? { base: 1, sm: 2, lg: 3, xl: 4 };
   const celulas = produtos.length + (extra ? 1 : 0);
 
+  /* Coleção curta não vira cartaz.
+
+     `colunasAte` fecha a fileira quando há menos itens que colunas — sem ele,
+     um seminovo só numa grade de quatro deixa um cartão e três buracos. Só
+     que fechar a fileira em UMA coluna faz o cartão ocupar os 1600px da
+     faixa: a foto do equipamento vai para o centro de um retângulo de tela
+     inteira e o preço fica sozinho a meio metro do nome. Foi o que a home
+     mostrou no dia em que o catálogo tinha um seminovo publicado.
+
+     O teto por célula devolve a proporção de cartão. A fileira continua
+     fechada, alinhada à esquerda, e quem olha entende que há um item — não
+     que o desenho quebrou. */
+  const alvo = teto.xl ?? teto.lg ?? teto.sm ?? teto.base ?? 1;
+
   return (
-    <Grade como="ul" espaco="sm" colunas={colunasAte(celulas, teto)} className={className}>
+    <TrilhoOuGrade
+      como="ul"
+      espaco="sm"
+      colunas={colunasAte(celulas, teto)}
+      className={cn(celulas < alvo && "sm:[&>li]:max-w-[24rem]", className)}
+    >
       {produtos.map((produto, indice) => (
         <li key={produto.slug} className="flex">
           <CardVitrine
@@ -271,6 +335,6 @@ export function GradeVitrine({
         </li>
       ))}
       {extra ? <li className="flex">{extra}</li> : null}
-    </Grade>
+    </TrilhoOuGrade>
   );
 }

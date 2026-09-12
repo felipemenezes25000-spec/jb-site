@@ -50,7 +50,7 @@ export function FaixaConfianca({
   if (itens.length === 0) return null;
 
   return (
-    <div className="border-y border-graf-150 bg-white">
+    <div className="border-y border-hairline bg-white">
       {/* `tabIndex` porque no celular a faixa rola na horizontal e nenhum dos
           itens é focável: sem isto, quem navega por teclado não alcança o que
           passa da borda (axe `scrollable-region-focusable`, grave). A partir
@@ -59,7 +59,7 @@ export function FaixaConfianca({
       <ul
         aria-label="Benefícios desta compra"
         tabIndex={0}
-        className="foco-jb container-jb scrollbar-none flex max-w-[100rem] items-center gap-0 overflow-x-auto py-2 sm:justify-center sm:overflow-visible"
+        className="foco-jb container-loja scrollbar-none flex items-center gap-0 overflow-x-auto py-2 sm:justify-center sm:overflow-visible"
       >
         {itens.map((item, indice) => {
           const Icone = item.icone;

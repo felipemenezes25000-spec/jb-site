@@ -40,7 +40,7 @@ export default async function EscolherEntregaPage() {
       />
 
       <header className="mb-7 max-w-2xl border-b border-graf-200 pb-5">
-        <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.1em] text-jb-600">Entrega</p>
+        <p className="sobretitulo">Entrega</p>
         <h1 className="manchete mt-1.5 text-[clamp(2rem,1.5rem+2vw,3rem)] text-graf-950">
           Escolha como receber
         </h1>

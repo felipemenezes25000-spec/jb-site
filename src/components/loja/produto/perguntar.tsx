@@ -48,7 +48,7 @@ export function PerguntarSobreProduto({
         </span>
       </summary>
 
-      <div className="border-t border-graf-150 pb-4 pt-4">
+      <div className="border-t border-hairline pb-4 pt-4">
         {estado.ok ? (
           <Aviso tom="sucesso">{estado.ok}</Aviso>
         ) : (

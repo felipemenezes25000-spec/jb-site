@@ -147,7 +147,7 @@ test.describe("Marketplace — página do produto", () => {
 
     // E uma largura só de container, do topo ao rodapé da ficha.
     const largurasDeContainer = await page
-      .locator("main .container-jb")
+      .locator("main .container-jb, main .container-loja")
       .evaluateAll((itens) => [
         ...new Set(itens.map((c) => Math.round(c.getBoundingClientRect().width))),
       ]);
@@ -190,8 +190,17 @@ test.describe("Marketplace — página do produto", () => {
     await page.goto(`/loja/${atual}`);
     await expect(page.getByRole("heading", { name: "Você viu recentemente" })).toBeVisible();
 
+    /* As duas caixas do sistema, não uma.
+
+       O teste media só `.container-jb` e exigia uma largura só. Em 12/09 a
+       loja pública passou a usar `container-loja` (1600px) — a caixa que o
+       cabeçalho, a barra de categorias, o conteúdo e o rodapé compartilham —,
+       e `container-jb` (1440px) ficou para formulário, política, checkout e
+       painel. Medindo só a primeira, a lista voltava vazia e o teste passava
+       a não provar nada. Medindo as duas, o contrato fica MAIS forte: se
+       alguém misturar as caixas na mesma página, aparecem duas larguras. */
     const larguras = await page
-      .locator("main .container-jb")
+      .locator("main .container-jb, main .container-loja")
       .evaluateAll((itens) => [
         ...new Set(itens.map((c) => Math.round(c.getBoundingClientRect().width))),
       ]);
@@ -259,6 +268,11 @@ test.describe("Marketplace — página do produto", () => {
 
     const duvidas = page.locator("#duvidas");
     await expect(duvidas).toBeVisible();
+
+    /* A seção virou gaveta em 12/09 e nasce fechada: o assunto deste teste é
+       o formulário DENTRO dela, que continua recolhido até o cliente pedir.
+       Abrir a gaveta primeiro é o que a pessoa faz. */
+    await page.locator("#duvidas > summary").click();
 
     const campo = duvidas.getByRole("textbox", { name: "Sua pergunta" });
     await expect(campo).toBeHidden();

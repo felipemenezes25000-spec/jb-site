@@ -285,7 +285,7 @@ export default async function PedidoPage({ params }: Props) {
 
   if (!liberado) {
     return (
-      <div className="container-jb max-w-[100rem] py-8 lg:py-12">
+      <div className="container-loja py-8 lg:py-12">
         {trilha}
         <div className="mx-auto max-w-xl">
           <h1 className="text-display texto-forte">Acompanhar pedido</h1>
@@ -369,7 +369,7 @@ export default async function PedidoPage({ params }: Props) {
   );
 
   return (
-    <div className="container-jb max-w-[100rem] py-8 lg:py-12">
+    <div className="container-loja py-8 lg:py-12">
       {trilha}
 
       <header className="flex min-w-0 flex-wrap items-start justify-between gap-x-8 gap-y-5">
@@ -534,7 +534,7 @@ export default async function PedidoPage({ params }: Props) {
                 >
                   <div
                     data-palco-imagem-produto
-                    className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-graf-50/50 sm:size-24"
+                    className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-surface-muted sm:size-24"
                   >
                     {item.imageUrl ? (
                       <Image

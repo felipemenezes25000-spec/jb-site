@@ -20,7 +20,7 @@ export function ServicosDoProduto({ servicos }: { servicos: ServicoDoProduto[] }
   if (servicos.length === 0) return null;
 
   return (
-    <ul className="divide-y divide-graf-150 border-t border-graf-200">
+    <ul className="divide-y divide-hairline border-t border-graf-200">
       {servicos.map((servico) => {
         const preco = servico.precoCents ?? 0;
 

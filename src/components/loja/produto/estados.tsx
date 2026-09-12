@@ -53,7 +53,7 @@ export function SemEstoque({
   hrefAlternativas: string;
 }) {
   return (
-    <div className="flex gap-3 border-t border-graf-150 pt-3.5">
+    <div className="flex gap-3 border-t border-hairline pt-3.5">
       <PackageX className="mt-0.5 size-[18px] shrink-0 text-graf-500" aria-hidden />
       <div className="min-w-0">
         {/* `p`, e não `h2`.

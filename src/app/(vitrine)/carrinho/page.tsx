@@ -50,7 +50,7 @@ export default async function CarrinhoPage() {
   );
 
   return (
-    <div className="container-jb py-7 lg:py-10">
+    <div className="container-loja py-7 lg:py-10">
       <Trilha itens={[{ rotulo: "Início", href: "/" }, { rotulo: "Carrinho" }]} className="mb-4" />
 
       <header className="max-w-2xl">
@@ -246,7 +246,7 @@ export default async function CarrinhoPage() {
               </div>
 
               {whatsapp ? (
-                <div className="border-t border-graf-150 bg-graf-50/50 px-5 py-4 sm:px-6">
+                <div className="border-t border-hairline bg-surface-muted px-5 py-4 sm:px-6">
                   <p className="text-apoio font-bold text-graf-900">Precisa de ajuda antes de fechar?</p>
                   <div className="mt-2 flex items-center justify-between gap-3">
                     <p className="text-[0.75rem] leading-5 text-graf-500">
@@ -262,7 +262,7 @@ export default async function CarrinhoPage() {
                       WhatsApp
                     </Link>
                   </div>
-                  {s.horario ? <p className="mt-1.5 text-[0.6875rem] text-graf-500">{s.horario}</p> : null}
+                  {s.horario ? <p className="mt-1.5 text-xs text-graf-500">{s.horario}</p> : null}
                 </div>
               ) : null}
             </Cartao>

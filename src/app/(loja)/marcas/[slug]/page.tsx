@@ -95,7 +95,7 @@ export default async function MarcaPage({ params, searchParams }: Props) {
   ];
 
   return (
-    <div className="vitrine">
+    <>
       <JsonLd dados={trilhaJsonLd(trilha)} />
 
       <Vitrine
@@ -149,6 +149,6 @@ export default async function MarcaPage({ params, searchParams }: Props) {
           </Grade>
         </Secao>
       ) : null}
-    </div>
+    </>
   );
 }

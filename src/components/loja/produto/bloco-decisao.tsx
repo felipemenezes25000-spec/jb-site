@@ -33,9 +33,15 @@ type Props = {
   lateral?: ReactNode;
   /** Abre a seção por padrão. */
   aberto?: boolean;
+  /** Quanto há aqui dentro — "12 especificações", "5 perguntas".
+
+      Fechado, um cartão de sanfona diz o que tem lá dentro mas não QUANTO, e
+      quatro deles enfileirados viram quatro gavetas iguais. O número é a
+      única coisa que diferencia uma da outra antes de abrir. */
+  contador?: string;
 };
 
-export function BlocoDecisao({ id, titulo, resumo, children, lateral, aberto = false }: Props) {
+export function BlocoDecisao({ id, titulo, resumo, children, lateral, aberto = false, contador }: Props) {
   if (id === "relacionados") return null;
 
   return (
@@ -46,8 +52,23 @@ export function BlocoDecisao({ id, titulo, resumo, children, lateral, aberto = f
     >
       <summary className="foco-jb flex cursor-pointer list-none items-center justify-between gap-6 rounded-2xl px-6 py-5 marker:hidden sm:px-8 sm:py-6 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
-          <span id={`${id}-titulo`} className="block text-bloco text-graf-950">
-            {titulo}
+          {/* `h2` de verdade, dentro do `summary`.
+
+              Quando as seções viraram sanfona o título passou a ser um
+              `<span>`, e a ficha de produto perdeu os cinco cabeçalhos do seu
+              esqueleto de uma vez: quem navega por títulos deixou de
+              encontrar "Especificações técnicas" ou "Antes de comprar", e a
+              barra "Seções deste equipamento" apontava para âncoras sem
+              cabeçalho nenhum. `h2` dentro de `summary` é marcação válida. */}
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <h2 id={`${id}-titulo`} className="text-bloco text-graf-950">
+              {titulo}
+            </h2>
+            {contador ? (
+              <span className="micro rounded-full bg-surface-sunken px-2.5 py-1 text-graf-700">
+                {contador}
+              </span>
+            ) : null}
           </span>
           {resumo ? (
             <span className="texto-apoio mt-1.5 block max-w-2xl text-graf-600">{resumo}</span>
@@ -56,7 +77,7 @@ export function BlocoDecisao({ id, titulo, resumo, children, lateral, aberto = f
 
         {/* O convite. 44px de alvo, e a palavra ao lado da seta — quem toca
             precisa saber que há mais coisa aí dentro. */}
-        <span className="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-graf-200 px-4 text-apoio font-bold text-graf-800 transition-colors group-hover:border-jb-500 group-hover:text-jb-700 group-open:border-graf-200 group-open:text-graf-600">
+        <span className="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-graf-200 px-4 text-apoio font-bold text-graf-800 transition-colors group-hover:border-jb-500 group-hover:text-jb-700 group-open:border-graf-200">
           <span className="hidden sm:inline group-open:sm:hidden">Ver detalhes</span>
           <span className="hidden group-open:sm:inline">Fechar</span>
           <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />

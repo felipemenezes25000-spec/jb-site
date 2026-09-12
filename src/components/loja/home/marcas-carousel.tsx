@@ -83,13 +83,13 @@ function CartaoMarca({ marca }: { marca: Marca }) {
             className="max-h-[3.9rem] w-auto max-w-[78%] object-contain"
           />
         ) : (
-          <span className="text-[1.6rem] font-black tracking-[-0.04em] text-graf-900">
+          <span className="text-2xl font-black tracking-[-0.04em] text-graf-900">
             {marca.name}
           </span>
         )}
       </span>
-      <span className="mt-4 block text-[1.02rem] font-bold text-graf-800">{marca.name}</span>
-      <span className="mt-1.5 block text-[0.6875rem] font-bold uppercase leading-[1.5] tracking-[0.2em] text-graf-500">
+      <span className="mt-4 block text-base font-bold text-graf-800">{marca.name}</span>
+      <span className="mt-1.5 block micro leading-[1.5] tracking-[0.2em] text-graf-500">
         {legenda(marca)}
       </span>
     </Link>
@@ -139,12 +139,12 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
         <span className="absolute left-32 top-2 h-[26rem] w-11 rounded-full bg-gradient-to-b from-transparent via-graf-200/70 to-transparent" />
       </div>
 
-      <div className="revelar container-jb relative z-10 max-w-[100rem] min-[1024px]:pt-12">
+      <div className="revelar container-loja relative z-10 min-[1024px]:pt-12">
         <div className="pointer-events-none absolute top-0 hidden w-max items-center gap-5 min-[1024px]:right-10 min-[1024px]:flex min-[1840px]:-right-10">
           <span className="grid size-[3.15rem] shrink-0 place-items-center rounded-full bg-jb-50/70 text-graf-800">
             <Sparkles className="size-[1.05rem]" aria-hidden />
           </span>
-          <p className="whitespace-nowrap text-[0.66rem] font-bold uppercase leading-[1.6] tracking-[0.32em] text-graf-500">
+          <p className="whitespace-nowrap micro leading-[1.6] tracking-[0.32em] text-graf-500">
             Marcas
             <br />
             que a equipe
@@ -157,7 +157,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
           <div>
             <div className="flex items-center gap-4">
               <span className="h-[2px] w-9 shrink-0 rounded-full bg-jb-600" aria-hidden />
-              <p className="text-[0.72rem] font-black uppercase tracking-[0.26em] text-jb-700">
+              <p className="micro tracking-[0.26em] text-jb-700">
                 Marcas no catálogo
               </p>
             </div>
@@ -170,7 +170,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
               Marcas que <span className="text-jb-700">fazem parte do</span> dia a dia da JB.
             </h2>
 
-            <p className="mt-7 max-w-[30rem] text-[1.02rem] leading-[1.5] text-graf-500 min-[1360px]:text-[1.06rem]">
+            <p className="mt-7 max-w-[30rem] text-base leading-[1.5] text-graf-500">
               Navegue por fabricante para encontrar os equipamentos publicados e os modelos que a
               equipe acompanha.
             </p>
@@ -187,7 +187,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
               </Link>
 
               <div className="hidden h-12 w-px shrink-0 bg-graf-200 min-[640px]:block" aria-hidden />
-              <p className="whitespace-nowrap text-[0.95rem] leading-[1.4] text-graf-500">
+              <p className="whitespace-nowrap text-corpo leading-[1.4] text-graf-500">
                 As melhores marcas
                 <br />
                 para o seu consultório.
@@ -221,7 +221,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
               </ul>
             </div>
 
-            <p className="mt-7 flex items-center gap-4 pl-1 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-graf-500 min-[1024px]:mt-9">
+            <p className="mt-7 flex items-center gap-4 pl-1 micro tracking-[0.24em] text-graf-500 min-[1024px]:mt-9">
               <span className="h-[3px] w-16 shrink-0 rounded-full bg-jb-600" aria-hidden />
               {marcas.length} marcas com equipamentos publicados
             </p>
@@ -244,9 +244,9 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
                 <span className="grid size-11 shrink-0 place-items-center rounded-full bg-jb-50 text-jb-600">
                   <IconeBeneficio className="size-[1.2rem]" aria-hidden />
                 </span>
-                <p className="text-[0.92rem] font-semibold leading-[1.35] text-graf-700 min-[1840px]:whitespace-nowrap">
+                <p className="text-sm font-semibold leading-[1.35] text-graf-700 min-[1840px]:whitespace-nowrap">
                   {titulo}
-                  <span className="mt-0.5 block text-[0.82rem] font-normal text-graf-500">
+                  <span className="mt-0.5 block text-apoio font-normal text-graf-500">
                     {apoio}
                   </span>
                 </p>
@@ -259,7 +259,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
           className="pointer-events-none absolute bottom-[1.5rem] right-10 hidden w-max min-[1600px]:block min-[1840px]:-right-10"
           aria-hidden
         >
-          <p className="text-[0.63rem] font-bold uppercase leading-[1.6] tracking-[0.28em] text-graf-300">
+          <p className="micro leading-[1.6] tracking-[0.28em] text-graf-300">
             Juntos
             <br />
             por uma odontologia

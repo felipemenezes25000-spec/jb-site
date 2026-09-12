@@ -5,7 +5,7 @@ import { History } from "lucide-react";
 
 import { cartoesVistos, type VistosRecentes } from "@/app/acoes/vistos";
 import { CardProduto } from "@/components/loja/card-produto";
-import { Secao, type EspacoSecao } from "@/components/ui/secao";
+import { Secao, type EspacoSecao, type LarguraSecao } from "@/components/ui/secao";
 import { TituloSecao, type TamanhoTitulo } from "@/components/ui/data";
 
 /* ============================================================================
@@ -56,17 +56,16 @@ export function RegistrarVisita({ slug }: { slug: string }) {
      faixa de abertura que ela é na home: o título usa o mesmo degrau dos
      outros `h2` da página e o respiro acompanha o das seções vizinhas.
 
-     `larguraInterna` não é detalhe. Sem ela a tira cai no `container-jb` puro
-     (1440px) no meio de uma página que corre a 1600px — um degrau de 80px de
-     cada lado, que é exatamente o defeito que esta revisão veio consertar. Ela
-     só aparece para quem já visitou outros dois produtos, então passa
+     `largura="loja"` não é detalhe. Sem ela a tira cai na caixa de 1440px no
+     meio de uma página que corre a 1600px — um degrau de 80px de cada lado.
+     Ela só aparece para quem já visitou outros dois produtos, então passa
      despercebida em navegador limpo. */
   return (
     <VistosRecentemente
       excluir={slug}
       tamanhoDoTitulo="bloco"
       espaco="sm"
-      larguraInterna="max-w-[100rem]"
+      largura="loja"
     />
   );
 }
@@ -74,15 +73,15 @@ export function RegistrarVisita({ slug }: { slug: string }) {
 export function VistosRecentemente({
   excluir,
   titulo = "Você viu recentemente",
-  larguraInterna,
+  largura,
   tamanhoDoTitulo = "secao",
   espaco = "md",
 }: {
   /** O que não deve aparecer nesta lista. */
   excluir?: string | string[];
   titulo?: string;
-  /** Teto do container desta faixa. */
-  larguraInterna?: string;
+  /** Caixa desta faixa. `loja` acompanha a vitrine; o padrão é 1440px. */
+  largura?: LarguraSecao;
   /** Degrau do título. `secao` na home; `bloco` dentro de uma ficha. */
   tamanhoDoTitulo?: TamanhoTitulo;
   /** Respiro vertical, para acompanhar o ritmo da página que a hospeda. */
@@ -112,7 +111,7 @@ export function VistosRecentemente({
   if (!dados || dados.produtos.length < 2) return null;
 
   return (
-    <Secao espaco={espaco} separador classNameInterno={larguraInterna}>
+    <Secao espaco={espaco} largura={largura} separador>
       <TituloSecao
         como="h2"
         tamanho={tamanhoDoTitulo}

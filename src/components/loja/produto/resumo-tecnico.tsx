@@ -212,11 +212,11 @@ export function DetalhesDoProduto({
               com ~200px para caber "Secagem / A vácuo, 20 min", e o valor
               quebrava em duas linhas. Numa faixa só, o valor cabe inteiro e a
               lista lê como tabela de ficha — que é o que ela é. */}
-          <dl className="mt-1 grid border-graf-150 [&>*:nth-child(n+2)]:border-t">
+          <dl className="mt-1 grid border-hairline [&>*:nth-child(n+2)]:border-t">
             {essenciais.map((destaque) => (
               <div
                 key={`${destaque.rotulo}-${destaque.valor}`}
-                className="flex min-w-0 items-baseline justify-between gap-5 border-graf-150 py-2.5"
+                className="flex min-w-0 items-baseline justify-between gap-5 border-hairline py-2.5"
               >
                 <dt className="micro shrink-0 text-graf-500">{destaque.rotulo}</dt>
                 <dd className="min-w-0 break-words text-right text-base font-extrabold leading-5 text-graf-950">
@@ -237,7 +237,7 @@ export function DetalhesDoProduto({
       ) : null}
 
       {identificadores.length > 0 ? (
-        <details className="group mt-4 border-t border-graf-150 pt-2">
+        <details className="group mt-4 border-t border-hairline pt-2">
           <summary className="foco-jb texto-apoio flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 font-bold text-graf-500 hover:text-graf-900 [&::-webkit-details-marker]:hidden">
             Identificação do produto
             <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden />

@@ -390,7 +390,7 @@ export default async function CompararPage({ searchParams }: Props) {
                       />
                       <span
                         data-palco-imagem-produto
-                        className="relative size-12 shrink-0 overflow-hidden rounded-md bg-graf-50/50"
+                        className="relative size-12 shrink-0 overflow-hidden rounded-md bg-surface-muted"
                       >
                         {produto.foto ? (
                           <Image
@@ -410,7 +410,7 @@ export default async function CompararPage({ searchParams }: Props) {
                       </span>
                       <span className="min-w-0 flex-1">
                         {produto.marca ? (
-                          <span className="block truncate text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+                          <span className="block truncate micro text-graf-500">
                             {produto.marca}
                           </span>
                         ) : null}
@@ -619,7 +619,7 @@ export default async function CompararPage({ searchParams }: Props) {
                   <div className="flex items-center gap-4">
                     <span
                       data-palco-imagem-produto
-                      className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-graf-50/50 p-1.5"
+                      className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted p-1.5"
                     >
                       {produto.media[0] ? (
                         <Image
@@ -703,7 +703,7 @@ export default async function CompararPage({ searchParams }: Props) {
                         >
                           <span
                             data-palco-imagem-produto
-                            className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-lg bg-graf-50/50 p-2"
+                            className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-lg bg-surface-muted p-2"
                           >
                             {produto.media[0] ? (
                               <Image

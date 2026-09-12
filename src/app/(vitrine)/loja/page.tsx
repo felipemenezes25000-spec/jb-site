@@ -45,7 +45,7 @@ export default async function LojaPage({
   ];
 
   return (
-    <div className="vitrine">
+    <>
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
       <Vitrine
@@ -60,6 +60,6 @@ export default async function LojaPage({
         rotuloAtalhos="Categorias e atalhos desta coleção"
         travarCondicao
       />
-    </div>
+    </>
   );
 }

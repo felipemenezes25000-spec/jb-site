@@ -49,7 +49,7 @@ import {
   contarChecklist,
   frasedaVerificacao,
 } from "@/lib/certificacao";
-import { calcularParcelas, paraCentavos, whatsappHref } from "@/lib/format";
+import { calcularParcelas, paraCentavos, plural, whatsappHref } from "@/lib/format";
 import {
   faqJsonLd,
   JsonLd,
@@ -244,6 +244,9 @@ export default async function ProdutoPage({ params }: Props) {
   const DESCRICAO_LONGA = 900;
   const descricaoMereceSecao = tamanhoDaDescricao > DESCRICAO_LONGA;
   const temEspecificacoes = grupos.length > 0;
+  /* Quantas linhas a ficha tem no total — é o número que a sanfona mostra
+     fechada, e ele vem dos grupos já montados, não de outra consulta. */
+  const totalEspecificacoes = grupos.reduce((soma, grupo) => soma + grupo.itens.length, 0);
   const temApoioTecnico = temMedidas || temRegulatorio || documentos.length > 0;
 
   /* A lista de decisão sobe para a coluna do meio, junto do preço — e a ficha
@@ -498,7 +501,7 @@ export default async function ProdutoPage({ params }: Props) {
         />
       ) : null}
 
-      <div className="container-jb max-w-[100rem]">
+      <div className="container-loja">
         {temDescricao && descricaoMereceSecao ? (
           <BlocoDecisao
             id="sobre"
@@ -517,6 +520,19 @@ export default async function ProdutoPage({ params }: Props) {
             id="ficha-tecnica"
             titulo="Especificações técnicas"
             resumo="Dados organizados para conferir compatibilidade e comparar o que realmente importa."
+            contador={
+              totalEspecificacoes > 0
+                ? plural(totalEspecificacoes, "especificação", "especificações")
+                : undefined
+            }
+            /* A única que nasce aberta.
+
+               Num equipamento de clínica a tabela de especificação é o que
+               decide a compra — voltagem, capacidade, ciclo, medida de
+               bancada. Com as cinco seções fechadas, a metade de baixo da
+               ficha virava quatro gavetas iguais e a informação que mais pesa
+               ficava a um clique de distância de quem já decidiu comparar. */
+            aberto
           >
             <div className={duasColunasNaFicha ? "grid gap-x-10 gap-y-8 xl:grid-cols-2" : "max-w-4xl"}>
               {temEspecificacoes ? <FichaTecnica grupos={grupos} /> : null}
@@ -547,6 +563,12 @@ export default async function ProdutoPage({ params }: Props) {
             id="preparo"
             titulo="Antes de comprar"
             resumo="Confira infraestrutura, itens inclusos, instalação e o que acontece depois da compra."
+            /* Aberta, como a ficha técnica: requisito de instalação —
+               voltagem, ponto de água, espaço de bancada — é justamente o que
+               o cliente precisa descobrir ANTES de comprar, e é o que o
+               contrato medido em 11/09 contra dez fichas de referência
+               registra como visível no desktop. */
+            aberto
           >
             <div className="grid gap-x-10 gap-y-8 xl:grid-cols-2">
               <AntesDeComprar
@@ -627,6 +649,11 @@ export default async function ProdutoPage({ params }: Props) {
             id="duvidas"
             titulo="Dúvidas"
             resumo="Respostas técnicas e um canal direto para perguntar sobre este produto."
+            contador={
+              produto.faqs.length > 0
+                ? plural(produto.faqs.length, "pergunta respondida", "perguntas respondidas")
+                : undefined
+            }
           >
             <div className={produto.faqs.length > 0 ? "grid gap-x-10 gap-y-8 xl:grid-cols-2" : "max-w-3xl"}>
               {produto.faqs.length > 0 ? (

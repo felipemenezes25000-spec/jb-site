@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Secao } from "@/components/ui/secao";
 import { ClipboardCheck, ShieldCheck, Sparkles } from "lucide-react";
 
 /* ============================================================================
@@ -80,7 +81,7 @@ export function ManifestoJB({
   temSeminovo: boolean;
 }) {
   return (
-    <section className="container-jb py-16">
+    <Secao largura="loja" espaco="md">
       <div className="grid items-center gap-12 lg:grid-cols-2">
         <div className="relative min-w-0">
           <div className="relative overflow-hidden rounded-[2rem] border border-graf-200 shadow-raised">
@@ -141,6 +142,6 @@ export function ManifestoJB({
           </div>
         </div>
       </div>
-    </section>
+    </Secao>
   );
 }

@@ -7,7 +7,7 @@ import { Esqueleto } from "@/components/ui/data";
  */
 export default function CarregandoPagina() {
   return (
-    <main className="container-jb max-w-[100rem] py-7 sm:py-9 lg:py-12" aria-busy="true">
+    <main className="container-loja py-7 sm:py-9 lg:py-12" aria-busy="true">
       <span className="sr-only" role="status">
         Carregando página…
       </span>

@@ -132,7 +132,7 @@ export function EscolherEntrega({
           </form>
         ) : null}
 
-        <div className="rounded-xl border border-graf-200 bg-graf-50/60 p-4">
+        <div className="rounded-xl border border-graf-200 bg-surface-muted p-4">
           <PackageCheck className="size-4 text-jb-700" aria-hidden />
           <p className="mt-2 text-sm font-bold text-graf-900">Cotação vinculada ao pedido</p>
           <p className="mt-1 text-apoio leading-5 text-graf-600">

@@ -30,7 +30,7 @@ export function CabecalhoColecao({
       <div className="mt-3 grid min-w-0 gap-5 border-b border-graf-200 pb-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:gap-8 lg:pb-6">
         <div className="min-w-0 max-w-4xl">
           {sobretitulo ? (
-            <p className="text-[0.6875rem] font-extrabold uppercase tracking-[0.11em] text-jb-600">
+            <p className="sobretitulo">
               {sobretitulo}
             </p>
           ) : null}
@@ -45,7 +45,7 @@ export function CabecalhoColecao({
         </div>
 
         {imagem ? (
-          <div className="hidden min-h-16 min-w-28 items-center justify-center rounded-xl border border-graf-150 bg-graf-50/60 px-4 sm:flex">
+          <div className="hidden min-h-16 min-w-28 items-center justify-center rounded-xl border border-hairline bg-surface-muted px-4 sm:flex">
             <Image
               src={imagemProdutoSemFundo(imagem.url)}
               alt={imagem.alt}
@@ -78,7 +78,7 @@ export function CabecalhoColecao({
             >
               <span>{atalho.rotulo}</span>
               {atalho.quantidade === undefined ? null : (
-                <span className="tabular inline-flex min-w-5 items-center justify-center rounded-full bg-graf-100 px-1.5 py-0.5 text-[0.6875rem] font-bold text-graf-600">
+                <span className="tabular inline-flex min-w-5 items-center justify-center rounded-full bg-graf-100 px-1.5 py-0.5 text-xs font-bold text-graf-600">
                   {atalho.quantidade}
                 </span>
               )}

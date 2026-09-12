@@ -32,7 +32,7 @@ export default async function Pagina({
   const [parametros, atalhos] = await Promise.all([searchParams, atalhosDeCondicao("novo")]);
 
   return (
-    <div className="vitrine">
+    <>
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
       <Vitrine
@@ -47,6 +47,6 @@ export default async function Pagina({
         rotuloAtalhos="Outras condições"
         travarCondicao
       />
-    </div>
+    </>
   );
 }
