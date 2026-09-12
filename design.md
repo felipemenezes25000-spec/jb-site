@@ -4,7 +4,7 @@ Referência da linguagem visual da plataforma. O que está aqui foi lido do
 código, não de memória: a fonte da verdade é `src/app/globals.css`, e cada
 número abaixo sai de lá ou de medição no navegador.
 
-Estado: 11/09/2026, commit `d5ff4ad` na branch `plataforma`.
+Estado: 11/09/2026, branch `plataforma`.
 
 ---
 
@@ -228,6 +228,25 @@ layouts de `(vitrine)` e `(loja)`, porque moldura pode ser mais larga que miolo.
 > em notebook. **Ao criar seção nova, a pergunta não é "que largura fica
 > bonita": é se aquilo é conteúdo ou catálogo.**
 
+### Sangria até a borda
+
+Peça que se estica de borda a borda dentro de uma página com respiro — faixa em
+destaque, barra fixa de salvar — usa recuo negativo mais o respiro de volta:
+
+```tsx
+"-mx-4 px-4 sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6 xl:-mx-7 xl:px-7 2xl:-mx-8 2xl:px-8"
+```
+
+**O recuo não tem valor próprio: é o negativo do respiro da página**, e por isso
+vai escrito degrau a degrau ao lado dele, nunca resumido. No painel o respiro é
+`px-4 sm:px-5 lg:px-6 xl:px-7 2xl:px-8`, em `src/components/admin/casca.tsx`.
+
+> Em 11/09/2026 duas peças traziam `-mx-4 sm:-mx-6` — certo quando a página
+> tinha dois degraus, errado desde que ela ganhou cinco. O efeito eram 4px de
+> página fora da tela em toda largura de tablet para cima, com rolagem
+> horizontal em `/admin` e `/admin/configuracoes`. Sangria maior que o respiro
+> não quebra nada e não avisa: simplesmente transborda.
+
 ### Ritmo vertical da home
 
 **Lista é densa, narrativa respira.** As sete seções tinham exatamente 64px em
@@ -415,7 +434,16 @@ Não é uma camada revisada no fim; é parte do sistema, e a suíte mede.
 | `npx eslint .` | 0 erros (51 avisos conhecidos) |
 | `npx playwright test` | **99 cenários de ponta a ponta** |
 | `tests/e2e/15-legibilidade-alinhamento.spec.ts` | cinza, tamanho mínimo, alvo de toque, alinhamento |
-| axe (WCAG 2.0/2.1 A+AA) | 28 rotas públicas × 2 larguras + 10 da Área da Clínica |
+| `pnpm a11y` (axe, WCAG 2.0/2.1 A+AA) | **47 rotas × 2 larguras = 94 medições** |
+| `pnpm responsivo` | **42 rotas × 7 larguras = 294 medições** |
+
+Em 11/09/2026 os quatro fecharam verdes na mesma rodada pela primeira vez:
+99/99, 621 unitários, **0 problemas** de acessibilidade e **0** de
+responsividade.
+
+> Os dois últimos precisam do Postgres de pé. Sem banco, o trecho do painel
+> imprime `pulando: não foi possível entrar` e termina com **zero medição e
+> código de saída 0** — lê como verde sem ter medido nada.
 
 **Cuidado ao escrever teste visual.** Quatro dos testes desta suíte já falharam
 por medir antes de a página existir — conteúdo por streaming, foco no primeiro
@@ -440,8 +468,8 @@ que casa zero elementos faz o teste passar dizendo nada.
 
 | Item | Situação |
 |---|---|
-| **`MARKETPLACE ODONTOLÓGICO`** | injetado por `content:` em `header-product.css:37`. Factualmente errado e invisível para leitor de tela |
-| **Quatro CSS de cabeçalho** | `header-premium`, `header-product` (12,9 kB), `header-product-mobile`, `header-search` repintam o cabeçalho global de fora, com `!important`. Deveria ser prop |
+| **Quatro CSS de cabeçalho** | `header-premium` (5,1 kB), `header-product` (11,4 kB), `header-product-mobile` (2,3 kB), `header-search` (3,1 kB) repintam o cabeçalho global de fora, com `!important` — 21,9 kB ao todo. Deveria ser prop |
 | **~90 valores tipográficos avulsos** | espalhados por 20 tamanhos (`text-[1.02rem]`, `text-[11px]`…). Poucos usos cada — nomear degrau que aparece três vezes é inventar escala |
 | **Rampa de cinza × override público** | as duas coexistem e brigam; CSS Module escapa da segunda |
-| **Texto institucional na ficha** | 30–40% de cada página de produto é o mesmo texto da JB, repetido. No compressor: 40% institucional contra 18% de produto |
+| **Bloco institucional idêntico na ficha** | "O equipamento continua dentro do ecossistema" ocupa **466px iguais** em toda página de produto. O resto do texto institucional varia com o equipamento — a medição de sobreposição de palavras deu 22%, 13% e 58%, não os "30–40% repetidos" que este documento afirmou antes. Só esse bloco é literalmente o mesmo, e é decisão editorial: âncora de marca ou repetição |
+| **Sangria negativa espalhada** | o padrão está documentado em § 4, mas nada impede escrever `-mx-4 sm:-mx-6` de novo. Um teste que meça `scrollWidth` do `<main>` no painel fecharia a classe inteira |

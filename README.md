@@ -685,24 +685,34 @@ dado, a tela mostra estado vazio com uma ação útil.
   principal do cabeçalho enquanto não tiver texto no ar
   (`centralTemPublicacao`, em `src/lib/loja-publica.ts`). Voltam sozinhas na
   primeira publicação.
-- **Os portões de 47 e 42 rotas não foram reconferidos na última rodada.** O que
-  foi medido em 10–11/09/2026, e está verde: **e2e 99/99**, **621 unitários**,
-  `eslint` sem erro, axe limpo em **28 rotas públicas × 2 larguras** e em **10
-  rotas da Área da Clínica**, e o spec de legibilidade — que cobre cinza, piso de
-  12px e alvo de 44px em `/`, `/loja`, `/seminovos` e `/busca` — **7/7**.
+- ~~**Os portões de 47 e 42 rotas não foram reconferidos**~~ — **reconferidos
+  em 11/09/2026, e os três fecharam verdes pela primeira vez na mesma rodada**:
 
-  Nessa rodada saíram os dois vermelhos que a lista antiga citava do lado
-  público: o texto de 11,52px do hero da vitrine e os chips de 40px do catálogo,
-  mais o botão de favoritar do cartão, que nasceu com 36px. O que **não** foi
-  remedido é a casca do painel e da Área da Clínica, onde a densidade de 40px foi
-  escolha de desenho daquelas telas.
+  | Portão | Medida |
+  |---|---|
+  | `pnpm e2e` | **99/99**, sem repetição |
+  | `pnpm test:unit` | **621** em 39 arquivos |
+  | `pnpm a11y` | **47 rotas · 94 medições · 0 problemas** |
+  | `pnpm responsivo` | **42 rotas · 294 medições · 0 problemas** |
+  | `pnpm build` | compila |
+  | `eslint`, `tsc` | sem erro |
 
-  `pnpm a11y` (47 rotas) e `pnpm responsivo` (7 larguras × 42 rotas) precisam do
-  Postgres de pé; rode-os antes de dar a frente por fechada. `pnpm responsivo
-  --so=publico` separa loja de painel. Ver
+  O último vermelho era do painel, e de um tipo só: barra de formulário e faixa
+  em destaque sangravam com recuo negativo maior que o respiro da página, e
+  vazavam 4px para fora da tela em toda largura de tablet para cima. A sangria
+  agora espelha o respiro degrau a degrau — ver
+  [`docs/decisoes.md` § 28](docs/decisoes.md).
+
+  Os dois vermelhos públicos que a lista antiga citava saíram na rodada
+  anterior: o texto de 11,52px do hero da vitrine e os chips de 40px do
+  catálogo, mais o botão de favoritar do cartão, que nasceu com 36px.
+
+  `pnpm a11y` e `pnpm responsivo` precisam do Postgres de pé — sem ele, o portão
+  do painel diz "não foi possível entrar" e **passa com zero medição**, que lê
+  como verde e não é. `pnpm responsivo --so=publico` separa loja de painel. Ver
   [`docs/evolucao-jb/validacao.md`](docs/evolucao-jb/validacao.md).
 - **Quatro folhas de estilo repintam o cabeçalho de fora.** `header-premium.css`,
-  `header-product.css` (12,9 kB), `header-product-mobile.css` e
+  `header-product.css` (11,4 kB), `header-product-mobile.css` e
   `header-search.css` alcançam o cabeçalho global por
   `body:has([data-pdp-marketplace]) header[…] { … !important }`. O efeito
   aparece: a busca do topo mede 300px em todo o site e 563px na ficha. Deveria

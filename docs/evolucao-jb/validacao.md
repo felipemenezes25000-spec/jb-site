@@ -543,3 +543,43 @@ o círculo de 36px num `<span>`, porque a regra fala do **alvo**, não da tinta.
 
 Não saiu: a densidade de 40px na casca do painel e da Área da Clínica, que foi
 escolha de desenho daquelas telas e continua sendo decisão em aberto.
+
+---
+
+## Fechamento dos três portões — 11/09/2026
+
+Primeira rodada em que e2e, acessibilidade e responsividade fecham verdes ao
+mesmo tempo, contra o Postgres local (`localhost:5433/jb`).
+
+| Portão | Medida | Resultado |
+|---|---|---|
+| `pnpm e2e` | 99 cenários, `retries: 0` | **99 passaram** (6,1 min) |
+| `pnpm test:unit` | 39 arquivos | **621 passaram** |
+| `pnpm a11y` | 47 rotas × 2 larguras | **94 medições · 0 problemas** |
+| `pnpm responsivo` | 42 rotas × 7 larguras | **294 medições · 0 problemas** |
+| `pnpm build` | produção | compila |
+| `tsc --noEmit`, `eslint` | — | sem erro |
+
+### O último vermelho: sangria negativa maior que o respiro da página
+
+Restava um tipo só de problema, em `/admin` e `/admin/configuracoes`:
+`elemento-fora-da-tela`, de `-4px a 772px` em 768, e 4px além da borda direita
+em 1024, 1280 e 1440.
+
+Duas peças sangram até a borda da página com recuo negativo — a `BarraDeSalvar`
+de `src/components/admin/conteudo/formulario-base.tsx` e a faixa em destaque de
+`src/app/(admin)/admin/page.tsx`. As duas traziam `-mx-4 sm:-mx-6`, escrito
+quando o respiro da página era `px-4 sm:px-6`. A página passou a
+`px-4 sm:px-5 lg:px-6 xl:px-7 2xl:px-8` (`casca.tsx`), e a sangria ficou um
+degrau adiantada de 640px para cima. As duas agora espelham o respiro degrau a
+degrau. Ver [`decisoes.md` § 28](../decisoes.md).
+
+### Uma armadilha do próprio portão, registrada porque engana
+
+Com o Postgres parado, `pnpm responsivo --so=admin` imprime
+`pulando: não foi possível entrar` e termina com **`0 medições · nenhum problema
+encontrado`, código de saída 0**. Lê como verde e não mediu nada. O container
+`jb-pg` precisa estar de pé **e aceitando conexão** (`docker exec jb-pg
+pg_isready -U jb -d jb`) antes de o `next dev` subir — se o servidor nascer sem
+banco, o layout raiz falha com `PrismaClientInitializationError` e toda rota
+devolve 500 até reiniciar.

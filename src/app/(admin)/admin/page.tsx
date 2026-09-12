@@ -145,7 +145,12 @@ function Secao({
       className={cn(
         "space-y-4",
         destaque &&
-          "-mx-4 border-y border-jb-500/5 bg-gradient-to-br from-jb-50/55 via-white/75 to-jb-50/20 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-7 lg:px-7 xl:-mx-8 xl:px-8",
+          // O recuo negativo sangra a faixa até a borda da página, então tem de
+          // espelhar o respiro dela — `px-4 sm:px-5 lg:px-6 xl:px-7 2xl:px-8`, em
+          // `casca.tsx`. Estava um degrau adiantado a partir de 640px e a faixa
+          // ficava 4px mais larga que a tela em todas as larguras de tablet para
+          // cima.
+          "-mx-4 border-y border-jb-500/5 bg-gradient-to-br from-jb-50/55 via-white/75 to-jb-50/20 px-4 py-6 sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6 xl:-mx-7 xl:px-7 2xl:-mx-8 2xl:px-8",
       )}
     >
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">

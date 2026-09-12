@@ -62,8 +62,18 @@ export function Bloco({
 
 /**
  * Barra de ações do formulário. Fica colada no fim da janela para que o botão
- * de salvar não fuja da tela em formulário longo. Os recuos negativos casam com
- * o respiro da página do painel, e não com o do bloco.
+ * de salvar não fuja da tela em formulário longo.
+ *
+ * O recuo negativo sangra a barra até a borda da página, e por isso precisa
+ * espelhar o respiro dela — `px-4 sm:px-5 lg:px-6 xl:px-7 2xl:px-8`, em
+ * `casca.tsx`. Estava `-mx-4 sm:-mx-6`: os dois casavam quando a página tinha
+ * dois degraus e deixaram de casar quando ela ganhou cinco. A partir de 640px a
+ * barra passava a ser mais larga que a própria página e vazava 4px para fora da
+ * tela — era o último problema de responsividade do painel, em `/admin` e
+ * `/admin/configuracoes`.
+ *
+ * Espelhar degrau a degrau elimina a classe de erro, não só a ocorrência: se o
+ * respiro da página mudar de novo, a divergência aparece lado a lado aqui.
  */
 export function BarraDeSalvar({
   children,
@@ -75,7 +85,10 @@ export function BarraDeSalvar({
   className?: string;
 }) {
   return (
-    <BarraForm ajuda={aviso} className={cn("-mx-4 px-4 sm:-mx-6 sm:px-6", className)}>
+    <BarraForm ajuda={aviso} className={cn(
+        "-mx-4 px-4 sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6 xl:-mx-7 xl:px-7 2xl:-mx-8 2xl:px-8",
+        className,
+      )}>
       {children}
     </BarraForm>
   );

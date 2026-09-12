@@ -532,3 +532,31 @@ silêncio em qualquer `cn("text-bloco", "text-graf-950")`, e o texto caía para 
 
 **Todo degrau tipográfico novo precisa entrar naquela lista.** É a única parte
 do design system que falha sem erro.
+
+## 28. Sangria negativa é um espelho, e espelho quebra em silêncio
+
+Duas peças do painel se esticam até a borda da página com recuo negativo: a
+faixa em destaque de `/admin` e a barra fixa de salvar de todo formulário. As
+duas traziam `-mx-4 sm:-mx-6`, escrito quando o respiro da página era
+`px-4 sm:px-6`. A página passou a `px-4 sm:px-5 lg:px-6 xl:px-7 2xl:px-8` — e a
+sangria ficou um degrau adiantada a partir de 640px.
+
+O resultado eram **4px de página fora da tela em toda largura de tablet para
+cima**, com barra de rolagem horizontal em `/admin` e `/admin/configuracoes`.
+Nada quebra, nada avisa: um recuo negativo maior que o respiro simplesmente
+transborda.
+
+Duas coisas valem a lembrança:
+
+- **A sangria não tem valor próprio.** Ela é sempre o negativo do respiro da
+  página, e por isso precisa ser escrita degrau a degrau ao lado dele
+  (`-mx-4 px-4 sm:-mx-5 sm:px-5 …`), nunca resumida. Escrita assim, uma
+  divergência futura aparece lendo as duas linhas lado a lado.
+- **O comentário mentia com convicção.** `formulario-base.tsx` dizia que os
+  recuos casavam com o respiro da página — verdade quando foi escrito, falso
+  desde que a página ganhou três degraus. Comentário que afirma acoplamento
+  envelhece junto com o acoplamento; o portão de responsividade foi o que
+  percebeu.
+
+Isso fechou o último problema de responsividade do projeto: o painel passou de
+1 rota vazando para **9 de 9 limpas**.
