@@ -4,27 +4,25 @@ import type { ReactNode } from "react";
 /* ============================================================================
    Seção de decisão da ficha de produto
 
-   Um desenho só, para todas as seções — e agora em cartão com sanfona, como no
-   desenho de referência: moldura arredondada, título numa barra de 56px com
-   seta, e o conteúdo separado por um filete.
+   Cartão com sanfona: moldura arredondada, barra de título e o conteúdo
+   separado por um filete.
 
-   **Elas nascem abertas, e isso é de propósito.**
+   **Nascem fechadas, com convite explícito para abrir.**
 
-   Este componente já foi `<details>` recolhido uma vez, e foi aberto com
-   motivo: no desktop dava três gavetas fechadas de 73px empilhadas onde
-   deveria estar o miolo técnico da página, e requisito de instalação — tomada,
-   folga para ventilação, água destilada — é justamente o que o cliente precisa
-   descobrir ANTES de comprar, não depois de um clique.
+   Só a seta não basta: ela é pequena, cinza e fica no canto oposto ao título —
+   num toque de dedo, ninguém garante que a pessoa entenda que o cartão inteiro
+   abre. Por isso a barra carrega a palavra: "Ver detalhes" quando fechado,
+   "Fechar" quando aberto, ao lado da seta. O alvo é a barra inteira, não o
+   ícone.
 
-   A referência concorda: a ficha técnica dela também abre por padrão. A
-   sanfona ali é moldura, não esconderijo. O que fecha lá é conteúdo de
-   consulta, e é o que `aberto={false}` serve aqui.
+   A troca do rótulo é feita por CSS (`group-open`), não por estado de React:
+   `<details>` já guarda o aberto/fechado sozinho, e um `useState` aqui
+   transformaria quatro seções de conteúdo em componente de cliente para
+   trocar uma palavra.
 
-   Nenhuma das fichas medidas como referência externa recolhe a ficha técnica
-   no desktop: Tuttnauer, Mercado Livre e Magazine Luiza mostram tabela aberta,
-   Dental Cremer e Newegg usam abas — e abas também não escondem, só realocam.
-   O que essas páginas encurtam é a *lista longa dentro* da seção, e é lá que a
-   divulgação progressiva ficou (ver `FichaTecnica`).
+   O respiro é generoso de propósito. Antes eram `px-5` com `py-6`, e o
+   conteúdo — tabela de especificação, requisitos de instalação, lista de
+   itens da caixa — encostava na moldura.
    ============================================================================ */
 
 type Props = {
@@ -33,37 +31,41 @@ type Props = {
   resumo?: string;
   children: ReactNode;
   lateral?: ReactNode;
-  /** Fecha a seção por padrão. Só para conteúdo de consulta. */
+  /** Abre a seção por padrão. */
   aberto?: boolean;
 };
 
-export function BlocoDecisao({ id, titulo, resumo, children, lateral, aberto = true }: Props) {
+export function BlocoDecisao({ id, titulo, resumo, children, lateral, aberto = false }: Props) {
   if (id === "relacionados") return null;
 
   return (
     <details
       id={id}
       open={aberto}
-      className="group scroll-mt-[var(--jb-topo-secoes)] mt-3 rounded-xl border border-graf-200 bg-surface open:shadow-card"
+      className="group scroll-mt-[var(--jb-topo-secoes)] mt-4 rounded-2xl border border-graf-200 bg-surface transition-shadow open:shadow-card hover:border-graf-300"
     >
-      <summary className="foco-jb flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 marker:hidden [&::-webkit-details-marker]:hidden">
+      <summary className="foco-jb flex cursor-pointer list-none items-center justify-between gap-6 rounded-2xl px-6 py-5 marker:hidden sm:px-8 sm:py-6 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
           <span id={`${id}-titulo`} className="block text-bloco text-graf-950">
             {titulo}
           </span>
           {resumo ? (
-            <span className="texto-apoio mt-1 block max-w-2xl text-graf-600">{resumo}</span>
+            <span className="texto-apoio mt-1.5 block max-w-2xl text-graf-600">{resumo}</span>
           ) : null}
         </span>
-        <ChevronDown
-          className="size-4 shrink-0 text-graf-500 transition-transform group-open:rotate-180"
-          aria-hidden
-        />
+
+        {/* O convite. 44px de alvo, e a palavra ao lado da seta — quem toca
+            precisa saber que há mais coisa aí dentro. */}
+        <span className="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-graf-200 px-4 text-apoio font-bold text-graf-800 transition-colors group-hover:border-jb-500 group-hover:text-jb-700 group-open:border-graf-200 group-open:text-graf-600">
+          <span className="hidden sm:inline group-open:sm:hidden">Ver detalhes</span>
+          <span className="hidden group-open:sm:inline">Fechar</span>
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+        </span>
       </summary>
 
-      <div className="border-t border-graf-200 px-5 py-6">
+      <div className="border-t border-graf-200 px-6 py-8 sm:px-8 sm:py-10">
         {lateral ? (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-8">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-10">
             <div className="min-w-0">{children}</div>
             <aside className="min-w-0">{lateral}</aside>
           </div>
