@@ -466,6 +466,7 @@ export default async function ProdutoPage({ params }: Props) {
               desde={s.empresa_desde}
               cidade={s.endereco_cidade}
               uf={s.endereco_uf}
+              garantiaMeses={produto.warrantyMonths}
             />
           </>
         }

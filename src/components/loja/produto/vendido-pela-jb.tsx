@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, ShieldCheck, Wrench } from "lucide-react";
+import { BadgeCheck, FileText, MapPin, RotateCcw, ShieldCheck, Truck, Wrench } from "lucide-react";
 
 /* ============================================================================
    Quem vende, entrega e assiste
@@ -25,9 +25,11 @@ type Props = {
   desde: string;
   cidade: string;
   uf: string;
+  /** Garantia deste equipamento, em meses. Sai da ficha, não é promessa fixa. */
+  garantiaMeses?: number | null;
 };
 
-export function VendidoPelaJB({ empresa, desde, cidade, uf }: Props) {
+export function VendidoPelaJB({ empresa, desde, cidade, uf, garantiaMeses }: Props) {
   const praca = [cidade.trim(), uf.trim()].filter(Boolean).join(" · ");
   const anos = Number.parseInt(desde, 10);
 
@@ -41,14 +43,43 @@ export function VendidoPelaJB({ empresa, desde, cidade, uf }: Props) {
         <span className="font-extrabold text-graf-950">{empresa}</span>
       </p>
 
+      {/* Cinco linhas, não três.
+
+          Faltavam as três que quem gasta quinze mil reais procura antes de
+          clicar: o prazo da garantia DESTE equipamento, o direito de
+          arrependimento e a nota fiscal. As duas últimas valem para qualquer
+          venda desta loja — arrependimento é o artigo 49 do CDC, e nota fiscal
+          é obrigação de quem vende com CNPJ —, então não são promessa: são o
+          que já acontece, escrito onde a decisão é tomada. */}
       <ul className="mt-3 space-y-2">
+        {garantiaMeses && garantiaMeses > 0 ? (
+          <li className="texto-apoio flex items-start gap-2 text-graf-600">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+            <span>
+              {garantiaMeses} {garantiaMeses === 1 ? "mês" : "meses"} de garantia JB neste
+              equipamento.
+            </span>
+          </li>
+        ) : null}
         <li className="texto-apoio flex items-start gap-2 text-graf-600">
           <Wrench className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
           <span>Assistência técnica própria — a mesma equipe que instala atende depois.</span>
         </li>
+        <li className="texto-apoio flex items-start gap-2 text-graf-600">
+          <Truck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+          <span>Frete e prazo definidos antes do pagamento.</span>
+        </li>
+        <li className="texto-apoio flex items-start gap-2 text-graf-600">
+          <RotateCcw className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+          <span>Troca em 7 dias por arrependimento, como manda o CDC.</span>
+        </li>
+        <li className="texto-apoio flex items-start gap-2 text-graf-600">
+          <FileText className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+          <span>Venda com nota fiscal.</span>
+        </li>
         {Number.isFinite(anos) ? (
           <li className="texto-apoio flex items-start gap-2 text-graf-600">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+            <BadgeCheck className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
             <span>No mercado odontológico desde {anos}.</span>
           </li>
         ) : null}

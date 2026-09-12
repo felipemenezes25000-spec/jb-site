@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ClipboardCheck } from "lucide-react";
 
 import { CONDICAO_PDP, type CondicaoProduto } from "@/components/loja/produto/condicao";
@@ -111,18 +112,6 @@ export function UnidadeFisica({
   const reparados = checklist.filter((item) => item.resultado === "reparado").length;
   const verificados = checklist.filter((item) => item.resultado === "verificado").length;
 
-  const resumo = [
-    verificados > 0
-      ? `${verificados} ${verificados === 1 ? "item verificado" : "itens verificados"}`
-      : "",
-    substituidas > 0
-      ? `${substituidas} ${substituidas === 1 ? "peça substituída" : "peças substituídas"}`
-      : "",
-    reparados > 0
-      ? `${reparados} ${reparados === 1 ? "item reparado" : "itens reparados"}`
-      : "",
-  ].filter(Boolean);
-
   /* Os mesmos números do resumo, agora como pares rótulo/valor para os
      quadros. "Peças substituídas" é o único em vermelho: é a informação que
      muda a decisão de quem está comprando usado. */
@@ -180,7 +169,13 @@ export function UnidadeFisica({
           no meio de um parágrafo. É o número que dá o peso da inspeção, e ele
           estava com o mesmo tamanho do texto ao redor. Em quadros, o laudo
           abre dizendo o que fez. */}
-      <div className="min-w-0 max-w-2xl">
+      {/* Duas colunas, como na referência: à esquerda o que a inspeção
+          CONCLUIU — selo, título, números e o pedido do laudo completo —, à
+          direita o que ela CONFERIU, item por item. Antes a lista vinha
+          primeiro e os números ficavam soltos acima dela; lado a lado, o
+          número e a lista que o produz se explicam. */}
+      <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
+      <div className="min-w-0">
         <span
           className={`inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 ${desenho.selo}`}
         >
@@ -212,17 +207,22 @@ export function UnidadeFisica({
             ))}
           </dl>
         ) : null}
+
+        {/* O laudo que a pessoa lê aqui é o resumo conferível. O documento
+            inteiro — com foto de cada item — a equipe envia; é conversa, não
+            download, porque ele é de UMA unidade e sai assinado. */}
+        {!vendida ? (
+          <Link
+            href={`/orcamento?assunto=${encodeURIComponent("Laudo completo desta unidade")}`}
+            className="botao-jb foco-jb mt-7 inline-flex min-h-11 items-center rounded-lg px-5 text-apoio"
+          >
+            Pedir o laudo completo
+          </Link>
+        ) : null}
       </div>
 
-      <div
-        className={
-          checklist.length > 0 && temLateral
-            ? "mt-10 grid gap-10 lg:grid-cols-12 lg:gap-14"
-            : "mt-10"
-        }
-      >
-        {checklist.length > 0 ? (
-          <div className={temLateral ? "min-w-0 lg:col-span-7" : "min-w-0 max-w-3xl"}>
+      {checklist.length > 0 ? (
+          <div className="min-w-0">
             <Rotulo>Laudo de inspeção</Rotulo>
             {/* Cada item num cartão próprio, em vez de linhas dividindo uma
                 régua. O laudo é a peça que mais se lê nesta página, e o
@@ -253,13 +253,19 @@ export function UnidadeFisica({
             </ul>
           </div>
         ) : null}
+      </div>
 
+        {/* Os dados da unidade descem para a largura inteira, abaixo das duas
+            colunas. Eles não são o laudo — são a identidade da máquina: número
+            de série, ano, ciclos, estado de conservação. Espremidos numa
+            coluna de 5/12 ao lado da lista, viravam nota de rodapé de algo que
+            é prova. */}
         {temLateral ? (
           <div
             className={
               checklist.length > 0
-                ? "min-w-0 space-y-8 lg:col-span-5"
-                : "min-w-0 max-w-3xl space-y-8"
+                ? "mt-12 grid min-w-0 gap-8 border-t border-graf-200/70 pt-10 lg:grid-cols-2 lg:gap-14"
+                : "mt-10 min-w-0 max-w-3xl space-y-8"
             }
           >
             {/* O selo abre a coluna: é o que resume o laudo inteiro numa
@@ -311,7 +317,6 @@ export function UnidadeFisica({
             ) : null}
           </div>
         ) : null}
-      </div>
     </Secao>
   );
 }
