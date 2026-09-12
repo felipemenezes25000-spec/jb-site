@@ -855,6 +855,28 @@
   animation: jb-rodizio-3 10.8s cubic-bezier(0.76, 0, 0.24, 1) infinite;
 }
 
+/* Sem movimento, a primeira palavra fica — e só ela.
+
+   O bloco global de `prefers-reduced-motion` corta a duração para 0,01ms e a
+   repetição para 1: a animação pula direto para o quadro final, que é
+   `opacity: 0`. Resultado, para quem pediu menos movimento: a manchete lia
+   "A clínica escolhe / — / A JB responde", com um buraco no meio.
+
+   Isto também deixa a auditoria determinística. O rodízio é infinito, então
+   nenhuma espera por "animação terminada" o alcança, e o axe media o quadro
+   em que calhasse de cair — reprovou contraste com `#fefafa`, que é o vermelho
+   da marca a 2% de opacidade, no começo de um fade. */
+@media (prefers-reduced-motion: reduce) {
+  .rodizio > [data-palavra] {
+    animation: none !important;
+    opacity: 0;
+  }
+
+  .rodizio > [data-palavra]:first-child {
+    opacity: 1;
+  }
+}
+
 @utility gira {
   animation: jb-gira 22s linear infinite;
 }

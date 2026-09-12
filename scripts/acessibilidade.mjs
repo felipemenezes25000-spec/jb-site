@@ -316,6 +316,28 @@ async function percorrer(grupo, rotas, login) {
            não é o que a pessoa lê. As animações infinitas (selo girando, faixa
            correndo) nunca terminam, então o filtro pega só as finitas, e o
            `Promise.race` impede que uma animação longa trave a auditoria. */
+        /* Assenta o que nunca assenta.
+
+           Contraste da WCAG se afere no estado parado. Animação INFINITA — a
+           palavra que gira na manchete, a faixa de recados correndo — não tem
+           estado final, e o axe media o quadro em que calhasse de cair: a
+           manchete reprovou com `#fefafa`, que é o vermelho da marca a 2% de
+           opacidade no começo de um fade.
+
+           Congelar a página inteira com `reducedMotion` no contexto resolveria
+           isso e quebraria outra coisa: sem transição, a régua de foco visível
+           passou a acusar 25 campos "focado, nada mudou visualmente". Então o
+           congelamento é só das infinitas, e da palavra do rodízio em
+           particular — que fica na primeira, visível, igual ao que quem tem
+           movimento reduzido ligado vê. */
+        await pagina.addStyleTag({
+          content: `
+            .marquise, .gira, .pulso::after { animation: none !important; }
+            .rodizio > [data-palavra] { animation: none !important; opacity: 0 !important; }
+            .rodizio > [data-palavra]:first-child { opacity: 1 !important; }
+          `,
+        });
+
         await Promise.race([
           pagina.evaluate(() =>
             Promise.all(
