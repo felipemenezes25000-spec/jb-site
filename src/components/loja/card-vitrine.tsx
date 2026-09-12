@@ -104,7 +104,10 @@ export function CardVitrine({
           cheia volta. */}
       <div
         data-palco-imagem-produto
-        className="relative aspect-3/2 max-h-72 overflow-hidden bg-[#fff9f9] sm:aspect-4/3"
+        /* Branco chapado, como nos outros dois cartões da loja. Era `#fff9f9`,
+           um rosa de 1% que só este componente usava — e que aparecia por
+           baixo de recortes já transparentes. */
+        className="relative aspect-3/2 max-h-72 overflow-hidden bg-surface sm:aspect-4/3"
       >
         {produto.imageUrl ? (
           <Image

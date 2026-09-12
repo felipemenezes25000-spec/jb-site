@@ -111,7 +111,7 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
   return (
     <section
       aria-label="Marcas no catálogo"
-      className="relative isolate overflow-hidden bg-[#fffdfc] py-16 min-[640px]:py-20 min-[1024px]:min-h-[40rem] min-[1024px]:pb-[1.8rem] min-[1024px]:pt-[3.9rem]">
+      className="relative isolate overflow-hidden bg-surface py-16 min-[640px]:py-20 min-[1024px]:min-h-[40rem] min-[1024px]:pb-[1.8rem] min-[1024px]:pt-[3.9rem]">
       <style>{CSS_TICKER}</style>
 
       <div

@@ -3,10 +3,12 @@ import Link from "next/link";
 import { ArrowRight, MessageCircle, ShieldCheck, ShoppingCart } from "lucide-react";
 
 import { CampoCupom } from "@/components/loja/campo-cupom";
+import { FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
 import { LinhasCarrinho } from "@/components/loja/linhas-carrinho";
 import { Aviso } from "@/components/ui/aviso";
 import { LinkBotao } from "@/components/ui/button";
-import { Cartao, Trilha, Vazio } from "@/components/ui/data";
+import { Cartao, Trilha } from "@/components/ui/data";
+import { dadosDaHome } from "@/lib/catalogo";
 import { calcularTotais, lerCarrinho } from "@/lib/carrinho";
 import {
   calcularParcelas,
@@ -27,6 +29,12 @@ export const metadata: Metadata = {
 export default async function CarrinhoPage() {
   const [carrinho, s] = await Promise.all([lerCarrinho(), getSettings()]);
   const totais = calcularTotais(carrinho);
+
+  /* Carrinho vazio não é fim de caminho: é a hora de oferecer o catálogo.
+     O desenho de referência põe quatro equipamentos logo abaixo do estado
+     vazio, e faz sentido — quem chegou aqui queria comprar. A consulta só
+     acontece quando não há nada no carrinho. */
+  const sugestoes = totais.linhas.length === 0 ? await dadosDaHome() : null;
 
   const parcelas = calcularParcelas(
     totais.totalCents,
@@ -55,16 +63,38 @@ export default async function CarrinhoPage() {
       </header>
 
       {totais.linhas.length === 0 ? (
-        <Vazio
-          icone={ShoppingCart}
-          titulo="Seu carrinho está vazio"
-          descricao="Escolha um produto no catálogo ou peça um orçamento para algo que ainda não esteja publicado na loja."
-          acao={
-            <div className="flex flex-wrap justify-center gap-2.5">
-              <LinkBotao href="/loja">Ver catálogo</LinkBotao>
-              <LinkBotao href="/orcamento" variante="secundario">
-                Pedir orçamento
-              </LinkBotao>
+        <>
+          {/* Sem a placa tracejada em volta. Ela desenhava uma caixa vazia
+              dentro de uma página vazia — moldura para o nada. O estado vazio
+              agora é o próprio miolo da página, centrado. */}
+          <div className="mx-auto mt-12 max-w-xl text-center">
+            <span
+              className="mx-auto grid size-16 place-items-center rounded-2xl bg-graf-100 text-graf-700"
+              aria-hidden
+            >
+              <ShoppingCart className="size-7" />
+            </span>
+            <p className="fonte-display mt-6 text-[clamp(1.75rem,1.4rem+1.6vw,2.5rem)] text-graf-950">
+              Seu carrinho está vazio
+            </p>
+            <p className="mt-3 text-base leading-7 text-graf-700">
+              Escolha um produto no catálogo ou peça um orçamento para algo que ainda não esteja
+              publicado na loja.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/loja"
+                className="botao-jb foco-jb inline-flex min-h-12 items-center gap-2 rounded-full px-7 text-corpo"
+              >
+                <ShoppingCart className="size-4" aria-hidden />
+                Ir para a loja
+              </Link>
+              <Link
+                href="/seminovos"
+                className="botao-osso foco-jb inline-flex min-h-12 items-center rounded-full px-7 text-corpo"
+              >
+                Ver seminovos
+              </Link>
               {whatsapp ? (
                 <LinkBotao
                   href={whatsapp}
@@ -77,9 +107,24 @@ export default async function CarrinhoPage() {
                 </LinkBotao>
               ) : null}
             </div>
-          }
-          className="mt-8"
-        />
+          </div>
+
+          {sugestoes && sugestoes.procurados.length > 0 ? (
+            <div className="-mx-4 mt-14 sm:-mx-6 lg:-mx-8">
+              <FaixaVitrine
+                sobretitulo="Do catálogo"
+                titulo="O que a clínica costuma repor"
+                href="/loja"
+                rotuloDoLink="Ver catálogo"
+                produtos={sugestoes.procurados.slice(0, 4)}
+                parcelamento={{
+                  max: Math.min(12, Math.max(1, Number(s.parcelas_max) || 1)),
+                  minimoCents: paraCentavos(s.parcela_minima),
+                }}
+              />
+            </div>
+          ) : null}
+        </>
       ) : (
         <div className="mt-8 grid gap-7 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-9">
           <section aria-labelledby="titulo-itens" className="min-w-0">
