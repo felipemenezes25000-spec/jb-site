@@ -319,8 +319,12 @@ export function Cabecalho({
                 aria-hidden
                 className="hidden border-l border-graf-200 pl-3 leading-tight xl:block"
               >
-                <span className="block text-[0.7rem] font-bold text-graf-700">Soluções</span>
-                <span className="block text-[0.7rem] font-black tracking-[0.08em] text-graf-950 uppercase">
+                {/* 12px, não 11,2. A assinatura nasceu com `0.7rem` e o portão
+                    de responsividade pegou em nove rotas: esta plataforma tem
+                    piso de 12px para texto que a pessoa lê, e decorativo ou
+                    não, isto é palavra na tela. */}
+                <span className="block text-[0.75rem] font-bold text-graf-700">Soluções</span>
+                <span className="block text-[0.75rem] font-black tracking-[0.07em] text-graf-950 uppercase">
                   Odontológicas
                 </span>
               </span>
