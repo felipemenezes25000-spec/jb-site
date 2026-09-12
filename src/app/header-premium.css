@@ -1,23 +1,16 @@
 /* Cabeçalho público: três níveis claros — utilidade, ação e navegação. */
 
+/* Vermelho chapado, sem gradiente, sem brilho diagonal e sem sombra no texto.
+   Os três existiam para dar "profundidade" a uma faixa de 36px de altura — e o
+   que davam era ruído: o degradê fazia o mesmo texto mudar de contraste da
+   esquerda para a direita, e a sombra embaçava letra de 12px.
+
+   `jb-600` sobre branco dá 6,14:1. Chapado, esse número vale na faixa
+   inteira. */
 [data-jb-utility-bar="true"] {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(100deg, var(--color-jb-800), var(--color-jb-600) 54%, var(--color-jb-800)) !important;
-  box-shadow: inset 0 -1px rgb(255 255 255 / 0.1);
-}
-
-[data-jb-utility-bar="true"]::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(110deg, transparent 28%, rgb(255 255 255 / 0.06) 48%, transparent 66%);
-  content: "";
-  pointer-events: none;
-}
-
-[data-jb-utility-bar="true"] a,
-[data-jb-utility-bar="true"] p {
-  text-shadow: 0 1px 1px rgb(70 0 0 / 0.14);
+  background: var(--color-jb-600) !important;
 }
 
 header[data-jb-premium-header="true"] {

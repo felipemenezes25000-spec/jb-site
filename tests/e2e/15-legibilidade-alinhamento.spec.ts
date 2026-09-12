@@ -315,6 +315,25 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
         )
         .toBeGreaterThanOrEqual(44);
 
+      /* E espera a animação de entrada terminar.
+         `jb-surge` anima `scale(0.985) → 1`, e `getBoundingClientRect()`
+         devolve a caixa JÁ transformada: um alvo de 44px medido no meio do
+         quadro dá 43. O botão do menu da guarda acima não é animado, então o
+         estilo estar aplicado não quer dizer que a página parou de se mexer.
+         Só as animações finitas entram — o selo girando e a faixa correndo
+         nunca terminam. */
+      await Promise.race([
+        page.evaluate(() =>
+          Promise.all(
+            document
+              .getAnimations()
+              .filter((animacao) => animacao.effect?.getComputedTiming().iterations !== Infinity)
+              .map((animacao) => animacao.finished.catch(() => {})),
+          ),
+        ),
+        page.waitForTimeout(3000),
+      ]);
+
       const pequenos = await cascaPublica(page).first().evaluate((raiz) => {
         const caminhoElemento = (elemento: Element) =>
           [elemento.parentElement, elemento]

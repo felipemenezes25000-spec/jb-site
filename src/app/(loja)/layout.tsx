@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { BarraDeCategorias } from "@/components/loja/barra-categorias";
 import { Cabecalho } from "@/components/loja/cabecalho";
 import {
   AcessoDaConta,
@@ -60,6 +61,9 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
           desde={s.empresa_desde}
           cidade={s.endereco_cidade}
         />
+
+        <BarraDeCategorias categorias={categorias} />
+
         <main id="conteudo" className="flex-1">
           {children}
         </main>

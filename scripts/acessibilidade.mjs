@@ -304,6 +304,33 @@ async function percorrer(grupo, rotas, login) {
         await pagina.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 60000 });
         await pagina.waitForTimeout(800); // deixa a hidratação assentar
 
+        /* Espera a animação de entrada terminar antes de medir.
+
+           Sem isto o axe amostra um quadro do meio do fade e reprova cor que
+           está correta parada: a manchete da home saiu como `#ec6e73` — o
+           vermelho da marca a meio caminho da opacidade — em vez de `#e0141b`.
+           Foram 5 falsos positivos numa rota só, todos de elementos com
+           `surge`.
+
+           Contraste da WCAG se afere no estado assentado; quadro de transição
+           não é o que a pessoa lê. As animações infinitas (selo girando, faixa
+           correndo) nunca terminam, então o filtro pega só as finitas, e o
+           `Promise.race` impede que uma animação longa trave a auditoria. */
+        await Promise.race([
+          pagina.evaluate(() =>
+            Promise.all(
+              document
+                .getAnimations()
+                .filter((a) => {
+                  const t = a.effect?.getComputedTiming();
+                  return t && t.iterations !== Infinity;
+                })
+                .map((a) => a.finished.catch(() => {})),
+            ),
+          ),
+          pagina.waitForTimeout(3000),
+        ]);
+
         // o axe só roda na largura de mesa; no dedo interessa só o alvo de toque
         if (etiqueta === "1280") {
           await pagina.addScriptTag({ content: fonteAxe });

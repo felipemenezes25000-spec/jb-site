@@ -9,6 +9,8 @@ import {
   BookOpen,
   ChevronDown,
   Clock,
+  GitCompareArrows,
+  Heart,
   Menu,
   MessageCircle,
   Package,
@@ -373,6 +375,27 @@ export function Cabecalho({
                 )}
                 <span className="sr-only">{buscaAberta ? "Fechar a busca" : "Buscar"}</span>
               </button>
+
+              {/* Comparar e favoritos, os dois atalhos que o desenho do
+                  protótipo traz ao lado do carrinho. As duas telas já
+                  existiam — só não tinham porta no topo: comparar dependia de
+                  achar a barra flutuante, e favoritos, de entrar na conta.
+                  Escondidos abaixo de 1024 porque lá a linha é do logo, da
+                  busca e do menu. */}
+              <Link
+                href="/comparar"
+                className="hidden size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 lg:flex"
+              >
+                <GitCompareArrows className="size-5" aria-hidden />
+                <span className="sr-only">Comparar equipamentos</span>
+              </Link>
+              <Link
+                href="/minha-jb/favoritos"
+                className="hidden size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 lg:flex"
+              >
+                <Heart className="size-5" aria-hidden />
+                <span className="sr-only">Meus favoritos</span>
+              </Link>
 
               {acessoDaConta}
               {contadorDoCarrinho}

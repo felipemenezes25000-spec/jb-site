@@ -487,6 +487,9 @@ export type DadosDaHome = {
   totalPublicado: number;
   totalMarcas: number;
   menorPrecoCents: number | null;
+  /** Maior garantia declarada no catálogo, em meses. Alimenta o cartão do
+      manifesto — que antes trazia "24m" escrito à mão. */
+  garantiaMaximaMeses: number | null;
 };
 
 export async function dadosDaHome(): Promise<DadosDaHome> {
@@ -494,8 +497,16 @@ export async function dadosDaHome(): Promise<DadosDaHome> {
      curadoria logo abaixo tirar as repetições sem deixar a fileira pela
      metade: quatro cartões sempre foram quatro equipamentos DIFERENTES, e não
      era isso que a página entregava. */
-  const [destaque, ofertas, seminovos, procurados, totalPublicado, marcas, menorPreco] =
-    await Promise.all([
+  const [
+    destaque,
+    ofertas,
+    seminovos,
+    procurados,
+    totalPublicado,
+    marcas,
+    menorPreco,
+    garantia,
+  ] = await Promise.all([
       prisma.product.findFirst({
         where: VITRINE,
         orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
@@ -538,6 +549,7 @@ export async function dadosDaHome(): Promise<DadosDaHome> {
         where: { ...VITRINE, allowDirectPurchase: true, priceCents: { gt: 0 } },
         _min: { priceCents: true },
       }),
+      prisma.product.aggregate({ where: VITRINE, _max: { warrantyMonths: true } }),
     ]);
 
   /* ------------------------------------------------------------ curadoria
@@ -581,5 +593,6 @@ export async function dadosDaHome(): Promise<DadosDaHome> {
     totalPublicado,
     totalMarcas: unificarPorNome(marcas.map((m) => ({ slug: m.slug, nome: m.name }))).length,
     menorPrecoCents: menorPreco._min.priceCents ?? null,
+    garantiaMaximaMeses: garantia._max.warrantyMonths ?? null,
   };
 }
