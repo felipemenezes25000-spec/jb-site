@@ -308,9 +308,22 @@ export function Cabecalho({
             <Link
               href="/"
               aria-label="JB Soluções Odontológicas — início"
-              className="jb-logo flex min-h-11 shrink-0 items-center rounded-lg"
+              className="jb-logo flex min-h-11 shrink-0 items-center gap-3 rounded-lg"
             >
               <Logo altura={compacto ? 32 : 38} prioridade />
+              {/* Assinatura em texto ao lado da marca, separada por um filete.
+                  Some abaixo de 1024 porque ali a linha é do logo, da busca e
+                  do menu — e volta no desktop, onde sobra largura e a marca
+                  ganha em dizer o que vende. */}
+              <span
+                aria-hidden
+                className="hidden border-l border-graf-200 pl-3 leading-tight xl:block"
+              >
+                <span className="block text-[0.7rem] font-bold text-graf-700">Soluções</span>
+                <span className="block text-[0.7rem] font-black tracking-[0.08em] text-graf-950 uppercase">
+                  Odontológicas
+                </span>
+              </span>
             </Link>
 
             <div className="jb-busca-topo ml-auto hidden min-w-0 max-w-[32rem] flex-1 lg:block">

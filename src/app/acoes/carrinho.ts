@@ -216,3 +216,21 @@ export async function aplicarCupom(
   revalidatePath("/carrinho");
   return { ok: "Cupom aplicado." };
 }
+
+/**
+ * Adicionar direto do cartão do catálogo.
+ *
+ * `adicionarAoCarrinho` tem a forma de `useActionState` — recebe o estado
+ * anterior e devolve o novo — e por isso não serve a um `<form action>` puro.
+ * O cartão do catálogo tem vinte e quatro instâncias numa página: montar um
+ * `useActionState` em cada um transforma a grade inteira em componente de
+ * cliente para um botão.
+ *
+ * Este invólucro existe só para isso: mesma regra, mesma validação, mesmo
+ * estoque — só a assinatura muda. Erro não vira tela de erro; o carrinho já
+ * revalida e o contador do topo mostra o resultado. Quem precisa de mensagem
+ * (a ficha do produto, o carrinho) continua usando a versão com estado.
+ */
+export async function adicionarAoCarrinhoDoCartao(formData: FormData): Promise<void> {
+  await adicionarAoCarrinho({}, formData);
+}

@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ImageOff } from "lucide-react";
+import { Heart, ImageOff, ShoppingCart } from "lucide-react";
 
+import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
+import { alternarFavorito } from "@/app/acoes/minha-jb";
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import { Etiqueta } from "@/components/ui/data";
 import { Grade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
@@ -62,13 +64,11 @@ export function CardProduto({
   produto,
   prioridade,
   parcelamento,
-  chamadaDestacada,
   className,
 }: {
   produto: ProdutoCard;
   prioridade?: boolean;
   parcelamento?: Parcelamento;
-  chamadaDestacada?: boolean;
   className?: string;
 }) {
   const semEstoque = produto.trackInventory && produto.stock <= 0;
@@ -86,138 +86,159 @@ export function CardProduto({
     !semEstoque && precoAnterior
       ? Math.round(((precoAnterior - produto.priceCents) / precoAnterior) * 100)
       : 0;
-  const chamada = soOrcamento ? "Pedir orçamento" : "Ver produto";
+  const chamada = soOrcamento ? "Pedir orçamento" : "Ver equipamento";
 
   return (
     <article
       className={cn(
-        "group relative isolate flex flex-col overflow-hidden rounded-xl border border-graf-200 bg-white",
-        "transition-[border-color,box-shadow,transform] duration-200 ease-out-quint",
-        "hover:-translate-y-px hover:border-graf-300 hover:shadow-card",
+        "group relative isolate flex flex-col overflow-hidden rounded-lg border border-graf-200 bg-surface",
+        "transition-[border-color,box-shadow] duration-300",
+        "hover:border-graf-300 hover:shadow-card",
         "has-[a:focus-visible]:border-jb-500 has-[a:focus-visible]:shadow-card",
         className,
       )}
     >
-      <div
-        data-palco-imagem-produto
-        className="relative aspect-[4/3] max-h-72 overflow-hidden bg-graf-50/45"
-      >
+      {/* Foto quadrada sobre branco, centrada e com folga — o equipamento
+          aparece inteiro em vez de preencher a caixa. A moldura cinza que
+          existia aqui punha um fundo por baixo de um recorte que já é
+          transparente. */}
+      <div data-palco-imagem-produto className="relative overflow-hidden bg-surface p-4">
+        {/* Condição e desconto empilhados no mesmo canto: são as duas
+            informações que fazem alguém parar no cartão, e separadas em
+            cantos opostos obrigavam a varrer a foto. */}
+        <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
+          <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
+          {desconto >= 5 ? (
+            <span className="micro rounded-sm bg-jb-500 px-2 py-1 leading-none text-white">
+              −{desconto}%
+            </span>
+          ) : null}
+        </div>
+
+        <div className="absolute top-3 right-3 z-10">
+          <BotaoComparar slug={produto.slug} nome={produto.name} />
+        </div>
+
         {produto.imageUrl ? (
           <Image
             data-imagem-produto
             src={imagemProdutoSemFundo(produto.imageUrl)}
             alt={produto.imageAlt || produto.name}
-            fill
+            width={512}
+            height={512}
             preload={prioridade}
             loading={prioridade ? undefined : "lazy"}
-            sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, (max-width: 1536px) 30vw, 25vw"
+            sizes="(max-width: 640px) 60vw, 12rem"
             className={cn(
-              "object-contain p-2.5 transition-transform duration-300 ease-out-quint sm:p-3",
-              "group-hover:scale-[1.02]",
+              "mx-auto aspect-square w-full max-w-[12rem] object-contain",
+              "transition-transform duration-500 group-hover:scale-105",
               semEstoque && "opacity-60 grayscale",
             )}
           />
         ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2 text-graf-500">
+          <div className="mx-auto flex aspect-square w-full max-w-[12rem] flex-col items-center justify-center gap-2 text-graf-500">
             <span className="flex size-11 items-center justify-center rounded-full border border-graf-200 bg-white text-graf-400">
               <ImageOff className="size-5" aria-hidden />
             </span>
-            <span className="text-xs font-semibold">Foto em cadastro</span>
+            <span className="micro">Foto em cadastro</span>
           </div>
         )}
 
-        <div className="absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-2">
-          <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-          <BotaoComparar slug={produto.slug} nome={produto.name} />
-        </div>
-
-        {desconto >= 5 ? (
-          <span className="absolute bottom-3 left-3 rounded-md bg-jb-500 px-2 py-1 text-xs font-extrabold text-white">
-            −{desconto}%
-          </span>
-        ) : null}
-
         {semEstoque ? (
-          <p className="absolute inset-x-0 bottom-0 z-10 bg-graf-950/90 py-2 text-center text-xs font-semibold uppercase tracking-[0.12em] text-white">
+          <p className="micro absolute inset-x-0 bottom-0 z-10 bg-graf-950/90 py-2 text-center text-white">
             {produto.unique ? "Vendido" : "Indisponível"}
           </p>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col border-t border-graf-100 p-4">
+      <div className="flex flex-1 flex-col border-t border-graf-200 p-4">
         {produto.brandName ? (
-          <p className="truncate text-[0.6875rem] font-extrabold uppercase tracking-[0.08em] text-graf-500">
-            {produto.brandName}
-          </p>
+          <p className="micro truncate text-graf-500">{produto.brandName}</p>
         ) : null}
 
-        <h3 className="mt-1 line-clamp-2 min-h-10 text-corpo font-bold leading-5 text-graf-950 sm:text-base">
+        <h3 className="mt-2 line-clamp-2 min-h-10 text-[0.98rem] leading-snug font-bold text-graf-950">
           <Link
             href={`/loja/${produto.slug}`}
-            className="rounded-xs after:absolute after:inset-0 after:content-['']"
+            className="rounded-xs after:absolute after:inset-0 after:content-[''] hover:text-jb-700"
           >
             {produto.name}
           </Link>
         </h3>
 
         {produto.model ? (
-          <p className="mt-1 truncate text-xs text-graf-500">{produto.model}</p>
+          <p className="micro mt-1 truncate text-graf-500">{produto.model}</p>
         ) : null}
 
         <div className="mt-auto pt-4">
           {precoAnterior ? (
-            <p className="text-xs tabular text-graf-500 line-through">
+            <p className="micro tabular text-graf-500 line-through">
               {formatarPreco(precoAnterior)}
             </p>
           ) : null}
 
-          <p className="tabular text-xl font-extrabold leading-7 tracking-tight text-graf-950 sm:text-2xl">
+          <p className="tabular text-[1.4rem] leading-tight font-black text-graf-950">
             {soOrcamento ? "Sob orçamento" : formatarPreco(produto.priceCents)}
           </p>
 
-          <p className="min-h-5 truncate text-xs text-graf-500">
+          <p className="micro tabular min-h-5 truncate text-graf-500">
             {soOrcamento
               ? "Preço e prazo com a equipe JB"
               : parcelas
-                ? `${parcelas.parcelas}× de ${formatarPreco(parcelas.valorCents)} sem juros`
+                ? `${parcelas.parcelas}x de ${formatarPreco(parcelas.valorCents)} sem juros`
                 : "Pagamento à vista"}
           </p>
 
-          <div className="mt-3 flex min-h-6 items-center justify-between gap-3 border-t border-graf-100 pt-3">
-            {estado ? (
-              <span className={cn("flex min-w-0 items-center gap-1.5 text-xs font-semibold", estado.classe)}>
-                <span className={cn("size-1.5 shrink-0 rounded-full", estado.pontoClasse)} aria-hidden />
-                <span className="truncate">{estado.texto}</span>
-              </span>
-            ) : (
-              <span aria-hidden />
-            )}
-
-            {chamadaDestacada ? null : (
-              <span
-                aria-hidden
-                className="flex shrink-0 items-center gap-1 text-xs font-bold text-graf-800 transition-colors group-hover:text-jb-600"
-              >
-                {chamada}
-                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-              </span>
-            )}
-          </div>
-
-          {chamadaDestacada ? (
-            <span
-              aria-hidden
-              className={cn(
-                "mt-3 flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-bold",
-                semEstoque
-                  ? "bg-graf-200 text-graf-700"
-                  : "bg-jb-500 text-white transition-colors group-hover:bg-jb-600",
-              )}
-            >
-              {chamada}
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-            </span>
+          {estado ? (
+            <p className={cn("micro mt-2 inline-flex items-center gap-1.5", estado.classe)}>
+              <span className={cn("size-1.5 shrink-0 rounded-full", estado.pontoClasse)} aria-hidden />
+              {estado.texto}
+            </p>
           ) : null}
+        </div>
+
+        {/* Linha de ações.
+
+            Os três botões redondos ficam ACIMA da camada que torna o cartão
+            inteiro clicável (`z-10` contra o `after:inset-0` do título) — sem
+            isso, um clique no coração abriria a ficha do produto.
+
+            O que o desenho de referência traz aqui e não entrou: a nota de
+            avaliação, que lá é um hash do slug — avaliação inventada —, e o
+            "no Pix", que lá é 5% fixo. Esta loja tem avaliação de verdade,
+            só que por SKU e cara demais para vinte e quatro cartões numa
+            página; e desconto no Pix ela não tem. */}
+        <div className="mt-4 flex items-center gap-2">
+          <Link
+            href={`/loja/${produto.slug}`}
+            className="foco-jb relative z-10 inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-graf-200 px-3 text-apoio font-bold text-graf-950 transition-colors hover:border-jb-500 hover:text-jb-700"
+          >
+            {chamada}
+          </Link>
+
+          {!soOrcamento && !semEstoque ? (
+            <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
+              <input type="hidden" name="produtoId" value={produto.id} />
+              <input type="hidden" name="quantidade" value="1" />
+              <button
+                type="submit"
+                aria-label={`Adicionar ${produto.name} ao carrinho`}
+                className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600"
+              >
+                <ShoppingCart className="size-4" aria-hidden />
+              </button>
+            </form>
+          ) : null}
+
+          <form action={alternarFavorito} className="relative z-10">
+            <input type="hidden" name="produtoId" value={produto.id} />
+            <button
+              type="submit"
+              aria-label={`Guardar ${produto.name} nos favoritos`}
+              className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-graf-200 text-graf-700 transition-colors hover:border-jb-500 hover:text-jb-700"
+            >
+              <Heart className="size-4" aria-hidden />
+            </button>
+          </form>
         </div>
       </div>
     </article>
@@ -233,14 +254,12 @@ export function GradeProdutos({
   produtos,
   colunas,
   parcelamento,
-  chamadaDestacada,
   extra,
   className,
 }: {
   produtos: ProdutoCard[];
   colunas?: ColunasPorTela;
   parcelamento?: Parcelamento;
-  chamadaDestacada?: boolean;
   extra?: React.ReactNode;
   className?: string;
 }) {
@@ -260,7 +279,6 @@ export function GradeProdutos({
             produto={produto}
             parcelamento={parcelamento}
             prioridade={indice < 4}
-            chamadaDestacada={chamadaDestacada}
             className="w-full"
           />
         </li>

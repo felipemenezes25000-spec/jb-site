@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ImageOff } from "lucide-react";
+import { Heart, ImageOff, ShoppingCart } from "lucide-react";
 
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import type {
@@ -8,6 +8,7 @@ import type {
   ProdutoMarketplaceCard,
 } from "@/components/loja/marketplace/tipos";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
 import { alternarFavorito } from "@/app/acoes/minha-jb";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 
@@ -62,81 +63,42 @@ export function CardProdutoMarketplace({
       data-marketplace-card
       className={`${styles.card} group relative flex w-full flex-col overflow-hidden`}
     >
-      <div
-        data-palco-imagem-produto
-        className="relative aspect-[4/3] bg-[linear-gradient(145deg,#fff_0%,#fff8f8_100%)]"
-      >
+      {/* Foto quadrada sobre branco, centrada e com folga. Era 4/3 sobre um
+          degradê rosado: o degradê aparecia por baixo de recortes que já são
+          transparentes, e o 4/3 cortava equipamento alto. */}
+      <div data-palco-imagem-produto className="relative overflow-hidden bg-surface p-4">
+        <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
+          <span className="micro rounded-sm border border-graf-200 bg-white/95 px-2 py-1 leading-none text-graf-700 shadow-sm">
+            {CONDICAO[produto.condition]}
+          </span>
+          {desconto >= 5 ? (
+            <span className="micro rounded-sm bg-jb-500 px-2 py-1 leading-none text-white">
+              −{desconto}%
+            </span>
+          ) : null}
+        </div>
+
+        <div className="absolute top-3 right-3 z-10">
+          <BotaoComparar slug={produto.slug} nome={produto.name} />
+        </div>
+
         {produto.imageUrl ? (
           <Image
             data-imagem-produto
             src={imagemProdutoSemFundo(produto.imageUrl)}
             alt={produto.imageAlt || produto.name}
-            fill
+            width={512}
+            height={512}
             preload={prioridade}
-            /* Larguras reais depois da coluna de filtros: uma coluna abaixo de
-               375px, duas até 1023 e, do desktop em diante, a grade adapta por
-               `auto-fill` com piso de 264px — o cartão fica entre 264 e ~340,
-               e nunca passa disso. Pedir `24vw` a 1920 era pedir 460px para um
-               espaço de 281. */
-            sizes="(max-width: 374px) 94vw, (max-width: 1023px) 46vw, 340px"
-            className="object-contain p-3 transition-transform duration-200 group-hover:scale-[1.025] motion-reduce:transform-none"
+            sizes="(max-width: 374px) 60vw, 12rem"
+            className="mx-auto aspect-square w-full max-w-[12rem] object-contain transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none"
           />
         ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2 bg-graf-50 text-xs font-semibold text-graf-500">
+          <div className="mx-auto flex aspect-square w-full max-w-[12rem] flex-col items-center justify-center gap-2 text-graf-500">
             <ImageOff className="size-5" aria-hidden />
-            <span>Foto em cadastro</span>
+            <span className="micro">Foto em cadastro</span>
           </div>
         )}
-
-        <div className="absolute inset-x-2.5 top-2.5 z-10 flex items-start justify-between gap-2 sm:inset-x-3 sm:top-3">
-          <span className="rounded-md border border-graf-200 bg-white/95 px-2 py-1 text-[0.625rem] font-extrabold uppercase tracking-[0.06em] text-graf-700 shadow-sm sm:text-xs sm:normal-case sm:tracking-normal">
-            {CONDICAO[produto.condition]}
-          </span>
-          <div className="flex items-center gap-1.5">
-            {/* Guardar e comparar na mesma linha, no canto da foto: são o
-                mesmo gesto para quem está decidindo, e é o par que o briefing
-                pede no cartão. O formulário fica acima da camada que torna o
-                cartão inteiro clicável — sem `relative`, o clique no coração
-                abriria a ficha do produto. */}
-            <form action={alternarFavorito} className="relative">
-              <input type="hidden" name="produtoId" value={produto.id} />
-              {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
-              {/* 44px de alvo, 36px de desenho.
-
-                  O botão nasceu com `size-9` — 36px em tudo — e virou o maior
-                  grupo de alvos pequenos da loja: 16 de uma vez a 320px, um
-                  por cartão. A regra de toque fala do ALVO, não da tinta,
-                  então o círculo desceu para um `span` e o botão cresceu em
-                  volta dele: o canto da foto continua com a mesma aparência e
-                  o dedo ganha os 8px que faltavam. */}
-              <button
-                type="submit"
-                aria-pressed={favoritado}
-                aria-label={favoritado ? `Remover ${produto.name} dos favoritos` : `Guardar ${produto.name} nos favoritos`}
-                title={favoritado ? "Remover dos favoritos" : "Guardar nos favoritos"}
-                className="foco-jb flex size-11 items-center justify-center rounded-full"
-              >
-                <span
-                  className={`flex size-9 items-center justify-center rounded-full border shadow-sm transition-colors ${
-                    favoritado
-                      ? "border-jb-300 bg-jb-50 text-jb-700"
-                      : "border-graf-200 bg-white/95 text-graf-600 hover:border-graf-400 hover:text-jb-700"
-                  }`}
-                >
-                  <Heart className={`size-4 ${favoritado ? "fill-current" : ""}`} aria-hidden />
-                </span>
-              </button>
-            </form>
-
-            <BotaoComparar slug={produto.slug} nome={produto.name} />
-          </div>
-        </div>
-
-        {desconto >= 5 ? (
-          <span className="absolute bottom-2.5 left-2.5 rounded-md bg-jb-500 px-2 py-1 text-xs font-extrabold text-white sm:bottom-3 sm:left-3">
-            −{desconto}%
-          </span>
-        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col p-3 sm:p-4">
@@ -195,22 +157,65 @@ export function CardProdutoMarketplace({
             <span className="truncate">{disponibilidade(produto)}</span>
           </div>
 
-          {/* O botão saiu.
+          {/* Linha de ações — reposta em 12/09/2026, a pedido.
 
-              Era um `<span aria-hidden>` — decoração: quem leva à ficha é o
-              link do título, que já cobre o cartão inteiro com
-              `after:inset-0`. Só que era um retângulo vermelho sólido de
-              largura inteira, e a grade mostra dezesseis deles de uma vez. O
-              vermelho da JB é sinal de ação; repetido dezesseis vezes numa
-              tela ele deixa de apontar para qualquer coisa, e a foto do
-              equipamento — que é o que a pessoa está comparando — passa a
-              disputar atenção com uma faixa de cor.
+              Ela já tinha existido e saído, com motivo medido: era um retângulo
+              vermelho de largura inteira, dezesseis por tela, e o vermelho da
+              JB é sinal de ação — repetido dezesseis vezes deixa de apontar
+              para coisa nenhuma, e a foto do equipamento passava a disputar
+              atenção com uma faixa de cor.
 
-              O que ficou no lugar é o que as grades medidas como referência
-              usam: nenhum CTA por cartão, o cartão inteiro clicável, e o
-              hover/foco levantando a peça. São 56px a menos de altura em cada
-              um dos dezesseis. O "Sob orçamento" que ele carregava já é o que
-              a linha do preço escreve, logo acima. */}
+              O que volta não é aquilo. O destino continua sendo o cartão
+              inteiro; esta linha traz o botão de contorno, e o vermelho fica
+              só no ícone do carrinho — 44px, não a largura toda. O coração
+              desceu do canto da foto para cá, junto das outras ações.
+
+              Os três controles ficam acima da camada que torna o cartão
+              clicável (`z-10` contra o `after:inset-0` do título) — sem isso,
+              um clique no coração abriria a ficha. */}
+          <div className="mt-4 flex items-center gap-2">
+            <Link
+              href={`/loja/${produto.slug}`}
+              className="foco-jb relative z-10 inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-graf-200 px-3 text-apoio font-bold text-graf-950 transition-colors hover:border-jb-500 hover:text-jb-700"
+            >
+              {sobOrcamento ? "Pedir orçamento" : "Ver equipamento"}
+            </Link>
+
+            {!sobOrcamento && !indisponivel ? (
+              <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
+                <input type="hidden" name="produtoId" value={produto.id} />
+                <input type="hidden" name="quantidade" value="1" />
+                <button
+                  type="submit"
+                  aria-label={`Adicionar ${produto.name} ao carrinho`}
+                  className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600"
+                >
+                  <ShoppingCart className="size-4" aria-hidden />
+                </button>
+              </form>
+            ) : null}
+
+            <form action={alternarFavorito} className="relative z-10">
+              <input type="hidden" name="produtoId" value={produto.id} />
+              {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
+              <button
+                type="submit"
+                aria-pressed={favoritado}
+                aria-label={
+                  favoritado
+                    ? `Remover ${produto.name} dos favoritos`
+                    : `Guardar ${produto.name} nos favoritos`
+                }
+                className={`foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border transition-colors ${
+                  favoritado
+                    ? "border-jb-500 bg-jb-50 text-jb-700"
+                    : "border-graf-200 text-graf-700 hover:border-jb-500 hover:text-jb-700"
+                }`}
+              >
+                <Heart className={`size-4 ${favoritado ? "fill-current" : ""}`} aria-hidden />
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </article>
