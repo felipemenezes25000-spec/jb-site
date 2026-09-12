@@ -254,7 +254,7 @@ export function Cabecalho({
 
       {temBarraUtilidade ? (
         <div data-jb-utility-bar="true" className="overflow-hidden bg-jb-700 text-white">
-          <div className="mx-auto flex min-h-9 max-w-[105rem] items-center lg:px-10">
+          <div className="container-loja flex min-h-9 items-center">
             {horario ? (
               <p className="hidden shrink-0 items-center gap-2 pr-6 text-[0.75rem] font-semibold text-white/90 lg:flex">
                 <Clock className="size-4" aria-hidden />
@@ -298,8 +298,9 @@ export function Cabecalho({
           compacto && "shadow-[0_10px_35px_rgba(25,28,32,0.08)]",
         )}
       >
-        <div className="mx-auto max-w-[105rem] px-5 sm:px-8 lg:px-10">
+        <div data-jb-topo-caixa className="container-loja">
           <div
+            data-jb-topo-linha
             className={cn(
               "flex items-center gap-4 transition-[height] duration-200",
               compacto ? "h-[60px]" : "h-[70px]",
@@ -379,7 +380,16 @@ export function Cabecalho({
                 className={classesBotao(
                   "primario",
                   "sm",
-                  "jb-cta-topo ml-1.5 hidden min-h-11 rounded-xl px-4 shadow-[0_12px_28px_rgba(196,14,21,0.2)] lg:inline-flex xl:min-h-12 xl:px-5",
+                  /* Entra em `xl`, junto com a faixa de categorias.
+
+                     Entre 1024 e 1279px a linha do topo passou a ter também o
+                     botão do menu — sem ele não havia navegação de catálogo
+                     nenhuma nessa faixa. Com logo, busca, conta, carrinho,
+                     menu E este botão, a linha estourava 14px para fora da
+                     tela a 1024px. Quem cede é o atalho de assistência, que
+                     continua na faixa de utilidade logo acima e no rodapé —
+                     é a mesma escolha que a ficha de produto já fazia. */
+                  "jb-cta-topo ml-1.5 hidden min-h-11 rounded-xl px-4 shadow-[0_12px_28px_rgba(196,14,21,0.2)] xl:inline-flex xl:min-h-12 xl:px-5",
                 )}
               >
                 <Wrench className="size-4 shrink-0" aria-hidden />
@@ -391,7 +401,16 @@ export function Cabecalho({
                 onClick={() => setMenuAberto(true)}
                 aria-haspopup="dialog"
                 aria-expanded={menuAberto}
-                className="ml-1 flex size-11 items-center justify-center rounded-xl border border-graf-200 text-graf-800 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 lg:hidden"
+                /* `xl:hidden`, e não `lg:hidden`.
+
+                  A faixa vermelha de categorias — a navegação de catálogo da
+                  loja — só aparece a partir de `xl` (1280px). O botão do menu
+                  sumia em `lg` (1024px). Entre uma coisa e outra havia 256px
+                  de largura SEM nenhuma navegação de catálogo: nem faixa, nem
+                  gaveta. É a janela do iPad Pro deitado (1024, 1112, 1194px) e
+                  de qualquer navegador em janela, e ali a pessoa só tinha a
+                  busca. Medido de 1023 a 1280px, um a um. */
+                className="ml-1 flex size-11 items-center justify-center rounded-xl border border-graf-200 text-graf-800 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 xl:hidden"
               >
                 <Menu className="size-5" aria-hidden />
                 <span className="sr-only">Abrir o menu</span>
@@ -413,7 +432,7 @@ export function Cabecalho({
               }}
               className="overflow-hidden border-t border-graf-200 bg-white lg:hidden"
             >
-              <div className="mx-auto max-w-[105rem] px-5 py-3 sm:px-8">
+              <div data-jb-topo-caixa className="container-loja py-3">
                 <BuscaComSugestoes id="busca-celular" compacto focoInicial />
               </div>
             </motion.div>

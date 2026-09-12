@@ -120,7 +120,16 @@ try {
 
       const buscaDesktop = page.locator(`${HEADER} .jb-busca-topo`).first();
       const menu = page.locator(`${HEADER} button[aria-haspopup="dialog"]`).first();
-      const nav = page.locator(`${HEADER} nav[aria-label="Principal"]`).first();
+      /* A navegação de catálogo NÃO mora mais dentro do `<header>`.
+
+         Em 12/09/2026 o cabeçalho passou a ter três níveis — utilidade, ação
+         e a faixa vermelha de categorias — e os destinos foram para a faixa,
+         que fica fora do `<header>`. Este roteiro continuava procurando
+         `header nav[aria-label="Principal"]` e acusava "navegação principal
+         não está visível" em todas as larguras de desktop: reprovava o
+         desenho aprovado. Agora mede a faixa onde ela de fato está, que é o
+         mesmo que `13-cabecalho-pdp.spec.ts` cobra. */
+      const nav = page.getByRole("navigation", { name: "Catálogo" }).first();
 
       if (largura < 1024) {
         if (await buscaDesktop.isVisible()) achados.push(`${largura}px: busca desktop deveria estar escondida.`);
@@ -143,8 +152,22 @@ try {
         }
       } else {
         if (!(await buscaDesktop.isVisible())) achados.push(`${largura}px: busca desktop não está visível.`);
-        if (!(await nav.isVisible())) achados.push(`${largura}px: navegação principal não está visível.`);
-        if (await menu.isVisible()) achados.push(`${largura}px: botão de menu mobile apareceu no desktop.`);
+
+        /* A regra não é "a faixa tem de estar visível", é "tem de haver como
+           chegar ao catálogo". A faixa vermelha entra em 1280px; abaixo
+           disso, quem leva ao catálogo é a gaveta. As duas nunca aparecem
+           juntas, e nenhuma das duas pode faltar — entre 1024 e 1279px foi
+           exatamente isso que aconteceu, e ninguém viu porque o roteiro
+           procurava a navegação dentro do `<header>`, onde ela não mora
+           desde 12/09/2026. */
+        const temFaixa = await nav.isVisible();
+        const temGaveta = await menu.isVisible();
+        if (!temFaixa && !temGaveta) {
+          achados.push(`${largura}px: sem navegação de catálogo — nem faixa, nem gaveta.`);
+        }
+        if (temFaixa && temGaveta) {
+          achados.push(`${largura}px: faixa de categorias e gaveta aparecem ao mesmo tempo.`);
+        }
       }
 
       if (largura >= 1440) {

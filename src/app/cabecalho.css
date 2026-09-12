@@ -1,0 +1,427 @@
+/* ============================================================================
+   Cabeçalho da loja pública — acabamento
+
+   Este arquivo substitui quatro: `header-premium.css`, `header-search.css`,
+   `header-product.css` e `header-product-mobile.css`. Juntos eles somavam
+   **117 `!important`** e seletores que contavam filhos
+   (`header[...] > div:nth-of-type(2) > div`). Dois deles já não casavam com
+   elemento nenhum, e um terceiro — `max-width: 118rem` — fazia o cabeçalho
+   correr 1888px enquanto o conteúdo corria 1600 e o rodapé 1840.
+
+   Três regras para mexer aqui:
+
+   1. **Quase sem `!important`.** Sobraram dois, nos dois lugares onde ele é
+      inevitável: a altura da logo em tela estreita, que disputa com o estilo
+      em linha que o `next/image` escreve no elemento. Todo o resto saiu — o
+      seletor `header[data-jb-premium-header="true"]` já pesa mais que
+      qualquer utilidade do Tailwind, e o bloco da ficha, mais ainda.
+      `!important` só era necessário contra outro `!important`, e era isso que
+      mantinha a corrida viva.
+   2. **Sem contar filhos.** `> div:first-of-type` quebra em silêncio quando
+      alguém envolve o conteúdo num `<div>`. Os pontos de apoio são atributos
+      declarados no componente: `data-jb-topo-caixa`, `data-jb-topo-linha`,
+      `.jb-logo`, `.jb-busca-topo`, `.jb-cta-topo`.
+   3. **Sem texto.** Nada de `content: "…"`. Já custou duas vezes: a
+      assinatura "MARKETPLACE ODONTOLÓGICO" numa plataforma de vendedor único,
+      e um "BUSCAR Buscar" na ficha quando o componente passou a escrever a
+      palavra. Texto que a pessoa lê nasce no JSX.
+
+   O que este arquivo NÃO faz: mexer no desenho. Raio de 0,78rem e 0,82rem,
+   peso 560, corpo de 0,84rem — valores que não estão na escala do sistema —
+   ficaram como estavam. Trocá-los de carona numa mudança de mecanismo seria
+   esconder um restyle dentro de uma refatoração, e ninguém teria como revisar
+   os dois separadamente. Estão anotados em `AUDITORIA-DESIGN-SYSTEM.md`.
+
+   A ficha de produto tem cabeçalho próprio, e isso é decisão aprovada —
+   `tests/e2e/13-cabecalho-pdp.spec.ts` existe justamente para impedir que o
+   acabamento dela vaze para o resto da loja. O que muda aqui não é o desenho:
+   é onde ele mora.
+   ============================================================================ */
+
+/* ==========================================================================
+   1 · Faixa de utilidade
+   ========================================================================== */
+
+/* Vermelho chapado, sem gradiente, sem brilho diagonal e sem sombra no texto.
+   Os três existiam para dar "profundidade" a uma faixa de 36px de altura — e o
+   que davam era ruído: o degradê fazia o mesmo texto mudar de contraste da
+   esquerda para a direita, e a sombra embaçava letra de 12px.
+   `jb-600` sobre branco dá 6,14:1. Chapado, esse número vale na faixa
+   inteira. */
+[data-jb-utility-bar="true"] {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-jb-600);
+}
+
+/* ==========================================================================
+   2 · Superfície e marca
+   ========================================================================== */
+
+header[data-jb-premium-header="true"] {
+  border-bottom-color: rgb(196 14 21 / 0.09);
+  background: rgb(255 255 255 / 0.97);
+  box-shadow: 0 1px 0 rgb(26 28 30 / 0.035);
+}
+
+header[data-jb-premium-header="true"] .jb-logo {
+  transition:
+    transform 180ms var(--ease-out-quint),
+    filter 180ms ease;
+  filter: drop-shadow(0 4px 8px rgb(111 15 19 / 0.08));
+}
+
+header[data-jb-premium-header="true"] .jb-logo:hover {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 7px 12px rgb(111 15 19 / 0.12));
+}
+
+header[data-jb-premium-header="true"] .jb-cta-topo {
+  border: 1px solid var(--color-jb-500);
+  background: var(--color-jb-500);
+  box-shadow: 0 0.75rem 1.5rem -1rem rgb(165 9 12 / 0.72);
+  transition:
+    transform 170ms var(--ease-out-quint),
+    background-color 170ms ease,
+    box-shadow 170ms ease;
+}
+
+header[data-jb-premium-header="true"] .jb-cta-topo:hover {
+  transform: translateY(-1px);
+  background: var(--color-jb-600);
+  box-shadow: 0 0.95rem 1.8rem -1rem rgb(165 9 12 / 0.82);
+}
+
+/* ==========================================================================
+   3 · Busca do topo
+
+   Aqui estava a briga mais cara das quatro folhas. `header-search.css`
+   declarava raio de 1rem, sombra própria e `font-weight: 500` para o campo; e
+   NADA disso chegava à tela, porque `header-premium.css` — importado depois e
+   com um seletor mais específico — mandava raio de 0,75rem, outra sombra e
+   peso 550. Duas folhas, `!important` dos dois lados, e a mais nova perdendo
+   em silêncio há semanas.
+
+   O que está escrito abaixo é o que a tela mostrava, medido elemento a
+   elemento antes da troca. Onde as duas discordavam, ficou o valor que de
+   fato valia.
+   ========================================================================== */
+
+header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div {
+  overflow: hidden;
+  border: 1px solid var(--color-graf-300);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  box-shadow: 0 0.5rem 1.5rem -1.2rem rgb(26 28 30 / 0.34);
+}
+
+header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div:hover {
+  border-color: var(--color-graf-450);
+}
+
+header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div:focus-within {
+  border-color: var(--color-jb-400);
+  box-shadow: 0 0 0 3px rgb(224 20 27 / 0.09);
+}
+
+header[data-jb-premium-header="true"] #busca-cabecalho {
+  font-weight: 550;
+  letter-spacing: -0.01em;
+}
+
+/* A busca ganhou largura própria porque, flexível demais, era ela que pagava
+   a conta quando os cinco menus e as ações cabiam na mesma linha. */
+@media (width >= 64rem) {
+  header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
+    flex: 0 0 clamp(21rem, 23vw, 26rem);
+    width: clamp(21rem, 23vw, 26rem);
+    min-width: 21rem;
+    max-width: 26rem;
+  }
+
+  header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div {
+    height: 3.125rem;
+  }
+
+  header[data-jb-premium-header="true"] #busca-cabecalho {
+    padding-left: 0.75rem;
+    padding-right: 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* O tamanho do botão de enviar NÃO é decidido aqui.
+
+   Havia uma regra que o encolhia para 2,9rem abaixo de 1200px, para ele virar
+   só a lupa. Ela nasceu quando a palavra "Buscar" era injetada por
+   `content:` — bastava esconder o pseudo-elemento e o botão cabia. Em
+   12/09/2026 a palavra passou a ser texto de verdade no JSX, e a mesma regra
+   virou defeito: o botão ficava com 46px e a palavra saía cortada pela borda
+   arredondada do campo, visível de 640 a 1199px.
+
+   O componente já resolve isso sozinho e melhor: abaixo de `sm` mostra a
+   lupa, de `sm` para cima mostra a palavra. É a terceira vez que uma
+   suposição da era do `content:` cobra o seu preço neste cabeçalho. */
+
+/* Entre 1700 e 1839px, cinco menus + busca + conta + carrinho + CTA ainda
+   ficam apertados. Nesta faixa a loja prioriza a busca completa e usa a
+   gaveta de navegação, que já existe no componente — menos na ficha, que tem
+   a sua própria conta de espaço (bloco 4). */
+@media (width >= 106.25rem) and (width < 115rem) {
+  header[data-jb-premium-header="true"] button[aria-haspopup="dialog"] {
+    display: flex;
+  }
+}
+
+@media (width >= 115rem) {
+  header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
+    flex-basis: clamp(22rem, 21vw, 27rem);
+    width: clamp(22rem, 21vw, 27rem);
+    min-width: 22rem;
+    max-width: 27rem;
+  }
+}
+
+/* ==========================================================================
+   4 · A ficha de produto tem cabeçalho próprio
+
+   Ativa só onde existe `[data-pdp-marketplace]`, marcador do `TopoMarketplace`.
+   A diferença é deliberada e tem suíte própria: na ficha a busca absorve o
+   espaço que sobra, porque ali a pessoa está comparando equipamento.
+
+   O que NÃO muda mais: a caixa. A ficha corria com o cabeçalho em 1792px
+   enquanto o conteúdo da página corria em 1600 — a 1920px o logo começava em
+   64px e o título do produto em 200. Agora o cabeçalho herda `container-loja`
+   como o resto da loja, e a busca continua larga por ser elástica, não por a
+   caixa ser maior.
+   ========================================================================== */
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] {
+  border-bottom-color: rgb(196 14 21 / 0.11);
+  background: rgb(255 255 255 / 0.99);
+  box-shadow:
+    0 1px 0 rgb(26 28 30 / 0.04),
+    0 12px 32px -28px rgb(26 28 30 / 0.38);
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] [data-jb-topo-linha] {
+  gap: clamp(0.7rem, 1.15vw, 1.35rem);
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo {
+  position: relative;
+  min-width: 0;
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
+  flex: 1 1 44rem;
+  width: auto;
+  min-width: 16rem;
+  max-width: none;
+  margin-left: 0;
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div {
+  height: 3rem;
+  border: 1px solid var(--color-graf-300);
+  border-radius: 0.82rem;
+  background: linear-gradient(180deg, #fff, rgb(250 250 250 / 0.8));
+  box-shadow:
+    0 1px 2px rgb(26 28 30 / 0.025),
+    0 9px 25px -22px rgb(26 28 30 / 0.48);
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div:hover {
+  border-color: var(--color-graf-450);
+  box-shadow:
+    0 1px 2px rgb(26 28 30 / 0.03),
+    0 11px 27px -21px rgb(26 28 30 / 0.5);
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div:focus-within {
+  border-color: var(--color-jb-400);
+  background: #fff;
+  box-shadow:
+    0 0 0 3px rgb(224 20 27 / 0.085),
+    0 11px 28px -20px rgb(26 28 30 / 0.42);
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] #busca-cabecalho {
+  min-width: 0;
+  padding-left: 0.3rem;
+  padding-right: 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 560;
+  letter-spacing: -0.012em;
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"] {
+  border-color: rgb(196 14 21 / 0.11);
+  border-radius: 0.78rem;
+  box-shadow: 0 8px 20px -18px rgb(26 28 30 / 0.55);
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label^="Carrinho"] {
+  border-radius: 0.78rem;
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label^="Carrinho"]:hover {
+  color: var(--color-jb-700);
+  background: var(--color-jb-50);
+}
+
+body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-cta-topo {
+  border-radius: 0.78rem;
+  background: linear-gradient(135deg, var(--color-jb-500), var(--color-jb-600));
+  box-shadow: 0 10px 22px -16px rgb(165 9 12 / 0.8);
+}
+
+/* ------------------------------------------------ ficha · 1024–1279px
+
+   A busca elástica cobra o seu preço aqui: o CTA sai e a conta vira ícone,
+   para o campo não ser esmagado. */
+@media (width >= 64rem) and (width < 80rem) {
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
+    flex-basis: 30rem;
+    min-width: 15rem;
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-cta-topo {
+    display: none;
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"] {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  body:has([data-pdp-marketplace])
+    header[data-jb-premium-header="true"]
+    a[aria-label*="Área da Clínica"]
+    > span:last-child {
+    display: none;
+  }
+
+  body:has([data-pdp-marketplace])
+    header[data-jb-premium-header="true"]
+    form[role="search"]:has(#busca-cabecalho)
+    button[type="submit"][aria-label="Buscar"] {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    padding: 0;
+  }
+}
+
+/* ------------------------------------------------ ficha · 1280px em diante */
+@media (width >= 80rem) {
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
+    min-width: 22rem;
+  }
+}
+
+/* 1280–1439: comprime o CTA em ícone antes de esmagar a busca. */
+@media (width >= 80rem) and (width < 90rem) {
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-cta-topo {
+    width: 2.9rem;
+    min-width: 2.9rem;
+    padding-inline: 0;
+    overflow: hidden;
+    gap: 0;
+    color: transparent;
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-cta-topo svg {
+    margin: 0;
+    color: #fff;
+  }
+}
+
+@media (width >= 90rem) {
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
+    min-width: 28rem;
+  }
+}
+
+/* Entre 1700 e 1839px a ficha mantém a navegação desktop aberta — ao
+   contrário do resto da loja, que troca pela gaveta. É o que o spec do
+   cabeçalho da PDP cobra. */
+@media (width >= 106.25rem) and (width < 115rem) {
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] button[aria-haspopup="dialog"] {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------ ficha · tablet e celular */
+@media (width < 64rem) {
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] {
+    background: rgb(255 255 255 / 0.995);
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo {
+    min-width: 0;
+    margin-right: auto;
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"],
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label^="Carrinho"],
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] button[aria-haspopup="dialog"] {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] form[role="search"]:has(#busca-celular) > div {
+    min-height: 3rem;
+    border-radius: 0.85rem;
+    border-color: var(--color-graf-300);
+    box-shadow: 0 8px 20px -18px rgb(26 28 30 / 0.5);
+  }
+}
+
+/* Celular estreito: o que cede é o respiro e a altura da marca, nunca o alvo
+   de toque — os três controles ficam nos 44px que a WCAG 2.5.8 pede. */
+@media (width < 30rem) {
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] [data-jb-topo-caixa] {
+    padding-inline: 0.75rem;
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] [data-jb-topo-linha] {
+    gap: 0.1rem;
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo {
+    margin-right: auto;
+  }
+
+  /* Os dois únicos `!important` do arquivo, e eles são necessários.
+
+     `next/image` escreve `style="height:38px;width:auto"` no próprio
+     elemento, e estilo em linha ganha de qualquer seletor. Sem a marca, a
+     regra não existe — foi assim que a logo voltou aos 38px na primeira
+     tentativa desta consolidação, e só a assinatura computada pegou. */
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo img {
+    width: auto !important;
+    height: 1.75rem !important;
+  }
+
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label*="Área da Clínica"],
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] a[aria-label^="Carrinho"],
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] button[aria-haspopup="dialog"],
+  body:has([data-pdp-marketplace])
+    header[data-jb-premium-header="true"]
+    button[aria-expanded]:not([aria-haspopup="dialog"]) {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+  }
+}
+
+/* Última margem para WebView muito estreita. Cede a marca, não os controles. */
+@media (width < 22rem) {
+  body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo img {
+    height: 1.5rem !important;
+  }
+}
