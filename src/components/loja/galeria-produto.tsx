@@ -88,24 +88,23 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
   const foto = fotos[atual];
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row-reverse lg:items-start lg:gap-3">
-      {/* Sem moldura desenhada em volta da foto.
+    <div className="flex flex-col gap-3">
+      {/* A moldura voltou em 12/09/2026, junto com o resto do desenho de
+          referência.
 
-          O palco era `rounded-2xl border border-graf-150 bg-white`: uma caixa
-          branca com borda sobre o fundo branco da página, ao lado de outra
-          caixa (a de compra). Nenhuma das fichas de produto medidas como
-          referência emoldura a foto — Mercado Livre, Amazon, Magazine Luiza e
-          Sonos apoiam o produto direto na página.
+          Ela já tinha saído daqui, e com argumento: nenhuma das fichas medidas
+          como referência (Mercado Livre, Amazon, Magazine Luiza, Sonos)
+          emoldura a foto, e a borda punha uma caixa branca dentro de uma
+          página branca ao lado de outra caixa. O desenho aprovado emoldura, e
+          essa é a decisão que vale.
 
-          O canto arredondado fica porque ele recorta o degradê que apoia o
-          equipamento no chão; a borda, não. A assimetria com a caixa de compra
-          — que continua sendo cartão — é de propósito: a foto é conteúdo, a
-          caixa é painel de controle. */}
-      <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl">
+          O degradê de apoio saiu junto: sobre branco chapado, dentro de uma
+          borda, ele virava uma sombra sem chão. */}
+      <div className="relative min-w-0 overflow-hidden rounded-2xl border border-graf-200 bg-surface">
         <div
           data-pdp-gallery-main
           data-palco-imagem-produto
-          className="relative aspect-square bg-[linear-gradient(180deg,#fff_0%,#fff_72%,var(--color-graf-50)_100%)]"
+          className="relative aspect-square bg-surface"
           onTouchStart={aoEncostar}
           onTouchEnd={aoSoltar}
         >
@@ -175,10 +174,10 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
       {total > 1 ? (
         <ul
           aria-label={`Imagens de ${nome}`}
-          className="scrollbar-none flex gap-2 overflow-x-auto pb-1 lg:max-h-[34rem] lg:w-[4.25rem] lg:shrink-0 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0"
+          className="scrollbar-none grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8"
         >
           {fotos.map((imagem, indice) => (
-            <li key={`${imagem.url}-${indice}`} className="shrink-0 lg:w-full">
+            <li key={`${imagem.url}-${indice}`} className="min-w-0">
               <button
                 data-palco-imagem-produto
                 type="button"
@@ -186,7 +185,7 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                 aria-label={`Ver imagem ${indice + 1} de ${total}`}
                 aria-current={indice === atual ? "true" : undefined}
                 className={cn(
-                  "foco-jb relative block size-16 overflow-hidden rounded-lg border bg-white transition-colors lg:aspect-square lg:size-auto lg:w-full",
+                  "foco-jb relative block aspect-square w-full overflow-hidden rounded-lg border bg-surface transition-colors",
                   indice === atual
                     ? "border-jb-500 ring-1 ring-inset ring-jb-500"
                     : "border-graf-200 hover:border-graf-400",

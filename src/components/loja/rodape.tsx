@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -210,38 +209,6 @@ function Prova({
   );
 }
 
-/**
- * A cadeira. Fica fora do fluxo, ancorada na borda direita do container para que
- * a distância até a assinatura editorial não mude com a largura da tela — e
- * sangra além dela, que é o corte da referência.
- *
- * As duas máscaras dissolvem o lado esquerdo (para o texto respirar) e a base
- * (para não invadir a faixa inferior). Duas divs, uma máscara em cada: evita
- * depender de `mask-composite`.
- */
-function CadeiraOdontologica() {
-  return (
-    <div
-      className="pointer-events-none absolute top-4 hidden select-none min-[1360px]:-right-[11.5rem] min-[1360px]:top-6 min-[1360px]:block min-[1360px]:h-[25.9rem] min-[1360px]:w-[29rem] min-[1800px]:top-12 min-[1800px]:-right-[18rem] min-[1800px]:h-[31.8rem] min-[1800px]:w-[35.6rem]"
-      style={{ maskImage: "linear-gradient(to right, transparent 0%, #000 9%)" }}
-      aria-hidden
-    >
-      <div
-        className="relative size-full"
-        style={{ maskImage: "linear-gradient(to top, transparent 0%, #000 13%)" }}
-      >
-        <Image
-          src="/images/footer-dental-chair.png"
-          alt=""
-          fill
-          sizes="(min-width: 1800px) 570px, 464px"
-          className="object-contain object-right-top opacity-[0.48]"
-        />
-      </div>
-    </div>
-  );
-}
-
 export async function Rodape() {
   "use cache";
   cacheTag(ETIQUETA_CONFIGURACOES);
@@ -271,25 +238,25 @@ export async function Rodape() {
       : null;
 
   return (
-    <footer className="relative isolate mt-auto overflow-hidden border-t border-jb-100/70 bg-[#fffdfc] text-graf-900">
-      {/* Fundo: iluminação quase imperceptível e arcos editoriais de 1px. */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(90%_80%_at_90%_40%,rgba(224,20,27,0.035),transparent_60%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[linear-gradient(180deg,rgba(224,20,27,0.02),transparent)]"
-        aria-hidden
-      />
+    <footer className="relative isolate mt-auto overflow-hidden border-t border-graf-200 bg-surface text-graf-900">
+      {/* Fundo chapado. Havia duas camadas de vermelho a 2% e 3,5% aqui — uma
+          radial vinda do canto direito e um véu no topo. Elas existiam para
+          apoiar a fotografia da cadeira, que saiu; sozinhas, davam ao rodapé
+          um rosa que nenhuma outra área da loja tem. */}
       {/* Os arcos decorativos saíram: eram três círculos de 600 a 1024px com
           borda de 1px, ancorados fora da tela para que só a curva cruzasse o
           rodapé. Em vez de fundo, davam riscos atravessando o bloco de contato
           e os links. O degradê acima já dá a transição de cor sem cortar nada. */}
 
       <div className="container-jb relative z-10 max-w-[115rem] pt-9 min-[1800px]:pt-7">
-        <CadeiraOdontologica />
+        {/* Duas colunas: contato e navegação.
 
-        <div className="relative z-10 grid gap-10 min-[1150px]:grid-cols-[20rem_minmax(0,1fr)] min-[1150px]:gap-x-10 min-[1360px]:grid-cols-[27%_minmax(0,1fr)_17%] min-[1360px]:gap-x-8 min-[1800px]:grid-cols-[25rem_minmax(0,1fr)_19rem] min-[1800px]:gap-x-16">
+            Eram três — a terceira levava a assinatura editorial e a fotografia
+            da cadeira, ancorada na borda direita. O desenho de referência não
+            tem esse bloco, e ele custava caro: a arte comia 17% da largura e as
+            quatro colunas de links espremiam a ponto de "Área da Clínica" e
+            "Institucional" caírem na mesma linha. */}
+        <div className="relative z-10 grid gap-10 min-[1150px]:grid-cols-[20rem_minmax(0,1fr)] min-[1150px]:gap-x-12 min-[1800px]:grid-cols-[24rem_minmax(0,1fr)] min-[1800px]:gap-x-16">
           {/* ── Contato ───────────────────────────────────────────────────── */}
           <section
             /* Sem moldura: nenhum outro bloco do rodapé tem cartão, e este
@@ -494,35 +461,6 @@ export async function Rodape() {
             </div>
           </div>
 
-          {/* ── Assinatura editorial ──────────────────────────────────────── */}
-          <div className="relative flex flex-col justify-between min-[1150px]:col-span-2 min-[1150px]:flex-row-reverse min-[1150px]:items-end min-[1150px]:justify-between min-[1360px]:col-span-1 min-[1360px]:flex-col min-[1360px]:min-h-[27rem] min-[1800px]:min-h-[32rem]">
-            <div className="text-right min-[1800px]:pt-[6.4rem]">
-              <p className="text-[0.8rem] font-semibold uppercase leading-[1.6] tracking-[0.34em] text-graf-500">
-                Tecnologia
-                <br />
-                que move
-              </p>
-              <p className="mt-2.5 flex items-center justify-end gap-4">
-                <span className="text-[2.15rem] font-light uppercase leading-none tracking-[0.1em] text-jb-600 min-[1800px]:text-[2.35rem]">
-                  Sorrisos
-                </span>
-                <span className="h-px w-9 shrink-0 bg-jb-500" aria-hidden />
-              </p>
-              <p className="ml-auto mt-3.5 max-w-[10.5rem] text-[0.8rem] font-medium uppercase leading-[1.65] tracking-[0.28em] text-graf-500">
-                {s.empresa_nome}
-              </p>
-            </div>
-
-            <div className="mt-10 min-[1150px]:mt-0 min-[1360px]:mt-0 min-[1800px]:pb-5">
-              <span className="mb-3.5 block h-px w-9 bg-jb-500" aria-hidden />
-              <p
-                className="text-[1.3rem] leading-[1.45] text-graf-500 min-[1360px]:text-[1.05rem] min-[1800px]:text-[1.45rem]"
-                style={{ fontFamily: "var(--font-manuscrita), cursive" }}
-              >
-                Mais que equipamentos, parceria para o seu consultório.
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* ── Faixa inferior ──────────────────────────────────────────────── */}

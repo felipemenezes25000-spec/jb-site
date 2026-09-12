@@ -56,21 +56,18 @@
     letter-spacing: -0.01em;
   }
 
-  /* A lupa da esquerda já comunica a função do campo. O segundo botão de lupa
-     reduzia a área de texto e deixava o componente com aparência de dois
-     controles colados. Enter continua submetendo a busca. */
-  form[role="search"]:has(#busca-cabecalho) button[type="submit"] {
-    display: none !important;
-  }
+  /* O botão de enviar volta a aparecer.
+
+     Esta regra o escondia, e com razão na época: ele era uma SEGUNDA lupa,
+     colada na primeira, que só comia área de texto. Em 12/09/2026 o botão
+     passou a ser o botão cheio com a palavra "Buscar", em vermelho — a ação
+     principal da loja, não um ícone repetido. */
 }
 
 /* Entre 1700 e 1839px, cinco menus + busca + conta + carrinho + CTA ainda
    ficam apertados. Nesta faixa, priorizamos a busca completa e usamos a gaveta
    de navegação, que já existe no componente. */
 @media (width >= 106.25rem) and (width < 115rem) {
-  header nav[aria-label="Principal"] {
-    display: none !important;
-  }
 
   header button[aria-haspopup="dialog"] {
     display: flex !important;
