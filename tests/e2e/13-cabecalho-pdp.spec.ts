@@ -134,7 +134,13 @@ test.describe("Cabeçalho da página de produto", () => {
     );
     expect(assinatura).not.toContain("MARKETPLACE");
 
-    await expect(page.locator(`${HEADER} nav[aria-label="Principal"]`)).toBeVisible();
+    /* A linha de navegação com mega menu saiu do cabeçalho em 12/09/2026: o
+       desenho aprovado tem três níveis — utilidade, ação e a faixa vermelha de
+       categorias —, e a quarta linha era nossa. Quem herdou os destinos foi a
+       faixa, que vive FORA do `<header>`. Por isso a asserção mudou de lugar,
+       não de intenção: continua cobrando que exista navegação de catálogo na
+       largura de desktop. */
+    await expect(page.getByRole("navigation", { name: "Catálogo" })).toBeVisible();
     await semRolagemHorizontal(page);
   });
 
@@ -142,7 +148,7 @@ test.describe("Cabeçalho da página de produto", () => {
     await page.setViewportSize({ width: 1760, height: 1000 });
     await abrirProduto(page);
 
-    await expect(page.locator(`${HEADER} nav[aria-label="Principal"]`)).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Catálogo" })).toBeVisible();
     await expect(page.locator(`${HEADER} button[aria-haspopup="dialog"]`)).toBeHidden();
     await semRolagemHorizontal(page);
   });

@@ -43,12 +43,16 @@ test.describe("Home", () => {
    * janela e percorre a gaveta.
    */
   test("o menu do cabeçalho leva ao catálogo", async ({ page }) => {
+    /* A navegação de desktop saiu do `<header>` em 12/09/2026 e virou a faixa
+       vermelha logo abaixo dele, que se chama "Catálogo" e aparece a partir de
+       1280px. O destino é o mesmo e o caminho continua sendo um link direto —
+       só mudou de linha. */
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/");
 
-    const direcao = page.getByRole("navigation", { name: "Principal" });
+    const direcao = page.getByRole("navigation", { name: "Catálogo" });
     await expect(direcao).toBeVisible();
-    // o item do menu principal chama-se "Loja"; "Equipamentos" é rótulo da Área da Clínica
-    await direcao.getByRole("link", { name: /^Loja$/ }).first().click();
+    await direcao.getByRole("link", { name: /^Todo o catálogo$/ }).click();
 
     await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

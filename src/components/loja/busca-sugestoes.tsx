@@ -326,12 +326,21 @@ export function BuscaComSugestoes({
               Buscar
             </button>
           ) : (
+            /* Botão cheio, com a palavra, como no desenho de referência: a
+               busca do topo é a ação principal da loja e estava terminando num
+               ícone do mesmo peso do resto da linha.
+
+               Abaixo de 640px continua só o ícone — ali a barra tem ~200px, e
+               uma palavra dentro dela come o campo. */
             <button
               type="submit"
               aria-label="Buscar"
-              className="mr-0.5 flex size-11 shrink-0 items-center justify-center rounded-full text-jb-600 transition-colors hover:bg-jb-50 hover:text-jb-800"
+              className="botao-jb foco-jb mr-1 flex min-h-11 shrink-0 items-center justify-center rounded-lg px-3 text-white transition-colors sm:px-5"
             >
-              <Search className="size-4.5" aria-hidden />
+              <Search className="size-4.5 sm:hidden" aria-hidden />
+              <span className="hidden text-apoio font-extrabold tracking-wide uppercase sm:inline">
+                Buscar
+              </span>
             </button>
           )}
         </div>

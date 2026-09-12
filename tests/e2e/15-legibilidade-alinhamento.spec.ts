@@ -177,20 +177,34 @@ test.describe("Legibilidade e alinhamento da loja pública", () => {
     }
   });
 
-  test("texto e botão do menu desktop não dividem a mesma área de clique", async ({ page }) => {
+  /* Este teste cobria o menu desktop antigo, onde cada item era um link e um
+     botão irmão de MESMO NOME, lado a lado: a queixa original era não saber
+     onde clicar para ir ao catálogo e onde clicar para abrir as opções.
+
+     Essa linha saiu do cabeçalho em 12/09/2026 e o lugar da navegação de
+     desktop passou a ser a faixa vermelha, onde não há botão nenhum — só
+     links. A pergunta de fundo continua valendo e é a mesma: dois alvos
+     vizinhos não podem dividir a mesma área de clique. Então o teste mudou de
+     alvo, não de assunto. */
+  test("os destinos da faixa de catálogo não dividem área de clique", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/loja");
 
-    // hoje o item chama-se "Loja", e o gatilho do mega menu é um botão irmão
-    // com o mesmo nome, ao lado do link
-    const principal = page.getByRole("navigation", { name: "Principal" });
-    const link = principal.getByRole("link", { name: /^Loja$/ }).first();
-    const botao = principal.getByRole("button", { name: /Loja/ }).first();
-    const [caixaLink, caixaBotao] = await Promise.all([link.boundingBox(), botao.boundingBox()]);
+    const faixa = page.getByRole("navigation", { name: "Catálogo" });
+    await expect(faixa).toBeVisible();
 
-    expect(caixaLink).not.toBeNull();
-    expect(caixaBotao).not.toBeNull();
-    expect(caixaBotao!.x).toBeGreaterThanOrEqual(caixaLink!.x + caixaLink!.width);
+    const caixas = await faixa.getByRole("link").evaluateAll((elementos) =>
+      elementos.map((elemento) => {
+        const caixa = elemento.getBoundingClientRect();
+        return { texto: elemento.textContent?.trim() ?? "", x: caixa.x, direita: caixa.right };
+      }),
+    );
+
+    expect(caixas.length).toBeGreaterThan(2);
+    const sobrepostos = caixas.filter(
+      (caixa, i) => i > 0 && caixa.x < caixas[i - 1]!.direita - 1,
+    );
+    expect(sobrepostos, "links da faixa não podem se sobrepor").toEqual([]);
   });
 
   test("ordenação continua legível na largura mínima suportada", async ({ page }) => {
