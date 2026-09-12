@@ -123,6 +123,15 @@ export function UnidadeFisica({
       : "",
   ].filter(Boolean);
 
+  /* Os mesmos números do resumo, agora como pares rótulo/valor para os
+     quadros. "Peças substituídas" é o único em vermelho: é a informação que
+     muda a decisão de quem está comprando usado. */
+  const contagens = [
+    verificados > 0 ? { rotulo: "Itens verificados", valor: verificados, destaque: false } : null,
+    substituidas > 0 ? { rotulo: "Peças substituídas", valor: substituidas, destaque: true } : null,
+    reparados > 0 ? { rotulo: "Itens reparados", valor: reparados, destaque: true } : null,
+  ].filter((linha) => linha !== null);
+
   const nadaAMostrar =
     dados.length === 0 &&
     checklist.length === 0 &&
@@ -138,6 +147,17 @@ export function UnidadeFisica({
     <Secao
       id={id}
       espaco="lg"
+      /* Painel da marca, não faixa branca.
+
+         É a única seção da ficha que fala da UNIDADE — não do modelo — e era
+         a mais discreta da página: mesmo branco, mesma régua, mesmo peso das
+         outras seis. Sobre `jb-50` ela se separa do resto sem precisar de
+         título maior, que é o que o desenho de referência faz aqui.
+
+         `jb-50` é fundo de estado selecionado no sistema; usado numa faixa
+         inteira ele continua sendo sinal, porque só esta faixa o usa na
+         ficha. */
+      fundo="marca"
       separador
       className="scroll-mt-[var(--jb-topo-secoes)]"
       /* `container-jb` sozinho para em 90rem, e o resto da vitrine — home
@@ -154,25 +174,43 @@ export function UnidadeFisica({
           página com sete faixas, o degrau aparece. Acima, o selo continua
           marcando a seção e o título volta para a mesma linha vertical de
           "Ficha técnica", "Antes de comprar" e todas as outras. */}
+      {/* Selo, título e contagem em quadros.
+
+          O resumo era uma frase — "4 itens verificados · 1 peça substituída" —
+          no meio de um parágrafo. É o número que dá o peso da inspeção, e ele
+          estava com o mesmo tamanho do texto ao redor. Em quadros, o laudo
+          abre dizendo o que fez. */}
       <div className="min-w-0 max-w-2xl">
         <span
-          aria-hidden
-          className={`mb-4 flex size-11 items-center justify-center rounded-lg ${desenho.selo}`}
+          className={`inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 ${desenho.selo}`}
         >
-          <ClipboardCheck className="size-5" />
+          <ClipboardCheck className="size-4" aria-hidden />
+          <span className="micro">{vendida ? "Unidade vendida" : "Unidade inspecionada"}</span>
         </span>
-        <h2 className="text-bloco texto-forte">
-          {vendida ? "A unidade que foi vendida" : "Esta unidade, item por item"}
+        <h2 className="fonte-display mt-4 text-[clamp(1.5rem,1.2rem+1.4vw,2.15rem)] text-graf-950">
+          {vendida ? "A unidade que foi vendida" : "Laudo de inspeção desta unidade"}
         </h2>
         <p className="texto-guia mt-3 text-graf-600">
           {checklist.length > 0
-            ? "O laudo abaixo é da unidade que está à venda — não é a descrição do modelo."
+            ? "Não é a descrição genérica do modelo: é o exame, item por item, da unidade que será enviada."
             : "Os dados abaixo são da unidade que está à venda — não são a descrição do modelo."}
         </p>
-        {resumo.length > 0 ? (
-          <p className="mt-3 text-base font-semibold text-graf-800">
-            {resumo.join(" · ")}
-          </p>
+        {contagens.length > 0 ? (
+          <dl className="mt-6 flex flex-wrap gap-3">
+            {contagens.map((contagem) => (
+              <div
+                key={contagem.rotulo}
+                className="min-w-[10.5rem] rounded-xl border border-graf-200 bg-surface px-5 py-4"
+              >
+                <dt className="micro text-graf-500">{contagem.rotulo}</dt>
+                <dd
+                  className={`fonte-display tabular mt-1 text-3xl ${contagem.destaque ? "text-jb-600" : "text-graf-950"}`}
+                >
+                  {contagem.valor}
+                </dd>
+              </div>
+            ))}
+          </dl>
         ) : null}
       </div>
 
@@ -186,11 +224,18 @@ export function UnidadeFisica({
         {checklist.length > 0 ? (
           <div className={temLateral ? "min-w-0 lg:col-span-7" : "min-w-0 max-w-3xl"}>
             <Rotulo>Laudo de inspeção</Rotulo>
-            <ul className="mt-3 divide-y divide-graf-200 border-t border-graf-200">
+            {/* Cada item num cartão próprio, em vez de linhas dividindo uma
+                régua. O laudo é a peça que mais se lê nesta página, e o
+                cartão dá ao par item/resultado a mesma leitura de uma lista
+                de conferência em papel. */}
+            <ul className="mt-3 grid gap-2.5">
               {checklist.map((item) => {
                 const resultado = RESULTADO[item.resultado] ?? RESULTADO.verificado;
                 return (
-                  <li key={item.id} className="py-3.5">
+                  <li
+                    key={item.id}
+                    className="rounded-xl border border-graf-200 bg-surface px-4 py-3.5"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                       <span className="text-sm font-semibold text-graf-900">
                         {item.rotulo}
