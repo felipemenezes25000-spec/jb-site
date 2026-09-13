@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Truck,
   Wrench,
+  type LucideIcon,
 } from "lucide-react";
 
 type Props = {
@@ -18,11 +19,17 @@ type Props = {
   garantiaMeses?: number | null;
 };
 
+type Prova = {
+  icone: LucideIcon;
+  titulo: string;
+  texto: string;
+};
+
 export function VendidoPelaJB({ empresa, desde, cidade, uf, garantiaMeses }: Props) {
   const praca = [cidade.trim(), uf.trim()].filter(Boolean).join(" · ");
   const anos = Number.parseInt(desde, 10);
 
-  const provasPrincipais = [
+  const provasPrincipais: Prova[] = [
     garantiaMeses && garantiaMeses > 0
       ? {
           icone: ShieldCheck,
@@ -45,9 +52,7 @@ export function VendidoPelaJB({ empresa, desde, cidade, uf, garantiaMeses }: Pro
       titulo: "Nota fiscal",
       texto: "Venda formalizada pela JB",
     },
-  ].filter(
-    (item): item is { icone: typeof ShieldCheck; titulo: string; texto: string } => item !== null,
-  );
+  ].filter((item): item is Prova => item !== null);
 
   return (
     <section
