@@ -78,7 +78,9 @@ export function NavegacaoDoProduto({
   const compraForaDeVista = useForaDeVista(alvoDaCompra);
 
   const ancorasEfetivas = useMemo(() => {
-    return ancoras.filter((ancora) => ancora.id !== "relacionados");
+    return ancoras.filter(
+      (ancora) => ancora.id !== "relacionados" && ancora.id !== "unidade",
+    );
   }, [ancoras]);
 
   useEffect(() => {
@@ -97,8 +99,6 @@ export function NavegacaoDoProduto({
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
         if (visiveis[0]) setAtiva(visiveis[0].target.id);
       },
-      // A margem superior é a mesma altura que o `scroll-mt` das seções: o
-      // que está atrás do cabeçalho e da barra não conta como visível.
       { rootMargin: `-${ocupadoNoTopo()}px 0px -60% 0px`, threshold: 0 },
     );
 
@@ -149,8 +149,6 @@ export function NavegacaoDoProduto({
           ))}
         </ul>
 
-        {/* Só no desktop: no celular quem faz esse papel é `BarraCompraMobile`,
-            que fica no rodapé, onde o polegar alcança. */}
         {compra ? (
           <div
             aria-hidden={!mostrarCompra}
