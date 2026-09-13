@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Loader2, MapPin, Store, Truck } from "lucide-react";
+import { ArrowRight, Loader2, MapPin, Store, Truck } from "lucide-react";
 
 import { estimarEntrega, type EstimativaDeEntrega } from "@/app/acoes/entrega";
 import { mascararCep } from "@/components/ui/campos-br";
@@ -46,13 +46,25 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   }
 
   return (
-    <section aria-labelledby="entrega-cep" className="border-t border-hairline px-5 py-4 sm:px-6">
-      <h3 id="entrega-cep" className="flex items-center gap-2 text-sm font-bold text-graf-800">
-        <Truck className="size-4 shrink-0 text-jb-600" aria-hidden />
-        Calcular frete
-      </h3>
+    <section
+      aria-labelledby="entrega-cep"
+      className="border-t border-hairline bg-[linear-gradient(180deg,rgba(248,250,252,0.72),rgba(255,255,255,1))] px-5 py-4 sm:px-6 sm:py-5"
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700 ring-1 ring-jb-100">
+          <Truck className="size-[18px]" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h3 id="entrega-cep" className="text-sm font-extrabold text-graf-950">
+            Entrega para sua clínica
+          </h3>
+          <p className="mt-0.5 text-xs leading-4 text-graf-500">
+            Consulte valor e prazo antes de fechar a compra.
+          </p>
+        </div>
+      </div>
 
-      <div className="mt-2.5 flex gap-2">
+      <div className="mt-3 flex gap-2">
         <div className="relative min-w-0 flex-1">
           <label htmlFor="cep-entrega" className="sr-only">
             CEP de entrega
@@ -68,7 +80,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
             type="text"
             inputMode="numeric"
             autoComplete="postal-code"
-            placeholder="00000-000"
+            placeholder="Digite seu CEP"
             maxLength={9}
             value={cep}
             onChange={(evento) => {
@@ -80,7 +92,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
               evento.preventDefault();
               calcular();
             }}
-            className="h-11 w-full rounded-lg border border-graf-300 bg-white pl-9 pr-3 text-sm tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/10"
+            className="h-11 w-full rounded-xl border border-graf-300 bg-white pl-9 pr-3 text-sm tabular text-graf-900 shadow-[0_8px_24px_-24px_rgba(15,23,42,0.5)] outline-none transition-all placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/10"
           />
         </div>
         <button
@@ -88,13 +100,17 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
           onClick={calcular}
           disabled={!completo || calculando}
           className={cn(
-            "foco-jb flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-graf-300 px-3.5 text-sm font-bold transition-colors",
+            "foco-jb flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-3.5 text-sm font-extrabold transition-all",
             completo && !calculando
-              ? "text-graf-900 hover:border-graf-400 hover:bg-graf-50"
-              : "cursor-not-allowed text-graf-400",
+              ? "border-graf-900 bg-graf-950 text-white shadow-sm hover:-translate-y-0.5 hover:bg-graf-800"
+              : "cursor-not-allowed border-graf-200 bg-graf-100 text-graf-400",
           )}
         >
-          {calculando ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+          {calculando ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <ArrowRight className="size-4" aria-hidden />
+          )}
           Calcular
         </button>
       </div>
@@ -108,10 +124,10 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
       ) : null}
 
       {resultado?.ok ? (
-        <div className="mt-3 rounded-lg bg-graf-50 px-3.5 py-3">
+        <div className="mt-3 rounded-2xl border border-graf-200 bg-white px-4 py-3.5 shadow-[0_12px_30px_-28px_rgba(15,23,42,0.45)]">
           {resultado.orcadoDepois ? (
             <div>
-              <p className="text-sm font-semibold text-graf-900">Frete sob consulta para este CEP</p>
+              <p className="text-sm font-extrabold text-graf-950">Frete sob consulta para este CEP</p>
               <p className="mt-0.5 text-xs leading-5 text-graf-600">
                 A JB confirma o valor antes da cobrança.
               </p>
@@ -119,7 +135,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
           ) : (
             <div>
               <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <span className="text-sm font-semibold text-graf-900">{resultado.rotulo}</span>
+                <span className="text-sm font-bold text-graf-900">{resultado.rotulo}</span>
                 <span className="tabular text-sm font-extrabold text-graf-950">
                   {resultado.valorCents > 0 ? formatarPreco(resultado.valorCents) : "Grátis"}
                 </span>
