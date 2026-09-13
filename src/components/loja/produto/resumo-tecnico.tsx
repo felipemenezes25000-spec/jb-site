@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, ChevronDown, Hash, Star } from "lucide-react";
+import { BadgeCheck, ChevronDown, Star } from "lucide-react";
 
 import { CONDICAO_PDP, type CondicaoProduto } from "@/components/loja/produto/condicao";
 import { normalizar } from "@/lib/busca/intencao";
@@ -128,14 +128,12 @@ export function DetalhesDoProduto({
   sku,
   codigoDoFabricante,
   gtin,
-  numeroDeSerie,
   categoria,
   destaques,
 }: PropsDetalhes) {
   const modeloUtil = Boolean(
     modelo.trim() && normalizar(modelo) !== normalizar(categoria?.nome ?? ""),
   );
-  const serie = numeroDeSerie?.trim() ?? "";
 
   const identificadores: Identificador[] = [
     modeloUtil ? { rotulo: "Modelo", valor: modelo.trim() } : null,
@@ -150,33 +148,12 @@ export function DetalhesDoProduto({
   const restantes = destaques.length - essenciais.length;
   const temDiferencial = Boolean(descricaoHtml?.trim());
 
-  if (essenciais.length === 0 && identificadores.length === 0 && !temDiferencial && !serie) return null;
+  if (essenciais.length === 0 && identificadores.length === 0 && !temDiferencial) return null;
 
   return (
     <div className="min-w-0">
-      {serie ? (
-        <a
-          href="#unidade"
-          className="foco-jb group mt-5 flex items-center gap-3 rounded-2xl border border-graf-200 bg-white p-3.5 shadow-[0_10px_35px_-28px_rgba(15,23,42,0.55)] transition-all hover:-translate-y-0.5 hover:border-jb-200 hover:shadow-card lg:mt-6"
-        >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-graf-950 text-white shadow-sm">
-            <Hash className="size-[18px]" aria-hidden />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="micro block text-graf-500">Esta unidade à venda</span>
-            <span className="mt-0.5 block text-sm font-extrabold text-graf-950">
-              Série <span className="label-mono">{serie}</span>
-            </span>
-            <span className="mt-0.5 block text-xs leading-4 text-graf-500">
-              Veja inspeção, estado e histórico da máquina específica.
-            </span>
-          </span>
-          <ArrowRight className="size-4 shrink-0 text-graf-400 transition-transform group-hover:translate-x-0.5 group-hover:text-jb-700" aria-hidden />
-        </a>
-      ) : null}
-
       {temDiferencial ? (
-        <div className={`border-t border-graf-200 pt-5 ${serie ? "mt-5" : "lg:mt-6"}`}>
+        <div className="border-t border-graf-200 pt-5 lg:mt-6">
           <p className="micro text-graf-500">Por que este modelo</p>
           <div
             className="prose-jb mt-2.5 text-corpo text-graf-700 [&_li]:leading-6 [&_p]:leading-6 [&>*+*]:mt-2"
@@ -186,7 +163,7 @@ export function DetalhesDoProduto({
       ) : null}
 
       {essenciais.length > 0 ? (
-        <div className={`border-t border-graf-200 pt-5 ${temDiferencial || serie ? "mt-5" : "lg:mt-6"}`}>
+        <div className={`border-t border-graf-200 pt-5 ${temDiferencial ? "mt-5" : "lg:mt-6"}`}>
           <div className="flex items-center justify-between gap-3">
             <p className="micro text-graf-500">Dados que decidem a compra</p>
             <a
