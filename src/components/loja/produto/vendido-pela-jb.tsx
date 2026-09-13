@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   BadgeCheck,
+  ChevronDown,
   FileText,
   MapPin,
   RotateCcw,
@@ -21,75 +22,94 @@ export function VendidoPelaJB({ empresa, desde, cidade, uf, garantiaMeses }: Pro
   const praca = [cidade.trim(), uf.trim()].filter(Boolean).join(" · ");
   const anos = Number.parseInt(desde, 10);
 
-  const provas = [
+  const provasPrincipais = [
     garantiaMeses && garantiaMeses > 0
       ? {
           icone: ShieldCheck,
-          texto: `${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"} de garantia JB neste equipamento`,
+          titulo: "Garantia JB registrada",
+          texto: "Prazo e cobertura declarados nesta ficha",
         }
       : null,
     {
       icone: Wrench,
-      texto: "Assistência técnica própria depois da compra",
+      titulo: "Assistência própria",
+      texto: "A mesma equipe acompanha o equipamento depois",
     },
     {
       icone: Truck,
-      texto: "Frete e prazo confirmados antes do pagamento",
+      titulo: "Entrega combinada antes",
+      texto: "Frete e prazo são confirmados antes do pagamento",
     },
     {
       icone: FileText,
-      texto: "Venda com nota fiscal",
+      titulo: "Nota fiscal",
+      texto: "Venda formalizada pela JB",
     },
-  ].filter((item) => item !== null);
+  ].filter(
+    (item): item is { icone: typeof ShieldCheck; titulo: string; texto: string } => item !== null,
+  );
 
   return (
     <section
       aria-label="Quem vende este produto"
-      className="overflow-hidden rounded-2xl border border-graf-200 bg-graf-50/65"
+      className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-[0_12px_30px_-30px_rgba(15,23,42,0.4)]"
     >
-      <div className="border-b border-graf-200 bg-white px-4 py-3.5">
-        <p className="micro text-graf-500">Compra protegida pela própria JB</p>
-        <p className="mt-1 text-sm leading-5 text-graf-600">
-          Vendido e entregue por{" "}
-          <span className="font-extrabold text-graf-950">{empresa}</span>
-        </p>
+      <div className="border-b border-graf-200 bg-graf-50/70 px-4 py-3.5">
+        <div className="flex items-start gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white text-jb-700 ring-1 ring-graf-200">
+            <BadgeCheck className="size-[18px]" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="micro text-graf-500">Procedência e pós-venda</p>
+            <p className="mt-0.5 text-sm leading-5 text-graf-600">
+              Vendido, entregue e assistido por{" "}
+              <span className="font-extrabold text-graf-950">{empresa}</span>
+            </p>
+          </div>
+        </div>
       </div>
 
-      <ul className="grid gap-2 px-4 py-3.5">
-        {provas.map(({ icone: Icone, texto }) => (
-          <li key={texto} className="texto-apoio flex items-start gap-2.5 text-graf-600">
-            <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white text-jb-700 shadow-sm ring-1 ring-graf-200">
+      <ul className="grid gap-0 px-4">
+        {provasPrincipais.map(({ icone: Icone, titulo, texto }, indice) => (
+          <li
+            key={titulo}
+            className={`flex items-start gap-3 py-3 ${indice > 0 ? "border-t border-graf-100" : ""}`}
+          >
+            <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700">
               <Icone className="size-3.5" aria-hidden />
             </span>
-            <span>{texto}.</span>
+            <span className="min-w-0">
+              <strong className="block text-xs font-extrabold text-graf-900">{titulo}</strong>
+              <span className="mt-0.5 block text-[11px] leading-4 text-graf-500">{texto}</span>
+            </span>
           </li>
         ))}
-
-        <li className="texto-apoio flex items-start gap-2.5 text-graf-600">
-          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white text-jb-700 shadow-sm ring-1 ring-graf-200">
-            <RotateCcw className="size-3.5" aria-hidden />
-          </span>
-          <span>Direito de arrependimento em 7 dias nas compras elegíveis pelo CDC.</span>
-        </li>
-
-        {Number.isFinite(anos) ? (
-          <li className="texto-apoio flex items-start gap-2.5 text-graf-600">
-            <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white text-jb-700 shadow-sm ring-1 ring-graf-200">
-              <BadgeCheck className="size-3.5" aria-hidden />
-            </span>
-            <span>Atuação no mercado odontológico desde {anos}.</span>
-          </li>
-        ) : null}
-
-        {praca ? (
-          <li className="texto-apoio flex items-start gap-2.5 text-graf-600">
-            <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white text-jb-700 shadow-sm ring-1 ring-graf-200">
-              <MapPin className="size-3.5" aria-hidden />
-            </span>
-            <span>Base técnica em {praca}.</span>
-          </li>
-        ) : null}
       </ul>
+
+      <details className="group border-t border-graf-200">
+        <summary className="foco-jb flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 text-xs font-bold text-graf-600 transition-colors hover:bg-graf-50 hover:text-graf-900 [&::-webkit-details-marker]:hidden">
+          Mais segurança da compra
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+        </summary>
+        <div className="space-y-2.5 border-t border-graf-100 bg-graf-50/45 px-4 py-3.5">
+          <p className="flex items-start gap-2.5 text-xs leading-5 text-graf-600">
+            <RotateCcw className="mt-0.5 size-4 shrink-0 text-jb-700" aria-hidden />
+            <span>Direito de arrependimento em 7 dias nas compras elegíveis pelo CDC.</span>
+          </p>
+          {Number.isFinite(anos) ? (
+            <p className="flex items-start gap-2.5 text-xs leading-5 text-graf-600">
+              <BadgeCheck className="mt-0.5 size-4 shrink-0 text-jb-700" aria-hidden />
+              <span>Atuação no mercado odontológico desde {anos}.</span>
+            </p>
+          ) : null}
+          {praca ? (
+            <p className="flex items-start gap-2.5 text-xs leading-5 text-graf-600">
+              <MapPin className="mt-0.5 size-4 shrink-0 text-jb-700" aria-hidden />
+              <span>Base técnica em {praca}.</span>
+            </p>
+          ) : null}
+        </div>
+      </details>
 
       <div className="flex flex-wrap gap-x-4 border-t border-graf-200 bg-white px-4 py-2.5">
         <Link
