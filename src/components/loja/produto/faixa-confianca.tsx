@@ -1,17 +1,5 @@
 import { BadgeCheck, PlugZap, ShieldCheck, Truck, Wrench } from "lucide-react";
 
-/* ============================================================================
-   Faixa de confiança
-
-   `certificado` e `temFrete` estavam no tipo, eram passados pela ficha de
-   produto e a função desestruturava só `garantiaMeses` e `temInstalacao`: dois
-   sinais de confiança chegavam e eram descartados em silêncio. Agora os quatro
-   entram, na ordem em que pesam para quem compra equipamento — a inspeção
-   registrada é o argumento mais raro, e por isso vem primeiro quando existe.
-
-   O corte em quatro itens continua: a faixa é uma linha, não uma seção.
-   ============================================================================ */
-
 type Props = {
   certificado: boolean;
   garantiaMeses: number | null;
@@ -22,6 +10,7 @@ type Props = {
 type ItemConfianca = {
   icone: React.ComponentType<{ className?: string }>;
   titulo: string;
+  texto: string;
 };
 
 export function FaixaConfianca({
@@ -32,50 +21,68 @@ export function FaixaConfianca({
 }: Props) {
   const itens: ItemConfianca[] = [
     ...(certificado
-      ? [{ icone: BadgeCheck, titulo: "Inspeção registrada por técnico" }]
+      ? [
+          {
+            icone: BadgeCheck,
+            titulo: "Unidade inspecionada",
+            texto: "Certificação JB verificável",
+          },
+        ]
       : []),
-    ...(garantiaMeses
+    ...(garantiaMeses && garantiaMeses > 0
       ? [
           {
             icone: ShieldCheck,
             titulo: `${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"} de garantia`,
+            texto: "Cobertura informada nesta ficha",
           },
         ]
       : []),
-    { icone: Wrench, titulo: "Assistência técnica própria" },
-    ...(temInstalacao ? [{ icone: PlugZap, titulo: "Instalação disponível" }] : []),
-    ...(temFrete ? [{ icone: Truck, titulo: "Frete calculado por CEP" }] : []),
+    {
+      icone: Wrench,
+      titulo: "Assistência técnica própria",
+      texto: "A mesma equipe acompanha o pós-venda",
+    },
+    ...(temInstalacao
+      ? [
+          {
+            icone: PlugZap,
+            titulo: "Instalação disponível",
+            texto: "Preparação e execução pela JB",
+          },
+        ]
+      : []),
+    ...(temFrete
+      ? [
+          {
+            icone: Truck,
+            titulo: "Entrega planejada",
+            texto: "Frete e prazo antes do pagamento",
+          },
+        ]
+      : []),
   ].slice(0, 4);
 
   if (itens.length === 0) return null;
 
   return (
-    <div className="border-y border-hairline bg-white">
-      {/* `tabIndex` porque no celular a faixa rola na horizontal e nenhum dos
-          itens é focável: sem isto, quem navega por teclado não alcança o que
-          passa da borda (axe `scrollable-region-focusable`, grave). A partir
-          de `sm` a faixa cabe inteira e o `overflow` some, mas a parada de
-          tabulação é barata perto de esconder conteúdo do teclado. */}
-      <ul
-        aria-label="Benefícios desta compra"
-        tabIndex={0}
-        className="foco-jb container-loja scrollbar-none flex items-center gap-0 overflow-x-auto py-2 sm:justify-center sm:overflow-visible"
-      >
-        {itens.map((item, indice) => {
-          const Icone = item.icone;
-          return (
-            <li
-              key={item.titulo}
-              className={`texto-apoio flex min-h-10 shrink-0 items-center gap-2 px-3 font-semibold text-graf-700 sm:px-5 ${
-                indice > 0 ? "border-l border-graf-200" : ""
-              }`}
-            >
-              <Icone className="size-4 shrink-0 text-jb-600" aria-hidden />
-              <span className="whitespace-nowrap">{item.titulo}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <section aria-label="Benefícios desta compra" className="border-y border-graf-200 bg-graf-50/75">
+      <div className="container-loja grid gap-3 py-4 sm:grid-cols-2 xl:grid-cols-4">
+        {itens.map(({ icone: Icone, titulo, texto }) => (
+          <div
+            key={titulo}
+            className="flex min-w-0 items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-graf-200/80"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-jb-50 text-jb-700">
+              <Icone className="size-[18px]" aria-hidden />
+            </span>
+            <span className="min-w-0">
+              <strong className="block text-sm font-extrabold text-graf-950">{titulo}</strong>
+              <span className="mt-0.5 block text-xs leading-4 text-graf-500">{texto}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
