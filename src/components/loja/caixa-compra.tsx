@@ -3,6 +3,7 @@
 import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  ArrowRight,
   CheckCircle2,
   ChevronDown,
   CreditCard,
@@ -10,6 +11,7 @@ import {
   Plus,
   ShoppingCart,
   Sliders,
+  Truck,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -57,8 +59,6 @@ export function CaixaCompra({
   hrefOrcamento: string;
   maxParcelas: number;
   minParcelaCents: number;
-  /** Mantido na API do componente porque a PDP já passa esse dado; a garantia
-   * fica na faixa de confiança para não aparecer duas vezes na primeira dobra. */
   garantia?: { meses: number; daUnidade: boolean } | null;
 }) {
   const router = useRouter();
@@ -130,9 +130,11 @@ export function CaixaCompra({
   const temOpcoes = baseCompravel && (!unico || addons.length > 0);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
-      <div className="px-5 py-5 sm:px-6">
-        <div className="mb-3">
+    <div className="overflow-hidden rounded-[1.75rem] border border-graf-200 bg-white shadow-[0_28px_80px_-48px_rgba(15,23,42,0.5)] ring-1 ring-black/[0.015]">
+      <div className="h-1 bg-[linear-gradient(90deg,var(--color-jb-700),var(--color-jb-500),var(--color-jb-700))]" />
+
+      <div className="px-5 py-5 sm:px-6 sm:py-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           {semEstoque ? (
             <Etiqueta tom="neutro">{unico ? "Vendido" : "Sem estoque no momento"}</Etiqueta>
           ) : unico ? (
@@ -148,11 +150,12 @@ export function CaixaCompra({
               Disponível
             </Etiqueta>
           )}
+          {!soOrcamento ? <span className="micro text-graf-400">Compra direta</span> : null}
         </div>
 
         {soOrcamento ? (
           <div>
-            <p className="text-xl font-extrabold tracking-[-0.02em] text-graf-950">
+            <p className="fonte-display text-2xl leading-tight tracking-[-0.025em] text-graf-950">
               Disponível sob orçamento
             </p>
             <p className="mt-2 max-w-[38ch] text-sm leading-5 text-graf-600">
@@ -161,8 +164,9 @@ export function CaixaCompra({
           </div>
         ) : (
           <div>
+            <p className="micro mb-2 text-graf-500">Preço deste equipamento</p>
             {precoAnteriorCents ? (
-              <div className="mb-1.5 flex flex-wrap items-center gap-2">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="text-sm tabular text-graf-500 line-through">
                   {formatarPreco(precoAnteriorCents)}
                 </span>
@@ -170,40 +174,50 @@ export function CaixaCompra({
               </div>
             ) : null}
 
-            {/* 30px, e não 40px.
-
-                O preço estava em 2.35rem subindo para 2.55rem no `xl` — maior
-                que o de qualquer ficha de produto medida como referência, e
-                praticamente do tamanho do `h1` na coluna ao lado, o que fazia
-                título e preço disputarem a primeira dobra. `text-3xl` é o
-                degrau nativo; quem dá peso ao número é `numero` (800, tabular),
-                não o tamanho. */}
-            <p className="numero text-3xl leading-none text-graf-950">
+            <p className="numero text-[clamp(2rem,1.85rem+0.5vw,2.35rem)] leading-none tracking-[-0.03em] text-graf-950">
               {formatarPreco(precoCents)}
             </p>
 
             {parcelas ? (
-              <p className="mt-2 text-sm leading-5 text-graf-600">
-                até <span className="font-semibold text-graf-900">{parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}</span> sem juros
+              <p className="mt-2.5 text-sm leading-5 text-graf-600">
+                até{" "}
+                <span className="font-extrabold text-graf-900">
+                  {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
+                </span>{" "}
+                sem juros
               </p>
             ) : null}
 
-            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-graf-500">
-              <CreditCard className="size-3.5 shrink-0" aria-hidden />
-              Pix ou cartão de crédito
-            </p>
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <span className="inline-flex items-center gap-1.5 text-xs text-graf-500">
+                <CreditCard className="size-3.5 shrink-0" aria-hidden />
+                Pix ou cartão de crédito
+              </span>
+              {economiaCents > 0 ? (
+                <span className="inline-flex rounded-full bg-ok-50 px-2.5 py-1 text-xs font-extrabold text-ok-700 ring-1 ring-ok-500/15">
+                  Você economiza {formatarPreco(economiaCents)}
+                </span>
+              ) : null}
+            </div>
 
-            {economiaCents > 0 ? (
-              <p className="mt-2 text-sm font-semibold text-ok-700">
-                Economia de {formatarPreco(economiaCents)}
-              </p>
+            {baseCompravel ? (
+              <a
+                href="#entrega-cep"
+                className="foco-jb group mt-4 flex min-h-11 items-center justify-between gap-3 rounded-xl border border-graf-200 bg-graf-50/70 px-3.5 text-sm font-bold text-graf-700 transition-all hover:border-graf-300 hover:bg-white hover:text-graf-950"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <Truck className="size-4 text-jb-700" aria-hidden />
+                  Calcular frete e prazo
+                </span>
+                <ArrowRight className="size-4 text-graf-400 transition-transform group-hover:translate-x-0.5 group-hover:text-jb-700" aria-hidden />
+              </a>
             ) : null}
           </div>
         )}
       </div>
 
       {baseCompravel ? (
-        <form action={acao} className="border-t border-hairline px-5 py-4 sm:px-6">
+        <form action={acao} className="border-t border-hairline bg-white px-5 py-4 sm:px-6 sm:py-5">
           <input type="hidden" name="produtoId" value={produtoId} />
           <input type="hidden" name="quantidade" value={quantidade} />
           {escolhidos.map((id) => (
@@ -211,11 +225,9 @@ export function CaixaCompra({
           ))}
 
           {mostrarTotal ? (
-            <div className="mb-3 flex items-end justify-between gap-4 rounded-xl bg-graf-50 px-3.5 py-3">
+            <div className="mb-3 flex items-end justify-between gap-4 rounded-2xl border border-graf-200 bg-graf-50/75 px-4 py-3.5">
               <span>
-                <span className="block micro text-graf-500">
-                  Total
-                </span>
+                <span className="block micro text-graf-500">Total configurado</span>
                 <span className="mt-0.5 block text-xs text-graf-500">
                   {plural(quantidade, "produto", "produtos")}
                   {servicosComPreco > 0
@@ -252,24 +264,12 @@ export function CaixaCompra({
             </div>
           ) : null}
 
-          {/* Um primário, um secundário, um terciário — e não dois primários
-              e um link.
-
-              Antes os dois primeiros botões mediam 302×52 cada: mesma largura,
-              mesma altura, um vermelho sólido e o outro branco com borda. Dois
-              botões de mesmo peso não formam hierarquia, só dividem a atenção.
-
-              Nenhuma ficha de produto de referência resolve isso com contorno
-              branco: quem mantém dois botões usa preenchimento de menor
-              intensidade no segundo (Mercado Livre repete o mesmo azul a 15%),
-              e a maioria simplesmente tem um botão só. Aqui o secundário fica
-              com preenchimento neutro e 44px de altura contra os 52px do
-              primário — continua sendo um botão de verdade, sem competir. */}
-          <div className="grid gap-2">
+          <div className="grid gap-2.5">
             <Botao
               type="submit"
               tamanho="lg"
               larguraTotal
+              className="min-h-14 rounded-xl shadow-[0_14px_30px_-18px_rgba(190,24,24,0.7)]"
               disabled={enviando || !podeComprar}
               carregando={enviando && irParaPagamento && podeComprar}
               onClick={() => {
@@ -286,6 +286,7 @@ export function CaixaCompra({
               variante="sutil"
               tamanho="md"
               larguraTotal
+              className="min-h-11 rounded-xl"
               disabled={enviando || !podeComprar}
               carregando={enviando && !irParaPagamento && podeComprar}
               onClick={() => {
@@ -298,8 +299,12 @@ export function CaixaCompra({
             </Botao>
           </div>
 
+          <p className="mt-2.5 text-center text-[11px] leading-4 text-graf-400">
+            Serviços e total podem ser revisados antes do pagamento.
+          </p>
+
           {permiteOrcamento ? (
-            <div className="mt-1.5 text-center">
+            <div className="mt-1 text-center">
               <LinkBotao
                 href={hrefOrcamento}
                 variante="texto"
@@ -313,7 +318,7 @@ export function CaixaCompra({
         </form>
       ) : permiteOrcamento ? (
         <div className="border-t border-hairline p-5 sm:p-6">
-          <LinkBotao href={hrefOrcamento} tamanho="lg" larguraTotal>
+          <LinkBotao href={hrefOrcamento} tamanho="lg" larguraTotal className="min-h-13 rounded-xl">
             Solicitar orçamento
           </LinkBotao>
           <p className="mt-2 text-center text-xs leading-5 text-graf-500">
@@ -332,7 +337,7 @@ export function CaixaCompra({
 
       {temOpcoes ? (
         <details className="group border-t border-hairline">
-          <summary className="foco-jb flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 text-sm font-semibold text-graf-700 hover:bg-graf-50/70 [&::-webkit-details-marker]:hidden sm:px-6">
+          <summary className="foco-jb flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-50/70 [&::-webkit-details-marker]:hidden sm:px-6">
             <span className="flex min-w-0 items-center gap-2">
               <Sliders className="size-4 shrink-0 text-jb-600" aria-hidden />
               Mais opções da compra
@@ -582,11 +587,7 @@ function AlternativaDoPacote({
           <span className="text-sm font-bold text-graf-900">{titulo}</span>
           {valor !== null ? (
             <span className="shrink-0 text-right text-sm font-bold tabular text-graf-800">
-              {aPartirDe ? (
-                <span className="block micro text-graf-500">
-                  a partir de
-                </span>
-              ) : null}
+              {aPartirDe ? <span className="block micro text-graf-500">a partir de</span> : null}
               + {formatarPreco(valor)}
             </span>
           ) : aPartirDe ? (
@@ -594,9 +595,7 @@ function AlternativaDoPacote({
           ) : null}
         </span>
         <span className="mt-1 block text-xs leading-5 text-graf-500">{descricao}</span>
-        {ressalva ? (
-          <span className="mt-1.5 block texto-apoio text-graf-500">{ressalva}</span>
-        ) : null}
+        {ressalva ? <span className="mt-1.5 block texto-apoio text-graf-500">{ressalva}</span> : null}
         {itens && itens.length > 0 ? (
           <span className="mt-2 flex flex-wrap gap-1.5">
             {itens.map((item) => (
