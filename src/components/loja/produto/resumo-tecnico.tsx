@@ -7,27 +7,6 @@ import { normalizar } from "@/lib/busca/intencao";
 import { carregarResumoAvaliacoesProdutoPorSku } from "@/lib/marketplace/avaliacoes-produto";
 import type { DestaqueProduto } from "@/lib/marketplace/resumo-produto";
 
-/* ============================================================================
-   Coluna de contexto da ficha de produto
-
-   Duas correções de fundo em relação à versão anterior:
-
-   1. O `h1` usava `clamp(1.8rem, …, 2.55rem)` — 40px numa coluna de 376px, três
-      linhas de altura, e maior que qualquer ficha de produto usada como
-      referência cujo título seja uma *descrição* e não um nome de marca
-      (Mercado Livre 22px, Amazon e Dental Cremer 24px, Newegg 20px). Agora usa
-      `text-title`, que é o degrau do design system para exatamente isto.
-
-   2. As "Principais características" eram quatro cartões com borda e fundo
-      próprios, dentro da coluna de resumo, ao lado da caixa de compra, dentro
-      da seção — caixa dentro de caixa dentro de caixa. Agora são filetes: a
-      mesma informação, sem a moldura.
-
-   Os tamanhos avulsos (`text-[0.6rem]`, `text-[0.625rem]`, `text-[0.6875rem]`,
-   `text-corpo`) saíram em favor de `micro`, `texto-apoio` e da escala
-   nativa — todos já documentados em `globals.css`.
-   ============================================================================ */
-
 type Props = {
   nome: string;
   resumo: string;
@@ -39,7 +18,6 @@ type Props = {
 };
 
 type PropsDetalhes = {
-  /** HTML já sanitizado do diferencial do modelo. Vazio esconde o bloco. */
   descricaoHtml?: string;
   modelo: string;
   sku: string;
@@ -69,27 +47,33 @@ export async function ResumoTecnicoProduto({
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
         <Etiqueta tom={desenho.tom}>{desenho.rotulo}</Etiqueta>
         {marca ? (
           <Link
             href={`/marcas/${marca.slug}`}
-            className="foco-jb micro inline-flex min-h-9 items-center text-graf-700 hover:text-jb-700"
+            className="foco-jb micro inline-flex min-h-8 items-center font-extrabold text-graf-800 hover:text-jb-700"
           >
             {marca.nome}
           </Link>
         ) : null}
         {categoria ? (
-          <Link
-            href={`/categoria/${categoria.slug}`}
-            className="foco-jb texto-apoio inline-flex min-h-9 items-center font-semibold text-graf-500 hover:text-graf-900"
-          >
-            · {categoria.nome}
-          </Link>
+          <>
+            <span className="text-graf-300" aria-hidden>•</span>
+            <Link
+              href={`/categoria/${categoria.slug}`}
+              className="foco-jb texto-apoio inline-flex min-h-8 items-center font-semibold text-graf-500 hover:text-graf-900"
+            >
+              {categoria.nome}
+            </Link>
+          </>
         ) : null}
       </div>
 
-      <h1 id="titulo-produto" className="text-title mt-2 text-graf-950">
+      <h1
+        id="titulo-produto"
+        className="fonte-display mt-3 text-[clamp(2rem,1.55rem+1.45vw,3rem)] leading-[1.04] tracking-[-0.035em] text-graf-950"
+      >
         {nome}
       </h1>
 
@@ -97,7 +81,7 @@ export async function ResumoTecnicoProduto({
         <a
           href="#avaliacoes-verificadas"
           aria-label={`${avaliacao.media.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} de 5 em ${avaliacao.total} ${avaliacao.total === 1 ? "avaliação verificada" : "avaliações verificadas"}`}
-          className="foco-jb texto-apoio mt-2 inline-flex min-h-9 items-center gap-2 rounded-lg font-semibold text-graf-600 transition-colors hover:text-jb-700"
+          className="foco-jb mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border border-graf-200 bg-graf-50/80 px-3 text-xs font-semibold text-graf-600 transition-all hover:border-graf-300 hover:bg-white hover:text-jb-700"
         >
           <span className="tabular inline-flex items-center gap-1 font-extrabold text-graf-950">
             <Star className="size-3.5 fill-current text-graf-900" aria-hidden />
@@ -114,44 +98,26 @@ export async function ResumoTecnicoProduto({
       ) : null}
 
       {resumo ? (
-        <p className="mt-3 max-w-[52ch] text-base leading-6 text-graf-600">{resumo}</p>
+        <p className="mt-4 max-w-[50ch] text-[1.05rem] leading-7 text-graf-600">{resumo}</p>
       ) : null}
 
       {definicao ? (
-        <p className="texto-apoio mt-4 border-l-2 border-jb-500 pl-3 text-graf-600">
-          {definicao}
-        </p>
+        <div className="mt-5 flex items-start gap-3 rounded-2xl border border-jb-100 bg-jb-50/65 px-4 py-3.5">
+          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-jb-700 shadow-sm ring-1 ring-jb-100">
+            <BadgeCheck className="size-4" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="micro text-jb-700">Condição deste equipamento</p>
+            <p className="mt-1 text-sm leading-5 text-graf-700">{definicao}</p>
+          </div>
+        </div>
       ) : null}
     </div>
   );
 }
 
-/* ============================================================================
-   Detalhes técnicos da coluna de contexto
-
-   Bloco separado da identidade por causa do celular. Empilhado, o topo saía
-   como marca → `h1` → resumo → quatro linhas de características → gaveta de
-   identificação → **só então a foto** → e a caixa de compra depois dela: a
-   390px, 700px de rolagem até ver o equipamento e ~1.100px até o preço.
-   Nenhuma ficha medida como referência coloca tabela antes da foto.
-
-   Como slot próprio do grid, isto desce para depois da compra no celular e
-   volta para baixo do resumo, na mesma coluna, a partir de 768px.
-   ============================================================================ */
-
-/**
- * Quantas especificações a coluna do meio carrega antes de mandar para a ficha.
- *
- * Eram 4, cortadas de uma lista que todo produto do catálogo tem com 5 ou 6 —
- * ou seja, a ficha escondia uma ou duas linhas na dobra e repetia as outras
- * quatro 1.100px abaixo, dentro de "Especificações técnicas". A coluna do meio
- * ficava com 410px de conteúdo ao lado de uma caixa de compra de 773px.
- *
- * O teto continua existindo porque o catálogo pode receber equipamento com
- * quarenta atributos, e a dobra não é lugar de tabela longa. Oito é o que cabe
- * sem empurrar a gaveta de identificação para fora da primeira tela.
- */
 export const LIMITE_NA_COLUNA = 8;
+
 export function DetalhesDoProduto({
   descricaoHtml,
   modelo,
@@ -185,53 +151,43 @@ export function DetalhesDoProduto({
   return (
     <div className="min-w-0">
       {temDiferencial ? (
-        <div className="border-t border-graf-200 pt-4 lg:mt-6">
-          <p className="micro text-graf-500">O que diferencia este modelo</p>
-          {/* Os tópicos do produto, ao lado do preço.
-
-              Ficavam numa seção de largura inteira a 1.100px de rolagem —
-              o argumento de venda longe de onde a decisão acontece. São 96 a
-              265 caracteres em todo produto do catálogo: cabem aqui, e é aqui
-              que Amazon e Mercado Livre os colocam. */}
+        <div className="border-t border-graf-200 pt-5 lg:mt-6">
+          <p className="micro text-graf-500">Por que este modelo</p>
           <div
-            className="prose-jb mt-2 text-corpo [&_li]:leading-6 [&_p]:leading-6 [&>*+*]:mt-2"
+            className="prose-jb mt-2.5 text-corpo text-graf-700 [&_li]:leading-6 [&_p]:leading-6 [&>*+*]:mt-2"
             dangerouslySetInnerHTML={{ __html: descricaoHtml! }}
           />
         </div>
       ) : null}
-      {essenciais.length > 0 ? (
-        <div
-          className={`border-t border-graf-200 pt-4 ${temDiferencial ? "mt-4" : "lg:mt-6"}`}
-        >
-          <p className="micro text-graf-500">Especificações</p>
-          {/* Filetes, não cartões: as linhas dividem uma régua e não carregam
-              moldura própria. O mesmo desenho de `GradeDados`, na ficha.
 
-              Uma por linha, rótulo à esquerda e valor à direita. Eram duas
-              colunas, e a coluna do meio tem ~430px a 1440: cada célula ficava
-              com ~200px para caber "Secagem / A vácuo, 20 min", e o valor
-              quebrava em duas linhas. Numa faixa só, o valor cabe inteiro e a
-              lista lê como tabela de ficha — que é o que ela é. */}
-          <dl className="mt-1 grid border-hairline [&>*:nth-child(n+2)]:border-t">
-            {essenciais.map((destaque) => (
+      {essenciais.length > 0 ? (
+        <div className={`border-t border-graf-200 pt-5 ${temDiferencial ? "mt-5" : "lg:mt-6"}`}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="micro text-graf-500">Dados que decidem a compra</p>
+            <a
+              href="#ficha-tecnica"
+              className="foco-jb texto-apoio inline-flex min-h-8 items-center font-bold text-jb-700 hover:text-jb-800"
+            >
+              Ficha completa
+            </a>
+          </div>
+          <dl className="mt-2.5 grid overflow-hidden rounded-xl border border-graf-200 bg-graf-50/45">
+            {essenciais.map((destaque, indice) => (
               <div
                 key={`${destaque.rotulo}-${destaque.valor}`}
-                className="flex min-w-0 items-baseline justify-between gap-5 border-hairline py-2.5"
+                className={`flex min-w-0 items-baseline justify-between gap-5 px-3.5 py-2.5 ${indice > 0 ? "border-t border-graf-200" : ""}`}
               >
                 <dt className="micro shrink-0 text-graf-500">{destaque.rotulo}</dt>
-                <dd className="min-w-0 break-words text-right text-base font-extrabold leading-5 text-graf-950">
+                <dd className="min-w-0 break-words text-right text-sm font-extrabold leading-5 text-graf-950">
                   {destaque.valor}
                 </dd>
               </div>
             ))}
           </dl>
           {restantes > 0 ? (
-            <a
-              href="#ficha-tecnica"
-              className="foco-jb texto-apoio mt-2 inline-flex min-h-10 items-center font-bold text-jb-700 hover:text-jb-800"
-            >
-              Ver mais {restantes} {restantes === 1 ? "especificação" : "especificações"}
-            </a>
+            <p className="mt-2 text-xs leading-5 text-graf-500">
+              + {restantes} {restantes === 1 ? "especificação" : "especificações"} na ficha completa.
+            </p>
           ) : null}
         </div>
       ) : null}
