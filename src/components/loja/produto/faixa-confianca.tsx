@@ -24,8 +24,8 @@ export function FaixaConfianca({
       ? [
           {
             icone: BadgeCheck,
-            titulo: "Unidade inspecionada",
-            texto: "Certificação JB verificável",
+            titulo: "Inspeção verificável",
+            texto: "Certificação ligada à unidade física",
           },
         ]
       : []),
@@ -33,22 +33,22 @@ export function FaixaConfianca({
       ? [
           {
             icone: ShieldCheck,
-            titulo: `${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"} de garantia`,
-            texto: "Cobertura informada nesta ficha",
+            titulo: "Garantia JB por escrito",
+            texto: "Prazo e cobertura declarados na ficha",
           },
         ]
       : []),
     {
       icone: Wrench,
       titulo: "Assistência técnica própria",
-      texto: "A mesma equipe acompanha o pós-venda",
+      texto: "Quem vende também acompanha o pós-venda",
     },
     ...(temInstalacao
       ? [
           {
             icone: PlugZap,
             titulo: "Instalação disponível",
-            texto: "Preparação e execução pela JB",
+            texto: "Preparação e execução pela equipe JB",
           },
         ]
       : []),
@@ -57,7 +57,7 @@ export function FaixaConfianca({
           {
             icone: Truck,
             titulo: "Entrega planejada",
-            texto: "Frete e prazo antes do pagamento",
+            texto: "Frete e prazo definidos antes do pagamento",
           },
         ]
       : []),
@@ -66,14 +66,17 @@ export function FaixaConfianca({
   if (itens.length === 0) return null;
 
   return (
-    <section aria-label="Benefícios desta compra" className="border-y border-graf-200 bg-graf-50/75">
+    <section
+      aria-label="Benefícios desta compra"
+      className="border-y border-graf-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.85),rgba(255,255,255,0.96))]"
+    >
       <div className="container-loja grid gap-3 py-4 sm:grid-cols-2 xl:grid-cols-4">
         {itens.map(({ icone: Icone, titulo, texto }) => (
           <div
             key={titulo}
-            className="flex min-w-0 items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-graf-200/80"
+            className="group flex min-w-0 items-center gap-3 rounded-2xl border border-graf-200/90 bg-white px-4 py-3.5 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.35)] transition-all hover:-translate-y-0.5 hover:border-jb-100 hover:shadow-card"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-jb-50 text-jb-700">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700 ring-1 ring-jb-100/70 transition-colors group-hover:bg-jb-100/70">
               <Icone className="size-[18px]" aria-hidden />
             </span>
             <span className="min-w-0">
