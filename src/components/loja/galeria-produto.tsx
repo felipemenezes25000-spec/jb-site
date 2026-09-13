@@ -3,7 +3,15 @@
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, ImageOff, X, ZoomIn } from "lucide-react";
+import {
+  BadgeCheck,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  ImageOff,
+  X,
+  ZoomIn,
+} from "lucide-react";
 
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
@@ -20,6 +28,7 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
   const [ampliado, setAmpliado] = useState(false);
   const toqueRef = useRef<{ x: number; y: number } | null>(null);
   const fecharRef = useRef<HTMLButtonElement>(null);
+  const temFotosDaUnidade = fotos.some((foto) => foto.daUnidade);
 
   const irPara = useCallback(
     (passo: number) => {
@@ -72,10 +81,7 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
 
   if (total === 0) {
     return (
-      /* `aspect-square`, igual ao palco com foto: sem isso a coluna mudava de
-         altura conforme o produto tivesse ou não imagem, e a primeira dobra
-         inteira se reorganizava junto. */
-      <div className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-graf-300 bg-graf-50 px-6 text-center">
+      <div className="flex aspect-square flex-col items-center justify-center gap-2 rounded-3xl border border-dashed border-graf-300 bg-graf-50 px-6 text-center">
         <ImageOff className="size-8 text-graf-400" aria-hidden />
         <p className="text-sm font-semibold text-graf-700">Foto em cadastro</p>
         <p className="texto-apoio max-w-xs text-graf-500">
@@ -88,52 +94,47 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
   const foto = fotos[atual];
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* A moldura voltou em 12/09/2026, junto com o resto do desenho de
-          referência.
-
-          Ela já tinha saído daqui, e com argumento: nenhuma das fichas medidas
-          como referência (Mercado Livre, Amazon, Magazine Luiza, Sonos)
-          emoldura a foto, e a borda punha uma caixa branca dentro de uma
-          página branca ao lado de outra caixa. O desenho aprovado emoldura, e
-          essa é a decisão que vale.
-
-          O degradê de apoio saiu junto: sobre branco chapado, dentro de uma
-          borda, ele virava uma sombra sem chão. */}
-      <div className="relative min-w-0 overflow-hidden rounded-2xl border border-graf-200 bg-surface">
+    <div
+      className={cn(
+        "grid min-w-0 gap-3",
+        total > 1 && "lg:grid-cols-[4.75rem_minmax(0,1fr)] lg:items-start",
+      )}
+    >
+      <div
+        className={cn(
+          "relative min-w-0 overflow-hidden rounded-3xl border border-graf-200 bg-surface shadow-[0_18px_60px_-38px_rgba(15,23,42,0.38)]",
+          total > 1 && "lg:col-start-2 lg:row-start-1",
+        )}
+      >
         <div
           data-pdp-gallery-main
           data-palco-imagem-produto
-          className="relative aspect-square bg-surface"
+          className="relative aspect-square bg-[radial-gradient(circle_at_50%_40%,rgba(248,250,252,0.25),rgba(248,250,252,0.8))]"
           onTouchStart={aoEncostar}
           onTouchEnd={aoSoltar}
         >
-          {/* As larguras reais desta coluna depois do redesign: tela cheia no
-              celular, metade entre 768 e 1279 (duas colunas) e 39% a partir de
-              1280 (três colunas), com o container travando em 1600px — daí o
-              teto fixo no fim. O valor antigo, `48vw`, pedia 691px para um
-              espaço de 514px a 1440. */}
           <Image
             data-imagem-produto
             src={imagemProdutoSemFundo(foto.url)}
             alt={foto.alt || nome}
             fill
             priority
-            sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, (max-width: 1680px) 39vw, 600px"
-            className="object-contain p-5 sm:p-7 lg:p-8"
+            sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, (max-width: 1680px) 40vw, 620px"
+            className="object-contain p-5 sm:p-7 lg:p-9"
           />
 
           <button
             type="button"
             onClick={() => setAmpliado(true)}
             aria-label={`Ampliar imagem ${atual + 1} de ${total}`}
-            className="foco-jb absolute right-3 top-3 z-10 flex size-10 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur transition-colors hover:border-graf-300 hover:text-jb-700"
+            className="foco-jb absolute right-3 top-3 z-10 flex size-11 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur transition-all hover:-translate-y-0.5 hover:border-graf-300 hover:text-jb-700 hover:shadow-md"
           >
             <ZoomIn className="size-[18px]" aria-hidden />
           </button>
 
           {foto.daUnidade ? (
-            <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-graf-950/85 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">
+            <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-graf-950/88 px-3 py-1.5 text-xs font-bold text-white shadow-sm backdrop-blur">
+              <Camera className="size-3.5" aria-hidden />
               Foto desta unidade
             </span>
           ) : null}
@@ -144,7 +145,7 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                 type="button"
                 onClick={() => irPara(-1)}
                 aria-label="Imagem anterior"
-                className="foco-jb absolute left-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur hover:text-jb-700"
+                className="foco-jb absolute left-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur transition hover:scale-105 hover:text-jb-700"
               >
                 <ChevronLeft className="size-5" aria-hidden />
               </button>
@@ -152,11 +153,11 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                 type="button"
                 onClick={() => irPara(1)}
                 aria-label="Próxima imagem"
-                className="foco-jb absolute right-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur hover:text-jb-700"
+                className="foco-jb absolute right-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur transition hover:scale-105 hover:text-jb-700"
               >
                 <ChevronRight className="size-5" aria-hidden />
               </button>
-              <span className="pointer-events-none absolute bottom-3 right-3 z-10 rounded-full bg-graf-950/80 px-2.5 py-1 text-xs font-semibold tabular text-white backdrop-blur">
+              <span className="pointer-events-none absolute bottom-3 right-3 z-10 rounded-full bg-graf-950/82 px-2.5 py-1 text-xs font-semibold tabular text-white backdrop-blur">
                 {atual + 1}/{total}
               </span>
             </>
@@ -164,17 +165,10 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
         </div>
       </div>
 
-      {/* Trocar de foto não dizia nada a quem usa leitor de tela: a imagem do
-          palco troca sozinha, sem foco e sem anúncio. Esta região resolve isso
-          sem mudar nada do que se vê. */}
-      <p aria-live="polite" className="sr-only">
-        {total > 1 ? `Imagem ${atual + 1} de ${total}. ${foto.alt || nome}` : ""}
-      </p>
-
       {total > 1 ? (
         <ul
           aria-label={`Imagens de ${nome}`}
-          className="scrollbar-none grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8"
+          className="scrollbar-none order-2 grid grid-cols-5 gap-2.5 overflow-x-auto sm:grid-cols-7 lg:order-none lg:col-start-1 lg:row-start-1 lg:max-h-[39rem] lg:grid-cols-1 lg:overflow-y-auto lg:pr-1"
         >
           {fotos.map((imagem, indice) => (
             <li key={`${imagem.url}-${indice}`} className="min-w-0">
@@ -185,10 +179,10 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                 aria-label={`Ver imagem ${indice + 1} de ${total}`}
                 aria-current={indice === atual ? "true" : undefined}
                 className={cn(
-                  "foco-jb relative block aspect-square w-full overflow-hidden rounded-lg border bg-surface transition-colors",
+                  "foco-jb relative block aspect-square w-full overflow-hidden rounded-xl border bg-surface transition-all",
                   indice === atual
-                    ? "border-jb-500 ring-1 ring-inset ring-jb-500"
-                    : "border-graf-200 hover:border-graf-400",
+                    ? "border-jb-500 ring-2 ring-jb-500/15"
+                    : "border-graf-200 hover:-translate-y-0.5 hover:border-graf-400",
                 )}
               >
                 <Image
@@ -196,13 +190,35 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                   src={imagemProdutoSemFundo(imagem.url)}
                   alt=""
                   fill
-                  sizes="68px"
+                  sizes="76px"
                   className="object-contain p-1.5"
                 />
+                {imagem.daUnidade ? (
+                  <span className="absolute bottom-1 right-1 size-2 rounded-full bg-jb-600 ring-2 ring-white" />
+                ) : null}
               </button>
             </li>
           ))}
         </ul>
+      ) : null}
+
+      <p aria-live="polite" className="sr-only">
+        {total > 1 ? `Imagem ${atual + 1} de ${total}. ${foto.alt || nome}` : ""}
+      </p>
+
+      {temFotosDaUnidade ? (
+        <div
+          className={cn(
+            "flex items-start gap-2.5 rounded-2xl border border-graf-200 bg-graf-50/70 px-4 py-3",
+            total > 1 && "lg:col-start-2",
+          )}
+        >
+          <BadgeCheck className="mt-0.5 size-4 shrink-0 text-jb-700" aria-hidden />
+          <p className="text-xs leading-5 text-graf-600">
+            <strong className="font-extrabold text-graf-900">Fotos reais da unidade.</strong>{" "}
+            Quando marcada, a imagem é do equipamento exato que será enviado — não de uma unidade genérica do catálogo.
+          </p>
+        </div>
       ) : null}
 
       {ampliado && typeof document !== "undefined"
