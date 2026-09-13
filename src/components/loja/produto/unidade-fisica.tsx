@@ -1,5 +1,16 @@
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
+import {
+  BadgeCheck,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardCheck,
+  Clock3,
+  Gauge,
+  Hash,
+  ShieldCheck,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 
 import { CONDICAO_PDP, type CondicaoProduto } from "@/components/loja/produto/condicao";
 import {
@@ -8,26 +19,6 @@ import {
 } from "@/components/loja/produto/selo-certificado";
 import { Etiqueta, type Tom } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
-
-/* ============================================================================
-   A unidade física
-
-   Seminovo, usado e recondicionado não são um modelo de catálogo: são AQUELE
-   equipamento, com número de série, ano, horas de uso e um laudo do que a
-   bancada verificou. Esta é a seção que mostra os dados daquela unidade e de
-   mais nenhuma.
-
-   É uma faixa da página, não um cartão dentro dela: título de seção de
-   verdade no alto, laudo e dados em duas colunas abaixo. O único fundo
-   colorido é o painel de dados da unidade, tingido pela condição.
-
-   A faixa é montada aqui dentro, e não na página, para que a seção inteira
-   desapareça junto com o conteúdo: unidade sem nenhum campo preenchido não
-   deixa uma tira vazia com linha divisória no meio da tela.
-
-   Campo em branco não vira linha. Se a unidade não tem ano cadastrado, a
-   página não diz "—": a linha some e a seção fica menor.
-   ============================================================================ */
 
 export type ItemDeChecklist = {
   id: string;
@@ -43,12 +34,30 @@ const RESULTADO: Record<string, { rotulo: string; tom: Tom }> = {
   nao_aplicavel: { rotulo: "Não se aplica", tom: "neutro" },
 };
 
-/** Rótulo em caixa alta dos blocos internos da seção. */
+type DadoDaUnidade = {
+  rotulo: string;
+  valor: string;
+  mono: boolean;
+  icone: LucideIcon;
+};
+
 function Rotulo({ children }: { children: React.ReactNode }) {
+  return <h3 className="micro text-graf-500">{children}</h3>;
+}
+
+function IconeDoResultado({ resultado }: { resultado: string }) {
+  if (resultado === "substituido" || resultado === "reparado") {
+    return (
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-jb-50 text-jb-700 ring-1 ring-jb-100">
+        <Wrench className="size-4" aria-hidden />
+      </span>
+    );
+  }
+
   return (
-    <h3 className="micro text-graf-500">
-      {children}
-    </h3>
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-ok-50 text-ok-700 ring-1 ring-ok-100">
+      <CheckCircle2 className="size-4" aria-hidden />
+    </span>
   );
 }
 
@@ -66,7 +75,6 @@ export function UnidadeFisica({
   certificado,
   vendida,
 }: {
-  /** Âncora da faixa, para a navegação de seções do equipamento. */
   id?: string;
   condicao: CondicaoProduto;
   numeroDeSerie: string | null;
@@ -77,26 +85,37 @@ export function UnidadeFisica({
   notasDeEstado: string;
   notasDeInspecao: string;
   checklist: ItemDeChecklist[];
-  /** Certificação publicada desta unidade, quando existe. */
   certificado?: CertificadoDaUnidade | null;
-  /** A unidade já saiu — a página segue de pé, mas o texto muda de tempo. */
   vendida?: boolean;
 }) {
   const desenho = CONDICAO_PDP[condicao];
 
-  const dados = [
-    numeroDeSerie ? { rotulo: "Número de série", valor: numeroDeSerie, mono: true } : null,
+  const dados: DadoDaUnidade[] = [
+    numeroDeSerie
+      ? { rotulo: "Número de série", valor: numeroDeSerie, mono: true, icone: Hash }
+      : null,
     anoDeFabricacao
-      ? { rotulo: "Ano de fabricação", valor: String(anoDeFabricacao), mono: false }
+      ? {
+          rotulo: "Ano de fabricação",
+          valor: String(anoDeFabricacao),
+          mono: false,
+          icone: CalendarDays,
+        }
       : null,
     ciclos
-      ? { rotulo: "Ciclos registrados", valor: ciclos.toLocaleString("pt-BR"), mono: false }
+      ? {
+          rotulo: "Ciclos registrados",
+          valor: ciclos.toLocaleString("pt-BR"),
+          mono: false,
+          icone: Gauge,
+        }
       : null,
     horasDeUso
       ? {
           rotulo: "Horas de uso",
           valor: `${horasDeUso.toLocaleString("pt-BR")} h`,
           mono: false,
+          icone: Clock3,
         }
       : null,
     garantiaMeses
@@ -104,22 +123,22 @@ export function UnidadeFisica({
           rotulo: "Garantia desta unidade",
           valor: `${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"}`,
           mono: false,
+          icone: ShieldCheck,
         }
       : null,
-  ].filter((linha) => linha !== null);
+  ].filter((linha): linha is DadoDaUnidade => linha !== null);
 
   const substituidas = checklist.filter((item) => item.resultado === "substituido").length;
   const reparados = checklist.filter((item) => item.resultado === "reparado").length;
   const verificados = checklist.filter((item) => item.resultado === "verificado").length;
 
-  /* Os mesmos números do resumo, agora como pares rótulo/valor para os
-     quadros. "Peças substituídas" é o único em vermelho: é a informação que
-     muda a decisão de quem está comprando usado. */
   const contagens = [
     verificados > 0 ? { rotulo: "Itens verificados", valor: verificados, destaque: false } : null,
     substituidas > 0 ? { rotulo: "Peças substituídas", valor: substituidas, destaque: true } : null,
     reparados > 0 ? { rotulo: "Itens reparados", valor: reparados, destaque: true } : null,
-  ].filter((linha) => linha !== null);
+  ].filter(
+    (linha): linha is { rotulo: string; valor: number; destaque: boolean } => linha !== null,
+  );
 
   const nadaAMostrar =
     dados.length === 0 &&
@@ -129,194 +148,197 @@ export function UnidadeFisica({
     !certificado;
   if (nadaAMostrar) return null;
 
-  const temLateral =
+  const temComplemento =
     dados.length > 0 || Boolean(notasDeEstado) || Boolean(notasDeInspecao) || Boolean(certificado);
 
   return (
     <Secao
       id={id}
       espaco="lg"
-      /* Painel da marca, não faixa branca.
-
-         É a única seção da ficha que fala da UNIDADE — não do modelo — e era
-         a mais discreta da página: mesmo branco, mesma régua, mesmo peso das
-         outras seis. Sobre `jb-50` ela se separa do resto sem precisar de
-         título maior, que é o que o desenho de referência faz aqui.
-
-         `jb-50` é fundo de estado selecionado no sistema; usado numa faixa
-         inteira ele continua sendo sinal, porque só esta faixa o usa na
-         ficha. */
       fundo="marca"
       separador
       className="scroll-mt-[var(--jb-topo-secoes)]"
-      /* `container-jb` sozinho para em 90rem, e o resto da vitrine — home
-         inclusive — alinha por 100rem. Numa ficha com unidade física isso
-         aparecia como degrau: a 1920px, "Esta unidade" media 1440 enquanto
-         topo, ficha e comparação mediam 1600. 80px de cada lado, no meio da
-         página. */
       largura="loja"
     >
-      {/* O ícone fica ACIMA do título, não ao lado.
+      <div className="overflow-hidden rounded-[2rem] border border-graf-200/90 bg-white shadow-[0_30px_90px_-58px_rgba(15,23,42,0.45)]">
+        <div className="grid gap-8 p-5 sm:p-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12 lg:p-10 xl:gap-16">
+          <div className="min-w-0 self-start">
+            <span
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-extrabold ${desenho.selo}`}
+            >
+              <ClipboardCheck className="size-4" aria-hidden />
+              {vendida ? "Unidade vendida" : "Unidade inspecionada"}
+            </span>
 
-          Ao lado, ele empurrava o `h2` 64px para a direita, e esta era a única
-          faixa da ficha cujo título não começava na borda do container — numa
-          página com sete faixas, o degrau aparece. Acima, o selo continua
-          marcando a seção e o título volta para a mesma linha vertical de
-          "Ficha técnica", "Antes de comprar" e todas as outras. */}
-      {/* Selo, título e contagem em quadros.
+            <h2 className="fonte-display mt-5 max-w-[15ch] text-[clamp(1.8rem,1.35rem+1.6vw,2.7rem)] leading-[1.05] tracking-[-0.035em] text-graf-950">
+              {vendida ? "A unidade que foi vendida" : "O passaporte desta unidade"}
+            </h2>
 
-          O resumo era uma frase — "4 itens verificados · 1 peça substituída" —
-          no meio de um parágrafo. É o número que dá o peso da inspeção, e ele
-          estava com o mesmo tamanho do texto ao redor. Em quadros, o laudo
-          abre dizendo o que fez. */}
-      {/* Duas colunas, como na referência: à esquerda o que a inspeção
-          CONCLUIU — selo, título, números e o pedido do laudo completo —, à
-          direita o que ela CONFERIU, item por item. Antes a lista vinha
-          primeiro e os números ficavam soltos acima dela; lado a lado, o
-          número e a lista que o produz se explicam. */}
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
-      <div className="min-w-0">
-        <span
-          className={`inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 ${desenho.selo}`}
-        >
-          <ClipboardCheck className="size-4" aria-hidden />
-          <span className="micro">{vendida ? "Unidade vendida" : "Unidade inspecionada"}</span>
-        </span>
-        <h2 className="fonte-display mt-4 text-[clamp(1.5rem,1.2rem+1.4vw,2.15rem)] text-graf-950">
-          {vendida ? "A unidade que foi vendida" : "Laudo de inspeção desta unidade"}
-        </h2>
-        <p className="texto-guia mt-3 text-graf-600">
-          {checklist.length > 0
-            ? "Não é a descrição genérica do modelo: é o exame, item por item, da unidade que será enviada."
-            : "Os dados abaixo são da unidade que está à venda — não são a descrição do modelo."}
-        </p>
-        {contagens.length > 0 ? (
-          <dl className="mt-6 flex flex-wrap gap-3">
-            {contagens.map((contagem) => (
-              <div
-                key={contagem.rotulo}
-                className="min-w-[10.5rem] rounded-xl border border-graf-200 bg-surface px-5 py-4"
-              >
-                <dt className="micro text-graf-500">{contagem.rotulo}</dt>
-                <dd
-                  className={`fonte-display tabular mt-1 text-3xl ${contagem.destaque ? "text-jb-600" : "text-graf-950"}`}
-                >
-                  {contagem.valor}
-                </dd>
+            <p className="mt-3 max-w-[48ch] text-base leading-7 text-graf-600">
+              {checklist.length > 0
+                ? "Não é ficha genérica de catálogo. Aqui ficam a identidade, os testes e as intervenções da máquina específica que será enviada."
+                : "Os dados abaixo pertencem à unidade física anunciada — não ao modelo de forma genérica."}
+            </p>
+
+            {numeroDeSerie ? (
+              <div className="mt-5 inline-flex max-w-full items-center gap-3 rounded-2xl border border-graf-200 bg-graf-50/80 px-4 py-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-graf-950 text-white">
+                  <Hash className="size-4" aria-hidden />
+                </span>
+                <span className="min-w-0">
+                  <span className="micro block text-graf-500">Unidade identificada</span>
+                  <span className="label-mono mt-0.5 block truncate text-graf-950">{numeroDeSerie}</span>
+                </span>
               </div>
-            ))}
-          </dl>
-        ) : null}
+            ) : null}
 
-        {/* O laudo que a pessoa lê aqui é o resumo conferível. O documento
-            inteiro — com foto de cada item — a equipe envia; é conversa, não
-            download, porque ele é de UMA unidade e sai assinado. */}
-        {!vendida ? (
-          <Link
-            href={`/orcamento?assunto=${encodeURIComponent("Laudo completo desta unidade")}`}
-            className="botao-jb foco-jb mt-7 inline-flex min-h-11 items-center rounded-lg px-5 text-apoio"
-          >
-            Pedir o laudo completo
-          </Link>
-        ) : null}
-      </div>
-
-      {checklist.length > 0 ? (
-          <div className="min-w-0">
-            <Rotulo>Laudo de inspeção</Rotulo>
-            {/* Cada item num cartão próprio, em vez de linhas dividindo uma
-                régua. O laudo é a peça que mais se lê nesta página, e o
-                cartão dá ao par item/resultado a mesma leitura de uma lista
-                de conferência em papel. */}
-            <ul className="mt-3 grid gap-2.5">
-              {checklist.map((item) => {
-                const resultado = RESULTADO[item.resultado] ?? RESULTADO.verificado;
-                return (
-                  <li
-                    key={item.id}
-                    className="rounded-xl border border-graf-200 bg-surface px-4 py-3.5"
+            {contagens.length > 0 ? (
+              <dl className="mt-6 grid gap-2.5 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                {contagens.map((contagem) => (
+                  <div
+                    key={contagem.rotulo}
+                    className="rounded-2xl border border-graf-200 bg-white px-4 py-4 shadow-[0_12px_30px_-28px_rgba(15,23,42,0.5)]"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                      <span className="text-sm font-semibold text-graf-900">
-                        {item.rotulo}
-                      </span>
-                      <Etiqueta tom={resultado.tom}>{resultado.rotulo}</Etiqueta>
-                    </div>
-                    {item.nota ? (
-                      <p className="mt-1.5 text-sm leading-relaxed text-graf-500">
-                        {item.nota}
-                      </p>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-
-        {/* Os dados da unidade descem para a largura inteira, abaixo das duas
-            colunas. Eles não são o laudo — são a identidade da máquina: número
-            de série, ano, ciclos, estado de conservação. Espremidos numa
-            coluna de 5/12 ao lado da lista, viravam nota de rodapé de algo que
-            é prova. */}
-        {temLateral ? (
-          <div
-            className={
-              checklist.length > 0
-                ? "mt-12 grid min-w-0 gap-8 border-t border-graf-200/70 pt-10 lg:grid-cols-2 lg:gap-14"
-                : "mt-10 min-w-0 max-w-3xl space-y-8"
-            }
-          >
-            {/* O selo abre a coluna: é o que resume o laudo inteiro numa
-                frase conferível, e quem lê esta faixa está exatamente
-                procurando por essa garantia. */}
-            {certificado ? <SeloCertificado certificado={certificado} forma="laudo" /> : null}
-
-            {dados.length > 0 ? (
-              <div className={`rounded-xl p-5 sm:p-6 ${desenho.faixa}`}>
-                <Rotulo>Dados da unidade</Rotulo>
-                <dl className="mt-3 divide-y divide-graf-200">
-                  {dados.map((linha) => (
-                    <div
-                      key={linha.rotulo}
-                      className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 py-2.5 first:pt-0 last:pb-0"
+                    <dd
+                      className={`fonte-display tabular text-3xl leading-none ${contagem.destaque ? "text-jb-650" : "text-graf-950"}`}
                     >
-                      <dt className="text-sm text-graf-500">{linha.rotulo}</dt>
-                      <dd
-                        className={
-                          linha.mono
-                            ? "label-mono text-graf-900"
-                            : "text-sm font-semibold tabular text-graf-900"
-                        }
+                      {contagem.valor}
+                    </dd>
+                    <dt className="micro mt-2 leading-4 text-graf-500">{contagem.rotulo}</dt>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+
+            {!vendida ? (
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <Link
+                  href={`/orcamento?assunto=${encodeURIComponent("Laudo completo desta unidade")}`}
+                  className="botao-jb foco-jb inline-flex min-h-12 items-center gap-2 rounded-xl px-5 text-sm font-extrabold shadow-sm"
+                >
+                  <ClipboardCheck className="size-4" aria-hidden />
+                  Pedir laudo completo
+                </Link>
+                {certificado ? (
+                  <span className="inline-flex min-h-11 items-center gap-2 text-xs font-bold text-ok-700">
+                    <BadgeCheck className="size-4" aria-hidden />
+                    Certificação publicada
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          {checklist.length > 0 ? (
+            <div className="min-w-0 rounded-3xl border border-graf-200 bg-graf-50/60 p-4 sm:p-5 lg:p-6">
+              <div className="flex flex-wrap items-end justify-between gap-3 border-b border-graf-200 pb-4">
+                <div>
+                  <Rotulo>Checklist da bancada</Rotulo>
+                  <p className="mt-1.5 text-sm font-bold text-graf-900">
+                    O que foi conferido nesta máquina
+                  </p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-bold tabular text-graf-600 ring-1 ring-graf-200">
+                  {checklist.length} {checklist.length === 1 ? "item" : "itens"}
+                </span>
+              </div>
+
+              <ul className="mt-3 grid gap-2.5">
+                {checklist.map((item) => {
+                  const resultado = RESULTADO[item.resultado] ?? RESULTADO.verificado;
+                  return (
+                    <li
+                      key={item.id}
+                      className="flex items-start gap-3 rounded-2xl border border-graf-200/90 bg-white px-4 py-3.5 shadow-[0_10px_24px_-25px_rgba(15,23,42,0.45)]"
+                    >
+                      <IconeDoResultado resultado={item.resultado} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                          <span className="text-sm font-extrabold text-graf-900">{item.rotulo}</span>
+                          <Etiqueta tom={resultado.tom}>{resultado.rotulo}</Etiqueta>
+                        </div>
+                        {item.nota ? (
+                          <p className="mt-1.5 text-sm leading-5 text-graf-500">{item.nota}</p>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+
+        {temComplemento ? (
+          <div className="border-t border-graf-200 bg-graf-50/55 px-5 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-9">
+            {dados.length > 0 ? (
+              <div>
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <Rotulo>Identidade e uso</Rotulo>
+                    <p className="mt-1 text-sm font-bold text-graf-900">Dados da unidade física anunciada</p>
+                  </div>
+                  <span className="text-xs text-graf-500">Informação por unidade, não por modelo</span>
+                </div>
+
+                <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                  {dados.map((linha) => {
+                    const Icone = linha.icone;
+                    return (
+                      <div
+                        key={linha.rotulo}
+                        className="min-w-0 rounded-2xl border border-graf-200 bg-white p-4 shadow-[0_12px_28px_-28px_rgba(15,23,42,0.45)]"
                       >
-                        {linha.valor}
-                      </dd>
-                    </div>
-                  ))}
+                        <span className="flex size-8 items-center justify-center rounded-lg bg-graf-50 text-graf-700 ring-1 ring-graf-200">
+                          <Icone className="size-4" aria-hidden />
+                        </span>
+                        <dt className="micro mt-3 text-graf-500">{linha.rotulo}</dt>
+                        <dd
+                          className={
+                            linha.mono
+                              ? "label-mono mt-1 break-all text-graf-950"
+                              : "mt-1 text-base font-extrabold tabular text-graf-950"
+                          }
+                        >
+                          {linha.valor}
+                        </dd>
+                      </div>
+                    );
+                  })}
                 </dl>
               </div>
             ) : null}
 
-            {notasDeEstado ? (
-              <div>
-                <Rotulo>Estado de conservação</Rotulo>
-                <p className="mt-2.5 text-base leading-relaxed text-graf-700">
-                  {notasDeEstado}
-                </p>
-              </div>
-            ) : null}
+            {certificado || notasDeEstado || notasDeInspecao ? (
+              <div className={`grid gap-5 ${dados.length > 0 ? "mt-7 border-t border-graf-200 pt-7" : ""} lg:grid-cols-2`}>
+                {certificado ? (
+                  <div className="min-w-0">
+                    <SeloCertificado certificado={certificado} forma="laudo" />
+                  </div>
+                ) : null}
 
-            {notasDeInspecao ? (
-              <div>
-                <Rotulo>Observações da revisão</Rotulo>
-                <p className="mt-2.5 text-base leading-relaxed text-graf-700">
-                  {notasDeInspecao}
-                </p>
+                {notasDeEstado || notasDeInspecao ? (
+                  <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    {notasDeEstado ? (
+                      <div className="rounded-2xl border border-graf-200 bg-white p-5">
+                        <Rotulo>Estado de conservação</Rotulo>
+                        <p className="mt-2.5 text-sm leading-6 text-graf-700">{notasDeEstado}</p>
+                      </div>
+                    ) : null}
+
+                    {notasDeInspecao ? (
+                      <div className="rounded-2xl border border-graf-200 bg-white p-5">
+                        <Rotulo>Observações da revisão</Rotulo>
+                        <p className="mt-2.5 text-sm leading-6 text-graf-700">{notasDeInspecao}</p>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>
         ) : null}
+      </div>
     </Secao>
   );
 }
