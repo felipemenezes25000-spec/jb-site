@@ -86,6 +86,15 @@ for (const caminho of arquivosTs(diretorioSrc)) {
       `${relativo} importa @/lib/marketplace/*. Use @/lib/comercio/*; marketplace é só compatibilidade.`,
     );
   }
+
+  // `pedido-base` concentra regras internas, mas não é API pública. A borda
+  // `pedido.ts` acrescenta atomicidade de status e efeitos de logística; pular
+  // essa borda reintroduziria exatamente os bugs que ela existe para impedir.
+  if (conteudo.includes("@/lib/pedido-base") && relativo !== "src/lib/pedido.ts") {
+    problemas.push(
+      `${relativo} importa @/lib/pedido-base diretamente. Use @/lib/pedido para preservar a borda transacional e logística.`,
+    );
+  }
 }
 
 if (problemas.length) {
