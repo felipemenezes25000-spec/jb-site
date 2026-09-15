@@ -1,7 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 
-import { processarPedidoMelhorEnvio } from "@/lib/melhor-envio";
 import { provedorPagamento } from "@/lib/pagamento";
 import { confirmarPagamento, estornarPedido, mudarStatus } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
@@ -9,10 +8,10 @@ import { prisma } from "@/lib/prisma";
 /**
  * Notificação do provedor de pagamento.
  *
- * Pagamento e logística têm fronteiras diferentes. O pagamento aprovado é
- * confirmado primeiro e de forma idempotente. Só depois tentamos a etiqueta:
- * falta de NF-e, saldo no Melhor Envio ou indisponibilidade da transportadora
- * nunca podem transformar um pagamento válido em webhook com erro.
+ * Pagamento e logística têm fronteiras diferentes. `confirmarPagamento`
+ * confirma o dinheiro primeiro e só depois tenta a logística, fora da transação
+ * financeira. O webhook não repete esse efeito: existe uma única borda para
+ * disparar o Melhor Envio.
  */
 export async function POST(request: Request) {
   const corpo = await request.text();
@@ -70,22 +69,11 @@ export async function POST(request: Request) {
     });
 
     switch (evento.status) {
-      case "aprovado": {
+      case "aprovado":
+        // Esta é a única chamada necessária. `confirmarPagamento` já cuida do
+        // efeito pós-pagamento do Melhor Envio de forma idempotente.
         await confirmarPagamento(pagamento.orderId);
-
-        // Melhor Envio é efeito pós-pagamento. A própria função é idempotente:
-        // se o webhook repetir, ela recupera a etiqueta/rastreio em vez de
-        // comprar outro frete. Pendência fiscal fica gravada no pedido.
-        try {
-          const logistica = await processarPedidoMelhorEnvio(pagamento.orderId);
-          if (!logistica.ok && !("skipped" in logistica)) {
-            console.warn("[webhook/logistica] etiqueta pendente", logistica.error);
-          }
-        } catch (erro) {
-          console.error("[webhook/logistica] falha pós-pagamento", erro);
-        }
         break;
-      }
 
       case "em_analise":
         if (!pagamento.order.paidAt && pagamento.order.status === "aguardando_pagamento") {
