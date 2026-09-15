@@ -215,7 +215,7 @@ function LinkVerSite({ colapsado = false }: { colapsado?: boolean }) {
       href="/"
       title={colapsado ? "Ver o site" : undefined}
       className={cn(
-        "flex h-10 items-center gap-2.5 rounded-lg text-apoio font-medium text-graf-600 transition-colors",
+        "flex h-11 items-center gap-2.5 rounded-lg text-apoio font-medium text-graf-600 transition-colors",
         "hover:bg-graf-100 hover:text-graf-950",
         "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
         colapsado ? "justify-center px-0" : "pl-2.5 pr-2",
