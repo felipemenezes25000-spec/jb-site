@@ -282,11 +282,21 @@ export function DepoisDaCompraNoProduto({
       titulo: "Prontuário Técnico",
       detalhe: "Origem e histórico do equipamento.",
     },
+    /* Este passo diz o que a JB FAZ com a garantia, e não quantos meses ela
+       tem. O número já está em três lugares acima — nos destaques do topo, na
+       ficha técnica e na seção "Entrega, garantia e suporte", que é a dona
+       dele. Repeti-lo aqui era a quarta vez na mesma página, e as quatro
+       saíam do mesmo campo: não acrescentava nada e fazia a página parecer
+       insistente em vez de completa.
+
+       O que este bloco tem de próprio é o relógio: o prazo conta da ENTREGA,
+       não da compra, e ele fica na ficha do equipamento em vez de numa nota
+       fiscal guardada na gaveta. Isso é resposta para "e depois?". */
     meses > 0
       ? {
           icone: FileText,
-          titulo: `${meses} ${meses === 1 ? "mês" : "meses"} de garantia`,
-          detalhe: "Prazo cadastrado a partir da compra.",
+          titulo: "Garantia registrada",
+          detalhe: "O prazo conta da entrega e fica na ficha do equipamento.",
         }
       : {
           icone: FileText,

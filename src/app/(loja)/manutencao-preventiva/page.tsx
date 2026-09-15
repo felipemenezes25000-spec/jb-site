@@ -166,6 +166,13 @@ export default async function ManutencaoPreventivaPage() {
             {/* Tabela de verdade: são duas colunas comparáveis, e o leitor de
                 tela precisa ouvir "Preventiva"/"Corretiva" em cada célula. */}
             <table className="mt-6 w-full table-fixed border-collapse text-left">
+              {/* A legenda diz do que a tabela trata antes de a pessoa entrar
+                  nas células. `sr-only` porque o rótulo logo acima já cumpre o
+                  papel para quem enxerga — quem navega por tabelas não recebe
+                  aquele parágrafo, recebe a legenda. */}
+              <caption className="sr-only">
+                O que muda na prática entre manutenção preventiva e corretiva
+              </caption>
               <thead>
                 <tr className="border-b border-graf-200">
                   <th scope="col" className="pb-3 pr-5 sm:pr-8">

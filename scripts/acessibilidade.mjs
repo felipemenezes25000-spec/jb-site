@@ -435,7 +435,45 @@ async function percorrer(grupo, rotas, login) {
   await contexto.close();
 }
 
-await percorrer("publico", ROTAS.publico, null);
+/**
+ * A ficha de um produto de verdade, descoberta no catálogo.
+ *
+ * A PDP é a página mais complexa da loja — galeria, caixa de compra, ficha
+ * técnica, laudo, comparação, avaliações — e era a única grande que este
+ * portão não media, porque o endereço dela depende de um `slug` que não cabe
+ * numa lista fixa. Escrever um slug à mão seria pior: o dia em que aquele
+ * produto saísse do ar, o portão passaria a medir um 404 e continuaria verde.
+ *
+ * Então o slug vem do próprio catálogo. Quando não vem nenhum, isso é dito em
+ * voz alta: portão que não mede nada precisa avisar que não mediu, senão o
+ * verde vira falso negativo.
+ */
+async function rotaDeProduto() {
+  const contexto = await navegador.newContext({ locale: "pt-BR" });
+  const pagina = await contexto.newPage();
+  try {
+    await pagina.goto(BASE + "/loja", { waitUntil: "domcontentloaded", timeout: 60000 });
+    await pagina.waitForTimeout(800);
+    const href = await pagina
+      .locator('a[href^="/loja/"]')
+      .first()
+      .getAttribute("href", { timeout: 5000 });
+    return href ?? null;
+  } catch {
+    return null;
+  } finally {
+    await contexto.close();
+  }
+}
+
+const rotasPublicas = [...ROTAS.publico];
+if (!rotaPedida || rotaPedida.startsWith("/loja/")) {
+  const pdp = rotaPedida?.startsWith("/loja/") ? rotaPedida : await rotaDeProduto();
+  if (pdp) rotasPublicas.push(pdp);
+  else console.log("  aviso: nenhuma ficha de produto no catálogo — a PDP não foi medida");
+}
+
+await percorrer("publico", rotasPublicas, null);
 await percorrer("conta", ROTAS.conta, { rota: "/entrar", ...CLIENTE });
 await percorrer("admin", ROTAS.admin, { rota: "/admin/entrar", ...EQUIPE });
 await navegador.close();

@@ -85,7 +85,11 @@ export function VendidoPelaJB({ empresa, desde, cidade, uf, garantiaMeses }: Pro
             </span>
             <span className="min-w-0">
               <strong className="block text-xs font-extrabold text-graf-900">{titulo}</strong>
-              <span className="mt-0.5 block text-[11px] leading-4 text-graf-500">{texto}</span>
+              {/* 12px é o piso de texto corrido do portão de responsividade;
+                  estas quatro linhas estavam em 11px em toda largura. */}
+              <span className="mt-0.5 block text-[0.75rem] leading-4 text-graf-500">
+                {texto}
+              </span>
             </span>
           </li>
         ))}

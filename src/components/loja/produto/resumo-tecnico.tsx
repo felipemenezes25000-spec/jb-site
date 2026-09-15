@@ -55,10 +55,21 @@ export async function ResumoTecnicoProduto({
           <BadgeCheck className="size-3.5" aria-hidden />
           {desenho.rotulo}
         </span>
+        {/* 44px de alvo, sem engordar a linha.
+
+            O portão de acessibilidade mediu o link da marca em 24×32px a
+            390px — uma marca de três letras, "ALT", vira um alvo menor que a
+            ponta do dedo, e a WCAG 2.2 pede 44×44. A altura e o respiro
+            lateral entram de verdade (`min-h-11 px-2`) e o negativo devolve o
+            espaço ao ritmo da fileira (`-mx-2`): o desenho não muda um pixel,
+            o retângulo tocável passa a existir.
+
+            Vale para os dois links: hoje "Biossegurança" é largo o bastante e
+            passa, mas uma categoria de nome curto cairia no mesmo buraco. */}
         {marca ? (
           <Link
             href={`/marcas/${marca.slug}`}
-            className="foco-jb micro inline-flex min-h-8 items-center font-extrabold text-graf-800 hover:text-jb-700"
+            className="foco-jb micro -mx-2 inline-flex min-h-11 items-center px-2 font-extrabold text-graf-800 hover:text-jb-700"
           >
             {marca.nome}
           </Link>
@@ -68,7 +79,7 @@ export async function ResumoTecnicoProduto({
             <span className="text-graf-300" aria-hidden>•</span>
             <Link
               href={`/categoria/${categoria.slug}`}
-              className="foco-jb texto-apoio inline-flex min-h-8 items-center font-semibold text-graf-500 hover:text-graf-900"
+              className="foco-jb texto-apoio -mx-2 inline-flex min-h-11 items-center px-2 font-semibold text-graf-500 hover:text-graf-900"
             >
               {categoria.nome}
             </Link>

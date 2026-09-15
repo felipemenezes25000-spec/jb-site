@@ -109,7 +109,7 @@ function ListaDeAbas({
             {typeof aba.contador === "number" ? (
               <span
                 className={cn(
-                  "tabular inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-bold",
+                  "tabular inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[0.75rem] font-bold",
                   selecionada ? "bg-jb-100 text-jb-700" : "bg-graf-100 text-graf-600",
                 )}
               >

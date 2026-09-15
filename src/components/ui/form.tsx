@@ -216,7 +216,24 @@ export function Marcador({
   );
 }
 
-/** Grupo de opções em forma de "pílulas" — usado em urgência, condição, filtros. */
+/**
+ * Grupo de opções em forma de "pílulas" — urgência, condição, filtros.
+ *
+ * Em grade, não em `flex-wrap`. Com o flex, cada pílula tinha a largura do
+ * próprio texto e as linhas saíam desalinhadas: "Baixa" ao lado de "Assim que
+ * possível" ao lado de "Equipamento parado", com a terceira caindo sozinha na
+ * linha de baixo e ocupando meia tela. Numa escolha de urgência isso importa
+ * além da estética — o tamanho do alvo passava a variar com o comprimento da
+ * palavra, e a opção mais grave ficava com o maior botão por acidente de
+ * redação.
+ *
+ * `auto-fit` com `minmax` resolve os dois: as colunas têm a mesma largura, a
+ * quantidade delas se ajusta ao espaço, e `min(100%, …)` garante uma coluna só
+ * a 360px em vez de estourar a linha.
+ *
+ * O piso muda quando há descrição: um nome de equipamento com marca e modelo
+ * embaixo não cabe em 14rem sem virar quatro linhas de texto.
+ */
 export function Opcoes<T extends string>({
   nome,
   rotulo,
@@ -237,7 +254,14 @@ export function Opcoes<T extends string>({
       {rotulo ? (
         <legend className="mb-2 text-sm font-semibold text-graf-800">{rotulo}</legend>
       ) : null}
-      <div className="flex flex-wrap gap-2">
+      <div
+        className="grid gap-2"
+        style={{
+          gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${
+            opcoes.some((opcao) => opcao.descricao) ? "20rem" : "14rem"
+          }), 1fr))`,
+        }}
+      >
         {opcoes.map((opcao) => {
           const ativo = opcao.valor === valor;
           return (

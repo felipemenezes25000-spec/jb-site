@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { AlertTriangle, Calculator, Info } from "lucide-react";
 
+import {
+  FocoNoResultado,
+  FormularioDaSimulacao,
+} from "@/components/loja/simulador-de-custo";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, TituloSecao, Trilha } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
@@ -177,6 +181,16 @@ export default async function SimuladorPage({ searchParams }: Props) {
 
   const simulou = [reparo, seminovo, novo].some((valor) => valor !== null);
 
+  /* Identidade desta simulação: a mesma URL é o mesmo resultado, e uma URL
+     nova é um resultado novo que merece o foco de novo. Derivada dos
+     parâmetros, e não de um contador: voltar pelo histórico para a simulação
+     anterior não deve disparar a rolagem outra vez. */
+  const chaveDaSimulacao = new URLSearchParams(
+    Object.entries(params).flatMap(([chave, valor]) =>
+      valor === undefined ? [] : [[chave, Array.isArray(valor) ? valor.join(",") : valor]],
+    ),
+  ).toString();
+
   /* O bloco de refinamento abre sozinho para quem já informou alguma daquelas
      premissas — voltar a uma simulação compartilhada e não ver o que a
      produziu seria pior do que o formulário longo que este bloco resolveu. */
@@ -328,7 +342,7 @@ export default async function SimuladorPage({ searchParams }: Props) {
           descricao="Os três cenários no mesmo período, com a memória de cálculo à vista. O que você informar aparece marcado como premissa sua — e o que ninguém informou não vira zero."
         />
 
-        <form method="get" className="mt-8 rounded-xl border border-graf-200 bg-graf-50 p-5">
+        <FormularioDaSimulacao className="mt-8 rounded-xl border border-graf-200 bg-graf-50 p-5">
           <div>
             <label htmlFor="anos" className="block text-[0.875rem] font-semibold text-graf-900">
               Horizonte da simulação
@@ -467,14 +481,23 @@ export default async function SimuladorPage({ searchParams }: Props) {
             <Calculator className="size-4" aria-hidden />
             Simular
           </button>
-        </form>
+        </FormularioDaSimulacao>
       </Secao>
 
       {simulou ? (
         <>
           <Secao fundo="clara" espaco="sm">
+            {/* A chave é a própria simulação: outra combinação de premissas é
+                outro resultado, e o foco tem de ir até ele de novo. */}
+            <FocoNoResultado chave={chaveDaSimulacao} />
             <Cartao className="p-5 sm:p-6">
-              <h2 className="flex items-center gap-2.5 text-title texto-forte">
+              <h2
+                id="resultado-da-simulacao"
+                /* `tabIndex={-1}` para poder receber foco por script sem entrar
+                   na ordem de tabulação de quem está só lendo a página. */
+                tabIndex={-1}
+                className="flex items-center gap-2.5 scroll-mt-24 text-title texto-forte focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-jb-500"
+              >
                 {comparacao.comparavel ? (
                   <Calculator className="size-5 shrink-0 text-graf-500" aria-hidden />
                 ) : (

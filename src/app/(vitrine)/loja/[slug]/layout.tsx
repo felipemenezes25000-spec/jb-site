@@ -181,7 +181,7 @@ function AvaliacoesVerificadas({
   );
 }
 
-function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
+function PosVendaJB() {
   const itens = [
     {
       icone: FileText,
@@ -190,11 +190,14 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
     },
     {
       icone: ShieldCheck,
-      titulo:
-        garantiaMeses && garantiaMeses > 0
-          ? `Garantia de ${garantiaMeses} meses`
-          : "Garantia acompanhada",
-      texto: "O histórico da compra mantém origem e informações de garantia organizadas.",
+      /* Sem o número. Ele já aparece nos destaques do topo, na ficha técnica e
+         na seção "Entrega, garantia e suporte" — três lugares, todos saindo do
+         mesmo campo. Esta faixa é sobre o pós-venda da JB, e o que ela tem de
+         próprio a dizer é que a data de vencimento fica calculada e visível em
+         vez de depender de alguém achar a nota fiscal. */
+      titulo: "Garantia acompanhada",
+      texto:
+        "O prazo passa a valer da entrega, aparece com a data de vencimento na ficha do equipamento e a JB avisa antes de vencer.",
     },
     {
       icone: Wrench,
@@ -468,7 +471,7 @@ export default async function ProdutoLayout({ children, params }: Props) {
             alt: produto.name,
           }}
         />
-        {geraEquipamento ? <PosVendaJB garantiaMeses={produto.warrantyMonths} /> : null}
+        {geraEquipamento ? <PosVendaJB /> : null}
       </div>
     </>
   );

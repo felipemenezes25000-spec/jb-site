@@ -81,30 +81,65 @@ function tomDoChamado(status: string) {
   return "andamento" as const;
 }
 
+/**
+ * Um bloco da visão geral: os quatro primeiros de uma lista, e o caminho para
+ * o resto dela.
+ *
+ * `total` não é enfeite. Cada bloco mostra no máximo quatro registros e
+ * oferece "Ver todos" — sem o número, quem tem exatamente quatro pedidos e
+ * quem tem quarenta veem a mesma tela, e "Ver todos" não diz se vale a pena
+ * clicar. A auditoria anotou o efeito na Área da Clínica: seções contáveis sem
+ * contagem, e a decisão de clicar virando tentativa.
+ *
+ * A contagem fica em cinza, e não na etiqueta vermelha de pendência que o menu
+ * lateral usa: quarenta pedidos entregues não são quarenta problemas.
+ */
 function Bloco({
   titulo,
   descricao,
   href,
   rotuloLink,
+  total,
+  mostrados,
   children,
 }: {
   titulo: string;
   descricao?: string;
   href: string;
   rotuloLink: string;
+  /** Quantos registros existem ao todo neste recorte. */
+  total?: number;
+  /** Quantos deles couberam neste bloco. */
+  mostrados?: number;
   children: React.ReactNode;
 }) {
+  const temMais =
+    typeof total === "number" && typeof mostrados === "number" && total > mostrados;
+
   return (
     <Cartao className="flex flex-col">
       <CabecalhoCartao
-        titulo={titulo}
+        titulo={
+          <span className="flex flex-wrap items-center gap-2">
+            {titulo}
+            {typeof total === "number" && total > 0 ? (
+              <span className="tabular inline-flex min-w-6 items-center justify-center rounded-full bg-graf-100 px-2 py-0.5 text-xs font-bold text-graf-600">
+                {total}
+              </span>
+            ) : null}
+          </span>
+        }
         descricao={descricao}
         acao={
           <Link
             href={href}
             className="inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-sm font-semibold text-jb-700 transition-colors hover:text-jb-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
-            {rotuloLink}
+            {/* "Ver todos" num bloco que já mostra todos é um clique para a
+                mesma informação. Quando não há mais nada além do que está na
+                tela, o link diz o que a outra página acrescenta: a lista
+                completa, com filtro e busca. */}
+            {temMais ? `Ver ${total}` : rotuloLink}
             <ArrowRight className="size-4" aria-hidden />
           </Link>
         }
@@ -139,6 +174,7 @@ export default async function VisaoGeralPage() {
     pedidosEmAndamento,
     parque,
     mudancasDeSituacao,
+    totalPedidos,
   ] = await Promise.all([
     prisma.order.findMany({
       where: { customerId: cliente.id },
@@ -285,6 +321,10 @@ export default async function VisaoGeralPage() {
       orderBy: { happenedAt: "asc" },
       select: { equipmentId: true, happenedAt: true, statusTo: true },
     }),
+    /* Todos os pedidos, e não só os em andamento: o bloco "Pedidos recentes"
+       lista os quatro últimos sem recorte de status, e a contagem tem de ser a
+       da lista que o link abre. */
+    prisma.order.count({ where: { customerId: cliente.id } }),
   ]);
 
   /* ------------------------------------------ disponibilidade do parque */
@@ -608,6 +648,8 @@ export default async function VisaoGeralPage() {
           titulo="Pedidos recentes"
           href="/minha-jb/pedidos"
           rotuloLink="Ver todos"
+          total={totalPedidos}
+          mostrados={pedidos.length}
         >
           {pedidos.length === 0 ? (
             <ListaVazia texto="Você ainda não fez pedidos pelo site. Os pedidos feitos pela equipe também aparecem aqui." />
@@ -648,6 +690,8 @@ export default async function VisaoGeralPage() {
           titulo="Chamados em aberto"
           href="/minha-jb/assistencia"
           rotuloLink="Ver todos"
+          total={chamadosAbertos}
+          mostrados={chamados.length}
         >
           {chamados.length === 0 ? (
             <ListaVazia texto="Nenhum chamado em andamento. Se algum equipamento parou ou está fazendo barulho estranho, abra um chamado — a triagem responde no mesmo dia útil." />
@@ -685,8 +729,10 @@ export default async function VisaoGeralPage() {
 
         <Bloco
           titulo="Orçamentos aguardando resposta"
-          href="/minha-jb/orcamentos"
+          href="/minha-jb/orcamentos?aba=propostas"
           rotuloLink="Ver todos"
+          total={orcamentosAbertos}
+          mostrados={orcamentos.length}
         >
           {orcamentos.length === 0 ? (
             <ListaVazia texto="Nenhuma proposta esperando por você. Quando a equipe enviar um orçamento, ele aparece aqui para aprovar ou recusar." />
@@ -730,7 +776,12 @@ export default async function VisaoGeralPage() {
         <Bloco
           titulo="Equipamentos que pedem atenção"
           href="/minha-jb/equipamentos"
-          rotuloLink="Ver todos"
+          rotuloLink="Ver o parque"
+          /* A contagem aqui é a dos que PEDEM ATENÇÃO — é o que o título diz.
+             Usar o total do parque faria "Equipamentos que pedem atenção 12"
+             numa clínica com doze aparelhos e nenhum problema. */
+          total={equipamentos.length}
+          mostrados={equipamentos.length}
         >
           {equipamentos.length === 0 ? (
             <ListaVazia texto="Nada em alerta e nenhuma preventiva vencendo nos próximos 30 dias." />

@@ -124,6 +124,13 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
           `border-t`, no container branco da página. */}
       <div className="overflow-x-auto border-t border-graf-200">
         <table className="w-full min-w-[34rem] border-collapse text-left">
+          {/* Sem legenda, quem navega por tabela ouvia "tabela, 4 colunas, 7
+              linhas" e mais nada — e esta é a tabela que decide a compra. */}
+          <caption className="sr-only">
+            {`Comparação entre ${atual.name} e ${
+              visiveis.length - 1 === 1 ? "uma alternativa" : `${visiveis.length - 1} alternativas`
+            }, atributo a atributo`}
+          </caption>
           <thead>
             <tr>
               <th

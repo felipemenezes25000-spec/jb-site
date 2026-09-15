@@ -338,7 +338,12 @@ export function CaixaCompra({
 
           {/* graf-400 é borda e ícone, nunca texto: 2,61:1 sobre branco,
               abaixo do piso da WCAG AA. A régua está em `globals.css`. */}
-          <p className="mt-2.5 text-center text-[11px] leading-4 text-graf-500">
+          {/* 12px, não 11: o portão de responsividade tem piso de 12px em texto
+              corrido, e esta é a ressalva que diz que o total ainda pode mudar
+              — a última coisa que deveria ser difícil de ler antes do clique
+              de comprar. 11px era um pixel abaixo do piso em toda largura, de
+              320 a 1920. */}
+          <p className="mt-2.5 text-center text-[0.75rem] leading-4 text-graf-500">
             Serviços e total podem ser revisados antes do pagamento.
           </p>
 
@@ -390,13 +395,20 @@ export function CaixaCompra({
                 <span className="text-sm font-semibold text-graf-800" id="rotulo-quantidade">
                   Quantidade
                 </span>
+                {/* 44px, não 40.
+
+                    A WCAG 2.2 pede 44×44 para alvo de toque, e este par tinha
+                    40×40 — medido pelo portão de acessibilidade a 390px, que é
+                    a largura de um iPhone comum. Num seletor de quantidade o
+                    erro custa dinheiro: a pessoa mira o "+", acerta a borda e
+                    compra uma unidade a menos do que queria. */}
                 <div className="flex items-center rounded-lg border border-graf-300 bg-white">
                   <button
                     type="button"
                     onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
                     disabled={quantidade <= 1}
                     aria-label="Diminuir quantidade"
-                    className="foco-jb flex size-10 items-center justify-center rounded-l-lg text-graf-700 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-400"
+                    className="foco-jb flex size-11 items-center justify-center rounded-l-lg text-graf-700 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-400"
                   >
                     <Minus className="size-4" aria-hidden />
                   </button>
@@ -412,7 +424,7 @@ export function CaixaCompra({
                     onClick={() => setQuantidade((q) => Math.min(maximo, q + 1))}
                     disabled={quantidade >= maximo}
                     aria-label="Aumentar quantidade"
-                    className="foco-jb flex size-10 items-center justify-center rounded-r-lg text-graf-700 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-400"
+                    className="foco-jb flex size-11 items-center justify-center rounded-r-lg text-graf-700 hover:bg-graf-50 disabled:cursor-not-allowed disabled:text-graf-400"
                   >
                     <Plus className="size-4" aria-hidden />
                   </button>
