@@ -40,6 +40,7 @@
     "frete:prever": "tsx scripts/tabela-de-frete.ts",
     "frete:aplicar": "tsx scripts/verificar-ambiente.ts db-destructive && tsx scripts/tabela-de-frete.ts --aplicar",
     "catalogo:nomes": "tsx scripts/verificar-ambiente.ts db-destructive && tsx scripts/corrigir-nomes-do-catalogo.ts",
+    "catalogo:descricoes": "tsx scripts/verificar-ambiente.ts db-destructive && tsx scripts/corrigir-descricoes-do-catalogo.ts",
     "duplicatas:prever": "tsx scripts/unificar-duplicatas.ts",
     "duplicatas:unificar": "tsx scripts/verificar-ambiente.ts db-destructive && tsx scripts/unificar-duplicatas.ts --aplicar"
   },
