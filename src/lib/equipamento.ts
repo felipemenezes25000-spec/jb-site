@@ -4,6 +4,7 @@ import type { EquipmentOrigin, EquipmentStatus } from "@prisma/client";
 
 import { ROTULO_CHAMADO, STATUS_CHAMADO_ABERTOS } from "@/lib/assistencia";
 import { ROTULO_VISITA } from "@/lib/manutencao";
+import { urlExpostaDaMidia } from "@/lib/midia-operacional";
 import { ROTULO_OS } from "@/lib/os";
 import { prisma } from "@/lib/prisma";
 
@@ -163,7 +164,9 @@ export async function equipamentosDoCliente(customerId: string) {
       media: {
         take: 1,
         orderBy: { order: "asc" },
-        select: { media: { select: { url: true, alt: true } } },
+        select: {
+          media: { select: { id: true, folder: true, url: true, alt: true } },
+        },
       },
     },
   });
@@ -185,7 +188,9 @@ export async function equipamentosDoCliente(customerId: string) {
 
   return equipamentos.map((equipamento) => ({
     ...equipamento,
-    imagemUrl: equipamento.media[0]?.media.url ?? null,
+    imagemUrl: equipamento.media[0]
+      ? urlExpostaDaMidia(equipamento.media[0].media)
+      : null,
     imagemAlt: equipamento.media[0]?.media.alt || equipamento.name,
     chamadosAbertos: contagem.get(equipamento.id) ?? 0,
   }));
