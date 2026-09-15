@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import type { Parcelamento, ProdutoCard } from "@/components/loja/card-produto";
-import { GradeVitrine } from "@/components/loja/card-vitrine";
+import { GradeVitrine } from "@/components/loja/grade-vitrine";
 import { TituloSecao } from "@/components/ui/data";
 import { Secao, type FundoSecao } from "@/components/ui/secao";
 

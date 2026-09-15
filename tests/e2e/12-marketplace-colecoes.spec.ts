@@ -117,11 +117,11 @@ test.describe("Marketplace — coleções", () => {
 
   test("coloca o primeiro produto na primeira tela e não simula orçamento como card", async ({ page }) => {
     await page.goto("/loja");
-    const primeiro = page.locator("[data-marketplace-card]").first();
+    const primeiro = page.locator("[data-cartao-produto]").first();
     await expect(primeiro).toBeVisible();
     expect((await primeiro.boundingBox())!.y).toBeLessThan(900);
     await expect(
-      page.locator("[data-marketplace-card] [data-convite-orcamento]"),
+      page.locator("[data-cartao-produto] [data-convite-orcamento]"),
     ).toHaveCount(0);
   });
 
@@ -143,7 +143,7 @@ test.describe("Marketplace — coleções", () => {
   test("a busca usa o card do marketplace e permite refinar no catálogo", async ({ page }) => {
     const { produto } = fixtures();
     await page.goto(`/busca?q=${encodeURIComponent(produto.nome)}`);
-    await expect(page.locator("[data-marketplace-card]").first()).toBeVisible();
+    await expect(page.locator("[data-cartao-produto]").first()).toBeVisible();
     // hoje o convite se chama "Ver no catálogo com filtros"
     await expect(page.getByRole("link", { name: /Ver no catálogo com filtros/ })).toBeVisible();
   });

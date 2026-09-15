@@ -1,25 +1,18 @@
-import type { ProductCondition } from "@prisma/client";
+import type { ProdutoCard, Parcelamento } from "@/components/loja/card-produto";
 
-import type { DestaqueTecnico } from "@/lib/marketplace/destaques-card";
+/* ============================================================================
+   O cartão do catálogo é o cartão da loja
 
-export type ProdutoMarketplaceCard = {
-  /** Chave do produto. O botão de guardar precisa dela para o formulário. */
-  id: string;
-  slug: string;
-  name: string;
-  model: string;
-  condition: ProductCondition;
-  priceCents: number;
-  compareAtCents: number | null;
-  allowDirectPurchase: boolean;
-  trackInventory: boolean;
-  stock: number;
-  unique: boolean;
-  brandName: string | null;
-  categoryName: string | null;
-  imageUrl: string | null;
-  imageAlt: string;
-  destaques: DestaqueTecnico[];
-};
+   Este arquivo declarava `ProdutoMarketplaceCard` com os mesmos vinte campos
+   de `ProdutoCard`, mais dois — e era essa segunda declaração que segurava o
+   terceiro componente de cartão de pé. Os dois passam a ser o mesmo tipo:
+   `destaques` e `categoryName` já são opcionais em `ProdutoCard`, porque só o
+   catálogo os carrega.
 
-export type ParcelamentoMarketplace = { max: number; minimoCents: number };
+   Os nomes continuam exportados: quem monta a consulta do catálogo fala em
+   "marketplace", e renomear isso é outra tarefa, com o portão de arquitetura
+   olhando (ver `IMPORTS_MARKETPLACE_LEGADOS`).
+   ============================================================================ */
+
+export type ProdutoMarketplaceCard = ProdutoCard;
+export type ParcelamentoMarketplace = Parcelamento;

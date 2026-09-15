@@ -77,7 +77,7 @@ test.describe("Imagens de produto sem moldura branca", () => {
     await page.goto("/loja");
     await esperarImagens(page);
 
-    const cards = page.locator("[data-marketplace-card]");
+    const cards = page.locator("[data-cartao-produto]");
     const imagens = cards.locator("img[data-imagem-produto]");
 
     expect(await imagens.count()).toBeGreaterThan(0);

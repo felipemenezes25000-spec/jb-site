@@ -1,20 +1,55 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ImageOff, ShoppingCart } from "lucide-react";
+import { ArrowRight, Heart, ImageOff, ShoppingCart } from "lucide-react";
 
 import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
 import { alternarFavorito } from "@/app/acoes/minha-jb";
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
-import {
-  disponibilidadeDoProduto,
-  type TomDaDisponibilidade,
-} from "@/domain/catalogo/disponibilidade";
 import { BotaoEnvio } from "@/components/ui/botao-envio";
 import { Etiqueta } from "@/components/ui/data";
-import { Grade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
-import { calcularParcelas, formatarPreco, semQuebraNaUnidade } from "@/lib/format";
+import { claimsDoCartao, type Parcelamento } from "@/domain/catalogo/cartao";
+import type { TomDaDisponibilidade } from "@/domain/catalogo/disponibilidade";
+import type { DestaqueTecnico } from "@/lib/comercio/destaques-card";
+import { formatarPreco, semQuebraNaUnidade } from "@/lib/format";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
+
+/* ============================================================================
+   O cartão de produto da loja — um só
+
+   Havia três: `CardProduto` (favoritos e "você viu recentemente"),
+   `CardVitrine` (home e carrinho) e `CardProdutoMarketplace` (catálogo). 828
+   linhas para desenhar o mesmo produto, a partir das mesmas colunas.
+
+   Não eram três desenhos: eram três cópias com divergências que ninguém
+   decidiu. Medidas, na mesma seladora, no mesmo minuto:
+
+     · a parcela saía "12x R$ 123,33", "12x de R$ 123,33 sem juros" e
+       "12× de R$ 123,33 sem juros";
+     · sob orçamento virava "A equipe responde com prazo" num e "Preço e prazo
+       com a equipe JB" nos outros dois;
+     · a tarja "Vendido" sobre a foto existia na home e na conta — e não no
+       catálogo, que é justamente a lista onde mais se varre foto;
+     · o favorito existia no catálogo e na conta, e não na home;
+     · o nome do produto era `h2` no catálogo e `h3` nos outros dois, na mesma
+       página em que o título da seção também é `h2`;
+     · e a moldura era escrita de três jeitos — `.placa`, `.card` do módulo do
+       marketplace e um punhado de classes soltas — para chegar no mesmo
+       branco com borda `graf-200` e canto de 12px.
+
+   As FRASES foram para `@/domain/catalogo/cartao`, com a disponibilidade que
+   já morava no domínio. Aqui ficou o desenho, e ele tem duas variantes que são
+   diferença de verdade:
+
+     · **`grade`** — foto quadrada com folga, em grade de 2 a 4 colunas. É o
+       catálogo e a conta, onde o cartão é item de lista.
+     · **`trilho`** — foto 3:2 no celular e 4:3 do `sm` para cima, ocupando a
+       largura toda da moldura. É a home e o carrinho, onde abaixo de `sm` os
+       cartões andam num trilho horizontal e a foto é o que convida a arrastar.
+
+   O resto — etiqueta de condição, selo de desconto, preço, pagamento, estado
+   do estoque, linha de ações — é igual, porque sempre deveria ter sido.
+   ============================================================================ */
 
 export type ProdutoCard = {
   /** Chave do produto — usada por quem precisa agir sobre ele (guardar, etc.). */
@@ -32,9 +67,15 @@ export type ProdutoCard = {
   brandName: string | null;
   imageUrl: string | null;
   imageAlt: string;
+  /** Só o catálogo traz: dois atributos que decidem, lidos da ficha. */
+  destaques?: DestaqueTecnico[];
+  /** Fallback da linha da marca quando o produto não tem marca cadastrada. */
+  categoryName?: string | null;
 };
 
-export type Parcelamento = { max: number; minimoCents: number };
+export type { Parcelamento };
+
+export type VarianteDoCartao = "grade" | "trilho";
 
 export const CONDICAO = {
   novo: { rotulo: "Novo", tom: "neutro" as const },
@@ -54,62 +95,79 @@ const COR_DA_DISPONIBILIDADE: Record<TomDaDisponibilidade, { texto: string; pont
 
 export function CardProduto({
   produto,
+  variante = "grade",
   prioridade,
   parcelamento,
+  favoritado = false,
+  voltar,
+  nivelDoTitulo = "h3",
   className,
 }: {
   produto: ProdutoCard;
+  variante?: VarianteDoCartao;
   prioridade?: boolean;
   parcelamento?: Parcelamento;
+  /** Já guardado por quem está logado. */
+  favoritado?: boolean;
+  /** Endereço desta listagem, para o formulário de favorito voltar para cá. */
+  voltar?: string;
+  /**
+   * O degrau do nome do produto na página que hospeda o cartão.
+   *
+   * `h3` é o padrão porque o cartão quase sempre mora dentro de uma seção que
+   * já tem `h2`. O catálogo usava `h2` e ficava irmão do título da própria
+   * lista — quem navega por cabeçalho via 24 itens no mesmo nível da seção.
+   */
+  nivelDoTitulo?: "h2" | "h3";
   className?: string;
 }) {
-  const semEstoque = produto.trackInventory && produto.stock <= 0;
-  const soOrcamento = !produto.allowDirectPurchase || produto.priceCents <= 0;
-  const parcelas = soOrcamento
-    ? null
-    : calcularParcelas(produto.priceCents, parcelamento?.max, parcelamento?.minimoCents);
+  const claims = claimsDoCartao(produto, parcelamento);
   const condicao = CONDICAO[produto.condition];
-  const estado = disponibilidadeDoProduto(produto);
-  const corDoEstado = COR_DA_DISPONIBILIDADE[estado.tom];
-  const precoAnterior =
-    !soOrcamento && produto.compareAtCents && produto.compareAtCents > produto.priceCents
-      ? produto.compareAtCents
-      : null;
-  const desconto =
-    !semEstoque && precoAnterior
-      ? Math.round(((precoAnterior - produto.priceCents) / precoAnterior) * 100)
-      : 0;
-  const chamada = soOrcamento ? "Pedir orçamento" : "Ver equipamento";
+  const corDoEstado = COR_DA_DISPONIBILIDADE[claims.disponibilidade.tom];
+  const esgotado = claims.faixaDeEsgotado !== null;
+  const podeComprar = claims.preco !== "Sob orçamento" && !esgotado;
+  const Titulo = nivelDoTitulo;
+  const destaques = produto.destaques?.slice(0, 2) ?? [];
+  const noTrilho = variante === "trilho";
 
   return (
     <article
+      /* O gancho de quem mede a loja por fora — testes e auditorias — para
+         achar "um cartão de produto" sem depender de classe de layout.
+         Chamava-se `data-marketplace-card` e ficava só no cartão do catálogo;
+         agora existe um cartão só, e o nome dele não é mais "marketplace". */
+      data-cartao-produto
+      /* `placa` é a superfície do design system — branca, borda `graf-200`,
+         canto de 12px. Era o que as três molduras tentavam ser, cada uma com
+         a própria escrita. */
       className={cn(
-        "group relative isolate flex flex-col overflow-hidden rounded-lg border border-graf-200 bg-surface",
-        "transition-[border-color,box-shadow] duration-300",
-        "hover:border-graf-300 hover:shadow-card",
-        "has-[a:focus-visible]:border-jb-500 has-[a:focus-visible]:shadow-card",
+        "placa group relative isolate flex flex-col overflow-hidden",
+        "transition-[border-color,box-shadow,transform] duration-200 ease-out-quint",
+        "hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-raised",
+        "has-[a:focus-visible]:border-jb-500 has-[a:focus-visible]:shadow-raised",
+        "motion-reduce:transition-none motion-reduce:hover:translate-y-0",
         className,
       )}
     >
-      {/* Foto quadrada sobre branco, centrada e com folga — o equipamento
-          aparece inteiro em vez de preencher a caixa. A moldura cinza que
-          existia aqui punha um fundo por baixo de um recorte que já é
-          transparente. */}
-      <div data-palco-imagem-produto className="relative overflow-hidden bg-surface p-4">
-        {/* Condição e desconto empilhados no mesmo canto: são as duas
-            informações que fazem alguém parar no cartão, e separadas em
-            cantos opostos obrigavam a varrer a foto. */}
+      <div
+        data-palco-imagem-produto
+        /* Branco chapado nas duas variantes. O degradê rosado que existia aqui
+           aparecia por baixo de recortes que já são transparentes. */
+        className={cn(
+          "relative overflow-hidden bg-surface",
+          noTrilho ? "aspect-3/2 max-h-72 sm:aspect-4/3" : "p-4",
+        )}
+      >
+        {/* Condição e desconto empilhados no mesmo canto: são as duas coisas
+            que fazem alguém parar no cartão, e em cantos opostos obrigavam a
+            varrer a foto. */}
         <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
           <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-          {desconto >= 5 ? (
+          {claims.descontoPct > 0 ? (
             <span className="micro rounded-sm bg-jb-500 px-2 py-1 leading-none text-white">
-              −{desconto}%
+              −{claims.descontoPct}%
             </span>
           ) : null}
-        </div>
-
-        <div className="absolute top-3 right-3 z-10">
-          <BotaoComparar slug={produto.slug} nome={produto.name} />
         </div>
 
         {produto.imageUrl ? (
@@ -117,165 +175,173 @@ export function CardProduto({
             data-imagem-produto
             src={imagemProdutoSemFundo(produto.imageUrl)}
             alt={produto.imageAlt || produto.name}
-            width={512}
-            height={512}
+            {...(noTrilho
+              ? { fill: true, sizes: "(max-width: 640px) 94vw, (max-width: 1024px) 46vw, 24vw" }
+              : { width: 512, height: 512, sizes: "(max-width: 640px) 60vw, 12rem" })}
             preload={prioridade}
             loading={prioridade ? undefined : "lazy"}
-            sizes="(max-width: 640px) 60vw, 12rem"
             className={cn(
-              "mx-auto aspect-square w-full max-w-[12rem] object-contain",
-              "transition-transform duration-500 group-hover:scale-105",
-              semEstoque && "opacity-60 grayscale",
+              "object-contain transition-transform duration-500 ease-out-quint",
+              "group-hover:scale-[1.03] motion-reduce:transform-none",
+              noTrilho ? "p-3" : "mx-auto aspect-square w-full max-w-[12rem]",
+              esgotado && "opacity-60 grayscale",
             )}
           />
         ) : (
-          <div className="mx-auto flex aspect-square w-full max-w-[12rem] flex-col items-center justify-center gap-2 text-graf-500">
-            <span className="flex size-11 items-center justify-center rounded-full border border-graf-200 bg-white text-graf-400">
-              <ImageOff className="size-5" aria-hidden />
-            </span>
+          <div
+            className={cn(
+              "flex flex-col items-center justify-center gap-2 text-graf-500",
+              noTrilho ? "size-full" : "mx-auto aspect-square w-full max-w-[12rem]",
+            )}
+          >
+            <ImageOff className="size-6" aria-hidden />
             <span className="micro">Foto em cadastro</span>
           </div>
         )}
 
-        {semEstoque ? (
-          <p className="micro absolute inset-x-0 bottom-0 z-10 bg-graf-950/90 py-2 text-center text-white">
-            {produto.unique ? "Vendido" : "Indisponível"}
+        {/* A tarja faltava no catálogo — a lista onde mais se varre foto era a
+            única que não avisava sobre a foto. `aria-hidden` porque a linha de
+            estado logo abaixo já diz a mesma coisa para quem não vê a tarja. */}
+        {claims.faixaDeEsgotado ? (
+          <p
+            aria-hidden
+            className="micro absolute inset-x-0 bottom-0 z-10 bg-graf-950/90 py-2 text-center text-white"
+          >
+            {claims.faixaDeEsgotado}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-1 flex-col border-t border-graf-200 p-4">
-        {produto.brandName ? (
-          <p className="micro truncate text-graf-500">{produto.brandName}</p>
+        {produto.brandName || produto.categoryName ? (
+          <p className="micro truncate text-graf-500">
+            {produto.brandName || produto.categoryName}
+          </p>
         ) : null}
 
-        <h3 className="mt-2 line-clamp-2 min-h-10 text-[0.98rem] leading-snug font-bold text-graf-950">
+        <Titulo className="mt-2 line-clamp-2 min-h-10 text-corpo leading-snug font-bold text-graf-950">
           <Link
             href={`/loja/${produto.slug}`}
-            className="rounded-xs after:absolute after:inset-0 after:content-[''] hover:text-jb-700"
+            className="rounded-sm after:absolute after:inset-0 after:content-[''] hover:text-jb-700"
           >
             {semQuebraNaUnidade(produto.name)}
           </Link>
-        </h3>
+        </Titulo>
 
-        {produto.model ? (
-          <p className="micro mt-1 truncate text-graf-500">{produto.model}</p>
+        {/* Dois atributos que decidem, quando a lista os carrega; o modelo
+            quando não. As duas coisas ocupam a mesma faixa do cartão, então a
+            grade não muda de altura de uma lista para a outra. */}
+        {destaques.length > 0 ? (
+          <dl className="mt-3 grid gap-1.5 border-t border-graf-100 pt-3">
+            {destaques.map((item) => (
+              <div
+                key={`${item.rotulo}-${item.valor}`}
+                className="flex min-w-0 justify-between gap-2 text-xs"
+              >
+                <dt className="truncate text-graf-500">{item.rotulo}</dt>
+                <dd className="truncate font-semibold text-graf-800">{item.valor}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : produto.model ? (
+          <p className="micro mt-1.5 truncate text-graf-500">{produto.model}</p>
         ) : null}
 
         <div className="mt-auto pt-4">
-          {precoAnterior ? (
-            <p className="micro tabular text-graf-500 line-through">
-              {formatarPreco(precoAnterior)}
-            </p>
-          ) : null}
+          <div className="flex h-4 items-center">
+            {claims.precoAnteriorCents ? (
+              <span className="micro tabular text-graf-500 line-through">
+                {formatarPreco(claims.precoAnteriorCents)}
+              </span>
+            ) : null}
+          </div>
 
-          <p className="tabular text-[1.4rem] leading-tight font-black text-graf-950">
-            {soOrcamento ? "Sob orçamento" : formatarPreco(produto.priceCents)}
+          <p className="numero text-[1.45rem] leading-8 text-graf-950">{claims.preco}</p>
+
+          <p className="micro tabular min-h-5 truncate text-graf-500">{claims.pagamento}</p>
+
+          <p className={cn("micro mt-2.5 flex items-center gap-1.5", corDoEstado.texto)}>
+            <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", corDoEstado.ponto)} />
+            {claims.disponibilidade.texto}
           </p>
 
-          <p className="micro tabular min-h-5 truncate text-graf-500">
-            {soOrcamento
-              ? "Preço e prazo com a equipe JB"
-              : parcelas
-                ? `${parcelas.parcelas}x de ${formatarPreco(parcelas.valorCents)} sem juros`
-                : "Pagamento à vista"}
-          </p>
+          {/* Linha de ações.
 
-          {estado ? (
-            <p className={cn("micro mt-2 inline-flex items-center gap-1.5", corDoEstado.texto)}>
-              <span className={cn("size-1.5 shrink-0 rounded-full", corDoEstado.ponto)} aria-hidden />
-              {estado.texto}
-            </p>
-          ) : null}
-        </div>
+              O destino continua sendo o cartão inteiro: o `after:inset-0` do
+              título cobre tudo. Por isso o convite é decorativo — repetir o
+              mesmo endereço como âncora duplicaria o item na lista de links de
+              quem navega por teclado. Os controles que fazem OUTRA coisa
+              (carrinho, favorito, comparar) sobem para `z-10`, senão o clique
+              neles cairia na camada do cartão e abriria a ficha.
 
-        {/* Linha de ações.
+              O vermelho fica só no ícone do carrinho, 44px. Este cartão já
+              teve o convite como retângulo vermelho de largura inteira: numa
+              home com nove equipamentos são nove faixas de vermelho, e o
+              vermelho da JB é sinal de ação — repetido nove vezes deixa de
+              apontar para coisa nenhuma.
 
-            Os três botões redondos ficam ACIMA da camada que torna o cartão
-            inteiro clicável (`z-10` contra o `after:inset-0` do título) — sem
-            isso, um clique no coração abriria a ficha do produto.
+              `flex-wrap` + `shrink-0`: a 320px o cartão do trilho mede 250px,
+              e três controles numa linha só espremiam o de comparar de 44 para
+              18px — abaixo do alvo mínimo da WCAG 2.5.8, que o portão
+              `responsivo` pega. */}
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <span
+              aria-hidden
+              className={cn(
+                "inline-flex h-11 min-w-[8.5rem] flex-1 items-center justify-center gap-2 px-3 whitespace-nowrap",
+                "rounded-lg border border-graf-200 text-apoio font-bold text-graf-950",
+                "transition-colors group-hover:border-jb-500 group-hover:text-jb-700",
+                esgotado && "text-graf-500 group-hover:border-graf-200 group-hover:text-graf-500",
+              )}
+            >
+              {claims.chamada}
+              <ArrowRight className="size-3.5 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5 motion-reduce:transform-none" />
+            </span>
 
-            O que o desenho de referência traz aqui e não entrou: a nota de
-            avaliação, que lá é um hash do slug — avaliação inventada —, e o
-            "no Pix", que lá é 5% fixo. Esta loja tem avaliação de verdade,
-            só que por SKU e cara demais para vinte e quatro cartões numa
-            página; e desconto no Pix ela não tem. */}
-        <div className="mt-4 flex items-center gap-2">
-          <Link
-            href={`/loja/${produto.slug}`}
-            className="foco-jb relative z-10 inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-graf-200 px-3 text-apoio font-bold text-graf-950 transition-colors hover:border-jb-500 hover:text-jb-700"
-          >
-            {chamada}
-          </Link>
+            {podeComprar ? (
+              <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
+                <input type="hidden" name="produtoId" value={produto.id} />
+                <input type="hidden" name="quantidade" value="1" />
+                <BotaoEnvio
+                  aria-label={`Adicionar ${produto.name} ao carrinho`}
+                  className="foco-jb grid size-11 shrink-0 place-items-center rounded-lg border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600 disabled:opacity-70"
+                >
+                  <ShoppingCart className="size-4" aria-hidden />
+                </BotaoEnvio>
+              </form>
+            ) : null}
 
-          {!soOrcamento && !semEstoque ? (
-            <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
+            {/* Guardar existia no catálogo e na conta, e não na home — o mesmo
+                produto, dois cartões, e só um deixava guardar. */}
+            <form action={alternarFavorito} className="relative z-10">
               <input type="hidden" name="produtoId" value={produto.id} />
-              <input type="hidden" name="quantidade" value="1" />
+              {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
               <BotaoEnvio
-                aria-label={`Adicionar ${produto.name} ao carrinho`}
-                className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600 disabled:opacity-70"
+                aria-pressed={favoritado}
+                aria-label={
+                  favoritado
+                    ? `Remover ${produto.name} dos favoritos`
+                    : `Guardar ${produto.name} nos favoritos`
+                }
+                className={cn(
+                  "foco-jb grid size-11 shrink-0 place-items-center rounded-lg border transition-colors disabled:opacity-70",
+                  favoritado
+                    ? "border-jb-500 bg-jb-50 text-jb-700"
+                    : "border-graf-200 text-graf-700 hover:border-jb-500 hover:text-jb-700",
+                )}
               >
-                <ShoppingCart className="size-4" aria-hidden />
+                <Heart className={cn("size-4", favoritado && "fill-current")} aria-hidden />
               </BotaoEnvio>
             </form>
-          ) : null}
 
-          <form action={alternarFavorito} className="relative z-10">
-            <input type="hidden" name="produtoId" value={produto.id} />
-            <BotaoEnvio
-              aria-label={`Guardar ${produto.name} nos favoritos`}
-              className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-graf-200 text-graf-700 transition-colors hover:border-jb-500 hover:text-jb-700 disabled:opacity-70"
-            >
-              <Heart className="size-4" aria-hidden />
-            </BotaoEnvio>
-          </form>
+            <BotaoComparar
+              slug={produto.slug}
+              nome={produto.name}
+              className="relative z-10 size-11 shrink-0 rounded-lg border-graf-200 bg-white"
+            />
+          </div>
         </div>
       </div>
     </article>
-  );
-}
-
-const LARGURA_LISTA_CURTA: Record<number, string> = {
-  1: "sm:max-w-sm",
-  2: "sm:max-w-3xl",
-};
-
-export function GradeProdutos({
-  produtos,
-  colunas,
-  parcelamento,
-  extra,
-  className,
-}: {
-  produtos: ProdutoCard[];
-  colunas?: ColunasPorTela;
-  parcelamento?: Parcelamento;
-  extra?: React.ReactNode;
-  className?: string;
-}) {
-  const teto = colunas ?? { base: 1, sm: 2, lg: 3, xl: 4 };
-  const celulas = produtos.length + (extra ? 1 : 0);
-
-  return (
-    <Grade
-      como="ul"
-      espaco="md"
-      colunas={colunasAte(celulas, teto)}
-      className={cn(extra ? undefined : LARGURA_LISTA_CURTA[celulas], className)}
-    >
-      {produtos.map((produto, indice) => (
-        <li key={produto.slug} className="flex">
-          <CardProduto
-            produto={produto}
-            parcelamento={parcelamento}
-            prioridade={indice < 4}
-            className="w-full"
-          />
-        </li>
-      ))}
-
-      {extra ? <li className="flex">{extra}</li> : null}
-    </Grade>
   );
 }

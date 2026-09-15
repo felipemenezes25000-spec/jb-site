@@ -1,4 +1,4 @@
-import { CardProdutoMarketplace } from "@/components/loja/marketplace/card-produto-marketplace";
+import { CardProduto } from "@/components/loja/card-produto";
 import type {
   ParcelamentoMarketplace,
   ProdutoMarketplaceCard,
@@ -27,12 +27,14 @@ export function GradeMarketplace({
     <ul data-grade-marketplace className={`${styles.grid} ${className}`}>
       {produtos.map((produto, indice) => (
         <li key={produto.slug} className="flex min-w-0">
-          <CardProdutoMarketplace
+          <CardProduto
             produto={produto}
+            variante="grade"
             parcelamento={parcelamento}
             prioridade={indice < 4}
             favoritado={favoritados?.has(produto.id) ?? false}
             voltar={voltar}
+            className="w-full"
           />
         </li>
       ))}
