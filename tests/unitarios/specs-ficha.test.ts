@@ -1,4 +1,8 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+
+import { SpecRow } from "@/components/specs/spec-row";
 
 import { construirFicha, type ProdutoParaFicha } from "@/domain/specs/construir";
 import { definicaoDe, familiaDoProduto } from "@/domain/specs/definicoes";
@@ -273,5 +277,47 @@ describe("interpretarValor — o que NÃO é unidade", () => {
     expect(interpretarValor("12 bandejas de inox", capacidade).valor).toBe(
       "12 bandejas de inox",
     );
+  });
+});
+
+describe("SpecRow — o desenho da linha", () => {
+  const capacidade = definicaoDe("capacidade")!;
+  const requisitos = definicaoDe("requisitos")!;
+
+  function renderizar(definicao: typeof capacidade, texto: string) {
+    return renderToStaticMarkup(
+      createElement(SpecRow, {
+        linha: {
+          definicao,
+          valor: { key: definicao.key, value: texto, source: "fabricante" },
+          texto,
+        },
+      }),
+    );
+  }
+
+  it("valor curto fica ao lado do rótulo", () => {
+    const html = renderizar(capacidade, "12 L");
+    expect(html).toContain("grid-cols-[auto_minmax(0,1fr)]");
+    expect(html).toContain("text-right");
+  });
+
+  it("valor longo empilha em vez de espremer o rótulo", () => {
+    /* O caso medido em 15/09/2026: com a grade de duas colunas, este valor
+       levava a largura inteira e o `<dt>` ia a 0 px de largura por 340 px de
+       altura — "Requisitos do local" descendo uma letra por linha. */
+    const longo =
+      "Tomada exclusiva de 20 A em 220 V, com aterramento · Bancada nivelada com 60 cm livres de profundidade · Água destilada";
+    const html = renderizar(requisitos, longo);
+
+    expect(html).not.toContain("grid-cols-");
+    expect(html).not.toContain("text-right");
+    expect(html).toContain("Requisitos do local");
+    expect(html).toContain("Água destilada");
+  });
+
+  it("a fronteira entre os dois desenhos é o tamanho do texto", () => {
+    expect(renderizar(capacidade, "x".repeat(20))).toContain("grid-cols-");
+    expect(renderizar(capacidade, "x".repeat(80))).not.toContain("grid-cols-");
   });
 });

@@ -99,11 +99,33 @@ test.describe("Home", () => {
       )
       .toBe(true);
 
-    await gaveta
-      .getByRole("navigation", { name: "Menu principal no celular" })
-      .getByRole("link", { name: /^Loja/ })
-      .first()
-      .click();
+    /* O clique também precisa tolerar o remonte.
+
+       Esperar a gaveta ficar aberta não basta: o remonte do Strict Mode pode
+       cair ENTRE a espera e o clique, e aí o Playwright acerta um link que
+       está sendo descartado — "element is not stable", depois "element was
+       detached from the DOM". Com o servidor de desenvolvimento frio, que é
+       como ele está no começo da suíte, isso deixou de ser raro.
+
+       A saída é a mesma de uma pessoa: se o toque não pegou, tocar de novo.
+       O laço requery o link a cada tentativa, então ele nunca insiste num nó
+       morto. Em produção não há remonte e a primeira tentativa resolve. */
+    const linkDaLoja = () =>
+      gaveta
+        .getByRole("navigation", { name: "Menu principal no celular" })
+        .getByRole("link", { name: /^Loja/ })
+        .first();
+
+    for (let tentativa = 1; tentativa <= 4; tentativa += 1) {
+      try {
+        await linkDaLoja().click({ timeout: 5_000 });
+        break;
+      } catch (erro) {
+        if (tentativa === 4) throw erro;
+        if (!(await gaveta.isVisible())) await abrir.click();
+        await page.waitForTimeout(320);
+      }
+    }
 
     await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

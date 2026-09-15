@@ -122,4 +122,39 @@ test.describe("Ficha técnica", () => {
       await expect(bloco).toHaveAttribute("open", /.*/);
     }
   });
+
+  test("nenhum rótulo da ficha quebra por caractere", async ({ page }) => {
+    await page.goto(`/loja/${fixtures().produto.slug}`);
+
+    /* O defeito de 15/09/2026, em geometria: a grade punha o valor numa
+       trilha `auto` (max-content) ao lado de um rótulo `minmax(0,1fr)` que
+       podia encolher até zero. Com valor longo — os requisitos do local, os
+       itens inclusos — o rótulo ia a 0 px de largura e 340 px de altura,
+       descendo uma letra por linha.
+
+       Asserção de pixel, de propósito: nenhum teste de conteúdo pegaria isso,
+       porque o texto estava todo lá, na ordem certa, com a semântica certa. */
+    for (const largura of [1440, 1280, 1024]) {
+      await page.setViewportSize({ width: largura, height: 900 });
+      await page.waitForTimeout(250);
+
+      const quebrados = await page.locator("#ficha-tecnica dl dt").evaluateAll((elementos) =>
+        elementos
+          .map((el) => {
+            const r = el.getBoundingClientRect();
+            return {
+              texto: (el.textContent ?? "").trim().split("\n")[0],
+              largura: Math.round(r.width),
+              altura: Math.round(r.height),
+            };
+          })
+          .filter((m) => m.largura < 40 && m.altura > 56),
+      );
+
+      expect(
+        quebrados,
+        `em ${largura}px: ${quebrados.map((q) => `${q.texto} ${q.largura}x${q.altura}`).join(", ")}`,
+      ).toEqual([]);
+    }
+  });
 });

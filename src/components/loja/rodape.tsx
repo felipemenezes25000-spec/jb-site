@@ -35,11 +35,9 @@ import { enderecoCompleto, getSettings, redesSociais } from "@/lib/settings";
 
 type Icone = React.ComponentType<{ className?: string }>;
 
-export const CLASSE_LINK_RODAPE =
+const CLASSE_LINK =
   "foco-jb flex min-h-[2rem] items-center rounded-md text-corpo leading-snug text-graf-600 " +
   "transition-[color,transform] duration-200 hover:translate-x-0.5 hover:text-jb-700 pointer-coarse:min-h-11";
-
-const CLASSE_LINK = CLASSE_LINK_RODAPE;
 
 function IconeDente({ className }: { className?: string }) {
   return (
@@ -120,14 +118,11 @@ function Coluna({
   itens,
   icone: IconeColuna,
   separador = false,
-  extra,
 }: {
   titulo: string;
   itens: ItemMenu[];
   icone: Icone;
   separador?: boolean;
-  /** Links que dependem da sessão, renderizados fora do cache. */
-  extra?: React.ReactNode;
 }) {
   return (
     <div
@@ -150,7 +145,6 @@ function Coluna({
             </Link>
           </li>
         ))}
-        {extra}
       </ul>
     </div>
   );
@@ -204,15 +198,28 @@ function Prova({
 }
 
 /**
- * O rodapé continua cacheado; o que depende da sessão entra por um buraco.
+ * O rodapé é cacheado, e por isso ele não fala de sessão.
  *
- * `"use cache"` não pode ler cookie — e é justamente por isso que o rodapé
- * mostrava "Entrar" e "Criar conta" para quem estava logado: ele não tinha
- * como saber. A correção não é tirar o cache (o rodapé é igual para todo
- * mundo, menos por dois links); é passar esses dois links de fora, como
- * `ReactNode`, do jeito que o cabeçalho já faz com `AcessoDaConta`.
+ * O problema real era este: ele oferecia "Entrar" e "Criar conta" a quem o
+ * cabeçalho, quatro telas acima, cumprimentava pelo nome. Convidar a criar
+ * conta quem já tem uma sugere que a sessão caiu.
+ *
+ * A primeira correção foi receber esses dois links de fora, como `ReactNode`
+ * dentro de um `<Suspense>`, do jeito que o cabeçalho faz com `AcessoDaConta`.
+ * **Não refaça isso.** Uma fronteira de streaming entregue como prop a um
+ * componente `"use cache"` resolve tarde e re-renderiza a casca inteira — e a
+ * gaveta do celular, que guarda estado de aberta/fechada, era arrancada do DOM
+ * no meio do toque. Medido em 15/09/2026: o teste da gaveta passou a falhar
+ * com "element was detached from the DOM" em toda execução, e voltou a passar
+ * assim que o slot saiu.
+ *
+ * A saída que ficou é mais simples e não custa fronteira nenhuma: o rodapé só
+ * lista links verdadeiros nos dois estados (ver `RODAPE_CLIENTE`). Quem não
+ * tem sessão e clicar em "Meus pedidos" cai na tela de entrada, que é para
+ * onde queria ir; e o caminho de entrar continua no cabeçalho, que é dinâmico
+ * de verdade.
  */
-export async function Rodape({ acesso }: { acesso?: React.ReactNode }) {
+export async function Rodape() {
   "use cache";
   cacheTag(ETIQUETA_CONFIGURACOES);
   cacheLife("hours");
@@ -369,13 +376,7 @@ export async function Rodape({ acesso }: { acesso?: React.ReactNode }) {
             >
               <Coluna titulo="Loja" itens={RODAPE_LOJA} icone={ShoppingCart} />
               <Coluna titulo="Assistência" itens={RODAPE_ASSISTENCIA} icone={Wrench} separador />
-              <Coluna
-                titulo="Área da Clínica"
-                itens={RODAPE_CLIENTE}
-                icone={IconeDente}
-                separador
-                extra={acesso}
-              />
+              <Coluna titulo="Área da Clínica" itens={RODAPE_CLIENTE} icone={IconeDente} separador />
               <Coluna titulo="Institucional" itens={RODAPE_INSTITUCIONAL} icone={Building2} separador />
             </nav>
 

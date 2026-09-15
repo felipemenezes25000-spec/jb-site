@@ -5,7 +5,6 @@ import { Cabecalho } from "@/components/loja/cabecalho";
 import {
   AcessoDaConta,
   AcessoDaContaEsqueleto,
-  AcessoNoRodape,
   ContadorDoCarrinho,
   ContadorDoCarrinhoEsqueleto,
 } from "@/components/loja/cabecalho-pessoal";
@@ -76,15 +75,7 @@ export async function CascaPublica({ children }: { children: React.ReactNode }) 
         {/* O rodapé segue vindo do cache; só os dois links de acesso são
             resolvidos por requisição. Sem isso, ele convidava a "Criar conta"
             quem o cabeçalho já cumprimentava pelo nome. */}
-        <Rodape
-          acesso={
-            /* `key` porque este nó entra numa `<ul>` ao lado de uma lista
-               mapeada: sem ela o React reclama de chave duplicada na coluna. */
-            <Suspense key="acesso-no-rodape" fallback={null}>
-              <AcessoNoRodape />
-            </Suspense>
-          }
-        />
+        <Rodape />
         <BarraComparar />
       </div>
     </ComparadorProvider>

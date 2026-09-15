@@ -31,6 +31,7 @@
     "responsivo": "node scripts/responsivo.mjs",
     "responsivo:pdp": "node scripts/responsivo-pdp.mjs",
     "a11y": "node scripts/acessibilidade.mjs",
+    "texto:vertical": "node scripts/texto-vertical.mjs",
     "conteudo:prever": "tsx scripts/migrar-conteudo-institucional.ts",
     "conteudo:migrar": "tsx scripts/migrar-conteudo-institucional.ts --aplicar",
     "pautas:prever": "tsx scripts/carregar-pautas.ts",

@@ -128,13 +128,23 @@ const DESEMPENHO: SpecDefinition[] = [
   },
   {
     key: "ciclo",
-    label: "Ciclo completo",
+    /* "Ciclo", e não "Ciclo completo".
+     *
+     * O campo "Ciclo" do cadastro guarda coisas diferentes conforme o produto:
+     * numa autoclave é "121 °C e 134 °C" (as temperaturas que ela roda), em
+     * outra é "35 min" (a duração). O rótulo "Ciclo completo" com a ajuda
+     * "tempo do ciclo do início à liberação da carga" afirmava duração sobre
+     * um valor que era temperatura — a ficha passava a descrever um ciclo que
+     * o equipamento não tem. O rótulo agora cobre os dois, e a unidade `min`
+     * só aparece quando o valor é mesmo um número (ver `formatarSpec`). */
+    label: "Ciclo",
     group: "desempenho",
     unit: "min",
     format: "numero",
     comparable: true,
     decisive: true,
-    helpText: "Tempo do ciclo do início à liberação da carga.",
+    helpText:
+      "O programa de esterilização como o fabricante declara — temperatura, duração ou ambos.",
     appliesTo: ["autoclave", "lavadora"],
     aliases: [/ciclo(?!.*classe)|tempo.*ciclo|duracao.*ciclo/],
     order: 20,

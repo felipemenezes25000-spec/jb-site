@@ -102,18 +102,16 @@ export const RODAPE_ASSISTENCIA: ItemMenu[] = [
 ];
 
 /**
- * O par de acesso, só para quem NÃO está logado.
+ * Só o que é verdade nos dois estados.
  *
- * O rodapé oferecia "Entrar" e "Criar conta" para quem o cabeçalho, quatro
- * telas acima, cumprimentava pelo nome. Não é só redundância: convidar a criar
- * conta quem já tem uma sugere que a sessão caiu.
- */
-export const RODAPE_ACESSO: ItemMenu[] = [
-  { rotulo: "Entrar", href: "/entrar" },
-  { rotulo: "Criar conta", href: "/cadastro" },
-];
-
-/** O que vale para qualquer pessoa — logada ou não. */
+ * "Entrar" e "Criar conta" saíram daqui: o rodapé os oferecia a quem o
+ * cabeçalho, quatro telas acima, cumprimentava pelo nome — e convidar a criar
+ * conta quem já tem uma sugere que a sessão caiu. Estes links servem aos dois:
+ * sem sessão, todos levam à tela de entrada e voltam ao destino depois.
+ *
+ * O caminho de entrar vive no cabeçalho (`AcessoDaConta`), que é dinâmico por
+ * `<Suspense>` e sabe quem está do outro lado. O rodapé é cacheado e não sabe
+ * — ver a nota em `rodape.tsx` sobre por que não vale abrir uma exceção. */
 export const RODAPE_CLIENTE: ItemMenu[] = [
   { rotulo: "Meus pedidos", href: "/minha-jb/pedidos" },
   { rotulo: "Meus equipamentos", href: "/minha-jb/equipamentos" },
