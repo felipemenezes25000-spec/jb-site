@@ -143,12 +143,21 @@ export function TopoClinica({
   );
 }
 
+/**
+ * O botão de sair do topo — só no celular.
+ *
+ * O nome acessível era "Sair da Área da Clínica" enquanto o botão do menu
+ * lateral, que faz exatamente a mesma coisa, chamava-se "Sair da conta". Dois
+ * nomes para uma ação é o tipo de diferença que só aparece para quem navega por
+ * leitor de tela ou por comando de voz: a pessoa pede "clicar em sair da conta"
+ * e o comando não acha o botão que está na tela dela.
+ */
 export function BotaoSairTopo() {
   return (
     <button
       type="submit"
-      aria-label="Sair da Área da Clínica"
-      title="Sair da Área da Clínica"
+      aria-label="Sair da conta"
+      title="Sair da conta"
       className="flex size-11 items-center justify-center rounded-xl text-graf-600 transition-colors hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
     >
       <LogOut className="size-5" aria-hidden />

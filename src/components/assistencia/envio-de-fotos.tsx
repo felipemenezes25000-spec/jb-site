@@ -60,6 +60,31 @@ const SEGUNDOS_DE_VIDEO = 30;
 const MAXIMO_FOTOS = 6;
 const MAXIMO_VIDEOS = 1;
 
+/**
+ * A política de envio, escrita UMA vez, a partir das constantes acima.
+ *
+ * A tela dizia duas coisas incompatíveis a dois centímetros de distância: a
+ * caixa listava "JPG, PNG, HEIC, MP4 ou MOV" e o parágrafo logo abaixo dizia
+ * "pelo site entram imagens e PDF; o vídeo vai pelo WhatsApp". PDF não estava
+ * na lista de formatos e o vídeo estava. Quem lê os dois não sabe o que pode
+ * mandar — e quem mantém o código muda um e esquece o outro.
+ *
+ * Agora a frase é derivada: mexer em `MAXIMO_FOTOS`, no limite de MB ou na
+ * lista de tipos reescreve o texto sozinho, em todo lugar que o consome.
+ */
+export const POLITICA_DE_ENVIO = {
+  fotos: MAXIMO_FOTOS,
+  videos: MAXIMO_VIDEOS,
+  limiteFotoMb: LIMITE_FOTO_MB,
+  limiteVideoMb: LIMITE_VIDEO_MB,
+  segundosDeVideo: SEGUNDOS_DE_VIDEO,
+  formatos: ROTULO_ACEITOS,
+  frase:
+    `Até ${MAXIMO_FOTOS} fotos de ${LIMITE_FOTO_MB} MB e ${MAXIMO_VIDEOS} vídeo de ` +
+    `${SEGUNDOS_DE_VIDEO} segundos e ${LIMITE_VIDEO_MB} MB, em ${ROTULO_ACEITOS}. ` +
+    "Documento em PDF não entra por aqui — mande pelo WhatsApp com o número do chamado.",
+} as const;
+
 function ehVideo(mime: string) {
   return mime.startsWith("video/");
 }
@@ -375,11 +400,12 @@ export function EnvioDeFotos({
         {/* Os limites são ditos ANTES da captura, não depois da recusa. Quem
             vai gravar um vídeo precisa saber dos 30 segundos enquanto ainda
             está com o telefone na mão. */}
+        {/* Os limites são ditos ANTES da captura, não depois da recusa. Quem
+            vai gravar um vídeo precisa saber dos 30 segundos enquanto ainda
+            está com o telefone na mão. E a frase é a mesma em toda a tela:
+            `POLITICA_DE_ENVIO` é a única fonte. */}
         <p id={idAjuda} className="mt-4 text-apoio leading-relaxed text-graf-500">
-          Até {MAXIMO_FOTOS} fotos de {LIMITE_FOTO_MB} MB, em {ROTULO_ACEITOS}. Se quiser,
-          {" "}
-          {MAXIMO_VIDEOS} vídeo de até {SEGUNDOS_DE_VIDEO} segundos e {LIMITE_VIDEO_MB} MB —
-          grave só o trecho em que o defeito aparece.
+          {POLITICA_DE_ENVIO.frase} Grave só o trecho em que o defeito aparece.
         </p>
       </div>
 

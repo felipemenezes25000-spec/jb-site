@@ -365,13 +365,19 @@ export async function produtosPorCondicao(
 }
 
 /* ============================================================================
-   Abertura das coleções comerciais — /loja (novos) e /seminovos
+   Abertura das coleções comerciais — /loja, /novos, /seminovos
 
-   As duas páginas abrem com o mesmo cabeçalho e precisam exatamente das
-   mesmas quatro respostas. Buscá-las aqui mantém as duas coleções coerentes:
-   o que aparece em "Novos 5" na página do seminovo é a mesma contagem que a
-   própria /loja publica.
+   As páginas abrem com o mesmo cabeçalho e precisam exatamente das mesmas
+   quatro respostas. Buscá-las aqui mantém as coleções coerentes: o que aparece
+   em "Novos 5" na página do seminovo é a mesma contagem que /novos publica.
+
+   `"todas"` é o recorte de /loja, que é o catálogo inteiro — e não uma
+   condição. Ver a nota em `/loja/page.tsx` sobre por que ele deixou de ser
+   sinônimo de /novos.
    ============================================================================ */
+
+/** Condição da coleção, ou o catálogo inteiro. */
+export type RecorteDaColecao = ProductCondition | "todas";
 
 export type DadosDaColecao = {
   /** Foto real de um equipamento publicado — nunca imagem de ilustração. */
@@ -393,9 +399,12 @@ export type DadosDaColecao = {
 };
 
 export async function dadosDaColecao(
-  condicao: ProductCondition,
+  condicao: RecorteDaColecao,
   limiteCategorias = 6,
 ): Promise<DadosDaColecao> {
+  /* "todas" não é um valor de coluna: é a ausência do filtro. Um `undefined`
+     em `where` some da consulta, que é exatamente o que se quer aqui. */
+  const daCondicao = condicao === "todas" ? undefined : condicao;
   /* A contagem do topo tem que ser a mesma da lista logo abaixo: as duas
      tiram as unidades já vendidas. "3 unidades publicadas" com 2 cartões na
      tela é um erro de página, não um detalhe de cadastro. */
@@ -405,7 +414,7 @@ export async function dadosDaColecao(
     /* O destaque sai de `VITRINE`: com foto e disponível. Era só "tem foto", e
        por isso o painel podia abrir com uma unidade já vendida. */
     prisma.product.findFirst({
-      where: { ...VITRINE, condition: condicao },
+      where: { ...VITRINE, condition: daCondicao },
       orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
       select: {
         name: true,
@@ -423,12 +432,12 @@ export async function dadosDaColecao(
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: { ...listavel, condition: condicao } } } },
+        _count: { select: { products: { where: { ...listavel, condition: daCondicao } } } },
       },
     }),
     prisma.product.count({ where: { ...listavel, condition: "novo" } }),
     prisma.product.count({ where: { ...listavel, condition: "seminovo" } }),
-    prisma.product.count({ where: { ...PUBLICADO, condition: condicao, ...UNIDADE_VENDIDA } }),
+    prisma.product.count({ where: { ...PUBLICADO, condition: daCondicao, ...UNIDADE_VENDIDA } }),
   ]);
 
   const foto = destaque?.media[0];
@@ -462,7 +471,12 @@ export async function dadosDaColecao(
         slug: categoria.slug,
         nome: categoria.nome,
         quantidade: categoria.quantidade ?? 0,
-        href: `/categoria/${categoria.slug}?condicao=${condicao}`,
+        /* Em "todas", a categoria abre sem recorte de condição — senão o
+           catálogo inteiro mandaria para uma lista já filtrada. */
+        href:
+          condicao === "todas"
+            ? `/categoria/${categoria.slug}`
+            : `/categoria/${categoria.slug}?condicao=${condicao}`,
       })),
     totalNovos,
     totalSeminovos,

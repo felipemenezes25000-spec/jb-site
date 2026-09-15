@@ -16,12 +16,6 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   duvidas: "Dúvidas",
 };
 
-/** Altura das faixas grudadas no topo, lida do token de `globals.css`. */
-function ocupadoNoTopo() {
-  const bruto = getComputedStyle(document.documentElement).getPropertyValue("--jb-topo-secoes");
-  return Number.parseInt(bruto, 10) || 136;
-}
-
 export type CompraDaBarra = {
   precoCents: number;
   parcelas: { parcelas: number; valorCents: number } | null;
@@ -92,14 +86,31 @@ export function NavegacaoDoProduto({
 
     if (alvos.length === 0) return;
 
+    /* A seção acesa é a de baixo, não a de cima.
+
+       Duas seções cruzam a faixa de leitura ao mesmo tempo toda vez que uma
+       termina e a próxima começa — e a ordenação crescente por `top` escolhia
+       justamente a que está saindo. O efeito medido: a barra continuava
+       acendendo "Visão geral" com a ficha técnica já ocupando a tela inteira, e
+       só trocava quando a seção anterior sumia por completo. O destaque andava
+       uma seção atrasado em toda a página.
+
+       Quem manda é a que entrou por último: entre as que cruzam a faixa, a de
+       maior `top` é a que está começando ali, e é a que a pessoa está lendo.
+
+       A faixa também encolheu. `-136px 0px -60%` deixava uma janela de mais de
+       200px logo abaixo do cabeçalho, onde essa ambiguidade acontecia quase
+       sempre; entre 35% e 40% da altura da tela ela é estreita o bastante para
+       que a resposta quase nunca seja ambígua, e fica bem abaixo da faixa
+       grudada do topo em qualquer altura de viewport. */
     const observador = new IntersectionObserver(
       (entradas) => {
         const visiveis = entradas
           .filter((entrada) => entrada.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+          .sort((a, b) => b.boundingClientRect.top - a.boundingClientRect.top);
         if (visiveis[0]) setAtiva(visiveis[0].target.id);
       },
-      { rootMargin: `-${ocupadoNoTopo()}px 0px -60% 0px`, threshold: 0 },
+      { rootMargin: "-35% 0px -60% 0px", threshold: 0 },
     );
 
     for (const alvo of alvos) observador.observe(alvo);
@@ -249,10 +260,17 @@ export function BarraCompraMobile({
               <p className="tabular text-lg font-extrabold leading-tight text-graf-950">
                 {formatarPreco(precoCents)}
               </p>
-              {parcelas ? (
+              {/* A barra de cima já sabia disto; esta não sabia. Num equipamento
+                  vendido, a barra fixa do celular continuava prometendo "12× de
+                  R$ 624,16 sem juros" logo acima de um botão que leva a
+                  alternativas — e no celular ela é a última coisa que fica na
+                  tela enquanto a pessoa rola a página inteira. */}
+              {parcelas && !indisponivel ? (
                 <p className="tabular truncate text-xs text-graf-500">
                   {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)} sem juros
                 </p>
+              ) : indisponivel ? (
+                <p className="truncate text-xs font-semibold text-graf-600">Indisponível</p>
               ) : null}
             </>
           )}

@@ -34,11 +34,11 @@ async function abrirFiltros(page: Page) {
  * ligada). É por esse nome acessível que o teste localiza as opções, e é ele
  * que diz se o filtro está aplicado.
  *
- * O grupo escolhido é **Categoria**, e não Condição: /loja é a coleção dos
- * novos e trava a condição — ela é o escopo da página, não uma escolha que a
- * pessoa possa desmarcar, então aquele grupo simplesmente não é desenhado
- * ali. O teste pedia por ele e falhava sem que houvesse defeito nenhum na
- * aplicação.
+ * O grupo escolhido é **Categoria** porque ele existe em toda coleção da loja,
+ * inclusive nas que travam a condição (/novos, /seminovos, /usados). /loja não
+ * trava mais nada — passou a ser o catálogo inteiro —, mas o teste continua
+ * pedindo Categoria para valer igual em qualquer coleção que ele venha a
+ * apontar.
  */
 
 /** O contador do topo da lista, que muda de texto quando há filtro. */
@@ -48,8 +48,9 @@ test.describe("Catálogo", () => {
   test("lista equipamentos com preço e link para o produto", async ({ page }) => {
     await page.goto("/loja");
 
-    // o título da coleção é "Produtos odontológicos"
-    await expect(page.getByRole("heading", { name: "Produtos odontológicos" })).toBeVisible();
+    /* /loja é o catálogo inteiro — o título diz isso, e é o mesmo escopo que o
+       menu ("Loja") e o rodapé ("Todos os produtos") prometem. */
+    await expect(page.getByRole("heading", { name: "Todos os produtos" })).toBeVisible();
     await expect(page.getByText(CONTADOR)).toBeVisible();
 
     const { produto } = fixtures();

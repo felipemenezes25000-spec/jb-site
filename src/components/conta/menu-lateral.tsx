@@ -83,11 +83,20 @@ function iniciais(nome: string) {
   return (primeira + ultima).toUpperCase();
 }
 
-function Contador({ valor }: { valor: number }) {
+/**
+ * O contador de uma seção do menu.
+ *
+ * O texto de leitor de tela diz de QUE seção é o número. "3 em aberto" logo
+ * depois do nome do link já era compreensível ouvindo em sequência, mas some
+ * quando o leitor lista os links fora de ordem — que é como se navega um menu.
+ */
+function Contador({ valor, secao }: { valor: number; secao: string }) {
   return (
     <Etiqueta tom="alerta" className="ml-auto shrink-0">
       <span className="tabular" aria-hidden>{valor}</span>
-      <span className="sr-only">{valor} em aberto</span>
+      <span className="sr-only">
+        {valor} em aberto em {secao}
+      </span>
     </Etiqueta>
   );
 }
@@ -108,6 +117,7 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
             ? "bg-gradient-to-r from-jb-50 via-[#fff7f7] to-white text-jb-700 shadow-[inset_3px_0_0_#e51b23,0_1px_2px_rgba(18,24,35,0.025)]"
             : "text-graf-700 hover:bg-graf-50 hover:text-graf-950",
         )}
+        prefetch={false}
       >
         <span
           aria-hidden
@@ -121,7 +131,9 @@ function ItemMenu({ item, aoNavegar }: { item: ItemMontado; aoNavegar?: () => vo
           <Icone className="size-4" />
         </span>
         <span className="min-w-0 truncate">{item.rotulo}</span>
-        {item.quantidade !== null ? <Contador valor={item.quantidade} /> : null}
+        {item.quantidade !== null ? (
+          <Contador valor={item.quantidade} secao={item.rotulo} />
+        ) : null}
       </Link>
     </li>
   );
@@ -224,7 +236,25 @@ export function MenuLateral({
   if (restantes.length > 0) grupos.push({ titulo: "Mais", itens: restantes });
 
   const atual = itens.find((item) => item.ativo) ?? visaoGeral ?? itens[0];
-  const pendencias = itens.reduce((soma, item) => soma + (item.quantidade ?? 0), 0);
+
+  /* O número do menu fechado é uma SOMA de seções, e precisa dizer isso.
+
+     Ele aparecia como "3", com o texto de leitor de tela "3 itens em aberto" —
+     e a pessoa abria "Meus equipamentos", contava dois, e concluía que o menu
+     estava errado. Não estava: três era um chamado, uma visita e um
+     equipamento parado, cada um numa seção diferente. "Itens em aberto" dá a
+     esse conjunto heterogêneo um nome que sugere uma lista única, que não
+     existe em lugar nenhum da tela.
+
+     Agora o resumo nomeia de onde vem cada parte. O número visível continua um
+     só — é um menu fechado, não cabe mais —, mas quem lê a etiqueta (pelo
+     leitor de tela ou parando o cursor em cima) recebe a conta inteira, e ela
+     confere com o que cada seção mostra quando abre. */
+  const comPendencia = itens.filter((item) => (item.quantidade ?? 0) > 0);
+  const pendencias = comPendencia.reduce((soma, item) => soma + (item.quantidade ?? 0), 0);
+  const detalheDasPendencias = comPendencia
+    .map((item) => `${item.quantidade} em ${item.rotulo}`)
+    .join(", ");
   const IconeAtual = atual?.icone ?? LayoutDashboard;
 
   const navegacao = (dentroDaGaveta: boolean) => (
@@ -258,6 +288,7 @@ export function MenuLateral({
           <Link
             href="/minha-jb"
             className="mb-4 flex min-h-12 items-center gap-3 rounded-xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            prefetch={false}
           >
             <Logo altura={32} />
             <span className="min-w-0 border-l border-graf-200 pl-3">
@@ -269,6 +300,7 @@ export function MenuLateral({
           <Link
             href="/minha-jb/assistencia/novo"
             className="mb-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-jb-500 px-4 text-sm font-bold text-white shadow-[0_9px_22px_-12px_rgba(229,27,35,0.72)] transition-all hover:-translate-y-px hover:bg-jb-600 hover:shadow-[0_12px_26px_-12px_rgba(229,27,35,0.78)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            prefetch={false}
           >
             <span className="text-lg leading-none">+</span>
             Abrir chamado
@@ -285,6 +317,7 @@ export function MenuLateral({
             <Link
               href="/contato"
               className="mt-2.5 inline-flex min-h-8 items-center gap-1.5 text-xs font-bold text-jb-700 transition-colors hover:text-jb-800"
+              prefetch={false}
             >
               Falar com um especialista
               <ArrowRight className="size-3.5" aria-hidden />
@@ -311,8 +344,13 @@ export function MenuLateral({
           </span>
           {pendencias > 0 ? (
             <Etiqueta tom="alerta" className="shrink-0">
-              <span className="tabular" aria-hidden>{pendencias}</span>
-              <span className="sr-only">{pendencias} itens em aberto</span>
+              <span className="tabular" aria-hidden title={detalheDasPendencias}>
+                {pendencias}
+              </span>
+              <span className="sr-only">
+                {pendencias === 1 ? "1 pendência" : `${pendencias} pendências`} —{" "}
+                {detalheDasPendencias}
+              </span>
             </Etiqueta>
           ) : null}
           <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-graf-100 text-graf-700">

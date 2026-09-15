@@ -481,7 +481,17 @@ export function ConteudoFiltros({
                   autoComplete="off"
                   aria-invalid={erroFaixa ? true : undefined}
                   aria-describedby={erroFaixa ? idErroFaixa : undefined}
-                  placeholder={formatarValor(grupos.faixaPreco.minCents)}
+                  /* "0,00" e não o menor preço do catálogo.
+
+                     O placeholder era `formatarValor(minCents)` — "1.200,00" —
+                     em `text-graf-500`, que é contraste de leitura de verdade
+                     (5,23:1). O campo parecia PREENCHIDO com R$ 1.200,00, e
+                     quem quisesse essa faixa clicava direto em "Aplicar" e
+                     recebia o catálogo inteiro de volta, sem filtro nenhum e
+                     sem entender por quê. A faixa do catálogo continua escrita
+                     logo abaixo, em texto, onde ela é informação e não engano:
+                     "Catálogo de R$ 1.200,00 a R$ 18.900,00". */
+                  placeholder="0,00"
                   defaultValue={min ? formatarValor(Number(min)) : ""}
                   className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
                 />
@@ -500,7 +510,7 @@ export function ConteudoFiltros({
                   autoComplete="off"
                   aria-invalid={erroFaixa ? true : undefined}
                   aria-describedby={erroFaixa ? idErroFaixa : undefined}
-                  placeholder={formatarValor(grupos.faixaPreco.maxCents)}
+                  placeholder="0,00"
                   defaultValue={max ? formatarValor(Number(max)) : ""}
                   className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
                 />

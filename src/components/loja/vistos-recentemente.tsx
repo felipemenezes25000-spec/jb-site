@@ -107,6 +107,15 @@ export function VistosRecentemente({
     };
   }, [foraDaLista]);
 
+  function limpar() {
+    try {
+      window.localStorage.removeItem(CHAVE);
+    } catch {
+      /* navegação privada: não havia lista guardada para apagar */
+    }
+    setDados(null);
+  }
+
   // Com menos de dois, a tira é só ruído e não ajuda a comparar nada.
   if (!dados || dados.produtos.length < 2) return null;
 
@@ -136,9 +145,24 @@ export function VistosRecentemente({
         </ul>
       </div>
 
-      <p className="texto-apoio mt-3 flex items-center gap-2 text-graf-500">
+      <p className="texto-apoio mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-graf-500">
         <History className="size-4 shrink-0 text-graf-500" aria-hidden />
-        Guardado no seu navegador. Limpar os dados do site apaga esta lista.
+        Guardado no seu navegador.
+        {/* Um botão, e não a instrução de limpar os dados do site.
+
+            O texto dizia "Limpar os dados do site apaga esta lista" — ou seja,
+            para tirar daqui um equipamento que a pessoa não quer mais ver (ou
+            que ela não reconhece como seu, num computador compartilhado com a
+            recepção da clínica), a página mandava apagar sessão, carrinho e
+            preferências junto. Quem é dono da lista precisa poder apagar só
+            ela. */}
+        <button
+          type="button"
+          onClick={limpar}
+          className="foco-jb rounded font-semibold text-graf-600 underline underline-offset-2 hover:text-jb-700"
+        >
+          Limpar esta lista
+        </button>
       </p>
     </Secao>
   );

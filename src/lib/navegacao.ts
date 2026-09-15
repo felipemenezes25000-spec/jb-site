@@ -81,6 +81,10 @@ export const ATALHOS_CLIENTE: ItemMenu[] = [
 ];
 
 export const RODAPE_LOJA: ItemMenu[] = [
+  /* "Todos os produtos" e "Novos" apontavam para a mesma lista: /loja era a
+     coleção de novos com outro endereço. Agora /loja é o catálogo inteiro e os
+     dois rótulos passam a descrever destinos diferentes — que é o que um menu
+     com dois itens deveria significar desde sempre. */
   { rotulo: "Todos os produtos", href: "/loja" },
   { rotulo: "Novos", href: "/novos" },
   { rotulo: "Seminovos JB", href: "/seminovos" },

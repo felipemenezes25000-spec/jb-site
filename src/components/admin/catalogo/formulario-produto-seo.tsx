@@ -190,7 +190,7 @@ export function FormularioProdutoSeo({
               />
 
               <Area
-                rotulo="O que vem na caixa"
+                rotulo="Itens inclusos"
                 name="boxContents"
                 rows={4}
                 defaultValue={produto.boxContents.join("\n")}

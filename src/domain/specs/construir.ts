@@ -91,6 +91,21 @@ const ROTULO_INSTALACAO: Record<string, string> = {
   nao_informada: "",
 };
 
+/**
+ * Para qual atributo um valor de "Ciclo" deve ir.
+ *
+ * O campo é um só no cadastro e guarda duas coisas diferentes. Quem decide é
+ * o valor: grau Celsius vai para temperatura, minuto vai para duração, e o
+ * que não for nem um nem outro fica no "Ciclo" genérico — sem que a ficha
+ * afirme o que não sabe.
+ */
+function chaveDoCiclo(valor: string): "temperatura-ciclo" | "duracao-ciclo" | "ciclo" {
+  const texto = semAcento(valor);
+  if (/°\s*c|graus|\bc\b(?!\w)/.test(texto)) return "temperatura-ciclo";
+  if (/\bmin\b|minuto/.test(texto)) return "duracao-ciclo";
+  return "ciclo";
+}
+
 function semAcento(texto: string) {
   return texto
     .normalize("NFD")
@@ -200,7 +215,10 @@ export function construirFicha(produto: ProdutoParaFicha): FichaDeEspecificacoes
   }
 
   if ((produto.garantiaMeses ?? 0) > 0) {
-    registrar("garantia", produto.garantiaMeses!, "fabricante", { unit: "meses" });
+    registrar("garantia", produto.garantiaMeses!, "fabricante", {
+      unit: "meses",
+      note: "Garantia do modelo, declarada pelo fabricante.",
+    });
   }
 
   if (produto.politicaDeInstalacao) {
@@ -232,9 +250,15 @@ export function construirFicha(produto: ProdutoParaFicha): FichaDeEspecificacoes
     if (!rotulo || !valorBruto) return;
 
     const normalizado = semAcento(rotulo);
-    const definicao = permitidas.find((candidata) =>
+    let definicao = permitidas.find((candidata) =>
       candidata.aliases?.some((padrao) => padrao.test(normalizado)),
     );
+
+    /* O "Ciclo" do cadastro se desdobra em dois atributos conforme o valor. */
+    if (definicao?.key === "ciclo") {
+      const destino = chaveDoCiclo(valorBruto);
+      definicao = permitidas.find((candidata) => candidata.key === destino) ?? definicao;
+    }
 
     if (definicao && !coletados.has(definicao.key)) {
       const lido = interpretarValor(valorBruto, definicao);

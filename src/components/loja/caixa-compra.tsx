@@ -104,6 +104,20 @@ export function CaixaCompra({
     ? null
     : calcularParcelas(precoCents, maxParcelas, minParcelaCents);
 
+  /* Uma oferta que não dá para aceitar não é uma oferta.
+
+     A unidade seminova vendida continuava anunciando "até 12× de R$ 624,16 sem
+     juros", "Pix ou cartão de crédito", "−15%" e "Você economiza R$ 2.100,00" —
+     tudo isso ao lado da etiqueta "Vendido". Parcelamento, meio de pagamento e
+     desconto são condições de uma compra; sem estoque não há compra, e a página
+     ficava descrevendo um negócio que ela mesma acabara de dizer que não existe.
+
+     O PREÇO fica. Ele é informação de verdade sobre o equipamento — quem chegou
+     por busca quer saber quanto custa este modelo na JB, e apagá-lo obrigaria a
+     pessoa a pedir orçamento para descobrir o que a página sabe. O que sai é a
+     mecânica de fechar negócio. */
+  const ofertaValida = !semEstoque;
+
   const precoAnteriorCents =
     compareAtCents && compareAtCents > precoCents ? compareAtCents : null;
   const economiaCents = precoAnteriorCents ? precoAnteriorCents - precoCents : 0;
@@ -156,7 +170,10 @@ export function CaixaCompra({
               Disponível
             </Etiqueta>
           )}
-          {!soOrcamento ? <span className="micro text-graf-500">Compra direta</span> : null}
+          {/* "Compra direta" ao lado de "Vendido" é a própria contradição. */}
+          {!soOrcamento && ofertaValida ? (
+            <span className="micro text-graf-500">Compra direta</span>
+          ) : null}
         </div>
 
         {soOrcamento ? (
@@ -170,8 +187,16 @@ export function CaixaCompra({
           </div>
         ) : (
           <div>
-            <p className="micro mb-2 text-graf-500">Preço deste equipamento</p>
-            {precoAnteriorCents ? (
+            <p className="micro mb-2 text-graf-500">
+              {ofertaValida
+                ? "Preço deste equipamento"
+                : unico
+                  ? "Preço desta unidade, já vendida"
+                  : "Preço praticado, enquanto durou o estoque"}
+            </p>
+            {/* Preço riscado e "−15%" são promoção: só existem enquanto houver o
+                que comprar com desconto. */}
+            {precoAnteriorCents && ofertaValida ? (
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="text-sm tabular text-graf-500 line-through">
                   {formatarPreco(precoAnteriorCents)}
@@ -184,7 +209,7 @@ export function CaixaCompra({
               {formatarPreco(precoCents)}
             </p>
 
-            {parcelas ? (
+            {parcelas && ofertaValida ? (
               <p className="mt-2.5 text-sm leading-5 text-graf-600">
                 até{" "}
                 <span className="font-extrabold text-graf-900">
@@ -194,17 +219,25 @@ export function CaixaCompra({
               </p>
             ) : null}
 
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
-              <span className="inline-flex items-center gap-1.5 text-xs text-graf-500">
-                <CreditCard className="size-3.5 shrink-0" aria-hidden />
-                Pix ou cartão de crédito
-              </span>
-              {economiaCents > 0 ? (
-                <span className="inline-flex rounded-full bg-ok-50 px-2.5 py-1 text-xs font-extrabold text-ok-700 ring-1 ring-ok-500/15">
-                  Você economiza {formatarPreco(economiaCents)}
+            {ofertaValida ? (
+              <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="inline-flex items-center gap-1.5 text-xs text-graf-500">
+                  <CreditCard className="size-3.5 shrink-0" aria-hidden />
+                  Pix ou cartão de crédito
                 </span>
-              ) : null}
-            </div>
+                {economiaCents > 0 ? (
+                  <span className="inline-flex rounded-full bg-ok-50 px-2.5 py-1 text-xs font-extrabold text-ok-700 ring-1 ring-ok-500/15">
+                    Você economiza {formatarPreco(economiaCents)}
+                  </span>
+                ) : null}
+              </div>
+            ) : (
+              <p className="mt-2.5 max-w-[38ch] text-sm leading-5 text-graf-600">
+                {unico
+                  ? "Esta unidade foi vendida. As condições de pagamento valem para a próxima que entrar — e elas dependem do preço dela."
+                  : "Sem estoque no momento. As condições de pagamento voltam junto com a reposição."}
+              </p>
+            )}
 
             {/* Aqui existia um botão "Calcular frete e prazo" que não calculava
                 nada: era uma âncora para o campo de CEP que fica 15px abaixo,

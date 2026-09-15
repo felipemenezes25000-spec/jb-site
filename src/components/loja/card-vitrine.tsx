@@ -5,6 +5,10 @@ import { ArrowRight, ImageOff, ShoppingCart } from "lucide-react";
 import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import type { ProdutoCard, Parcelamento } from "@/components/loja/card-produto";
+import {
+  disponibilidadeDoProduto,
+  type TomDaDisponibilidade,
+} from "@/domain/catalogo/disponibilidade";
 import { TrilhoOuGrade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
 import { calcularParcelas, formatarPreco, semQuebraNaUnidade } from "@/lib/format";
 import { BotaoEnvio } from "@/components/ui/botao-envio";
@@ -38,25 +42,14 @@ const CONDICAO_ETIQUETA = {
   recondicionado: { rotulo: "Recondicionado JB", classe: "bg-white text-warn-700 ring-1 ring-warn-500" },
 } as const;
 
-function disponibilidade(produto: ProdutoCard) {
-  if (!produto.trackInventory) return null;
-  if (produto.stock <= 0) {
-    return {
-      texto: produto.unique ? "Unidade vendida" : "Indisponível",
-      classe: "text-graf-500",
-      ponto: "bg-graf-400",
-    };
-  }
-  if (produto.unique) return { texto: "Unidade única", classe: "text-jb-700", ponto: "bg-jb-500" };
-  if (produto.stock <= 3) {
-    return {
-      texto: `Últimas ${produto.stock} un`,
-      classe: "text-warn-700",
-      ponto: "bg-warn-500",
-    };
-  }
-  return { texto: `${produto.stock} em estoque`, classe: "text-ok-700", ponto: "bg-ok-500" };
-}
+/* O tom vem do domínio; a cor é decisão deste cartão. */
+const COR_DA_DISPONIBILIDADE: Record<TomDaDisponibilidade, { texto: string; ponto: string }> = {
+  esgotado: { texto: "text-graf-500", ponto: "bg-graf-400" },
+  unico: { texto: "text-jb-700", ponto: "bg-jb-500" },
+  pouco: { texto: "text-warn-700", ponto: "bg-warn-500" },
+  ok: { texto: "text-ok-700", ponto: "bg-ok-500" },
+  "sob-encomenda": { texto: "text-graf-600", ponto: "bg-graf-400" },
+};
 
 export function CardVitrine({
   produto,
@@ -75,7 +68,8 @@ export function CardVitrine({
     ? null
     : calcularParcelas(produto.priceCents, parcelamento?.max, parcelamento?.minimoCents);
   const condicao = CONDICAO_ETIQUETA[produto.condition];
-  const estado = disponibilidade(produto);
+  const estado = disponibilidadeDoProduto(produto);
+  const corDoEstado = COR_DA_DISPONIBILIDADE[estado.tom];
 
   const precoAnterior =
     !soOrcamento && produto.compareAtCents && produto.compareAtCents > produto.priceCents
@@ -200,12 +194,10 @@ export function CardVitrine({
           </div>
 
           <div className="mt-3 flex h-4 items-center">
-            {estado ? (
-              <span className={cn("micro flex items-center gap-1.5", estado.classe)}>
-                <span aria-hidden className={cn("size-1.5 rounded-full", estado.ponto)} />
-                {estado.texto}
-              </span>
-            ) : null}
+            <span className={cn("micro flex items-center gap-1.5", corDoEstado.texto)}>
+              <span aria-hidden className={cn("size-1.5 rounded-full", corDoEstado.ponto)} />
+              {estado.texto}
+            </span>
           </div>
 
           {/* Linha de ações — a mesma gramática do cartão do catálogo.

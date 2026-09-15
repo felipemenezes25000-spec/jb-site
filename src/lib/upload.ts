@@ -470,6 +470,36 @@ export async function guardarPrivado(
   };
 }
 
+/**
+ * O último destino privado que sempre existe: o próprio banco.
+ *
+ * Existe porque há DOIS jeitos de o armazenamento privado faltar, e o segundo
+ * passou despercebido no conserto anterior:
+ *
+ *   1. Sem `BLOB_READ_WRITE_TOKEN` o código cai no disco do projeto, que em
+ *      serverless é somente leitura. Esse caminho já caía aqui.
+ *   2. COM token, a loja de blobs pode recusar `access: "private"` por falta
+ *      do recurso no plano. Aí `guardarPrivado` devolve `privado: false`, e
+ *      `guardarPrivadoEstrito` apagava o objeto público e lançava 503 — com
+ *      razão, porque nome difícil de adivinhar não é controle de acesso.
+ *
+ * O preview da JB está no caso 2: o token existe e o plano recusa objeto
+ * privado, então toda foto de chamado respondia 503, inclusive no "tentar de
+ * novo". A recusa estava certa; o que faltava era ter para onde ir.
+ *
+ * O banco é privado de verdade — os bytes só saem pelas rotas que conferem
+ * sessão e dono. Não é destino ideal para acervo de mídia, e continua sendo o
+ * piso: com objeto privado disponível na loja, nada passa por aqui.
+ */
+export async function guardarPrivadoNoBanco(
+  pathname: string,
+  bytes: Buffer,
+  mime: string,
+): Promise<{ url: string; pathname: string; privado: true }> {
+  const guardado = await guardarNoBanco(pathname, bytes, mime);
+  return { url: guardado.url, pathname: guardado.pathname, privado: true };
+}
+
 /** Cria a raiz privada já ignorada pelo git, independente do `.gitignore` da raiz. */
 async function garantirRaizPrivada() {
   await fs.mkdir(RAIZ_PRIVADA, { recursive: true });

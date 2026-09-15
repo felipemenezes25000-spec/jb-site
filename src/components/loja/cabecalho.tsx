@@ -310,6 +310,7 @@ export function Cabecalho({
               href="/"
               aria-label="JB Soluções Odontológicas — início"
               className="jb-logo flex min-h-11 shrink-0 items-center gap-3 rounded-lg"
+              prefetch={false}
             >
               <Logo altura={compacto ? 32 : 38} prioridade />
               {/* Assinatura em texto ao lado da marca, separada por um filete.
@@ -360,6 +361,7 @@ export function Cabecalho({
               <Link
                 href="/comparar"
                 className="hidden size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 lg:flex"
+                prefetch={false}
               >
                 <GitCompareArrows className="size-5" aria-hidden />
                 <span className="sr-only">Comparar equipamentos</span>
@@ -367,6 +369,7 @@ export function Cabecalho({
               <Link
                 href="/minha-jb/favoritos"
                 className="hidden size-11 items-center justify-center rounded-lg text-graf-700 transition-colors hover:bg-graf-100 lg:flex"
+                prefetch={false}
               >
                 <Heart className="size-5" aria-hidden />
                 <span className="sr-only">Meus favoritos</span>
@@ -391,6 +394,7 @@ export function Cabecalho({
                      é a mesma escolha que a ficha de produto já fazia. */
                   "jb-cta-topo ml-1.5 hidden min-h-11 rounded-xl px-4 shadow-[0_12px_28px_rgba(196,14,21,0.2)] xl:inline-flex xl:min-h-12 xl:px-5",
                 )}
+                prefetch={false}
               >
                 <Wrench className="size-4 shrink-0" aria-hidden />
                 Solicitar assistência
@@ -572,6 +576,7 @@ function MenuMobile({
                 <Link
                   href="/minha-jb"
                   className="flex items-center gap-3.5 rounded-2xl border border-jb-100 bg-gradient-to-r from-jb-50 to-white p-4"
+                  prefetch={false}
                 >
                   <span className="flex size-11 items-center justify-center rounded-2xl bg-white text-jb-700 shadow-sm ring-1 ring-jb-100">
                     <User className="size-5" aria-hidden />
@@ -606,6 +611,7 @@ function MenuMobile({
                               "flex min-w-0 flex-1 items-center gap-3 p-3.5",
                               ativo(item.href) && "bg-jb-50",
                             )}
+                            prefetch={false}
                           >
                             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-graf-50 text-jb-600">
                               <IconeMenu chave={chave} className="size-4" />
@@ -657,6 +663,7 @@ function MenuMobile({
                                     <Link
                                       href={sub.href}
                                       className="flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-graf-700 transition hover:bg-white hover:text-jb-700"
+                                      prefetch={false}
                                     >
                                       {sub.rotulo}
                                       <ArrowRight className="ml-auto size-3.5 opacity-40" aria-hidden />
@@ -682,6 +689,7 @@ function MenuMobile({
                         <Link
                           href={item.href}
                           className="flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-graf-700 hover:bg-jb-50 hover:text-jb-700"
+                          prefetch={false}
                         >
                           {item.rotulo}
                         </Link>
@@ -696,6 +704,7 @@ function MenuMobile({
               <Link
                 href="/assistencia-tecnica/solicitar"
                 className={classesBotao("primario", "md", "w-full rounded-xl")}
+                prefetch={false}
               >
                 <Wrench className="size-4 shrink-0" aria-hidden /> Solicitar assistência
               </Link>

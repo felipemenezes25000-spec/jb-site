@@ -198,9 +198,13 @@ export function Casca({
           aoAbrirGaveta={() => setGaveta(true)}
         />
 
+        {/* `scroll-mt` porque o "Pular para o conteúdo" é um salto de âncora e a
+            faixa do topo é grudada: sem margem de rolagem, o alvo do salto para
+            embaixo do cabeçalho e quem usa teclado chega no lugar certo vendo o
+            lugar errado. */}
         <main
           id="conteudo-admin"
-          className="min-w-0 px-4 py-6 sm:px-5 sm:py-7 lg:px-6 lg:py-8 xl:px-7 2xl:px-8"
+          className="min-w-0 scroll-mt-20 px-4 py-6 sm:px-5 sm:py-7 lg:px-6 lg:py-8 xl:px-7 2xl:px-8"
         >
           <div className="mx-auto min-w-0 w-full max-w-[140rem]">{children}</div>
         </main>

@@ -68,7 +68,12 @@ export async function CascaPublica({ children }: { children: React.ReactNode }) 
 
         <BarraDeCategorias categorias={categorias} />
 
-        <main id="conteudo" className="flex-1">
+        {/* Mesmo motivo do painel: o salto do "Pular para o conteúdo" precisa
+            respeitar a altura da faixa grudada do topo. */}
+        <main
+          id="conteudo"
+          className="flex-1 scroll-mt-[var(--jb-topo-secoes)]"
+        >
           {children}
         </main>
 

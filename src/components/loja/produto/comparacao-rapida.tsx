@@ -102,94 +102,34 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
         </Link>
       </div>
 
-      <div className="space-y-3 md:hidden">
-        {visiveis.slice(1).map((alternativa, posicao) => {
-          const indiceAlternativa = posicao + 1;
-          const delta = diferencaDePreco(atual, alternativa);
-          return (
-            <article
-              key={alternativa.id}
-              className="overflow-hidden rounded-2xl border border-graf-200 bg-white"
-            >
-              <div className="grid grid-cols-2 border-b border-graf-200">
-                <div className="bg-jb-50/45 p-4">
-                  <span className="micro text-jb-800">
-                    Este modelo
-                  </span>
-                  <p className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950">
-                    {atual.name}
-                  </p>
-                  <p className="mt-2 text-sm font-extrabold tabular text-graf-950">
-                    {preco(atual)}
-                  </p>
-                </div>
-                <div className="p-4">
-                  <span className="micro text-graf-500">
-                    Alternativa
-                  </span>
-                  <Link
-                    href={`/loja/${alternativa.slug}`}
-                    className="foco-jb mt-1 block min-h-11 line-clamp-2 text-sm font-extrabold leading-5 text-graf-950 hover:text-jb-700"
-                  >
-                    {alternativa.name}
-                  </Link>
-                  <p className="mt-2 text-sm font-extrabold tabular text-graf-950">
-                    {preco(alternativa)}
-                  </p>
-                  {delta ? (
-                    <p className="texto-apoio mt-1 font-bold text-graf-500">{delta}</p>
-                  ) : null}
-                </div>
-              </div>
+      {/* Uma tabela, em qualquer largura.
 
-              <dl className="divide-y divide-graf-100">
-                {linhas.map((linha) => {
-                  const valorAtual = linha.valores[0] ?? "—";
-                  const valorAlternativa = linha.valores[indiceAlternativa] ?? "—";
-                  const diferente = valorAtual !== valorAlternativa;
-                  return (
-                    <div key={linha.key} className="p-3.5">
-                      <dt className="micro text-graf-500">
-                        {linha.label}
-                      </dt>
-                      <dd className="mt-2 grid grid-cols-2 gap-3 text-sm font-semibold text-graf-800">
-                        <span className="min-w-0 break-words">{valorAtual}</span>
-                        <span
-                          className={`min-w-0 break-words ${diferente ? "font-extrabold text-graf-950" : ""}`}
-                        >
-                          {valorAlternativa}
-                        </span>
-                      </dd>
-                    </div>
-                  );
-                })}
-              </dl>
+          Aqui existiam DUAS: uma lista de cartões `md:hidden` para o celular e
+          esta tabela `hidden md:block` para o desktop, com os mesmos seis
+          atributos dos mesmos três produtos escritos duas vezes no documento.
+          Era o defeito que já tinha saído da ficha técnica, reaparecendo na
+          comparação — e aqui ele custava mais caro, porque a versão do celular
+          não comparava três produtos: comparava o atual contra cada
+          alternativa, em blocos separados, que é justamente o que uma
+          comparação não deve fazer.
 
-              <Link
-                href={`/loja/${alternativa.slug}`}
-                className="foco-jb flex min-h-11 items-center justify-center gap-2 border-t border-graf-200 px-4 text-sm font-bold text-jb-700 hover:bg-graf-50"
-              >
-                Ver alternativa
-                <ArrowRight className="size-4" aria-hidden />
-              </Link>
-            </article>
-          );
-        })}
-      </div>
+          Agora é uma só, e ela rola na horizontal quando não cabe. A primeira
+          coluna fica grudada (`sticky left-0`): sem ela, arrastar a tabela para
+          ver a terceira alternativa levava embora o nome do atributo, e a
+          pessoa ficava olhando "12 L · 18 L · 21 L" sem saber do que se trata.
 
-      {/* Sem a moldura de cartão. A tabela já se desenha sozinha — filete por
+          Sem a moldura de cartão: a tabela já se desenha sozinha — filete por
           linha, faixa clara no cabeçalho — e estava dentro de um
           `rounded-2xl border bg-white` que por sua vez estava numa seção com
-          `border-t`, no container branco da página. É a mesma caixa dentro de
-          caixa que saiu da ficha técnica e da coluna de resumo.
-
-          `overflow-x-auto` continua: a tabela tem largura mínima de 720px e
-          precisa rolar sozinha antes de empurrar a página. */}
-      <div className="hidden overflow-x-auto border-t border-graf-200 md:block">
-        <table className="w-full min-w-[720px] border-collapse text-left">
+          `border-t`, no container branco da página. */}
+      <div className="overflow-x-auto border-t border-graf-200">
+        <table className="w-full min-w-[34rem] border-collapse text-left">
           <thead>
             <tr>
-              <th className="w-[22%] border-b border-graf-200 bg-graf-50/80 px-5 py-5 text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
+              <th
+                scope="col"
+                className="sticky left-0 z-10 w-[26%] min-w-[7.5rem] border-b border-r border-graf-200 bg-graf-50 px-4 py-4 text-xs font-bold uppercase tracking-[0.08em] text-graf-500 sm:w-[22%] sm:px-5 sm:py-5"
+              >
                 Comparação
               </th>
               {visiveis.map((produto, indice) => {
@@ -197,7 +137,8 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                 return (
                   <th
                     key={produto.id}
-                    className={`border-b border-graf-200 px-5 py-5 align-top ${indice === 0 ? "bg-jb-50/45" : "bg-white"}`}
+                    scope="col"
+                    className={`border-b border-graf-200 px-4 py-4 align-top sm:px-5 sm:py-5 ${indice === 0 ? "bg-jb-50/45" : "bg-white"}`}
                   >
                     {indice === 0 ? (
                       <span className="mb-2 inline-flex rounded-full bg-jb-100 px-2.5 py-1 micro text-jb-800">
@@ -226,7 +167,10 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
               const valorAtual = linha.valores[0] ?? "—";
               return (
                 <tr key={linha.key}>
-                  <th className="bg-graf-50/55 px-5 py-3.5 text-xs font-semibold text-graf-600">
+                  <th
+                    scope="row"
+                    className="sticky left-0 z-10 border-r border-graf-200 bg-graf-50 px-4 py-3.5 text-left text-xs font-semibold text-graf-600 sm:px-5"
+                  >
                     {linha.label}
                   </th>
                   {visiveis.map((produto, indice) => {
@@ -235,7 +179,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
                     return (
                       <td
                         key={produto.id}
-                        className={`px-5 py-3.5 text-sm text-graf-800 ${
+                        className={`px-4 py-3.5 text-sm text-graf-800 sm:px-5 ${
                           indice === 0
                             ? "bg-jb-50/20 font-semibold"
                             : diferente

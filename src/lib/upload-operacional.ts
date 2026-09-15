@@ -5,6 +5,7 @@ import {
   ErroDeUpload,
   formatarLimite,
   guardarPrivado,
+  guardarPrivadoNoBanco,
   LIMITE_POR_TIPO,
   removerArquivo,
   sanitizarNome,
@@ -16,10 +17,19 @@ import {
 /**
  * Grava em armazenamento privado e RECUSA qualquer fallback público.
  *
- * `upload.ts` ainda preserva compatibilidade com instalações antigas que
- * aceitavam Blob público. Para material operacional/sensível essa tolerância
- * não serve: se a loja não aceitar `access: private`, o objeto de fallback é
- * removido e o envio falha. Disponibilidade nunca vence confidencialidade.
+ * A regra não mudou: disponibilidade nunca vence confidencialidade, e objeto
+ * público com nome de 32 hexadecimais continua não sendo controle de acesso.
+ *
+ * O que mudou é o que acontece quando a loja de blobs recusa `access:
+ * private`. Antes o envio morria em 503 — correto e inútil: o preview da JB
+ * roda num plano que recusa objeto privado, então TODA foto de chamado
+ * respondia 503, inclusive no "tentar de novo", numa etapa cuja própria cópia
+ * diz que a foto "resolve metade do diagnóstico".
+ *
+ * Agora existe um terceiro destino, e ele é privado de verdade: o banco. O
+ * objeto público de contenção continua sendo apagado; os bytes vão para
+ * `StoredBlob` e só saem pelas rotas que conferem sessão e dono. A ordem de
+ * preferência fica: Blob privado → banco → falha.
  */
 export async function guardarPrivadoEstrito(
   pathname: string,
@@ -29,16 +39,28 @@ export async function guardarPrivadoEstrito(
   const guardado = await guardarPrivado(pathname, bytes, mime);
   if (guardado.privado) return guardado;
 
+  /* Chegou aqui: a loja devolveu objeto PÚBLICO. Ele sai antes de qualquer
+     outra coisa — um arquivo de clínica não fica num endereço que abre sem
+     sessão nem por um instante. */
   try {
     await removerArquivo(guardado.url);
   } catch (erro) {
     console.error("[upload-privado] falha ao limpar fallback público", erro);
   }
 
-  throw new ErroDeUpload(
-    "O armazenamento privado está indisponível. O arquivo não foi publicado. Tente novamente mais tarde.",
-    503,
-  );
+  try {
+    console.warn(
+      "[upload-privado] a loja de blobs recusou objeto privado; gravando no banco.",
+    );
+    return await guardarPrivadoNoBanco(pathname, bytes, mime);
+  } catch (erro) {
+    console.error("[upload-privado] o banco também recusou o arquivo", erro);
+    throw new ErroDeUpload(
+      "O armazenamento de arquivos está indisponível. O arquivo não foi publicado. " +
+        "Siga sem anexo — a equipe pede as imagens pelo WhatsApp — ou tente mais tarde.",
+      503,
+    );
+  }
 }
 
 /**

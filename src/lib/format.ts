@@ -332,3 +332,62 @@ export function adicionarMeses(base: Date, meses: number): Date {
 export function adicionarDias(base: Date, dias: number): Date {
   return new Date(base.getTime() + dias * 86_400_000);
 }
+
+/* ---------------------------------------------------------------- cartão */
+
+/**
+ * As bandeiras, escritas como elas se escrevem.
+ *
+ * O provedor manda `visa`, `mastercard`, `amex` — minúsculo, do jeito do
+ * protocolo. A página imprimia isso cru: "visa ····4321" no comprovante do
+ * pedido, ao lado de "Cartão em 3×" escrito com maiúscula. Nome próprio em
+ * caixa baixa num comprovante de compra não parece estilo; parece dado sem
+ * tratamento, e comprovante é justamente onde a pessoa procura sinal de que o
+ * sistema sabe o que está fazendo.
+ */
+const BANDEIRA: Record<string, string> = {
+  visa: "Visa",
+  mastercard: "Mastercard",
+  master: "Mastercard",
+  amex: "American Express",
+  "american express": "American Express",
+  elo: "Elo",
+  hipercard: "Hipercard",
+  hiper: "Hiper",
+  diners: "Diners Club",
+  "diners club": "Diners Club",
+  discover: "Discover",
+  jcb: "JCB",
+  aura: "Aura",
+};
+
+/** "Visa" a partir de "visa". Bandeira desconhecida ganha inicial maiúscula. */
+export function nomeDaBandeira(bruto: string): string {
+  const texto = bruto.trim();
+  if (!texto) return "";
+  const conhecida = BANDEIRA[texto.toLowerCase()];
+  if (conhecida) return conhecida;
+  return texto[0].toUpperCase() + texto.slice(1);
+}
+
+/**
+ * "Visa •••• 4321" — a mesma máscara em toda tela que mostra um cartão.
+ *
+ * Existiam duas: `····4321` (pontos médios, colados) na página pública do
+ * pedido e `•••• 4321` (bullets, separados) na Área da Clínica. É o mesmo
+ * cartão, no mesmo pedido, escrito de dois jeitos conforme a rota — e o
+ * comprovante que a clínica imprime não bate com o que ela vê logada.
+ */
+export function textoDoCartao(
+  bandeira: string | null | undefined,
+  ultimos4: string | null | undefined,
+): string {
+  const nome = nomeDaBandeira(bandeira ?? "");
+  const digitos = (ultimos4 ?? "").trim();
+  if (!nome && !digitos) return "";
+  if (!digitos) return nome;
+  /* Espaço NÃO quebrável entre a máscara e os dígitos: "•••• 4321" partido em
+     duas linhas vira um borrão em cima e um número solto embaixo. */
+  const mascara = `••••\u00a04321`.replace("4321", digitos);
+  return nome ? `${nome} ${mascara}` : mascara;
+}

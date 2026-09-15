@@ -19,6 +19,7 @@ import {
   formatarTelefone,
   plural,
   telHref,
+  textoDoCartao,
   whatsappHref,
 } from "@/lib/format";
 import { ROTULO_STATUS } from "@/lib/pedido";
@@ -374,8 +375,8 @@ export default async function PedidoPage({ params }: { params: Params }) {
                     {pagamento.installments > 1
                       ? ` em ${pagamento.installments}×`
                       : " à vista"}
-                    {pagamento.cardBrand && pagamento.cardLast4
-                      ? ` · ${pagamento.cardBrand} •••• ${pagamento.cardLast4}`
+                    {textoDoCartao(pagamento.cardBrand, pagamento.cardLast4)
+                      ? ` · ${textoDoCartao(pagamento.cardBrand, pagamento.cardLast4)}`
                       : ""}
                   </p>
 

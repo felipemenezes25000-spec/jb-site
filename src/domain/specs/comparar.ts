@@ -87,28 +87,12 @@ export function compararProdutos(
       return linha ? chaveDeComparacao(linha.definicao, linha.valor) : null;
     });
 
-    /* Uma coluna, uma unidade.
-
-       `textoDaGarantia` escreve 6 como "6 meses" e 12 como "1 ano" — cada um
-       certo sozinho, e os dois errados lado a lado. Era o que a auditoria
-       fotografou: "6 meses · 1 ano · 1 ano" na mesma linha da tabela, sem como
-       o olho comparar. Quando a linha mistura as duas escalas, ela inteira sai
-       em meses, que é a menor. */
-    const numeros = chaves.filter((valor): valor is number => typeof valor === "number");
-    const misturaEscala =
-      referencia.definicao.unit === "meses" &&
-      numeros.some((valor) => valor < 12) &&
-      numeros.some((valor) => valor >= 12);
-
-    const valores = porProduto.map((mapa) => {
-      const linha = mapa.get(key);
-      if (!linha) return null;
-      if (misturaEscala && typeof linha.valor?.value === "number") {
-        const meses = linha.valor.value;
-        return `${meses} ${meses === 1 ? "mês" : "meses"}`;
-      }
-      return linha.texto;
-    });
+    /* A escala já vem única de `textoDaGarantia`: meses, sempre. Enquanto ela
+       traduzia 12 para "1 ano", esta linha precisava reconverter a coluna
+       inteira quando as duas escalas se encontravam — "6 meses" ao lado de
+       "1 ano" era o que a auditoria fotografou. Com a unidade canônica na
+       origem, não há o que reconverter aqui. */
+    const valores = porProduto.map((mapa) => mapa.get(key)?.texto ?? null);
 
     if (valores.every((valor) => valor === null)) continue;
 

@@ -39,6 +39,9 @@ import type { CategoriaDoMenu } from "@/lib/loja-publica";
  */
 const CABEM_NA_FAIXA = 5;
 
+/* Sem prefetch (ver a nota em `rodape.tsx`): esta barra é fixa em toda página
+   da loja, então ela cobraria as mesmas requisições a cada navegação. */
+
 export function BarraDeCategorias({ categorias }: { categorias: CategoriaDoMenu[] }) {
   if (categorias.length === 0) return null;
   const naFaixa = categorias.slice(0, CABEM_NA_FAIXA);
@@ -53,13 +56,17 @@ export function BarraDeCategorias({ categorias }: { categorias: CategoriaDoMenu[
         <Link
           href="/loja"
           className="foco-jb inline-flex min-h-11 items-center px-4 text-[0.75rem] font-black tracking-wider whitespace-nowrap text-white uppercase transition-colors hover:bg-jb-600"
+          prefetch={false}
         >
-          {/* "Todo o catálogo" levava a /loja, que é a coleção de NOVOS — 10
-              de 12 itens. O rótulo prometia o catálogo inteiro e entregava um
-              recorte, e o número das categorias ao lado (catálogo inteiro)
-              passava a contradizer a lista de destino. O rótulo agora diz qual
-              coleção é; os seminovos já têm o próprio link, à direita. */}
-          Produtos novos
+          {/* De volta a "Todo o catálogo", agora que ele é verdade.
+
+              O rótulo virou "Produtos novos" quando /loja era a coleção de
+              novos — 10 de 12 itens — e prometer o catálogo inteiro
+              contradizia tanto o destino quanto o número das categorias ao
+              lado, que sempre contou tudo. /loja passou a ser o catálogo
+              inteiro, então o rótulo e as contagens voltam a falar da mesma
+              lista. */}
+          Todo o catálogo
         </Link>
 
         {naFaixa.map((categoria) => (
@@ -67,6 +74,7 @@ export function BarraDeCategorias({ categorias }: { categorias: CategoriaDoMenu[
             key={categoria.slug}
             href={`/categoria/${categoria.slug}`}
             className="foco-jb inline-flex min-h-11 items-center gap-1.5 px-4 text-[0.75rem] font-bold tracking-wider whitespace-nowrap text-white uppercase transition-colors hover:bg-jb-600"
+            prefetch={false}
           >
             {categoria.name}
             {categoria.count > 0 ? (
@@ -78,6 +86,7 @@ export function BarraDeCategorias({ categorias }: { categorias: CategoriaDoMenu[
         <Link
           href="/seminovos"
           className="foco-jb ml-auto inline-flex min-h-11 items-center px-4 text-[0.75rem] font-black tracking-wider whitespace-nowrap text-white uppercase transition-colors hover:bg-jb-600"
+          prefetch={false}
         >
           Seminovos revisados
         </Link>

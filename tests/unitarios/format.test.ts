@@ -15,6 +15,7 @@ import {
   plural,
   somenteDigitos,
   telHref,
+  textoDoCartao,
   whatsappHref,
 } from "@/lib/format";
 
@@ -289,5 +290,44 @@ describe("plural", () => {
     expect(plural(1, "item", "itens")).toBe("1 item");
     expect(plural(0, "item", "itens")).toBe("0 itens");
     expect(plural(3, "item", "itens")).toBe("3 itens");
+  });
+});
+
+describe("textoDoCartao", () => {
+  it("escreve a bandeira como nome próprio", () => {
+    /* O provedor manda "visa", minúsculo, do jeito do protocolo. O comprovante
+       imprimia isso cru — "visa ····4321" — ao lado de "Cartão em 3×" escrito
+       com maiúscula. */
+    expect(textoDoCartao("visa", "4321")).toBe("Visa •••• 4321");
+    expect(textoDoCartao("MASTERCARD", "1111")).toBe(
+      "Mastercard •••• 1111",
+    );
+    expect(textoDoCartao("amex", "0005")).toBe(
+      "American Express •••• 0005",
+    );
+  });
+
+  it("não inventa nome para bandeira que não conhece", () => {
+    expect(textoDoCartao("bandeira-nova", "9999")).toBe(
+      "Bandeira-nova •••• 9999",
+    );
+  });
+
+  it("usa espaço não quebrável entre a máscara e os dígitos", () => {
+    /* "•••• 4321" partido em duas linhas vira um borrão
+       em cima e um número solto embaixo. */
+    expect(textoDoCartao("elo", "7788")).toContain(" ");
+    expect(textoDoCartao("elo", "7788")).not.toContain("•••• 7788");
+  });
+
+  it("não escreve máscara quando não há dígitos", () => {
+    expect(textoDoCartao("visa", "")).toBe("Visa");
+    expect(textoDoCartao("visa", null)).toBe("Visa");
+    expect(textoDoCartao(null, null)).toBe("");
+    expect(textoDoCartao("", "")).toBe("");
+  });
+
+  it("mostra só a máscara quando a bandeira não veio", () => {
+    expect(textoDoCartao(null, "4321")).toBe("•••• 4321");
   });
 });

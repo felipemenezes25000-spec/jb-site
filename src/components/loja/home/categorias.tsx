@@ -73,11 +73,27 @@ function detalheCategoria(categoria: CategoriaHome) {
   return plural(categoria._count.products, "produto disponível", "produtos disponíveis");
 }
 
+/**
+ * Quantas categorias a home mostra.
+ *
+ * Quatro, porque a grade é de quatro colunas no desktop e uma quinta abriria
+ * uma segunda fila com um cartão só — o buraco de três colunas que nenhuma
+ * home quer ter. A faixa vermelha do topo mostra cinco pelo motivo oposto: ela
+ * é uma linha única e cabem cinco antes de vazar.
+ *
+ * Os dois números são de layout, e é por isso que a diferença precisa estar
+ * escrita: quem conta quatro aqui e cinco na faixa, na mesma tela, tem de
+ * poder concluir que faltou uma — e a ação da seção diz onde estão todas.
+ */
+const CABEM_NA_GRADE = 4;
+
 export async function SecaoCategorias() {
   const linhas = await carregar();
-  const categorias = unificarPorNome(
+  const todas = unificarPorNome(
     linhas.map((linha) => ({ ...linha, nome: linha.name, quantidade: linha._count.products })),
-  ).slice(0, 4);
+  );
+  const categorias = todas.slice(0, CABEM_NA_GRADE);
+  const escondidas = todas.length - categorias.length;
 
   if (categorias.length === 0) return null;
 
@@ -100,7 +116,13 @@ export async function SecaoCategorias() {
             href="/loja"
             className="foco-jb inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-jb-700 transition-colors hover:text-jb-900"
           >
-            Ver todas as categorias
+            {/* O número, e não "todas" no vago: a grade mostra quatro e a faixa
+                vermelha do topo mostra cinco, na mesma tela. Dizer quantas
+                ficaram de fora é o que transforma essa diferença em um caminho
+                em vez de uma dúvida. */}
+            {escondidas > 0
+              ? `Ver as outras ${escondidas} categorias`
+              : "Ver todas as categorias"}
             <ArrowRight className="size-4" aria-hidden />
           </Link>
         }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Heart, ImageOff, ShoppingCart } from "lucide-react";
 
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
+import { disponibilidadeDoProduto } from "@/domain/catalogo/disponibilidade";
 import type {
   ParcelamentoMarketplace,
   ProdutoMarketplaceCard,
@@ -21,14 +22,6 @@ const CONDICAO: Record<ProdutoMarketplaceCard["condition"], string> = {
   usado: "Usado",
   recondicionado: "Recondicionado JB",
 };
-
-function disponibilidade(produto: ProdutoMarketplaceCard) {
-  if (produto.trackInventory && produto.stock <= 0) {
-    return produto.unique ? "Unidade vendida" : "Indisponível";
-  }
-  if (produto.unique) return "Unidade única";
-  return produto.trackInventory ? "Em estoque" : "Disponível";
-}
 
 export function CardProdutoMarketplace({
   produto,
@@ -155,7 +148,7 @@ export function CardProdutoMarketplace({
               className={`size-1.5 shrink-0 rounded-full ${indisponivel ? "bg-graf-400" : "bg-ok-500"}`}
               aria-hidden
             />
-            <span className="truncate">{disponibilidade(produto)}</span>
+            <span className="truncate">{disponibilidadeDoProduto(produto).texto}</span>
           </div>
 
           {/* Linha de ações — reposta em 12/09/2026, a pedido.

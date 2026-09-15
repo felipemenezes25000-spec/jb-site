@@ -192,6 +192,7 @@ export function Trilha({ itens, className }: { itens: Migalha[]; className?: str
                   /* 44px de altura: no celular a trilha é o caminho de volta e
                      precisa ser tocável, não só legível. */
                   className="inline-flex min-h-11 items-center rounded-sm transition-colors hover:text-jb-700"
+                  prefetch={false}
                 >
                   {item.rotulo}
                 </Link>

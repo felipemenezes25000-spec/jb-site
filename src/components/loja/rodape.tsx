@@ -35,6 +35,19 @@ import { enderecoCompleto, getSettings, redesSociais } from "@/lib/settings";
 
 type Icone = React.ComponentType<{ className?: string }>;
 
+/* ----------------------------------------------------------------- prefetch
+
+   Todo `<Link>` deste arquivo leva `prefetch={false}`.
+
+   O `<Link>` do App Router busca a rota assim que ela entra no viewport. O
+   rodapé tem ~30 destinos e todos entram de uma vez quando a pessoa chega ao
+   fim da página — medido em 15/09/2026 contra o preview: 18 a 30 requisições
+   RSC por carregamento, em toda rota do site. É o custo de adivinhar um
+   clique que quase nunca vem, pago por quem só queria ler a página.
+
+   O prefetch continua onde ele paga: no cartão do catálogo, onde a pessoa
+   está escolhendo para onde ir. Aqui ele sai. */
+
 const CLASSE_LINK =
   "foco-jb flex min-h-[2rem] items-center rounded-md text-corpo leading-snug text-graf-600 " +
   "transition-[color,transform] duration-200 hover:translate-x-0.5 hover:text-jb-700 pointer-coarse:min-h-11";
@@ -140,7 +153,7 @@ function Coluna({
       <ul className="mt-4 space-y-0.5">
         {itens.map((item) => (
           <li key={item.href}>
-            <Link href={item.href} className={CLASSE_LINK}>
+            <Link href={item.href} className={CLASSE_LINK} prefetch={false}>
               {item.rotulo}
             </Link>
           </li>
@@ -387,6 +400,7 @@ export async function Rodape() {
                 <Link
                   href="/assistencia-tecnica/solicitar"
                   className="group foco-jb flex min-h-[3.6rem] items-center justify-between gap-4 rounded-[0.95rem] bg-jb-600 px-6 text-corpo font-bold text-white shadow-[0_18px_34px_-20px_rgba(164,10,16,0.85)] transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-jb-700 hover:shadow-[0_22px_38px_-20px_rgba(164,10,16,0.9)]"
+                  prefetch={false}
                 >
                   <span className="flex items-center gap-3">
                     <Wrench className="size-[1.15rem] stroke-[2]" aria-hidden />
@@ -404,6 +418,7 @@ export async function Rodape() {
                 <Link
                   href="/orcamento"
                   className="group foco-jb flex min-h-[3.6rem] items-center justify-between gap-4 rounded-[0.95rem] border-[1.5px] border-jb-500 bg-white px-6 text-corpo font-bold text-jb-600 transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-jb-50 hover:shadow-[0_16px_28px_-22px_rgba(164,10,16,0.55)]"
+                  prefetch={false}
                 >
                   <span className="flex items-center gap-3">
                     <FileText className="size-[1.15rem] stroke-[2]" aria-hidden />
@@ -459,6 +474,7 @@ export async function Rodape() {
                 <Link
                   href={item.href}
                   className="foco-jb inline-flex min-h-8 items-center rounded-md text-apoio text-graf-500 transition-colors hover:text-jb-700 pointer-coarse:min-h-11"
+                  prefetch={false}
                 >
                   {item.rotulo}
                 </Link>

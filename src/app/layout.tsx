@@ -149,9 +149,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="antialiased">
         {children}
         <Medicao identificador={await codigoDeMedicao()} />
+        {/* Seis segundos, e com um X.
+
+            O padrão do sonner são quatro, e quatro segundos é menos do que uma
+            pessoa leva para terminar de ler "Autoclave adicionada ao carrinho"
+            e decidir se clica em "Ver carrinho" — o aviso e a ação sumiam
+            juntos, antes da decisão. Seis dá tempo sem virar entulho na tela.
+
+            E `closeButton`, porque quem já leu não deveria esperar o relógio:
+            um aviso que só some sozinho é um aviso que a pessoa não controla,
+            e no celular ele cobre a barra de compra enquanto estiver lá. */}
         <Toaster
           position="bottom-right"
           richColors
+          closeButton
+          duration={6000}
           toastOptions={{ style: { fontFamily: "var(--font-manrope)" } }}
         />
       </body>

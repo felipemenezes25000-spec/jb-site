@@ -61,12 +61,23 @@ describe("garantia", () => {
     expect(garantiaEmMeses("sob consulta")).toBeNull();
   });
 
-  it("escreve o número de meses do jeito que se fala", () => {
+  it("escreve sempre em meses, nunca em anos", () => {
+    /* A tradução para a fala natural — 12 virando "1 ano" — deixava cada tela
+       ótima sozinha e o conjunto incoerente: a ficha da seladora dizia "1 ano"
+       e o bullet logo acima dizia "12 meses". Mês é a unidade do dado, e passa
+       a ser a da tela. */
     expect(textoDaGarantia(6)).toBe("6 meses");
     expect(textoDaGarantia(1)).toBe("1 mês");
-    expect(textoDaGarantia(12)).toBe("1 ano");
-    expect(textoDaGarantia(24)).toBe("2 anos");
-    expect(textoDaGarantia(18)).toBe("1 ano e 6 meses");
+    expect(textoDaGarantia(12)).toBe("12 meses");
+    expect(textoDaGarantia(24)).toBe("24 meses");
+    expect(textoDaGarantia(18)).toBe("18 meses");
+    expect(textoDaGarantia(0)).toBe("Sem garantia declarada");
+  });
+
+  it("nenhuma superfície pode escrever a garantia em anos", () => {
+    for (const meses of [12, 18, 24, 36, 60]) {
+      expect(textoDaGarantia(meses)).not.toMatch(/ano/);
+    }
   });
 });
 

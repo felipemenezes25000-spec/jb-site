@@ -127,27 +127,49 @@ const DESEMPENHO: SpecDefinition[] = [
     order: 10,
   },
   {
-    key: "ciclo",
-    /* "Ciclo", e não "Ciclo completo".
-     *
-     * O campo "Ciclo" do cadastro guarda coisas diferentes conforme o produto:
-     * numa autoclave é "121 °C e 134 °C" (as temperaturas que ela roda), em
-     * outra é "35 min" (a duração). O rótulo "Ciclo completo" com a ajuda
-     * "tempo do ciclo do início à liberação da carga" afirmava duração sobre
-     * um valor que era temperatura — a ficha passava a descrever um ciclo que
-     * o equipamento não tem. O rótulo agora cobre os dois, e a unidade `min`
-     * só aparece quando o valor é mesmo um número (ver `formatarSpec`). */
-    label: "Ciclo",
+    key: "temperatura-ciclo",
+    label: "Temperatura de ciclo",
+    group: "desempenho",
+    unit: "°C",
+    format: "texto",
+    comparable: true,
+    decisive: true,
+    helpText: "As temperaturas de esterilização que o equipamento roda.",
+    appliesTo: ["autoclave", "lavadora"],
+    order: 20,
+  },
+  {
+    key: "duracao-ciclo",
+    label: "Duração do ciclo",
     group: "desempenho",
     unit: "min",
     format: "numero",
     comparable: true,
     decisive: true,
-    helpText:
-      "O programa de esterilização como o fabricante declara — temperatura, duração ou ambos.",
+    helpText: "Tempo do início à liberação da carga.",
+    appliesTo: ["autoclave", "lavadora"],
+    order: 21,
+  },
+  {
+    /* O cadastro guarda "Ciclo" como texto livre, e o que ele contém muda por
+     * produto: numa autoclave é "121 °C e 134 °C", noutra é "35 min". Um
+     * rótulo só para os dois afirmava duração sobre temperatura — o tooltip
+     * dizia "tempo do ciclo" ao lado de dois graus Celsius.
+     *
+     * A separação acontece na leitura (`chaveDoCiclo`, em `construir.ts`): o
+     * valor decide para qual dos dois atributos acima ele vai. Esta definição
+     * fica como rede — valor que não é nem temperatura nem duração continua
+     * aparecendo, sem que a ficha invente o que ele significa. */
+    key: "ciclo",
+    label: "Ciclo",
+    group: "desempenho",
+    format: "texto",
+    comparable: true,
+    decisive: false,
+    helpText: "O programa de esterilização como o fabricante declara.",
     appliesTo: ["autoclave", "lavadora"],
     aliases: [/ciclo(?!.*classe)|tempo.*ciclo|duracao.*ciclo/],
-    order: 20,
+    order: 22,
   },
   {
     key: "classe",
@@ -554,7 +576,11 @@ const COMERCIAL: SpecDefinition[] = [
     format: "numero",
     comparable: true,
     decisive: true,
-    helpText: "Contada da data de entrega, prestada pela JB.",
+    /* Quem presta NÃO entra no rótulo nem na ajuda: entra na procedência da
+     * linha (`source` + `note`), porque varia por produto e por unidade. O
+     * bullet da seladora dizia "garantia de fábrica" enquanto esta ajuda dizia
+     * "prestada pela JB" — a mesma tela afirmando dois responsáveis. */
+    helpText: "Contada da data de entrega do equipamento.",
     aliases: [/garantia/],
     order: 10,
   },
@@ -621,6 +647,30 @@ const UNIDADE: SpecDefinition[] = [
     comparable: true,
     decisive: false,
     order: 40,
+  },
+  {
+    /* "Revisão" e "Teste" vinham do cadastro como texto livre e caíam em
+     * Desempenho, onde ficavam ao lado de capacidade e bandejas. Eles não
+     * descrevem o MODELO: descrevem o que a bancada fez nesta peça. O lugar
+     * deles é "Esta unidade", junto do número de série e do uso acumulado. */
+    key: "revisao",
+    label: "Revisão",
+    group: "unidade",
+    format: "texto",
+    comparable: false,
+    decisive: false,
+    aliases: [/^revisao$|revisao (da|de)/],
+    order: 60,
+  },
+  {
+    key: "teste",
+    label: "Teste",
+    group: "unidade",
+    format: "texto",
+    comparable: false,
+    decisive: false,
+    aliases: [/^teste[s]?$|ciclos? de teste|teste de/],
+    order: 70,
   },
   {
     key: "procedencia-unidade",

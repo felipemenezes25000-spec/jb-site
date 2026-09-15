@@ -221,9 +221,17 @@ export default async function CarrinhoPage() {
                       {formatarPreco(totais.totalCents)}
                     </span>
                   </div>
+                  {/* "antes do frete", porque o Total desta caixa ainda não tem
+                      frete: a linha logo acima diz "Entrega: calculada pelo CEP
+                      na próxima etapa". Sem a ressalva, "até 12× de R$ 624,16"
+                      é o número que a pessoa leva para a decisão — e ele muda
+                      na etapa seguinte, que é o pior lugar para um valor mudar.
+                      A parcela sobe junto com o frete, e dizer isso aqui custa
+                      três palavras. */}
                   {parcelas ? (
                     <p className="mt-1.5 text-right text-apoio leading-5 text-graf-500">
-                      até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)} sem juros
+                      até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)} sem
+                      juros, antes do frete
                     </p>
                   ) : null}
                 </div>

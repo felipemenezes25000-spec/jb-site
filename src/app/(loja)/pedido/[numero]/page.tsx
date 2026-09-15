@@ -37,7 +37,13 @@ import {
 } from "@/components/ui/data";
 import { liberarAcompanhamento, pedidosDoNavegador } from "@/lib/acompanhamento";
 import { sessaoCliente } from "@/lib/auth-cliente";
-import { formatarDataHora, formatarPreco, telHref, whatsappHref } from "@/lib/format";
+import {
+  formatarDataHora,
+  formatarPreco,
+  telHref,
+  textoDoCartao,
+  whatsappHref,
+} from "@/lib/format";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { pagamentoEhSimulado, provedorPagamento } from "@/lib/pagamento";
 import { FLUXO_PADRAO, ROTULO_STATUS } from "@/lib/pedido";
@@ -482,8 +488,9 @@ export default async function PedidoPage({ params }: Props) {
                         : pagamento.method === "boleto"
                           ? "Boleto"
                           : "Registrado pela JB"}
-                    {pagamento.cardBrand ? ` · ${pagamento.cardBrand}` : ""}
-                    {pagamento.cardLast4 ? ` ····${pagamento.cardLast4}` : ""}
+                    {textoDoCartao(pagamento.cardBrand, pagamento.cardLast4)
+                      ? ` · ${textoDoCartao(pagamento.cardBrand, pagamento.cardLast4)}`
+                      : ""}
                   </dd>
                 </div>
                 <div className="min-w-0">

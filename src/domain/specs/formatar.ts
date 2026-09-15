@@ -84,16 +84,23 @@ export function garantiaEmMeses(bruto: string | number | null): number | null {
   return null;
 }
 
-/** "6 meses" / "1 ano e 6 meses" — a leitura humana de um número de meses. */
+/**
+ * A garantia, sempre em meses.
+ *
+ * A versão anterior traduzia para a fala natural — 12 virava "1 ano", 24
+ * virava "2 anos" — e cada tela isolada ficava ótima. Juntas, não: a ficha da
+ * seladora dizia "1 ano", o bullet logo acima dizia "12 meses de garantia de
+ * fábrica" e o comparador dizia "12 meses". Três verdades para o mesmo campo,
+ * na mesma jornada, e nenhuma forma de comparar de relance qual equipamento
+ * tem mais cobertura.
+ *
+ * Mês é a unidade canônica do dado (`warrantyMonths`) e passa a ser a unidade
+ * da tela. "24 meses" lê pior que "2 anos" numa frase solta; lê melhor em toda
+ * tabela em que ele aparece ao lado de "6 meses".
+ */
 export function textoDaGarantia(meses: number): string {
   if (meses <= 0) return "Sem garantia declarada";
-  if (meses < 12) return `${meses} ${meses === 1 ? "mês" : "meses"}`;
-
-  const anos = Math.floor(meses / 12);
-  const resto = meses % 12;
-  const parteAnos = `${anos} ${anos === 1 ? "ano" : "anos"}`;
-  if (resto === 0) return parteAnos;
-  return `${parteAnos} e ${resto} ${resto === 1 ? "mês" : "meses"}`;
+  return `${meses} ${meses === 1 ? "mês" : "meses"}`;
 }
 
 /* ------------------------------------------------------ leitura do texto */

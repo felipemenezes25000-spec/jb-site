@@ -743,7 +743,11 @@ export function AssistenteChamado({
 
               {whatsapp ? (
                 <p className="text-apoio leading-relaxed text-graf-500">
-                  Tem um vídeo curto do problema? Pelo site entram imagens e PDF; o vídeo
+                  {/* Este parágrafo dizia "pelo site entram imagens e PDF; o vídeo vai
+                      pelo WhatsApp" — e contradizia a caixa logo acima em dois pontos:
+                      vídeo ENTRA pelo site, e PDF não. O que sobra de verdadeiro é o
+                      PDF, que continua sendo caso de WhatsApp. */}
+                  Precisa mandar um documento em PDF — orçamento antigo, nota, manual? Ele
                   vai pelo{" "}
                   <a
                     href={whatsappHref(

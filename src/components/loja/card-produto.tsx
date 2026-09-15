@@ -5,6 +5,10 @@ import { Heart, ImageOff, ShoppingCart } from "lucide-react";
 import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
 import { alternarFavorito } from "@/app/acoes/minha-jb";
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
+import {
+  disponibilidadeDoProduto,
+  type TomDaDisponibilidade,
+} from "@/domain/catalogo/disponibilidade";
 import { BotaoEnvio } from "@/components/ui/botao-envio";
 import { Etiqueta } from "@/components/ui/data";
 import { Grade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
@@ -39,27 +43,14 @@ export const CONDICAO = {
   recondicionado: { rotulo: "Recondicionado JB", tom: "alerta" as const },
 };
 
-function disponibilidade(produto: ProdutoCard) {
-  if (!produto.trackInventory) return null;
-  if (produto.stock <= 0) {
-    return {
-      texto: produto.unique ? "Unidade vendida" : "Indisponível",
-      classe: "text-graf-500",
-      pontoClasse: "bg-graf-400",
-    };
-  }
-  if (produto.unique) {
-    return { texto: "Unidade única", classe: "text-jb-700", pontoClasse: "bg-jb-500" };
-  }
-  if (produto.stock <= 3) {
-    return {
-      texto: `Últimas ${produto.stock} unidades`,
-      classe: "text-warn-700",
-      pontoClasse: "bg-warn-500",
-    };
-  }
-  return { texto: "Em estoque", classe: "text-ok-700", pontoClasse: "bg-ok-500" };
-}
+/* O tom vem do domínio; a cor é decisão deste cartão. */
+const COR_DA_DISPONIBILIDADE: Record<TomDaDisponibilidade, { texto: string; ponto: string }> = {
+  esgotado: { texto: "text-graf-500", ponto: "bg-graf-400" },
+  unico: { texto: "text-jb-700", ponto: "bg-jb-500" },
+  pouco: { texto: "text-warn-700", ponto: "bg-warn-500" },
+  ok: { texto: "text-ok-700", ponto: "bg-ok-500" },
+  "sob-encomenda": { texto: "text-graf-600", ponto: "bg-graf-400" },
+};
 
 export function CardProduto({
   produto,
@@ -78,7 +69,8 @@ export function CardProduto({
     ? null
     : calcularParcelas(produto.priceCents, parcelamento?.max, parcelamento?.minimoCents);
   const condicao = CONDICAO[produto.condition];
-  const estado = disponibilidade(produto);
+  const estado = disponibilidadeDoProduto(produto);
+  const corDoEstado = COR_DA_DISPONIBILIDADE[estado.tom];
   const precoAnterior =
     !soOrcamento && produto.compareAtCents && produto.compareAtCents > produto.priceCents
       ? produto.compareAtCents
@@ -190,8 +182,8 @@ export function CardProduto({
           </p>
 
           {estado ? (
-            <p className={cn("micro mt-2 inline-flex items-center gap-1.5", estado.classe)}>
-              <span className={cn("size-1.5 shrink-0 rounded-full", estado.pontoClasse)} aria-hidden />
+            <p className={cn("micro mt-2 inline-flex items-center gap-1.5", corDoEstado.texto)}>
+              <span className={cn("size-1.5 shrink-0 rounded-full", corDoEstado.ponto)} aria-hidden />
               {estado.texto}
             </p>
           ) : null}

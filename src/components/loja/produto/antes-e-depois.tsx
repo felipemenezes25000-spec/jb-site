@@ -160,7 +160,9 @@ export function OQueVemNaCaixa({
         <Cabecalho
           icone={PackageOpen}
           sobretitulo="Conteúdo confirmado"
-          titulo="O que vem na caixa"
+          /* Mesmo nome da ficha e do comparador — ver a nota no comparador
+             sobre os três nomes que este campo tinha. */
+          titulo="Itens inclusos"
           descricao={`${itens.length} ${itens.length === 1 ? "item incluído" : "itens incluídos"}`}
         />
       </div>
