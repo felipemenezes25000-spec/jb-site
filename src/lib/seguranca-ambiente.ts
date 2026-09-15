@@ -23,6 +23,38 @@ function provedorSimulado(env: Ambiente) {
 }
 
 /**
+ * Conexões efetivas da aplicação e do Prisma CLI.
+ *
+ * A aplicação usa a URL normal (que pode ser pooled). Migrações e demais
+ * comandos do Prisma preferem a conexão direta. Em preview, ambas precisam
+ * permanecer no banco de preview; nunca se deixa o CLI cair silenciosamente na
+ * conexão direta de produção.
+ */
+export function urlsBancoEfetivas(env: Ambiente): {
+  runtime?: string;
+  cli?: string;
+} {
+  const vercel = valor(env, "VERCEL_ENV")?.toLowerCase();
+  const databaseUrl = valor(env, "DATABASE_URL");
+  const databaseDireta = valor(env, "DATABASE_URL_UNPOOLED");
+  const previewUrl = valor(env, "JBPREV_DATABASE_URL");
+  const previewDireta = valor(env, "JBPREV_DATABASE_URL_UNPOOLED");
+
+  const usaPreview = Boolean(previewUrl) && vercel !== "production";
+  if (usaPreview) {
+    return {
+      runtime: previewUrl,
+      cli: previewDireta || previewUrl,
+    };
+  }
+
+  return {
+    runtime: databaseUrl,
+    cli: databaseDireta || databaseUrl,
+  };
+}
+
+/**
  * Regras de ambiente que precisam valer igual no runtime, nos scripts e no CI.
  * A função é pura de propósito para poder ser testada sem tocar em process.env.
  */
@@ -31,17 +63,36 @@ export function problemasDoAmbiente(env: Ambiente, contexto: ContextoAmbiente): 
   const vercel = valor(env, "VERCEL_ENV")?.toLowerCase();
   const node = valor(env, "NODE_ENV")?.toLowerCase();
   const databaseUrl = valor(env, "DATABASE_URL");
+  const databaseDireta = valor(env, "DATABASE_URL_UNPOOLED");
   const previewUrl = valor(env, "JBPREV_DATABASE_URL");
+  const previewDireta = valor(env, "JBPREV_DATABASE_URL_UNPOOLED");
 
-  if (vercel === "production" && previewUrl) {
+  if (vercel === "production" && (previewUrl || previewDireta)) {
     problemas.push(
-      "JBPREV_DATABASE_URL está definido em produção. Remova a variável em vez de deixá-la ser silenciosamente ignorada.",
+      "Variável de banco de preview está definida em produção. Remova JBPREV_DATABASE_URL/JBPREV_DATABASE_URL_UNPOOLED em vez de ignorá-las silenciosamente.",
     );
   }
 
   if (vercel === "preview" && !previewUrl) {
     problemas.push(
       "Deploy de preview sem JBPREV_DATABASE_URL. Isso pode fazer a branch usar o banco configurado em DATABASE_URL.",
+    );
+  }
+
+  if (vercel === "preview" && previewUrl && databaseUrl && previewUrl === databaseUrl) {
+    problemas.push(
+      "JBPREV_DATABASE_URL é igual a DATABASE_URL. Preview e produção precisam usar bancos diferentes.",
+    );
+  }
+
+  if (
+    vercel === "preview" &&
+    previewDireta &&
+    databaseDireta &&
+    previewDireta === databaseDireta
+  ) {
+    problemas.push(
+      "JBPREV_DATABASE_URL_UNPOOLED é igual a DATABASE_URL_UNPOOLED. O Prisma CLI de preview não pode usar a conexão direta de produção.",
     );
   }
 
@@ -55,7 +106,8 @@ export function problemasDoAmbiente(env: Ambiente, contexto: ContextoAmbiente): 
   // exigindo URL mesmo em NODE_ENV=test, porque neles a conexão é o trabalho.
   const testeUnitarioSemBanco = node === "test" && contexto === "database";
   const exigeBanco = contexto !== "build" && !testeUnitarioSemBanco;
-  const urlEfetiva = previewUrl && vercel !== "production" ? previewUrl : databaseUrl;
+  const urls = urlsBancoEfetivas(env);
+  const urlEfetiva = contexto === "database" ? urls.runtime : urls.cli;
   if (exigeBanco && !urlEfetiva) {
     problemas.push("Nenhuma URL de banco efetiva foi configurada para esta operação.");
   }
