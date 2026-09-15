@@ -72,15 +72,18 @@ test.describe("Marketplace — página do produto", () => {
     // preço.
     await painel.getByText("Mais opções da compra", { exact: true }).click();
     await painel.getByRole("button", { name: "Aumentar quantidade" }).click();
-    // o bloco chama-se só "Total" (com a composição na linha de baixo)
-    const total = painel.getByText("Total", { exact: true });
-    await expect(total).toBeVisible();
-    // O valor sai de `formatarPreco`, que escreve "R$ 2.468,00" dentro de um
-    // único <strong> — procurar "2.468,00" com `exact` nunca casaria. A busca
-    // é pelo bloco do total, e o número é conferido como parte do texto dele.
-    await expect(total.locator("xpath=ancestor::div[1]")).toContainText(
-      emReais(frete.precoCents * 2),
-    );
+
+    /* O bloco "Total" saiu do buybox em 13/09/2026, e este teste mudou junto.
+       No lugar dele a caixa afirma "Serviços e total podem ser revisados antes
+       do pagamento" — a soma passou a viver no carrinho e no checkout, onde
+       frete e serviços já estão escolhidos. Somar dentro da ficha prometia um
+       número que ainda ia mudar.
+
+       O que este teste prova não dependia daquele bloco: o controle de
+       quantidade mora na gaveta, *abaixo* do CTA no DOM, e mesmo assim precisa
+       alimentar os inputs do formulário que ficou acima dele. É esse fio que
+       as asserções abaixo seguram — do input escondido até a contagem que o
+       cabeçalho mostra depois de adicionar. */
 
     const formulario = adicionar.locator("xpath=ancestor::form");
     await expect(formulario.locator('input[name="quantidade"]')).toHaveValue("2");
