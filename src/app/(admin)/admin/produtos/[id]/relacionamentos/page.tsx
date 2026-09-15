@@ -4,7 +4,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 
 import { FormularioCrossSellTipado } from "@/components/admin/catalogo/formulario-cross-sell-tipado";
 import { Trilha } from "@/components/ui/data";
-import { decodificarOrdemRelacao } from "@/lib/marketplace/relacionamentos-produto";
+import { decodificarOrdemRelacao } from "@/lib/comercio/relacionamentos-produto";
 import { exigirArea, podeEditar } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 
