@@ -19,6 +19,11 @@ function naoEncontrado() {
 /**
  * Entrega de mídia operacional privada.
  *
+ * `id` pode ser o id da própria `Media` (upload recém-criado) ou o id do
+ * vínculo operacional já persistido (`EquipmentMedia`, `ServiceRequestMedia`
+ * ou `WorkOrderMedia`). Aceitar os dois evita que páginas antigas precisem
+ * expor/selecionar mais uma chave só para migrar para a rota protegida.
+ *
  * A mesma resposta 404 cobre arquivo inexistente e arquivo sem autorização —
  * o id não vira oráculo de existência. Staff autenticado pode ver o material
  * operacional; cliente só vê mídia ligada ao próprio equipamento/chamado/OS;
@@ -31,8 +36,15 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const midia = await prisma.media.findUnique({
-    where: { id },
+  const midia = await prisma.media.findFirst({
+    where: {
+      OR: [
+        { id },
+        { equipmentMedia: { some: { id } } },
+        { requestMedia: { some: { id } } },
+        { workOrderMedia: { some: { id } } },
+      ],
+    },
     select: {
       id: true,
       filename: true,
