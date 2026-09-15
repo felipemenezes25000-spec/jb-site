@@ -23,6 +23,24 @@ function provedorSimulado(env: Ambiente) {
 }
 
 /**
+ * Uma única regra para dizer onde o mock de pagamento pode existir.
+ *
+ * - Vercel production: nunca. Nem uma flag manual pode destravar sem querer a
+ *   produção hospedada.
+ * - Vercel preview/development: permitido para demonstração e E2E.
+ * - self-hosted com NODE_ENV=production: só com opt-in explícito.
+ * - desenvolvimento/teste local: permitido.
+ */
+export function simulacaoPagamentoPermitida(env: Ambiente): boolean {
+  const vercel = valor(env, "VERCEL_ENV")?.toLowerCase();
+  const node = valor(env, "NODE_ENV")?.toLowerCase();
+
+  if (vercel) return vercel !== "production";
+  if (node === "production") return valor(env, "PERMITIR_PAGAMENTO_SIMULADO") === "1";
+  return true;
+}
+
+/**
  * Conexões efetivas da aplicação e do Prisma CLI.
  *
  * A aplicação usa a URL normal (que pode ser pooled). Migrações e demais
@@ -96,8 +114,10 @@ export function problemasDoAmbiente(env: Ambiente, contexto: ContextoAmbiente): 
     );
   }
 
-  if (vercel === "production" && provedorSimulado(env)) {
-    problemas.push("PAYMENT_PROVIDER simulado não é permitido em produção.");
+  if (provedorSimulado(env) && !simulacaoPagamentoPermitida(env)) {
+    problemas.push(
+      "PAYMENT_PROVIDER simulado não é permitido neste ambiente de produção.",
+    );
   }
 
   // Vitest importa módulos que dependem de Prisma mesmo em testes puramente
