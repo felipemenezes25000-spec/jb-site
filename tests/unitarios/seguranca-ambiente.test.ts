@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CONFIRMACAO_OPERACAO_PRODUCAO,
   problemasDoAmbiente,
+  simulacaoPagamentoPermitida,
   urlsBancoEfetivas,
 } from "../../src/lib/seguranca-ambiente";
 
@@ -17,7 +18,7 @@ describe("segurança de ambiente", () => {
         },
         "database",
       ),
-    ).toEqual(expect.arrayContaining([expect.stringContaining("preview")]))
+    ).toEqual(expect.arrayContaining([expect.stringContaining("preview")]));
   });
 
   it("recusa preview sem banco próprio", () => {
@@ -96,17 +97,42 @@ describe("segurança de ambiente", () => {
     });
   });
 
-  it("recusa pagamento simulado em produção", () => {
+  it("produção Vercel nunca permite pagamento simulado, nem com flag manual", () => {
+    expect(
+      simulacaoPagamentoPermitida({
+        VERCEL_ENV: "production",
+        NODE_ENV: "production",
+        PERMITIR_PAGAMENTO_SIMULADO: "1",
+      }),
+    ).toBe(false);
+
     expect(
       problemasDoAmbiente(
         {
           VERCEL_ENV: "production",
           DATABASE_URL: "postgresql://prod",
           PAYMENT_PROVIDER: "mock",
+          PERMITIR_PAGAMENTO_SIMULADO: "1",
         },
         "database",
       ),
     ).toEqual(expect.arrayContaining([expect.stringContaining("simulado")]));
+  });
+
+  it("preview Vercel permite mock mesmo com NODE_ENV=production", () => {
+    expect(
+      simulacaoPagamentoPermitida({ VERCEL_ENV: "preview", NODE_ENV: "production" }),
+    ).toBe(true);
+  });
+
+  it("self-hosted em produção exige opt-in explícito para mock", () => {
+    expect(simulacaoPagamentoPermitida({ NODE_ENV: "production" })).toBe(false);
+    expect(
+      simulacaoPagamentoPermitida({
+        NODE_ENV: "production",
+        PERMITIR_PAGAMENTO_SIMULADO: "1",
+      }),
+    ).toBe(true);
   });
 
   it("permite teste unitário importar Prisma sem URL de banco", () => {
