@@ -59,6 +59,11 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
+      # Dívida existente vira teto: os quatro Server Actions legados podem
+      # diminuir, mas não podem continuar crescendo silenciosamente.
+      - name: Limites arquiteturais
+        run: pnpm arquitetura:verificar
+
       # Erro reprova; aviso passa. Os avisos de hoje são os 31 pontos do
       # compilador React documentados em eslint.config.mjs — contados de
       # propósito, para que a migração para Cache Components tenha lista.
