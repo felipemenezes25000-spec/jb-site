@@ -196,15 +196,46 @@ function OpcaoLink({
      Marcada com zero continua clicável — é assim que se desmarca. */
   const indisponivel = opcao.quantidade === 0 && !marcado;
 
+  /* ------------------------------------------------ a caixinha da opção
+
+     **Quadrada.** Ela tinha `rounded-md` — 8px de canto numa caixa de 20px, ou
+     seja 40% do lado. Isso não lê como caixa de seleção: lê como pastilha
+     ligada/desligada, que é outro controle, com outra promessa (pastilha troca
+     de estado, caixa acumula escolhas — e aqui dá para marcar Biossegurança E
+     Profilaxia ao mesmo tempo). `rounded-xs` são os 4px da escala do projeto:
+     o suficiente para o canto não ficar cortante, pouco o bastante para a
+     forma continuar sendo um quadrado.
+
+     **Borda `graf-450`, não `graf-300`.** A borda é o ÚNICO sinal de que ali
+     se marca alguma coisa — a caixa desmarcada é branca por dentro. `graf-300`
+     dá 1,72:1 sobre branco, contra os 3:1 que a WCAG 1.4.11 pede para o
+     contorno de um controle; `graf-450` dá 3,39:1. É a mesma troca, pelo mesmo
+     motivo, que os campos de formulário já tinham feito em `ui/form.tsx` — e
+     o axe não pega, porque a regra de contraste dele só olha texto.
+
+     **Sem estado indeterminado, e isso é resposta, não omissão.** Meio-marcado
+     existe para caixa de PAI, quando parte dos filhos está escolhida. Aqui as
+     quatro facetas — Categoria, Marca, Condição, Voltagem — são planas: a
+     lista de categorias traz só as raízes, nenhuma opção contém outra, e não
+     há caixa que possa estar meio-cheia. Desenhar o traço do indeterminado
+     seria inventar uma hierarquia que a tela não tem. Se um dia a Categoria
+     abrir em subcategorias, é aí que ele passa a significar alguma coisa.
+
+     `aria-hidden` continua: quem lê por leitor de tela recebe o `aria-label`
+     do link inteiro ("Filtrar por Categoria: Biossegurança" / "Remover filtro
+     …"), que diz o que o clique FAZ. Trocar isso por `role="checkbox"` daria
+     um estado no lugar de uma ação — e custaria o que faz esta lista
+     funcionar sem JavaScript: cada opção é um link de verdade, com endereço
+     próprio e compartilhável. */
   const conteudo = (
     <>
       <span
         aria-hidden
         className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors",
+          "flex size-5 shrink-0 items-center justify-center rounded-xs border transition-colors",
           marcado
             ? "border-jb-500 bg-jb-500 text-white"
-            : "border-graf-300 bg-white text-transparent",
+            : "border-graf-450 bg-white text-transparent",
         )}
       >
         <Check className="size-3.5" strokeWidth={3} />
