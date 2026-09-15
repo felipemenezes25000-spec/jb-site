@@ -1,7 +1,7 @@
 import {
   normalizarAtributo,
   prioridadeAtributoDecisao,
-} from "@/lib/marketplace/atributos-decisao";
+} from "@/lib/comercio/atributos-decisao";
 
 type EntradaDoResumo = {
   specs: { label: string; value: string; order: number }[];
