@@ -41,6 +41,16 @@ describe("segurança de ambiente", () => {
     ).toEqual(expect.arrayContaining([expect.stringContaining("simulado")]));
   });
 
+  it("permite teste unitário importar Prisma sem URL de banco", () => {
+    expect(problemasDoAmbiente({ NODE_ENV: "test" }, "database")).toEqual([]);
+  });
+
+  it("scripts de banco continuam exigindo URL mesmo em teste", () => {
+    expect(problemasDoAmbiente({ NODE_ENV: "test" }, "db-deploy")).toEqual(
+      expect.arrayContaining([expect.stringContaining("Nenhuma URL de banco")]),
+    );
+  });
+
   it("bloqueia operação destrutiva em produção sem confirmação", () => {
     expect(
       problemasDoAmbiente(
