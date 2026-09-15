@@ -87,7 +87,12 @@ export default async function LojaPage({
         caminho={CAMINHO}
         parametros={parametros}
         atalhos={atalhos}
-        rotuloAtalhos="Categorias do catálogo"
+        /* Não pode conter "Catálogo": a faixa vermelha do topo já é um
+           landmark com esse nome, e dois marcos cujo nome casa deixam quem
+           navega por landmark sem saber qual é qual — foi o que derrubou um
+           teste que clicava no primeiro link do nome errado. O arquivo
+           `barra-categorias.tsx` registra a mesma lição. */
+        rotuloAtalhos="Categorias desta coleção"
       />
     </>
   );

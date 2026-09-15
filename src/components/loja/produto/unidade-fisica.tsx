@@ -174,7 +174,16 @@ export function UnidadeFisica({
           <p className="micro text-jb-700">Prova da bancada</p>
           <h2
             id={`${id}-titulo`}
-            className="fonte-display mt-1 text-xl leading-tight tracking-[-0.02em] text-graf-950 sm:text-2xl"
+            /* `text-bloco`, a mesma escala de "Especificações técnicas",
+               "Antes de comprar" e "Entrega, garantia e suporte".
+
+               Este título saía em 24px enquanto os outros quatro da mesma
+               coluna saíam em 22px — dois degraus de h2 na mesma página, e o
+               maior era justamente o desta seção, que dá a impressão de ser um
+               nível acima das outras sem ser. Só aparecia em ficha de seminovo,
+               porque em produto novo a seção não existe; ficou invisível
+               enquanto os testes de ficha pegavam só produto novo. */
+            className="fonte-display mt-1 text-bloco text-graf-950"
           >
             Laudo de inspeção desta unidade
           </h2>
