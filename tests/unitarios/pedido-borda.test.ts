@@ -73,9 +73,13 @@ describe("borda pública de pedido", () => {
   it("grava o marco temporal da etapa quando o status possui data própria", async () => {
     await mudarStatus("pedido-1", "entregue");
 
-    const chamada = atualizarPedido.mock.calls[0]?.[0] as {
-      data?: { deliveredAt?: unknown };
-    };
-    expect(chamada.data?.deliveredAt).toBeInstanceOf(Date);
+    expect(atualizarPedido).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "entregue",
+          deliveredAt: expect.any(Date),
+        }),
+      }),
+    );
   });
 });
