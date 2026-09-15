@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { OrderStatus, Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 
 import {
@@ -75,6 +76,42 @@ export async function criarPedido(input: Parameters<typeof criarPedidoBase>[0]) 
   }
 
   return pedido;
+}
+
+/**
+ * Status e histórico formam uma única unidade: nunca existe status novo sem o
+ * evento correspondente, nem evento que diga algo que o pedido não gravou.
+ */
+export async function mudarStatus(
+  pedidoId: string,
+  status: OrderStatus,
+  opcoes: { nota?: string; userId?: string; visivel?: boolean } = {},
+) {
+  const marcos: Partial<Record<OrderStatus, keyof Prisma.OrderUpdateInput>> = {
+    pago: "paidAt",
+    enviado: "shippedAt",
+    entregue: "deliveredAt",
+    concluido: "closedAt",
+    cancelado: "canceledAt",
+  };
+  const campo = marcos[status];
+
+  await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: pedidoId },
+      data: { status, ...(campo ? { [campo]: new Date() } : {}) },
+    });
+
+    await tx.orderStatusEvent.create({
+      data: {
+        orderId: pedidoId,
+        status,
+        note: opcoes.nota ?? "",
+        visibleToCustomer: opcoes.visivel ?? true,
+        userId: opcoes.userId ?? null,
+      },
+    });
+  });
 }
 
 export async function confirmarPagamento(pedidoId: string) {
