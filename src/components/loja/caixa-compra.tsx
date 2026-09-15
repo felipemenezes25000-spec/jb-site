@@ -1,9 +1,8 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   CheckCircle2,
   ChevronDown,
   CreditCard,
@@ -11,7 +10,6 @@ import {
   Plus,
   ShoppingCart,
   Sliders,
-  Truck,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -66,12 +64,19 @@ export function CaixaCompra({
   const obrigatorios = addons.filter((a) => a.obrigatorio).map((a) => a.serviceId);
   const [escolhidos, setEscolhidos] = useState<string[]>(obrigatorios);
   const [detalhando, setDetalhando] = useState(false);
-  const destinoRef = useRef<"carrinho" | "checkout">("carrinho");
   const [irParaPagamento, setIrParaPagamento] = useState(false);
 
+  /* Qual botão enviou o formulário vem do PRÓPRIO formulário.
+     Antes, o destino era guardado num `useRef` escrito no `onClick` do botão.
+     Dois `type="submit"` no mesmo `<form>` disputando um ref é frágil por
+     construção: qualquer envio que não passe pelo clique — Enter no campo,
+     reenvio do React depois de um erro, envio antes de hidratar — cai no valor
+     que estiver no ref, e o botão secundário perde a própria intenção.
+     Com `name`/`value` no botão, o submitter entra no FormData pelo padrão do
+     HTML: o dado viaja com o envio, não ao lado dele. */
   const [estado, acao, enviando] = useActionState<EstadoCarrinho, FormData>(
     async (anterior, formData) => {
-      const direto = destinoRef.current === "checkout";
+      const direto = formData.get("destino") === "checkout";
       const resultado = await adicionarAoCarrinho(anterior, formData);
 
       if (resultado.ok) {
@@ -86,6 +91,7 @@ export function CaixaCompra({
           action: { label: "Ver carrinho", onClick: () => router.push("/carrinho") },
         });
       }
+      setIrParaPagamento(false);
       return resultado;
     },
     {},
@@ -150,7 +156,7 @@ export function CaixaCompra({
               Disponível
             </Etiqueta>
           )}
-          {!soOrcamento ? <span className="micro text-graf-400">Compra direta</span> : null}
+          {!soOrcamento ? <span className="micro text-graf-500">Compra direta</span> : null}
         </div>
 
         {soOrcamento ? (
@@ -200,18 +206,12 @@ export function CaixaCompra({
               ) : null}
             </div>
 
-            {baseCompravel ? (
-              <a
-                href="#entrega-cep"
-                className="foco-jb group mt-4 flex min-h-11 items-center justify-between gap-3 rounded-xl border border-graf-200 bg-graf-50/70 px-3.5 text-sm font-bold text-graf-700 transition-all hover:border-graf-300 hover:bg-white hover:text-graf-950"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <Truck className="size-4 text-jb-700" aria-hidden />
-                  Calcular frete e prazo
-                </span>
-                <ArrowRight className="size-4 text-graf-400 transition-transform group-hover:translate-x-0.5 group-hover:text-jb-700" aria-hidden />
-              </a>
-            ) : null}
+            {/* Aqui existia um botão "Calcular frete e prazo" que não calculava
+                nada: era uma âncora para o campo de CEP que fica 15px abaixo,
+                na mesma caixa. Dois calculadores de frete a um dedo de
+                distância um do outro fazem a pessoa clicar no que não calcula
+                e concluir que a loja não sabe o frete. Ficou um só — o que
+                pergunta o CEP. */}
           </div>
         )}
       </div>
@@ -267,39 +267,45 @@ export function CaixaCompra({
           <div className="grid gap-2.5">
             <Botao
               type="submit"
+              name="destino"
+              value="checkout"
               tamanho="lg"
               larguraTotal
               className="min-h-14 rounded-xl shadow-[0_14px_30px_-18px_rgba(190,24,24,0.7)]"
               disabled={enviando || !podeComprar}
               carregando={enviando && irParaPagamento && podeComprar}
-              onClick={() => {
-                destinoRef.current = "checkout";
-                setIrParaPagamento(true);
-              }}
+              data-pending={enviando && irParaPagamento ? "true" : undefined}
+              onClick={() => setIrParaPagamento(true)}
             >
               <Zap className="size-[18px]" aria-hidden />
               Comprar agora
             </Botao>
 
+            {/* `secundario`, não `sutil`: cinza sobre cinza dava ao CTA
+                secundário a aparência exata de um botão desabilitado, e a
+                auditoria registrou gente concluindo que o botão não funcionava
+                antes mesmo de clicar. Branco com borda grafite lê como ação. */}
             <Botao
               type="submit"
-              variante="sutil"
+              name="destino"
+              value="carrinho"
+              variante="secundario"
               tamanho="md"
               larguraTotal
               className="min-h-11 rounded-xl"
               disabled={enviando || !podeComprar}
               carregando={enviando && !irParaPagamento && podeComprar}
-              onClick={() => {
-                destinoRef.current = "carrinho";
-                setIrParaPagamento(false);
-              }}
+              data-pending={enviando && !irParaPagamento ? "true" : undefined}
+              onClick={() => setIrParaPagamento(false)}
             >
               <ShoppingCart className="size-4" aria-hidden />
               Adicionar ao carrinho
             </Botao>
           </div>
 
-          <p className="mt-2.5 text-center text-[11px] leading-4 text-graf-400">
+          {/* graf-400 é borda e ícone, nunca texto: 2,61:1 sobre branco,
+              abaixo do piso da WCAG AA. A régua está em `globals.css`. */}
+          <p className="mt-2.5 text-center text-[11px] leading-4 text-graf-500">
             Serviços e total podem ser revisados antes do pagamento.
           </p>
 

@@ -52,7 +52,9 @@ test.describe("Home", () => {
 
     const direcao = page.getByRole("navigation", { name: "Catálogo" });
     await expect(direcao).toBeVisible();
-    await direcao.getByRole("link", { name: /^Todo o catálogo$/ }).click();
+    /* O rótulo era "Todo o catálogo" e levava a /loja, que é a coleção de
+       NOVOS — 10 de 12 itens. Nome e destino agora dizem a mesma coisa. */
+    await direcao.getByRole("link", { name: /^Produtos novos$/ }).click();
 
     await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

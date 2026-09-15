@@ -3,17 +3,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ImageOff, Info, Scale } from "lucide-react";
 
+import { Aviso } from "@/components/ui/aviso";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
-import { CONDICAO } from "@/components/loja/card-produto";
+import { compararProdutos } from "@/domain/specs/comparar";
 import {
   AUSENTE,
   PERGUNTAS,
-  TEXTO_AUSENTE,
-  dimensoesLegiveis,
-  garantiaLegivel,
-  pesoLegivel,
   recomendar,
   textoDoValor,
   type LinhaDaComparacao,
@@ -67,14 +64,6 @@ const TRILHA = [{ rotulo: "Início", href: "/" }, { rotulo: "Comparar" }];
 /** No máximo três: acima disso a tabela deixa de caber na tela do celular. */
 const MAXIMO = 3;
 
-const ROTULO_INSTALACAO: Record<string, string> = {
-  nao_informada: TEXTO_AUSENTE,
-  nao_oferecida: "A JB não instala",
-  opcional: "Opcional, à parte",
-  inclusa: "Inclusa no preço",
-  sob_consulta: "Sob consulta",
-};
-
 /** Uma opção da fileira de escolha — o suficiente para reconhecer o aparelho. */
 type OpcaoDeComparacao = {
   slug: string;
@@ -118,7 +107,14 @@ function slugsDe(valor: string | string[] | undefined) {
 export default async function CompararPage({ searchParams }: Props) {
   const params = await searchParams;
 
-  const escolhidos = slugsDe(params.p).slice(0, MAXIMO);
+  const pedidos = slugsDe(params.p);
+  const escolhidos = pedidos.slice(0, MAXIMO);
+  /* O que ficou de fora do limite de três.
+
+     A auditoria passou quatro produtos pela URL e o quarto foi descartado em
+     silêncio: a tabela abriu com três e nada dizia que havia um quarto. Corte
+     silencioso lê-se como "o site perdeu o que eu pedi". */
+  const excedentes = pedidos.slice(MAXIMO);
 
   const respostas: RespostasDaClinica = {
     volume: (primeiro(params.volume) || "nao_sei") as RespostasDaClinica["volume"],
@@ -159,9 +155,19 @@ export default async function CompararPage({ searchParams }: Props) {
           select: {
             slug: true,
             name: true,
+            sku: true,
+            model: true,
             priceCents: true,
             condition: true,
             voltage: true,
+            manufacturer: true,
+            regulatoryHolder: true,
+            anvisaCode: true,
+            specs: {
+              orderBy: { order: "asc" as const },
+              select: { label: true, value: true, order: true },
+            },
+            category: { select: { slug: true, name: true } },
             warrantyMonths: true,
             weightGrams: true,
             widthMm: true,
@@ -188,6 +194,45 @@ export default async function CompararPage({ searchParams }: Props) {
     .map((slug) => produtos.find((produto) => produto.slug === slug))
     .filter((produto): produto is (typeof produtos)[number] => Boolean(produto));
 
+  /* A comparação técnica vem da MESMA ficha da página do produto.
+
+     Antes, esta tabela montava a própria lista: preço, condição, marca,
+     voltagem, dimensões, peso, garantia, instalação, local e caixa — dez
+     atributos, nenhum deles capacidade, ciclo ou bandejas. Para autoclave,
+     capacidade é O atributo de decisão, e o comparador "completo" era o único
+     lugar do site que não o mostrava. Pior: ele anunciava "8 de 10 atributos
+     mudam" contando linhas que não são o que muda.
+
+     `compararProdutos` devolve a ficha de cada produto lado a lado, com as
+     unidades já normalizadas — é o que faz "220" e "220 V" pararem de contar
+     como diferença e "6 meses" e "1 ano" pararem de ser colunas em unidades
+     diferentes. */
+  const comparacaoTecnica = compararProdutos(
+    ordenados.map((produto) => ({
+      nome: produto.name,
+      sku: produto.sku,
+      modelo: produto.model,
+      condicao: produto.condition,
+      marca: produto.brand?.name ?? null,
+      categoria: produto.category
+        ? { slug: produto.category.slug, nome: produto.category.name }
+        : null,
+      fabricante: produto.manufacturer,
+      detentor: produto.regulatoryHolder,
+      anvisa: produto.anvisaCode,
+      voltagem: produto.voltage,
+      pesoGramas: produto.weightGrams,
+      larguraMm: produto.widthMm,
+      alturaMm: produto.heightMm,
+      profundidadeMm: produto.depthMm,
+      garantiaMeses: produto.warrantyMonths,
+      requisitos: produto.infrastructureNotes,
+      itensInclusos: produto.boxContents,
+      politicaDeInstalacao: produto.installationPolicy,
+      specs: produto.specs,
+    })),
+  );
+
   const linhas: LinhaDaComparacao[] =
     ordenados.length === 0
       ? []
@@ -201,57 +246,18 @@ export default async function CompararPage({ searchParams }: Props) {
                 : { tipo: "texto", valor: "Sob orçamento" },
             ),
           },
-          {
-            chave: "condicao",
-            rotulo: "Condição",
-            valores: ordenados.map((produto): ValorDoAtributo => ({
-              tipo: "texto",
-              valor:
-                CONDICAO[produto.condition as keyof typeof CONDICAO]?.rotulo ?? produto.condition,
-            })),
-          },
-          {
-            chave: "marca",
-            rotulo: "Marca",
-            valores: ordenados.map((produto): ValorDoAtributo =>
-              produto.brand ? { tipo: "texto", valor: produto.brand.name } : AUSENTE,
-            ),
-          },
-          {
-            chave: "voltagem",
-            rotulo: "Voltagem",
-            valores: ordenados.map((produto): ValorDoAtributo =>
-              produto.voltage ? { tipo: "texto", valor: produto.voltage } : AUSENTE,
-            ),
-          },
-          {
-            chave: "dimensoes",
-            rotulo: "Dimensões",
-            ajuda: "Confira contra o espaço da bancada antes de comprar.",
-            valores: ordenados.map((produto) =>
-              dimensoesLegiveis(produto.widthMm, produto.heightMm, produto.depthMm),
-            ),
-          },
-          {
-            chave: "peso",
-            rotulo: "Peso",
-            valores: ordenados.map((produto) => pesoLegivel(produto.weightGrams)),
-          },
-          {
-            chave: "garantia",
-            rotulo: "Garantia",
-            valores: ordenados.map((produto) => garantiaLegivel(produto.warrantyMonths)),
-          },
-          {
-            chave: "instalacao",
-            rotulo: "Instalação",
-            valores: ordenados.map((produto): ValorDoAtributo => {
-              const rotulo = ROTULO_INSTALACAO[produto.installationPolicy];
-              return rotulo && rotulo !== TEXTO_AUSENTE
-                ? { tipo: "texto", valor: rotulo }
-                : AUSENTE;
+          ...comparacaoTecnica.linhas.map(
+            (linha): LinhaDaComparacao => ({
+              chave: linha.key,
+              rotulo: linha.label,
+              ajuda: linha.decisive
+                ? "Atributo que decide a compra neste tipo de equipamento."
+                : undefined,
+              valores: linha.valores.map((valor): ValorDoAtributo =>
+                valor === null ? AUSENTE : { tipo: "texto", valor },
+              ),
             }),
-          },
+          ),
           {
             chave: "infraestrutura",
             rotulo: "O local precisa ter",
@@ -585,6 +591,44 @@ export default async function CompararPage({ searchParams }: Props) {
 
           {/* ------------------------------------------- a comparação --- */}
           <Secao espaco="sm">
+            {/* Dois avisos que faltavam, e os dois são sobre o que a tabela
+                NÃO está dizendo.
+
+                O primeiro: o limite de três é aplicado no servidor, e o
+                quarto produto passado pela URL era descartado em silêncio. A
+                tabela abria com três e nada indicava que havia um quarto.
+
+                O segundo: dava para comparar autoclave com cuba e com
+                seladora. A tabela monta — e fica quase toda de travessões,
+                porque os atributos de uma família não existem na outra. Dizer
+                isso antes evita que a pessoa leia o travessão como defeito do
+                equipamento. */}
+            {excedentes.length > 0 ? (
+              <Aviso
+                tom="atencao"
+                titulo={`A comparação mostra ${MAXIMO} equipamentos por vez`}
+                className="mb-5"
+              >
+                {excedentes.length === 1
+                  ? "Um equipamento ficou de fora desta tabela."
+                  : `${excedentes.length} equipamentos ficaram de fora desta tabela.`}{" "}
+                Tire um dos três acima para colocar outro no lugar — acima de três, a tabela
+                deixa de caber na tela do celular.
+              </Aviso>
+            ) : null}
+
+            {comparacaoTecnica.familiasMisturadas ? (
+              <Aviso
+                tom="info"
+                titulo="Estes equipamentos são de tipos diferentes"
+                className="mb-5"
+              >
+                Capacidade, ciclo e potência significam coisas distintas em cada um deles, e
+                por isso várias linhas aparecem vazias. A comparação continua válida para
+                preço, garantia e instalação.
+              </Aviso>
+            ) : null}
+
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div className="min-w-0">
                 <h2 className="text-title texto-forte">Atributo por atributo</h2>

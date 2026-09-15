@@ -7,7 +7,8 @@ import type {
   ParcelamentoMarketplace,
   ProdutoMarketplaceCard,
 } from "@/components/loja/marketplace/tipos";
-import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { BotaoEnvio } from "@/components/ui/botao-envio";
+import { calcularParcelas, formatarPreco, semQuebraNaUnidade } from "@/lib/format";
 import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
 import { alternarFavorito } from "@/app/acoes/minha-jb";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
@@ -110,7 +111,7 @@ export function CardProdutoMarketplace({
             href={`/loja/${produto.slug}`}
             className="foco-jb rounded-sm after:absolute after:inset-0 after:content-['']"
           >
-            {produto.name}
+            {semQuebraNaUnidade(produto.name)}
           </Link>
         </h2>
 
@@ -185,21 +186,19 @@ export function CardProdutoMarketplace({
               <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
                 <input type="hidden" name="produtoId" value={produto.id} />
                 <input type="hidden" name="quantidade" value="1" />
-                <button
-                  type="submit"
+                <BotaoEnvio
                   aria-label={`Adicionar ${produto.name} ao carrinho`}
-                  className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600"
+                  className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600 disabled:opacity-70"
                 >
                   <ShoppingCart className="size-4" aria-hidden />
-                </button>
+                </BotaoEnvio>
               </form>
             ) : null}
 
             <form action={alternarFavorito} className="relative z-10">
               <input type="hidden" name="produtoId" value={produto.id} />
               {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
-              <button
-                type="submit"
+              <BotaoEnvio
                 aria-pressed={favoritado}
                 aria-label={
                   favoritado
@@ -213,7 +212,7 @@ export function CardProdutoMarketplace({
                 }`}
               >
                 <Heart className={`size-4 ${favoritado ? "fill-current" : ""}`} aria-hidden />
-              </button>
+              </BotaoEnvio>
             </form>
           </div>
         </div>

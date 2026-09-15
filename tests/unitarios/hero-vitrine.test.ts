@@ -96,13 +96,24 @@ describe("HeroVitrine", () => {
     expect(html).not.toContain("a compressor");
   });
 
-  it("não gira a palavra quando a vitrine tem um tipo só", () => {
+  /* A palavra da manchete é a do equipamento EM FOCO.
+
+     Antes eram duas coisas independentes: a palavra girava por animação de CSS
+     sobre todos os tipos da vitrine, e o produto exibido só mudava por clique.
+     A auditoria de 15/09/2026 fotografou o resultado — o título dizia "a
+     seladora" com a autoclave na imagem, no cartão de preço e na miniatura
+     ativa. Agora existe um relógio só, e a palavra é derivada do foco. */
+  it("nomeia na manchete o equipamento que está em foco", () => {
+    expect(renderizarHero([autoclave, compressor])).toContain("a autoclave");
+    expect(renderizarHero([compressor, autoclave])).toContain("o compressor");
+  });
+
+  it("com um equipamento só, nomeia esse equipamento", () => {
     const html = renderizarHero([autoclave]);
 
-    /* Com um equipamento só não há o que alternar, e o rodízio viraria uma
-       animação trocando "autoclave" por "autoclave". */
-    expect(html).toContain("o equipamento");
-    expect(html).not.toContain("a autoclave");
+    /* Aqui a manchete dizia "o equipamento" porque o rodízio não tinha o que
+       alternar. Sem rodízio, ela pode dizer o que está na tela. */
+    expect(html).toContain("a autoclave");
   });
 
   it("dá ao leitor de tela uma frase, não a lista inteira do rodízio", () => {

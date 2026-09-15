@@ -6,7 +6,8 @@ import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import type { ProdutoCard, Parcelamento } from "@/components/loja/card-produto";
 import { TrilhoOuGrade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
-import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { calcularParcelas, formatarPreco, semQuebraNaUnidade } from "@/lib/format";
+import { BotaoEnvio } from "@/components/ui/botao-envio";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
@@ -163,7 +164,7 @@ export function CardVitrine({
             href={`/loja/${produto.slug}`}
             className="rounded-lg after:absolute after:inset-0 after:content-['']"
           >
-            {produto.name}
+            {semQuebraNaUnidade(produto.name)}
           </Link>
         </h3>
 
@@ -247,13 +248,12 @@ export function CardVitrine({
               <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
                 <input type="hidden" name="produtoId" value={produto.id} />
                 <input type="hidden" name="quantidade" value="1" />
-                <button
-                  type="submit"
+                <BotaoEnvio
                   aria-label={`Adicionar ${produto.name} ao carrinho`}
-                  className="foco-jb grid size-11 shrink-0 place-items-center rounded-lg border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600"
+                  className="foco-jb grid size-11 shrink-0 place-items-center rounded-lg border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600 disabled:opacity-70"
                 >
                   <ShoppingCart className="size-4" aria-hidden />
-                </button>
+                </BotaoEnvio>
               </form>
             ) : null}
 

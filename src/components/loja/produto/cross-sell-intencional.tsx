@@ -10,6 +10,7 @@ import {
   adicionarConjuntoAoCarrinho,
   type EstadoCarrinho,
 } from "@/app/acoes/carrinho";
+import { BotaoEnvio } from "@/components/ui/botao-envio";
 import { formatarPreco } from "@/lib/format";
 
 /* ============================================================================
@@ -277,13 +278,13 @@ export function CrossSellIntencional({
                 {formatarPreco(conjunto.totalCents)}
               </strong>
             </p>
-            <button
-              type="submit"
-              className="botao-jb foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg px-5 text-apoio"
+            <BotaoEnvio
+              carregando={<span>Adicionando o conjunto…</span>}
+              className="botao-jb foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg px-5 text-apoio disabled:opacity-70"
             >
               <ShoppingCart className="size-4" aria-hidden />
               Adicionar o conjunto
-            </button>
+            </BotaoEnvio>
           </form>
         </div>
       ) : null}

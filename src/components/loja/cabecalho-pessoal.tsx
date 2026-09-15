@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShoppingCart, User } from "lucide-react";
 
+import { CLASSE_LINK_RODAPE } from "@/components/loja/rodape";
 import { sessaoCliente } from "@/lib/auth-cliente";
 import { contarItensDoCarrinho } from "@/lib/carrinho";
 import { cn } from "@/lib/utils";
@@ -139,5 +140,38 @@ export function ContadorDoCarrinhoEsqueleto() {
     <Link href="/carrinho" aria-label="Carrinho" className={CAIXA_CARRINHO}>
       <ShoppingCart className="size-5" aria-hidden />
     </Link>
+  );
+}
+
+/* ============================================================================
+   Os links de acesso do rodapé
+
+   O rodapé é cacheado — ele é igual para todo mundo, menos por dois links.
+   Estes dois. Quem está logado não recebe "Entrar" nem "Criar conta"; recebe o
+   caminho para sair. É o mesmo desenho do `AcessoDaConta` do cabeçalho: o
+   buraco dinâmico entra por `<Suspense>`, e o resto do rodapé continua vindo
+   pronto do cache.
+   ============================================================================ */
+
+export async function AcessoNoRodape() {
+  const cliente = await sessaoCliente();
+
+  const itens = cliente
+    ? [{ rotulo: "Sair da conta", href: "/minha-jb/perfil" }]
+    : [
+        { rotulo: "Entrar", href: "/entrar" },
+        { rotulo: "Criar conta", href: "/cadastro" },
+      ];
+
+  return (
+    <>
+      {itens.map((item) => (
+        <li key={item.href}>
+          <Link href={item.href} className={CLASSE_LINK_RODAPE}>
+            {item.rotulo}
+          </Link>
+        </li>
+      ))}
+    </>
   );
 }

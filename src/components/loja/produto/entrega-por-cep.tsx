@@ -12,6 +12,7 @@ const CHAVE_CEP = "jb:cep";
 
 export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   const [cep, setCep] = useState("");
+  const [lembrado, setLembrado] = useState(false);
   const [resultado, setResultado] = useState<EstimativaDeEntrega | null>(null);
   const [calculando, startTransition] = useTransition();
   const campoRef = useRef<HTMLInputElement>(null);
@@ -22,7 +23,14 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   useEffect(() => {
     try {
       const guardado = window.localStorage.getItem(CHAVE_CEP);
-      if (guardado) setCep(mascararCep(guardado));
+      if (guardado) {
+        setCep(mascararCep(guardado));
+        /* O campo passa de vazio a preenchido depois de hidratar, e quem viu
+           os dois estados na auditoria leu o CEP restaurado como se fosse um
+           placeholder — "01319-040" parecia exemplo, não escolha dela. A linha
+           abaixo do campo diz de onde veio o número. */
+        setLembrado(true);
+      }
     } catch {
       // O cálculo continua funcionando mesmo quando o navegador bloqueia storage.
     }
@@ -86,6 +94,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
             onChange={(evento) => {
               setCep(mascararCep(evento.target.value));
               setResultado(null);
+              setLembrado(false);
             }}
             onKeyDown={(evento) => {
               if (evento.key !== "Enter") return;
@@ -103,7 +112,9 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
             "foco-jb flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-3.5 text-sm font-extrabold transition-all",
             completo && !calculando
               ? "border-graf-900 bg-graf-950 text-white shadow-sm hover:-translate-y-0.5 hover:bg-graf-800"
-              : "cursor-not-allowed border-graf-200 bg-graf-100 text-graf-400",
+              /* graf-400 sobre graf-100 dá 2,4:1 — o botão desabilitado ficava
+                 ilegível. graf-500 mantém o "não dá para clicar" visível. */
+              : "cursor-not-allowed border-graf-200 bg-graf-100 text-graf-500",
           )}
         >
           {calculando ? (
@@ -114,6 +125,13 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
           Calcular
         </button>
       </div>
+
+      {lembrado && !resultado ? (
+        <p className="mt-1.5 text-xs leading-4 text-graf-500">
+          Usamos o CEP que você consultou antes neste navegador. Troque se quiser outro
+          endereço.
+        </p>
+      ) : null}
 
       <p aria-live="polite" className="sr-only">
         {resultado?.ok ? `Entrega estimada: ${resultado.rotulo}.` : ""}
@@ -127,9 +145,15 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
         <div className="mt-3 rounded-2xl border border-graf-200 bg-white px-4 py-3.5 shadow-[0_12px_30px_-28px_rgba(15,23,42,0.45)]">
           {resultado.orcadoDepois ? (
             <div>
-              <p className="text-sm font-extrabold text-graf-950">Frete sob consulta para este CEP</p>
+              <p className="text-sm font-extrabold text-graf-950">
+                {resultado.motivo === "perfil_orcado"
+                  ? "Frete deste equipamento é orçado à parte"
+                  : "Ainda não temos tabela para este CEP"}
+              </p>
               <p className="mt-0.5 text-xs leading-5 text-graf-600">
-                A JB confirma o valor antes da cobrança.
+                {resultado.motivo === "perfil_orcado"
+                  ? "Pelo porte, o transporte é contratado caso a caso. A JB confirma o valor antes da cobrança."
+                  : "A compra segue normalmente: a equipe cota com a transportadora e confirma o valor antes de despachar."}
               </p>
             </div>
           ) : (

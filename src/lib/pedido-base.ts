@@ -4,6 +4,7 @@ import type { OrderStatus, Prisma, ShippingKind } from "@prisma/client";
 
 import { proximoCodigo } from "@/lib/codigos";
 import { descontoDoCupom, linhaElegivelAoCupom, precoDoAdicional } from "@/lib/carrinho";
+import { adicionarDias, adicionarMeses } from "@/lib/format";
 import { enfileirar } from "@/lib/notificacoes";
 import { prisma } from "@/lib/prisma";
 
@@ -421,40 +422,65 @@ export async function confirmarPagamento(pedidoId: string) {
     for (const item of pedido.items) {
       if (item.kind !== "produto" || !item.product || !item.isEquipment) continue;
 
-      const jaExiste = await prisma.equipment.findFirst({
+      /* Um prontuário por UNIDADE, não por linha do pedido.
+
+         Comprar duas autoclaves criava um equipamento só. Cada unidade tem
+         número de série próprio, garantia própria e histórico de manutenção
+         próprio — juntar as duas num registro significa que a segunda não tem
+         prontuário, não entra na preventiva e não aparece na hora de abrir
+         chamado. A auditoria comprou duas seladoras e recebeu um registro.
+
+         A contagem do que já existe substitui o antigo `findFirst`: o efeito
+         continua idempotente (reprocessar o pagamento não duplica nada) e
+         passa a completar o que faltar. */
+      const jaCriados = await prisma.equipment.count({
         where: { orderId: pedido.id, productId: item.productId },
       });
-      if (jaExiste) continue;
+      const faltam = Math.max(0, item.quantity - jaCriados);
+      if (faltam === 0) continue;
 
       const garantiaMeses = item.product.warrantyMonths ?? item.unit?.warrantyMonths ?? null;
-      await prisma.equipment.create({
-        data: {
-          customerId: pedido.customerId,
-          name: item.name,
-          brandName: item.brandName,
-          modelName: item.modelName,
-          serialNumber: item.unit?.serialNumber ?? "",
-          voltage: item.product.voltage,
-          productId: item.productId,
-          orderId: pedido.id,
-          categoryId: item.product.categoryId,
-          origin: "compra_jb",
-          status: "operacional",
-          condition: item.condition,
-          purchasedAt: new Date(),
-          warrantyUntil: garantiaMeses
-            ? new Date(Date.now() + garantiaMeses * 30 * 86400000)
-            : null,
-          maintenanceIntervalDays: 180,
-          nextMaintenanceAt: new Date(Date.now() + 180 * 86400000),
-          events: {
-            create: {
-              kind: "compra",
-              title: `Adquirido no pedido ${pedido.number}`,
+      const compradoEm = new Date();
+
+      for (let indice = 0; indice < faltam; indice += 1) {
+        await prisma.equipment.create({
+          data: {
+            customerId: pedido.customerId,
+            name: item.name,
+            brandName: item.brandName,
+            modelName: item.modelName,
+            /* A série só pertence à primeira: `OrderItem.unit` aponta para UMA
+               unidade física. Repeti-la nas demais seria afirmar que duas
+               máquinas diferentes têm o mesmo número — pior do que deixar em
+               branco para a equipe preencher. */
+            serialNumber: indice === 0 ? (item.unit?.serialNumber ?? "") : "",
+            voltage: item.product.voltage,
+            productId: item.productId,
+            orderId: pedido.id,
+            categoryId: item.product.categoryId,
+            origin: "compra_jb",
+            status: "operacional",
+            condition: item.condition,
+            purchasedAt: compradoEm,
+            /* Meses de calendário, não blocos de 30 dias: doze meses a partir
+               de 14/09/2026 vencem em 14/09/2027, e não em 09/09. */
+            warrantyUntil: garantiaMeses
+              ? adicionarMeses(compradoEm, garantiaMeses)
+              : null,
+            maintenanceIntervalDays: 180,
+            nextMaintenanceAt: adicionarDias(compradoEm, 180),
+            events: {
+              create: {
+                kind: "compra",
+                title:
+                  item.quantity > 1
+                    ? `Adquirido no pedido ${pedido.number} (unidade ${jaCriados + indice + 1} de ${item.quantity})`
+                    : `Adquirido no pedido ${pedido.number}`,
+              },
             },
           },
-        },
-      });
+        });
+      }
     }
 
     await prisma.notification.create({

@@ -268,13 +268,49 @@ export default async function BuscaPage({
             titulo="Nada encontrado com esse termo"
             descricao="Tente outro nome, marca ou modelo. Se você estiver descrevendo um problema de um equipamento, a equipe técnica também pode ajudar por chamado."
             acao={
-              <div className="flex flex-wrap justify-center gap-2">
-                <LinkBotao href="/loja" tamanho="sm" variante="secundario">
-                  Ver catálogo
-                </LinkBotao>
-                <LinkBotao href="/assistencia-tecnica/solicitar" tamanho="sm">
-                  Abrir chamado
-                </LinkBotao>
+              /* O botão vermelho vai para o catálogo, não para o chamado.
+
+                 Quem digitou o nome de um equipamento e não achou nada quer,
+                 quase sempre, procurar de outro jeito — não abrir um chamado
+                 técnico, que é o caminho de quem já TEM o aparelho e ele
+                 quebrou. A auditoria registrou o destaque invertido: a ação
+                 mais provável estava em cinza e a menos provável em vermelho.
+
+                 E, antes dos dois, o campo de busca de novo: refinar o termo é
+                 o que a pessoa faria primeiro se a tela deixasse. */
+              <div className="mx-auto w-full max-w-md space-y-4">
+                <form action="/busca" method="get" className="flex gap-2">
+                  <label htmlFor="busca-refinar" className="sr-only">
+                    Buscar outro termo
+                  </label>
+                  <input
+                    id="busca-refinar"
+                    name="q"
+                    type="search"
+                    defaultValue={validada.consulta}
+                    placeholder="Tente outro nome, marca ou modelo"
+                    className="min-h-11 w-full rounded-lg border border-graf-300 bg-white px-3 text-base text-graf-900 outline-none focus:border-jb-500 focus:ring-4 focus:ring-jb-500/10 sm:text-sm"
+                  />
+                  <button
+                    type="submit"
+                    className="foco-jb min-h-11 shrink-0 rounded-lg border border-graf-300 px-4 text-sm font-bold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50"
+                  >
+                    Buscar
+                  </button>
+                </form>
+
+                <div className="flex flex-wrap justify-center gap-2">
+                  <LinkBotao href="/loja" tamanho="sm">
+                    Ver o catálogo
+                  </LinkBotao>
+                  <LinkBotao
+                    href="/assistencia-tecnica/solicitar"
+                    tamanho="sm"
+                    variante="secundario"
+                  >
+                    Meu equipamento quebrou
+                  </LinkBotao>
+                </div>
               </div>
             }
           />

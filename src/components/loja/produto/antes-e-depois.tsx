@@ -3,9 +3,7 @@ import {
   ClipboardList,
   FileText,
   History,
-  Package,
   PackageOpen,
-  PlugZap,
   Ruler,
   ShieldCheck,
   Wrench,
@@ -77,6 +75,18 @@ const MOLDURA = "min-w-0";
 
 /* -------------------------------------------------------- antes de comprar */
 
+/**
+ * O que precisa estar pronto na sala — e só isso.
+ *
+ * Este bloco trazia "Alimentação 220 V", "Dimensões" e "Peso" em três células
+ * próprias. Os três já estão na ficha técnica, no grupo "Instalação e espaço",
+ * a uma rolagem daqui — e com rótulo diferente: "Alimentação" aqui,
+ * "Tensão" lá. Era metade da contagem de repetições que a auditoria mediu na
+ * página ("220 V" cinco vezes, com três rótulos).
+ *
+ * Ficou o que este bloco tem de próprio e não está em lugar nenhum: a lista de
+ * pré-requisitos da sala. O resto virou um link para a fonte.
+ */
 export function AntesDeComprar({
   dados,
   className,
@@ -84,23 +94,13 @@ export function AntesDeComprar({
   dados: DadosDeInfraestrutura;
   className?: string;
 }) {
-  const voltagem = rotuloDeVoltagem(dados.voltagem);
-  const l = medida(dados.larguraMm);
-  const a = medida(dados.alturaMm);
-  const p = medida(dados.profundidadeMm);
-  const dimensoes = l && a && p ? `${l} × ${a} × ${p}` : null;
-  const peso =
-    dados.pesoGramas && dados.pesoGramas > 0
-      ? `${(dados.pesoGramas / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg`
-      : null;
+  const temDadosNaFicha = Boolean(
+    rotuloDeVoltagem(dados.voltagem) ||
+      (dados.pesoGramas ?? 0) > 0 ||
+      (medida(dados.larguraMm) && medida(dados.alturaMm) && medida(dados.profundidadeMm)),
+  );
 
-  const fichas = [
-    voltagem ? { icone: PlugZap, rotulo: "Alimentação", valor: voltagem } : null,
-    dimensoes ? { icone: Ruler, rotulo: "Dimensões", valor: dimensoes } : null,
-    peso ? { icone: Package, rotulo: "Peso", valor: peso } : null,
-  ].filter((f) => f !== null);
-
-  if (fichas.length === 0 && dados.requisitos.length === 0) return null;
+  if (!temDadosNaFicha && dados.requisitos.length === 0) return null;
 
   return (
     <section className={cn(MOLDURA, className)} aria-labelledby="antes-de-comprar">
@@ -113,28 +113,17 @@ export function AntesDeComprar({
         />
       </div>
 
-      {fichas.length > 0 ? (
-        <dl className="grid sm:grid-cols-3">
-          {fichas.map((ficha, indice) => {
-            const Icone = ficha.icone;
-            return (
-              <div
-                key={ficha.rotulo}
-                className={`min-w-0 border-hairline py-3 pr-4 ${
-                  indice > 0 ? "border-t sm:border-l sm:border-t-0 sm:pl-5" : ""
-                }`}
-              >
-                <dt className="micro flex items-center gap-1.5 text-graf-500">
-                  <Icone className="size-3 shrink-0" aria-hidden />
-                  {ficha.rotulo}
-                </dt>
-                <dd className="tabular mt-1 break-words text-sm font-bold text-graf-950">
-                  {ficha.valor}
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
+      {temDadosNaFicha ? (
+        <p className="texto-apoio py-3 text-graf-600">
+          Tensão, dimensões e peso estão na{" "}
+          <a
+            href="#ficha-tecnica"
+            className="foco-jb font-bold text-jb-700 underline-offset-2 hover:underline"
+          >
+            ficha técnica
+          </a>
+          , no grupo &ldquo;Instalação e espaço&rdquo;.
+        </p>
       ) : null}
 
       {dados.requisitos.length > 0 ? (

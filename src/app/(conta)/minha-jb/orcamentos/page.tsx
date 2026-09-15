@@ -16,7 +16,11 @@ import { Paginacao } from "@/components/ui/paginacao";
 import { Tabela, type Coluna } from "@/components/ui/tabela";
 import { exigirCliente } from "@/lib/auth-cliente";
 import { formatarData, formatarPreco } from "@/lib/format";
-import { ROTULO_ORCAMENTO, STATUS_ORCAMENTO_ABERTOS } from "@/lib/orcamento";
+import {
+  ROTULO_ORCAMENTO,
+  STATUS_ORCAMENTO_ABERTOS,
+  STATUS_ORCAMENTO_VISIVEIS,
+} from "@/lib/orcamento";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -28,6 +32,12 @@ export const metadata: Metadata = {
 const POR_PAGINA = 10;
 
 const SITUACOES = {
+  /* "Em análise" é o pedido que a pessoa acabou de fazer no /orcamento: a
+     equipe ainda está montando a proposta. Antes ele não tinha situação
+     nenhuma porque nem aparecia — nascia `rascunho`, que é documento interno,
+     e a listagem dizia "Todas 0" para quem tinha acabado de receber o número
+     por e-mail. */
+  analise: { rotulo: "Em análise", status: ["solicitado"] as QuoteStatus[] },
   aguardando: { rotulo: "Aguardando você", status: STATUS_ORCAMENTO_ABERTOS },
   aprovado: {
     rotulo: "Aprovados",
@@ -73,10 +83,12 @@ export default async function OrcamentosPage({ searchParams }: { searchParams: B
   const numero = primeiroValor(params.numero).slice(0, 40);
   const pagina = paginaDaUrl(params.pagina);
 
-  // rascunho é documento interno: enquanto a equipe monta, nada aparece aqui
+  /* `rascunho` é documento interno — o que a equipe escreve antes de o cliente
+     ver. Todo o resto é do cliente, inclusive o `solicitado` que ele mesmo
+     criou pelo site. */
   const base: Prisma.QuoteWhereInput = {
     customerId: cliente.id,
-    status: { not: "rascunho" },
+    status: { in: STATUS_ORCAMENTO_VISIVEIS },
   };
 
   const filtro: Prisma.QuoteWhereInput = {

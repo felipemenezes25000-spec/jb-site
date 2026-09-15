@@ -136,7 +136,7 @@ export function ControlesColecao({
                  carrega o mesmo texto em `sr-only`. Com os dois, o nome
                  acessível ficava declarado duas vezes — o `aria-label` vencia
                  e o `sr-only` virava peso morto. */
-              className="h-11 w-full min-w-0 rounded-lg border border-graf-300 bg-white pl-3 pr-8 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 lg:w-auto"
+              className="select-jb h-11 w-full min-w-0 rounded-lg border border-graf-300 bg-white pl-3 pr-9 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15 lg:w-auto"
             >
               {ORDENS.map((opcao) => (
                 <option key={opcao.valor} value={opcao.valor}>

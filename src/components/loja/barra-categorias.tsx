@@ -54,7 +54,12 @@ export function BarraDeCategorias({ categorias }: { categorias: CategoriaDoMenu[
           href="/loja"
           className="foco-jb inline-flex min-h-11 items-center px-4 text-[0.75rem] font-black tracking-wider whitespace-nowrap text-white uppercase transition-colors hover:bg-jb-600"
         >
-          Todo o catálogo
+          {/* "Todo o catálogo" levava a /loja, que é a coleção de NOVOS — 10
+              de 12 itens. O rótulo prometia o catálogo inteiro e entregava um
+              recorte, e o número das categorias ao lado (catálogo inteiro)
+              passava a contradizer a lista de destino. O rótulo agora diz qual
+              coleção é; os seminovos já têm o próprio link, à direita. */}
+          Produtos novos
         </Link>
 
         {naFaixa.map((categoria) => (

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   ClipboardCheck,
@@ -93,7 +93,30 @@ export function HeroVitrine({
   parcelamento?: { max: number; minimoCents: number };
 }) {
   const [emFoco, setEmFoco] = useState(0);
+  /* Clicou numa miniatura: o rodízio para. Quem escolheu o que olhar não quer
+     que a tela troque sozinha três segundos depois. */
+  const [assumido, setAssumido] = useState(false);
   const foco = vitrine[emFoco] ?? vitrine[0] ?? null;
+
+  /* Um relógio só para a manchete e para a imagem.
+
+     Antes eram dois: a palavra girava por animação de CSS sobre a lista de
+     tipos da vitrine inteira, e o produto em foco só mudava por clique. O
+     resultado medido na auditoria: o título dizia "a seladora" enquanto a
+     imagem, o cartão de preço e a miniatura ativa mostravam a autoclave. A
+     manchete não é enfeite — ela afirma o que está na tela.
+
+     Agora a palavra é derivada de `foco`, e o que gira é o foco. Com um
+     relógio só, os dois não têm como discordar. */
+  useEffect(() => {
+    if (assumido || vitrine.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const relogio = window.setInterval(() => {
+      setEmFoco((atual) => (atual + 1) % vitrine.length);
+    }, 4500);
+    return () => window.clearInterval(relogio);
+  }, [assumido, vitrine.length]);
 
   const temPreco = Boolean(foco?.allowDirectPurchase && foco.priceCents > 0);
   const parcelas =
@@ -115,6 +138,12 @@ export function HeroVitrine({
      vitrine. Com um tipo só a palavra fica parada. */
   const palavras = (tipos.length >= 2 ? tipos.slice(0, 3) : ["equipamento"]).map(comArtigo);
   const maisLonga = palavras.reduce((a, b) => (b.length > a.length ? b : a), "");
+
+  /* A palavra da manchete é a do equipamento em foco — não uma da lista
+     girando por conta própria. */
+  const palavraEmFoco = foco
+    ? comArtigo(tipoDoEquipamento(foco.name) || "equipamento")
+    : palavras[0];
 
   const laudoDeUnidade = foco?.condition === "seminovo" || foco?.condition === "recondicionado";
 
@@ -152,15 +181,21 @@ export function HeroVitrine({
                 A clínica escolhe
               </span>
               <span className="surge block" style={{ animationDelay: "160ms" }}>
-                <span className="rodizio" data-palavras={palavras.length}>
-                  {palavras.map((palavra, i) => (
-                    <span key={palavra} data-palavra style={{ animationDelay: `${i * 3.6}s` }}>
-                      {palavra}
-                    </span>
-                  ))}
-                  {/* Reserva a largura da maior: sem isso a manchete inteira
-                      muda de largura a cada troca. */}
-                  <span className="invisible">{maisLonga}</span>
+                {/* A troca é por `key`: cada palavra entra com a mesma animação
+                    de surgimento do resto da manchete, e some junto com o
+                    produto que a justificava. O espaço da maior continua
+                    reservado para a manchete não mudar de largura. */}
+                <span className="relative inline-grid">
+                  <span
+                    key={palavraEmFoco}
+                    className="surge col-start-1 row-start-1"
+                    style={{ animationDelay: "0ms" }}
+                  >
+                    {palavraEmFoco}
+                  </span>
+                  <span aria-hidden className="invisible col-start-1 row-start-1">
+                    {maisLonga}
+                  </span>
                 </span>
               </span>
               <span className="surge block" style={{ animationDelay: "260ms" }}>
@@ -357,7 +392,10 @@ export function HeroVitrine({
                   <button
                     key={produto.slug}
                     type="button"
-                    onClick={() => setEmFoco(i)}
+                    onClick={() => {
+                      setEmFoco(i);
+                      setAssumido(true);
+                    }}
                     aria-pressed={i === emFoco}
                     className={`foco-jb flex min-h-16 flex-col items-center gap-1 rounded-xl border p-2 transition-all duration-300 ${
                       i === emFoco

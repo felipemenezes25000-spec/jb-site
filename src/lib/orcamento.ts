@@ -37,6 +37,7 @@ export class ErroDeOrcamento extends Error {
 
 export const ROTULO_ORCAMENTO: Record<QuoteStatus, string> = {
   rascunho: "Rascunho",
+  solicitado: "Em análise pela equipe",
   enviado: "Enviado",
   em_duvida: "Em negociação",
   aprovado: "Aprovado",
@@ -52,6 +53,24 @@ export const ROTULO_TIPO_ORCAMENTO: Record<QuoteKind, string> = {
 
 /** Status em que a proposta ainda está viva e pode ser decidida pelo cliente. */
 export const STATUS_ORCAMENTO_ABERTOS: QuoteStatus[] = ["enviado", "em_duvida"];
+
+/**
+ * O que o cliente pode ver na Área da Clínica.
+ *
+ * `rascunho` fica de fora porque é documento interno da equipe. `solicitado`
+ * entra porque é o pedido que o próprio cliente fez: ele tem o número, recebeu
+ * o e-mail e foi informado de que a proposta está sendo montada. Esconder o
+ * que a pessoa acabou de criar é o defeito, não a proteção.
+ */
+export const STATUS_ORCAMENTO_VISIVEIS: QuoteStatus[] = [
+  "solicitado",
+  "enviado",
+  "em_duvida",
+  "aprovado",
+  "recusado",
+  "expirado",
+  "convertido",
+];
 
 export type EntradaItemOrcamento = {
   productId?: string | null;
@@ -77,6 +96,16 @@ export type EntradaOrcamento = {
   freteCents?: number;
   itens: EntradaItemOrcamento[];
   userId?: string | null;
+  /**
+   * O pedido partiu do cliente, pelo site.
+   *
+   * Muda o estado inicial de `rascunho` para `solicitado` e deixa o evento de
+   * abertura visível para ele. É a diferença entre um documento que a equipe
+   * está escrevendo e um pedido que a pessoa fez e já recebeu numerado por
+   * e-mail. Sem essa distinção, a proposta nascia invisível na Área da Clínica
+   * enquanto a tela de sucesso prometia que ela entraria na fila.
+   */
+  pedidoDoCliente?: boolean;
 };
 
 function normalizarItens(itens: EntradaItemOrcamento[]) {
@@ -164,7 +193,7 @@ export async function criarOrcamento(entrada: EntradaOrcamento) {
       data: {
         number: numero,
         kind: entrada.kind ?? "comercial",
-        status: "rascunho",
+        status: entrada.pedidoDoCliente ? "solicitado" : "rascunho",
         customerId: entrada.customerId ?? null,
         requestId: entrada.chamadoId ?? null,
         contactName: entrada.contato?.nome ?? cliente?.name ?? "",
@@ -185,9 +214,11 @@ export async function criarOrcamento(entrada: EntradaOrcamento) {
     await tx.quoteEvent.create({
       data: {
         quoteId: orcamento.id,
-        title: "Orçamento criado",
-        message: `Proposta ${numero} montada com ${itens.length} ${itens.length === 1 ? "item" : "itens"}.`,
-        visibleToCustomer: false,
+        title: entrada.pedidoDoCliente ? "Pedido recebido" : "Orçamento criado",
+        message: entrada.pedidoDoCliente
+          ? `Pedido registrado pelo site com ${itens.length} ${itens.length === 1 ? "item" : "itens"}. A equipe comercial vai montar a proposta.`
+          : `Proposta ${numero} montada com ${itens.length} ${itens.length === 1 ? "item" : "itens"}.`,
+        visibleToCustomer: Boolean(entrada.pedidoDoCliente),
         userId: entrada.userId ?? null,
       },
     });
@@ -800,6 +831,7 @@ export function passosDoOrcamento(orcamento: OrcamentoParaLinha): PassoLinha[] {
 
   const alcance: Record<QuoteStatus, number> = {
     rascunho: 0,
+    solicitado: 0,
     enviado: 1,
     em_duvida: 1,
     expirado: 1,
@@ -818,10 +850,14 @@ export function passosDoOrcamento(orcamento: OrcamentoParaLinha): PassoLinha[] {
 
   const passos: PassoLinha[] = [
     {
-      titulo: "Proposta montada",
-      descricao: "Itens, prazos e condições definidos pela equipe.",
+      titulo:
+        orcamento.status === "solicitado" ? "Pedido recebido" : "Proposta montada",
+      descricao:
+        orcamento.status === "solicitado"
+          ? "A equipe comercial está montando a proposta com os itens que você listou."
+          : "Itens, prazos e condições definidos pela equipe.",
       quando: formatarDataHora(orcamento.createdAt),
-      estado: "concluido",
+      estado: orcamento.status === "solicitado" ? "atual" : "concluido",
     },
     {
       titulo: "Enviada ao cliente",

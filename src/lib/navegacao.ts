@@ -101,9 +101,20 @@ export const RODAPE_ASSISTENCIA: ItemMenu[] = [
   { rotulo: "Pedir orçamento", href: "/orcamento" },
 ];
 
-export const RODAPE_CLIENTE: ItemMenu[] = [
+/**
+ * O par de acesso, só para quem NÃO está logado.
+ *
+ * O rodapé oferecia "Entrar" e "Criar conta" para quem o cabeçalho, quatro
+ * telas acima, cumprimentava pelo nome. Não é só redundância: convidar a criar
+ * conta quem já tem uma sugere que a sessão caiu.
+ */
+export const RODAPE_ACESSO: ItemMenu[] = [
   { rotulo: "Entrar", href: "/entrar" },
   { rotulo: "Criar conta", href: "/cadastro" },
+];
+
+/** O que vale para qualquer pessoa — logada ou não. */
+export const RODAPE_CLIENTE: ItemMenu[] = [
   { rotulo: "Meus pedidos", href: "/minha-jb/pedidos" },
   { rotulo: "Meus equipamentos", href: "/minha-jb/equipamentos" },
   { rotulo: "Assistência", href: "/minha-jb/assistencia" },

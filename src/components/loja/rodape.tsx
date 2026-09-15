@@ -35,9 +35,11 @@ import { enderecoCompleto, getSettings, redesSociais } from "@/lib/settings";
 
 type Icone = React.ComponentType<{ className?: string }>;
 
-const CLASSE_LINK =
+export const CLASSE_LINK_RODAPE =
   "foco-jb flex min-h-[2rem] items-center rounded-md text-corpo leading-snug text-graf-600 " +
   "transition-[color,transform] duration-200 hover:translate-x-0.5 hover:text-jb-700 pointer-coarse:min-h-11";
+
+const CLASSE_LINK = CLASSE_LINK_RODAPE;
 
 function IconeDente({ className }: { className?: string }) {
   return (
@@ -118,11 +120,14 @@ function Coluna({
   itens,
   icone: IconeColuna,
   separador = false,
+  extra,
 }: {
   titulo: string;
   itens: ItemMenu[];
   icone: Icone;
   separador?: boolean;
+  /** Links que dependem da sessão, renderizados fora do cache. */
+  extra?: React.ReactNode;
 }) {
   return (
     <div
@@ -145,6 +150,7 @@ function Coluna({
             </Link>
           </li>
         ))}
+        {extra}
       </ul>
     </div>
   );
@@ -197,7 +203,16 @@ function Prova({
   );
 }
 
-export async function Rodape() {
+/**
+ * O rodapé continua cacheado; o que depende da sessão entra por um buraco.
+ *
+ * `"use cache"` não pode ler cookie — e é justamente por isso que o rodapé
+ * mostrava "Entrar" e "Criar conta" para quem estava logado: ele não tinha
+ * como saber. A correção não é tirar o cache (o rodapé é igual para todo
+ * mundo, menos por dois links); é passar esses dois links de fora, como
+ * `ReactNode`, do jeito que o cabeçalho já faz com `AcessoDaConta`.
+ */
+export async function Rodape({ acesso }: { acesso?: React.ReactNode }) {
   "use cache";
   cacheTag(ETIQUETA_CONFIGURACOES);
   cacheLife("hours");
@@ -354,7 +369,13 @@ export async function Rodape() {
             >
               <Coluna titulo="Loja" itens={RODAPE_LOJA} icone={ShoppingCart} />
               <Coluna titulo="Assistência" itens={RODAPE_ASSISTENCIA} icone={Wrench} separador />
-              <Coluna titulo="Área da Clínica" itens={RODAPE_CLIENTE} icone={IconeDente} separador />
+              <Coluna
+                titulo="Área da Clínica"
+                itens={RODAPE_CLIENTE}
+                icone={IconeDente}
+                separador
+                extra={acesso}
+              />
               <Coluna titulo="Institucional" itens={RODAPE_INSTITUCIONAL} icone={Building2} separador />
             </nav>
 

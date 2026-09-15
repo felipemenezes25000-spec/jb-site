@@ -14,6 +14,7 @@ import {
   GradeMarketplace,
 } from "@/components/loja/marketplace/grade-marketplace";
 import type { ParcelamentoMarketplace } from "@/components/loja/marketplace/tipos";
+import { ReposicionarNoFiltro } from "@/components/loja/reposicionar-no-filtro";
 import { LinkBotao } from "@/components/ui/button";
 import { Esqueleto, Vazio, type Migalha } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
@@ -210,77 +211,145 @@ type BasesDeFaceta = {
   semCondicao: Prisma.ProductWhereInput;
   semVoltagem: Prisma.ProductWhereInput;
   semPreco: Prisma.ProductWhereInput;
+  /**
+   * A coleção inteira, sem NENHUM filtro da barra.
+   *
+   * É o que define quais opções EXISTEM. Antes, a existência de uma opção era
+   * decidida pela contagem filtrada, e o resultado era um beco: marcar
+   * "Marca: Gnatus" fazia sobrar uma categoria só, o grupo inteiro de
+   * Categoria desaparecia junto com Voltagem e Preço, e não havia como trocar
+   * de categoria sem limpar tudo pelo botão do navegador.
+   *
+   * Agora a lista de opções vem daqui e a contagem vem do `sem*`. Opção que
+   * zerou continua na tela, desabilitada e com zero — que é informação
+   * ("não há Gnatus em Profilaxia") em vez de sumiço.
+   */
+  daColecao: Prisma.ProductWhereInput;
 };
 
+type LinhaDeOpcao = { slug: string; name: string; _count: { products: number } };
+
+/** Junta a lista do que existe com a contagem do recorte atual. */
+function opcoesComContagem(existentes: LinhaDeOpcao[], contadas: LinhaDeOpcao[]) {
+  const porSlug = new Map(contadas.map((linha) => [linha.slug, linha._count.products]));
+
+  return unificarPorNome(
+    existentes
+      .filter((linha) => linha._count.products > 0)
+      .map((linha) => ({
+        slug: linha.slug,
+        nome: linha.name,
+        quantidade: porSlug.get(linha.slug) ?? 0,
+      })),
+  ).map((item) => ({
+    valor: item.slug,
+    rotulo: item.nome,
+    quantidade: item.quantidade ?? 0,
+  }));
+}
+
 async function montarGrupos(bases: BasesDeFaceta): Promise<GruposFiltro> {
-  const [categorias, marcas, condicoes, voltagens, faixa] = await Promise.all([
-    prisma.category.findMany({
-      where: { published: true },
-      orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: {
-        slug: true,
-        name: true,
-        _count: { select: { products: { where: bases.semCategoria } } },
-      },
-    }),
-    prisma.brand.findMany({
-      where: { published: true },
-      orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: {
-        slug: true,
-        name: true,
-        _count: { select: { products: { where: bases.semMarca } } },
-      },
+  const selecaoCategoria = (onde: Prisma.ProductWhereInput) => ({
+    where: { published: true },
+    orderBy: [{ order: "asc" as const }, { name: "asc" as const }],
+    select: {
+      slug: true,
+      name: true,
+      _count: { select: { products: { where: onde } } },
+    },
+  });
+
+  const selecaoMarca = (onde: Prisma.ProductWhereInput) => ({
+    where: { published: true },
+    orderBy: [{ order: "asc" as const }, { name: "asc" as const }],
+    select: {
+      slug: true,
+      name: true,
+      _count: { select: { products: { where: onde } } },
+    },
+  });
+
+  const [
+    categoriasExistentes,
+    categoriasContadas,
+    marcasExistentes,
+    marcasContadas,
+    condicoesExistentes,
+    condicoesContadas,
+    voltagensExistentes,
+    voltagensContadas,
+    faixa,
+  ] = await Promise.all([
+    prisma.category.findMany(selecaoCategoria(bases.daColecao)),
+    prisma.category.findMany(selecaoCategoria(bases.semCategoria)),
+    prisma.brand.findMany(selecaoMarca(bases.daColecao)),
+    prisma.brand.findMany(selecaoMarca(bases.semMarca)),
+    prisma.product.groupBy({
+      by: ["condition"],
+      where: bases.daColecao,
+      _count: { _all: true },
     }),
     prisma.product.groupBy({
       by: ["condition"],
       where: bases.semCondicao,
       _count: { _all: true },
     }),
-    prisma.product.findMany({
-      where: { ...bases.semVoltagem, voltage: { not: null } },
-      distinct: ["voltage"],
+    prisma.product.groupBy({
+      by: ["voltage"],
+      where: { ...bases.daColecao, voltage: { not: null } },
+      _count: { _all: true },
       orderBy: { voltage: "asc" },
-      select: { voltage: true },
     }),
+    prisma.product.groupBy({
+      by: ["voltage"],
+      where: { ...bases.semVoltagem, voltage: { not: null } },
+      _count: { _all: true },
+      orderBy: { voltage: "asc" },
+    }),
+    /* A faixa do slider vem da coleção inteira: se ela encolhesse junto com o
+       filtro de preço, o campo perderia o alcance que a pessoa precisa para
+       alargar a busca de novo. */
     prisma.product.aggregate({
-      where: { ...bases.semPreco, priceCents: { gt: 0 } },
+      where: { ...bases.daColecao, priceCents: { gt: 0 } },
       _min: { priceCents: true },
       _max: { priceCents: true },
     }),
   ]);
 
-  /* Duas linhas "Biossegurança" com 1 ao lado de cada uma não são duas
-     escolhas: são a mesma escolha partida em duas por um acidente de carga de
-     dados. Viram uma opção, com a soma — e o filtro abre os dois cadastros
-     (ver `expandirCategorias` em `src/lib/catalogo.ts`). */
-  const opcoes = (linhas: { slug: string; name: string; _count: { products: number } }[]) =>
-    unificarPorNome(
-      linhas
-        .filter((linha) => linha._count.products > 0)
-        .map((linha) => ({
-          slug: linha.slug,
-          nome: linha.name,
-          quantidade: linha._count.products,
-        })),
-    ).map((item) => ({ valor: item.slug, rotulo: item.nome, quantidade: item.quantidade }));
+  const contagemDeCondicao = new Map(
+    condicoesContadas.map((linha) => [linha.condition, linha._count._all]),
+  );
+  const contagemDeVoltagem = new Map(
+    voltagensContadas.map((linha) => [linha.voltage, linha._count._all]),
+  );
 
   return {
-    categorias: opcoes(categorias),
-    marcas: opcoes(marcas),
+    categorias: opcoesComContagem(categoriasExistentes, categoriasContadas),
+    marcas: opcoesComContagem(marcasExistentes, marcasContadas),
     condicoes: ORDEM_CONDICAO.flatMap((condicao) => {
-      const linha = condicoes.find((c) => c.condition === condicao);
-      if (!linha) return [];
+      const existe = condicoesExistentes.find((c) => c.condition === condicao);
+      if (!existe) return [];
       return [
-        { valor: condicao, rotulo: CONDICOES_ROTULO[condicao], quantidade: linha._count._all },
+        {
+          valor: condicao,
+          rotulo: CONDICOES_ROTULO[condicao],
+          quantidade: contagemDeCondicao.get(condicao) ?? 0,
+        },
       ];
     }),
-    voltagens: voltagens
-      .flatMap((linha) => (linha.voltage ? [linha.voltage] : []))
-      .map((voltagem) => ({
-        valor: voltagem,
-        rotulo: voltagem === "bivolt" ? "Bivolt" : `${voltagem} V`,
-      })),
+    /* Voltagem passou a ter contador. Ela era o único grupo sem número — e um
+       filtro sem contador não diz se vale o clique. */
+    voltagens: voltagensExistentes.flatMap((linha) =>
+      linha.voltage
+        ? [
+            {
+              valor: linha.voltage,
+              rotulo: linha.voltage === "bivolt" ? "Bivolt" : `${linha.voltage} V`,
+              quantidade: contagemDeVoltagem.get(linha.voltage) ?? 0,
+            },
+          ]
+        : [],
+    ),
     faixaPreco: {
       minCents: faixa._min.priceCents ?? 0,
       maxCents: faixa._max.priceCents ?? 0,
@@ -361,11 +430,14 @@ function SemResultado({
         titulo={`Nada encontrado para “${busca}”`}
         descricao="Tente o nome do equipamento, a marca ou o modelo. Muita coisa é atendida sob orçamento, mesmo fora do catálogo."
         acao={
+          /* O vermelho vai para o catálogo. Quem buscou e não achou quer
+             procurar de outro jeito antes de pedir orçamento — a ação mais
+             provável é a que recebe o destaque. */
           <div className="flex flex-wrap justify-center gap-3">
-            <LinkBotao href="/loja" variante="secundario">
-              Ver o catálogo inteiro
+            <LinkBotao href="/loja">Ver o catálogo inteiro</LinkBotao>
+            <LinkBotao href="/orcamento" variante="secundario">
+              Pedir orçamento
             </LinkBotao>
-            <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
           </div>
         }
       />
@@ -508,8 +580,11 @@ async function Resultados({
       {/* cabeçalho da listagem: quantidade à esquerda, posição na lista à
           direita. O filete embaixo separa a contagem dos cartões sem pedir
           mais uma caixa na tela */}
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-graf-200 pb-3">
-        <p className="text-corpo text-graf-600" aria-live="polite">
+      <div
+        id="resultados-do-catalogo"
+        className="scroll-mt-[var(--jb-topo-secoes)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-graf-200 pb-3"
+      >
+        <p className="text-corpo text-graf-600" aria-live="polite" aria-atomic="true">
           <span className="tabular text-base font-bold text-graf-950">{dados.total}</span>{" "}
           {busca || temFiltro
             ? dados.total === 1
@@ -547,6 +622,7 @@ async function Resultados({
       ) : null}
 
       <ChamadaCatalogo />
+      <ReposicionarNoFiltro alvo="resultados-do-catalogo" />
     </div>
   );
 }
@@ -666,6 +742,15 @@ export async function Vitrine({
       semCondicao: montarFiltro({ ...filtros, condicao: filtrosFixos?.condicao }),
       semVoltagem: montarFiltro({ ...filtros, voltagem: undefined }),
       semPreco: montarFiltro({ ...filtros, precoMin: undefined, precoMax: undefined }),
+      /* Só o que a rota fixa e a busca: o recorte da coleção sem nada da barra.
+         É a lista de opções que a pessoa sempre pode alcançar daqui. */
+      daColecao: montarFiltro({
+        busca,
+        incluirVendidos,
+        categoria: categoriaFixaAberta,
+        marca: marcaFixaAberta,
+        condicao: filtrosFixos?.condicao,
+      }),
     }).catch(() => GRUPOS_VAZIOS),
     getSettings().catch(() => null),
   ]);
@@ -676,6 +761,17 @@ export async function Vitrine({
   };
 
   const travas = { travarCategoria, travarCondicao, travarMarca };
+
+  /* A coleção inteira está vazia — não é o filtro que zerou.
+
+     `grupos` é montado sobre o recorte da rota; sem nenhuma categoria, marca
+     ou condição com item, não há nada publicado aqui. */
+  const colecaoVazia =
+    grupos.categorias.length === 0 &&
+    grupos.marcas.length === 0 &&
+    grupos.condicoes.length === 0 &&
+    !temFiltro &&
+    !busca;
   const chave = JSON.stringify({ filtros, ordem, pagina });
 
   // a mesma lista na primeira página, para quem chegou por um link antigo
@@ -718,8 +814,20 @@ export async function Vitrine({
           grade de catálogo primeiro e o motivo de confiar por último. */}
       {faixaDeConfianca ? <div className="mt-6">{faixaDeConfianca}</div> : null}
 
+      {/* Coleção sem nada publicado não ganha trilho de filtro.
+
+          /usados, /recondicionados, /peças e /depoimentos abriam com a barra
+          de controles e a coluna de filtros — "Disponibilidade", "Ordenar
+          por" — sobre zero resultados. Filtrar o nada é a caricatura de um
+          catálogo: o estado vazio, que é bem escrito, aparecia depois de dois
+          controles que não fazem nada.
+
+          O corte é pela COLEÇÃO, não pelo resultado: filtrar até sobrar zero
+          precisa manter os filtros na tela, senão não há como desfazer. */}
       <div className="mt-7 lg:mt-8">
-        <ControlesColecao grupos={grupos} parametros={parametros} {...travas} />
+        {colecaoVazia ? null : (
+          <ControlesColecao grupos={grupos} parametros={parametros} {...travas} />
+        )}
 
         {/* Duas colunas a partir de 1024px.
 
@@ -733,13 +841,21 @@ export async function Vitrine({
             barra de controles não consegue dar: ver o que existe para filtrar
             sem abrir nada. No celular continua sendo gaveta, que é onde
             gaveta faz sentido. */}
-        <div className="mt-6 min-w-0 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[18.5rem_minmax(0,1fr)] xl:gap-10">
-          <PainelFiltros
-            grupos={grupos}
-            parametros={parametros}
-            className="hidden lg:block"
-            {...travas}
-          />
+        <div
+          className={
+            colecaoVazia
+              ? "mt-6 min-w-0"
+              : "mt-6 min-w-0 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[18.5rem_minmax(0,1fr)] xl:gap-10"
+          }
+        >
+          {colecaoVazia ? null : (
+            <PainelFiltros
+              grupos={grupos}
+              parametros={parametros}
+              className="hidden lg:block"
+              {...travas}
+            />
+          )}
 
           <div className="min-w-0">
             <Suspense key={chave} fallback={<EsqueletoResultados />}>

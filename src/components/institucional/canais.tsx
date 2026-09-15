@@ -195,22 +195,27 @@ export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: s
           </p>
         </div>
 
+        {/* Três botões desenhados para faixa grafite, numa faixa clara.
+
+            `claro` é branco sobre branco e `contorno-claro` é texto branco com
+            borda branca a 35% — o próprio `button.tsx` avisa: "Não use nenhum
+            dos dois sobre fundo claro". Sobre `bg-surface-muted` os três
+            sumiam, e a auditoria registrou os dois de contato como invisíveis
+            na página 404. As variantes de fundo claro são estas. */}
         <div className="flex flex-wrap gap-3">
-          <LinkBotao href="/contato" variante="claro">
-            Enviar mensagem
-          </LinkBotao>
+          <LinkBotao href="/contato">Enviar mensagem</LinkBotao>
           {whatsapp ? (
             <a
               href={whatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className={classesBotao("contorno-claro", "md")}
+              className={classesBotao("secundario", "md")}
             >
               WhatsApp
             </a>
           ) : null}
           {s.telefone ? (
-            <a href={telHref(s.telefone)} className={classesBotao("contorno-claro", "md")}>
+            <a href={telHref(s.telefone)} className={classesBotao("secundario", "md")}>
               {formatarTelefone(s.telefone)}
             </a>
           ) : null}

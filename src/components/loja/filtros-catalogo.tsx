@@ -192,19 +192,12 @@ function OpcaoLink({
   marcado: boolean;
   href: string;
 }) {
-  return (
-    <Link
-      href={href}
-      scroll={false}
-      // combinação de filtros é resultado dinâmico: não vale pré-carregar dezenas
-      prefetch={false}
-      aria-label={`${marcado ? "Remover filtro" : "Filtrar por"} ${campo}: ${opcao.rotulo}`}
-      className={cn(
-        "flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm transition-colors",
-        "hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-        marcado && "bg-jb-50/70 hover:bg-jb-50",
-      )}
-    >
+  /* Zero resultados e ainda não marcada: fica na lista, sem clique.
+     Marcada com zero continua clicável — é assim que se desmarca. */
+  const indisponivel = opcao.quantidade === 0 && !marcado;
+
+  const conteudo = (
+    <>
       <span
         aria-hidden
         className={cn(
@@ -225,10 +218,41 @@ function OpcaoLink({
         {opcao.rotulo}
       </span>
       {opcao.quantidade !== undefined ? (
-        <span className="tabular shrink-0 text-apoio text-graf-500">
-          {opcao.quantidade}
-        </span>
+        <span className="tabular shrink-0 text-apoio text-graf-500">{opcao.quantidade}</span>
       ) : null}
+    </>
+  );
+
+  const classe = cn(
+    "flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm transition-colors",
+    indisponivel
+      ? "cursor-not-allowed opacity-55"
+      : "hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+    marcado && "bg-jb-50/70 hover:bg-jb-50",
+  );
+
+  if (indisponivel) {
+    return (
+      <span
+        aria-disabled
+        title={`Nenhum item em ${opcao.rotulo} com os filtros atuais.`}
+        className={classe}
+      >
+        {conteudo}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      scroll={false}
+      // combinação de filtros é resultado dinâmico: não vale pré-carregar dezenas
+      prefetch={false}
+      aria-label={`${marcado ? "Remover filtro" : "Filtrar por"} ${campo}: ${opcao.rotulo}`}
+      className={classe}
+    >
+      {conteudo}
     </Link>
   );
 }
@@ -238,6 +262,14 @@ function OpcaoLink({
  * Uma coluna de caixas de seleção para "Bivolt / 127 V / 220 V" faz a barra
  * parecer formulário de sistema; três pastilhas lado a lado ocupam uma linha
  * e leem como escolha de loja.
+ */
+/**
+ * Opção que zerou continua na tela — desabilitada, e não removida.
+ *
+ * Remover a opção sem resultado parece limpeza e é armadilha: foi assim que
+ * marcar uma marca fazia o grupo Categoria inteiro desaparecer, e a pessoa
+ * ficava presa sem caminho para trocar de categoria. Com a opção visível e o
+ * zero à direita, "não há Gnatus em Profilaxia" vira informação.
  */
 function OpcaoPastilha({
   campo,
@@ -265,6 +297,13 @@ function OpcaoPastilha({
       )}
     >
       {opcao.rotulo}
+      {/* Voltagem era o único grupo sem contador, e um filtro sem número não
+          diz se vale o clique. */}
+      {opcao.quantidade !== undefined ? (
+        <span className="tabular ml-2 text-apoio font-normal text-graf-500">
+          {opcao.quantidade}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -324,7 +363,13 @@ export function ConteudoFiltros({
       }}
     >
       {/* um grupo com uma opção só não filtra nada: ou some, ou engana */}
-      {!travarCategoria && grupos.categorias.length > 1 ? (
+      {/* `> 0`, não `> 1`.
+
+          Esconder o grupo quando sobra uma opção parecia limpeza e era beco: ao
+          marcar uma marca, a Categoria encolhia para uma opção, o grupo inteiro
+          sumia e não havia caminho de volta para trocar de categoria sem limpar
+          tudo. Com uma opção só, ela continua sendo o caminho de saída. */}
+      {!travarCategoria && grupos.categorias.length > 0 ? (
         <Grupo titulo="Categoria">
           <Lista muitas={grupos.categorias.length > 8}>
             {grupos.categorias.map((opcao) => (
@@ -340,7 +385,7 @@ export function ConteudoFiltros({
         </Grupo>
       ) : null}
 
-      {!travarCondicao && grupos.condicoes.length > 1 ? (
+      {!travarCondicao && grupos.condicoes.length > 0 ? (
         <Grupo titulo="Condição">
           <Lista muitas={false}>
             {grupos.condicoes.map((opcao) => (
@@ -358,7 +403,7 @@ export function ConteudoFiltros({
 
       {/* em /marcas/[slug] a marca já é o recorte da rota: mostrar o grupo
           deixaria a pessoa marcar outra marca sem efeito nenhum */}
-      {!travarMarca && grupos.marcas.length > 1 ? (
+      {!travarMarca && grupos.marcas.length > 0 ? (
         <Grupo titulo="Marca">
           <Lista muitas={grupos.marcas.length > 8}>
             {grupos.marcas.map((opcao) => (
@@ -374,7 +419,7 @@ export function ConteudoFiltros({
         </Grupo>
       ) : null}
 
-      {grupos.voltagens.length > 1 ? (
+      {grupos.voltagens.length > 0 ? (
         <Grupo titulo="Voltagem">
           <div className="flex flex-wrap gap-2 pt-1">
             {grupos.voltagens.map((opcao) => (

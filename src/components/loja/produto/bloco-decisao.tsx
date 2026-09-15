@@ -17,7 +17,14 @@ export function BlocoDecisao({
   resumo,
   children,
   lateral,
-  aberto = false,
+  /* Todas nascem abertas.
+
+     Com duas abertas e duas fechadas, a barra de âncoras levava a pessoa para
+     dentro de um cartão vazio: "Entrega e garantia" e "Dúvidas" rolavam até o
+     título e exigiam um segundo clique para mostrar o conteúdo que o link
+     acabara de prometer. A auditoria registrou os dois. Continuar podendo
+     fechar é divulgação progressiva; abrir por padrão é honrar o link. */
+  aberto = true,
   contador,
 }: Props) {
   if (id === "relacionados") return null;

@@ -2,10 +2,10 @@ import "server-only";
 
 import { cacheLife, cacheTag } from "next/cache";
 
-import { unificarPorNome } from "@/lib/homonimos";
 import { prisma } from "@/lib/prisma";
 import { getSettings, type SettingsMap } from "@/lib/settings";
 import { CONDICOES } from "@/lib/navegacao";
+import { contagemDoCatalogo } from "@/domain/counts";
 
 /* ============================================================================
    Os dados públicos da casca da loja
@@ -102,35 +102,24 @@ export async function condicoesDoMenu(): Promise<CondicaoDoMenu[]> {
 }
 
 export async function categoriasDoMenu(): Promise<CategoriaDoMenu[]> {
-  "use cache";
-  cacheTag(ETIQUETA_CATEGORIAS);
-  cacheLife("hours");
+  /* A contagem vem de `contagemDoCatalogo`, a mesma que a home e as coleções
+     usam. Antes esta função tinha a própria consulta, com um recorte
+     ligeiramente diferente — `status: "active"` e nada mais —, e por isso a
+     barra vermelha dizia "BIOSSEGURANÇA 4" enquanto a coleção logo abaixo
+     dizia "Biossegurança 3": a barra contava a unidade seminova já vendida, a
+     coleção não. Dois números certos sobre recortes diferentes continuam sendo
+     dois números diferentes na mesma tela.
 
-  /* Só categoria com equipamento publicado. "Estética" e "Outros periféricos"
-     existem no cadastro sem nenhum produto, e apareciam no mega menu levando a
-     uma página que só sabia dizer "Nada publicado aqui ainda" — item de menu
-     promete que existe algo do outro lado. Voltam sozinhas quando entrar o
-     primeiro equipamento delas. */
-  const linhas = await prisma.category.findMany({
-    where: {
-      published: true,
-      parentId: null,
-      products: { some: { status: "active" } },
-    },
-    orderBy: [{ order: "asc" }, { name: "asc" }],
-    select: {
-      slug: true,
-      name: true,
-      _count: { select: { products: { where: { status: "active" } } } },
-    },
-  });
+     O destino destes itens é `/categoria/[slug]`, que mostra TODAS as
+     condições — então o recorte aqui é o catálogo inteiro, e o número bate com
+     o que a pessoa encontra do outro lado do clique. */
+  const contagem = await contagemDoCatalogo();
 
-  /* O mega menu mostrava "Biossegurança" duas vezes, uma abaixo da outra,
-     porque o catálogo tem dois cadastros com o mesmo nome. Vira um item, com
-     a soma — o mesmo tratamento da barra de filtros e da home. */
-  return unificarPorNome(
-    linhas.map((c) => ({ slug: c.slug, nome: c.name, quantidade: c._count.products })),
-  ).map((c) => ({ slug: c.slug, name: c.nome, count: c.quantidade ?? 0 }));
+  return contagem.categorias.map((categoria) => ({
+    slug: categoria.slug,
+    name: categoria.nome,
+    count: categoria.total,
+  }));
 }
 
 /**

@@ -84,7 +84,8 @@ function resumirEndereco(endereco: {
 export default async function SolicitarPage() {
   const cliente = await sessaoCliente();
 
-  const [s, categorias, dadosDoCliente, equipamentos, unidades] = await Promise.all([
+  const [s, categorias, dadosDoCliente, equipamentos, unidades, enderecoDaConta] =
+    await Promise.all([
     getSettings(),
     prisma.category.findMany({
       where: { published: true },
@@ -117,6 +118,28 @@ export default async function SolicitarPage() {
           },
         })
       : Promise.resolve([]),
+    /* O endereço padrão da conta.
+
+       /minha-jb/enderecos afirma, com todas as letras: "O endereço padrão vem
+       preenchido na compra e na abertura de chamado." Vinha na compra e não
+       vinha aqui — o assistente só conhecia `CustomerLocation`, que é a
+       unidade da clínica, e quem tinha endereço salvo pelo checkout começava
+       a etapa 4 com sete campos em branco. */
+    cliente
+      ? prisma.customerAddress.findFirst({
+          where: { customerId: cliente.id },
+          orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+          select: {
+            zip: true,
+            street: true,
+            number: true,
+            complement: true,
+            district: true,
+            city: true,
+            state: true,
+          },
+        })
+      : Promise.resolve(null),
   ]);
 
   /* A escolha do tipo de equipamento oferecia "Biossegurança" duas vezes,
@@ -146,6 +169,18 @@ export default async function SolicitarPage() {
     endereco: resumirEndereco(unidade.address),
   }));
 
+  const enderecoPadrao = enderecoDaConta
+    ? {
+        cep: enderecoDaConta.zip,
+        logradouro: enderecoDaConta.street,
+        numero: enderecoDaConta.number,
+        complemento: enderecoDaConta.complement,
+        bairro: enderecoDaConta.district,
+        cidade: enderecoDaConta.city,
+        uf: enderecoDaConta.state,
+      }
+    : null;
+
   return (
     <>
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
@@ -171,6 +206,7 @@ export default async function SolicitarPage() {
               categorias={listaCategorias}
               equipamentos={listaEquipamentos}
               unidades={listaUnidades}
+              enderecoPadrao={enderecoPadrao}
               cliente={
                 dadosDoCliente
                   ? {

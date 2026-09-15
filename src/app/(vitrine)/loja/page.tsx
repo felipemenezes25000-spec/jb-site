@@ -50,7 +50,7 @@ export default async function LojaPage({
 
       <Vitrine
         sobretitulo="Loja JB"
-        titulo="Produtos odontológicos"
+        titulo="Produtos odontológicos novos"
         descricao={`${colecao.totalNovos} ${colecao.totalNovos === 1 ? "produto novo" : "produtos novos"} com informações técnicas, condições de pagamento e suporte da JB.`}
         trilha={TRILHA}
         caminho={CAMINHO}

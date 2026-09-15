@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { normalizarCep, paraExibicao } from "@/lib/frete";
+import { normalizarCep, paraExibicao, type MotivoDoFrete } from "@/lib/frete";
 import { calcularFreteDaPdp } from "@/lib/frete-produto";
 import { prisma } from "@/lib/prisma";
 import { getSettings, ligado } from "@/lib/settings";
@@ -37,6 +37,8 @@ export type EstimativaDeEntrega =
       prazoDias: number | null;
       /** `true` quando a JB ainda vai orçar: não há valor a mostrar. */
       orcadoDepois: boolean;
+      /** Por que não há valor — política do produto ou lacuna de tabela. */
+      motivo: MotivoDoFrete;
       /** Instruções de retirada, quando a loja aceita retirar no balcão. */
       retirada: string | null;
     };
@@ -84,6 +86,7 @@ export async function estimarEntrega(
     valorCents: exibido.valorCents,
     prazoDias: exibido.prazoDias,
     orcadoDepois: exibido.orcadoDepois,
+    motivo: exibido.motivo,
     retirada: ligado(s.retirada_disponivel) ? s.retirada_instrucoes.trim() || null : null,
   };
 }

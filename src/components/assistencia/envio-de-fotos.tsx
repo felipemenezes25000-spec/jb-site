@@ -139,11 +139,27 @@ function postar(
   });
 }
 
+export type ResumoDoEnvio = {
+  fotos: number;
+  videos: number;
+  /** Arquivos que falharam e continuam fora do chamado. */
+  falharam: number;
+};
+
 export function EnvioDeFotos({
   maximo = MAXIMO_FOTOS + MAXIMO_VIDEOS,
+  aoMudar,
   className,
 }: {
   maximo?: number;
+  /**
+   * Avisa quem coordena o formulário quantos arquivos entraram.
+   *
+   * A tela de revisão não mencionava foto nenhuma. Quem teve um envio
+   * recusado — e o erro sumia da tela — chegava ao fim achando que a foto
+   * tinha ido junto. O resumo existe para que a revisão diga a verdade.
+   */
+  aoMudar?: (resumo: ResumoDoEnvio) => void;
   className?: string;
 }) {
   const idEntrada = useId();
@@ -276,8 +292,21 @@ export function EnvioDeFotos({
   const enviando = itens.some((item) => item.estado === "enviando");
   const prontos = itens.filter((item) => item.estado === "pronto" && item.mediaId);
   /* Arquivo recusado não ocupa vaga: só conta o que está indo ou já foi. */
-  const usados = itens.filter((item) => item.estado !== "erro").length;
+  const valendo = itens.filter((item) => item.estado !== "erro");
+  const usados = valendo.length;
   const cheio = usados >= maximo;
+
+  /* O contador dizia "0 de 7" enquanto a regra logo acima dizia "6 fotos e 1
+     vídeo". Sete é a soma, mas ninguém pode enviar sete fotos — e quem lê "0
+     de 7" entende exatamente isso. Dois contadores, um por espécie, dizem a
+     regra que o servidor aplica. */
+  const fotosUsadas = valendo.filter((item) => !ehVideo(item.mime)).length;
+  const videosUsados = valendo.filter((item) => ehVideo(item.mime)).length;
+  const falharam = itens.length - valendo.length;
+
+  useEffect(() => {
+    aoMudar?.({ fotos: fotosUsadas, videos: videosUsados, falharam });
+  }, [aoMudar, fotosUsadas, videosUsados, falharam]);
 
   return (
     <div className={className}>
@@ -361,7 +390,9 @@ export function EnvioDeFotos({
               Arquivos do chamado
             </p>
             <p className="tabular text-apoio text-graf-500">
-              {usados} de {maximo}
+              {fotosUsadas} de {MAXIMO_FOTOS} {fotosUsadas === 1 ? "foto" : "fotos"}
+              {" · "}
+              {videosUsados} de {MAXIMO_VIDEOS} vídeo
             </p>
           </div>
 

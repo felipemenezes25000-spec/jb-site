@@ -5,9 +5,10 @@ import { Heart, ImageOff, ShoppingCart } from "lucide-react";
 import { adicionarAoCarrinhoDoCartao } from "@/app/acoes/carrinho";
 import { alternarFavorito } from "@/app/acoes/minha-jb";
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
+import { BotaoEnvio } from "@/components/ui/botao-envio";
 import { Etiqueta } from "@/components/ui/data";
 import { Grade, colunasAte, type ColunasPorTela } from "@/components/ui/grade";
-import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { calcularParcelas, formatarPreco, semQuebraNaUnidade } from "@/lib/format";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
@@ -161,7 +162,7 @@ export function CardProduto({
             href={`/loja/${produto.slug}`}
             className="rounded-xs after:absolute after:inset-0 after:content-[''] hover:text-jb-700"
           >
-            {produto.name}
+            {semQuebraNaUnidade(produto.name)}
           </Link>
         </h3>
 
@@ -219,25 +220,23 @@ export function CardProduto({
             <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
               <input type="hidden" name="produtoId" value={produto.id} />
               <input type="hidden" name="quantidade" value="1" />
-              <button
-                type="submit"
+              <BotaoEnvio
                 aria-label={`Adicionar ${produto.name} ao carrinho`}
-                className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600"
+                className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600 disabled:opacity-70"
               >
                 <ShoppingCart className="size-4" aria-hidden />
-              </button>
+              </BotaoEnvio>
             </form>
           ) : null}
 
           <form action={alternarFavorito} className="relative z-10">
             <input type="hidden" name="produtoId" value={produto.id} />
-            <button
-              type="submit"
+            <BotaoEnvio
               aria-label={`Guardar ${produto.name} nos favoritos`}
-              className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-graf-200 text-graf-700 transition-colors hover:border-jb-500 hover:text-jb-700"
+              className="foco-jb grid min-h-11 min-w-11 place-items-center rounded-md border border-graf-200 text-graf-700 transition-colors hover:border-jb-500 hover:text-jb-700 disabled:opacity-70"
             >
               <Heart className="size-4" aria-hidden />
-            </button>
+            </BotaoEnvio>
           </form>
         </div>
       </div>

@@ -14,13 +14,9 @@ import {
 import { BlocoDecisao } from "@/components/loja/produto/bloco-decisao";
 import { definicaoDaCondicao } from "@/components/loja/produto/condicao";
 import { CondicoesDeCompra } from "@/components/loja/produto/condicoes-de-compra";
-import {
-  agruparEspecificacoes,
-  Documentacao,
-  FichaTecnica,
-  MedidasEPeso,
-  Regulatorio,
-} from "@/components/loja/produto/especificacoes";
+import { Documentacao } from "@/components/loja/produto/especificacoes";
+import { SpecSheet } from "@/components/specs/spec-sheet";
+import { construirFicha } from "@/domain/specs/construir";
 import { ForaDeLinha, SemEstoque } from "@/components/loja/produto/estados";
 import { FaixaConfianca } from "@/components/loja/produto/faixa-confianca";
 import { DetalhesDoProduto, ResumoTecnicoProduto } from "@/components/loja/produto/resumo-tecnico";
@@ -62,7 +58,6 @@ import {
 } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { getSettings, ligado } from "@/lib/settings";
-import { destaquesDaPdp } from "@/lib/marketplace/resumo-produto";
 
 export const instant = false;
 
@@ -196,7 +191,6 @@ export default async function ProdutoPage({ params }: Props) {
     : "";
   const garantiaMeses = unidade?.warrantyMonths ?? produto.warrantyMonths ?? null;
 
-  const grupos = agruparEspecificacoes(produto.specs);
   const adicionalDeInstalacao = produto.addons.find(
     (adicional) => adicional.service.kind === "instalacao",
   );
@@ -209,12 +203,54 @@ export default async function ProdutoPage({ params }: Props) {
     tipo: documento.kind,
   }));
 
-  const temMedidas = Boolean(
-    produto.widthMm || produto.heightMm || produto.depthMm || produto.weightGrams,
-  );
-  const temRegulatorio = Boolean(
-    produto.anvisaCode || produto.manufacturer || produto.regulatoryHolder || produto.regulatoryNote,
-  );
+  /* ------------------------------------------------------------- a ficha
+
+     Um objeto, cinco grupos, e todas as telas lendo dele.
+
+     Antes desta linha o dado técnico da página vinha de sete lugares:
+     `agruparEspecificacoes` para a tabela, `destaquesDaPdp` para a prévia,
+     `MedidasEPeso` para as dimensões, `Regulatorio` para o registro,
+     `AntesDeComprar` para a compatibilidade, `CondicoesDeCompra` para a
+     garantia e o mini-comparador para o resto. O resultado medido na
+     auditoria: "220 V" aparecia cinco vezes, com três rótulos e dois
+     formatos, e o contador dizia "6 especificações" numa página com nove
+     atributos. `construirFicha` unifica as colunas estruturadas e o texto
+     livre do cadastro num objeto tipado — e daqui para baixo nada é digitado
+     duas vezes. */
+  const ficha = construirFicha({
+    nome: produto.name,
+    sku: produto.sku,
+    modelo: produto.model,
+    condicao: produto.condition,
+    marca: produto.brand?.name ?? null,
+    categoria: produto.category
+      ? { slug: produto.category.slug, nome: produto.category.name }
+      : null,
+    fabricante: produto.manufacturer,
+    detentor: produto.regulatoryHolder,
+    anvisa: produto.anvisaCode,
+    voltagem: produto.voltage,
+    pesoGramas: produto.weightGrams,
+    larguraMm: produto.widthMm,
+    alturaMm: produto.heightMm,
+    profundidadeMm: produto.depthMm,
+    garantiaMeses,
+    requisitos: produto.infrastructureNotes,
+    itensInclusos: produto.boxContents,
+    politicaDeInstalacao: produto.installationPolicy,
+    specs: produto.specs,
+    unidade: unidade
+      ? {
+          serialNumber: unidade.serialNumber,
+          manufactureYear: unidade.manufactureYear,
+          usageHours: unidade.usageHours,
+          usageCycles: unidade.usageCycles,
+          warrantyMonths: unidade.warrantyMonths,
+          acquiredFrom: unidade.acquiredFrom,
+        }
+      : null,
+  });
+
   const descricao = produto.description.trim();
   const tamanhoDaDescricao = textoLimpo(descricao, 4000).length;
   const temDescricao = tamanhoDaDescricao > 0;
@@ -243,32 +279,34 @@ export default async function ProdutoPage({ params }: Props) {
      de forma de um item para o outro. */
   const DESCRICAO_LONGA = 900;
   const descricaoMereceSecao = tamanhoDaDescricao > DESCRICAO_LONGA;
-  const temEspecificacoes = grupos.length > 0;
-  /* Quantas linhas a ficha tem no total — é o número que a sanfona mostra
-     fechada, e ele vem dos grupos já montados, não de outra consulta. */
-  const totalEspecificacoes = grupos.reduce((soma, grupo) => soma + grupo.itens.length, 0);
-  const temApoioTecnico = temMedidas || temRegulatorio || documentos.length > 0;
+  /* Identidade sozinha não é ficha técnica.
 
-  /* A lista de decisão sobe para a coluna do meio, junto do preço — e a ficha
-     completa CONTINUA aqui embaixo, com o mesmo nome em toda página.
+     `construirFicha` sempre devolve pelo menos SKU e condição — eles existem
+     em todo cadastro. Se a seção aparecesse por causa deles, um produto sem
+     nenhuma especificação ganharia uma "Ficha técnica" com duas linhas de
+     identificação, que é exatamente a âncora sem conteúdo que a PDP evita
+     fabricar. A seção existe quando há dado técnico: desempenho, instalação,
+     o que vem junto ou a unidade física. */
+  const linhasTecnicas = ficha.grupos
+    .filter((grupo) => grupo.id !== "identidade")
+    .reduce((soma, grupo) => soma + grupo.linhas.length, 0);
+  const temEspecificacoes = linhasTecnicas > 0;
+  /* Contador derivado. Nunca literal: foi um "6 especificações" escrito à mão
+     numa página com nove atributos que expôs a falta de fonte única. */
+  const totalEspecificacoes = ficha.total;
 
-     Cheguei a esconder o cartão "Dados do modelo" quando a lista inteira cabia
-     na dobra, para não repetir a mesma tabela duas vezes. Foi pior: o título
-     da seção passava a depender do produto e as estruturas distintas de ficha
-     saltaram de 7 para 11 — justamente o que se quer eliminar. Mercado Livre e
-     Amazon repetem de propósito: prévia na dobra, tabela completa embaixo,
-     sempre com o mesmo nome. Repetição previsível vale mais que economia que
-     muda de página para página. */
-  const destaques = destaquesDaPdp({
-    specs: produto.specs,
-    voltage: produto.voltage,
-    warrantyMonths: garantiaMeses,
-    anvisaCode: produto.anvisaCode,
-    nome: produto.name,
-    categoriaSlug: produto.category?.slug ?? null,
-  });
-  const temFichaTecnica = temEspecificacoes || temApoioTecnico;
-  const duasColunasNaFicha = temEspecificacoes && temApoioTecnico;
+  /* No topo ficam TRÊS atributos, não seis.
+
+     A prévia de seis linhas repetia a ficha inteira 600 px acima dela — e o
+     link "Ficha completa" levava a um bloco cujo conteúdo principal era
+     idêntico ao que a pessoa acabara de ler. Três atributos respondem "é este
+     o equipamento?"; a ficha responde "serve na minha sala?". São perguntas
+     diferentes, e só a segunda precisa da tabela inteira.
+
+     Quais três não é escolha de layout: vêm de `decisive` no registro da
+     família. Para autoclave, capacidade, ciclo e bandejas; para seladora, a
+     barra de selagem. */
+  const temFichaTecnica = temEspecificacoes || documentos.length > 0;
 
   const temInfraestrutura = Boolean(
     produto.voltage?.trim() ||
@@ -348,7 +386,7 @@ export default async function ProdutoPage({ params }: Props) {
 
   const ancoras: AncoraDoProduto[] = [
     { id: "visao-geral", rotulo: "Visão geral" },
-    ...(unidade ? [{ id: "unidade", rotulo: "Esta unidade" }] : []),
+    ...(produto.condition !== "novo" ? [{ id: "laudo", rotulo: "Laudo de inspeção" }] : []),
     ...(temFichaTecnica
       ? [{ id: "ficha-tecnica", rotulo: "Especificações" }]
       : []),
@@ -418,7 +456,7 @@ export default async function ProdutoPage({ params }: Props) {
                 ? { nome: produto.category.name, slug: produto.category.slug }
                 : null
             }
-            destaques={destaques}
+            ficha={ficha}
           />
         }
         compra={
@@ -484,22 +522,27 @@ export default async function ProdutoPage({ params }: Props) {
 
       <NavegacaoDoProduto ancoras={ancoras} compra={compraDaBarra} />
 
-      {unidade ? (
-        <UnidadeFisica
-          id="unidade"
-          condicao={produto.condition}
-          numeroDeSerie={unidade.serialNumber}
-          anoDeFabricacao={unidade.manufactureYear}
-          horasDeUso={unidade.usageHours}
-          ciclos={unidade.usageCycles}
-          garantiaMeses={unidade.warrantyMonths}
-          notasDeEstado={unidade.conditionNotes}
-          notasDeInspecao={unidade.inspectionNotes}
-          checklist={checklist}
-          certificado={certificado}
-          vendida={unidade.status === "vendido"}
-        />
-      ) : null}
+      {/* O laudo é seção fixa de todo equipamento que não é novo — com ou sem
+          registro publicado. A condição anterior (`unidade ? ... : null`) é o
+          que fazia a página prometer o laudo na caixa de condição e no FAQ e
+          não entregar nada: sem unidade cadastrada, a seção inteira sumia e as
+          duas frases continuavam no ar. Sem registro, agora a seção diz que
+          não há e oferece o caminho. */}
+      <UnidadeFisica
+        id="laudo"
+        condicao={produto.condition}
+        numeroDeSerie={unidade?.serialNumber ?? null}
+        anoDeFabricacao={unidade?.manufactureYear ?? null}
+        horasDeUso={unidade?.usageHours ?? null}
+        ciclos={unidade?.usageCycles ?? null}
+        garantiaMeses={unidade?.warrantyMonths ?? null}
+        notasDeEstado={unidade?.conditionNotes ?? ""}
+        notasDeInspecao={unidade?.inspectionNotes ?? ""}
+        checklist={checklist}
+        certificado={certificado}
+        vendida={unidade?.status === "vendido"}
+        hrefAjuda={hrefWhatsapp || "/contato"}
+      />
 
       <div className="container-loja">
         {temDescricao && descricaoMereceSecao ? (
@@ -534,26 +577,24 @@ export default async function ProdutoPage({ params }: Props) {
                ficava a um clique de distância de quem já decidiu comparar. */
             aberto
           >
-            <div className={duasColunasNaFicha ? "grid gap-x-10 gap-y-8 xl:grid-cols-2" : "max-w-4xl"}>
-              {temEspecificacoes ? <FichaTecnica grupos={grupos} /> : null}
+            <div className="min-w-0 space-y-8">
+              <SpecSheet
+                ficha={ficha}
+                fonte={
+                  ficha.procedencias.includes("inspecao-jb")
+                    ? "cadastro do fabricante e inspeção da JB nesta unidade"
+                    : "cadastro do fabricante"
+                }
+              />
 
-              {temApoioTecnico ? (
-                <div className="min-w-0 space-y-8">
-                  <MedidasEPeso
-                    larguraMm={produto.widthMm}
-                    alturaMm={produto.heightMm}
-                    profundidadeMm={produto.depthMm}
-                    pesoG={produto.weightGrams}
-                  />
-                  <Regulatorio
-                    codigoAnvisa={produto.anvisaCode}
-                    fabricante={produto.manufacturer}
-                    detentor={produto.regulatoryHolder}
-                    observacao={produto.regulatoryNote}
-                  />
-                  <Documentacao documentos={documentos} />
-                </div>
+              {produto.regulatoryNote?.trim() ? (
+                <p className="texto-apoio max-w-[70ch] text-graf-600">
+                  <span className="font-semibold text-graf-800">Observação regulatória:</span>{" "}
+                  {produto.regulatoryNote.trim()}
+                </p>
               ) : null}
+
+              <Documentacao documentos={documentos} />
             </div>
           </BlocoDecisao>
         ) : null}

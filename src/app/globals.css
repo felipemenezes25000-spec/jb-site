@@ -1147,3 +1147,18 @@
     transform: translateX(-50%);
   }
 }
+
+/* Seta do `<select>`, para o campo fechado combinar com o resto dos controles.
+
+   A lista aberta continua sendo a nativa — e continua de propósito. Um menu
+   desenhado à mão precisa refazer teclado, leitura de tela e o seletor de
+   rolagem do celular, e quase sempre refaz pior. O que dava ao campo o ar de
+   "formulário de sistema" era a seta do sistema operacional; ela é a parte que
+   dá para trocar sem perder nada. */
+@utility select-jb {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666d76' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1rem 1rem;
+}

@@ -12,7 +12,10 @@ import {
   type Operacao,
 } from "@/components/assistencia/rotulos";
 import { LeitorDeEtiqueta } from "@/components/conta/mj-leitor-etiqueta";
-import { EnvioDeFotos } from "@/components/assistencia/envio-de-fotos";
+import {
+  EnvioDeFotos,
+  type ResumoDoEnvio,
+} from "@/components/assistencia/envio-de-fotos";
 import { Verificacao } from "@/components/assistencia/verificacao";
 import { abrirChamadoPublico, type EstadoAssistencia } from "@/app/acoes/assistencia";
 import { Aviso } from "@/components/ui/aviso";
@@ -69,6 +72,17 @@ export type UnidadeEscolha = {
 };
 
 export type CategoriaEscolha = { id: string; nome: string };
+
+/** O endereço padrão da conta, para começar a etapa 4 preenchida. */
+export type EnderecoPadrao = {
+  cep: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+};
 
 type Rascunho = {
   equipamentoId: string;
@@ -141,9 +155,16 @@ const ETAPA_DO_CAMPO: Record<string, number> = {
 function vazio(
   cliente: { nome: string; email: string; telefone: string } | null,
   unidades: UnidadeEscolha[],
+  equipamentos: EquipamentoEscolha[],
+  endereco: EnderecoPadrao | null,
 ): Rascunho {
   return {
-    equipamentoId: "",
+    /* Com um equipamento só na conta, "Outro equipamento" vinha marcado e a
+       integração se anulava sozinha: o chamado saía sem histórico, sem série e
+       sem prontuário, para alguém que tinha exatamente um aparelho cadastrado.
+       Mesma regra da unidade única logo abaixo — não é presunção quando não há
+       alternativa a presumir. */
+    equipamentoId: equipamentos.length === 1 ? equipamentos[0].id : "",
     categoriaId: "",
     marca: "",
     modelo: "",
@@ -155,13 +176,13 @@ function vazio(
     aindaOpera: "sim",
     // Com uma unidade só, escolher por ela não é presunção — é o único caso.
     unidadeEscolha: unidades.length === 1 ? unidades[0].id : "",
-    cep: "",
-    logradouro: "",
-    numero: "",
-    complemento: "",
-    bairro: "",
-    cidade: "",
-    uf: "",
+    cep: endereco?.cep ?? "",
+    logradouro: endereco?.logradouro ?? "",
+    numero: endereco?.numero ?? "",
+    complemento: endereco?.complemento ?? "",
+    bairro: endereco?.bairro ?? "",
+    cidade: endereco?.cidade ?? "",
+    uf: endereco?.uf ?? "",
     disponibilidade: "",
     nome: cliente?.nome ?? "",
     email: cliente?.email ?? "",
@@ -170,6 +191,12 @@ function vazio(
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** As 27 unidades federativas, como no checkout. */
+const UFS = [
+  "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT",
+  "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO",
+];
 
 /** O que a conferência local devolve: a frase e, quando dá, o campo culpado. */
 type Pendencia = { campo?: string; texto: string };
@@ -214,6 +241,7 @@ export function AssistenteChamado({
   categorias,
   equipamentos,
   unidades,
+  enderecoPadrao = null,
   cliente,
   logado,
   telefone,
@@ -224,6 +252,7 @@ export function AssistenteChamado({
   categorias: CategoriaEscolha[];
   equipamentos: EquipamentoEscolha[];
   unidades: UnidadeEscolha[];
+  enderecoPadrao?: EnderecoPadrao | null;
   cliente: { nome: string; email: string; telefone: string } | null;
   logado: boolean;
   telefone: string;
@@ -235,10 +264,17 @@ export function AssistenteChamado({
     {},
   );
 
-  const [dados, setDados] = useState<Rascunho>(() => vazio(cliente, unidades));
+  const [dados, setDados] = useState<Rascunho>(() =>
+    vazio(cliente, unidades, equipamentos, enderecoPadrao),
+  );
   const [etapa, setEtapa] = useState(0);
   const [montado, setMontado] = useState(false);
   const [pendencia, setPendencia] = useState<Pendencia | undefined>();
+  const [arquivos, setArquivos] = useState<ResumoDoEnvio>({
+    fotos: 0,
+    videos: 0,
+    falharam: 0,
+  });
   const refTopo = useRef<HTMLDivElement>(null);
   const refRecado = useRef<HTMLDivElement>(null);
   useFocoNaEtapa(etapa, montado, refTopo);
@@ -322,8 +358,27 @@ export function AssistenteChamado({
       if (somenteDigitos(dados.telefone).length < 10) {
         return { campo: "telefone", texto: "Informe o telefone com DDD." };
       }
-      if (usaEnderecoDigitado && !dados.cidade.trim()) {
-        return { campo: "cidade", texto: "Informe ao menos a cidade do atendimento." };
+      /* O endereço define a rota do técnico — é o que a própria etapa diz.
+         Antes, só a cidade era cobrada: dava para abrir uma visita técnica sem
+         rua e sem número, e a equipe descobria isso ao tentar agendar. Rua,
+         número e cidade são o mínimo para alguém chegar; bairro e CEP ajudam,
+         e a consulta de CEP preenche os dois. */
+      if (usaEnderecoDigitado) {
+        if (dados.logradouro.trim().length < 3) {
+          return {
+            campo: "logradouro",
+            texto: "Informe a rua ou avenida do atendimento — é por ela que o técnico chega.",
+          };
+        }
+        if (!dados.numero.trim()) {
+          return {
+            campo: "numero",
+            texto: "Informe o número. Se não houver, escreva “S/N”.",
+          };
+        }
+        if (!dados.cidade.trim()) {
+          return { campo: "cidade", texto: "Informe a cidade do atendimento." };
+        }
       }
       return undefined;
     }
@@ -576,13 +631,39 @@ export function AssistenteChamado({
                 descricao="É o que define a ordem de atendimento na fila da equipe."
                 divisor
               >
-                <Opcoes
-                  nome="urgencia"
-                  rotulo="Urgência"
-                  valor={dados.urgencia}
-                  aoMudar={(valor) => alterar({ urgencia: valor })}
-                  opcoes={OPCOES_URGENCIA}
-                />
+                {/* Uma pergunta, não duas.
+
+                    "Urgência: Parado" e "O equipamento ainda opera?: Não, está
+                    parado" pediam o mesmo dado em dois lugares, e nada impedia
+                    que se contradissessem: dava para marcar "Baixa" e "está
+                    parado" no mesmo chamado, e a fila da equipe recebia os dois
+                    sinais brigando.
+
+                    Agora o estado do equipamento é a pergunta, e "Parado" saiu
+                    da lista de urgência: ele é DERIVADO. Quem responde "está
+                    parado" tem a urgência definida por isso — e quem responde
+                    que funciona escolhe entre três graus de impacto, que é o
+                    que a equipe realmente precisa para ordenar a fila. De
+                    quebra, os chips deixaram de ser 3+1 com um órfão na segunda
+                    linha. */}
+                {dados.aindaOpera === "nao" ? (
+                  <Aviso tom="atencao" titulo="Urgência: equipamento parado">
+                    Você marcou que o equipamento está fora de uso, então este chamado entra
+                    na fila como parada. Para escolher outro grau de urgência, mude a resposta
+                    de &ldquo;O equipamento ainda opera?&rdquo;.
+                  </Aviso>
+                ) : (
+                  <Opcoes
+                    nome="urgencia"
+                    rotulo="Urgência"
+                    valor={dados.urgencia}
+                    aoMudar={(valor) => alterar({ urgencia: valor })}
+                    opcoes={OPCOES_URGENCIA.filter((opcao) => opcao.valor !== "parado")}
+                  />
+                )}
+                {dados.aindaOpera === "nao" ? (
+                  <input type="hidden" name="urgencia" value="parado" />
+                ) : null}
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Selecao
@@ -603,7 +684,20 @@ export function AssistenteChamado({
                     nome="aindaOpera"
                     rotulo="O equipamento ainda opera?"
                     valor={dados.aindaOpera}
-                    aoMudar={(valor) => alterar({ aindaOpera: valor })}
+                    aoMudar={(valor) =>
+                      alterar({
+                        aindaOpera: valor,
+                        /* Estado e urgência param de poder discordar: parado
+                           vira "parado"; voltando a operar, a urgência cai
+                           para "alta" em vez de continuar declarando parada. */
+                        urgencia:
+                          valor === "nao"
+                            ? "parado"
+                            : dados.urgencia === "parado"
+                              ? "alta"
+                              : dados.urgencia,
+                      })
+                    }
                     opcoes={(Object.keys(ROTULO_OPERACAO) as Operacao[]).map((chave) => ({
                       valor: chave,
                       rotulo: ROTULO_OPERACAO[chave],
@@ -630,7 +724,7 @@ export function AssistenteChamado({
 
             <div className="mt-7 space-y-6">
               {logado ? (
-                <EnvioDeFotos />
+                <EnvioDeFotos aoMudar={setArquivos} />
               ) : (
                 <Aviso tom="info" titulo="Para anexar fotos, entre na sua conta">
                   <p>
@@ -735,12 +829,19 @@ export function AssistenteChamado({
                       ajuda="Preenche o endereço sozinho."
                       className="sm:col-span-2"
                     />
+                    {/* "Logradouro" e "Estado", os mesmos rótulos do checkout.
+
+                        Aqui eram "Endereço" e "UF", e o campo de estado era
+                        texto livre enquanto lá era uma lista — o mesmo dado,
+                        da mesma clínica, com dois nomes e duas regras. Quem
+                        preenche os dois formulários no mesmo mês percebe. */}
                     <Campo
-                      rotulo="Endereço"
+                      rotulo="Logradouro"
                       name="logradouro"
                       value={dados.logradouro}
                       onChange={(evento) => alterar({ logradouro: evento.target.value })}
                       autoComplete="street-address"
+                      erro={erroDoCampo("logradouro")}
                       className="sm:col-span-4"
                     />
                     <Campo
@@ -748,6 +849,7 @@ export function AssistenteChamado({
                       name="numero"
                       value={dados.numero}
                       onChange={(evento) => alterar({ numero: evento.target.value })}
+                      erro={erroDoCampo("numero")}
                       className="sm:col-span-2"
                     />
                     <Campo
@@ -774,15 +876,21 @@ export function AssistenteChamado({
                       erro={erroDoCampo("cidade")}
                       className="sm:col-span-2"
                     />
-                    <Campo
-                      rotulo="UF"
+                    <Selecao
+                      rotulo="Estado"
                       name="uf"
                       value={dados.uf}
-                      onChange={(evento) => alterar({ uf: evento.target.value.toUpperCase() })}
-                      maxLength={2}
+                      onChange={(evento) => alterar({ uf: evento.target.value })}
                       autoComplete="address-level1"
                       className="sm:col-span-1"
-                    />
+                    >
+                      <option value="">UF</option>
+                      {UFS.map((sigla) => (
+                        <option key={sigla} value={sigla}>
+                          {sigla}
+                        </option>
+                      ))}
+                    </Selecao>
                   </div>
                 )}
 
@@ -898,6 +1006,28 @@ export function AssistenteChamado({
                         .join(" — ")
                 }
                 aoEditar={() => setEtapa(3)}
+              />
+              {/* Fotos aparecem na revisão porque a etapa 3 promete que elas
+                  "resolvem metade do diagnóstico". Sem esta linha, quem teve
+                  um envio recusado chegava aqui achando que tinha mandado. */}
+              <Resumo
+                rotulo="Fotos e vídeo"
+                valor={
+                  arquivos.fotos + arquivos.videos > 0
+                    ? [
+                        arquivos.fotos > 0
+                          ? `${arquivos.fotos} ${arquivos.fotos === 1 ? "foto" : "fotos"}`
+                          : "",
+                        arquivos.videos > 0 ? `${arquivos.videos} vídeo` : "",
+                        arquivos.falharam > 0
+                          ? `${arquivos.falharam} não ${arquivos.falharam === 1 ? "entrou" : "entraram"}`
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")
+                    : "Nenhuma — o chamado segue, e a equipe pode pedir por WhatsApp"
+                }
+                aoEditar={() => setEtapa(2)}
               />
               <Resumo
                 rotulo="Horário preferido"

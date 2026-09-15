@@ -241,9 +241,12 @@ export default async function ChamadoPage({ params }: Parametros) {
                 </Etiqueta>
               </div>
 
+              {/* O cabeçalho do chamado é claro (o `h1` é `text-graf-950`):
+                  `contorno-claro` é texto branco e some aqui, como sumiu na
+                  faixa de contato da 404. */}
               <BotaoCopiar
                 texto={chamado.number}
-                variante="contorno-claro"
+                variante="secundario"
                 tamanho="sm"
                 rotulo="Copiar o número"
                 rotuloCopiado="Número copiado"

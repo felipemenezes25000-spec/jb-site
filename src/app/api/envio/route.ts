@@ -229,6 +229,17 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, arquivo: registro }, { status: 201 });
   } catch (falha) {
     console.error("[envio] falha ao guardar", falha);
+
+    /* Quando o armazenamento diz o que houve, a tela repete o que ele disse.
+
+       "Não foi possível receber o arquivo. Tente de novo." era a resposta para
+       tudo, inclusive para o caso em que tentar de novo nunca ia funcionar —
+       ambiente sem lugar onde gravar. Mensagem genérica sobre erro permanente
+       é pior do que erro: transforma uma configuração faltando numa suspeita
+       de que o arquivo da pessoa está com problema. */
+    const { ErroDeUpload } = await import("@/lib/upload");
+    if (falha instanceof ErroDeUpload) return erro(falha.message, falha.status);
+
     return erro(RESPOSTA_GENERICA, 500);
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { CircleCheck, Plus, Send, Trash2 } from "lucide-react";
 
@@ -58,6 +58,23 @@ export function FormularioOrcamento({
     {},
   );
 
+  /* A confirmação nascia no rodapé.
+
+     O formulário é longo; quando ele é trocado pela tela de sucesso, o
+     navegador mantém a posição de rolagem e a pessoa continua olhando o
+     rodapé. A auditoria só descobriu que o pedido tinha dado certo depois de
+     rolar para cima. Um efeito no primeiro render da confirmação leva a página
+     de volta ao topo, respeitando quem pediu menos movimento. */
+  useEffect(() => {
+    if (!estado.ok) return;
+    window.scrollTo({
+      top: 0,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  }, [estado.ok]);
+
   const [tipo, setTipo] = useState<TipoPedido>(tipoInicial);
   const [linhas, setLinhas] = useState<Linha[]>(() => [novaLinha(itemInicial)]);
   const [tel, setTel] = useState(cliente?.telefone ?? "");
@@ -80,6 +97,15 @@ export function FormularioOrcamento({
           funciona a assistência técnica da JB.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
+          {/* Pedido e chamado têm página de acompanhamento; o orçamento não
+              tinha nenhum caminho a partir daqui. Quem está logado vai direto
+              para a proposta na Área da Clínica — ela já aparece lá, em
+              "Em análise". */}
+          {estado.numero && cliente ? (
+            <LinkBotao href={`/minha-jb/orcamentos/${encodeURIComponent(estado.numero)}`}>
+              Acompanhar {estado.numero}
+            </LinkBotao>
+          ) : null}
           <LinkBotao href="/loja" variante="secundario">
             Ver equipamentos
           </LinkBotao>

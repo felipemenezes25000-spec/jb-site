@@ -207,21 +207,74 @@ export default async function SimuladorPage({ searchParams }: Props) {
 
   const anual = (valor: number | null) => (valor === null ? null : valor * anos);
 
+  /* Dimensão não informada não vira linha — e a simulação diz isso.
+
+     O texto do bloco opcional prometia: "Sem eles a simulação continua
+     valendo". Não continuava. Cada cenário nascia com uma linha de manutenção
+     e uma de instalação mesmo quando ninguém informou nada, essas linhas
+     saíam como `ausente`, e `compararCenarios` recusava comparar — com razão,
+     porque somar um custo desconhecido como zero elege o mais barato por falta
+     de dado.
+
+     A correção não é afrouxar a recusa; é parar de criar a linha. Se ninguém
+     informou manutenção para nenhum cenário, manutenção simplesmente não entra
+     na simulação, e a ressalva declara isso. Se informou para UM, a linha
+     existe nos três e os outros dois ficam `ausente` — aí a recusa volta a ser
+     a resposta certa, porque comparar manutenção de um lado só é pior do que
+     não comparar.
+
+     A regra em uma frase: dimensão ausente sai da conta inteira; dimensão
+     parcial bloqueia a conta. O que nunca acontece é dimensão parcial virando
+     zero. */
+  const comparaManutencao = [manutencaoReparo, manutencaoSeminovo, manutencaoNovo].some(
+    (valor) => valor !== null,
+  );
+  const comparaInstalacao = instalacao !== null;
+
+  const linhaDeManutencao = (
+    valorAnual: number | null,
+    deQuem: string,
+  ): LinhaDeCusto[] => {
+    if (!comparaManutencao) return [];
+    return [
+      {
+        rotulo: `Manutenção em ${anos} ${anos === 1 ? "ano" : "anos"}`,
+        valorCents: anual(valorAnual),
+        origem: valorAnual === null ? "ausente" : "premissa",
+        procedencia:
+          valorAnual === null
+            ? `Você informou manutenção para outro cenário, mas não para ${deQuem}. Sem esse número os totais não se comparam.`
+            : `${formatarPreco(valorAnual)} por ano, informado por você.`,
+      },
+    ];
+  };
+
+  const linhaDeInstalacao = (): LinhaDeCusto[] =>
+    comparaInstalacao
+      ? [
+          {
+            rotulo: "Instalação",
+            valorCents: instalacao,
+            origem: "premissa",
+            procedencia: "Informado por você. Vale para o seminovo e para o novo.",
+          },
+        ]
+      : [];
+
+  /** O que ficou de fora por não ter sido informado em nenhum cenário. */
+  const foraDaConta = [
+    comparaManutencao ? null : "manutenção",
+    comparaInstalacao ? null : "instalação",
+    decisaoDaParada.incluir ? null : "custo dos dias parados",
+  ].filter((item): item is string => item !== null);
+
   const cenarios: Cenario[] = [
     {
       chave: "reparar",
       titulo: ROTULO_DO_CENARIO.reparar,
       linhas: [
         linhaDoReparo(reparo),
-        {
-          rotulo: `Manutenção em ${anos} ${anos === 1 ? "ano" : "anos"}`,
-          valorCents: anual(manutencaoReparo),
-          origem: manutencaoReparo === null ? "ausente" : "premissa",
-          procedencia:
-            manutencaoReparo === null
-              ? "Você não informou o custo anual de manutenção."
-              : `${formatarPreco(manutencaoReparo)} por ano, informado por você.`,
-        },
+        ...linhaDeManutencao(manutencaoReparo, "o reparo"),
         ...linhaDaParada,
       ],
       observacoes: [
@@ -238,16 +291,8 @@ export default async function SimuladorPage({ searchParams }: Props) {
           origem: seminovo === null ? "ausente" : "conhecido",
           procedencia: seminovo === null ? "Preço não informado." : "Preço do equipamento.",
         },
-        {
-          rotulo: "Instalação",
-          valorCents: instalacao,
-          origem: instalacao === null ? "ausente" : "premissa",
-        },
-        {
-          rotulo: `Manutenção em ${anos} ${anos === 1 ? "ano" : "anos"}`,
-          valorCents: anual(manutencaoSeminovo),
-          origem: manutencaoSeminovo === null ? "ausente" : "premissa",
-        },
+        ...linhaDeInstalacao(),
+        ...linhaDeManutencao(manutencaoSeminovo, "o seminovo"),
       ],
       observacoes: [
         "Um seminovo do programa da JB sai com checklist de inspeção e código de verificação.",
@@ -263,22 +308,14 @@ export default async function SimuladorPage({ searchParams }: Props) {
           origem: novo === null ? "ausente" : "conhecido",
           procedencia: novo === null ? "Preço não informado." : "Preço do equipamento.",
         },
-        {
-          rotulo: "Instalação",
-          valorCents: instalacao,
-          origem: instalacao === null ? "ausente" : "premissa",
-        },
-        {
-          rotulo: `Manutenção em ${anos} ${anos === 1 ? "ano" : "anos"}`,
-          valorCents: anual(manutencaoNovo),
-          origem: manutencaoNovo === null ? "ausente" : "premissa",
-        },
+        ...linhaDeInstalacao(),
+        ...linhaDeManutencao(manutencaoNovo, "o novo"),
       ],
       observacoes: ["Garantia de fábrica cobre parte do período simulado."],
     },
   ];
 
-  const comparacao = compararCenarios(cenarios, anos);
+  const comparacao = compararCenarios(cenarios, anos, foraDaConta);
 
   return (
     <>
@@ -304,7 +341,7 @@ export default async function SimuladorPage({ searchParams }: Props) {
               id="anos"
               name="anos"
               defaultValue={String(anos)}
-              className="mt-2 min-h-11 rounded-lg border border-graf-300 bg-white px-3 text-base sm:text-[0.875rem] text-graf-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+              className="select-jb mt-2 min-h-11 rounded-lg border border-graf-300 bg-white pl-3 pr-9 text-base sm:text-[0.875rem] text-graf-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
               {[3, 5, 7, 10].map((opcao) => (
                 <option key={opcao} value={opcao}>
@@ -365,8 +402,10 @@ export default async function SimuladorPage({ searchParams }: Props) {
 
             <div className="border-t border-graf-200 p-4">
               <p className="text-[0.75rem] leading-relaxed text-graf-500">
-                Estes quatro campos afinam a comparação. Sem eles a simulação continua
-                valendo — ela só declara que a manutenção e a parada não foram informadas.
+                Estes campos afinam a comparação. Sem eles ela continua valendo: a dimensão
+                que ninguém informou sai da conta dos três cenários e é declarada na ressalva
+                do resultado — nunca entra como zero. Informar para um cenário só, porém,
+                torna os totais incomparáveis: ou vale para os três, ou para nenhum.
               </p>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-3">

@@ -95,14 +95,20 @@ describe("paraCentavos", () => {
 });
 
 describe("calcularParcelas", () => {
+  /* `valorCents` continua sendo o valor que se repete — é ele que a vitrine
+     anuncia. O que passou a existir é `primeiraCents`, que absorve a sobra do
+     arredondamento para a soma fechar com o total (ver
+     `tests/unitarios/datas-e-parcelas.test.ts`). Estas asserções passaram a
+     usar `toMatchObject` para checar o que sempre checaram, sem depender do
+     tamanho do objeto. */
   it("escolhe o maior número de parcelas que respeita o mínimo", () => {
     // 849000 / 12 = 70750 ≥ 5000 → cabe no máximo
-    expect(calcularParcelas(849000)).toEqual({ parcelas: 12, valorCents: 70750 });
+    expect(calcularParcelas(849000)).toMatchObject({ parcelas: 12, valorCents: 70750 });
   });
 
   it("reduz as parcelas quando a divisão fica abaixo do mínimo", () => {
     // mínimo 5000: 30000/12 = 2500 (não), 30000/6 = 5000 (sim)
-    expect(calcularParcelas(30000)).toEqual({ parcelas: 6, valorCents: 5000 });
+    expect(calcularParcelas(30000)).toMatchObject({ parcelas: 6, valorCents: 5000 });
   });
 
   it("recusa parcelar quando nem 2× atinge o mínimo", () => {
@@ -111,22 +117,29 @@ describe("calcularParcelas", () => {
   });
 
   it("aceita exatamente 2× quando é o único que cabe", () => {
-    expect(calcularParcelas(10000)).toEqual({ parcelas: 2, valorCents: 5000 });
+    expect(calcularParcelas(10000)).toMatchObject({ parcelas: 2, valorCents: 5000 });
   });
 
   it("arredonda a parcela para baixo, nunca cobrando a mais por parcela", () => {
     const resultado = calcularParcelas(100001, 3, 1000);
-    expect(resultado).toEqual({ parcelas: 3, valorCents: 33333 });
+    expect(resultado).toMatchObject({ parcelas: 3, valorCents: 33333 });
     expect(resultado!.valorCents * resultado!.parcelas).toBeLessThanOrEqual(100001);
+    /* E a sobra vai para a primeira, para o pedido não perder dois centavos. */
+    expect(
+      resultado!.primeiraCents + resultado!.valorCents * (resultado!.parcelas - 1),
+    ).toBe(100001);
   });
 
   it("respeita o teto de parcelas configurado", () => {
-    expect(calcularParcelas(849000, 6)).toEqual({ parcelas: 6, valorCents: 141500 });
+    expect(calcularParcelas(849000, 6)).toMatchObject({ parcelas: 6, valorCents: 141500 });
     expect(calcularParcelas(849000, 1)).toBeNull();
   });
 
   it("respeita a parcela mínima configurada", () => {
-    expect(calcularParcelas(120000, 12, 20000)).toEqual({ parcelas: 6, valorCents: 20000 });
+    expect(calcularParcelas(120000, 12, 20000)).toMatchObject({
+      parcelas: 6,
+      valorCents: 20000,
+    });
   });
 
   it("não parcela total zerado nem negativo", () => {

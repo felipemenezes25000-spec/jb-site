@@ -1168,6 +1168,35 @@ enum TempUploadStatus {
 ///   • **Corrida.** A limpeza só apaga linha `pendente`. Vincular muda o
 ///     estado na mesma transação que grava o chamado, então um arquivo
 ///     reivindicado por um chamado válido nunca é apagado pelo job.
+/// Arquivo guardado no próprio banco.
+///
+/// Existe para o ambiente que não tem loja de blobs configurada. Sem ela, o
+/// envio caía no sistema de arquivos do projeto — que em serverless é somente
+/// leitura. O resultado medido na auditoria: toda foto de chamado devolvia
+/// "Não foi possível receber o arquivo. Tente de novo.", e tentar de novo
+/// nunca ia funcionar, porque não era falha transitória e sim ausência de
+/// lugar onde gravar. E a própria tela dizia que a foto da etiqueta "resolve
+/// metade do diagnóstico".
+///
+/// Guardar binário em Postgres não é o destino final de um acervo de mídia —
+/// é o piso que garante que a promessa da tela seja verdadeira em qualquer
+/// ambiente. Com `BLOB_READ_WRITE_TOKEN` configurado, nada passa por aqui.
+///
+/// Continua sendo armazenamento PRIVADO: o caminho gravado (`/banco/...`) não
+/// abre no navegador, e os bytes só saem pelas rotas que conferem sessão e
+/// dono antes de ler.
+model StoredBlob {
+  id        String   @id @default(cuid())
+  /// Mesmo `pathname` que a loja de blobs usaria. Único.
+  pathname  String   @unique
+  mime      String
+  size      Int
+  bytes     Bytes
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model TempUpload {
   id String @id @default(cuid())
 
@@ -1430,6 +1459,15 @@ model WorkOrderEvent {
 
 enum QuoteStatus {
   rascunho
+  /// Pedido do cliente pelo site, ainda sem proposta montada.
+  ///
+  /// `rascunho` é documento interno — o que a equipe escreve antes de o
+  /// cliente ver. Um pedido feito no /orcamento é o contrário: o cliente sabe
+  /// que existe, recebeu o número por e-mail e a tela de sucesso prometeu que
+  /// ele entra na fila. Sem um estado próprio, esse pedido nascia `rascunho` e
+  /// sumia da Área da Clínica — a auditoria criou ORC-000005 e a listagem
+  /// continuou dizendo "Nenhum orçamento por aqui · Todas 0".
+  solicitado
   enviado
   em_duvida
   aprovado

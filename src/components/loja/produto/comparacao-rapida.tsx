@@ -1,22 +1,76 @@
 import Link from "next/link";
 import { ArrowRight, Scale } from "lucide-react";
 
+import { compararProdutos } from "@/domain/specs/comparar";
 import { formatarPreco } from "@/lib/format";
-import {
-  normalizarAtributo,
-  prioridadeAtributoDecisao,
-} from "@/lib/marketplace/atributos-decisao";
+
+/* ============================================================================
+   Mini-comparador da ficha
+
+   Este bloco tinha um esquema de atributos próprio — o terceiro do site para
+   os mesmos dois produtos. Comparava "Capacidade, Ciclo, Secagem, Bandejas,
+   Voltagem, Garantia" enquanto a ficha logo acima mostrava outros nove campos
+   e o comparador completo mostrava outros dez. Na mesma coluna saíam "220" e
+   "bivolt"; na linha da garantia, "6 meses" ao lado de "1 ano".
+
+   Agora ele lê `compararProdutos`, que é a mesma ficha de todo o resto do
+   site. Ele não escolhe mais o que comparar: escolhe quantas linhas cabem.
+   ============================================================================ */
 
 export type ProdutoComparavel = {
   id: string;
   slug: string;
   name: string;
+  sku: string;
+  model: string;
+  condition: string;
   priceCents: number;
   allowDirectPurchase: boolean;
   voltage: string | null;
   warrantyMonths: number | null;
+  weightGrams: number | null;
+  widthMm: number | null;
+  heightMm: number | null;
+  depthMm: number | null;
+  manufacturer: string | null;
+  regulatoryHolder: string | null;
+  anvisaCode: string | null;
+  installationPolicy: string;
+  boxContents: string[];
+  infrastructureNotes: string[];
+  brand: { name: string } | null;
+  category: { slug: string; name: string } | null;
   specs: { label: string; value: string; order: number }[];
 };
+
+/** Quantas linhas cabem antes de a tabela virar a ficha inteira de novo. */
+const LINHAS_NA_FICHA = 6;
+
+export function paraFicha(produto: ProdutoComparavel) {
+  return {
+    nome: produto.name,
+    sku: produto.sku,
+    modelo: produto.model,
+    condicao: produto.condition,
+    marca: produto.brand?.name ?? null,
+    categoria: produto.category
+      ? { slug: produto.category.slug, nome: produto.category.name }
+      : null,
+    fabricante: produto.manufacturer,
+    detentor: produto.regulatoryHolder,
+    anvisa: produto.anvisaCode,
+    voltagem: produto.voltage,
+    pesoGramas: produto.weightGrams,
+    larguraMm: produto.widthMm,
+    alturaMm: produto.heightMm,
+    profundidadeMm: produto.depthMm,
+    garantiaMeses: produto.warrantyMonths,
+    requisitos: produto.infrastructureNotes,
+    itensInclusos: produto.boxContents,
+    politicaDeInstalacao: produto.installationPolicy,
+    specs: produto.specs,
+  };
+}
 
 function preco(produto: ProdutoComparavel) {
   if (!produto.allowDirectPurchase || produto.priceCents <= 0) return "Sob orçamento";
@@ -38,79 +92,19 @@ function diferencaDePreco(atual: ProdutoComparavel, alternativa: ProdutoComparav
   return `${formatarPreco(Math.abs(diferenca))} ${diferenca < 0 ? "a menos" : "a mais"}`;
 }
 
-export function linhasDaComparacao(produtos: ProdutoComparavel[]) {
-  if (produtos.length === 0) return [];
-
-  const principal = produtos[0];
-  const contexto = {
-    nome: principal.name,
-    rotulos: principal.specs.map((spec) => spec.label),
-  };
-
-  const candidatos = new Map<
-    string,
-    { rotulo: string; prioridade: number; ocorrencias: number; primeiraOrdem: number }
-  >();
-
-  for (const produto of produtos) {
-    const vistos = new Set<string>();
-    for (const spec of produto.specs) {
-      if (!spec.label.trim() || !spec.value.trim()) continue;
-      const id = normalizarAtributo(spec.label);
-      if (!id || vistos.has(id)) continue;
-      vistos.add(id);
-
-      const atual = candidatos.get(id);
-      candidatos.set(id, {
-        rotulo: atual?.rotulo ?? spec.label.trim(),
-        prioridade: Math.min(
-          atual?.prioridade ?? 9999,
-          prioridadeAtributoDecisao(spec.label, contexto),
-        ),
-        ocorrencias: (atual?.ocorrencias ?? 0) + 1,
-        primeiraOrdem: Math.min(atual?.primeiraOrdem ?? 9999, spec.order),
-      });
-    }
-  }
-
-  const specs = [...candidatos.entries()]
-    .sort(
-      ([, a], [, b]) =>
-        a.prioridade - b.prioridade ||
-        b.ocorrencias - a.ocorrencias ||
-        a.primeiraOrdem - b.primeiraOrdem,
-    )
-    .slice(0, 4)
-    .map(([id, dado]) => ({ id, rotulo: dado.rotulo }));
-
-  return [
-    ...specs,
-    ...(produtos.some((produto) => produto.voltage?.trim())
-      ? [{ id: "__voltagem", rotulo: "Voltagem" }]
-      : []),
-    ...(produtos.some((produto) => (produto.warrantyMonths ?? 0) > 0)
-      ? [{ id: "__garantia", rotulo: "Garantia" }]
-      : []),
-  ].slice(0, 6);
-}
-
-function valorDaLinha(produto: ProdutoComparavel, id: string) {
-  if (id === "__voltagem") return produto.voltage?.trim() || "—";
-  if (id === "__garantia") {
-    const meses = produto.warrantyMonths ?? 0;
-    return meses > 0 ? `${meses} ${meses === 1 ? "mês" : "meses"}` : "—";
-  }
-  return (
-    produto.specs.find((spec) => normalizarAtributo(spec.label) === id)?.value.trim() || "—"
-  );
-}
-
 export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }) {
   if (produtos.length < 2) return null;
 
   const atual = produtos[0];
-  const alternativas = produtos.slice(1, 3);
-  const linhas = linhasDaComparacao(produtos);
+  const visiveis = produtos.slice(0, 3);
+  const comparacao = compararProdutos(visiveis.map(paraFicha));
+
+  /* Quando há divergência, ela vem primeiro: uma tabela que abre por seis
+     linhas idênticas não responde "o que muda entre os dois". */
+  const linhas = [
+    ...comparacao.linhas.filter((linha) => linha.diverge),
+    ...comparacao.linhas.filter((linha) => !linha.diverge),
+  ].slice(0, LINHAS_NA_FICHA);
   const hrefCompleto = `/comparar?${produtos
     .slice(0, 3)
     .map((produto) => `p=${encodeURIComponent(produto.slug)}`)
@@ -149,7 +143,8 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
       </div>
 
       <div className="space-y-3 md:hidden">
-        {alternativas.map((alternativa) => {
+        {visiveis.slice(1).map((alternativa, posicao) => {
+          const indiceAlternativa = posicao + 1;
           const delta = diferencaDePreco(atual, alternativa);
           return (
             <article
@@ -189,14 +184,13 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
 
               <dl className="divide-y divide-graf-100">
                 {linhas.map((linha) => {
-                  const valorAtual = valorDaLinha(atual, linha.id);
-                  const valorAlternativa = valorDaLinha(alternativa, linha.id);
-                  const diferente =
-                    normalizarAtributo(valorAtual) !== normalizarAtributo(valorAlternativa);
+                  const valorAtual = linha.valores[0] ?? "—";
+                  const valorAlternativa = linha.valores[indiceAlternativa] ?? "—";
+                  const diferente = valorAtual !== valorAlternativa;
                   return (
-                    <div key={linha.id} className="p-3.5">
+                    <div key={linha.key} className="p-3.5">
                       <dt className="micro text-graf-500">
-                        {linha.rotulo}
+                        {linha.label}
                       </dt>
                       <dd className="mt-2 grid grid-cols-2 gap-3 text-sm font-semibold text-graf-800">
                         <span className="min-w-0 break-words">{valorAtual}</span>
@@ -238,7 +232,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
               <th className="w-[22%] border-b border-graf-200 bg-graf-50/80 px-5 py-5 text-xs font-bold uppercase tracking-[0.08em] text-graf-500">
                 Comparação
               </th>
-              {produtos.slice(0, 3).map((produto, indice) => {
+              {visiveis.map((produto, indice) => {
                 const delta = indice > 0 ? diferencaDePreco(atual, produto) : null;
                 return (
                   <th
@@ -269,17 +263,15 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
           </thead>
           <tbody className="divide-y divide-graf-100">
             {linhas.map((linha) => {
-              const valorAtual = valorDaLinha(atual, linha.id);
+              const valorAtual = linha.valores[0] ?? "—";
               return (
-                <tr key={linha.id}>
+                <tr key={linha.key}>
                   <th className="bg-graf-50/55 px-5 py-3.5 text-xs font-semibold text-graf-600">
-                    {linha.rotulo}
+                    {linha.label}
                   </th>
-                  {produtos.slice(0, 3).map((produto, indice) => {
-                    const valor = valorDaLinha(produto, linha.id);
-                    const diferente =
-                      indice > 0 &&
-                      normalizarAtributo(valor) !== normalizarAtributo(valorAtual);
+                  {visiveis.map((produto, indice) => {
+                    const valor = linha.valores[indice] ?? "—";
+                    const diferente = indice > 0 && valor !== valorAtual;
                     return (
                       <td
                         key={produto.id}

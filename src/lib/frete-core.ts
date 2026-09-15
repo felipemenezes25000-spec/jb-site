@@ -42,7 +42,12 @@ export type MotivoDoFrete =
   | "retirada"
   | "sem_frete"
   | "cep_invalido"
-  | "sem_faixa";
+  /** Nenhuma faixa da tabela cobre este CEP. É lacuna de cadastro. */
+  | "sem_faixa"
+  /** O perfil do produto é "sob orçamento" por decisão. Não é lacuna. */
+  | "perfil_orcado"
+  /** O produto não tem perfil de frete cadastrado. Também é lacuna. */
+  | "sem_perfil";
 
 export type Frete = {
   tipo: ShippingKind;
@@ -64,6 +69,15 @@ export type FreteExibido = {
   valorCents: number;
   prazoDias: number | null;
   orcadoDepois: boolean;
+  /**
+   * Por que não há valor.
+   *
+   * A tela precisa distinguir duas coisas que antes saíam com a mesma frase:
+   * equipamento de grande porte SEMPRE tem frete orçado à parte (é a política
+   * da JB, e dizer isso tranquiliza), e CEP fora da tabela é uma lacuna de
+   * cadastro (e aí a frase precisa oferecer uma saída, não um beco).
+   */
+  motivo: MotivoDoFrete;
 };
 
 export class ErroFreteSelecionado extends Error {
@@ -135,6 +149,7 @@ export function paraExibicao(frete: Frete): FreteExibido {
     valorCents: frete.valorCents,
     prazoDias: frete.prazoDias,
     orcadoDepois: frete.tipo === "sob_orcamento",
+    motivo: frete.motivo,
   };
 }
 
@@ -167,7 +182,7 @@ export function calcularFrete(entrada: {
     efetivos.set(perfil.id, perfil);
   }
 
-  if (semPerfil) return sobOrcamento("sem_faixa");
+  if (semPerfil) return sobOrcamento("sem_perfil");
 
   if (efetivos.size === 0) {
     return {
@@ -192,7 +207,7 @@ export function calcularFrete(entrada: {
       continue;
     }
 
-    if (perfil.tipo === "sob_orcamento") return sobOrcamento("sem_faixa");
+    if (perfil.tipo === "sob_orcamento") return sobOrcamento("perfil_orcado");
 
     if (perfil.tipo === "gratis") {
       const faixa = cep ? faixaParaCep(perfil, cep) : null;

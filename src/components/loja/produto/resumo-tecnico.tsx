@@ -2,9 +2,11 @@ import Link from "next/link";
 import { BadgeCheck, ChevronDown, Star } from "lucide-react";
 
 import { CONDICAO_PDP, type CondicaoProduto } from "@/components/loja/produto/condicao";
+import { SpecHighlights } from "@/components/specs/spec-sheet";
+import type { FichaDeEspecificacoes } from "@/domain/specs/schema";
+import { semQuebraNaUnidade } from "@/lib/format";
 import { normalizar } from "@/lib/busca/intencao";
 import { carregarResumoAvaliacoesProdutoPorSku } from "@/lib/marketplace/avaliacoes-produto";
-import type { DestaqueProduto } from "@/lib/marketplace/resumo-produto";
 
 type Props = {
   nome: string;
@@ -24,7 +26,7 @@ type PropsDetalhes = {
   gtin?: string | null;
   numeroDeSerie?: string | null;
   categoria: { nome: string; slug: string } | null;
-  destaques: DestaqueProduto[];
+  ficha: FichaDeEspecificacoes;
 };
 
 type Identificador = {
@@ -78,7 +80,10 @@ export async function ResumoTecnicoProduto({
         id="titulo-produto"
         className="fonte-display mt-3 text-[clamp(2rem,1.55rem+1.45vw,3rem)] leading-[1.04] tracking-[-0.035em] text-graf-950"
       >
-        {nome}
+        {/* O nome sai com espaço inquebrável entre número e unidade: sem
+            isto, "Autoclave 12 L revisada" quebra como "Autoclave 12" /
+            "L revisada" e o número fica órfão no fim da linha. */}
+        {semQuebraNaUnidade(nome)}
       </h1>
 
       {avaliacao ? (
@@ -120,8 +125,6 @@ export async function ResumoTecnicoProduto({
   );
 }
 
-export const LIMITE_NA_COLUNA = 8;
-
 export function DetalhesDoProduto({
   descricaoHtml,
   modelo,
@@ -129,7 +132,7 @@ export function DetalhesDoProduto({
   codigoDoFabricante,
   gtin,
   categoria,
-  destaques,
+  ficha,
 }: PropsDetalhes) {
   const modeloUtil = Boolean(
     modelo.trim() && normalizar(modelo) !== normalizar(categoria?.nome ?? ""),
@@ -144,11 +147,11 @@ export function DetalhesDoProduto({
     gtin?.trim() ? { rotulo: "GTIN", valor: gtin.trim() } : null,
   ].filter((identificador): identificador is Identificador => identificador !== null);
 
-  const essenciais = destaques.slice(0, LIMITE_NA_COLUNA);
-  const restantes = destaques.length - essenciais.length;
   const temDiferencial = Boolean(descricaoHtml?.trim());
 
-  if (essenciais.length === 0 && identificadores.length === 0 && !temDiferencial) return null;
+  if (ficha.decisivas.length === 0 && identificadores.length === 0 && !temDiferencial) {
+    return null;
+  }
 
   return (
     <div className="min-w-0">
@@ -162,35 +165,15 @@ export function DetalhesDoProduto({
         </div>
       ) : null}
 
-      {essenciais.length > 0 ? (
+      {ficha.decisivas.length > 0 ? (
         <div className={`border-t border-graf-200 pt-5 ${temDiferencial ? "mt-5" : "lg:mt-6"}`}>
-          <div className="flex items-center justify-between gap-3">
-            <p className="micro text-graf-500">Dados que decidem a compra</p>
-            <a
-              href="#ficha-tecnica"
-              className="foco-jb texto-apoio inline-flex min-h-8 items-center font-bold text-jb-700 hover:text-jb-800"
-            >
-              Ficha completa
-            </a>
-          </div>
-          <dl className="mt-2.5 grid overflow-hidden rounded-xl border border-graf-200 bg-graf-50/45">
-            {essenciais.map((destaque, indice) => (
-              <div
-                key={`${destaque.rotulo}-${destaque.valor}`}
-                className={`flex min-w-0 items-baseline justify-between gap-5 px-3.5 py-2.5 ${indice > 0 ? "border-t border-graf-200" : ""}`}
-              >
-                <dt className="micro shrink-0 text-graf-500">{destaque.rotulo}</dt>
-                <dd className="min-w-0 break-words text-right text-sm font-extrabold leading-5 text-graf-950">
-                  {destaque.valor}
-                </dd>
-              </div>
-            ))}
-          </dl>
-          {restantes > 0 ? (
-            <p className="mt-2 text-xs leading-5 text-graf-500">
-              + {restantes} {restantes === 1 ? "especificação" : "especificações"} na ficha completa.
-            </p>
-          ) : null}
+          {/* Três linhas e um link honesto.
+
+              "Ficha completa" era promessa quebrada: levava a um bloco cujo
+              conteúdo principal era a mesma lista, reordenada. O link agora diz
+              quantas especificações existem de verdade, e o número vem do
+              objeto da ficha — não de uma constante. */}
+          <SpecHighlights ficha={ficha} />
         </div>
       ) : null}
 

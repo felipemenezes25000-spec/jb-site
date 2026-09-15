@@ -184,7 +184,7 @@ test.describe("Frete no checkout", () => {
     await informarCep(page, frete.cepSemFaixa);
 
     await expect(
-      page.getByText("O frete deste endereço será orçado à parte"),
+      page.getByText("Ainda não temos tabela de entrega para este CEP"),
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/não entra no total agora/)).toBeVisible();
 
@@ -218,7 +218,7 @@ test.describe("Frete no checkout", () => {
 
     await informarCep(page, frete.cepSemFaixa);
     await expect(
-      page.getByText("O frete deste endereço será orçado à parte"),
+      page.getByText("Ainda não temos tabela de entrega para este CEP"),
     ).toBeVisible({ timeout: 30_000 });
 
     await informarCep(page, frete.cepComFaixa);

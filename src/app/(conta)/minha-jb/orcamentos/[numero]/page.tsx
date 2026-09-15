@@ -11,7 +11,11 @@ import { LinkBotao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao, Etiqueta, LinhaDoTempo } from "@/components/ui/data";
 import { exigirCliente } from "@/lib/auth-cliente";
 import { distanciaEmDias, formatarData, formatarDataHora, formatarPreco } from "@/lib/format";
-import { ROTULO_ORCAMENTO, passosDoOrcamento } from "@/lib/orcamento";
+import {
+  ROTULO_ORCAMENTO,
+  STATUS_ORCAMENTO_VISIVEIS,
+  passosDoOrcamento,
+} from "@/lib/orcamento";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -38,7 +42,7 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
   const orcamento = await prisma.quote.findFirst({
     where: {
       customerId: cliente.id,
-      status: { not: "rascunho" },
+      status: { in: STATUS_ORCAMENTO_VISIVEIS },
       OR: [{ number: chave }, { id: chave }],
     },
     include: {

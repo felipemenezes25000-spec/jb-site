@@ -168,7 +168,7 @@ export function Selecao({
         required={required}
         aria-invalid={erro ? true : undefined}
         aria-describedby={erro ? `${id}-erro` : ajuda ? `${id}-ajuda` : undefined}
-        className={cn(BASE_CAMPO, erro ? COM_ERRO : NORMAL, "h-11 px-3 pr-9")}
+        className={cn(BASE_CAMPO, erro ? COM_ERRO : NORMAL, "select-jb h-11 px-3 pr-9")}
       >
         {children}
       </select>

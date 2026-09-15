@@ -140,7 +140,10 @@ test.describe("Marketplace — página do produto", () => {
     // E o conteúdo delas está na tela sem ninguém clicar em nada.
     await expect(preparo.getByRole("heading", { name: "Antes de comprar" })).toBeVisible();
     await expect(preparo.getByText("Compatibilidade com o local")).toBeVisible();
-    await expect(ficha.getByText("Dados do modelo")).toBeVisible();
+    /* "Dados do modelo" era o nome do cartão único de specs. A ficha passou
+       a ter cinco grupos fixos, e o de desempenho é o que carrega os números
+       que decidem a compra. */
+    await expect(ficha.getByText("Desempenho")).toBeVisible();
 
     // Um `h2` por página, e não cinco tamanhos: a régua que a auditoria pediu.
     const tamanhosDeH2 = await page
@@ -272,10 +275,11 @@ test.describe("Marketplace — página do produto", () => {
     const duvidas = page.locator("#duvidas");
     await expect(duvidas).toBeVisible();
 
-    /* A seção virou gaveta em 12/09 e nasce fechada: o assunto deste teste é
-       o formulário DENTRO dela, que continua recolhido até o cliente pedir.
-       Abrir a gaveta primeiro é o que a pessoa faz. */
-    await page.locator("#duvidas > summary").click();
+    /* A seção continua sendo gaveta, mas nasce ABERTA desde 15/09: com
+       metade das seções fechadas, a barra de âncoras levava a pessoa para
+       dentro de um cartão vazio. O assunto deste teste é o formulário DENTRO
+       dela, que continua recolhido até o cliente pedir. */
+    await expect(page.locator("#duvidas")).toHaveAttribute("open", /.*/);
 
     const campo = duvidas.getByRole("textbox", { name: "Sua pergunta" });
     await expect(campo).toBeHidden();
