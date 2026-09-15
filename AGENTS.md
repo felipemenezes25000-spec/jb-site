@@ -10,8 +10,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Regras adicionais — JB Plataforma
 
-Antes de alterar o projeto, leia `docs/arquitetura-modular.md`, `docs/decisoes.md`
-e `design.md`.
+Antes de alterar o projeto, leia `docs/arquitetura-modular.md`, `docs/decisoes.md`,
+`docs/criterios-de-escopo.md` e `design.md`.
 
 Regras obrigatórias:
 
@@ -21,6 +21,9 @@ Regras obrigatórias:
 - Não aumente `admin-servico.ts`, `admin-catalogo.ts`, `admin-vendas.ts` ou
   `admin-conteudo.ts`; extraia o novo caso de uso.
 - Código novo de decisão de compra usa `@/lib/comercio/*`, não `marketplace`.
+- Capacidade horizontal nova (CRM, ERP, BI, agenda, helpdesk etc.) só entra no
+  core quando passar pelos critérios de `docs/criterios-de-escopo.md`; integrar
+  é preferível a recriar software genérico sem diferencial da JB.
 - Dinheiro é inteiro em centavos. Datas persistidas em UTC e exibidas no fuso de
   São Paulo.
 - Autorização é validada no servidor; esconder botão não é controle de acesso.
