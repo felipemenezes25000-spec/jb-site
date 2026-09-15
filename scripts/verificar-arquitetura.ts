@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 /**
@@ -48,7 +48,15 @@ function arquivosTs(diretorio: string): string[] {
 
 for (const caminho of arquivosTs(diretorioAcoes)) {
   const relativo = relative(diretorioAcoes, caminho).split(sep).join("/");
-  const bytes = statSync(caminho).size;
+  /* O peso é do conteúdo, não do checkout.
+
+     `statSync().size` conta o arquivo como ele está no disco, e no Windows o
+     Git entrega CRLF — um byte a mais por linha. `admin-servico.ts` tem 2.886
+     linhas, então o mesmo commit que passa na CI (Linux, LF) reprovava aqui
+     acusando exatamente 2.886 bytes de "crescimento". Os tetos de `LEGADOS`
+     foram medidos em LF; a comparação precisa ser na mesma unidade, senão o
+     portão reprova trabalho correto por causa da plataforma de quem rodou. */
+  const bytes = Buffer.byteLength(readFileSync(caminho, "utf8").replace(/\r\n/g, "\n"), "utf8");
   const tetoLegado = !relativo.includes("/") ? LEGADOS.get(relativo) : undefined;
 
   if (tetoLegado !== undefined) {
