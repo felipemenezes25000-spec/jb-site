@@ -8,6 +8,8 @@ import { LinkBotao } from "@/components/ui/button";
 import { Cartao, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
 import { compararProdutos } from "@/domain/specs/comparar";
+import { SELECT_FICHA, paraFicha } from "@/lib/ficha-do-produto";
+import { definicaoDe } from "@/domain/specs/definicoes";
 import {
   AUSENTE,
   PERGUNTAS,
@@ -153,30 +155,9 @@ export default async function CompararPage({ searchParams }: Props) {
       ? prisma.product.findMany({
           where: { ...PUBLICADO, slug: { in: escolhidos } },
           select: {
+            ...SELECT_FICHA,
             slug: true,
-            name: true,
-            sku: true,
-            model: true,
             priceCents: true,
-            condition: true,
-            voltage: true,
-            manufacturer: true,
-            regulatoryHolder: true,
-            anvisaCode: true,
-            specs: {
-              orderBy: { order: "asc" as const },
-              select: { label: true, value: true, order: true },
-            },
-            category: { select: { slug: true, name: true } },
-            warrantyMonths: true,
-            weightGrams: true,
-            widthMm: true,
-            heightMm: true,
-            depthMm: true,
-            infrastructureNotes: true,
-            boxContents: true,
-            installationPolicy: true,
-            brand: { select: { name: true } },
             /* A foto entra porque comparar equipamento sem ver o equipamento é
                comparar nome. Uma só: a comparação é tabela, não galeria. */
             media: {
@@ -208,29 +189,7 @@ export default async function CompararPage({ searchParams }: Props) {
      como diferença e "6 meses" e "1 ano" pararem de ser colunas em unidades
      diferentes. */
   const comparacaoTecnica = compararProdutos(
-    ordenados.map((produto) => ({
-      nome: produto.name,
-      sku: produto.sku,
-      modelo: produto.model,
-      condicao: produto.condition,
-      marca: produto.brand?.name ?? null,
-      categoria: produto.category
-        ? { slug: produto.category.slug, nome: produto.category.name }
-        : null,
-      fabricante: produto.manufacturer,
-      detentor: produto.regulatoryHolder,
-      anvisa: produto.anvisaCode,
-      voltagem: produto.voltage,
-      pesoGramas: produto.weightGrams,
-      larguraMm: produto.widthMm,
-      alturaMm: produto.heightMm,
-      profundidadeMm: produto.depthMm,
-      garantiaMeses: produto.warrantyMonths,
-      requisitos: produto.infrastructureNotes,
-      itensInclusos: produto.boxContents,
-      politicaDeInstalacao: produto.installationPolicy,
-      specs: produto.specs,
-    })),
+    ordenados.map((produto) => paraFicha(produto)),
   );
 
   const linhas: LinhaDaComparacao[] =
@@ -259,8 +218,15 @@ export default async function CompararPage({ searchParams }: Props) {
             }),
           ),
           {
+            /* Os rótulos vêm do dicionário, não da tela.
+
+               Este atributo tinha três nomes no site: "Requisitos do local" na
+               ficha, "O local precisa ter" aqui e nada no resto. O irmão dele
+               tinha outros três: "Itens inclusos", "Vem na caixa" e "O que vem
+               na caixa". Três nomes para um campo fazem a pessoa procurar de
+               novo o que já leu. */
             chave: "infraestrutura",
-            rotulo: "O local precisa ter",
+            rotulo: definicaoDe("requisitos")?.label ?? "Requisitos do local",
             ajuda: "Requisitos cadastrados. Célula vazia quer dizer que ninguém preencheu — não que não há requisito.",
             valores: ordenados.map((produto): ValorDoAtributo =>
               produto.infrastructureNotes.length > 0
@@ -270,7 +236,7 @@ export default async function CompararPage({ searchParams }: Props) {
           },
           {
             chave: "caixa",
-            rotulo: "Vem na caixa",
+            rotulo: definicaoDe("itens-inclusos")?.label ?? "Itens inclusos",
             valores: ordenados.map((produto): ValorDoAtributo =>
               produto.boxContents.length > 0
                 ? { tipo: "lista", valores: produto.boxContents }

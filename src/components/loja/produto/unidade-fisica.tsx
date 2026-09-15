@@ -87,7 +87,17 @@ const DESENHO_DO_RESULTADO: Record<
   },
 };
 
-function Resultado({ resultado }: { resultado: string }) {
+/**
+ * O selo de um item do checklist — "Substituído", "Verificado", "Não se aplica".
+ *
+ * Exportado porque o laudo aparece em dois lugares com molduras diferentes: a
+ * seção da vitrine (aqui) e o cartão do prontuário do cliente, depois que ele
+ * comprou. O vocabulário de resultados precisa ser um só; se o prontuário
+ * redesenhasse os próprios selos, "substituído" teria duas cores no site e a
+ * pessoa que viu o laudo antes de comprar não reconheceria o mesmo registro
+ * depois.
+ */
+export function ResultadoDoChecklist({ resultado }: { resultado: string }) {
   const desenho = DESENHO_DO_RESULTADO[resultado] ?? {
     rotulo: resultado,
     icone: ClipboardCheck,
@@ -216,7 +226,7 @@ export function UnidadeFisica({
                   <p className="texto-apoio mt-0.5 text-graf-600">{item.nota.trim()}</p>
                 ) : null}
               </div>
-              <Resultado resultado={item.resultado} />
+              <ResultadoDoChecklist resultado={item.resultado} />
             </li>
           ))}
         </ul>

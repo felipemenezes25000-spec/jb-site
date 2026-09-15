@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Scale } from "lucide-react";
 
 import { compararProdutos } from "@/domain/specs/comparar";
+import { paraFicha, type ProdutoDaFicha } from "@/lib/ficha-do-produto";
 import { formatarPreco } from "@/lib/format";
 
 /* ============================================================================
@@ -17,60 +18,19 @@ import { formatarPreco } from "@/lib/format";
    site. Ele não escolhe mais o que comparar: escolhe quantas linhas cabem.
    ============================================================================ */
 
-export type ProdutoComparavel = {
+/* O que a ficha lê vem de `ProdutoDaFicha`; aqui em cima entra só o que ESTE
+   bloco usa a mais — link, preço e se dá para comprar direto. Repetir os vinte
+   campos da ficha criava uma segunda declaração para manter em dia. */
+export type ProdutoComparavel = ProdutoDaFicha & {
   id: string;
   slug: string;
-  name: string;
-  sku: string;
-  model: string;
-  condition: string;
   priceCents: number;
   allowDirectPurchase: boolean;
-  voltage: string | null;
-  warrantyMonths: number | null;
-  weightGrams: number | null;
-  widthMm: number | null;
-  heightMm: number | null;
-  depthMm: number | null;
-  manufacturer: string | null;
-  regulatoryHolder: string | null;
-  anvisaCode: string | null;
-  installationPolicy: string;
-  boxContents: string[];
-  infrastructureNotes: string[];
-  brand: { name: string } | null;
-  category: { slug: string; name: string } | null;
-  specs: { label: string; value: string; order: number }[];
 };
 
 /** Quantas linhas cabem antes de a tabela virar a ficha inteira de novo. */
 const LINHAS_NA_FICHA = 6;
 
-export function paraFicha(produto: ProdutoComparavel) {
-  return {
-    nome: produto.name,
-    sku: produto.sku,
-    modelo: produto.model,
-    condicao: produto.condition,
-    marca: produto.brand?.name ?? null,
-    categoria: produto.category
-      ? { slug: produto.category.slug, nome: produto.category.name }
-      : null,
-    fabricante: produto.manufacturer,
-    detentor: produto.regulatoryHolder,
-    anvisa: produto.anvisaCode,
-    voltagem: produto.voltage,
-    pesoGramas: produto.weightGrams,
-    larguraMm: produto.widthMm,
-    alturaMm: produto.heightMm,
-    profundidadeMm: produto.depthMm,
-    garantiaMeses: produto.warrantyMonths,
-    requisitos: produto.infrastructureNotes,
-    itensInclusos: produto.boxContents,
-    politicaDeInstalacao: produto.installationPolicy,
-    specs: produto.specs,
-  };
-}
 
 function preco(produto: ProdutoComparavel) {
   if (!produto.allowDirectPurchase || produto.priceCents <= 0) return "Sob orçamento";
@@ -97,7 +57,7 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
 
   const atual = produtos[0];
   const visiveis = produtos.slice(0, 3);
-  const comparacao = compararProdutos(visiveis.map(paraFicha));
+  const comparacao = compararProdutos(visiveis.map((produto) => paraFicha(produto)));
 
   /* Quando há divergência, ela vem primeiro: uma tabela que abre por seis
      linhas idênticas não responde "o que muda entre os dois". */

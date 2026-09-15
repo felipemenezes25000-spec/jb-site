@@ -334,7 +334,7 @@ export function SeletorDeMidia({
             {
               chave: "biblioteca",
               rotulo: "Biblioteca",
-              icone: Images,
+              icone: <Images className="size-4 shrink-0" />,
               contador: disponiveis.length,
               conteudo: (
                 <GradeDaBiblioteca
@@ -347,7 +347,7 @@ export function SeletorDeMidia({
             {
               chave: "enviar",
               rotulo: "Enviar",
-              icone: Upload,
+              icone: <Upload className="size-4 shrink-0" />,
               conteudo: (
                 <div className="space-y-4">
                   <EnviarArquivo

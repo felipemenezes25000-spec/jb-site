@@ -2,6 +2,7 @@ import "server-only";
 
 import type { OrderStatus, Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
+import { updateTag } from "next/cache";
 
 import {
   cancelarPedido as cancelarPedidoBase,
@@ -18,6 +19,7 @@ import {
   partesDoRotuloMelhorEnvio,
 } from "@/lib/logistica-meta";
 import { prisma } from "@/lib/prisma";
+import { ETIQUETA_CATALOGO } from "@/lib/loja-publica";
 import { COOKIE_ESCOLHA_FRETE, lerEscolhaFrete } from "@/lib/selecao-frete";
 
 // Todo o domínio continua em pedido-base. Este arquivo é a borda de efeitos
@@ -38,8 +40,36 @@ export * from "@/lib/pedido-base";
  * O preço não vem do cookie: ele já foi recotado pelo servidor e está em
  * `input.entrega.valorCents`.
  */
+/**
+ * Estoque mudou, a vitrine cacheada precisa saber.
+ *
+ * `contagemDoCatalogo` já exclui unidade vendida da conta — a consulta sempre
+ * esteve certa. O que faltava era derrubar o cache: `ETIQUETA_CATALOGO` só era
+ * invalidada por ação do painel (publicar, arquivar, relacionar), e comprar
+ * não é ação do painel. O efeito medido: a autoclave seminova foi vendida e a
+ * barra vermelha continuou anunciando "BIOSSEGURANÇA 4" — por até uma hora,
+ * que é a validade do cache.
+ *
+ * Vale para venda e para devolução: os dois mudam o estoque, e é o estoque que
+ * decide quem aparece na vitrine e em que contagem.
+ *
+ * Fora da transação, de propósito. `updateTag` é efeito de cache, não de
+ * banco: chamá-lo lá dentro amarraria a validade do cache ao sucesso de um
+ * commit que ainda pode falhar.
+ */
+function derrubarCacheDoCatalogo(motivo: string) {
+  try {
+    updateTag(ETIQUETA_CATALOGO);
+  } catch (erro) {
+    /* Sem contexto de requisição — script, job, webhook fora do ciclo — não há
+       cache para derrubar. Isso nunca pode desfazer uma venda. */
+    console.error(`[pedido/cache] não foi possível derrubar o catálogo (${motivo})`, erro);
+  }
+}
+
 export async function criarPedido(input: Parameters<typeof criarPedidoBase>[0]) {
   const pedido = await criarPedidoBase(input);
+  derrubarCacheDoCatalogo("venda");
 
   try {
     const jar = await cookies();
@@ -131,6 +161,8 @@ export async function confirmarPagamento(pedidoId: string) {
 
 export async function cancelarPedido(pedidoId: string, motivo: string, userId?: string) {
   await cancelarPedidoBase(pedidoId, motivo, userId);
+  /* Depois, não antes: o estoque só voltou se a operação foi até o fim. */
+  derrubarCacheDoCatalogo("cancelamento");
 
   const resultado = await cancelarEtiquetasMelhorEnvio(pedidoId, motivo);
   if (!resultado.ok) {
@@ -142,6 +174,7 @@ export async function cancelarPedido(pedidoId: string, motivo: string, userId?: 
 
 export async function estornarPedido(pedidoId: string, motivo: string, userId?: string) {
   await estornarPedidoBase(pedidoId, motivo, userId);
+  derrubarCacheDoCatalogo("estorno");
 
   const resultado = await cancelarEtiquetasMelhorEnvio(pedidoId, motivo);
   if (!resultado.ok) {

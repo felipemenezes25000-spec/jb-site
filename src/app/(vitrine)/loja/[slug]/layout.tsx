@@ -29,6 +29,7 @@ import {
   categoriaDaAlternativaAutomatica,
   decodificarOrdemRelacao,
 } from "@/lib/marketplace/relacionamentos-produto";
+import { SELECT_FICHA } from "@/lib/ficha-do-produto";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -282,32 +283,11 @@ function PosVendaJB({ garantiaMeses }: { garantiaMeses: number | null }) {
    Comparar é ler a MESMA ficha lado a lado; para isso as colunas estruturadas
    precisam vir junto. */
 const SELECT_COMPARAVEL = {
+  ...SELECT_FICHA,
   id: true,
   slug: true,
-  name: true,
-  sku: true,
-  model: true,
   priceCents: true,
   allowDirectPurchase: true,
-  condition: true,
-  voltage: true,
-  warrantyMonths: true,
-  weightGrams: true,
-  widthMm: true,
-  heightMm: true,
-  depthMm: true,
-  manufacturer: true,
-  regulatoryHolder: true,
-  anvisaCode: true,
-  installationPolicy: true,
-  boxContents: true,
-  infrastructureNotes: true,
-  brand: { select: { name: true } },
-  category: { select: { slug: true, name: true } },
-  specs: {
-    orderBy: { order: "asc" as const },
-    select: { label: true, value: true, order: true },
-  },
 };
 
 export default async function ProdutoLayout({ children, params }: Props) {

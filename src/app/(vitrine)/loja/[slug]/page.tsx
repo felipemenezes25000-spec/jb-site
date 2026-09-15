@@ -16,7 +16,6 @@ import { definicaoDaCondicao } from "@/components/loja/produto/condicao";
 import { CondicoesDeCompra } from "@/components/loja/produto/condicoes-de-compra";
 import { Documentacao } from "@/components/loja/produto/especificacoes";
 import { SpecSheet } from "@/components/specs/spec-sheet";
-import { construirFicha } from "@/domain/specs/construir";
 import { ForaDeLinha, SemEstoque } from "@/components/loja/produto/estados";
 import { FaixaConfianca } from "@/components/loja/produto/faixa-confianca";
 import { DetalhesDoProduto, ResumoTecnicoProduto } from "@/components/loja/produto/resumo-tecnico";
@@ -45,6 +44,7 @@ import {
   contarChecklist,
   frasedaVerificacao,
 } from "@/lib/certificacao";
+import { fichaDoProduto } from "@/lib/ficha-do-produto";
 import { calcularParcelas, paraCentavos, plural, whatsappHref } from "@/lib/format";
 import {
   faqJsonLd,
@@ -217,29 +217,9 @@ export default async function ProdutoPage({ params }: Props) {
      atributos. `construirFicha` unifica as colunas estruturadas e o texto
      livre do cadastro num objeto tipado — e daqui para baixo nada é digitado
      duas vezes. */
-  const ficha = construirFicha({
-    nome: produto.name,
-    sku: produto.sku,
-    modelo: produto.model,
-    condicao: produto.condition,
-    marca: produto.brand?.name ?? null,
-    categoria: produto.category
-      ? { slug: produto.category.slug, nome: produto.category.name }
-      : null,
-    fabricante: produto.manufacturer,
-    detentor: produto.regulatoryHolder,
-    anvisa: produto.anvisaCode,
-    voltagem: produto.voltage,
-    pesoGramas: produto.weightGrams,
-    larguraMm: produto.widthMm,
-    alturaMm: produto.heightMm,
-    profundidadeMm: produto.depthMm,
-    garantiaMeses,
-    requisitos: produto.infrastructureNotes,
-    itensInclusos: produto.boxContents,
-    politicaDeInstalacao: produto.installationPolicy,
-    specs: produto.specs,
-    unidade: unidade
+  const ficha = fichaDoProduto(
+    { ...produto, warrantyMonths: garantiaMeses },
+    unidade
       ? {
           serialNumber: unidade.serialNumber,
           manufactureYear: unidade.manufactureYear,
@@ -249,7 +229,7 @@ export default async function ProdutoPage({ params }: Props) {
           acquiredFrom: unidade.acquiredFrom,
         }
       : null,
-  });
+  );
 
   const descricao = produto.description.trim();
   const tamanhoDaDescricao = textoLimpo(descricao, 4000).length;
