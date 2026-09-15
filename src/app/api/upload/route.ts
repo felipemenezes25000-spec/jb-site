@@ -3,6 +3,8 @@ import { z } from "zod";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { sessaoStaff } from "@/lib/auth";
 import { sessaoCliente } from "@/lib/auth-cliente";
+import { chaveDeSessao, checarLimite, segundosDeEspera } from "@/lib/limite";
+import { midiaOperacionalEhPrivada, urlExpostaDaMidia } from "@/lib/midia-operacional";
 import { prisma } from "@/lib/prisma";
 import {
   ErroDeUpload,
@@ -13,6 +15,7 @@ import {
   enviarArquivo,
   type PastaUpload,
 } from "@/lib/upload";
+import { enviarArquivoOperacionalPrivado } from "@/lib/upload-operacional";
 
 /**
  * Recebe um arquivo e devolve a mídia já registrada no banco.
@@ -21,6 +24,9 @@ import {
  * cliente final só em `chamados` e `equipamentos`, que são as pastas de coisas
  * que ele mesmo criou. Autorização é conferida aqui no servidor — esconder o
  * botão no formulário não vale como controle.
+ *
+ * Mídia operacional nunca devolve a URL real do storage para o navegador. O
+ * retorno usa `/api/midia/:id`, e o arquivo só sai depois de nova autorização.
  */
 
 const esquema = z.object({
@@ -28,39 +34,7 @@ const esquema = z.object({
   alt: z.string().trim().max(180).optional(),
 });
 
-/* --------------------------------------------------------- limite de taxa */
-
-const LIMITE_ENVIOS = 20;
-const JANELA_MS = 10 * 60_000;
-
-/**
- * Contagem em memória do processo. Não é uma barreira distribuída — em serverless
- * cada instância tem a sua —, mas segura o caso real: um formulário aberto
- * mandando arquivo em sequência.
- */
-const envios = new Map<string, number[]>();
-
-function excedeuLimite(chave: string) {
-  const agora = Date.now();
-
-  if (envios.size > 500) {
-    for (const [id, marcas] of envios) {
-      if (marcas.every((t) => agora - t >= JANELA_MS)) envios.delete(id);
-    }
-  }
-
-  const recentes = (envios.get(chave) ?? []).filter((t) => agora - t < JANELA_MS);
-  if (recentes.length >= LIMITE_ENVIOS) {
-    envios.set(chave, recentes);
-    return true;
-  }
-
-  recentes.push(agora);
-  envios.set(chave, recentes);
-  return false;
-}
-
-/* -------------------------------------------------------------------- POST */
+const LIMITE_ENVIOS = { limite: 20, janelaMs: 10 * 60_000 } as const;
 
 type Autor =
   | { tipo: "staff"; id: string; nome: string }
@@ -122,10 +96,19 @@ export async function POST(request: Request) {
   }
   const { autor } = permissao;
 
-  if (excedeuLimite(`${autor.tipo}:${autor.id}`)) {
+  const limite = checarLimite(
+    chaveDeSessao(`${autor.tipo}:${autor.id}`, "/api/upload"),
+    LIMITE_ENVIOS,
+  );
+  if (!limite.ok) {
     return Response.json(
-      { erro: "Muitos envios seguidos. Espere alguns minutos e tente de novo." },
-      { status: 429, headers: { "Retry-After": "600" } },
+      {
+        erro: `Muitos envios seguidos. Tente novamente em ${segundosDeEspera(limite.esperaMs)} segundos.`,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(segundosDeEspera(limite.esperaMs)) },
+      },
     );
   }
 
@@ -138,7 +121,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const enviado = await enviarArquivo(arquivo, { pasta });
+    const enviado = midiaOperacionalEhPrivada(pasta)
+      ? await enviarArquivoOperacionalPrivado(arquivo, pasta)
+      : await enviarArquivo(arquivo, { pasta });
 
     const media = await prisma.media.create({
       data: {
@@ -165,8 +150,6 @@ export async function POST(request: Request) {
     });
 
     await registrarAuditoria({
-      // AuditLog aponta para User; envio de cliente fica sem autor e é
-      // identificado no resumo
       userId: autor.tipo === "staff" ? autor.id : null,
       acao: "criar",
       entidade: "midia",
@@ -177,7 +160,16 @@ export async function POST(request: Request) {
           : `${PASTAS[pasta].rotulo}: ${media.filename} (cliente ${autor.id})`,
     });
 
-    return Response.json({ ok: true, media }, { status: 201 });
+    return Response.json(
+      {
+        ok: true,
+        media: {
+          ...media,
+          url: urlExpostaDaMidia(media),
+        },
+      },
+      { status: 201 },
+    );
   } catch (erro) {
     if (erro instanceof ErroDeUpload) {
       return Response.json({ erro: erro.message, campo: "arquivo" }, { status: erro.status });
