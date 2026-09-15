@@ -30,7 +30,7 @@ vi.mock("@/lib/selecao-frete", () => ({
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    $transaction: (...args: unknown[]) => transacao(...(args as [never])),
+    $transaction: transacao,
     order: {
       findUnique: vi.fn(async () => null),
       update: vi.fn(async () => ({})),
