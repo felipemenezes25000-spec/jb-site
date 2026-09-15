@@ -35,7 +35,7 @@ export function BlocoDecisao({
           <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h2
               id={`${id}-titulo`}
-              className="fonte-display text-[clamp(1.45rem,1.25rem+0.65vw,2rem)] leading-tight tracking-[-0.025em] text-graf-950"
+              className="fonte-display text-bloco text-graf-950"
             >
               {titulo}
             </h2>
