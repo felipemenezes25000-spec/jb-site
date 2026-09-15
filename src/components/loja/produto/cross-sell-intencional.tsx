@@ -68,7 +68,7 @@ function AdicionarAcessorio({ item }: { item: ItemCrossSell }) {
         <button
           type="submit"
           disabled={pendente}
-          className="foco-jb inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-graf-300 px-3 text-xs font-extrabold text-graf-900 transition-colors hover:border-graf-400 hover:bg-graf-50 disabled:cursor-wait disabled:opacity-65"
+          className="foco-jb inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-graf-300 px-3 text-xs font-extrabold text-graf-900 transition-colors hover:border-graf-400 hover:bg-graf-50 disabled:cursor-wait disabled:opacity-65"
         >
           {estado.ok ? (
             <Check className="size-3.5 text-ok-700" aria-hidden />
@@ -83,7 +83,7 @@ function AdicionarAcessorio({ item }: { item: ItemCrossSell }) {
         {estado.ok ? (
           <Link
             href="/carrinho"
-            className="foco-jb inline-flex min-h-9 items-center font-bold text-ok-700 underline underline-offset-2"
+            className="foco-jb inline-flex min-h-11 items-center font-bold text-ok-700 underline underline-offset-2"
           >
             Ver carrinho
           </Link>
@@ -139,7 +139,7 @@ function LinhaProduto({ item }: { item: ItemComTipo }) {
         ) : (
           <Link
             href={`/loja/${item.slug}`}
-            className="foco-jb mt-1 inline-flex min-h-9 items-center gap-1.5 text-xs font-extrabold text-jb-700 hover:text-jb-800"
+            className="foco-jb -mx-2 mt-1 inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-extrabold text-jb-700 hover:text-jb-800"
           >
             Ver produto
             <ArrowRight className="size-3.5" aria-hidden />

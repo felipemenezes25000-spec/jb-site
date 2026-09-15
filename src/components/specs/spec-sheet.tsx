@@ -129,7 +129,7 @@ export function SpecHighlights({
         <p className="micro text-graf-500">O que decide esta compra</p>
         <a
           href={hrefDaFicha}
-          className="foco-jb texto-apoio inline-flex min-h-8 items-center font-bold text-jb-700 hover:text-jb-800"
+          className="foco-jb texto-apoio -mx-2 inline-flex min-h-11 items-center px-2 font-bold text-jb-700 hover:text-jb-800"
         >
           Ver as {ficha.total} especificações →
         </a>

@@ -127,7 +127,7 @@ export function IdentidadeProduto({
         {categoria ? (
           <Link
             href={`/categoria/${categoria.slug}`}
-            className="foco-jb inline-flex min-h-9 items-center rounded-full bg-graf-100 px-3 text-xs font-bold text-graf-600 transition-colors hover:bg-graf-200 hover:text-graf-950"
+            className="foco-jb inline-flex min-h-11 items-center rounded-full bg-graf-100 px-3 text-xs font-bold text-graf-600 transition-colors hover:bg-graf-200 hover:text-graf-950"
           >
             {categoria.nome}
           </Link>

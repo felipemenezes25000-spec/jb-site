@@ -69,7 +69,7 @@ export async function ResumoTecnicoProduto({
         {marca ? (
           <Link
             href={`/marcas/${marca.slug}`}
-            className="foco-jb micro -mx-2 inline-flex min-h-11 items-center px-2 font-extrabold text-graf-800 hover:text-jb-700"
+            className="foco-jb micro -mx-2.5 inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 font-extrabold text-graf-800 hover:text-jb-700"
           >
             {marca.nome}
           </Link>
@@ -79,7 +79,7 @@ export async function ResumoTecnicoProduto({
             <span className="text-graf-300" aria-hidden>•</span>
             <Link
               href={`/categoria/${categoria.slug}`}
-              className="foco-jb texto-apoio -mx-2 inline-flex min-h-11 items-center px-2 font-semibold text-graf-500 hover:text-graf-900"
+              className="foco-jb texto-apoio -mx-2.5 inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 font-semibold text-graf-500 hover:text-graf-900"
             >
               {categoria.nome}
             </Link>
@@ -101,7 +101,7 @@ export async function ResumoTecnicoProduto({
         <a
           href="#avaliacoes-verificadas"
           aria-label={`${avaliacao.media.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} de 5 em ${avaliacao.total} ${avaliacao.total === 1 ? "avaliação verificada" : "avaliações verificadas"}`}
-          className="foco-jb mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border border-graf-200 bg-graf-50/80 px-3 text-xs font-semibold text-graf-600 transition-all hover:border-graf-300 hover:bg-white hover:text-jb-700"
+          className="foco-jb mt-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-graf-50/80 px-3 text-xs font-semibold text-graf-600 transition-all hover:border-graf-300 hover:bg-white hover:text-jb-700"
         >
           <span className="tabular inline-flex items-center gap-1 font-extrabold text-graf-950">
             <Star className="size-3.5 fill-current text-graf-900" aria-hidden />
@@ -190,7 +190,7 @@ export function DetalhesDoProduto({
 
       {identificadores.length > 0 ? (
         <details className="group mt-4 border-t border-hairline pt-2">
-          <summary className="foco-jb texto-apoio flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 font-bold text-graf-500 hover:text-graf-900 [&::-webkit-details-marker]:hidden">
+          <summary className="foco-jb texto-apoio -mx-2 flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 px-2 font-bold text-graf-500 hover:text-graf-900 [&::-webkit-details-marker]:hidden">
             Identificação do produto
             <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden />
           </summary>

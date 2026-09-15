@@ -309,7 +309,10 @@ export function Cabecalho({
             <Link
               href="/"
               aria-label="JB Soluções Odontológicas — início"
-              className="jb-logo flex min-h-11 shrink-0 items-center gap-3 rounded-lg"
+              /* `min-w-11` junto com `min-h-11`: a 320px a marca encolhe para 43px de
+                 largura e o alvo fica um pixel abaixo do mínimo da WCAG 2.2. O
+                 link do logo é a saída para a home em toda página da loja. */
+              className="jb-logo flex min-h-11 min-w-11 shrink-0 items-center gap-3 rounded-lg"
               prefetch={false}
             >
               <Logo altura={compacto ? 32 : 38} prioridade />

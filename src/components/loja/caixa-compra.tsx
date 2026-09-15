@@ -543,7 +543,7 @@ function PacoteDeServicos({
             type="button"
             onClick={aoDetalhar}
             aria-expanded={detalhando}
-            className="foco-jb inline-flex min-h-10 items-center gap-1.5 rounded-md text-xs font-semibold text-graf-600 hover:text-jb-700"
+            className="foco-jb -mx-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-graf-600 hover:text-jb-700"
           >
             <Sliders className="size-3.5" aria-hidden />
             {detalhando ? "Esconder serviços" : "Escolher serviço por serviço"}

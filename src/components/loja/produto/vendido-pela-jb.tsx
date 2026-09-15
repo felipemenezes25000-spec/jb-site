@@ -123,13 +123,13 @@ export function VendidoPelaJB({ empresa, desde, cidade, uf, garantiaMeses }: Pro
       <div className="flex flex-wrap gap-x-4 border-t border-graf-200 bg-white px-4 py-2.5">
         <Link
           href="/sobre"
-          className="foco-jb texto-apoio inline-flex min-h-9 items-center font-bold text-jb-700 hover:text-jb-800"
+          className="foco-jb texto-apoio -mx-2 inline-flex min-h-11 items-center px-2 font-bold text-jb-700 hover:text-jb-800"
         >
           Conhecer a JB
         </Link>
         <Link
           href="/assistencia-tecnica"
-          className="foco-jb texto-apoio inline-flex min-h-9 items-center font-bold text-graf-600 hover:text-graf-950"
+          className="foco-jb texto-apoio -mx-2 inline-flex min-h-11 items-center px-2 font-bold text-graf-600 hover:text-graf-950"
         >
           Ver assistência técnica
         </Link>

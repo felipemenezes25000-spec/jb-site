@@ -210,7 +210,19 @@ body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] [data-jb-
 
 body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo {
   position: relative;
-  min-width: 0;
+  /* 2.75rem, e não 0.
+
+     Este `min-width: 0` existia para a marca ceder espaço quando a faixa
+     aperta — e cedia bem, mas cedia o ALVO junto: a 320px o link do logo
+     media 43,3px de largura, abaixo dos 44 que a WCAG 2.2 pede, e ele é a
+     saída para a home em toda página da loja. A regra tem especificidade
+     maior que a utilitária `min-w-11` escrita no componente, então era ela
+     que decidia — o componente pedia 44 e não era ouvido.
+
+     A imagem continua encolhendo (`height: 1.5rem` abaixo de 22rem); quem
+     para de encolher é a caixa tocável em volta dela. O custo é menos de um
+     pixel na faixa mais estreita. */
+  min-width: 2.75rem;
 }
 
 body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-busca-topo:has(#busca-cabecalho) {
@@ -359,8 +371,11 @@ body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-cta-t
     background: rgb(255 255 255 / 0.995);
   }
 
+  /* Sem zerar o `min-width` de novo: o comentário da regra base explica por
+     quê — quem cede na faixa estreita é a altura da imagem, não o retângulo
+     que o dedo acerta. Esta faixa reafirmava `min-width: 0` e desfazia a
+     correção justamente na largura em que ela importa. */
   body:has([data-pdp-marketplace]) header[data-jb-premium-header="true"] .jb-logo {
-    min-width: 0;
     margin-right: auto;
   }
 

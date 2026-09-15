@@ -51,7 +51,7 @@ export function ServicosDoProduto({ servicos }: { servicos: ServicoDoProduto[] }
                 </p>
                 <Link
                   href={`/servicos/${servico.slug}`}
-                  className="foco-jb mt-1 inline-flex min-h-8 items-center gap-1 text-xs font-bold text-jb-700 hover:text-jb-800"
+                  className="foco-jb -mx-2 mt-1 inline-flex min-h-11 items-center gap-1 px-2 text-xs font-bold text-jb-700 hover:text-jb-800"
                 >
                   Como funciona
                   <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
