@@ -53,6 +53,11 @@ prisma/*.db-journal
 
 .shots/
 
+# Capturas, log de console e despejo de página do navegador do MCP. São
+# artefatos de ferramenta — PNGs de 1 MB que reaparecem a cada sessão que
+# abre o navegador —, não fonte. `.shots/` já saía pelo mesmo motivo.
+.playwright-mcp/
+
 # o exemplo precisa ir para o repositório
 !.env.example
 
