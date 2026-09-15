@@ -3,46 +3,25 @@ import "server-only";
 import { ProvedorMercadoPago } from "@/lib/pagamento/mercadopago";
 import { ProvedorMock } from "@/lib/pagamento/mock";
 import type { ProvedorPagamento } from "@/lib/pagamento/tipos";
+import { simulacaoPagamentoPermitida } from "@/lib/seguranca-ambiente";
 
 export * from "@/lib/pagamento/tipos";
 
 /**
  * Escolhe o provedor conforme o ambiente.
  *
- * A regra dura: o provedor de teste jamais entra em produção. Se a produção
- * subir sem credencial configurada, a aplicação falha na hora em vez de fingir
- * que cobrou — um pedido "pago" que ninguém cobrou é pior que um erro visível.
+ * A regra dura: o provedor de teste jamais entra em produção Vercel. Em uma
+ * demonstração auto-hospedada com NODE_ENV=production, ele só entra com opt-in
+ * explícito. A mesma decisão é usada pela rota de simulação e pelas travas de
+ * ambiente, evitando três versões diferentes de "isto é produção?".
  */
 let instancia: ProvedorPagamento | null = null;
 
-/**
- * Isto é produção?
- *
- * Depender só de `VERCEL_ENV === "production"` deixava um buraco: fora da
- * Vercel — VPS, Docker, qualquer servidor próprio — a variável não existe, a
- * checagem dava falso e a loja subia com o provedor de teste. Como o webhook
- * do provedor de teste não tem assinatura, qualquer anônimo marcaria qualquer
- * pedido como pago.
- *
- * A regra agora tem duas portas:
- *
- *   · na Vercel, quem manda é VERCEL_ENV — preview e development seguem
- *     livres para demonstrar com o simulador, que é o uso legítimo;
- *   · fora da Vercel, NODE_ENV=production já basta para trancar. Note que na
- *     Vercel o NODE_ENV também é "production" durante o build de um preview,
- *     por isso ele só vale quando VERCEL_ENV está ausente.
- *
- * `PERMITIR_PAGAMENTO_SIMULADO` existe para o caso legítimo de uma
- * demonstração auto-hospedada. É opt-in explícito: ninguém cai nele por
- * descuido, e quem liga sabe que está desligando a trava.
- */
-function ehAmbienteDeProducao() {
-  if (process.env.PERMITIR_PAGAMENTO_SIMULADO === "1") return false;
-
-  const naVercel = process.env.VERCEL_ENV;
-  if (naVercel) return naVercel === "production";
-
-  return process.env.NODE_ENV === "production";
+export function pagamentoEhSimulado() {
+  return (
+    (process.env.PAYMENT_PROVIDER ?? "mock") === "mock" &&
+    simulacaoPagamentoPermitida(process.env)
+  );
 }
 
 export function provedorPagamento(): ProvedorPagamento {
@@ -50,7 +29,6 @@ export function provedorPagamento(): ProvedorPagamento {
 
   const escolhido = process.env.PAYMENT_PROVIDER ?? "mock";
   const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-  const emProducao = ehAmbienteDeProducao();
 
   if (escolhido === "mercadopago") {
     if (!token) {
@@ -63,7 +41,7 @@ export function provedorPagamento(): ProvedorPagamento {
     return mp;
   }
 
-  if (emProducao) {
+  if (!simulacaoPagamentoPermitida(process.env)) {
     throw new Error(
       "Produção não pode usar o provedor de teste. Configure PAYMENT_PROVIDER e as credenciais.",
     );
@@ -72,9 +50,4 @@ export function provedorPagamento(): ProvedorPagamento {
   const mock = new ProvedorMock();
   instancia = mock;
   return mock;
-}
-
-/** Para a interface saber o que oferecer sem instanciar o provedor. */
-export function pagamentoEhSimulado() {
-  return (process.env.PAYMENT_PROVIDER ?? "mock") === "mock";
 }
