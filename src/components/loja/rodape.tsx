@@ -270,7 +270,7 @@ export async function Rodape() {
                     className="foco-jb inline-flex flex-wrap items-center gap-2 pointer-coarse:min-h-11 font-semibold text-graf-800 transition-colors hover:text-jb-700"
                   >
                     <span className="tabular text-base">{formatarTelefone(s.whatsapp)}</span>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[0.68rem] font-bold text-emerald-700 ring-1 ring-emerald-100">
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-100">
                       WhatsApp
                     </span>
                   </a>
