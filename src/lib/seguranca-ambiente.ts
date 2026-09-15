@@ -49,7 +49,12 @@ export function problemasDoAmbiente(env: Ambiente, contexto: ContextoAmbiente): 
     problemas.push("PAYMENT_PROVIDER simulado não é permitido em produção.");
   }
 
-  const exigeBanco = contexto !== "build";
+  // Vitest importa módulos que dependem de Prisma mesmo em testes puramente
+  // unitários. Exigir DATABASE_URL nesse caso transforma um import em acesso a
+  // infraestrutura sem melhorar a segurança. Scripts de banco continuam
+  // exigindo URL mesmo em NODE_ENV=test, porque neles a conexão é o trabalho.
+  const testeUnitarioSemBanco = node === "test" && contexto === "database";
+  const exigeBanco = contexto !== "build" && !testeUnitarioSemBanco;
   const urlEfetiva = previewUrl && vercel !== "production" ? previewUrl : databaseUrl;
   if (exigeBanco && !urlEfetiva) {
     problemas.push("Nenhuma URL de banco efetiva foi configurada para esta operação.");
