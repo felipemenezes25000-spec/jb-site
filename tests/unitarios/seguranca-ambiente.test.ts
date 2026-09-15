@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CONFIRMACAO_OPERACAO_PRODUCAO,
   problemasDoAmbiente,
+  urlsBancoEfetivas,
 } from "../../src/lib/seguranca-ambiente";
 
 describe("segurança de ambiente", () => {
@@ -16,7 +17,7 @@ describe("segurança de ambiente", () => {
         },
         "database",
       ),
-    ).toEqual(expect.arrayContaining([expect.stringContaining("JBPREV_DATABASE_URL")]));
+    ).toEqual(expect.arrayContaining([expect.stringContaining("preview")]))
   });
 
   it("recusa preview sem banco próprio", () => {
@@ -26,6 +27,73 @@ describe("segurança de ambiente", () => {
         "database",
       ),
     ).toEqual(expect.arrayContaining([expect.stringContaining("preview sem JBPREV_DATABASE_URL")]));
+  });
+
+  it("recusa preview apontando para a mesma URL de produção", () => {
+    expect(
+      problemasDoAmbiente(
+        {
+          VERCEL_ENV: "preview",
+          DATABASE_URL: "postgresql://mesmo-banco",
+          JBPREV_DATABASE_URL: "postgresql://mesmo-banco",
+        },
+        "database",
+      ),
+    ).toEqual(expect.arrayContaining([expect.stringContaining("bancos diferentes")]));
+  });
+
+  it("recusa conexão direta de preview igual à conexão direta de produção", () => {
+    expect(
+      problemasDoAmbiente(
+        {
+          VERCEL_ENV: "preview",
+          DATABASE_URL: "postgresql://prod",
+          DATABASE_URL_UNPOOLED: "postgresql://prod-direto",
+          JBPREV_DATABASE_URL: "postgresql://preview",
+          JBPREV_DATABASE_URL_UNPOOLED: "postgresql://prod-direto",
+        },
+        "db-deploy",
+      ),
+    ).toEqual(expect.arrayContaining([expect.stringContaining("Prisma CLI de preview")]));
+  });
+
+  it("runtime e Prisma CLI usam somente as URLs de preview", () => {
+    expect(
+      urlsBancoEfetivas({
+        VERCEL_ENV: "preview",
+        DATABASE_URL: "postgresql://prod-pooled",
+        DATABASE_URL_UNPOOLED: "postgresql://prod-direto",
+        JBPREV_DATABASE_URL: "postgresql://preview-pooled",
+        JBPREV_DATABASE_URL_UNPOOLED: "postgresql://preview-direto",
+      }),
+    ).toEqual({
+      runtime: "postgresql://preview-pooled",
+      cli: "postgresql://preview-direto",
+    });
+  });
+
+  it("Prisma CLI de preview cai na URL de preview normal quando não há direta própria", () => {
+    expect(
+      urlsBancoEfetivas({
+        VERCEL_ENV: "preview",
+        DATABASE_URL: "postgresql://prod",
+        DATABASE_URL_UNPOOLED: "postgresql://prod-direto",
+        JBPREV_DATABASE_URL: "postgresql://preview",
+      }),
+    ).toEqual({ runtime: "postgresql://preview", cli: "postgresql://preview" });
+  });
+
+  it("produção usa URL direta para Prisma CLI e pooled no runtime", () => {
+    expect(
+      urlsBancoEfetivas({
+        VERCEL_ENV: "production",
+        DATABASE_URL: "postgresql://prod-pooled",
+        DATABASE_URL_UNPOOLED: "postgresql://prod-direto",
+      }),
+    ).toEqual({
+      runtime: "postgresql://prod-pooled",
+      cli: "postgresql://prod-direto",
+    });
   });
 
   it("recusa pagamento simulado em produção", () => {
