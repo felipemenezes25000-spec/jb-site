@@ -1,23 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 
-import { exigirAmbienteSeguro } from "@/lib/seguranca-ambiente";
+import { exigirAmbienteSeguro, urlsBancoEfetivas } from "@/lib/seguranca-ambiente";
 
 /**
  * Qual banco a aplicação usa.
  *
  * Os deploys de preview (branches) apontam para um Postgres separado, para que
- * uma demonstração ou um teste jamais escreva no banco de produção. A Vercel
- * expõe as duas conexões no mesmo ambiente, então a escolha é explícita aqui.
- *
- * Configuração perigosa agora falha cedo: preview sem banco próprio e produção
- * com JBPREV_DATABASE_URL não são mais mascarados silenciosamente.
+ * uma demonstração ou um teste jamais escreva no banco de produção. A escolha
+ * da conexão vive em `seguranca-ambiente.ts` e é compartilhada com o Prisma
+ * CLI, evitando runtime em preview e migrations em produção por acidente.
  */
 function urlDoBanco() {
   exigirAmbienteSeguro(process.env, "database");
-
-  const preview = process.env.JBPREV_DATABASE_URL;
-  if (preview && process.env.VERCEL_ENV !== "production") return preview;
-  return process.env.DATABASE_URL;
+  return urlsBancoEfetivas(process.env).runtime;
 }
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
