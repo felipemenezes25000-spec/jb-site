@@ -47,8 +47,15 @@ export default async function ManutencoesPage() {
 
   const em30Dias = new Date(agora.getTime() + 30 * 86_400_000);
 
-  const [contratos, previstas, concluidas, vencidas, proximoMes, totalConcluidas] =
-    await Promise.all([
+  const [
+    contratos,
+    previstas,
+    concluidas,
+    vencidas,
+    proximoMes,
+    totalConcluidas,
+    preventivasDoProntuario,
+  ] = await Promise.all([
     prisma.maintenanceContract.findMany({
       where: { customerId: cliente.id, status: { not: "rascunho" } },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
@@ -99,6 +106,33 @@ export default async function ManutencoesPage() {
     }),
     prisma.maintenanceVisit.count({
       where: { status: "concluida", equipment: { customerId: cliente.id } },
+    }),
+    /* A preventiva que o prontuário calcula sozinho.
+
+       Duas telas do mesmo aplicativo discordavam: o prontuário do equipamento
+       e o painel da Área da Clínica mostravam "próxima preventiva em
+       13/03/2027", e esta página dizia "Nenhuma manutenção programada". As
+       duas estavam certas sobre coisas diferentes — aqui só existiam CONTRATO
+       e VISITA AGENDADA; lá existia a data que o próprio equipamento carrega,
+       calculada na compra.
+
+       Com as duas na mesma tela, a palavra "manutenção" volta a significar a
+       mesma coisa em todo lugar: o que a JB já agendou, e o que o prontuário
+       sugere e ainda não virou visita. */
+    prisma.equipment.findMany({
+      where: {
+        customerId: cliente.id,
+        status: { not: "desativado" },
+        nextMaintenanceAt: { not: null },
+      },
+      orderBy: { nextMaintenanceAt: "asc" },
+      take: 20,
+      select: {
+        id: true,
+        name: true,
+        nextMaintenanceAt: true,
+        maintenanceIntervalDays: true,
+      },
     }),
   ]);
 
@@ -163,8 +197,18 @@ export default async function ManutencoesPage() {
     { chave: "contrato", rotulo: "Contrato", largura: "9rem", esconderNoMobile: true },
   ];
 
+  /* Equipamento que já tem visita agendada não repete a sugestão do
+     prontuário: seria a mesma manutenção, duas vezes, com datas diferentes. */
+  const comVisitaPrevista = new Set(previstas.map((visita) => visita.equipment.id));
+  const sugestoes = preventivasDoProntuario.filter(
+    (equipamento) => !comVisitaPrevista.has(equipamento.id),
+  );
+
   const semNada =
-    contratos.length === 0 && previstas.length === 0 && concluidas.length === 0;
+    contratos.length === 0 &&
+    previstas.length === 0 &&
+    concluidas.length === 0 &&
+    sugestoes.length === 0;
 
   const contratosAtivos = contratos.filter((contrato) => contrato.status === "ativo").length;
 
@@ -219,6 +263,40 @@ export default async function ManutencoesPage() {
         titulo="Manutenções"
         descricao="Contratos ativos, visitas previstas e o histórico do que já foi feito na sua clínica."
       />
+
+      {sugestoes.length > 0 ? (
+        <Cartao className="mb-6">
+          <CabecalhoCartao
+            titulo="Preventiva sugerida pelo prontuário"
+            descricao="Calculada a partir da compra de cada equipamento. Ainda não é visita agendada — vira uma quando a JB confirma data e técnico."
+          />
+          <ul className="divide-y divide-graf-200">
+            {sugestoes.map((equipamento) => (
+              <li
+                key={equipamento.id}
+                className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3"
+              >
+                <Link
+                  href={`/minha-jb/equipamentos/${equipamento.id}`}
+                  className="foco-jb text-sm font-semibold text-graf-950 hover:text-jb-700"
+                >
+                  {equipamento.name}
+                </Link>
+                <span className="tabular text-sm text-graf-600">
+                  {formatarData(equipamento.nextMaintenanceAt)}
+                  <span className="ml-1.5 text-xs text-graf-500">
+                    ({distanciaEmDias(equipamento.nextMaintenanceAt!)})
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 border-t border-graf-200 pt-3 text-apoio text-graf-500">
+            Quer transformar isso em visita com data? Peça pela assistência ou conheça os
+            planos de manutenção.
+          </p>
+        </Cartao>
+      ) : null}
 
       {semNada ? (
         <Vazio

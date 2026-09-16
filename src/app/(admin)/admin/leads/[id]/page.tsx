@@ -101,7 +101,7 @@ export default async function PaginaDetalheDoLead({
             />
             <div className="px-5 py-4">
               {lead.obs.trim() ? (
-                <p className="whitespace-pre-line text-[0.9375rem] leading-relaxed text-graf-700">
+                <p className="whitespace-pre-line text-corpo leading-relaxed text-graf-700">
                   {lead.obs}
                 </p>
               ) : (
@@ -143,7 +143,7 @@ export default async function PaginaDetalheDoLead({
               <li className="flex items-start gap-3 px-5 py-3">
                 <Mail className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.8125rem] text-graf-500">E-mail</span>
+                  <span className="block text-apoio text-graf-500">E-mail</span>
                   {lead.email ? (
                     <a
                       href={`mailto:${lead.email}`}
@@ -160,7 +160,7 @@ export default async function PaginaDetalheDoLead({
               <li className="flex items-start gap-3 px-5 py-3">
                 <Phone className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.8125rem] text-graf-500">Telefone</span>
+                  <span className="block text-apoio text-graf-500">Telefone</span>
                   {telefone ? (
                     <>
                       <a
@@ -173,7 +173,7 @@ export default async function PaginaDetalheDoLead({
                         href={whatsappHref(telefone)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 inline-flex min-h-11 items-center text-[0.8125rem] font-semibold text-graf-600 underline underline-offset-2 hover:text-jb-700"
+                        className="mt-1 inline-flex min-h-11 items-center text-apoio font-semibold text-graf-600 underline underline-offset-2 hover:text-jb-700"
                       >
                         Abrir no WhatsApp
                       </a>
@@ -187,7 +187,7 @@ export default async function PaginaDetalheDoLead({
               <li className="flex items-start gap-3 px-5 py-3">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-[0.8125rem] text-graf-500">Endereço</span>
+                  <span className="block text-apoio text-graf-500">Endereço</span>
                   <span className="block text-sm text-graf-800">
                     {endereco || "Não informado"}
                   </span>
@@ -195,7 +195,7 @@ export default async function PaginaDetalheDoLead({
               </li>
 
               <li className="px-5 py-3">
-                <span className="block text-[0.8125rem] text-graf-500">Aceita novidades por e-mail</span>
+                <span className="block text-apoio text-graf-500">Aceita novidades por e-mail</span>
                 <span className="block text-sm text-graf-800">{lead.news ? "Sim" : "Não"}</span>
               </li>
             </ul>
@@ -240,7 +240,7 @@ export default async function PaginaDetalheDoLead({
               {lead.userAgent ? (
                 <>
                   <dt className="text-graf-500">Aparelho</dt>
-                  <dd className="break-words text-[0.8125rem] text-graf-600">{lead.userAgent}</dd>
+                  <dd className="break-words text-apoio text-graf-600">{lead.userAgent}</dd>
                 </>
               ) : null}
               <dt className="text-graf-500">Atualizado</dt>

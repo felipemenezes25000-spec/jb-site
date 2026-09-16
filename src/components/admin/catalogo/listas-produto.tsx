@@ -509,7 +509,7 @@ export function FormularioRelacionados({
                           <span className="block truncate text-sm font-semibold text-graf-900">
                             {produto.nome}
                           </span>
-                          <span className="block truncate text-[0.8125rem] text-graf-500">
+                          <span className="block truncate text-apoio text-graf-500">
                             {produto.sku} · {produto.condicao}
                           </span>
                         </span>
@@ -541,7 +541,7 @@ export function FormularioRelacionados({
                     {produto?.nome ?? "Produto removido do catálogo"}
                   </span>
                   {produto ? (
-                    <span className="block truncate text-[0.8125rem] text-graf-500">
+                    <span className="block truncate text-apoio text-graf-500">
                       {produto.sku} · {produto.condicao}
                     </span>
                   ) : null}

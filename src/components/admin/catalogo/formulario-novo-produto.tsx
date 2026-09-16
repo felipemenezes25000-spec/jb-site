@@ -8,7 +8,7 @@ import type { OpcaoSimples } from "@/components/admin/catalogo/formulario-produt
 import { BarraSalvar, Bloco, Grade, RegiaoEstado } from "@/components/admin/catalogo/moldura-form";
 import { Botao, LinkBotao } from "@/components/ui/button";
 import { CampoMoeda } from "@/components/ui/campos-br";
-import { Campo, Selecao } from "@/components/ui/form";
+import { Campo, Marcador, Selecao } from "@/components/ui/form";
 
 /* ============================================================================
    Novo produto
@@ -105,6 +105,14 @@ export function FormularioNovoProduto({
             <option value="active">Publicado</option>
           </Selecao>
         </Grade>
+
+        <Marcador
+          name="isEquipment"
+          value="on"
+          defaultChecked
+          rotulo="Gera prontuário técnico após a compra"
+          ajuda="Deixe ativo para equipamentos. Desative para peças, acessórios e consumíveis."
+        />
 
         <BarraSalvar>
           <LinkBotao href="/admin/produtos" variante="secundario">

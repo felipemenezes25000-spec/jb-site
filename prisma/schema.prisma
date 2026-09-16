@@ -46,8 +46,6 @@ model User {
   auditLogs  AuditLog[]
   technician Technician?
 
-  @@index([role, active])
-
   /// Inspeções que esta pessoa conduziu e publicou.
   certificacoesInspecionadas UnitCertification[] @relation("CertificacaoTecnico")
   certificacoesPublicadas    UnitCertification[] @relation("CertificacaoPublicador")
@@ -59,6 +57,8 @@ model User {
   /// Cases tecnicos que esta pessoa executou e revisou.
   casesExecutados TechCase[] @relation("CaseTecnico")
   casesRevisados  TechCase[] @relation("CaseRevisor")
+
+  @@index([role, active])
 }
 
 /// Técnico de campo. Estende um usuário interno com dados operacionais.
@@ -281,6 +281,9 @@ model Product {
   description      String           @default("") // HTML sanitizado
   status           ProductStatus    @default(draft)
   condition        ProductCondition @default(novo)
+  /// Define explicitamente se a compra gera prontuário técnico na Área da Clínica.
+  /// Peças, acessórios e consumíveis continuam sendo Product, mas ficam false.
+  isEquipment      Boolean          @default(true)
   featured         Boolean          @default(false)
   publishedAt      DateTime?
 
@@ -489,9 +492,9 @@ model InventoryUnit {
   checklist InventoryCheckItem[]
   media     InventoryUnitMedia[]
 
-
   /// Inspeção do programa Seminovo JB Certificado, quando existe.
   certification UnitCertification?
+
   @@index([productId, status])
   @@index([serialNumber])
 }
@@ -540,8 +543,8 @@ model UnitCertification {
   /// Quantos itens o checklist desta versão tem, e quantos foram aprovados.
   /// Guardados no fechamento: recontar depois daria outro número se o
   /// checklist mudasse.
-  itemsTotal    Int @default(0)
-  itemsApproved Int @default(0)
+  itemsTotal         Int @default(0)
+  itemsApproved      Int @default(0)
   /// Itens marcados como não aplicáveis. NÃO entram em `itemsApproved` — um
   /// item que não se aplica não foi aprovado, e somá-lo infla a verificação.
   itemsNotApplicable Int @default(0)
@@ -556,7 +559,7 @@ model UnitCertification {
   publishedBy   User?   @relation("CertificacaoPublicador", fields: [publishedById], references: [id], onDelete: SetNull)
 
   /// Observações estéticas e o que foi testado, em texto livre da equipe.
-  summary String @default("")
+  summary       String @default("")
   /// Motivo da revogação. Obrigatório para revogar, e mostrado ao público.
   revokedReason String @default("")
 
@@ -848,12 +851,12 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items        OrderItem[]
-  events       OrderStatusEvent[]
-  payments     Payment[]
-  movements    InventoryMovement[]
-  equipments   Equipment[]
-  documents    Document[]
+  items         OrderItem[]
+  events        OrderStatusEvent[]
+  payments      Payment[]
+  movements     InventoryMovement[]
+  equipments    Equipment[]
+  documents     Document[]
   quote         Quote?
   installTasks  InstallationTask[]
   reviewRequest ReviewRequest?
@@ -888,6 +891,8 @@ model OrderItem {
   brandName      String            @default("")
   modelName      String            @default("")
   condition      ProductCondition?
+  /// Snapshot: editar o produto depois da venda não muda o pós-venda do pedido antigo.
+  isEquipment    Boolean           @default(false)
   imageUrl       String            @default("")
   unitPriceCents Int
   quantity       Int               @default(1)
@@ -1046,7 +1051,7 @@ model Equipment {
   nextMaintenanceAt       DateTime?
   maintenanceIntervalDays Int?
 
-  notes     String   @default("")
+  notes String @default("")
 
   /// Localizador OPACO da etiqueta de QR.
   ///
@@ -1093,14 +1098,28 @@ model EquipmentEvent {
   title       String
   description String    @default("")
   happenedAt  DateTime  @default(now())
-  workOrderId String?
-  createdAt   DateTime  @default(now())
+
+  /// De QUE coisa este evento fala. Sem relacao declarada, igual a
+  /// `workOrderId`, que ja era assim: sao ponteiros de leitura, nao arestas do
+  /// grafo, e nenhuma consulta navega por eles.
+  ///
+  /// Existem porque a linha do tempo mostrava o mesmo fato duas vezes: o
+  /// chamado JB-000012 aparecia como chamado E como evento "Chamado JB-000012
+  /// aberto", com o mesmo minuto e o mesmo texto. Deduplicar exige saber a que
+  /// registro o evento se refere, e adivinhar isso lendo o titulo em portugues
+  /// seria casar texto de tela — o mesmo erro que `statusTo` existe para nao
+  /// cometer.
+  workOrderId      String?
+  serviceRequestId String?
+  visitId          String?
+
+  createdAt DateTime @default(now())
 
   /// Situacao para a qual o equipamento passou, quando kind == "status".
   /// Nulo nos eventos antigos, gravados antes desta coluna existir — e essa
   /// diferenca importa: sem ela, so daria para adivinhar a situacao lendo o
   /// titulo em portugues, que e texto de tela e pode mudar.
-  statusTo    EquipmentStatus?
+  statusTo EquipmentStatus?
 
   @@index([equipmentId, happenedAt])
 }
@@ -1163,6 +1182,35 @@ enum TempUploadStatus {
 ///   • **Corrida.** A limpeza só apaga linha `pendente`. Vincular muda o
 ///     estado na mesma transação que grava o chamado, então um arquivo
 ///     reivindicado por um chamado válido nunca é apagado pelo job.
+/// Arquivo guardado no próprio banco.
+///
+/// Existe para o ambiente que não tem loja de blobs configurada. Sem ela, o
+/// envio caía no sistema de arquivos do projeto — que em serverless é somente
+/// leitura. O resultado medido na auditoria: toda foto de chamado devolvia
+/// "Não foi possível receber o arquivo. Tente de novo.", e tentar de novo
+/// nunca ia funcionar, porque não era falha transitória e sim ausência de
+/// lugar onde gravar. E a própria tela dizia que a foto da etiqueta "resolve
+/// metade do diagnóstico".
+///
+/// Guardar binário em Postgres não é o destino final de um acervo de mídia —
+/// é o piso que garante que a promessa da tela seja verdadeira em qualquer
+/// ambiente. Com `BLOB_READ_WRITE_TOKEN` configurado, nada passa por aqui.
+///
+/// Continua sendo armazenamento PRIVADO: o caminho gravado (`/banco/...`) não
+/// abre no navegador, e os bytes só saem pelas rotas que conferem sessão e
+/// dono antes de ler.
+model StoredBlob {
+  id        String   @id @default(cuid())
+  /// Mesmo `pathname` que a loja de blobs usaria. Único.
+  pathname  String   @unique
+  mime      String
+  size      Int
+  bytes     Bytes
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model TempUpload {
   id String @id @default(cuid())
 
@@ -1253,11 +1301,11 @@ model ServiceRequest {
   workOrders   WorkOrder[]
   quotes       Quote[]
 
-  @@index([customerId, createdAt])
-  @@index([status, createdAt])
-
   /// Arquivos que o visitante enviou antes de o chamado existir.
   tempUploads TempUpload[]
+
+  @@index([customerId, createdAt])
+  @@index([status, createdAt])
 }
 
 model ServiceRequestMedia {
@@ -1425,6 +1473,15 @@ model WorkOrderEvent {
 
 enum QuoteStatus {
   rascunho
+  /// Pedido do cliente pelo site, ainda sem proposta montada.
+  ///
+  /// `rascunho` é documento interno — o que a equipe escreve antes de o
+  /// cliente ver. Um pedido feito no /orcamento é o contrário: o cliente sabe
+  /// que existe, recebeu o número por e-mail e a tela de sucesso prometeu que
+  /// ele entra na fila. Sem um estado próprio, esse pedido nascia `rascunho` e
+  /// sumia da Área da Clínica — a auditoria criou ORC-000005 e a listagem
+  /// continuou dizendo "Nenhum orçamento por aqui · Todas 0".
+  solicitado
   enviado
   em_duvida
   aprovado

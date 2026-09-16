@@ -56,7 +56,7 @@ const TAMANHOS: Record<Tamanho, string> = {
   /* 40px basta para o mouse e mantém a densidade das listas do painel; no
      toque o mesmo botão cresce para os 44px do alvo mínimo. */
   sm: "min-h-10 pointer-coarse:min-h-11 px-4 py-2 text-sm gap-1.5 rounded-md",
-  md: "min-h-11 px-5 py-2.5 text-[0.9375rem] gap-2 rounded-lg",
+  md: "min-h-11 px-5 py-2.5 text-corpo gap-2 rounded-lg",
   lg: "min-h-13 px-7 py-3 text-base gap-2.5 rounded-lg",
 };
 

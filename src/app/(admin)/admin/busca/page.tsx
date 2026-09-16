@@ -336,7 +336,7 @@ export default async function PaginaBuscaGlobal({
         role="search"
         className="rounded-xl border border-graf-200 bg-white p-3 shadow-card"
       >
-        <label htmlFor="termo-da-busca" className="mb-1 block text-[0.8125rem] font-semibold text-graf-600">
+        <label htmlFor="termo-da-busca" className="mb-1 block text-apoio font-semibold text-graf-600">
           O que você procura
         </label>
         <div className="flex flex-wrap gap-2">
@@ -423,7 +423,7 @@ export default async function PaginaBuscaGlobal({
                           <span className="block truncate text-sm font-semibold text-graf-900">
                             {item.titulo}
                           </span>
-                          <span className="block truncate text-[0.8125rem] text-graf-500">
+                          <span className="block truncate text-apoio text-graf-500">
                             {item.detalhe}
                           </span>
                         </span>

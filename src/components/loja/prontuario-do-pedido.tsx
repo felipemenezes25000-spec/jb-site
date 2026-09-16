@@ -69,7 +69,7 @@ export function ProntuarioDoPedido({
               className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-4 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
               <span className="min-w-0">
-                <span className="block text-[0.9375rem] font-semibold text-graf-950">
+                <span className="block text-corpo font-semibold text-graf-950">
                   {equipamento.nome}
                 </span>
                 <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -78,7 +78,7 @@ export function ProntuarioDoPedido({
                       parecer que o dado se perdeu. */}
                   <Serial numero={equipamento.serial} />
                   {equipamento.garantiaAte ? (
-                    <span className="text-[0.8125rem] text-graf-500">
+                    <span className="text-apoio text-graf-500">
                       Garantia até {formatarData(equipamento.garantiaAte)}
                     </span>
                   ) : null}

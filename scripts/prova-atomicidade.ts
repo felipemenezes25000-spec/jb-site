@@ -44,6 +44,7 @@ async function pedidoDescartavel(quantidade: number) {
           kind: "produto",
           productId: produto.id,
           name: produto.name,
+          isEquipment: true,
           unitPriceCents: produto.priceCents,
           quantity: quantidade,
           totalCents: produto.priceCents * quantidade,
@@ -194,6 +195,12 @@ async function main() {
       referencia: "",
     };
 
+    /* Guardar o motivo importa: aqui se espera que ALGUMAS chamadas falhem
+       por disputa da unidade, então engolir o erro é proposital. Mas quando
+       falham todas, "0 de 5" sozinho não diz se foi a trava do banco fazendo
+       seu trabalho ou o fixture quebrado — e sem o motivo o passo seguinte é
+       adivinhação. */
+    const recusas: unknown[] = [];
     const pedidos = await Promise.all(
       carrinhos.map((carrinho) =>
         criarPedido({
@@ -202,11 +209,17 @@ async function main() {
           comprador,
           entrega,
           observacao: "",
-        }).catch(() => null),
+        }).catch((erro) => {
+          recusas.push(erro);
+          return null;
+        }),
       ),
     );
 
     const criados = pedidos.filter((p) => p !== null);
+    if (criados.length === 0 && recusas.length > 0) {
+      console.log(`  motivo da primeira recusa: ${String(recusas[0]).slice(0, 200)}`);
+    }
     const unidade = await prisma.inventoryUnit.findFirst({
       where: { serialNumber: "PROVA-UNIDADE" },
       select: { status: true, orderItemId: true },
@@ -232,6 +245,32 @@ async function main() {
       data: { stock: produto.stock, unique: produto.unique },
     });
   }
+
+  console.log("\n5. item marcado como não equipamento não cria prontuário técnico");
+  {
+    const { pedido, cliente } = await pedidoDescartavel(1);
+    await prisma.orderItem.updateMany({
+      where: { orderId: pedido.id, kind: "produto" },
+      data: { isEquipment: false },
+    });
+
+    await confirmarPagamento(pedido.id);
+
+    const equipamentos = await prisma.equipment.count({ where: { orderId: pedido.id } });
+    const aviso = await prisma.notification.findFirst({
+      where: { customerId: cliente.id, title: { contains: pedido.number } },
+      select: { body: true },
+    });
+    conferir("não criou equipamento", equipamentos === 0, `${equipamentos}`);
+    conferir(
+      "mensagem fala em pedido, não equipamento",
+      aviso?.body === "Já estamos preparando seu pedido.",
+      aviso?.body ?? "sem aviso",
+    );
+
+    await limpar(pedido.id, cliente.id, pedido.number);
+  }
+
   console.log(`\n${falhas === 0 ? "TUDO OK" : `${falhas} FALHA(S)`}\n`);
 }
 

@@ -24,12 +24,23 @@ export function Passos({
   passos,
   atual,
   rotulo = "Progresso",
+  descricaoNoCelular = true,
   className,
 }: {
   passos: Passo[];
   /** Índice da etapa corrente, começando em 0. */
   atual: number;
   rotulo?: string;
+  /**
+   * A linha de apoio da etapa no bloco compacto.
+   *
+   * Desligue quando o título da etapa logo abaixo já diz a mesma coisa: na
+   * abertura de chamado a régua anunciava "Qual aparelho precisa de
+   * atendimento" e o título seguinte perguntava "Qual equipamento precisa de
+   * atendimento?" — duas linhas para a mesma frase, empurrando o primeiro
+   * campo para fora da primeira tela do celular.
+   */
+  descricaoNoCelular?: boolean;
   className?: string;
 }) {
   if (passos.length === 0) return null;
@@ -139,11 +150,16 @@ export function Passos({
           Etapa {indice + 1} de {passos.length}
         </p>
         <p className="mt-1 text-base font-bold leading-tight text-graf-950">{corrente.rotulo}</p>
-        {corrente.descricao ? (
+        {corrente.descricao && descricaoNoCelular ? (
           <p className="mt-1 text-sm leading-relaxed text-graf-500">{corrente.descricao}</p>
         ) : null}
+        {/* `aria-valuetext` diz o valor, não o nome — e `role="progressbar"`
+            exige nome próprio (axe `aria-progressbar-name`, grave). Sem ele o
+            leitor de tela anunciava "Etapa 1 de 5: Identificação" sem dizer
+            progresso de quê. O `rotulo` do `<nav>` é o mesmo texto certo. */}
         <div
           role="progressbar"
+          aria-label={rotulo}
           aria-valuemin={1}
           aria-valuemax={passos.length}
           aria-valuenow={indice + 1}
@@ -220,7 +236,7 @@ export function PassosNumerados({
               </div>
               <h3 className="texto-forte mt-5 text-lg font-bold leading-snug">{passo.titulo}</h3>
               {passo.descricao ? (
-                <p className="texto-suave mt-2 text-[0.9375rem] leading-relaxed">
+                <p className="texto-suave mt-2 text-corpo leading-relaxed">
                   {passo.descricao}
                 </p>
               ) : null}
@@ -256,7 +272,7 @@ export function PassosNumerados({
                 {passo.titulo}
               </h3>
               {passo.descricao ? (
-                <p className="texto-suave mt-2 text-[0.9375rem] leading-relaxed">
+                <p className="texto-suave mt-2 text-corpo leading-relaxed">
                   {passo.descricao}
                 </p>
               ) : null}

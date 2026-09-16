@@ -84,7 +84,7 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
               setAlternadas({});
             }}
             placeholder="Buscar por palavra — garantia, orçamento, prazo…"
-            className="h-12 w-full rounded-lg border border-graf-450 bg-white pl-11 pr-4 text-base sm:text-[0.9375rem] shadow-xs transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
+            className="h-12 w-full rounded-lg border border-graf-450 bg-white pl-11 pr-4 text-base sm:text-corpo shadow-xs transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
           />
         </div>
 
@@ -116,7 +116,7 @@ export function ListaDeFaq({ grupos }: { grupos: GrupoFaq[] }) {
         ) : null}
       </div>
 
-      <p className="mt-5 text-[0.8125rem] text-graf-500" aria-live="polite">
+      <p className="mt-5 text-apoio text-graf-500" aria-live="polite">
         {busca.length >= 2 || grupoAtivo !== "todos"
           ? `${plural(total, "pergunta encontrada", "perguntas encontradas")}.`
           : `${plural(total, "pergunta respondida", "perguntas respondidas")} nesta página.`}

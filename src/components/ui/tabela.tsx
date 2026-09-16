@@ -186,7 +186,7 @@ export function Tabela<T>({
                         : undefined
                     }
                     className={cn(
-                      "whitespace-nowrap px-4 py-3 text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500",
+                      "whitespace-nowrap px-4 py-3 text-apoio font-bold uppercase tracking-wider text-graf-500",
                       ALINHAR[coluna.alinhamento ?? "esquerda"],
                     )}
                   >
@@ -277,7 +277,7 @@ export function Tabela<T>({
             >
               {primeira ? (
                 <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 text-[0.9375rem] font-semibold leading-snug text-graf-950">
+                  <p className="min-w-0 text-corpo font-semibold leading-snug text-graf-950">
                     {href ? (
                       <Link
                         href={href}

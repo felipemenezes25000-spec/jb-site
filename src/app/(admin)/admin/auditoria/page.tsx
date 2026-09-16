@@ -241,7 +241,7 @@ export default async function PaginaAuditoria({
                       </p>
                     )}
 
-                    <p className="mt-2 text-[0.8125rem] text-graf-500">
+                    <p className="mt-2 text-apoio text-graf-500">
                       {registro.user
                         ? `${registro.user.name} · ${ROTULO_PAPEL[registro.user.role]}`
                         : "Sem usuário identificado"}

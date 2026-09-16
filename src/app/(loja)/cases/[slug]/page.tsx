@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section className="border-t border-graf-200 pt-6">
-      <h2 className="text-[0.8125rem] font-bold uppercase tracking-wide text-graf-500">
+      <h2 className="text-apoio font-bold uppercase tracking-wide text-graf-500">
         {titulo}
       </h2>
       <div className="mt-2 text-[1.0625rem] leading-relaxed text-graf-800">{children}</div>

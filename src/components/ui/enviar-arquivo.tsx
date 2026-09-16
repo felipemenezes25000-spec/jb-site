@@ -372,7 +372,7 @@ export function EnviarArquivo({
         <label
           htmlFor={idEntrada}
           className={cn(
-            "mt-2 inline-flex min-h-11 cursor-pointer select-none items-center justify-center rounded-lg border border-graf-300 bg-white px-5 text-[0.9375rem] font-semibold text-graf-800 transition-colors",
+            "mt-2 inline-flex min-h-11 cursor-pointer select-none items-center justify-center rounded-lg border border-graf-300 bg-white px-5 text-corpo font-semibold text-graf-800 transition-colors",
             "hover:border-graf-400 hover:bg-graf-50",
             desabilitado && "pointer-events-none opacity-60",
           )}

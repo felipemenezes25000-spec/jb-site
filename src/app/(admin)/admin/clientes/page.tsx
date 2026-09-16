@@ -157,7 +157,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
           <span className="block truncate font-semibold text-graf-900">
             {linha.companyName || linha.name}
           </span>
-          <span className="block truncate text-[0.8125rem] text-graf-500">{linha.email}</span>
+          <span className="block truncate text-apoio text-graf-500">{linha.email}</span>
         </span>
       ),
     },

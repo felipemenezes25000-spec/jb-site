@@ -244,7 +244,7 @@ export default async function EntregaPage() {
                       </div>
 
                       {perfil.description ? (
-                        <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-600">
+                        <p className="mt-2.5 text-corpo leading-relaxed text-graf-600">
                           {perfil.description}
                         </p>
                       ) : null}

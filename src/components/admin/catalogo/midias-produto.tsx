@@ -134,7 +134,7 @@ export function MidiasProduto({
                           })
                         }
                         className={cn(
-                          "inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[0.8125rem] font-semibold text-graf-600",
+                          "inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-apoio font-semibold text-graf-600",
                           "hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
                           "disabled:cursor-not-allowed disabled:text-graf-300",
                         )}
@@ -143,7 +143,7 @@ export function MidiasProduto({
                         Usar como capa
                       </button>
                     )}
-                    <span className="truncate text-[0.8125rem] text-graf-500">{foto.nome}</span>
+                    <span className="truncate text-apoio text-graf-500">{foto.nome}</span>
                   </div>
 
                   <Campo

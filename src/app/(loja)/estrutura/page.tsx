@@ -248,7 +248,7 @@ export default async function EstruturaPage() {
                         {servico.name}
                       </p>
                       {servico.description ? (
-                        <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-graf-600">
+                        <p className="mt-1.5 text-corpo leading-relaxed text-graf-600">
                           {servico.description}
                         </p>
                       ) : null}

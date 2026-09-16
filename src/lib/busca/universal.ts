@@ -1,9 +1,13 @@
 import "server-only";
 
 import { sessaoCliente } from "@/lib/auth-cliente";
-import type { ProdutoCard } from "@/components/loja/card-produto";
+import type { ProdutoMarketplaceCard } from "@/components/loja/marketplace/tipos";
 import { detectarIntencao, termosDaBusca, type Intencao } from "@/lib/busca/intencao";
-import { paraCard, PUBLICADO, SELECAO_CARD } from "@/lib/catalogo";
+import {
+  paraCardMarketplace,
+  PUBLICADO,
+  SELECAO_CARD_MARKETPLACE,
+} from "@/lib/catalogo";
 import { prisma } from "@/lib/prisma";
 
 /* ============================================================================
@@ -32,7 +36,7 @@ const TETO_POR_GRUPO = 6;
  * Agora a busca devolve o mesmo `ProdutoCard` da vitrine, e a página usa a
  * mesma grade.
  */
-export type AchadoDeProduto = ProdutoCard;
+export type AchadoDeProduto = ProdutoMarketplaceCard;
 
 export type AchadoDeConteudo = {
   slug: string;
@@ -86,7 +90,7 @@ export async function buscarTudo(consulta: string): Promise<ResultadoUniversal> 
       },
       orderBy: { featured: "desc" },
       take: TETO_POR_GRUPO,
-      select: SELECAO_CARD,
+      select: SELECAO_CARD_MARKETPLACE,
     }),
 
     /* Só publicado. Rascunho da Central não existe para a busca, pelo mesmo
@@ -133,7 +137,7 @@ export async function buscarTudo(consulta: string): Promise<ResultadoUniversal> 
   const resultado: ResultadoUniversal = {
     intencao,
     temSessao,
-    produtos: produtos.map(paraCard),
+    produtos: produtos.map(paraCardMarketplace),
     conteudo: artigos.map((artigo) => ({
       slug: artigo.slug,
       titulo: artigo.title,

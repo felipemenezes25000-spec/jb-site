@@ -65,7 +65,7 @@ export function FormularioEntrarStaff({ destino = "/admin" }: { destino?: string
         {enviando ? "Entrando…" : "Entrar no painel"}
       </Botao>
 
-      <p className="border-t border-graf-200 pt-4 text-center text-[0.8125rem] leading-relaxed text-graf-500">
+      <p className="border-t border-graf-200 pt-4 text-center text-apoio leading-relaxed text-graf-500">
         Acesso restrito à equipe da JB. Perdeu a senha? Peça a um administrador para
         gerar uma nova em Usuários.
       </p>

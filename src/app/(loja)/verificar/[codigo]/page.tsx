@@ -101,7 +101,7 @@ export default async function VerificarPage({ params }: Props) {
 
               {revogada ? (
                 <>
-                  <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-700">
+                  <p className="mt-2 text-corpo leading-relaxed text-graf-700">
                     {certificacao.revokedReason ||
                       "A JB retirou esta certificação. Fale com a equipe antes de considerar esta unidade."}
                   </p>
@@ -112,7 +112,7 @@ export default async function VerificarPage({ params }: Props) {
                   ) : null}
                 </>
               ) : (
-                <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-700">
+                <p className="mt-2 text-corpo leading-relaxed text-graf-700">
                   {frasedaVerificacao(contagem)}.
                   {certificacao.publishedAt
                     ? ` Publicada em ${formatarData(certificacao.publishedAt)}.`
@@ -120,7 +120,7 @@ export default async function VerificarPage({ params }: Props) {
                 </p>
               )}
 
-              <p className="label-mono mt-4 text-[0.8125rem] text-graf-500">
+              <p className="label-mono mt-4 text-apoio text-graf-500">
                 Código {certificacao.publicCode} · checklist {certificacao.checklistVersion}
               </p>
             </div>
@@ -171,7 +171,7 @@ export default async function VerificarPage({ params }: Props) {
           </dl>
 
           {unit.conditionNotes ? (
-            <p className="mt-4 text-[0.9375rem] leading-relaxed text-graf-700">
+            <p className="mt-4 text-corpo leading-relaxed text-graf-700">
               {unit.conditionNotes}
             </p>
           ) : null}
@@ -199,7 +199,7 @@ export default async function VerificarPage({ params }: Props) {
                       {item.label}
                     </span>
                     {item.note ? (
-                      <span className="block text-[0.8125rem] text-graf-500">{item.note}</span>
+                      <span className="block text-apoio text-graf-500">{item.note}</span>
                     ) : null}
                   </span>
                   <ResultadoDoItem resultado={item.result} />
@@ -212,7 +212,7 @@ export default async function VerificarPage({ params }: Props) {
         {/* ----------------------------------------------- disponibilidade */}
         <section className="rounded-xl border border-graf-200 bg-surface-muted p-5">
           <h2 className="text-base font-bold text-graf-950">Esta unidade está disponível?</h2>
-          <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+          <p className="mt-2 text-corpo leading-relaxed text-graf-600">
             {vendida
               ? "Esta unidade já foi vendida. A verificação continua no ar porque ela é o comprovante de quem comprou."
               : unit.product.status === "active"

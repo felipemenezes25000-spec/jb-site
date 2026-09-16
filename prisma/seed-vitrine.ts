@@ -154,12 +154,22 @@ async function main() {
     const seminovo = produto.condition === "seminovo";
 
     /* A descrição junta o resumo com o que o protótipo chamava de
-       "highlights": são as frases que a JB assina sobre o equipamento. */
+       "highlights": são as frases que a JB assina sobre o equipamento.
+
+       `warranty` NÃO entra aqui. Ela já vira `warrantyMonths` doze linhas
+       abaixo — a coluna estruturada que a ficha técnica lê — e escrevê-la
+       também como bullet punha o mesmo dado, vindo do mesmo campo, duas vezes
+       na mesma coluna da página: "12 meses de garantia de fábrica" no bloco
+       "Por que este modelo" e "Garantia 12 meses" nos destaques logo abaixo.
+       Medido em quatro fichas, era sempre esse bullet, e só ele.
+
+       `installedBy` fica: "Pronto para uso ao receber", "Orientação de
+       instalação por vídeo", "Configuração remota do software inclusa" não
+       estão em campo nenhum da ficha. É informação, não eco. */
     const descricao = [
       `<p>${produto.short}</p>`,
       "<ul>",
       ...produto.highlights.map((linha) => `<li>${linha}</li>`),
-      `<li>${produto.warranty}</li>`,
       `<li>${produto.installedBy}</li>`,
       "</ul>",
     ].join("");

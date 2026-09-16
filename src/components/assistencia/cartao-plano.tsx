@@ -78,7 +78,7 @@ export function CartaoPlano({
       </div>
 
       {plano.descricao ? (
-        <p className="mt-3 text-[0.9375rem] leading-relaxed text-graf-600">
+        <p className="mt-3 text-corpo leading-relaxed text-graf-600">
           {plano.descricao}
         </p>
       ) : null}
@@ -139,7 +139,7 @@ export function CartaoPlano({
           {plano.beneficios.map((beneficio) => (
             <li
               key={beneficio}
-              className="flex gap-2.5 text-[0.9375rem] leading-relaxed text-graf-700"
+              className="flex gap-2.5 text-corpo leading-relaxed text-graf-700"
             >
               <Check className="mt-0.5 size-4 shrink-0 text-ok-700" aria-hidden />
               <span>{beneficio}</span>

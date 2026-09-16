@@ -66,17 +66,56 @@ export function paraCentavos(entrada: string | number): number {
  * Parcelamento sem juros. Só exibe quando o valor da parcela fica acima do
  * mínimo configurado — nada de "12x de R$ 3,00".
  */
+export type Parcelamento = {
+  parcelas: number;
+  /** O valor que se repete — o que a vitrine anuncia. */
+  valorCents: number;
+  /**
+   * A primeira parcela, que absorve a sobra do arredondamento.
+   *
+   * `Math.floor` de 438.000 por 9 dá 48.666 centavos, e nove vezes isso é
+   * 437.994: seis centavos a menos que o pedido. A auditoria mediu exatamente
+   * isso num carrinho de R$ 4.380,00. Somar a sobra na primeira parcela é o
+   * que qualquer adquirente faz, e é o que faz a soma fechar.
+   */
+  primeiraCents: number;
+  /** `true` quando a primeira difere das demais. */
+  temSobra: boolean;
+};
+
 export function calcularParcelas(
   totalCents: number,
   maxParcelas = 12,
   minParcelaCents = 5000,
-): { parcelas: number; valorCents: number } | null {
+): Parcelamento | null {
   if (totalCents <= 0) return null;
   for (let n = maxParcelas; n >= 2; n--) {
     const valor = Math.floor(totalCents / n);
-    if (valor >= minParcelaCents) return { parcelas: n, valorCents: valor };
+    if (valor >= minParcelaCents) {
+      const sobra = totalCents - valor * n;
+      return {
+        parcelas: n,
+        valorCents: valor,
+        primeiraCents: valor + sobra,
+        temSobra: sobra > 0,
+      };
+    }
   }
   return null;
+}
+
+/**
+ * A frase do parcelamento, com a sobra dita quando ela existe.
+ *
+ * A vitrine continua anunciando o valor que se repete — é ele que a pessoa
+ * compara entre produtos. A primeira parcela só aparece quando difere, e aí
+ * ela aparece por inteiro: esconder seis centavos é o tipo de detalhe que
+ * derruba a confiança na hora de conferir a fatura.
+ */
+export function textoDoParcelamento(parcelamento: Parcelamento): string {
+  const base = `${parcelamento.parcelas}× de ${formatarPreco(parcelamento.valorCents)}`;
+  if (!parcelamento.temSobra) return base;
+  return `${base} (a 1ª de ${formatarPreco(parcelamento.primeiraCents)})`;
 }
 
 /* ------------------------------------------------------------------ datas */
@@ -233,4 +272,122 @@ export function telHref(telefone: string) {
 /** "1 item" / "3 itens" */
 export function plural(n: number, singular: string, plural_: string) {
   return `${n} ${n === 1 ? singular : plural_}`;
+}
+
+/* ============================================================================
+   Número e unidade não se separam
+
+   "Autoclave 12 L revisada" quebrava como "Autoclave 12" / "L revisada": o
+   número numa linha e a unidade na outra. Não é erro de largura — é erro de
+   quebra, e acontece em qualquer largura em que a linha termine ali. O olho lê
+   "12" como número solto e "L revisada" como outro produto.
+
+   A correção é tipográfica: espaço inquebrável (U+00A0) entre o número e a
+   unidade que o acompanha. Vale para o título do produto, para o cartão do
+   catálogo e para qualquer lugar que mostre nome de equipamento.
+   ============================================================================ */
+
+/* O `\b` do fim não basta.
+
+   Em JavaScript `\w` é só `[A-Za-z0-9_]`, então "3 Lâminas" casava: depois do
+   "L" vem "â", que não é caractere de palavra, e a fronteira fechava ali. O
+   título virava "3 Lâminas". A lookahead abaixo exige que NENHUMA letra
+   siga a unidade — acentuada inclusive. */
+const UNIDADES_COLADAS =
+  /(\d)\s+(L|mL|ml|kg|g|cm|mm|W|V|A|Hz|kHz|bar|rpm|un|min|h|mA|kV|nm|dB|pol)(?![\p{L}\d])/gu;
+
+export function semQuebraNaUnidade(texto: string): string {
+  return texto.replace(UNIDADES_COLADAS, "$1 $2");
+}
+
+/* ============================================================================
+   Aniversário de data — garantia não se conta em meses de 30 dias
+
+   A garantia de um equipamento comprado em 14/09/2026 vencia em 09/09/2027.
+   A causa era `meses * 30 * 86400000`: doze meses viravam 360 dias, e o
+   cliente perdia cinco dias de cobertura. A manutenção preventiva, calculada
+   com `+180 dias` a partir do mesmo evento, saía certa — foi a discrepância
+   entre as duas que expôs o erro na auditoria.
+
+   Mês tem 28, 29, 30 ou 31 dias. A conta certa anda no calendário, e quando o
+   dia não existe no mês de destino — 31/01 mais um mês — ela fecha no último
+   dia daquele mês, que é o comportamento esperado de prazo contratual.
+   ============================================================================ */
+
+export function adicionarMeses(base: Date, meses: number): Date {
+  const destino = new Date(base.getTime());
+  const diaOriginal = destino.getUTCDate();
+
+  destino.setUTCDate(1);
+  destino.setUTCMonth(destino.getUTCMonth() + meses);
+
+  const ultimoDiaDoMes = new Date(
+    Date.UTC(destino.getUTCFullYear(), destino.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+
+  destino.setUTCDate(Math.min(diaOriginal, ultimoDiaDoMes));
+  return destino;
+}
+
+export function adicionarDias(base: Date, dias: number): Date {
+  return new Date(base.getTime() + dias * 86_400_000);
+}
+
+/* ---------------------------------------------------------------- cartão */
+
+/**
+ * As bandeiras, escritas como elas se escrevem.
+ *
+ * O provedor manda `visa`, `mastercard`, `amex` — minúsculo, do jeito do
+ * protocolo. A página imprimia isso cru: "visa ····4321" no comprovante do
+ * pedido, ao lado de "Cartão em 3×" escrito com maiúscula. Nome próprio em
+ * caixa baixa num comprovante de compra não parece estilo; parece dado sem
+ * tratamento, e comprovante é justamente onde a pessoa procura sinal de que o
+ * sistema sabe o que está fazendo.
+ */
+const BANDEIRA: Record<string, string> = {
+  visa: "Visa",
+  mastercard: "Mastercard",
+  master: "Mastercard",
+  amex: "American Express",
+  "american express": "American Express",
+  elo: "Elo",
+  hipercard: "Hipercard",
+  hiper: "Hiper",
+  diners: "Diners Club",
+  "diners club": "Diners Club",
+  discover: "Discover",
+  jcb: "JCB",
+  aura: "Aura",
+};
+
+/** "Visa" a partir de "visa". Bandeira desconhecida ganha inicial maiúscula. */
+export function nomeDaBandeira(bruto: string): string {
+  const texto = bruto.trim();
+  if (!texto) return "";
+  const conhecida = BANDEIRA[texto.toLowerCase()];
+  if (conhecida) return conhecida;
+  return texto[0].toUpperCase() + texto.slice(1);
+}
+
+/**
+ * "Visa •••• 4321" — a mesma máscara em toda tela que mostra um cartão.
+ *
+ * Existiam duas: `····4321` (pontos médios, colados) na página pública do
+ * pedido e `•••• 4321` (bullets, separados) na Área da Clínica. É o mesmo
+ * cartão, no mesmo pedido, escrito de dois jeitos conforme a rota — e o
+ * comprovante que a clínica imprime não bate com o que ela vê logada.
+ */
+export function textoDoCartao(
+  bandeira: string | null | undefined,
+  ultimos4: string | null | undefined,
+): string {
+  const nome = nomeDaBandeira(bandeira ?? "");
+  const digitos = (ultimos4 ?? "").trim();
+  if (!nome && !digitos) return "";
+  if (!digitos) return nome;
+  /* Espaço NÃO quebrável entre a máscara e os dígitos: "•••• 4321" partido em
+     duas linhas vira um borrão em cima e um número solto embaixo. */
+  const mascara = `••••\u00a04321`.replace("4321", digitos);
+  return nome ? `${nome} ${mascara}` : mascara;
 }

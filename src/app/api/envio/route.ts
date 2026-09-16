@@ -13,7 +13,7 @@ import {
 import { detectarTipo, duracaoDeVideo } from "@/lib/midia-real";
 import { prisma } from "@/lib/prisma";
 import { ipDoPedido } from "@/lib/seguranca";
-import { guardarPrivado } from "@/lib/upload";
+import { guardarPrivadoEstrito } from "@/lib/upload-operacional";
 
 /*
  * Sem `use cache` e sem configuração de segmento: com Cache Components, buscar
@@ -38,7 +38,8 @@ import { guardarPrivado } from "@/lib/upload";
      2. **Tipo real.** Os bytes decidem, não o `Content-Type` nem a extensão.
      3. **Prazo.** 24 horas. Quem não virou chamado é apagado pela limpeza.
      4. **Armazenamento privado.** Nunca `public/uploads`. Foto de defeito de
-        clínica não é mídia de catálogo.
+        clínica não é mídia de catálogo. Se o backend privado não estiver
+        disponível, o envio falha; nunca cai para objeto público.
    ============================================================================ */
 
 const RESPOSTA_GENERICA = "Não foi possível receber o arquivo. Tente de novo.";
@@ -185,16 +186,13 @@ export async function POST(request: Request) {
        * útil para quem vai olhar na bancada.
        */
       const saida = await sharp(bytes, { failOn: "none" })
-        .rotate() // aplica a orientação do EXIF antes de descartá-lo
+        .rotate()
         .jpeg({ quality: 82 })
         .toBuffer();
 
       paraGravar = saida;
       mimeFinal = "image/jpeg";
     } catch (erroDeImagem) {
-      /* Imagem corrompida, ou formato que o sharp desta instalação não abre.
-         Recusar é melhor que guardar um arquivo que ninguém vai conseguir
-         ver — e a mensagem diz o que fazer. */
       console.error("[envio] falha ao processar imagem", erroDeImagem);
       return erro(
         "Não foi possível abrir esta imagem. Ela pode estar corrompida ou o envio pode ter " +
@@ -210,7 +208,7 @@ export async function POST(request: Request) {
   const pathname = `envio-temporario/${nome}`;
 
   try {
-    const guardado = await guardarPrivado(pathname, paraGravar, mimeFinal);
+    const guardado = await guardarPrivadoEstrito(pathname, paraGravar, mimeFinal);
 
     const registro = await prisma.tempUpload.create({
       data: {
@@ -228,26 +226,26 @@ export async function POST(request: Request) {
       select: { id: true, kind: true, mime: true, size: true, durationSeconds: true },
     });
 
-    /* A URL NÃO volta para o navegador. Ela é caminho de armazenamento
-       privado, e devolvê-la transformaria o id em link direto. O formulário
-       precisa do id para remover e para mostrar a miniatura pela rota
-       autorizada — nada além disso. */
     return Response.json({ ok: true, arquivo: registro }, { status: 201 });
   } catch (falha) {
     console.error("[envio] falha ao guardar", falha);
+
+    /* Quando o armazenamento diz o que houve, a tela repete o que ele disse.
+
+       "Não foi possível receber o arquivo. Tente de novo." era a resposta para
+       tudo, inclusive para o caso em que tentar de novo nunca ia funcionar —
+       ambiente sem lugar onde gravar. Mensagem genérica sobre erro permanente
+       é pior do que erro: transforma uma configuração faltando numa suspeita
+       de que o arquivo da pessoa está com problema. */
+    const { ErroDeUpload } = await import("@/lib/upload");
+    if (falha instanceof ErroDeUpload) return erro(falha.message, falha.status);
+
     return erro(RESPOSTA_GENERICA, 500);
   }
 }
 
 /* --------------------------------------------------------------- remoção */
 
-/**
- * Remove um arquivo que a pessoa acabou de enviar.
- *
- * Só arquivos `pendente` da PRÓPRIA sessão. Um id de outra pessoa não é
- * alcançável nem sabendo o valor, e um arquivo já vinculado a um chamado não
- * é apagável por aqui — ele passou a pertencer ao atendimento.
- */
 export async function DELETE(request: Request) {
   const { hash: sessionHash } = await sessaoDeEnvio();
 
@@ -260,7 +258,6 @@ export async function DELETE(request: Request) {
     select: { id: true, url: true },
   });
 
-  // mensagem única: quem não é dono não descobre se o arquivo existe
   if (!linha) return erro("Arquivo não encontrado.", 404);
 
   try {

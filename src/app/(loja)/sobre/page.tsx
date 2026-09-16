@@ -209,7 +209,7 @@ export default async function SobrePage() {
                    `definition-list` e `dlitem`. O ícone agora é posicionado sobre
                    o recuo, e o <div> tem exatamente o par dentro. */
                 <div key={linha.rotulo} className="relative min-w-0 pl-8">
-                  <dt className="text-[0.8125rem] leading-tight text-graf-500">
+                  <dt className="text-apoio leading-tight text-graf-500">
                     <linha.icone
                       className="absolute left-0 top-0.5 size-5 text-graf-500"
                       aria-hidden
@@ -251,7 +251,7 @@ export default async function SobrePage() {
                           </Etiqueta>
                         </div>
                         {servico.description ? (
-                          <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-600">
+                          <p className="mt-2.5 text-corpo leading-relaxed text-graf-600">
                             {servico.description}
                           </p>
                         ) : null}

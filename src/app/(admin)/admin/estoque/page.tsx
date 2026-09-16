@@ -276,7 +276,7 @@ async function Lista({ parametros }: { parametros: Busca }) {
       renderizar: (linha) => (
         <span className="block">
           <span className="block truncate font-semibold">{linha.name}</span>
-          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">
+          <span className="block truncate text-apoio font-normal text-graf-500">
             {linha.sku}
             {linha.category ? ` · ${linha.category.name}` : ""}
           </span>

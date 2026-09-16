@@ -177,7 +177,7 @@ export function Contador({
       </span>
       <span
         className={cn(
-          "mt-1.5 text-[0.8125rem] font-medium leading-snug",
+          "mt-1.5 text-apoio font-medium leading-snug",
           ativo ? "text-jb-700" : "text-graf-500",
         )}
       >

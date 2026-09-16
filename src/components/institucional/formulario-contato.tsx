@@ -137,7 +137,7 @@ export function FormularioContato() {
             {pendente ? "Enviando…" : "Enviar mensagem"}
             {pendente ? null : <Send className="size-4" aria-hidden />}
           </Botao>
-          <p className="max-w-xs text-[0.8125rem] leading-relaxed text-graf-500">
+          <p className="max-w-xs text-apoio leading-relaxed text-graf-500">
             Ao enviar, seus dados são usados apenas para responder este contato.{" "}
             <Link
               href="/privacidade"

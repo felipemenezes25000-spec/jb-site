@@ -1,166 +1,366 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, CreditCard, ImageOff, ShieldCheck, Wrench } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  ArrowRight,
+  ImageOff,
+  Search,
+  ShieldCheck,
+  Wrench,
+} from "lucide-react";
 
 import type { ProdutoCard } from "@/components/loja/card-produto";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
+import styles from "./hero-movimento.module.css";
 
-/* ============================================================================
-   Abertura da home
-
-   A dobra faz três coisas, nessa ordem: diz o que a JB resolve, prova com
-   número do próprio catálogo e mostra um equipamento de verdade.
-
-   O fundo é claro. Chegou a ser preto por um dia, copiado de um protótipo, e
-   o resultado foi ruim por dois motivos: texto branco em área grande cansa a
-   leitura, e a foto de equipamento — que é branca sobre branco — ficava
-   ilhada num buraco escuro. O vermelho continua sendo o sinal, e ele acende
-   melhor sobre claro, que é o que o design system da JB sempre disse.
-   ============================================================================ */
+/* A manchete acompanha o equipamento em foco. A rotação cede ao primeiro
+   contato com a vitrine; condição e preço pertencem ao produto exibido. */
 
 export type NumeroDaHome = { valor: string; rotulo: string };
 
-const GARANTIAS = [
-  { icone: ShieldCheck, titulo: "Laudo técnico no seminovo", apoio: "Item a item, antes de anunciar" },
-  { icone: Wrench, titulo: "Assistência própria", apoio: "Equipe JB, sem terceirizar" },
-  { icone: CreditCard, titulo: "12x sem juros", apoio: "No cartão, em todo o catálogo" },
-  { icone: CalendarCheck, titulo: "Entrega agendada", apoio: "Instalação combinada com a clínica" },
-];
+/* Substantivo terminado em -a é feminino em praticamente todo o catálogo
+   (cadeira, bomba, cuba, seladora, câmera). As exceções que a loja realmente
+   tem cabem numa linha — "autoclave" é a que mais aparece. */
+const FEMININOS_FORA_DA_REGRA = new Set(["autoclave"]);
+
+function comArtigo(palavra: string) {
+  const feminina = palavra.endsWith("a") || FEMININOS_FORA_DA_REGRA.has(palavra);
+  return `${feminina ? "a" : "o"} ${palavra}`;
+}
+
+/** Primeira palavra do nome do produto: "Autoclave 12 L revisada" → "autoclave". */
+function tipoDoEquipamento(nome: string) {
+  return nome.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
+}
 
 export function HeroVitrine({
   cidade,
+  desde,
   numeros,
-  destaque,
+  vitrine,
   parcelamento,
 }: {
   cidade?: string;
+  desde?: string;
   numeros: NumeroDaHome[];
-  destaque: ProdutoCard | null;
+  vitrine: ProdutoCard[];
   parcelamento?: { max: number; minimoCents: number };
 }) {
+  const [emFoco, setEmFoco] = useState(0);
+  /* Clicou numa miniatura: o rodízio para. Quem escolheu o que olhar não quer
+     que a tela troque sozinha três segundos depois. */
+  const [assumido, setAssumido] = useState(false);
+  const foco = vitrine[emFoco] ?? vitrine[0] ?? null;
+
+  /* Um relógio só para a manchete e para a imagem.
+
+     Antes eram dois: a palavra girava por animação de CSS sobre a lista de
+     tipos da vitrine inteira, e o produto em foco só mudava por clique. O
+     resultado medido na auditoria: o título dizia "a seladora" enquanto a
+     imagem, o cartão de preço e a miniatura ativa mostravam a autoclave. A
+     manchete não é enfeite — ela afirma o que está na tela.
+
+     Agora a palavra é derivada de `foco`, e o que gira é o foco. Com um
+     relógio só, os dois não têm como discordar. */
+  useEffect(() => {
+    if (assumido || vitrine.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const relogio = window.setInterval(() => {
+      setEmFoco((atual) => (atual + 1) % vitrine.length);
+    }, 4500);
+    return () => window.clearInterval(relogio);
+  }, [assumido, vitrine.length]);
+
+  const temPreco = Boolean(foco?.allowDirectPurchase && foco.priceCents > 0);
   const parcelas =
-    destaque && destaque.priceCents > 0
-      ? calcularParcelas(destaque.priceCents, parcelamento?.max, parcelamento?.minimoCents)
+    foco && temPreco
+      ? calcularParcelas(foco.priceCents, parcelamento?.max, parcelamento?.minimoCents)
       : null;
 
+  /* A palavra que gira. Vem dos equipamentos que estão na vitrine agora; sem
+     pelo menos dois tipos distintos a manchete fica parada, que é melhor do
+     que uma animação que troca "autoclave" por "autoclave". */
+  const tipos = [...new Set(vitrine.map((produto) => tipoDoEquipamento(produto.name)))].filter(
+    Boolean,
+  );
+  /* Dois ou três: é o que o CSS do rodízio sabe ladrilhar, e é o tamanho da
+     vitrine. Com um tipo só a palavra fica parada. */
+  const palavras = (tipos.length >= 2 ? tipos.slice(0, 3) : ["equipamento"]).map(comArtigo);
+  const maisLonga = palavras.reduce((a, b) => (b.length > a.length ? b : a), "");
+
+  /* A palavra da manchete é a do equipamento em foco — não uma da lista
+     girando por conta própria. */
+  const palavraEmFoco = foco
+    ? comArtigo(tipoDoEquipamento(foco.name) || "equipamento")
+    : palavras[0];
+
   return (
-    <section className="relative isolate overflow-hidden border-b border-graf-200">
+    <section className="relative overflow-hidden">
+      {/* Dois círculos de contorno, só a partir de 1024: são o que dá
+          profundidade ao lado direito sem colocar mais uma caixa na tela. */}
       <div
+        className="pointer-events-none absolute -top-48 -right-32 hidden size-[40rem] rounded-full border border-graf-200/60 lg:block"
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(70% 90% at 82% 10%, rgb(224 20 27 / 0.07), transparent 58%), linear-gradient(180deg, #ffffff 0%, #ffffff 55%, #fafafa 100%)",
-        }}
+      />
+      <div
+        className="pointer-events-none absolute top-20 -right-20 hidden size-[28rem] rounded-full border border-graf-200/40 lg:block"
+        aria-hidden
       />
 
-      <div className="container-jb grid items-center gap-x-12 gap-y-10 py-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:py-20 xl:grid-cols-[minmax(0,1fr)_25rem]">
-        <div className="max-w-3xl">
-          <p className="sobretitulo">Estoque próprio{cidade ? ` · ${cidade}` : ""}</p>
-
-          {/* Duas frases numa: o que a pessoa quer fazer e o medo que ela tem
-              de fazer errado. O vermelho fica na segunda metade — é o risco
-              que a JB se propõe a tirar da mesa. */}
-          <h1 className="mt-4 text-hero text-graf-950">
-            Equipar consultório <span className="text-jb-600">sem apostar no escuro.</span>
-          </h1>
-
-          <p className="texto-guia mt-6 max-w-xl text-graf-600">
-            Catálogo de equipamentos novos e seminovos revisados, com ficha técnica completa,
-            comparação lado a lado e a mesma equipe que dá assistência depois da venda.
+      <div className="container-loja relative grid items-center gap-10 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
+        <div className="min-w-0">
+          <p className="surge etiqueta flex items-center gap-2">
+            <span className="pulso inline-block size-1.5 rounded-full bg-jb-500" aria-hidden />
+            {[cidade, desde ? `desde ${desde}` : null, "assistência própria"]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <h1 className="fonte-display mt-5 text-[clamp(2.4rem,6.2vw,5rem)] leading-[0.98] text-graf-950">
+            {/* Uma frase para quem ouve, o teatro para quem vê: o rodízio
+                renderiza todas as palavras ao mesmo tempo, e lido em voz alta
+                viraria "a autoclave o motor o compressor". */}
+            <span className="sr-only">
+              A clínica escolhe o equipamento. A JB responde pelos próximos anos.
+            </span>
+            <span aria-hidden>
+              <span className="surge block" style={{ animationDelay: "60ms" }}>
+                A clínica escolhe
+              </span>
+              <span className="surge block" style={{ animationDelay: "160ms" }}>
+                {/* A troca é por `key`: cada palavra entra com a mesma animação
+                    de surgimento do resto da manchete, e some junto com o
+                    produto que a justificava. O espaço da maior continua
+                    reservado para a manchete não mudar de largura. */}
+                <span className="relative inline-grid">
+                  <span
+                    key={palavraEmFoco}
+                    className="surge col-start-1 row-start-1"
+                    style={{ animationDelay: "0ms" }}
+                  >
+                    {palavraEmFoco}
+                  </span>
+                  <span aria-hidden className="invisible col-start-1 row-start-1">
+                    {maisLonga}
+                  </span>
+                </span>
+              </span>
+              <span className="surge block" style={{ animationDelay: "260ms" }}>
+                A JB responde
+              </span>
+              <span className="surge block text-jb-500" style={{ animationDelay: "360ms" }}>
+                pelos próximos anos.
+              </span>
+            </span>
+          </h1>
+
+          <p
+            className="surge mt-6 max-w-xl text-base leading-7 text-graf-700"
+            style={{ animationDelay: "460ms" }}
+          >
+            Equipamentos novos e seminovos com condição, preço e garantia para conferir.
+            E uma equipe própria para cuidar do que vem depois.
+          </p>
+
+          <form
+            action="/busca"
+            method="get"
+            role="search"
+            className="surge mt-7 flex max-w-xl items-center gap-2 rounded-full border border-graf-450 bg-surface py-1.5 pr-1.5 pl-5 transition-colors focus-within:border-jb-500"
+            style={{ animationDelay: "520ms" }}
+          >
+            <Search className="size-4 shrink-0 text-graf-500" aria-hidden />
+            <label htmlFor="busca-home" className="sr-only">
+              Buscar na loja JB
+            </label>
+            <input
+              id="busca-home"
+              name="q"
+              type="search"
+              minLength={3}
+              placeholder="Produto, marca, modelo, peça ou SKU"
+              /* `min-h-11`: o portão mede o campo, não a moldura em volta
+                 dele. Com `py-2` o input dava 39px dentro de uma pílula de
+                 56px — passava aos olhos e reprovava na régua. */
+              className="min-w-0 flex-1 bg-transparent py-2 text-corpo text-graf-950 outline-none placeholder:text-graf-500 min-h-11"
+            />
+            <button
+              type="submit"
+              className="foco-jb inline-flex min-h-11 shrink-0 items-center rounded-full bg-graf-100 px-5 text-apoio font-semibold text-graf-900 transition-colors hover:bg-graf-200"
+            >
+              Buscar
+            </button>
+          </form>
+
+          <nav
+            aria-label="Comece sua compra"
+            className="surge mt-5 flex flex-wrap gap-3"
+            style={{ animationDelay: "560ms" }}
+          >
             <Link
               href="/loja"
-              className="foco-jb flex h-12 items-center gap-2 rounded-lg bg-jb-500 px-6 text-[0.9375rem] font-bold text-white transition-colors hover:bg-jb-600"
+              className="botao-jb foco-jb inline-flex min-h-13 items-center gap-2 rounded-full px-7 text-corpo"
             >
-              Ver catálogo completo
+              Abrir o catálogo
               <ArrowRight className="size-4" aria-hidden />
             </Link>
             <Link
-              href="/seminovos"
-              className="foco-jb flex h-12 items-center gap-2 rounded-lg border border-graf-300 bg-white px-6 text-[0.9375rem] font-bold text-graf-800 transition-colors hover:border-graf-450 hover:bg-graf-50"
+              href="/assistencia-tecnica/solicitar"
+              className="foco-jb inline-flex min-h-13 items-center gap-2 rounded-lg px-3 text-corpo font-semibold text-graf-700 underline decoration-graf-300 underline-offset-4 hover:text-jb-700"
             >
-              Seminovos revisados
+              <Wrench className="size-4" aria-hidden />
+              Abrir chamado técnico
             </Link>
-          </div>
+          </nav>
 
-          {/* Os números saem do catálogo publicado. Nenhum é redondo de
-              propósito: número redondo em vitrine cheira a enfeite. */}
           {numeros.length > 0 ? (
-            <dl className="mt-10 flex flex-wrap gap-x-12 gap-y-6 border-t border-graf-200 pt-7">
-              {numeros.map((numero) => (
-                <div key={numero.rotulo}>
-                  <dt className="micro text-graf-500">{numero.rotulo}</dt>
-                  <dd className="numero mt-2 text-3xl text-jb-600">{numero.valor}</dd>
+            <dl
+              className="surge mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-graf-200 pt-5"
+              aria-label="Catálogo JB"
+              style={{ animationDelay: "660ms" }}
+            >
+              {numeros.slice(0, 3).map((numero) => (
+                <div key={numero.rotulo} className="min-w-0">
+                  <dt className="etiqueta">{numero.rotulo}</dt>
+                  <dd className="fonte-display tabular mt-1 text-2xl text-graf-950">
+                    {numero.valor}
+                  </dd>
                 </div>
               ))}
             </dl>
           ) : null}
         </div>
 
-        {/* Um equipamento de verdade, com preço de verdade, na primeira tela.
-            Sem produto com foto cadastrada o painel não entra — melhor uma
-            dobra mais curta do que uma moldura vazia. */}
-        {destaque ? (
-          <Link
-            href={`/loja/${destaque.slug}`}
-            className="group placa block overflow-hidden transition-[transform,box-shadow] duration-200 ease-out-quint hover:-translate-y-1 hover:shadow-raised"
+        {foco ? (
+          <div
+            className="surge relative min-w-0"
+            style={{ animationDelay: "300ms" }}
+            onMouseEnter={() => setAssumido(true)}
+            onFocusCapture={() => setAssumido(true)}
           >
-            <div className="relative aspect-square max-h-80 bg-white">
-              {destaque.imageUrl ? (
-                <Image
-                  src={destaque.imageUrl}
-                  alt={destaque.imageAlt || destaque.name}
-                  fill
-                  preload
-                  unoptimized={destaque.imageUrl.startsWith("/")}
-                  sizes="(max-width: 1024px) 92vw, 25rem"
-                  className="object-contain p-6 transition-transform duration-500 ease-out-quint group-hover:scale-[1.03]"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-graf-400">
-                  <ImageOff className="size-8" aria-hidden />
+            <div className="relative">
+              {/* O bloco deslocado atrás da foto. É sombra sem desfoque: a
+                  marca aparece como recorte, não como brilho. */}
+              <div
+                className="absolute inset-0 -z-10 translate-x-4 translate-y-4 rounded-[2rem] bg-jb-50"
+                aria-hidden
+              />
+              <Link
+                href={`/loja/${foco.slug}`}
+                aria-label={`Conhecer ${foco.name}`}
+                className="foco-jb relative block overflow-hidden rounded-[2rem] border border-graf-200 bg-surface shadow-raised"
+              >
+                {/* O protótipo prende uma foto de cena aqui e deixa o cartão
+                    de baixo nomear outro equipamento — funciona lá porque o
+                    primeiro item da vitrine era justamente uma autoclave.
+                    Aqui a vitrine sai do catálogo e a coincidência não existe:
+                    ficava escrito "Compressor" embaixo de uma autoclave.
+
+                    A foto é a do produto em foco. O recorte é a mesma arte de
+                    estúdio do protótipo, então o desenho é o mesmo — só o
+                    rótulo passou a concordar com a imagem. */}
+                <div data-palco-imagem-produto className="relative aspect-square w-full bg-surface">
+                  {foco.imageUrl ? (
+                    <Image
+                      key={foco.slug}
+                      data-imagem-produto
+                      src={imagemProdutoSemFundo(foco.imageUrl)}
+                      alt={foco.imageAlt || foco.name}
+                      fill
+                      loading="eager"
+                      fetchPriority={emFoco === 0 ? "high" : "auto"}
+                      sizes="(max-width: 1024px) 92vw, 42rem"
+                      className={`${styles.imagem} object-contain p-10`}
+                      onLoad={(evento) => { evento.currentTarget.dataset.carregada = "true"; }}
+                    />
+                  ) : (
+                    <Image
+                      src="/lumina/hero-equipamento.jpg"
+                      alt="Equipamento odontológico da JB Soluções"
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 92vw, 42rem"
+                      className="object-cover"
+                    />
+                  )}
                 </div>
-              )}
-              <span className="micro absolute left-4 top-4 rounded-md bg-jb-500 px-2.5 py-1.5 text-white">
-                Mais procurado
-              </span>
+
+                <div className="absolute right-5 bottom-5 left-5 flex items-end justify-between gap-3">
+                  <span className="rounded-2xl border border-graf-200 bg-surface/90 px-4 py-3 backdrop-blur-md">
+                    <span className="etiqueta block text-jb-600">
+                      {foco.condition === "seminovo" ? "Seminovo JB" : "Em destaque"}
+                    </span>
+                    <span className="mt-0.5 block text-apoio font-extrabold text-graf-950">
+                      {foco.name}
+                    </span>
+                  </span>
+                </div>
+              </Link>
+
+              {temPreco ? (
+                <div className="mt-3 rounded-xl border border-graf-200 bg-surface px-5 py-4 sm:absolute sm:-right-3 sm:-bottom-6 sm:mt-0 sm:shadow-pop">
+                  <p className="etiqueta">Preço do equipamento</p>
+                  <p className="fonte-display tabular text-2xl text-graf-950">
+                    {formatarPreco(foco.priceCents)}
+                  </p>
+                  {parcelas ? (
+                    <p className="micro tabular mt-0.5 text-graf-500">
+                      {parcelas.parcelas}x de {formatarPreco(parcelas.valorCents)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
-            <div className="border-t border-graf-100 p-5">
-              {destaque.brandName ? (
-                <p className="micro text-graf-500">{destaque.brandName}</p>
-              ) : null}
-              <p className="mt-2 line-2 text-[0.9375rem] font-bold leading-snug text-graf-950">
-                {destaque.name}
-              </p>
-              <p className="numero mt-3 text-2xl text-graf-950">
-                {formatarPreco(destaque.priceCents)}
-              </p>
-              {parcelas ? (
-                <p className="mt-1.5 text-[0.8125rem] text-graf-500">
-                  em até {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)}
-                </p>
-              ) : null}
-            </div>
-          </Link>
-        ) : null}
-      </div>
-
-      <div className="border-t border-graf-200 bg-surface-muted">
-        <ul className="container-jb grid gap-x-10 gap-y-6 py-7 sm:grid-cols-2 lg:grid-cols-4">
-          {GARANTIAS.map((garantia) => (
-            <li key={garantia.titulo} className="flex items-start gap-3">
-              <garantia.icone className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
-              <div className="min-w-0">
-                <p className="text-[0.9375rem] font-bold text-graf-900">{garantia.titulo}</p>
-                <p className="mt-1 text-[0.8125rem] text-graf-500">{garantia.apoio}</p>
+            {vitrine.length > 1 ? (
+              <div className="mt-8 grid grid-cols-3 gap-2">
+                {vitrine.map((produto, i) => (
+                  <button
+                    key={produto.slug}
+                    type="button"
+                    onClick={() => {
+                      setEmFoco(i);
+                      setAssumido(true);
+                    }}
+                    aria-pressed={i === emFoco}
+                    className={`foco-jb flex min-h-16 flex-col items-center gap-1 rounded-xl border p-2 transition-all duration-300 ${
+                      i === emFoco
+                        ? "border-jb-500 bg-jb-50 shadow-card"
+                        : "border-graf-200 hover:border-graf-450 hover:shadow-card"
+                    }`}
+                  >
+                    {produto.imageUrl ? (
+                      <Image
+                        src={imagemProdutoSemFundo(produto.imageUrl)}
+                        alt=""
+                        width={80}
+                        height={80}
+                        className="size-10 object-contain"
+                      />
+                    ) : (
+                      <ImageOff className="size-10 p-2 text-graf-400" aria-hidden />
+                    )}
+                    <span className="line-2 text-center text-[0.75rem] leading-tight font-bold text-graf-700">
+                      {produto.name.split(" ").slice(0, 2).join(" ")}
+                    </span>
+                  </button>
+                ))}
               </div>
-            </li>
-          ))}
-        </ul>
+            ) : null}
+          </div>
+        ) : (
+          <div className="grid place-items-center gap-2 rounded-[2rem] border border-graf-200 bg-surface p-12 text-center shadow-card">
+            <ShieldCheck className="size-8 text-jb-500" aria-hidden />
+            <strong className="text-bloco text-graf-950">Catálogo JB</strong>
+            <p className="text-corpo text-graf-700">
+              Produtos publicados pela equipe aparecem aqui em destaque.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

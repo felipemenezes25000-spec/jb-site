@@ -272,6 +272,15 @@ export function CampoCep({
   }, [digitos, buscarEndereco]);
 
   const erroBusca = estado === "erro" ? "CEP não encontrado. Confira os números." : undefined;
+
+  /* Achou o endereço: o erro externo sobre este campo deixou de valer.
+
+     Sem esta linha, a borda vermelha de "Informe o CEP com 8 dígitos" ficava
+     no campo enquanto a ajuda logo abaixo dizia "Endereço encontrado" — dois
+     estados contraditórios ao mesmo tempo, no mesmo campo. A auditoria
+     encontrou o par no checkout e no formulário de chamado, porque o defeito
+     é do componente, não da tela. */
+  const erroFinal = estado === "ok" ? undefined : (erro ?? erroBusca);
   const ajudaEstado =
     estado === "buscando"
       ? "Buscando endereço…"
@@ -292,7 +301,7 @@ export function CampoCep({
       value={exibido}
       onChange={aoDigitar}
       onKeyDown={aoTeclar}
-      erro={erro ?? erroBusca}
+      erro={erroFinal}
       ajuda={ajudaEstado}
     />
   );

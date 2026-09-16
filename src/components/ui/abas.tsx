@@ -19,7 +19,16 @@ import { cn } from "@/lib/utils";
 export type Aba = {
   chave: string;
   rotulo: string;
-  icone?: React.ComponentType<{ className?: string }>;
+  /**
+   * O ícone JÁ RENDERIZADO — `<Send className="size-4 shrink-0" />`, não `Send`.
+   *
+   * O tipo era `ComponentType`, e isso quebrava toda página do servidor que
+   * quisesse usar estas abas: função não atravessa a fronteira para um Client
+   * Component, e o erro só aparecia em tempo de execução ("Functions cannot be
+   * passed directly to Client Components"), depois da tela em branco. Elemento
+   * atravessa. Quem monta a aba já decide o tamanho do ícone de qualquer jeito.
+   */
+  icone?: React.ReactNode;
   /** Número ao lado do rótulo — pendências, itens, mensagens. */
   contador?: number;
   conteudo: React.ReactNode;
@@ -74,7 +83,6 @@ function ListaDeAbas({
     >
       {abas.map((aba) => {
         const selecionada = aba.chave === ativa;
-        const Icone = aba.icone;
         return (
           <button
             key={aba.chave}
@@ -96,12 +104,12 @@ function ListaDeAbas({
                 : "border-transparent text-graf-500 hover:border-graf-300 hover:text-graf-800",
             )}
           >
-            {Icone ? <Icone className="size-4 shrink-0" /> : null}
+            {aba.icone}
             {aba.rotulo}
             {typeof aba.contador === "number" ? (
               <span
                 className={cn(
-                  "tabular inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-bold",
+                  "tabular inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[0.75rem] font-bold",
                   selecionada ? "bg-jb-100 text-jb-700" : "bg-graf-100 text-graf-600",
                 )}
               >

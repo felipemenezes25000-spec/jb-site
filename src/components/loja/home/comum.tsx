@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 
 import type { Tom } from "@/components/ui/data";
 import { calcularParcelas, formatarPreco, paraCentavos } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import type { SettingsMap } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +50,7 @@ export function fotoDe(produto: ProdutoHome): Foto | null {
   const primeira = produto.media[0];
   if (!primeira) return null;
   return {
-    url: primeira.media.url,
+    url: imagemProdutoSemFundo(primeira.media.url),
     alt: primeira.alt || primeira.media.alt || produto.name,
   };
 }

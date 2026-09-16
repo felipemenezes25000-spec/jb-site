@@ -124,7 +124,7 @@ test.describe("Acessibilidade do checkout", () => {
   test("dá para percorrer e enviar o pedido só com o teclado", async ({ page }) => {
     await adicionarAoCarrinho(page, { quantidade: 1 });
     await page.goto("/checkout");
-    await expect(page.getByRole("heading", { name: "Fechar pedido", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Finalizar compra", level: 1 })).toBeVisible();
 
     /* ------------------------------------------ etapa 0: identificação */
     const email = await tabAte(page, (atual) => atual.nome === "email");
@@ -243,11 +243,26 @@ test.describe("Acessibilidade do checkout", () => {
   test("a loja oferece atalho para o conteúdo e marcos de navegação", async ({ page }) => {
     await page.goto("/");
 
-    // o primeiro Tab precisa cair no atalho para o conteúdo
-    await page.keyboard.press("Tab");
-    const primeiro = await focado(page);
-    expect(primeiro?.tag).toBe("a");
-    expect(primeiro?.texto.toLowerCase()).toContain("conteúdo");
+    /* O primeiro Tab precisa cair no atalho para o conteúdo.
+
+       A espera existe porque a tecla pode chegar antes de o documento assumir
+       o foco: nesse caso o Tab não move nada, `document.activeElement` segue
+       no <body> e o teste reprovava por corrida — 1 vez em 3, medido — e não
+       por falta do atalho. Enquanto o foco não sai do body, cada Tab
+       recomeça do topo, então repetir é seguro: se o primeiro funcionou, a
+       espera devolve na primeira leitura. */
+    let primeiro: Focado | null = null;
+    await expect
+      .poll(
+        async () => {
+          await page.keyboard.press("Tab");
+          primeiro = await focado(page);
+          return primeiro?.tag ?? null;
+        },
+        { message: "o primeiro Tab precisa cair num link" },
+      )
+      .toBe("a");
+    expect(primeiro!.texto.toLowerCase()).toContain("conteúdo");
 
     await expect(page.getByRole("banner")).toBeVisible();
     await expect(page.getByRole("main")).toBeVisible();

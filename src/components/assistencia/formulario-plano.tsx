@@ -105,7 +105,7 @@ export function FormularioPlano({
     <form action={acao} className={className} noValidate>
       {/* ------------------------------------------------------- a cobertura */}
       <section>
-        <h3 className="text-[0.9375rem] font-bold text-graf-950">Sobre a cobertura</h3>
+        <h3 className="text-corpo font-bold text-graf-950">Sobre a cobertura</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-graf-500">
           A quantidade de aparelhos é o que a equipe usa para montar a proposta.
         </p>
@@ -143,7 +143,7 @@ export function FormularioPlano({
       {premissas ? (
         <section className="mt-8 rounded-xl border border-graf-200 bg-surface-muted p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <h3 className="flex items-center gap-2 text-[0.9375rem] font-bold text-graf-950">
+            <h3 className="flex items-center gap-2 text-corpo font-bold text-graf-950">
               <Calculator className="size-4 shrink-0 text-graf-500" aria-hidden />
               Da sua simulação
             </h3>
@@ -160,7 +160,7 @@ export function FormularioPlano({
             Estes números vão junto para a equipe entender de onde você partiu. Eles não
             entram em nenhum contrato.
           </p>
-          <pre className="mt-4 overflow-x-auto whitespace-pre-wrap font-mono text-[0.8125rem] leading-relaxed text-graf-700">
+          <pre className="mt-4 overflow-x-auto whitespace-pre-wrap font-mono text-apoio leading-relaxed text-graf-700">
             {premissas}
           </pre>
           <input type="hidden" name="premissas" value={premissas} />
@@ -169,7 +169,7 @@ export function FormularioPlano({
 
       {/* ----------------------------------------------------------- contato */}
       <section className="mt-9 border-t border-graf-200 pt-8">
-        <h3 className="text-[0.9375rem] font-bold text-graf-950">Como falamos com você</h3>
+        <h3 className="text-corpo font-bold text-graf-950">Como falamos com você</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-graf-500">
           A equipe retoma o contato para entender a clínica antes de propor qualquer
           valor.
@@ -257,7 +257,7 @@ export function FormularioPlano({
           {pendente ? null : <Send className="size-4" aria-hidden />}
           {pendente ? "Enviando…" : "Quero falar sobre este plano"}
         </Botao>
-        <p className="mt-5 text-[0.8125rem] leading-relaxed text-graf-500">
+        <p className="mt-5 text-apoio leading-relaxed text-graf-500">
           Sem compromisso: a equipe monta a proposta com você antes de qualquer
           contratação.
         </p>

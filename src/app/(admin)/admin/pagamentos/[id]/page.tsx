@@ -240,7 +240,7 @@ export default async function PagamentoPage({ params }: Props) {
                     <li key={evento.id} className="rounded-lg border border-graf-200">
                       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-graf-200 bg-graf-50 px-4 py-2.5">
                         <span className="text-sm font-semibold text-graf-900">{evento.kind}</span>
-                        <span className="text-[0.8125rem] text-graf-500">
+                        <span className="text-apoio text-graf-500">
                           {formatarDataHora(evento.createdAt)}
                         </span>
                       </div>

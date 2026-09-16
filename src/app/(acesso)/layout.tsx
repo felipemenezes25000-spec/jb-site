@@ -7,7 +7,12 @@ import {
   ContadorDoCarrinho,
   ContadorDoCarrinhoEsqueleto,
 } from "@/components/loja/cabecalho-pessoal";
-import { categoriasDoMenu, condicoesDoMenu, configuracoesPublicas } from "@/lib/loja-publica";
+import {
+  categoriasDoMenu,
+  centralTemPublicacao,
+  condicoesDoMenu,
+  configuracoesPublicas,
+} from "@/lib/loja-publica";
 import { Rodape } from "@/components/loja/rodape";
 
 /*
@@ -41,17 +46,19 @@ export const instant = false;
  * parênteses não entra no caminho.
  */
 export default async function AcessoLayout({ children }: { children: React.ReactNode }) {
-  const [s, categorias, condicoes] = await Promise.all([
+  const [s, categorias, condicoes, centralPublicada] = await Promise.all([
     configuracoesPublicas(),
     categoriasDoMenu(),
     condicoesDoMenu(),
+    centralTemPublicacao(),
   ]);
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div data-jb-publico="true" className="flex min-h-dvh flex-col">
       <Cabecalho
         categorias={categorias}
         condicoes={condicoes}
+        centralPublicada={centralPublicada}
         acessoDaConta={
           <Suspense fallback={<AcessoDaContaEsqueleto />}>
             <AcessoDaConta />

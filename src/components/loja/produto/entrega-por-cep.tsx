@@ -1,43 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Loader2, MapPin, Store, Truck } from "lucide-react";
+import { ArrowRight, Loader2, MapPin, Store, Truck } from "lucide-react";
 
 import { estimarEntrega, type EstimativaDeEntrega } from "@/app/acoes/entrega";
 import { mascararCep } from "@/components/ui/campos-br";
 import { formatarPreco, plural, somenteDigitos } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/* ============================================================================
-   Entrega por CEP
-
-   "Chega até mim, e quando?" era pergunta sem resposta antes do checkout. Quem
-   compra equipamento de dezenas de milhares de reais não cria conta para
-   descobrir se a JB entrega na cidade dele.
-
-   O número vem de `estimarEntrega`, que roda o MESMO cálculo do pedido sobre
-   as faixas cadastradas em /admin/frete. Quando não há faixa para aquele CEP,
-   a resposta é "a JB confere e informa" — nunca um valor inventado, e nunca um
-   prazo que a operação não assumiu.
-
-   Três separações que o texto mantém, porque misturá-las é o erro comum do
-   setor:
-
-     entrega do equipamento  ≠  deslocamento do técnico  ≠  instalação
-
-   Esta caixa fala só da primeira. Instalação é adicional de pedido e aparece
-   na caixa de compra, com preço próprio; deslocamento entra em orçamento de
-   assistência. Escrever "entrega e instalação em 5 dias" criaria uma obrigação
-   que a JB não vendeu.
-
-   O CEP fica no `localStorage` desta pessoa e não sai daqui: nenhuma chamada
-   grava CEP no servidor, e a estimativa é uma leitura pura.
-   ============================================================================ */
-
 const CHAVE_CEP = "jb:cep";
 
 export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   const [cep, setCep] = useState("");
+  const [lembrado, setLembrado] = useState(false);
   const [resultado, setResultado] = useState<EstimativaDeEntrega | null>(null);
   const [calculando, startTransition] = useTransition();
   const campoRef = useRef<HTMLInputElement>(null);
@@ -45,15 +20,19 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   const digitos = somenteDigitos(cep);
   const completo = digitos.length === 8;
 
-  /* O CEP da última consulta volta preenchido, mas NÃO recalcula sozinho: um
-     resultado que aparece antes de a pessoa pedir parece resposta a outra
-     pergunta. O botão continua sendo o gatilho. */
   useEffect(() => {
     try {
       const guardado = window.localStorage.getItem(CHAVE_CEP);
-      if (guardado) setCep(mascararCep(guardado));
+      if (guardado) {
+        setCep(mascararCep(guardado));
+        /* O campo passa de vazio a preenchido depois de hidratar, e quem viu
+           os dois estados na auditoria leu o CEP restaurado como se fosse um
+           placeholder — "01319-040" parecia exemplo, não escolha dela. A linha
+           abaixo do campo diz de onde veio o número. */
+        setLembrado(true);
+      }
     } catch {
-      /* navegação privada: segue sem memória do CEP */
+      // O cálculo continua funcionando mesmo quando o navegador bloqueia storage.
     }
   }, []);
 
@@ -62,25 +41,33 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
       campoRef.current?.focus();
       return;
     }
+
     try {
       window.localStorage.setItem(CHAVE_CEP, digitos);
     } catch {
-      /* idem */
+      // Sem persistência local, seguimos com a consulta atual.
     }
+
     startTransition(async () => {
       setResultado(await estimarEntrega(produtoId, digitos));
     });
   }
 
   return (
-    <section aria-labelledby="entrega-cep" className="border-t border-graf-200 p-5 sm:p-6">
-      <h3
-        id="entrega-cep"
-        className="flex items-center gap-2 text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
-      >
-        <Truck className="size-4 text-graf-500" aria-hidden />
-        Entrega do equipamento
-      </h3>
+    <section
+      aria-labelledby="entrega-cep"
+      className="border-t border-hairline px-5 py-4 sm:px-6"
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex size-6 shrink-0 items-center justify-center text-graf-700">
+          <Truck className="size-[18px]" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h3 id="entrega-cep" className="text-sm font-extrabold text-graf-950">
+            Entrega para sua clínica
+          </h3>
+        </div>
+      </div>
 
       <div className="mt-3 flex gap-2">
         <div className="relative min-w-0 flex-1">
@@ -98,19 +85,20 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
             type="text"
             inputMode="numeric"
             autoComplete="postal-code"
-            placeholder="00000-000"
+            placeholder="Digite seu CEP"
             maxLength={9}
             value={cep}
             onChange={(evento) => {
               setCep(mascararCep(evento.target.value));
               setResultado(null);
+              setLembrado(false);
             }}
             onKeyDown={(evento) => {
               if (evento.key !== "Enter") return;
               evento.preventDefault();
               calcular();
             }}
-            className="h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-[0.9375rem] tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/15"
+            className="h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-sm tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-2 focus:ring-jb-500/20"
           />
         </div>
         <button
@@ -118,77 +106,77 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
           onClick={calcular}
           disabled={!completo || calculando}
           className={cn(
-            "foco-jb flex h-11 shrink-0 items-center gap-2 rounded-lg border border-graf-300 px-4 text-[0.875rem] font-bold transition-colors duration-150",
+            "foco-jb flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-3.5 text-sm font-semibold transition-colors",
             completo && !calculando
-              ? "text-graf-900 hover:border-graf-450 hover:bg-graf-50"
-              : "cursor-not-allowed text-graf-500",
+              ? "border-graf-450 bg-white text-graf-950 hover:bg-graf-50"
+              /* graf-400 sobre graf-100 dá 2,4:1 — o botão desabilitado ficava
+                 ilegível. graf-500 mantém o "não dá para clicar" visível. */
+              : "cursor-not-allowed border-graf-200 bg-graf-100 text-graf-500",
           )}
         >
-          {calculando ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+          {calculando ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <ArrowRight className="size-4" aria-hidden />
+          )}
           Calcular
         </button>
       </div>
+
+      {lembrado && !resultado ? (
+        <p className="mt-1.5 text-xs leading-4 text-graf-500">
+          Usamos o CEP que você consultou antes neste navegador. Troque se quiser outro
+          endereço.
+        </p>
+      ) : null}
 
       <p aria-live="polite" className="sr-only">
         {resultado?.ok ? `Entrega estimada: ${resultado.rotulo}.` : ""}
       </p>
 
       {resultado && !resultado.ok ? (
-        <p className="mt-2.5 text-[0.8125rem] font-semibold text-jb-700">{resultado.erro}</p>
+        <p className="mt-2 text-xs font-semibold text-jb-700">{resultado.erro}</p>
       ) : null}
 
       {resultado?.ok ? (
-        <div className="mt-3 rounded-lg border border-graf-200 bg-graf-50 p-3.5">
+        <div className="mt-3 rounded-2xl border border-graf-200 bg-white px-4 py-3.5 shadow-[0_12px_30px_-28px_rgba(15,23,42,0.45)]">
           {resultado.orcadoDepois ? (
-            <>
-              <p className="text-[0.9375rem] font-semibold text-graf-900">
-                A JB confere o frete para este CEP.
+            <div>
+              <p className="text-sm font-extrabold text-graf-950">
+                {resultado.motivo === "perfil_orcado"
+                  ? "Frete deste equipamento é orçado à parte"
+                  : "Ainda não temos tabela para este CEP"}
               </p>
-              <p className="mt-1 text-[0.8125rem] leading-relaxed text-graf-600">
-                Este endereço está fora das faixas com preço fechado. O valor entra na
-                confirmação do pedido, antes da cobrança — nada é cobrado por estimativa.
+              <p className="mt-0.5 text-xs leading-5 text-graf-600">
+                {resultado.motivo === "perfil_orcado"
+                  ? "Pelo porte, o transporte é contratado caso a caso. A JB confirma o valor antes da cobrança."
+                  : "A compra segue normalmente: a equipe cota com a transportadora e confirma o valor antes de despachar."}
               </p>
-            </>
+            </div>
           ) : (
-            <>
+            <div>
               <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <span className="text-[0.9375rem] font-semibold text-graf-900">
-                  {resultado.rotulo}
-                </span>
-                <span className="tabular text-[0.9375rem] font-bold text-graf-950">
+                <span className="text-sm font-bold text-graf-900">{resultado.rotulo}</span>
+                <span className="tabular text-sm font-extrabold text-graf-950">
                   {resultado.valorCents > 0 ? formatarPreco(resultado.valorCents) : "Grátis"}
                 </span>
               </p>
-              {resultado.prazoDias !== null ? (
-                <p className="mt-1 text-[0.8125rem] text-graf-600">
-                  Prazo estimado de{" "}
-                  <span className="font-semibold text-graf-800">
-                    {plural(resultado.prazoDias, "dia útil", "dias úteis")}
-                  </span>{" "}
-                  após a confirmação do pagamento.
-                </p>
-              ) : (
-                <p className="mt-1 text-[0.8125rem] text-graf-600">
-                  O prazo é confirmado junto com o pedido.
-                </p>
-              )}
-            </>
+              <p className="mt-0.5 text-xs leading-5 text-graf-600">
+                {resultado.prazoDias !== null
+                  ? `${plural(resultado.prazoDias, "dia útil", "dias úteis")} após a confirmação do pagamento.`
+                  : "Prazo confirmado junto com o pedido."}
+              </p>
+            </div>
           )}
 
           {resultado.retirada ? (
-            <p className="mt-3 flex gap-2 border-t border-graf-200 pt-3 text-[0.8125rem] leading-relaxed text-graf-600">
+            <p className="mt-2.5 flex gap-2 border-t border-graf-200 pt-2.5 text-xs leading-5 text-graf-600">
               <Store className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
               <span>
-                <span className="font-semibold text-graf-800">Retirada na JB</span> —{" "}
-                {resultado.retirada}
+                <span className="font-semibold text-graf-800">Retirada na JB:</span> {resultado.retirada}
               </span>
             </p>
           ) : null}
-
-          <p className="mt-3 border-t border-graf-200 pt-3 text-[0.75rem] leading-relaxed text-graf-500">
-            Entrega do equipamento. Instalação, quando contratada, é serviço à parte e tem
-            agendamento próprio.
-          </p>
         </div>
       ) : null}
     </section>

@@ -130,7 +130,7 @@ export default async function PaginaMinhaConta() {
             ))}
           </dl>
           <div className="border-t border-graf-200 bg-graf-50 px-5 py-3">
-            <p className="text-[0.8125rem] leading-relaxed text-graf-600">
+            <p className="text-apoio leading-relaxed text-graf-600">
               <span className="font-semibold text-graf-800">
                 {ROTULO_PAPEL[pessoa.role]}:
               </span>{" "}
@@ -152,7 +152,7 @@ export default async function PaginaMinhaConta() {
           <div className="px-5 py-4">
             <FormularioSenhaStaff />
 
-            <div className="mt-5 space-y-2 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
+            <div className="mt-5 space-y-2 border-t border-graf-200 pt-4 text-apoio leading-relaxed text-graf-500">
               <p>
                 A sessão do painel dura 8 horas. Trocar a senha não desconecta os aparelhos
                 onde você já está dentro — se perdeu um celular ou deixou o painel aberto em

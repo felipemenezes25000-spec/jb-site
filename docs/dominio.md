@@ -370,6 +370,41 @@ prevista ──agendarVisitaDeManutencao──► agendada ──concluirVisita�
   Toda alteração de quantidade deixa uma linha aqui, com motivo e, quando
   aplicável, o pedido que a causou.
 
+### O que aparece em cada lista
+
+`ProductStatus` decide se o produto existe para o público. Não decide onde ele
+aparece — isso é de outros três filtros, todos em `src/lib/catalogo.ts`:
+
+| Filtro | Condição | Efeito |
+|---|---|---|
+| `UNIDADE_VENDIDA` | `unique` **e** controla estoque **e** saldo ≤ 0 | sai de toda listagem, por padrão |
+| `DISPONIVEL` | não controla estoque **ou** saldo > 0 | é o filtro "somente em estoque" |
+| `VITRINE` | publicado **e** com foto **e** disponível | quem pode encabeçar destaque e faixa |
+
+A regra da **unidade vendida** existe porque seminovo aqui é unidade, não
+modelo: o `InventoryUnit` correspondente já está `vendido`, e não há uma segunda
+igual esperando reposição. O anúncio continua alcançável — pela página, por
+link antigo, pela busca e por `?vendidos=1` — mas deixa de ocupar lugar na
+lista de quem está escolhendo o que comprar. As três condições precisam
+coincidir: **produto de linha esgotado continua listado**, porque ele volta.
+
+Contagem do topo de coleção, contagem de faceta e resultado do clique saem
+todos da mesma regra. É o que impede "3 unidades publicadas" acima de dois
+cartões.
+
+### Categoria e marca com o mesmo nome
+
+`Category` e `Brand` não têm restrição de nome único — só de `slug`. O catálogo
+carregou três vezes (site em PHP, protótipo, demonstração) e ficou com duas
+categorias "Biossegurança" e duas marcas "Schuster".
+
+Para a loja pública, cadastros de mesmo nome são **uma opção só**
+(`src/lib/homonimos.ts`): rótulo único, contagens somadas, e o slug da URL
+aberto em todos os homônimos na hora da consulta. Para o cadastro, a correção é
+`pnpm duplicatas:unificar`, que move os vínculos para o canônico e despublica o
+vazio. Categoria ou marca despublicada por unificação redireciona para a
+homônima publicada.
+
 ---
 
 ## Demais estados

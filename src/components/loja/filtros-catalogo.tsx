@@ -74,7 +74,7 @@ function paraParams(parametros: ParametrosCatalogo) {
 }
 
 /** Endereço da mesma lista com as mudanças aplicadas. Página sempre volta ao início. */
-function enderecoCom(
+export function enderecoCom(
   caminho: string,
   parametros: ParametrosCatalogo,
   mudancas: Record<string, string | null>,
@@ -89,21 +89,21 @@ function enderecoCom(
   return consulta ? `${caminho}?${consulta}` : caminho;
 }
 
-function valoresDe(parametros: ParametrosCatalogo, chave: string): string[] {
+export function valoresDe(parametros: ParametrosCatalogo, chave: string): string[] {
   const bruto = parametros[chave];
   if (!bruto) return [];
   const texto = Array.isArray(bruto) ? bruto.join(",") : bruto;
   return texto.split(",").filter(Boolean);
 }
 
-function textoDe(parametros: ParametrosCatalogo, chave: string): string {
+export function textoDe(parametros: ParametrosCatalogo, chave: string): string {
   const bruto = parametros[chave];
   if (!bruto) return "";
   return Array.isArray(bruto) ? (bruto[0] ?? "") : bruto;
 }
 
 /** Soma ou tira um valor de um filtro de vários valores. */
-function alternado(parametros: ParametrosCatalogo, chave: string, valor: string) {
+export function alternado(parametros: ParametrosCatalogo, chave: string, valor: string) {
   const atuais = valoresDe(parametros, chave);
   const novos = atuais.includes(valor)
     ? atuais.filter((v) => v !== valor)
@@ -116,7 +116,7 @@ function alternado(parametros: ParametrosCatalogo, chave: string, valor: string)
  * Fica dentro deste módulo de propósito: é código de cliente, e chamar daqui
  * de um Server Component devolveria uma referência, não a função.
  */
-function filtrosAplicados(parametros: ParametrosCatalogo, grupos: GruposFiltro) {
+export function filtrosAplicados(parametros: ParametrosCatalogo, grupos: GruposFiltro) {
   const fichas: { chave: string; valor: string | null; campo?: string; rotulo: string }[] = [];
 
   const fontes: Record<string, OpcaoFiltro[]> = {
@@ -154,6 +154,12 @@ function filtrosAplicados(parametros: ParametrosCatalogo, grupos: GruposFiltro) 
   if (textoDe(parametros, "estoque") === "1") {
     fichas.push({ chave: "estoque", valor: null, rotulo: "Somente em estoque" });
   }
+  /* Este alarga a lista em vez de estreitar, mas é a mesma promessa: o que
+     mudou o resultado aparece escrito e sai com um clique. Sem a ficha, a
+     unidade vendida voltava à lista sem nada na tela explicando por quê. */
+  if (textoDe(parametros, "vendidos") === "1") {
+    fichas.push({ chave: "vendidos", valor: null, rotulo: "Incluindo unidades já vendidas" });
+  }
 
   return fichas;
 }
@@ -164,7 +170,7 @@ function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode
   return (
     <details open className="group border-b border-graf-200 pb-6 last:border-b-0 last:pb-0">
       <summary className="-mx-2 flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500">
-        <span className="text-[0.9375rem] font-bold text-graf-950">{titulo}</span>
+        <span className="text-corpo font-bold text-graf-950">{titulo}</span>
         <ChevronDown
           className="size-4 shrink-0 text-graf-500 transition-transform duration-200 group-open:rotate-180"
           aria-hidden
@@ -186,26 +192,50 @@ function OpcaoLink({
   marcado: boolean;
   href: string;
 }) {
-  return (
-    <Link
-      href={href}
-      scroll={false}
-      // combinação de filtros é resultado dinâmico: não vale pré-carregar dezenas
-      prefetch={false}
-      aria-label={`${marcado ? "Remover filtro" : "Filtrar por"} ${campo}: ${opcao.rotulo}`}
-      className={cn(
-        "flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm transition-colors",
-        "hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
-        marcado && "bg-jb-50/70 hover:bg-jb-50",
-      )}
-    >
+  /* Zero resultados e ainda não marcada: fica na lista, sem clique.
+     Marcada com zero continua clicável — é assim que se desmarca. */
+  const indisponivel = opcao.quantidade === 0 && !marcado;
+
+  /* ------------------------------------------------ a caixinha da opção
+
+     **Quadrada.** Ela tinha `rounded-md` — 8px de canto numa caixa de 20px, ou
+     seja 40% do lado. Isso não lê como caixa de seleção: lê como pastilha
+     ligada/desligada, que é outro controle, com outra promessa (pastilha troca
+     de estado, caixa acumula escolhas — e aqui dá para marcar Biossegurança E
+     Profilaxia ao mesmo tempo). `rounded-xs` são os 4px da escala do projeto:
+     o suficiente para o canto não ficar cortante, pouco o bastante para a
+     forma continuar sendo um quadrado.
+
+     **Borda `graf-450`, não `graf-300`.** A borda é o ÚNICO sinal de que ali
+     se marca alguma coisa — a caixa desmarcada é branca por dentro. `graf-300`
+     dá 1,72:1 sobre branco, contra os 3:1 que a WCAG 1.4.11 pede para o
+     contorno de um controle; `graf-450` dá 3,39:1. É a mesma troca, pelo mesmo
+     motivo, que os campos de formulário já tinham feito em `ui/form.tsx` — e
+     o axe não pega, porque a regra de contraste dele só olha texto.
+
+     **Sem estado indeterminado, e isso é resposta, não omissão.** Meio-marcado
+     existe para caixa de PAI, quando parte dos filhos está escolhida. Aqui as
+     quatro facetas — Categoria, Marca, Condição, Voltagem — são planas: a
+     lista de categorias traz só as raízes, nenhuma opção contém outra, e não
+     há caixa que possa estar meio-cheia. Desenhar o traço do indeterminado
+     seria inventar uma hierarquia que a tela não tem. Se um dia a Categoria
+     abrir em subcategorias, é aí que ele passa a significar alguma coisa.
+
+     `aria-hidden` continua: quem lê por leitor de tela recebe o `aria-label`
+     do link inteiro ("Filtrar por Categoria: Biossegurança" / "Remover filtro
+     …"), que diz o que o clique FAZ. Trocar isso por `role="checkbox"` daria
+     um estado no lugar de uma ação — e custaria o que faz esta lista
+     funcionar sem JavaScript: cada opção é um link de verdade, com endereço
+     próprio e compartilhável. */
+  const conteudo = (
+    <>
       <span
         aria-hidden
         className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors",
+          "flex size-5 shrink-0 items-center justify-center rounded-xs border transition-colors",
           marcado
             ? "border-jb-500 bg-jb-500 text-white"
-            : "border-graf-300 bg-white text-transparent",
+            : "border-graf-450 bg-white text-transparent",
         )}
       >
         <Check className="size-3.5" strokeWidth={3} />
@@ -219,10 +249,41 @@ function OpcaoLink({
         {opcao.rotulo}
       </span>
       {opcao.quantidade !== undefined ? (
-        <span className="tabular shrink-0 text-[0.8125rem] text-graf-500">
-          {opcao.quantidade}
-        </span>
+        <span className="tabular shrink-0 text-apoio text-graf-500">{opcao.quantidade}</span>
       ) : null}
+    </>
+  );
+
+  const classe = cn(
+    "flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm transition-colors",
+    indisponivel
+      ? "cursor-not-allowed opacity-55"
+      : "hover:bg-graf-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500",
+    marcado && "bg-jb-50/70 hover:bg-jb-50",
+  );
+
+  if (indisponivel) {
+    return (
+      <span
+        aria-disabled
+        title={`Nenhum item em ${opcao.rotulo} com os filtros atuais.`}
+        className={classe}
+      >
+        {conteudo}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      scroll={false}
+      // combinação de filtros é resultado dinâmico: não vale pré-carregar dezenas
+      prefetch={false}
+      aria-label={`${marcado ? "Remover filtro" : "Filtrar por"} ${campo}: ${opcao.rotulo}`}
+      className={classe}
+    >
+      {conteudo}
     </Link>
   );
 }
@@ -232,6 +293,14 @@ function OpcaoLink({
  * Uma coluna de caixas de seleção para "Bivolt / 127 V / 220 V" faz a barra
  * parecer formulário de sistema; três pastilhas lado a lado ocupam uma linha
  * e leem como escolha de loja.
+ */
+/**
+ * Opção que zerou continua na tela — desabilitada, e não removida.
+ *
+ * Remover a opção sem resultado parece limpeza e é armadilha: foi assim que
+ * marcar uma marca fazia o grupo Categoria inteiro desaparecer, e a pessoa
+ * ficava presa sem caminho para trocar de categoria. Com a opção visível e o
+ * zero à direita, "não há Gnatus em Profilaxia" vira informação.
  */
 function OpcaoPastilha({
   campo,
@@ -259,6 +328,13 @@ function OpcaoPastilha({
       )}
     >
       {opcao.rotulo}
+      {/* Voltagem era o único grupo sem contador, e um filtro sem número não
+          diz se vale o clique. */}
+      {opcao.quantidade !== undefined ? (
+        <span className="tabular ml-2 text-apoio font-normal text-graf-500">
+          {opcao.quantidade}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -285,9 +361,11 @@ export function ConteudoFiltros({
   travarCategoria,
   travarCondicao,
   travarMarca,
+  onNavigate,
 }: {
   grupos: GruposFiltro;
   parametros: ParametrosCatalogo;
+  onNavigate?: () => void;
 } & Travas) {
   const router = useRouter();
   const caminho = usePathname();
@@ -306,11 +384,23 @@ export function ConteudoFiltros({
   const max = textoDe(parametros, "preco_max");
   const temFaixa = grupos.faixaPreco.maxCents > grupos.faixaPreco.minCents;
   const emEstoque = textoDe(parametros, "estoque") === "1";
+  const comVendidos = textoDe(parametros, "vendidos") === "1";
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      onClick={(evento) => {
+        if ((evento.target as HTMLElement).closest("a[href]")) onNavigate?.();
+      }}
+    >
       {/* um grupo com uma opção só não filtra nada: ou some, ou engana */}
-      {!travarCategoria && grupos.categorias.length > 1 ? (
+      {/* `> 0`, não `> 1`.
+
+          Esconder o grupo quando sobra uma opção parecia limpeza e era beco: ao
+          marcar uma marca, a Categoria encolhia para uma opção, o grupo inteiro
+          sumia e não havia caminho de volta para trocar de categoria sem limpar
+          tudo. Com uma opção só, ela continua sendo o caminho de saída. */}
+      {!travarCategoria && grupos.categorias.length > 0 ? (
         <Grupo titulo="Categoria">
           <Lista muitas={grupos.categorias.length > 8}>
             {grupos.categorias.map((opcao) => (
@@ -326,7 +416,7 @@ export function ConteudoFiltros({
         </Grupo>
       ) : null}
 
-      {!travarCondicao && grupos.condicoes.length > 1 ? (
+      {!travarCondicao && grupos.condicoes.length > 0 ? (
         <Grupo titulo="Condição">
           <Lista muitas={false}>
             {grupos.condicoes.map((opcao) => (
@@ -344,7 +434,7 @@ export function ConteudoFiltros({
 
       {/* em /marcas/[slug] a marca já é o recorte da rota: mostrar o grupo
           deixaria a pessoa marcar outra marca sem efeito nenhum */}
-      {!travarMarca && grupos.marcas.length > 1 ? (
+      {!travarMarca && grupos.marcas.length > 0 ? (
         <Grupo titulo="Marca">
           <Lista muitas={grupos.marcas.length > 8}>
             {grupos.marcas.map((opcao) => (
@@ -360,7 +450,7 @@ export function ConteudoFiltros({
         </Grupo>
       ) : null}
 
-      {grupos.voltagens.length > 1 ? (
+      {grupos.voltagens.length > 0 ? (
         <Grupo titulo="Voltagem">
           <div className="flex flex-wrap gap-2 pt-1">
             {grupos.voltagens.map((opcao) => (
@@ -411,7 +501,7 @@ export function ConteudoFiltros({
               <div className="min-w-0 flex-1">
                 <label
                   htmlFor={idMin}
-                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                  className="mb-1.5 block text-apoio font-semibold text-graf-700"
                 >
                   De
                 </label>
@@ -422,7 +512,17 @@ export function ConteudoFiltros({
                   autoComplete="off"
                   aria-invalid={erroFaixa ? true : undefined}
                   aria-describedby={erroFaixa ? idErroFaixa : undefined}
-                  placeholder={formatarValor(grupos.faixaPreco.minCents)}
+                  /* "0,00" e não o menor preço do catálogo.
+
+                     O placeholder era `formatarValor(minCents)` — "1.200,00" —
+                     em `text-graf-500`, que é contraste de leitura de verdade
+                     (5,23:1). O campo parecia PREENCHIDO com R$ 1.200,00, e
+                     quem quisesse essa faixa clicava direto em "Aplicar" e
+                     recebia o catálogo inteiro de volta, sem filtro nenhum e
+                     sem entender por quê. A faixa do catálogo continua escrita
+                     logo abaixo, em texto, onde ela é informação e não engano:
+                     "Catálogo de R$ 1.200,00 a R$ 18.900,00". */
+                  placeholder="0,00"
                   defaultValue={min ? formatarValor(Number(min)) : ""}
                   className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
                 />
@@ -430,7 +530,7 @@ export function ConteudoFiltros({
               <div className="min-w-0 flex-1">
                 <label
                   htmlFor={idMax}
-                  className="mb-1.5 block text-[0.8125rem] font-semibold text-graf-700"
+                  className="mb-1.5 block text-apoio font-semibold text-graf-700"
                 >
                   Até
                 </label>
@@ -441,23 +541,29 @@ export function ConteudoFiltros({
                   autoComplete="off"
                   aria-invalid={erroFaixa ? true : undefined}
                   aria-describedby={erroFaixa ? idErroFaixa : undefined}
-                  placeholder={formatarValor(grupos.faixaPreco.maxCents)}
+                  placeholder="0,00"
                   defaultValue={max ? formatarValor(Number(max)) : ""}
                   className="h-11 w-full min-w-0 rounded-lg border border-graf-450 bg-white px-3 text-base transition-colors placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/20 sm:text-sm"
                 />
               </div>
             </div>
-            <Botao type="submit" variante="secundario" tamanho="sm" larguraTotal className="mt-3">
+            <Botao
+              type="submit"
+              variante="secundario"
+              tamanho="sm"
+              larguraTotal
+              className="mt-3 min-h-11"
+            >
               Aplicar faixa de preço
             </Botao>
             <p
               id={idErroFaixa}
               aria-live="polite"
-              className="mt-2 text-[0.8125rem] font-semibold text-jb-700 empty:mt-0"
+              className="mt-2 text-apoio font-semibold text-jb-700 empty:mt-0"
             >
               {erroFaixa}
             </p>
-            <p className="mt-2.5 text-[0.8125rem] text-graf-500">
+            <p className="mt-2.5 text-apoio text-graf-500">
               Catálogo de {formatarPreco(grupos.faixaPreco.minCents)} a{" "}
               {formatarPreco(grupos.faixaPreco.maxCents)}.
             </p>
@@ -471,7 +577,25 @@ export function ConteudoFiltros({
             campo="Disponibilidade"
             opcao={{ valor: "1", rotulo: "Somente em estoque" }}
             marcado={emEstoque}
-            href={enderecoCom(caminho, parametros, { estoque: emEstoque ? null : "1" })}
+            href={enderecoCom(caminho, parametros, {
+              estoque: emEstoque ? null : "1",
+              vendidos: null,
+            })}
+          />
+          {/* Seminovo é unidade, não modelo: a que já saiu não volta, e por
+              isso a lista não a mostra por padrão. Quem quer ver o que a JB
+              já revisou e vendeu — histórico, link antigo, curiosidade
+              legítima de quem está avaliando a bancada — pede aqui. As duas
+              opções se desmarcam: "só em estoque" e "com vendidos" pedem
+              coisas opostas. */}
+          <OpcaoLink
+            campo="Disponibilidade"
+            opcao={{ valor: "1", rotulo: "Incluir unidades já vendidas" }}
+            marcado={comVendidos}
+            href={enderecoCom(caminho, parametros, {
+              vendidos: comVendidos ? null : "1",
+              estoque: null,
+            })}
           />
         </Lista>
       </Grupo>
@@ -499,12 +623,19 @@ export function PainelFiltros({
   const limpavel = ativos > 0;
 
   return (
-    <div className={cn("lg:sticky lg:top-24", className)}>
+    /* `top-24` são 96px fixos, e o cabeçalho grudado mede 108: o título
+       "Filtros" entrava por baixo dele. O token `--jb-topo` é o mesmo que a
+       barra de seções da ficha de produto usa, e acompanha a altura real do
+       cabeçalho em cada faixa. */
+    <div
+      data-painel-filtros
+      className={cn("lg:sticky lg:top-[calc(var(--jb-topo)+1rem)]", className)}
+    >
       <div className="mb-5 flex items-center justify-between gap-3 border-b border-graf-200 pb-3">
         <h2 className="flex items-baseline gap-2 text-base font-bold text-graf-950">
           Filtros
           {ativos > 0 ? (
-            <span className="tabular text-[0.8125rem] font-semibold text-graf-500">
+            <span className="tabular text-apoio font-semibold text-graf-500">
               {ativos} ativo{ativos > 1 ? "s" : ""}
             </span>
           ) : null}
@@ -515,7 +646,7 @@ export function PainelFiltros({
           <Link
             href={caminho}
             scroll={false}
-            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors pointer-coarse:min-h-11 hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-apoio font-semibold text-graf-700 transition-colors pointer-coarse:min-h-11 hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
           >
             <X className="size-3.5" aria-hidden />
             Limpar
@@ -617,7 +748,7 @@ export function BarraCatalogo({
             ) : null}
           </button>
 
-          <label className="flex min-w-0 flex-1 basis-44 items-center gap-2 text-[0.8125rem] font-semibold text-graf-600 sm:basis-auto sm:flex-none">
+          <label className="flex min-w-0 flex-1 basis-44 items-center gap-2 text-apoio font-semibold text-graf-600 sm:basis-auto sm:flex-none">
             <span className="hidden shrink-0 sm:inline">Ordenar por</span>
             <select
               value={ordem}
@@ -687,7 +818,7 @@ export function BarraCatalogo({
               <p className="flex items-baseline gap-2 text-[1.0625rem] font-bold text-graf-950">
                 Filtros
                 {ativos > 0 ? (
-                  <span className="tabular text-[0.8125rem] font-semibold text-graf-500">
+                  <span className="tabular text-apoio font-semibold text-graf-500">
                     {ativos} ativo{ativos > 1 ? "s" : ""}
                   </span>
                 ) : null}
@@ -697,7 +828,7 @@ export function BarraCatalogo({
                   <Link
                     href={enderecoLimpo}
                     scroll={false}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-[0.8125rem] font-semibold text-graf-700 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-graf-200 px-3 text-apoio font-semibold text-graf-700 transition-colors hover:border-jb-200 hover:bg-jb-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                   >
                     <X className="size-3.5" aria-hidden />
                     Limpar

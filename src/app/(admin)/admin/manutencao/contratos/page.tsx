@@ -176,7 +176,7 @@ export default async function PaginaContratos({
           <span className="block">
             {plural(linha._count.items, "equipamento", "equipamentos")}
           </span>
-          <span className="block text-[0.8125rem] text-graf-500">
+          <span className="block text-apoio text-graf-500">
             {linha._count.visits === 0
               ? "sem visitas geradas"
               : `${linha.visitasAbertas} de ${linha._count.visits} visitas em aberto`}

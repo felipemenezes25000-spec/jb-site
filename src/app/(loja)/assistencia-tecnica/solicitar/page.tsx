@@ -17,6 +17,7 @@ import {
 import { Cartao, Trilha } from "@/components/ui/data";
 import { sessaoCliente } from "@/lib/auth-cliente";
 import { equipamentosDoCliente } from "@/lib/equipamento";
+import { unificarPorNome } from "@/lib/homonimos";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
@@ -83,7 +84,8 @@ function resumirEndereco(endereco: {
 export default async function SolicitarPage() {
   const cliente = await sessaoCliente();
 
-  const [s, categorias, dadosDoCliente, equipamentos, unidades] = await Promise.all([
+  const [s, categorias, dadosDoCliente, equipamentos, unidades, enderecoDaConta] =
+    await Promise.all([
     getSettings(),
     prisma.category.findMany({
       where: { published: true },
@@ -116,12 +118,38 @@ export default async function SolicitarPage() {
           },
         })
       : Promise.resolve([]),
+    /* O endereço padrão da conta.
+
+       /minha-jb/enderecos afirma, com todas as letras: "O endereço padrão vem
+       preenchido na compra e na abertura de chamado." Vinha na compra e não
+       vinha aqui — o assistente só conhecia `CustomerLocation`, que é a
+       unidade da clínica, e quem tinha endereço salvo pelo checkout começava
+       a etapa 4 com sete campos em branco. */
+    cliente
+      ? prisma.customerAddress.findFirst({
+          where: { customerId: cliente.id },
+          orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+          select: {
+            zip: true,
+            street: true,
+            number: true,
+            complement: true,
+            district: true,
+            city: true,
+            state: true,
+          },
+        })
+      : Promise.resolve(null),
   ]);
 
-  const listaCategorias: CategoriaEscolha[] = categorias.map((categoria) => ({
-    id: categoria.id,
-    nome: categoria.name,
-  }));
+  /* A escolha do tipo de equipamento oferecia "Biossegurança" duas vezes,
+     porque o banco tem dois cadastros com esse nome. Duas opções idênticas
+     numa pergunta de formulário não são uma escolha: são uma chance de errar
+     sem saber. Aqui elas viram uma — e o chamado sai vinculado ao cadastro
+     canônico. Conserto de verdade: `pnpm duplicatas:prever`. */
+  const listaCategorias: CategoriaEscolha[] = unificarPorNome(
+    categorias.map((categoria) => ({ slug: categoria.id, nome: categoria.name })),
+  ).map((categoria) => ({ id: categoria.slug, nome: categoria.nome }));
 
   const listaEquipamentos: EquipamentoEscolha[] = equipamentos
     .filter((equipamento) => equipamento.status !== "desativado")
@@ -141,20 +169,36 @@ export default async function SolicitarPage() {
     endereco: resumirEndereco(unidade.address),
   }));
 
+  const enderecoPadrao = enderecoDaConta
+    ? {
+        cep: enderecoDaConta.zip,
+        logradouro: enderecoDaConta.street,
+        numero: enderecoDaConta.number,
+        complemento: enderecoDaConta.complement,
+        bairro: enderecoDaConta.district,
+        cidade: enderecoDaConta.city,
+        uf: enderecoDaConta.state,
+      }
+    : null;
+
   return (
     <>
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
+      {/* `compacto`: esta é tela de tarefa. A apresentação inteira ficava
+          entre o topo e o primeiro campo no celular — ver
+          `docs/auditoria-visual-2026-09-08/29-solicitar-mobile.png`. */}
       <CabecalhoAssistencia
+        compacto
         trilha={<Trilha itens={TRILHA} />}
         sobretitulo="Abertura de chamado"
         titulo="Solicitar assistência técnica"
-        resumo="Conte o que está acontecendo com o equipamento. Ao final, o chamado ganha um número e entra na fila da equipe técnica — é por ele que você acompanha cada etapa."
+        resumo="Conte o que está acontecendo com o equipamento. No fim, o chamado ganha um número — é por ele que você acompanha cada etapa."
       />
 
-      <div className="container-jb py-10 lg:py-14">
+      <div className="container-jb py-6 lg:py-14">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-14">
-          <Cartao className="p-6 sm:p-8 lg:p-10">
+          <Cartao className="p-5 sm:p-8 lg:p-10">
             <AssistenteChamado
               /* Carimbado no servidor: o relógio do navegador não entra nesta
                  conta, e assim não há divergência de hidratação. */
@@ -162,6 +206,7 @@ export default async function SolicitarPage() {
               categorias={listaCategorias}
               equipamentos={listaEquipamentos}
               unidades={listaUnidades}
+              enderecoPadrao={enderecoPadrao}
               cliente={
                 dadosDoCliente
                   ? {

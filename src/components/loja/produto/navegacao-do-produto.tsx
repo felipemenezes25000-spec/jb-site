@@ -1,136 +1,213 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ShoppingCart } from "lucide-react";
 
 import { formatarPreco } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/* ============================================================================
-   Navegação da página do equipamento
-
-   A página do equipamento ficou longa — e isso é correto: ficha técnica,
-   pré-requisitos, o que vem na caixa, documentos, dúvidas, unidade física.
-   Longa e sem mapa, porém, é a mesma coisa que curta e incompleta: ninguém
-   rola dez telas para descobrir se a instalação está inclusa.
-
-   Esta faixa é o mapa. Ela gruda logo abaixo do cabeçalho depois que a
-   primeira dobra passa, mostra só as seções que aquela página realmente tem —
-   seção vazia não vira âncora — e marca em qual delas a leitura está.
-
-   POR QUE ÂNCORA E NÃO ABA
-
-   Aba esconde conteúdo do buscador e de quem usa Ctrl+F. O escopo pede
-   explicitamente para não esconder conteúdo crítico de SEO atrás de abas. Aqui
-   tudo continua no HTML, numa página só; a faixa apenas leva até o pedaço.
-
-   O destaque da seção atual usa `IntersectionObserver` com uma margem superior
-   igual à altura grudada — sem isso, a seção "ativa" seria sempre a que está
-   escondida atrás do cabeçalho.
-   ============================================================================ */
-
 export type AncoraDoProduto = { id: string; rotulo: string };
 
-export function NavegacaoDoProduto({ ancoras }: { ancoras: AncoraDoProduto[] }) {
-  const [ativa, setAtiva] = useState<string | null>(null);
-  const trilhoRef = useRef<HTMLUListElement>(null);
+const ROTULOS_COMPACTOS: Record<string, string> = {
+  "visao-geral": "Visão geral",
+  "ficha-tecnica": "Especificações",
+  preparo: "Antes de comprar",
+  "entrega-e-garantia": "Entrega e garantia",
+  duvidas: "Dúvidas",
+};
+
+export type CompraDaBarra = {
+  precoCents: number;
+  parcelas: { parcelas: number; valorCents: number } | null;
+  soOrcamento: boolean;
+  indisponivel: boolean;
+};
+
+/**
+ * A caixa de compra sai de vista e não volta — no desktop.
+ *
+ * `.compra` é `position: sticky` dentro do grid do topo, e o grid termina onde
+ * termina a coluna mais alta: da barra de seções para baixo (especificações,
+ * instalação, entrega, dúvidas, comparação, avaliações, cross-sell) não havia
+ * preço nem botão em ~5.400px de página a 1440. O celular tinha
+ * `BarraCompraMobile`; o desktop não tinha nada.
+ *
+ * As fichas medidas resolvem isso sem inventar uma segunda faixa: a Peloton
+ * gruda 1440×72 com título, âncoras e "Add to cart" no mesmo trilho; a Herman
+ * Miller usa 1440×86 com título e âncoras; a Kabum gruda a própria caixa
+ * (320×240 em `top:96`). O denominador comum é *uma* faixa, não duas.
+ *
+ * Por isso o preço e o botão entram aqui dentro, à direita das âncoras, na
+ * faixa que já existe e já está grudada — sem nenhum pixel a mais de altura.
+ */
+function useForaDeVista(alvo: string) {
+  const [fora, setFora] = useState(false);
 
   useEffect(() => {
-    if (ancoras.length === 0) return;
+    const caixa = document.querySelector<HTMLElement>(`main #${CSS.escape(alvo)}`);
+    if (!caixa) return;
 
-    /* Mesma razão da barra de compra: as cópias escondidas do streaming
-       repetem os ids, e observar uma delas travaria o destaque. */
-    const alvos = ancoras
+    const observador = new IntersectionObserver(
+      ([entrada]) => setFora(!entrada.isIntersecting),
+      { rootMargin: "-80px 0px 0px 0px", threshold: 0 },
+    );
+    observador.observe(caixa);
+    return () => observador.disconnect();
+  }, [alvo]);
+
+  return fora;
+}
+
+export function NavegacaoDoProduto({
+  ancoras,
+  compra,
+  alvoDaCompra = "caixa-de-compra",
+}: {
+  ancoras: AncoraDoProduto[];
+  compra?: CompraDaBarra;
+  alvoDaCompra?: string;
+}) {
+  const [ativa, setAtiva] = useState<string | null>(null);
+  const trilhoRef = useRef<HTMLUListElement>(null);
+  const compraForaDeVista = useForaDeVista(alvoDaCompra);
+
+  const ancorasEfetivas = useMemo(() => {
+    return ancoras.filter(
+      (ancora) => ancora.id !== "relacionados" && ancora.id !== "unidade",
+    );
+  }, [ancoras]);
+
+  useEffect(() => {
+    if (ancorasEfetivas.length === 0) return;
+
+    const alvos = ancorasEfetivas
       .map((ancora) => document.querySelector<HTMLElement>(`main #${CSS.escape(ancora.id)}`))
       .filter((elemento): elemento is HTMLElement => elemento !== null);
 
     if (alvos.length === 0) return;
 
-    /* A faixa de observação é uma tira no terço superior da tela, logo abaixo
-       do que fica grudado. A seção que cruza essa tira é a que a pessoa está
-       lendo — não a que está sob o cabeçalho, nem a que ainda vai chegar. */
+    /* A seção acesa é a de baixo, não a de cima.
+
+       Duas seções cruzam a faixa de leitura ao mesmo tempo toda vez que uma
+       termina e a próxima começa — e a ordenação crescente por `top` escolhia
+       justamente a que está saindo. O efeito medido: a barra continuava
+       acendendo "Visão geral" com a ficha técnica já ocupando a tela inteira, e
+       só trocava quando a seção anterior sumia por completo. O destaque andava
+       uma seção atrasado em toda a página.
+
+       Quem manda é a que entrou por último: entre as que cruzam a faixa, a de
+       maior `top` é a que está começando ali, e é a que a pessoa está lendo.
+
+       A faixa também encolheu. `-136px 0px -60%` deixava uma janela de mais de
+       200px logo abaixo do cabeçalho, onde essa ambiguidade acontecia quase
+       sempre; entre 35% e 40% da altura da tela ela é estreita o bastante para
+       que a resposta quase nunca seja ambígua, e fica bem abaixo da faixa
+       grudada do topo em qualquer altura de viewport. */
     const observador = new IntersectionObserver(
       (entradas) => {
         const visiveis = entradas
           .filter((entrada) => entrada.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+          .sort((a, b) => b.boundingClientRect.top - a.boundingClientRect.top);
         if (visiveis[0]) setAtiva(visiveis[0].target.id);
       },
-      { rootMargin: "-136px 0px -60% 0px", threshold: 0 },
+      { rootMargin: "-35% 0px -60% 0px", threshold: 0 },
     );
 
     for (const alvo of alvos) observador.observe(alvo);
     return () => observador.disconnect();
-  }, [ancoras]);
+  }, [ancorasEfetivas]);
 
-  /* No celular a faixa rola na horizontal; a seção ativa precisa entrar no
-     campo de visão sozinha, senão o destaque fica fora da tela. */
   useEffect(() => {
     if (!ativa) return;
     const trilho = trilhoRef.current;
     const item = trilho?.querySelector<HTMLElement>(`[data-ancora="${ativa}"]`);
     if (!trilho || !item) return;
+
     const foraAEsquerda = item.offsetLeft < trilho.scrollLeft;
     const foraADireita =
       item.offsetLeft + item.offsetWidth > trilho.scrollLeft + trilho.clientWidth;
+
     if (foraAEsquerda || foraADireita) {
       trilho.scrollTo({ left: Math.max(0, item.offsetLeft - 16), behavior: "smooth" });
     }
   }, [ativa]);
 
-  if (ancoras.length < 2) return null;
+  if (ancorasEfetivas.length < 2) return null;
+
+  const mostrarCompra = Boolean(compra) && compraForaDeVista;
 
   return (
     <nav
-      aria-label="Seções deste equipamento"
-      /* `top-[72px]` é a altura do cabeçalho encolhido — e ele já está
-         encolhido quando esta faixa encosta nele. */
-      className="sticky top-[72px] z-30 border-y border-graf-200 bg-white/96 backdrop-blur-md"
+      aria-label="Seções deste produto"
+      className="sticky top-[var(--jb-topo)] z-30 border-y border-graf-200 bg-white/95 backdrop-blur"
     >
-      <ul
-        ref={trilhoRef}
-        className="scrollbar-none container-jb flex gap-1 overflow-x-auto"
-      >
-        {ancoras.map((ancora) => {
-          const atual = ativa === ancora.id;
-          return (
+      <div className="container-loja flex items-stretch gap-4">
+        <ul
+          ref={trilhoRef}
+          className="scrollbar-none flex min-h-12 min-w-0 flex-1 gap-5 overflow-x-auto"
+        >
+          {ancorasEfetivas.map((ancora) => (
             <li key={ancora.id} className="shrink-0">
               <a
                 href={`#${ancora.id}`}
                 data-ancora={ancora.id}
-                aria-current={atual ? "true" : undefined}
-                className={cn(
-                  "foco-jb relative flex min-h-12 items-center whitespace-nowrap px-3 text-[0.875rem] font-semibold transition-colors duration-150",
-                  atual
-                    ? "text-jb-700 after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-jb-500 after:content-['']"
-                    : "text-graf-600 hover:text-graf-950",
-                )}
+                aria-current={ativa === ancora.id ? "true" : undefined}
+                className="foco-jb flex min-h-12 items-center whitespace-nowrap border-b-2 border-transparent text-sm font-semibold text-graf-600 transition-colors hover:text-graf-950 aria-[current=true]:border-jb-500 aria-[current=true]:text-jb-700"
               >
-                {ancora.rotulo}
+                {ROTULOS_COMPACTOS[ancora.id] ?? ancora.rotulo}
               </a>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+
+        {compra ? (
+          <div
+            aria-hidden={!mostrarCompra}
+            className={cn(
+              "hidden shrink-0 items-center gap-3 transition-opacity duration-150 lg:flex",
+              mostrarCompra ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+          >
+            {compra.indisponivel ? (
+              <span className="text-sm font-bold text-graf-600">Indisponível</span>
+            ) : compra.soOrcamento ? (
+              <span className="text-sm font-bold text-graf-950">Sob orçamento</span>
+            ) : (
+              <span className="hidden text-right leading-tight xl:block">
+                <span className="tabular block text-sm font-extrabold text-graf-950">
+                  {formatarPreco(compra.precoCents)}
+                </span>
+                {compra.parcelas ? (
+                  <span className="tabular block text-xs text-graf-500">
+                    {compra.parcelas.parcelas}× de {formatarPreco(compra.parcelas.valorCents)}
+                  </span>
+                ) : null}
+              </span>
+            )}
+
+            <a
+              href={`#${alvoDaCompra}`}
+              tabIndex={mostrarCompra ? undefined : -1}
+              className={cn(
+                "foco-jb inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-extrabold transition-colors",
+                compra.indisponivel
+                  ? "border border-graf-300 text-graf-800 hover:bg-graf-50"
+                  : "bg-jb-500 text-white hover:bg-jb-600",
+              )}
+            >
+              {compra.indisponivel ? null : <ShoppingCart className="size-4" aria-hidden />}
+              {compra.indisponivel
+                ? "Ver alternativas"
+                : compra.soOrcamento
+                  ? "Pedir orçamento"
+                  : "Comprar"}
+            </a>
+          </div>
+        ) : null}
+      </div>
     </nav>
   );
 }
-
-/* ==========================================================================
-   Barra de compra do celular
-
-   No desktop a caixa de compra fica grudada ao lado da galeria e nunca sai da
-   tela. No celular ela some depois da primeira dobra, e a partir dali a pessoa
-   lê ficha técnica, requisitos e dúvidas sem preço nem botão à vista — o
-   momento exato em que a decisão amadurece.
-
-   A barra devolve os dois. Ela não duplica a caixa de compra: leva de volta
-   até ela. Duplicar significaria dois lugares para escolher serviço e
-   quantidade, e um deles ia mentir sobre o outro.
-
-   `--jb-barra-inferior` é publicada no elemento raiz enquanto a barra existe:
-   é assim que a barra de comparação sabe subir e não ficar embaixo desta.
-   ========================================================================== */
 
 export function BarraCompraMobile({
   precoCents,
@@ -143,41 +220,25 @@ export function BarraCompraMobile({
   parcelas: { parcelas: number; valorCents: number } | null;
   soOrcamento: boolean;
   indisponivel: boolean;
-  /** id do elemento para onde a barra leva. */
   alvo?: string;
 }) {
-  const [visivel, setVisivel] = useState(false);
+  const visivel = useForaDeVista(alvo);
   const barraRef = useRef<HTMLDivElement>(null);
-
-  /* A barra aparece quando a caixa de compra sai da tela — não a uma altura
-     fixa de scroll. Página com galeria alta e página com galeria baixa têm o
-     mesmo comportamento assim. */
-  useEffect(() => {
-    /* Dentro de `main`, e não `getElementById`: enquanto a página transmite,
-       o React deixa no fim do `body` cópias escondidas do conteúdo de cada
-       `<Suspense>`. Uma delas tem o mesmo id e mede zero — observar aquela
-       faria a barra achar que a caixa de compra nunca está na tela. */
-    const caixa = document.querySelector<HTMLElement>(`main #${CSS.escape(alvo)}`);
-    if (!caixa) return;
-
-    const observador = new IntersectionObserver(
-      ([entrada]) => setVisivel(!entrada.isIntersecting),
-      { rootMargin: "-80px 0px 0px 0px", threshold: 0 },
-    );
-    observador.observe(caixa);
-    return () => observador.disconnect();
-  }, [alvo]);
 
   useEffect(() => {
     const raiz = document.documentElement;
+    const corpo = document.body;
     if (!visivel) {
       raiz.style.removeProperty("--jb-barra-inferior");
+      corpo.style.removeProperty("padding-bottom");
       return;
     }
     const altura = barraRef.current?.offsetHeight ?? 0;
     raiz.style.setProperty("--jb-barra-inferior", `${altura}px`);
+    corpo.style.paddingBottom = `${altura}px`;
     return () => {
       raiz.style.removeProperty("--jb-barra-inferior");
+      corpo.style.removeProperty("padding-bottom");
     };
   }, [visivel]);
 
@@ -186,22 +247,30 @@ export function BarraCompraMobile({
   return (
     <div
       ref={barraRef}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/97 px-4 py-2.5 shadow-[0_-4px_16px_rgba(26,28,30,0.08)] backdrop-blur-md lg:hidden"
+      data-pdp-barra-compra
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 px-4 py-2.5 shadow-[0_-10px_30px_rgba(15,23,42,0.1)] backdrop-blur-xl lg:hidden"
       style={{ paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))" }}
     >
-      <div className="flex items-center gap-3">
+      <div className="mx-auto flex max-w-xl items-center gap-3">
         <div className="min-w-0 flex-1">
           {soOrcamento ? (
-            <p className="text-[0.9375rem] font-bold text-graf-950">Sob orçamento</p>
+            <p className="text-base font-bold text-graf-950">Sob orçamento</p>
           ) : (
             <>
               <p className="tabular text-lg font-extrabold leading-tight text-graf-950">
                 {formatarPreco(precoCents)}
               </p>
-              {parcelas ? (
-                <p className="tabular truncate text-[0.75rem] text-graf-500">
+              {/* A barra de cima já sabia disto; esta não sabia. Num equipamento
+                  vendido, a barra fixa do celular continuava prometendo "12× de
+                  R$ 624,16 sem juros" logo acima de um botão que leva a
+                  alternativas — e no celular ela é a última coisa que fica na
+                  tela enquanto a pessoa rola a página inteira. */}
+              {parcelas && !indisponivel ? (
+                <p className="tabular truncate text-xs text-graf-500">
                   {parcelas.parcelas}× de {formatarPreco(parcelas.valorCents)} sem juros
                 </p>
+              ) : indisponivel ? (
+                <p className="truncate text-xs font-semibold text-graf-600">Indisponível</p>
               ) : null}
             </>
           )}
@@ -210,10 +279,10 @@ export function BarraCompraMobile({
         <a
           href={`#${alvo}`}
           className={cn(
-            "foco-jb inline-flex min-h-12 shrink-0 items-center gap-2 rounded-lg px-5 text-[0.9375rem] font-bold transition-colors duration-150",
+            "foco-jb inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl px-5 text-corpo font-bold shadow-sm transition-all duration-150",
             indisponivel
-              ? "border border-graf-300 text-graf-800 hover:bg-graf-50"
-              : "bg-jb-500 text-white hover:bg-jb-600",
+              ? "border border-graf-300 bg-white text-graf-800 hover:bg-graf-50"
+              : "bg-jb-500 text-white hover:-translate-y-0.5 hover:bg-jb-600",
           )}
         >
           {indisponivel ? null : <ShoppingCart className="size-[18px]" aria-hidden />}

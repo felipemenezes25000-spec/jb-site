@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { Vitrine, type ParametrosVitrine } from "@/components/loja/vitrine";
 import { LinkBotao } from "@/components/ui/button";
@@ -9,25 +9,12 @@ import { TituloSecao } from "@/components/ui/data";
 import { Grade } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import { PUBLICADO } from "@/lib/catalogo";
-import { logoDaMarca } from "@/lib/marcas";
+import { chaveDeNome } from "@/lib/homonimos";
 import { textoDeHtml } from "@/lib/html";
+import { logoDaMarca } from "@/lib/marcas";
 import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- *
- * `instant = false` desliga a validação de navegação instantânea para este
- * segmento. É a saída documentada para migrar rota a rota
- * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
- * "Following validation"): a casca da loja já foi migrada e prerenderiza, e
- * cada página vai deixando de precisar disto conforme a leitura dela ganha
- * `use cache` ou um `<Suspense>`.
- *
- * A lista do que ainda depende desta linha está em
- * docs/evolucao-jb/cobertura.md, fase 5. Ela é pendência declarada, não
- * conclusão.
- */
 export const instant = false;
 
 type Props = {
@@ -45,23 +32,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     titulo: marca.name,
     descricao:
       textoDeHtml(marca.description) ||
-      `Equipamentos ${marca.name} vendidos e atendidos pela JB.`,
+      `Produtos ${marca.name} disponíveis no catálogo da JB.`,
     caminho: `/marcas/${marca.slug}`,
   });
 }
 
-/**
- * A parede de marcas que fecha a página.
- *
- * Só entram marcas com arte e com equipamento publicado: uma faixa de
- * logotipos precisa ser feita de logotipos, e um monograma solto no meio de
- * seis marcas reais denuncia o cadastro pela metade. Sem material suficiente,
- * a faixa não aparece.
- *
- * O filtro por arte é feito depois da consulta, não no `where`. Filtrar por
- * `logoId: { not: null }` no banco descartava toda marca cujo logotipo vem do
- * arquivo local — que hoje são todas elas —, e a faixa nunca aparecia.
- */
 async function outrasMarcas(slugAtual: string): Promise<MarcaVizinha[]> {
   try {
     const linhas = await prisma.brand.findMany({
@@ -96,12 +71,25 @@ export default async function MarcaPage({ params, searchParams }: Props) {
       logo: { select: { url: true, alt: true } },
     },
   });
-  if (!marca || !marca.published) notFound();
+  if (!marca) notFound();
+
+  if (!marca.published) {
+    const publicadas = await prisma.brand.findMany({
+      where: { published: true },
+      select: { slug: true, name: true },
+    });
+    const herdeira = publicadas.find(
+      (outra) => chaveDeNome(outra.name) === chaveDeNome(marca.name),
+    );
+    if (herdeira) permanentRedirect(`/marcas/${herdeira.slug}`);
+    notFound();
+  }
 
   const [parametros, vizinhas] = await Promise.all([searchParams, outrasMarcas(marca.slug)]);
 
   const trilha = [
     { rotulo: "Início", href: "/" },
+    { rotulo: "Loja", href: "/loja" },
     { rotulo: "Marcas", href: "/marcas" },
     { rotulo: marca.name },
   ];
@@ -111,48 +99,48 @@ export default async function MarcaPage({ params, searchParams }: Props) {
       <JsonLd dados={trilhaJsonLd(trilha)} />
 
       <Vitrine
-        sobretitulo="Marca atendida"
+        sobretitulo="Marca"
         titulo={marca.name}
         descricao={
           textoDeHtml(marca.description) ||
-          `Os equipamentos ${marca.name} que estão no catálogo da JB. A assistência técnica depois da compra é da nossa equipe.`
+          `Produtos ${marca.name} publicados no catálogo da JB. Para suporte técnico de equipamentos da marca, a assistência é atendida separadamente.`
         }
         trilha={trilha}
         caminho={`/marcas/${marca.slug}`}
         parametros={parametros}
         filtrosFixos={{ marca: marca.slug }}
-        // o nome da marca já é o título da página: a logo entra como decoração
         imagem={logoDaMarca(marca) ? { url: logoDaMarca(marca)!.url, alt: "" } : undefined}
         travarMarca
       />
 
       {vizinhas.length >= 3 ? (
-        <Secao fundo="clara" espaco="md">
+        <Secao fundo="clara" espaco="sm">
           <TituloSecao
             tamanho="titulo"
-            titulo="Outras marcas no catálogo"
+            titulo="Outras marcas"
+            descricao="Continue navegando pelas marcas com produtos publicados no catálogo."
             acao={
               <LinkBotao href="/marcas" variante="secundario" tamanho="sm">
-                Ver todas as marcas
+                Ver todas
               </LinkBotao>
             }
           />
 
-          <Grade como="ul" espaco="md" colunas={{ base: 2, sm: 3, lg: 6 }} className="mt-8">
+          <Grade como="ul" espaco="md" colunas={{ base: 2, sm: 3, lg: 6 }} className="mt-6">
             {vizinhas.map((vizinha) => (
               <li key={vizinha.slug} className="flex">
                 <Link
                   href={`/marcas/${vizinha.slug}`}
-                  className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-xl border border-graf-200 bg-white px-4 py-6 transition-[border-color,box-shadow] duration-200 hover:border-graf-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  className="group flex h-full w-full flex-col items-center justify-center gap-2.5 rounded-xl border border-graf-200 bg-white px-4 py-5 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-graf-300 hover:shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                 >
                   <Image
                     src={vizinha.logo}
                     alt=""
                     width={200}
                     height={80}
-                    className="h-10 w-auto max-w-full object-contain"
+                    className="h-9 w-auto max-w-full object-contain transition-transform duration-200 group-hover:scale-[1.03]"
                   />
-                  <span className="text-center text-[0.8125rem] font-semibold text-graf-700">
+                  <span className="text-center text-apoio font-semibold text-graf-700">
                     {vizinha.name}
                   </span>
                 </Link>

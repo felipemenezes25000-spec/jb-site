@@ -87,7 +87,7 @@ export function DocumentosDoPedido({
                     <FileText className="size-4 shrink-0 text-graf-500" aria-hidden />
                     <span className="truncate">{documento.titulo}</span>
                   </a>
-                  <p className="text-[0.8125rem] text-graf-500">
+                  <p className="text-apoio text-graf-500">
                     {documento.tipo} · {documento.detalhe}
                   </p>
                 </div>
@@ -159,7 +159,7 @@ export function DocumentosDoPedido({
               aria-describedby="documento-arquivo-ajuda"
               className="block w-full cursor-pointer rounded-lg border border-graf-450 bg-white text-base sm:text-sm text-graf-700 file:mr-3 file:min-h-11 file:cursor-pointer file:border-0 file:bg-graf-100 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-graf-800 hover:file:bg-graf-200 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
             />
-            <p id="documento-arquivo-ajuda" className="mt-1.5 text-[0.8125rem] text-graf-500">
+            <p id="documento-arquivo-ajuda" className="mt-1.5 text-apoio text-graf-500">
               PDF ou imagem. O conteúdo é conferido no servidor.
             </p>
           </div>

@@ -288,7 +288,7 @@ export default async function PaginaContrato({
                   <legend className="mb-1 text-sm font-semibold text-graf-800">
                     Equipamentos cobertos
                   </legend>
-                  <p className="mb-3 text-[0.8125rem] leading-relaxed text-graf-500">
+                  <p className="mb-3 text-apoio leading-relaxed text-graf-500">
                     Desmarcar um equipamento tira a cobertura e cancela as visitas dele
                     que ainda não aconteceram — as concluídas continuam no histórico.
                   </p>
@@ -334,11 +334,11 @@ export default async function PaginaContrato({
                                   {equipamento.name}
                                 </span>
                                 {detalhe ? (
-                                  <span className="block text-[0.8125rem] text-graf-500">
+                                  <span className="block text-apoio text-graf-500">
                                     {detalhe}
                                   </span>
                                 ) : null}
-                                <span className="block text-[0.8125rem] text-graf-500">
+                                <span className="block text-apoio text-graf-500">
                                   {equipamento.maintenanceIntervalDays
                                     ? `Intervalo próprio: ${plural(equipamento.maintenanceIntervalDays, "dia", "dias")}`
                                     : "Sem intervalo próprio — depende do plano ou do campo acima"}
@@ -430,7 +430,7 @@ export default async function PaginaContrato({
                   {contrato.endsAt ? (
                     <>
                       {formatarData(contrato.endsAt)}{" "}
-                      <span className="text-[0.8125rem] text-graf-500">
+                      <span className="text-apoio text-graf-500">
                         ({distanciaEmDias(contrato.endsAt)})
                       </span>
                     </>
@@ -495,7 +495,7 @@ export default async function PaginaContrato({
                           <span className="block truncate text-sm font-medium text-graf-900">
                             {visita.equipment.name}
                           </span>
-                          <span className="block text-[0.8125rem] text-graf-500">
+                          <span className="block text-apoio text-graf-500">
                             prevista para {formatarData(visita.dueAt)}
                             {visita.scheduledAt
                               ? ` · marcada para ${formatarDataHora(visita.scheduledAt)}`
@@ -536,7 +536,7 @@ export default async function PaginaContrato({
                           <span className="block truncate text-sm font-medium text-graf-900">
                             {item.equipment.name}
                           </span>
-                          <span className="block text-[0.8125rem] text-graf-500">
+                          <span className="block text-apoio text-graf-500">
                             {[item.equipment.brandName, item.equipment.modelName]
                               .filter(Boolean)
                               .join(" ") || "Sem marca informada"}
@@ -544,7 +544,7 @@ export default async function PaginaContrato({
                               ? ` · série ${item.equipment.serialNumber}`
                               : ""}
                           </span>
-                          <span className="block text-[0.8125rem] text-graf-500">
+                          <span className="block text-apoio text-graf-500">
                             {item.equipment.nextMaintenanceAt
                               ? `Próxima preventiva: ${formatarData(item.equipment.nextMaintenanceAt)}`
                               : "Sem próxima preventiva calculada"}

@@ -80,7 +80,7 @@ export default async function PaginaServicos() {
       renderizar: (linha) => (
         <span className="block">
           <span className="block truncate font-semibold">{linha.name}</span>
-          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">/{linha.slug}</span>
+          <span className="block truncate text-apoio font-normal text-graf-500">/{linha.slug}</span>
         </span>
       ),
     },
@@ -151,7 +151,7 @@ export default async function PaginaServicos() {
         {podeMexer ? (
           <LinkBotao href="/admin/servicos/novo">Novo serviço</LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-apoio font-semibold text-graf-600">
             Somente consulta
           </p>
         )}

@@ -52,7 +52,7 @@ function Bloco({
           >
             {numero}
           </span>
-          <span className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+          <span className="text-apoio font-bold uppercase tracking-[0.08em] text-graf-500">
             {titulo}
           </span>
         </span>

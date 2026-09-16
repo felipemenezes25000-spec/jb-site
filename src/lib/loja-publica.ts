@@ -5,6 +5,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSettings, type SettingsMap } from "@/lib/settings";
 import { CONDICOES } from "@/lib/navegacao";
+import { contagemDoCatalogo } from "@/domain/counts";
 
 /* ============================================================================
    Os dados públicos da casca da loja
@@ -33,6 +34,8 @@ export const ETIQUETA_CONFIGURACOES = "configuracoes";
 export const ETIQUETA_CATEGORIAS = "categorias";
 /** Produto, marca e vitrine — tudo que muda quando o catálogo muda. */
 export const ETIQUETA_CATALOGO = "catalogo";
+/** Publicações da Central Técnica. */
+export const ETIQUETA_CENTRAL = "central-tecnica";
 
 export type CategoriaDoMenu = {
   slug: string;
@@ -99,28 +102,49 @@ export async function condicoesDoMenu(): Promise<CondicaoDoMenu[]> {
 }
 
 export async function categoriasDoMenu(): Promise<CategoriaDoMenu[]> {
+  /* A contagem vem de `contagemDoCatalogo`, a mesma que a home e as coleções
+     usam. Antes esta função tinha a própria consulta, com um recorte
+     ligeiramente diferente — `status: "active"` e nada mais —, e por isso a
+     barra vermelha dizia "BIOSSEGURANÇA 4" enquanto a coleção logo abaixo
+     dizia "Biossegurança 3": a barra contava a unidade seminova já vendida, a
+     coleção não. Dois números certos sobre recortes diferentes continuam sendo
+     dois números diferentes na mesma tela.
+
+     O destino destes itens é `/categoria/[slug]`, que mostra TODAS as
+     condições — então o recorte aqui é o catálogo inteiro, e o número bate com
+     o que a pessoa encontra do outro lado do clique. */
+  const contagem = await contagemDoCatalogo();
+
+  return contagem.categorias.map((categoria) => ({
+    slug: categoria.slug,
+    name: categoria.nome,
+    count: categoria.total,
+  }));
+}
+
+/**
+ * A Central Técnica tem texto no ar?
+ *
+ * O menu do cabeçalho reserva um dos cinco lugares para ela, e a auditoria de
+ * 08/09/2026 encontrou a página sem nenhuma publicação: o item prometia
+ * conteúdo e entregava um aviso de que ainda não há conteúdo — exatamente o
+ * que `categoriasDoMenu` já evita fazer com categoria sem equipamento.
+ *
+ * Enquanto estiver vazia, ela sai da direção principal e continua no rodapé,
+ * onde é referência e não promessa. Volta sozinha na primeira publicação.
+ */
+export async function centralTemPublicacao(): Promise<boolean> {
   "use cache";
-  cacheTag(ETIQUETA_CATEGORIAS);
+  cacheTag(ETIQUETA_CENTRAL);
   cacheLife("hours");
 
-  /* Só categoria com equipamento publicado. "Estética" e "Outros periféricos"
-     existem no cadastro sem nenhum produto, e apareciam no mega menu levando a
-     uma página que só sabia dizer "Nada publicado aqui ainda" — item de menu
-     promete que existe algo do outro lado. Voltam sozinhas quando entrar o
-     primeiro equipamento delas. */
-  const linhas = await prisma.category.findMany({
-    where: {
-      published: true,
-      parentId: null,
-      products: { some: { status: "active" } },
-    },
-    orderBy: [{ order: "asc" }, { name: "asc" }],
-    select: {
-      slug: true,
-      name: true,
-      _count: { select: { products: { where: { status: "active" } } } },
-    },
-  });
-
-  return linhas.map((c) => ({ slug: c.slug, name: c.name, count: c._count.products }));
+  try {
+    const publicados = await prisma.article.count({ where: { status: "publicado" } });
+    return publicados > 0;
+  } catch {
+    /* Sem banco, o menu segue como sempre foi. Esconder um item por causa de
+       uma falha de leitura seria trocar um problema de conteúdo por um de
+       navegação. */
+    return true;
+  }
 }

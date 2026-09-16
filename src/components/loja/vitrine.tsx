@@ -1,32 +1,41 @@
-import Image from "next/image";
-import Link from "next/link";
 import { Suspense } from "react";
 import type { Prisma, ProductCondition } from "@prisma/client";
 import { ArrowRight, PackageSearch, SearchX, TriangleAlert } from "lucide-react";
 
-import { GradeProdutos, type Parcelamento } from "@/components/loja/card-produto";
-import { GradeVitrine } from "@/components/loja/card-vitrine";
 import {
-  BarraCatalogo,
   PainelFiltros,
   type GruposFiltro,
   type ParametrosCatalogo,
 } from "@/components/loja/filtros-catalogo";
+import { ControlesColecao } from "@/components/loja/marketplace/controles-colecao";
+import { CabecalhoColecao } from "@/components/loja/marketplace/cabecalho-colecao";
+import {
+  EsqueletoGradeMarketplace,
+  GradeMarketplace,
+} from "@/components/loja/marketplace/grade-marketplace";
+import type { ParcelamentoMarketplace } from "@/components/loja/marketplace/tipos";
+import { ReposicionarNoFiltro } from "@/components/loja/reposicionar-no-filtro";
 import { LinkBotao } from "@/components/ui/button";
-import { Esqueleto, Trilha, Vazio, type Migalha } from "@/components/ui/data";
-import { EsqueletoGradeProdutos } from "@/components/ui/esqueletos";
+import { Esqueleto, Vazio, type Migalha } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
 import {
-  buscarProdutos,
+  buscarProdutosMarketplace,
+  expandirCategorias,
+  expandirMarcas,
   montarFiltro,
   PUBLICADO,
+  UNIDADE_VENDIDA,
   type FiltrosCatalogo as Filtros,
   type Ordenacao,
 } from "@/lib/catalogo";
+import { sessaoCliente } from "@/lib/auth-cliente";
 import { paraCentavos } from "@/lib/format";
+import { unificarPorNome } from "@/lib/homonimos";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
+
+import marketplaceStyles from "./marketplace/marketplace.module.css";
 
 /* ============================================================================
    Vitrine
@@ -59,9 +68,6 @@ const CONDICOES_ROTA: Record<ProductCondition, string> = {
 
 const ORDEM_CONDICAO: ProductCondition[] = ["novo", "seminovo", "recondicionado", "usado"];
 
-/** Só existe uma fileira de atalhos por página — o id fixo dá nome à navegação. */
-const ID_ATALHOS = "atalhos-da-colecao";
-
 export type ParametrosVitrine = ParametrosCatalogo;
 
 /** Link de coleção mostrado abaixo do título — só com contagem real. */
@@ -88,7 +94,9 @@ export async function atalhosDeCondicao(atual?: ProductCondition): Promise<Atalh
   try {
     const linhas = await prisma.product.groupBy({
       by: ["condition"],
-      where: PUBLICADO,
+      /* A contagem do atalho tem que ser a da lista que ele abre — e a lista
+         não mostra unidade já vendida. */
+      where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA },
       _count: { _all: true },
     });
     const mapa = new Map(linhas.map((linha) => [linha.condition, linha._count._all]));
@@ -112,20 +120,40 @@ export async function atalhosDeSubcategorias(slugPai: string): Promise<Atalho[]>
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: PUBLICADO } } },
+        _count: { select: { products: { where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA } } } },
       },
     });
 
-    return filhas
-      .filter((filha) => filha._count.products > 0)
-      .map((filha) => ({
-        rotulo: filha.name,
-        href: `/categoria/${filha.slug}`,
-        quantidade: filha._count.products,
-      }));
+    return paraAtalhos(filhas);
   } catch {
     return [];
   }
+}
+
+/**
+ * Categorias viram atalhos, com os cadastros de mesmo nome já juntos.
+ *
+ * Duas pastilhas escritas "Biossegurança", uma ao lado da outra, levando a
+ * listas diferentes, é a mesma pergunta sem resposta que a barra de filtros
+ * fazia. Aqui vira uma pastilha com a soma; a lista do outro lado abre os
+ * dois cadastros (ver `expandirCategorias`).
+ */
+function paraAtalhos(
+  linhas: { slug: string; name: string; _count: { products: number } }[],
+): Atalho[] {
+  return unificarPorNome(
+    linhas
+      .filter((linha) => linha._count.products > 0)
+      .map((linha) => ({
+        slug: linha.slug,
+        nome: linha.name,
+        quantidade: linha._count.products,
+      })),
+  ).map((item) => ({
+    rotulo: item.nome,
+    href: `/categoria/${item.slug}`,
+    quantidade: item.quantidade,
+  }));
 }
 
 /** Categorias de primeiro nível com produto ativo — a entrada da loja. */
@@ -137,18 +165,11 @@ export async function atalhosDeCategorias(limite = 10): Promise<Atalho[]> {
       select: {
         slug: true,
         name: true,
-        _count: { select: { products: { where: PUBLICADO } } },
+        _count: { select: { products: { where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA } } } },
       },
     });
 
-    return categorias
-      .filter((categoria) => categoria._count.products > 0)
-      .slice(0, limite)
-      .map((categoria) => ({
-        rotulo: categoria.name,
-        href: `/categoria/${categoria.slug}`,
-        quantidade: categoria._count.products,
-      }));
+    return paraAtalhos(categorias).slice(0, limite);
   } catch {
     return [];
   }
@@ -190,74 +211,145 @@ type BasesDeFaceta = {
   semCondicao: Prisma.ProductWhereInput;
   semVoltagem: Prisma.ProductWhereInput;
   semPreco: Prisma.ProductWhereInput;
+  /**
+   * A coleção inteira, sem NENHUM filtro da barra.
+   *
+   * É o que define quais opções EXISTEM. Antes, a existência de uma opção era
+   * decidida pela contagem filtrada, e o resultado era um beco: marcar
+   * "Marca: Gnatus" fazia sobrar uma categoria só, o grupo inteiro de
+   * Categoria desaparecia junto com Voltagem e Preço, e não havia como trocar
+   * de categoria sem limpar tudo pelo botão do navegador.
+   *
+   * Agora a lista de opções vem daqui e a contagem vem do `sem*`. Opção que
+   * zerou continua na tela, desabilitada e com zero — que é informação
+   * ("não há Gnatus em Profilaxia") em vez de sumiço.
+   */
+  daColecao: Prisma.ProductWhereInput;
 };
 
+type LinhaDeOpcao = { slug: string; name: string; _count: { products: number } };
+
+/** Junta a lista do que existe com a contagem do recorte atual. */
+function opcoesComContagem(existentes: LinhaDeOpcao[], contadas: LinhaDeOpcao[]) {
+  const porSlug = new Map(contadas.map((linha) => [linha.slug, linha._count.products]));
+
+  return unificarPorNome(
+    existentes
+      .filter((linha) => linha._count.products > 0)
+      .map((linha) => ({
+        slug: linha.slug,
+        nome: linha.name,
+        quantidade: porSlug.get(linha.slug) ?? 0,
+      })),
+  ).map((item) => ({
+    valor: item.slug,
+    rotulo: item.nome,
+    quantidade: item.quantidade ?? 0,
+  }));
+}
+
 async function montarGrupos(bases: BasesDeFaceta): Promise<GruposFiltro> {
-  const [categorias, marcas, condicoes, voltagens, faixa] = await Promise.all([
-    prisma.category.findMany({
-      where: { published: true },
-      orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: {
-        slug: true,
-        name: true,
-        _count: { select: { products: { where: bases.semCategoria } } },
-      },
-    }),
-    prisma.brand.findMany({
-      where: { published: true },
-      orderBy: [{ order: "asc" }, { name: "asc" }],
-      select: {
-        slug: true,
-        name: true,
-        _count: { select: { products: { where: bases.semMarca } } },
-      },
+  const selecaoCategoria = (onde: Prisma.ProductWhereInput) => ({
+    where: { published: true },
+    orderBy: [{ order: "asc" as const }, { name: "asc" as const }],
+    select: {
+      slug: true,
+      name: true,
+      _count: { select: { products: { where: onde } } },
+    },
+  });
+
+  const selecaoMarca = (onde: Prisma.ProductWhereInput) => ({
+    where: { published: true },
+    orderBy: [{ order: "asc" as const }, { name: "asc" as const }],
+    select: {
+      slug: true,
+      name: true,
+      _count: { select: { products: { where: onde } } },
+    },
+  });
+
+  const [
+    categoriasExistentes,
+    categoriasContadas,
+    marcasExistentes,
+    marcasContadas,
+    condicoesExistentes,
+    condicoesContadas,
+    voltagensExistentes,
+    voltagensContadas,
+    faixa,
+  ] = await Promise.all([
+    prisma.category.findMany(selecaoCategoria(bases.daColecao)),
+    prisma.category.findMany(selecaoCategoria(bases.semCategoria)),
+    prisma.brand.findMany(selecaoMarca(bases.daColecao)),
+    prisma.brand.findMany(selecaoMarca(bases.semMarca)),
+    prisma.product.groupBy({
+      by: ["condition"],
+      where: bases.daColecao,
+      _count: { _all: true },
     }),
     prisma.product.groupBy({
       by: ["condition"],
       where: bases.semCondicao,
       _count: { _all: true },
     }),
-    prisma.product.findMany({
-      where: { ...bases.semVoltagem, voltage: { not: null } },
-      distinct: ["voltage"],
+    prisma.product.groupBy({
+      by: ["voltage"],
+      where: { ...bases.daColecao, voltage: { not: null } },
+      _count: { _all: true },
       orderBy: { voltage: "asc" },
-      select: { voltage: true },
     }),
+    prisma.product.groupBy({
+      by: ["voltage"],
+      where: { ...bases.semVoltagem, voltage: { not: null } },
+      _count: { _all: true },
+      orderBy: { voltage: "asc" },
+    }),
+    /* A faixa do slider vem da coleção inteira: se ela encolhesse junto com o
+       filtro de preço, o campo perderia o alcance que a pessoa precisa para
+       alargar a busca de novo. */
     prisma.product.aggregate({
-      where: { ...bases.semPreco, priceCents: { gt: 0 } },
+      where: { ...bases.daColecao, priceCents: { gt: 0 } },
       _min: { priceCents: true },
       _max: { priceCents: true },
     }),
   ]);
 
+  const contagemDeCondicao = new Map(
+    condicoesContadas.map((linha) => [linha.condition, linha._count._all]),
+  );
+  const contagemDeVoltagem = new Map(
+    voltagensContadas.map((linha) => [linha.voltage, linha._count._all]),
+  );
+
   return {
-    categorias: categorias
-      .filter((categoria) => categoria._count.products > 0)
-      .map((categoria) => ({
-        valor: categoria.slug,
-        rotulo: categoria.name,
-        quantidade: categoria._count.products,
-      })),
-    marcas: marcas
-      .filter((marca) => marca._count.products > 0)
-      .map((marca) => ({
-        valor: marca.slug,
-        rotulo: marca.name,
-        quantidade: marca._count.products,
-      })),
+    categorias: opcoesComContagem(categoriasExistentes, categoriasContadas),
+    marcas: opcoesComContagem(marcasExistentes, marcasContadas),
     condicoes: ORDEM_CONDICAO.flatMap((condicao) => {
-      const linha = condicoes.find((c) => c.condition === condicao);
-      if (!linha) return [];
+      const existe = condicoesExistentes.find((c) => c.condition === condicao);
+      if (!existe) return [];
       return [
-        { valor: condicao, rotulo: CONDICOES_ROTULO[condicao], quantidade: linha._count._all },
+        {
+          valor: condicao,
+          rotulo: CONDICOES_ROTULO[condicao],
+          quantidade: contagemDeCondicao.get(condicao) ?? 0,
+        },
       ];
     }),
-    voltagens: voltagens
-      .flatMap((linha) => (linha.voltage ? [linha.voltage] : []))
-      .map((voltagem) => ({
-        valor: voltagem,
-        rotulo: voltagem === "bivolt" ? "Bivolt" : `${voltagem} V`,
-      })),
+    /* Voltagem passou a ter contador. Ela era o único grupo sem número — e um
+       filtro sem contador não diz se vale o clique. */
+    voltagens: voltagensExistentes.flatMap((linha) =>
+      linha.voltage
+        ? [
+            {
+              valor: linha.voltage,
+              rotulo: linha.voltage === "bivolt" ? "Bivolt" : `${linha.voltage} V`,
+              quantidade: contagemDeVoltagem.get(linha.voltage) ?? 0,
+            },
+          ]
+        : [],
+    ),
     faixaPreco: {
       minCents: faixa._min.priceCents ?? 0,
       maxCents: faixa._max.priceCents ?? 0,
@@ -275,10 +367,9 @@ function EsqueletoResultados() {
       <div className="border-b border-graf-200 pb-3">
         <Esqueleto className="h-4 w-40" />
       </div>
-      <EsqueletoGradeProdutos
-        quantidade={6}
-        className="mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-      />
+      <div className="mt-6">
+        <EsqueletoGradeMarketplace />
+      </div>
     </div>
   );
 }
@@ -339,11 +430,14 @@ function SemResultado({
         titulo={`Nada encontrado para “${busca}”`}
         descricao="Tente o nome do equipamento, a marca ou o modelo. Muita coisa é atendida sob orçamento, mesmo fora do catálogo."
         acao={
+          /* O vermelho vai para o catálogo. Quem buscou e não achou quer
+             procurar de outro jeito antes de pedir orçamento — a ação mais
+             provável é a que recebe o destaque. */
           <div className="flex flex-wrap justify-center gap-3">
-            <LinkBotao href="/loja" variante="secundario">
-              Ver o catálogo inteiro
+            <LinkBotao href="/loja">Ver o catálogo inteiro</LinkBotao>
+            <LinkBotao href="/orcamento" variante="secundario">
+              Pedir orçamento
             </LinkBotao>
-            <LinkBotao href="/orcamento">Pedir orçamento</LinkBotao>
           </div>
         }
       />
@@ -388,49 +482,22 @@ function SemResultado({
 /** O convite comercial que fecha toda coleção com resultado. */
 function ChamadaCatalogo() {
   return (
-    <div className="mt-14 rounded-xl border border-graf-200 bg-surface-muted px-6 py-9 sm:mt-16 sm:px-9 sm:py-10">
-      <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-6">
-        <div className="max-w-xl">
-          <h2 className="text-title text-graf-950">Não encontrou o que procura?</h2>
-          <p className="mt-3 text-base leading-relaxed text-graf-600">
-            O catálogo publicado é uma parte do que a JB fornece. Diga o equipamento, a marca e
-            o modelo e a equipe responde com preço e prazo.
-          </p>
-        </div>
-        <LinkBotao href="/orcamento" tamanho="lg" className="shrink-0">
+    <aside
+      data-convite-orcamento
+      className="mt-8 flex flex-col justify-between gap-4 border-y border-graf-200 bg-graf-50 px-5 py-5 sm:flex-row sm:items-center"
+    >
+      <div className="max-w-3xl">
+        <p className="font-bold text-graf-950">Não encontrou a configuração certa?</p>
+        <p className="mt-1 text-sm leading-6 text-graf-600">
+          Informe equipamento, voltagem e necessidade da clínica. A equipe responde com
+          disponibilidade e prazo.
+        </p>
+      </div>
+      <LinkBotao href="/orcamento" variante="secundario" tamanho="sm" className="shrink-0">
           Pedir orçamento
           <ArrowRight className="size-4" aria-hidden />
-        </LinkBotao>
-      </div>
-    </div>
-  );
-}
-
-/**
- * O mesmo convite, mas como célula da grade.
- *
- * Coleção com um ou dois equipamentos publicados deixava metade da fileira em
- * branco — o vazio ao lado do cartão parecia carregamento que não terminou.
- * Aqui o convite ocupa a coluna que sobrou e vira o próximo passo de quem não
- * encontrou o equipamento na lista curta. A borda tracejada e a ausência de
- * preço deixam claro que não é produto.
- */
-function ConviteNaGrade() {
-  return (
-    <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-jb-200 bg-jb-50/40 p-6 text-center sm:p-7">
-      <span className="flex size-11 items-center justify-center rounded-full bg-white text-jb-600 shadow-card">
-        <PackageSearch className="size-5" aria-hidden />
-      </span>
-      <h3 className="mt-4 text-lg font-bold text-graf-950">Não é o que você procura?</h3>
-      <p className="mt-2 max-w-xs text-[0.9375rem] leading-relaxed text-graf-600">
-        O catálogo publicado é uma parte do que a JB fornece. Diga o equipamento, a marca e o
-        modelo e a equipe responde com preço e prazo.
-      </p>
-      <LinkBotao href="/orcamento" className="mt-5">
-        Pedir orçamento
-        <ArrowRight className="size-4" aria-hidden />
       </LinkBotao>
-    </div>
+    </aside>
   );
 }
 
@@ -438,7 +505,7 @@ function ConviteNaGrade() {
    Resultados — o bloco que muda a cada filtro
    ============================================================================ */
 
-type Busca = Awaited<ReturnType<typeof buscarProdutos>>;
+type Busca = Awaited<ReturnType<typeof buscarProdutosMarketplace>>;
 type Resposta = { ok: true; dados: Busca } | { ok: false };
 
 async function Resultados({
@@ -449,24 +516,50 @@ async function Resultados({
   caminho,
   endereco,
   pagina,
-  chamadaDestacada,
-  daVitrine,
 }: {
   consulta: Promise<Resposta>;
-  parcelamento: Parcelamento;
+  parcelamento: ParcelamentoMarketplace;
   busca?: string;
   temFiltro: boolean;
   caminho: string;
   endereco: string;
   pagina: number;
-  chamadaDestacada?: boolean;
-  /** Cartão da vitrine, com a apresentação preta e condensada. */
-  daVitrine?: boolean;
 }) {
   const resposta = await consulta;
   if (!resposta.ok) return <ErroCatalogo caminho={caminho} />;
 
   const { dados } = resposta;
+
+  /* ==========================================================================
+     Favoritos: uma consulta por página, não uma por cartão
+
+     A ficha de produto já guardava equipamento (`AcoesDoProduto`), e a Área da
+     Clínica já lista o que foi guardado — o que faltava era o gesto onde ele
+     mais serve: comparando opções na grade. O briefing pede
+     "favoritar/comparar" no cartão; comparar já estava lá, favoritar não.
+
+     O estado é do cliente e mora no banco, então precisa de sessão. Buscar por
+     cartão seriam 24 consultas numa página de catálogo: em vez disso vem o
+     conjunto dos ids favoritados desta página, de uma vez. Sem sessão o botão
+     continua aparecendo e leva ao login com a volta apontando para cá —
+     esconder a função de quem não entrou é como esconder o preço.
+     ========================================================================== */
+  const cliente = await sessaoCliente().catch(() => null);
+  const favoritados = cliente
+    ? new Set(
+        (
+          await prisma.favorite
+            .findMany({
+              where: {
+                customerId: cliente.id,
+                productId: { in: dados.produtos.map((produto) => produto.id) },
+              },
+              select: { productId: true },
+            })
+            .catch(() => [])
+        ).map((favorito) => favorito.productId),
+      )
+    : new Set<string>();
 
   if (dados.produtos.length === 0) {
     return (
@@ -482,17 +575,16 @@ async function Resultados({
 
   const paginas = Math.ceil(dados.total / POR_PAGINA);
 
-  /* Lista curta: o convite entra na grade, no lugar da coluna vazia, e a
-     faixa de baixo sai — senão o mesmo pedido apareceria duas vezes. */
-  const listaCurta = dados.total > 0 && dados.total < 3;
-
   return (
     <div>
       {/* cabeçalho da listagem: quantidade à esquerda, posição na lista à
           direita. O filete embaixo separa a contagem dos cartões sem pedir
           mais uma caixa na tela */}
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-graf-200 pb-3">
-        <p className="text-[0.9375rem] text-graf-600" aria-live="polite">
+      <div
+        id="resultados-do-catalogo"
+        className="scroll-mt-[var(--jb-topo-secoes)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-graf-200 pb-3"
+      >
+        <p className="text-corpo text-graf-600" aria-live="polite" aria-atomic="true">
           <span className="tabular text-base font-bold text-graf-950">{dados.total}</span>{" "}
           {busca || temFiltro
             ? dados.total === 1
@@ -504,30 +596,19 @@ async function Resultados({
         </p>
 
         {paginas > 1 ? (
-          <p className="tabular text-[0.8125rem] text-graf-500">
+          <p className="tabular text-apoio text-graf-500">
             Página {pagina} de {paginas}
           </p>
         ) : null}
       </div>
 
-      {daVitrine ? (
-        <GradeVitrine
-          produtos={dados.produtos}
-          parcelamento={parcelamento}
-          colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
-          extra={listaCurta ? <ConviteNaGrade /> : null}
-          className="mt-5"
-        />
-      ) : (
-        <GradeProdutos
-          produtos={dados.produtos}
-          parcelamento={parcelamento}
-          colunas={{ base: 1, sm: 2, lg: 2, xl: 3, xxl: 4 }}
-          chamadaDestacada={chamadaDestacada}
-          extra={listaCurta ? <ConviteNaGrade /> : null}
-          className="mt-6"
-        />
-      )}
+      <GradeMarketplace
+        favoritados={favoritados}
+        voltar={endereco}
+        produtos={dados.produtos}
+        parcelamento={parcelamento}
+        className="mt-5"
+      />
 
       {dados.total > POR_PAGINA ? (
         <Paginacao
@@ -540,7 +621,8 @@ async function Resultados({
         />
       ) : null}
 
-      {listaCurta ? null : <ChamadaCatalogo />}
+      <ChamadaCatalogo />
+      <ReposicionarNoFiltro alvo="resultados-do-catalogo" />
     </div>
   );
 }
@@ -560,12 +642,10 @@ export async function Vitrine({
   imagem,
   atalhos,
   rotuloAtalhos = "Coleções relacionadas",
+  faixaDeConfianca,
   travarCategoria,
   travarCondicao,
   travarMarca,
-  variante = "padrao",
-  semCabecalho,
-  apoioNoFiltro,
 }: {
   /** Degrau acima do título — "Catálogo", "Por condição", "Marca". */
   sobretitulo?: string;
@@ -580,30 +660,11 @@ export async function Vitrine({
   imagem?: { url: string; alt: string };
   atalhos?: Atalho[];
   rotuloAtalhos?: string;
+  /** Faixa entre o cabeçalho e os controles — sinais que precisam vir antes da grade. */
+  faixaDeConfianca?: React.ReactNode;
   travarCategoria?: boolean;
   travarCondicao?: boolean;
   travarMarca?: boolean;
-  /**
-   * `"colecao"` e `"vitrine"` para as páginas que trazem o próprio cabeçalho:
-   * a vitrine entra só como lista, sem repetir trilha, título e atalhos. Em
-   * `"colecao"` o cartão ganha o botão cheio; em `"vitrine"` ele troca de
-   * desenho inteiro (`CardVitrine`).
-   *
-   * Antes esse recorte era feito por CSS, escondendo o cabeçalho já
-   * renderizado. Escondido ele continuava no HTML, com dois `h1` na mesma
-   * página e um título anunciado a quem navega por leitor de tela.
-   */
-  variante?: "padrao" | "colecao" | "vitrine";
-  /**
-   * A página traz o próprio cabeçalho e a vitrine entra só como lista.
-   *
-   * É separado de  de propósito: /loja e /seminovos abrem com um
-   * cabeçalho de coleção escrito na página, enquanto /categoria e /busca usam
-   * o cabeçalho daqui — as quatro querem o MESMO desenho de cartão.
-   */
-  semCabecalho?: boolean;
-  /** Bloco extra no pé da coluna de filtros — apoio, não filtro. */
-  apoioNoFiltro?: React.ReactNode;
 }) {
   const pagina = Math.max(1, Number(texto(parametros.pagina) ?? 1) || 1);
   const ordem = (texto(parametros.ordem) as Ordenacao | undefined) ?? "relevancia";
@@ -616,12 +677,32 @@ export async function Vitrine({
   const precoMin = texto(parametros.preco_min);
   const precoMax = texto(parametros.preco_max);
   const emEstoque = texto(parametros.estoque) === "1";
+  const incluirVendidos = texto(parametros.vendidos) === "1";
+
+  /* Cadastros de mesmo nome viram um filtro só, e um filtro só precisa
+     alcançar todos eles. O endereço continua com um slug — `/categoria/
+     biosseguranca` — e a consulta é que abre o slug nos irmãos homônimos.
+     Sem isto, a pastilha "Biossegurança 2" abriria uma lista de 1. */
+  const emLista = (valor: string | string[] | undefined) =>
+    valor === undefined ? [] : Array.isArray(valor) ? valor : [valor];
+
+  const [categoriaAberta, marcaAberta] = await Promise.all([
+    expandirCategorias(emLista(filtrosFixos?.categoria ?? categorias)),
+    expandirMarcas(emLista(filtrosFixos?.marca ?? marcas)),
+  ]);
+
+  /* Quando a coleção fixa a categoria — `/categoria/[slug]` — a lista aberta
+     JÁ é a dela, porque o `??` acima escolheu a fixa. É o que as facetas
+     precisam para tirar da conta só o que veio da barra. */
+  const categoriaFixaAberta = filtrosFixos?.categoria ? categoriaAberta : undefined;
+  const marcaFixaAberta = filtrosFixos?.marca ? marcaAberta : undefined;
 
   const filtros: Filtros = {
     busca,
     // listas inteiras, não só o primeiro item: a barra marca vários valores
-    categoria: filtrosFixos?.categoria ?? (categorias.length ? categorias : undefined),
-    marca: filtrosFixos?.marca ?? (marcas.length ? marcas : undefined),
+    categoria: categoriaAberta.length ? categoriaAberta : undefined,
+    marca: marcaAberta.length ? marcaAberta : undefined,
+    incluirVendidos,
     condicao:
       filtrosFixos?.condicao ??
       (condicoes.length ? (condicoes as Filtros["condicao"]) : undefined),
@@ -642,7 +723,7 @@ export async function Vitrine({
 
   // a consulta começa antes dos grupos e só é aguardada dentro do Suspense:
   // a moldura da página aparece de imediato e apenas a lista espera o banco
-  const consulta: Promise<Resposta> = buscarProdutos({
+  const consulta: Promise<Resposta> = buscarProdutosMarketplace({
     filtros,
     ordem,
     pagina,
@@ -656,21 +737,41 @@ export async function Vitrine({
        condição é o escopo da página, não uma escolha que a pessoa possa
        desmarcar. Só o que veio da barra de filtros sai da conta do seu grupo. */
     montarGrupos({
-      semCategoria: montarFiltro({ ...filtros, categoria: filtrosFixos?.categoria }),
-      semMarca: montarFiltro({ ...filtros, marca: filtrosFixos?.marca }),
+      semCategoria: montarFiltro({ ...filtros, categoria: categoriaFixaAberta }),
+      semMarca: montarFiltro({ ...filtros, marca: marcaFixaAberta }),
       semCondicao: montarFiltro({ ...filtros, condicao: filtrosFixos?.condicao }),
       semVoltagem: montarFiltro({ ...filtros, voltagem: undefined }),
       semPreco: montarFiltro({ ...filtros, precoMin: undefined, precoMax: undefined }),
+      /* Só o que a rota fixa e a busca: o recorte da coleção sem nada da barra.
+         É a lista de opções que a pessoa sempre pode alcançar daqui. */
+      daColecao: montarFiltro({
+        busca,
+        incluirVendidos,
+        categoria: categoriaFixaAberta,
+        marca: marcaFixaAberta,
+        condicao: filtrosFixos?.condicao,
+      }),
     }).catch(() => GRUPOS_VAZIOS),
     getSettings().catch(() => null),
   ]);
 
-  const parcelamento: Parcelamento = {
+  const parcelamento: ParcelamentoMarketplace = {
     max: Math.max(1, Number(configuracoes?.parcelas_max ?? 12) || 12),
     minimoCents: paraCentavos(configuracoes?.parcela_minima ?? "50,00") || 5000,
   };
 
   const travas = { travarCategoria, travarCondicao, travarMarca };
+
+  /* A coleção inteira está vazia — não é o filtro que zerou.
+
+     `grupos` é montado sobre o recorte da rota; sem nenhuma categoria, marca
+     ou condição com item, não há nada publicado aqui. */
+  const colecaoVazia =
+    grupos.categorias.length === 0 &&
+    grupos.marcas.length === 0 &&
+    grupos.condicoes.length === 0 &&
+    !temFiltro &&
+    !busca;
   const chave = JSON.stringify({ filtros, ordem, pagina });
 
   // a mesma lista na primeira página, para quem chegou por um link antigo
@@ -684,111 +785,91 @@ export async function Vitrine({
     return consultaTexto ? `${caminho}?${consultaTexto}` : caminho;
   })();
 
-  const daVitrine = variante === "vitrine";
-  /* As duas variantes tiram o cabeçalho interno: a página traz o seu. */
-  const semCabecalhoInterno = semCabecalho || variante === "colecao";
-
   return (
-    <div className={cn("container-jb", semCabecalhoInterno ? "pb-10 lg:pb-14" : "py-8 lg:py-12")}>
-      {semCabecalhoInterno ? null : (
-        <>
-          <Trilha itens={trilha} className="mb-5" />
+    <div
+      data-marketplace-shell
+      /* `container-jb` sozinho para em 90rem, e a home, a ficha de produto e o
+         resto da vitrine alinham por 100rem. A 1920 o catálogo saía 160px mais
+         estreito que a página de onde a pessoa acabou de vir — o mesmo degrau
+         que a ficha já tinha corrigido. */
+      className={cn(marketplaceStyles.shell, "container-loja py-8 lg:py-12")}
+    >
+      <CabecalhoColecao
+        sobretitulo={sobretitulo}
+        titulo={titulo}
+        descricao={descricao}
+        trilha={trilha}
+        imagem={imagem}
+        atalhos={atalhos}
+        rotuloAtalhos={rotuloAtalhos}
+      />
 
-          <header className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
-            <div className="max-w-2xl">
-              {/* `text-section`, não `text-display`: numa listagem o título nomeia
-                  a coleção, não abre a marca. O degrau de hero fica reservado para
-                  a página principal, e o sobretítulo devolve a hierarquia que o
-                  título sozinho perdia. */}
-              {sobretitulo ? (
-                <p className={cn(daVitrine ? "micro text-jb-600" : "sobretitulo", "mb-3")}>
-                  {sobretitulo}
-                </p>
-              ) : null}
-              <h1
-                className={cn(
-                  daVitrine ? "manchete text-[clamp(2rem,1.4rem+2.6vw,3.25rem)]" : "text-section",
-                  "text-graf-950",
-                )}
-              >
-                {titulo}
-              </h1>
-              {descricao ? <p className="texto-guia mt-4 text-graf-600">{descricao}</p> : null}
-            </div>
+      {/* Faixa opcional entre o cabeçalho e os controles.
 
-            {imagem ? (
-              <div className="flex h-22 w-44 shrink-0 items-center justify-center rounded-xl border border-graf-200 bg-white p-5">
-                <Image
-                  src={imagem.url}
-                  alt={imagem.alt}
-                  width={176}
-                  height={72}
-                  className="h-full w-auto object-contain"
-                />
-              </div>
-            ) : null}
-          </header>
+          Existe por causa dos seminovos: a página tinha sete sinais de
+          procedência — unidade por anúncio, número de série, ano de fabricação,
+          uso acumulado, checklist da revisão, condição descrita e garantia —
+          gerados a partir do que está mesmo cadastrado, e todos **no rodapé da
+          página**, a 2.100px de rolagem. Quem chega via "Seminovos" vê uma
+          grade de catálogo primeiro e o motivo de confiar por último. */}
+      {faixaDeConfianca ? <div className="mt-6">{faixaDeConfianca}</div> : null}
 
-          {atalhos && atalhos.length > 0 ? (
-            <nav aria-labelledby={ID_ATALHOS} className="mt-8">
-              {/* o rótulo da fileira vira texto na tela: sem ele, uma linha de
-                  pastilhas soltas embaixo do título não explica o que é. O mesmo
-                  texto serve de nome acessível da navegação, sem repetição */}
-              <p
-                id={ID_ATALHOS}
-                className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
-              >
-                {rotuloAtalhos}
-              </p>
-              <ul className="scrollbar-none -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-                {atalhos.map((atalho) => (
-                  <li key={atalho.href} className="shrink-0">
-                    <Link
-                      href={atalho.href}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 text-sm font-semibold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-                    >
-                      {atalho.rotulo}
-                      {atalho.quantidade !== undefined ? (
-                        <span className="tabular text-[0.8125rem] font-medium text-graf-500">
-                          {atalho.quantidade}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ) : null}
-        </>
-      )}
+      {/* Coleção sem nada publicado não ganha trilho de filtro.
 
-      <div
-        className={cn(
-          "grid gap-x-12 gap-y-8 lg:grid-cols-[17rem_minmax(0,1fr)]",
-          semCabecalhoInterno ? "mt-6 lg:mt-7" : "mt-8 lg:mt-10",
+          /usados, /recondicionados, /peças e /depoimentos abriam com a barra
+          de controles e a coluna de filtros — "Disponibilidade", "Ordenar
+          por" — sobre zero resultados. Filtrar o nada é a caricatura de um
+          catálogo: o estado vazio, que é bem escrito, aparecia depois de dois
+          controles que não fazem nada.
+
+          O corte é pela COLEÇÃO, não pelo resultado: filtrar até sobrar zero
+          precisa manter os filtros na tela, senão não há como desfazer. */}
+      <div className="mt-7 lg:mt-8">
+        {colecaoVazia ? null : (
+          <ControlesColecao grupos={grupos} parametros={parametros} {...travas} />
         )}
-      >
-        <aside className="hidden lg:block" aria-label="Filtros do catálogo">
-          <PainelFiltros grupos={grupos} parametros={parametros} {...travas} />
-          {apoioNoFiltro}
-        </aside>
 
-        <div className="min-w-0">
-          <BarraCatalogo grupos={grupos} parametros={parametros} className="mb-6" {...travas} />
+        {/* Duas colunas a partir de 1024px.
 
-          <Suspense key={chave} fallback={<EsqueletoResultados />}>
-            <Resultados
-              consulta={consulta}
-              parcelamento={parcelamento}
-              busca={busca}
-              temFiltro={temFiltro}
-              caminho={caminho}
-              endereco={enderecoPrimeiraPagina}
-              pagina={pagina}
-              chamadaDestacada={variante === "colecao"}
-              daVitrine={daVitrine}
+            `PainelFiltros` já existia, com `lg:sticky lg:top-24` pronto, e
+            estava órfão: nenhuma tela do projeto o usava. O catálogo escondia
+            categoria, marca, preço, condição, voltagem e disponibilidade
+            atrás de um botão — inclusive a 1920px, onde sobram 1.600px de
+            largura e a coluna de filtros custa 17rem.
+
+            É o padrão de todo marketplace medido como referência, e é o que a
+            barra de controles não consegue dar: ver o que existe para filtrar
+            sem abrir nada. No celular continua sendo gaveta, que é onde
+            gaveta faz sentido. */}
+        <div
+          className={
+            colecaoVazia
+              ? "mt-6 min-w-0"
+              : "mt-6 min-w-0 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[18.5rem_minmax(0,1fr)] xl:gap-10"
+          }
+        >
+          {colecaoVazia ? null : (
+            <PainelFiltros
+              grupos={grupos}
+              parametros={parametros}
+              className="hidden lg:block"
+              {...travas}
             />
-          </Suspense>
+          )}
+
+          <div className="min-w-0">
+            <Suspense key={chave} fallback={<EsqueletoResultados />}>
+              <Resultados
+                consulta={consulta}
+                parcelamento={parcelamento}
+                busca={busca}
+                temFiltro={temFiltro}
+                caminho={caminho}
+                endereco={enderecoPrimeiraPagina}
+                pagina={pagina}
+              />
+            </Suspense>
+          </div>
         </div>
       </div>
     </div>

@@ -97,7 +97,7 @@ export function Historico({ itens }: { itens: ItemHistorico[] }) {
                 {item.etiqueta ? <Etiqueta tom="neutro">{item.etiqueta}</Etiqueta> : null}
               </div>
 
-              <p className="mt-1 text-[0.9375rem] font-bold leading-snug text-graf-950">
+              <p className="mt-1 text-corpo font-bold leading-snug text-graf-950">
                 {item.href ? (
                   <Link
                     href={item.href}

@@ -2,39 +2,6 @@ import crypto from "node:crypto";
 
 import { LIMITE_PADRAO, processarFila } from "@/lib/mensageria";
 
-/**
- * Gatilho do worker da fila de saída.
- *
- * Quem chama é máquina — o cron da Vercel definido em `vercel.json` — então
- * não há sessão nenhuma aqui. A autenticação é um segredo em cabeçalho:
- *
- *   Authorization: Bearer <CRON_SECRET>      (é o que a Vercel manda sozinha)
- *   x-cron-secret: <CRON_SECRET>             (aceito para chamada manual/curl)
- *
- * A Vercel injeta o cabeçalho `Authorization` nas invocações de cron quando a
- * variável `CRON_SECRET` existe no projeto. Sem a variável configurada, esta
- * rota NÃO processa nada e responde 503: uma fila de e-mails aberta na
- * internet é um canal de disparo para qualquer um, e "falha visível" é melhor
- * que "endpoint público por descuido". O botão "processar agora" em
- * `/admin/mensagens` continua funcionando, com sessão de verdade.
- *
- * GET e POST fazem o mesmo. O cron chama GET; POST existe para quem preferir
- * disparar de um script.
- *
- * Além da fila, esta rota faz a limpeza dos anexos temporários vencidos — os
- * arquivos que visitantes enviaram e que nunca viraram chamado. Ver o
- * comentário dentro de `tratar`.
- */
-
-// A rota lê o banco e o cabeçalho da requisição: nunca pode ser pré-renderizada.
-/*
- * O `export const dynamic = "force-dynamic"` saiu daqui: com
- * `cacheComponents`, a busca de dados já é dinâmica por padrão e o que se
- * marca é o que deve ser CACHEADO, não o contrário. Esta rota não tem nenhum
- * `use cache`, então continua dinâmica — agora por omissão, que é o padrão da
- * versão instalada.
- */
-
 /** Comparação em tempo constante: sem isso o segredo vaza pelo relógio. */
 function segredoConfere(recebido: string, esperado: string) {
   const a = Buffer.from(recebido);
@@ -62,6 +29,14 @@ function limiteDaUrl(request: Request) {
   return Number.isFinite(numero) && numero > 0 ? Math.trunc(numero) : LIMITE_PADRAO;
 }
 
+/**
+ * Worker periódico compartilhado.
+ *
+ * Além de mensagens e anexos temporários, ele funciona como rede de segurança
+ * da logística: pagamento normalmente dispara a etiqueta pelo webhook na hora,
+ * mas uma falha temporária, saldo insuficiente ou NF-e cadastrada depois é
+ * retomada aqui. Pedidos já emitidos têm o rastreio atualizado no mesmo ciclo.
+ */
 async function tratar(request: Request) {
   const esperado = (process.env.CRON_SECRET ?? "").trim();
 
@@ -83,24 +58,9 @@ async function tratar(request: Request) {
   }
 
   try {
-    const resumo = await processarFila({ limite: limiteDaUrl(request) });
+    const limite = limiteDaUrl(request);
+    const resumo = await processarFila({ limite });
 
-    /*
-     * A limpeza dos anexos órfãos pega carona nesta rota.
-     *
-     * Ela precisa de exatamente o que a fila já tem: um gatilho de máquina,
-     * autenticado por segredo, chamado periodicamente. Criar um segundo
-     * endpoint com o mesmo cron e o mesmo segredo seria duplicar a superfície
-     * protegida para executar duas tarefas do mesmo tipo — e a política de
-     * recursos do escopo pede o contrário.
-     *
-     * Um TTL escrito numa coluna não apaga arquivo sozinho. É esta chamada que
-     * apaga, em lote, e só o que está `pendente` e vencido — um anexo que um
-     * chamado acabou de reivindicar não é alcançado.
-     *
-     * Falha aqui não derruba a fila: e-mail pendente é mais urgente que
-     * arquivo vencido, e a próxima passada tenta de novo.
-     */
     let anexos = { removidos: 0, falhas: 0 };
     try {
       const { limparOrfaosVencidos } = await import("@/lib/envio-temporario");
@@ -112,12 +72,19 @@ async function tratar(request: Request) {
       console.error("[fila] limpeza de anexos órfãos falhou", falha);
     }
 
+    let logistica = { processados: 0, ok: 0, falhas: 0 };
+    try {
+      const { processarPendenciasMelhorEnvio } = await import("@/lib/melhor-envio");
+      logistica = await processarPendenciasMelhorEnvio(Math.min(40, Math.max(5, limite)));
+    } catch (falha) {
+      console.error("[fila] processamento da logística falhou", falha);
+    }
+
     return Response.json(
-      { ok: true, ...resumo, anexos },
+      { ok: true, ...resumo, anexos, logistica },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (erro) {
-    // O processador já trata mensagem a mensagem; chegar aqui é falha de banco.
     console.error("[fila] execução interrompida", erro);
     return Response.json(
       { ok: false, erro: "Falha ao processar a fila." },

@@ -4,40 +4,20 @@ import { ArrowRight, CircleAlert, TriangleAlert } from "lucide-react";
 import { plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/* ============================================================================
-   "Precisa da sua atenção"
-
-   O primeiro bloco do painel da clínica, e o único que não é resumo: aqui só
-   entra o que está parado esperando UMA DECISÃO DE QUEM ESTÁ LENDO —
-   equipamento fora de operação, manutenção vencida, orçamento aguardando
-   aprovação, chamado aguardando resposta, pedido aguardando pagamento.
-
-   O que já está com a JB (em triagem, em manutenção, aguardando peça) não
-   entra: é andamento, não pendência, e misturar os dois transforma a lista em
-   mais um resumo — que é justamente o que o resto da tela já faz.
-
-   Sem pendência, o bloco não aparece. Um painel que diz "tudo certo" numa
-   caixa grande gasta a primeira dobra para não informar nada.
-   ============================================================================ */
-
 export type Urgencia = "alta" | "media";
 
 export type Pendencia = {
-  /** Chave estável — normalmente o id do registro. */
   chave: string;
   urgencia: Urgencia;
-  /** O que aconteceu, em uma frase curta. */
   titulo: string;
-  /** Qual registro é, para a pessoa reconhecer sem abrir. */
   detalhe: string;
   href: string;
-  /** O que a pessoa vai fazer lá dentro — verbo, não "ver mais". */
   acao: string;
 };
 
 const TONS: Record<Urgencia, { selo: string; icone: typeof TriangleAlert }> = {
-  alta: { selo: "bg-jb-50 text-jb-700", icone: TriangleAlert },
-  media: { selo: "bg-warn-50 text-warn-700", icone: CircleAlert },
+  alta: { selo: "bg-jb-50 text-jb-700 ring-jb-500/10", icone: TriangleAlert },
+  media: { selo: "bg-warn-50 text-warn-700 ring-warn-500/10", icone: CircleAlert },
 };
 
 export function PrecisaDeAtencao({ pendencias }: { pendencias: Pendencia[] }) {
@@ -48,16 +28,21 @@ export function PrecisaDeAtencao({ pendencias }: { pendencias: Pendencia[] }) {
   return (
     <section
       aria-labelledby="mj-atencao"
-      className="overflow-hidden rounded-2xl border border-graf-200 bg-white"
+      className="overflow-hidden rounded-2xl border border-graf-200/90 bg-white shadow-[0_1px_2px_rgba(18,24,35,0.025),0_18px_46px_-36px_rgba(18,24,35,0.34)]"
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-graf-200 bg-graf-50 px-5 py-4">
-        <h2 id="mj-atencao" className="text-[1.0625rem] font-bold text-graf-950">
-          Precisa da sua atenção
-        </h2>
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-graf-200/90 bg-gradient-to-r from-[#fff9f9] via-white to-graf-50/70 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-jb-50 text-jb-700 ring-1 ring-inset ring-jb-500/10">
+            <TriangleAlert className="size-[17px]" aria-hidden />
+          </span>
+          <h2 id="mj-atencao" className="text-[1.03rem] font-extrabold tracking-[-0.015em] text-graf-950">
+            Precisa da sua atenção
+          </h2>
+        </div>
         <p className="text-sm text-graf-600">
           {plural(pendencias.length, "item", "itens")}
           {altas > 0 ? (
-            <span className="font-semibold text-jb-700">
+            <span className="font-bold text-jb-700">
               {` · ${altas} ${altas === 1 ? "urgente" : "urgentes"}`}
             </span>
           ) : null}
@@ -73,12 +58,12 @@ export function PrecisaDeAtencao({ pendencias }: { pendencias: Pendencia[] }) {
             <li key={pendencia.chave}>
               <Link
                 href={pendencia.href}
-                className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
+                className="group flex items-center gap-4 px-5 py-4 transition-all hover:bg-graf-50/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
               >
                 <span
                   aria-hidden
                   className={cn(
-                    "flex size-10 shrink-0 items-center justify-center rounded-lg",
+                    "flex size-10 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-inset",
                     tom.selo,
                   )}
                 >
@@ -86,7 +71,7 @@ export function PrecisaDeAtencao({ pendencias }: { pendencias: Pendencia[] }) {
                 </span>
 
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[0.9375rem] font-bold leading-snug text-graf-950">
+                  <span className="block text-[0.92rem] font-extrabold leading-snug tracking-[-0.01em] text-graf-950">
                     {pendencia.titulo}
                   </span>
                   <span className="mt-0.5 block truncate text-sm text-graf-500">

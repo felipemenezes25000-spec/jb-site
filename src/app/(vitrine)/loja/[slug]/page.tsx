@@ -1,17 +1,9 @@
 import type { Metadata } from "next";
-import type { Prisma } from "@prisma/client";
-import { Suspense } from "react";
-import Link from "next/link";
+import { cache } from "react";
 import { notFound } from "next/navigation";
-import { ArrowRight, Wrench } from "lucide-react";
 
 import { CaixaCompra, type AddonProduto } from "@/components/loja/caixa-compra";
 import { GaleriaProduto, type FotoProduto } from "@/components/loja/galeria-produto";
-import { GradeProdutos } from "@/components/loja/card-produto";
-import {
-  AcoesDoProduto,
-  AcoesDoProdutoEsqueleto,
-} from "@/components/loja/produto/acoes-do-produto";
 import { AjudaDaEquipe } from "@/components/loja/produto/ajuda-da-equipe";
 import {
   AntesDeComprar,
@@ -19,23 +11,21 @@ import {
   Instalacao,
   OQueVemNaCaixa,
 } from "@/components/loja/produto/antes-e-depois";
-import { AssistenciaRelacionada } from "@/components/loja/produto/assistencia-relacionada";
+import { BlocoDecisao } from "@/components/loja/produto/bloco-decisao";
 import { definicaoDaCondicao } from "@/components/loja/produto/condicao";
 import { CondicoesDeCompra } from "@/components/loja/produto/condicoes-de-compra";
-import {
-  agruparEspecificacoes,
-  Documentacao,
-  FichaTecnica,
-  MedidasEPeso,
-  Regulatorio,
-} from "@/components/loja/produto/especificacoes";
+import { Documentacao } from "@/components/loja/produto/especificacoes";
+import { SpecSheet } from "@/components/specs/spec-sheet";
 import { ForaDeLinha, SemEstoque } from "@/components/loja/produto/estados";
-import { IdentidadeProduto } from "@/components/loja/produto/identidade";
-import { MotivosJB } from "@/components/loja/produto/motivos-jb";
+import { FaixaConfianca } from "@/components/loja/produto/faixa-confianca";
+import { DetalhesDoProduto, ResumoTecnicoProduto } from "@/components/loja/produto/resumo-tecnico";
+import { TopoMarketplace } from "@/components/loja/produto/topo-marketplace";
+import { VendidoPelaJB } from "@/components/loja/produto/vendido-pela-jb";
 import {
   BarraCompraMobile,
   NavegacaoDoProduto,
   type AncoraDoProduto,
+  type CompraDaBarra,
 } from "@/components/loja/produto/navegacao-do-produto";
 import { PerguntarSobreProduto } from "@/components/loja/produto/perguntar";
 import { PerguntasDoProduto } from "@/components/loja/produto/perguntas";
@@ -46,21 +36,16 @@ import {
 import type { CertificadoDaUnidade } from "@/components/loja/produto/selo-certificado";
 import { SeloCertificado } from "@/components/loja/produto/selo-certificado";
 import { UnidadeFisica } from "@/components/loja/produto/unidade-fisica";
-import {
-  RegistrarVisita,
-  VistosRecentemente,
-} from "@/components/loja/vistos-recentemente";
-import { Trilha, TituloSecao } from "@/components/ui/data";
-import { EsqueletoCartaoProduto } from "@/components/ui/esqueletos";
-import { Secao } from "@/components/ui/secao";
+import { RegistrarVisita } from "@/components/loja/vistos-recentemente";
+import { Trilha } from "@/components/ui/data";
 import { sanitizarHtml } from "@/components/admin/conteudo/html-seguro";
-import { paraCard, SELECAO_CARD } from "@/lib/catalogo";
 import {
   certificacaoPublicada,
   contarChecklist,
   frasedaVerificacao,
 } from "@/lib/certificacao";
-import { calcularParcelas, paraCentavos, whatsappHref } from "@/lib/format";
+import { fichaDoProduto } from "@/lib/ficha-do-produto";
+import { calcularParcelas, paraCentavos, plural, whatsappHref } from "@/lib/format";
 import {
   faqJsonLd,
   JsonLd,
@@ -73,64 +58,13 @@ import {
 } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { getSettings, ligado } from "@/lib/settings";
-import { colunasAte } from "@/components/ui/grade";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- *
- * `instant = false` desliga a validação de navegação instantânea para este
- * segmento. É a saída documentada para migrar rota a rota
- * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
- * "Following validation"): a casca da loja já foi migrada e prerenderiza, e
- * cada página vai deixando de precisar disto conforme a leitura dela ganha
- * `use cache` ou um `<Suspense>`.
- *
- * A lista do que ainda depende desta linha está em
- * docs/evolucao-jb/cobertura.md, fase 5. Ela é pendência declarada, não
- * conclusão.
- */
 export const instant = false;
-
-/**
- * Página de um equipamento.
- *
- * A primeira dobra é a compra: galeria à esquerda em cima, a coluna que decide
- * à direita atravessando as duas linhas — marca, nome, identificadores, preço,
- * disponibilidade e botão — e, fechando o vão debaixo da foto, as condições da
- * compra e o caminho para falar com a equipe. Essa divisão não é estética: com
- * tudo empilhado à direita, a coluna media quase o dobro da imagem e sobrava
- * meia tela branca embaixo dela em toda ficha.
- *
- * Abaixo da dobra a ordem segue a decisão de quem compra equipamento caro:
- * o que é (descrição), quanto entrega (ficha técnica), o que preciso ter e o
- * que vem depois (antes e depois da compra), por que aqui (motivos), o que a
- * equipe faz junto (serviços), o que ainda ficou em dúvida, o que mais existe
- * e a assistência que continua depois da entrega.
- *
- * Confiança vem DEPOIS da ficha técnica, de propósito: "por que comprar na JB"
- * antes de a pessoa saber o que o equipamento faz é argumento no vazio.
- *
- * A regra que atravessa o arquivo inteiro: campo vazio não vira linha. Não há
- * prazo, frete, certificação, nota nem depoimento que não esteja no banco.
- */
 
 type Props = { params: Promise<{ slug: string }> };
 
-/**
- * O cartão de um relacionado precisa de `id` e `status` além do que a vitrine
- * usa: `id` para não repetir o mesmo item no complemento automático, `status`
- * porque uma relação cadastrada pode apontar para algo despublicado.
- */
-const SELECAO_RELACIONADO = {
-  ...SELECAO_CARD,
-  id: true,
-  status: true,
-} satisfies Prisma.ProductSelect;
-
-type LinhaRelacionada = Prisma.ProductGetPayload<{ select: typeof SELECAO_RELACIONADO }>;
-
-async function carregar(slug: string) {
-  return prisma.product.findUnique({
+const carregar = cache(async (slug: string) =>
+  prisma.product.findUnique({
     where: { slug },
     include: {
       brand: { include: { logo: true } },
@@ -140,11 +74,6 @@ async function carregar(slug: string) {
       documents: { orderBy: { createdAt: "asc" } },
       faqs: { where: { published: true }, orderBy: { order: "asc" } },
       addons: { orderBy: { order: "asc" }, include: { service: true } },
-      /**
-       * Duas unidades, não uma: com mais de uma no estoque, mostrar "o número
-       * de série" seria mostrar o de outra peça. `status` ordena pela ordem do
-       * enum, então a disponível vem primeiro.
-       */
       units: {
         orderBy: [{ status: "asc" }, { createdAt: "desc" }],
         take: 2,
@@ -153,25 +82,17 @@ async function carregar(slug: string) {
           media: { orderBy: { order: "asc" }, include: { media: true } },
         },
       },
-      /* As faixas entram porque o dado estruturado declara preço e prazo POR
-         faixa de CEP. Sem elas só restaria a alternativa que o escopo proíbe:
-         publicar um valor único de frete que na verdade depende do CEP. */
       shippingProfile: { include: { zones: { orderBy: { order: "asc" } } } },
-      relatedFrom: {
-        orderBy: { order: "asc" },
-        take: 8,
-        include: { target: { select: SELECAO_RELACIONADO } },
-      },
     },
-  });
-}
+  }),
+);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const produto = await carregar(slug);
   if (!produto) {
     return metadataDePagina({
-      titulo: "Equipamento não encontrado",
+      titulo: "Produto não encontrado",
       caminho: `/loja/${slug}`,
       noIndex: true,
     });
@@ -185,13 +106,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 
   if (produto.status === "active") return base;
-
-  /**
-   * Fora de linha sai do índice, mas os links continuam valendo: a página só
-   * existe para levar quem chegou até um substituto. `noIndex` do construtor
-   * padrão desligaria o `follow` junto, e aí o buscador ignoraria justamente
-   * os equipamentos indicados no lugar deste.
-   */
   return { ...base, robots: { index: false, follow: true } };
 }
 
@@ -202,19 +116,9 @@ export default async function ProdutoPage({ params }: Props) {
   if (!produto || produto.status === "draft") notFound();
 
   const caminho = `/loja/${produto.slug}`;
-
-  /**
-   * `archived` é produto que saiu de linha. A página continua de pé porque o
-   * link pode estar salvo ou indexado — devolver 404 para quem tem o
-   * equipamento é pior que explicar. O que não pode é continuar vendendo.
-   */
   const arquivado = produto.status === "archived";
   const semEstoque = produto.trackInventory && produto.stock <= 0;
 
-  /* ------------------------------------------------------ unidade física */
-
-  // Só existe "a unidade" quando há uma única peça identificada. Com duas ou
-  // mais no estoque, o número de série na tela seria o de outra peça.
   const unidade =
     produto.units.length === 1 && (produto.unique || produto.stock <= 1)
       ? produto.units[0]
@@ -228,26 +132,10 @@ export default async function ProdutoPage({ params }: Props) {
       nota: item.note,
     })) ?? [];
 
-  /* ------------------------------------------------------ certificação
-
-     A certificação é da UNIDADE, não do produto: duas autoclaves do mesmo
-     modelo têm desgastes diferentes, e um selo no SKU afirmaria sobre a
-     segunda o que só foi verificado na primeira. Por isso a leitura só
-     acontece quando existe uma unidade identificada — e só o estado
-     "publicada" aparece, que é o que `certificacaoPublicada` filtra.
-
-     A contagem NÃO é recontada aqui: `itemsTotal` e `itemsApproved` foram
-     carimbados no fechamento da inspeção, e recontar agora daria outro número
-     se o checklist tivesse mudado de versão desde então. */
   const certificacao = unidade ? await certificacaoPublicada(unidade.id) : null;
-
   const certificado: CertificadoDaUnidade | null = certificacao
     ? {
         codigoPublico: certificacao.publicCode,
-        /* A contagem sai do MESMO lugar que /verificar usa — os itens do
-           checklist da unidade. As duas telas precisam dizer o mesmo número:
-           ler o carimbo aqui e recontar lá faria a ficha e o certificado
-           discordarem se o checklist tivesse mudado de versão. */
         frase: frasedaVerificacao(contarChecklist(unidade?.checklist ?? [])),
         itensAprovados: certificacao.itemsApproved,
         itensTotal: certificacao.itemsTotal,
@@ -262,8 +150,6 @@ export default async function ProdutoPage({ params }: Props) {
     temNotasDeEstado: Boolean(unidade?.conditionNotes.trim()),
   });
 
-  /* ---------------------------------------------------------------- fotos */
-
   const fotos: FotoProduto[] = [
     ...produto.media.map((m) => ({
       url: m.media.url,
@@ -276,13 +162,10 @@ export default async function ProdutoPage({ params }: Props) {
     })) ?? []),
   ];
 
-  /* -------------------------------------------------------------- compra */
-
   const addons: AddonProduto[] = produto.addons.map((a) => ({
     serviceId: a.serviceId,
     nome: a.service.name,
     descricao: a.service.description,
-    // O produto sobrescreve o preço do serviço; sem sobrescrita vale o padrão.
     precoCents: a.priceCents ?? a.service.priceCents,
     obrigatorio: a.required,
   }));
@@ -297,28 +180,17 @@ export default async function ProdutoPage({ params }: Props) {
     obrigatorio: a.required,
   }));
 
-  // O mesmo teto do checkout: prometer 12× aqui e oferecer 6× lá seria mentira
-  // de vitrine. Os dois leem a configuração da loja.
   const maxParcelas = Math.min(12, Math.max(1, Number(s.parcelas_max) || 1));
   const minParcelaCents = paraCentavos(s.parcela_minima);
-
   const hrefOrcamento = `/orcamento?tipo=compra&item=${encodeURIComponent(produto.name)}`;
   const hrefWhatsapp = s.whatsapp
     ? whatsappHref(
         s.whatsapp,
-        `Olá! Tenho uma dúvida sobre o equipamento ${produto.name} (SKU ${produto.sku}).`,
+        `Olá! Tenho uma dúvida sobre o produto ${produto.name} (SKU ${produto.sku}).`,
       )
     : "";
-
   const garantiaMeses = unidade?.warrantyMonths ?? produto.warrantyMonths ?? null;
 
-  /* ------------------------------------------------------------- detalhes */
-
-  const grupos = agruparEspecificacoes(produto.specs);
-
-  /* O valor da instalação sai do adicional cadastrado, e não de um número
-     escrito na página: `ProductAddon.priceCents` sobrepõe o preço do serviço
-     quando definido, e é essa a regra que o carrinho também usa. */
   const adicionalDeInstalacao = produto.addons.find(
     (adicional) => adicional.service.kind === "instalacao",
   );
@@ -331,43 +203,127 @@ export default async function ProdutoPage({ params }: Props) {
     tipo: documento.kind,
   }));
 
-  const temMedidas = Boolean(
-    produto.widthMm || produto.heightMm || produto.depthMm || produto.weightGrams,
+  /* ------------------------------------------------------------- a ficha
+
+     Um objeto, cinco grupos, e todas as telas lendo dele.
+
+     Antes desta linha o dado técnico da página vinha de sete lugares:
+     `agruparEspecificacoes` para a tabela, `destaquesDaPdp` para a prévia,
+     `MedidasEPeso` para as dimensões, `Regulatorio` para o registro,
+     `AntesDeComprar` para a compatibilidade, `CondicoesDeCompra` para a
+     garantia e o mini-comparador para o resto. O resultado medido na
+     auditoria: "220 V" aparecia cinco vezes, com três rótulos e dois
+     formatos, e o contador dizia "6 especificações" numa página com nove
+     atributos. `construirFicha` unifica as colunas estruturadas e o texto
+     livre do cadastro num objeto tipado — e daqui para baixo nada é digitado
+     duas vezes. */
+  const ficha = fichaDoProduto(
+    { ...produto, warrantyMonths: garantiaMeses },
+    unidade
+      ? {
+          serialNumber: unidade.serialNumber,
+          manufactureYear: unidade.manufactureYear,
+          usageHours: unidade.usageHours,
+          usageCycles: unidade.usageCycles,
+          warrantyMonths: unidade.warrantyMonths,
+          acquiredFrom: unidade.acquiredFrom,
+        }
+      : null,
   );
-  const temRegulatorio = Boolean(
-    produto.anvisaCode || produto.manufacturer || produto.regulatoryHolder || produto.regulatoryNote,
-  );
+
   const descricao = produto.description.trim();
-  // `<p></p>` vindo do editor tem comprimento, mas não tem conteúdo: sem tirar
-  // a marcação, a página abriria um título "Sobre este equipamento" vazio.
   const tamanhoDaDescricao = textoLimpo(descricao, 4000).length;
   const temDescricao = tamanhoDaDescricao > 0;
-  /* O espaçamento grande foi feito para uma descrição de verdade. Com uma ou
-     duas frases — que é o que boa parte do catálogo tem hoje — sobravam 224px
-     de respiro para 105px de conteúdo, e a seção virava um vão no meio da
-     página. Descrição curta usa o passo menor da mesma escala. */
-  const descricaoLonga = tamanhoDaDescricao >= 400;
 
-  // A faixa da ficha técnica tem duas colunas — especificações à esquerda,
-  // medidas, regulatório e documentos à direita. Quando só um dos lados tem
-  // conteúdo, a faixa vira coluna única em vez de deixar metade da tela vazia.
-  const temEspecificacoes = grupos.length > 0;
-  const temApoioTecnico = temMedidas || temRegulatorio || documentos.length > 0;
-  const temFichaTecnica = temEspecificacoes || temApoioTecnico;
-  const duasColunasNaFicha = temEspecificacoes && temApoioTecnico;
+  /* O que diferencia o modelo sobe para a dobra, ao lado do preço.
 
-  /* ---------------------------------------------------------------- trilha */
+     A descrição de todo produto do catálogo tem entre 96 e 265 caracteres — um
+     parágrafo e quatro ou cinco tópicos. Isso ocupava uma seção de largura
+     inteira, 375px de altura, a 1.100px de rolagem do preço. É o argumento de
+     venda longe de onde a decisão acontece, e é justamente o bloco que Amazon e
+     Mercado Livre põem na primeira dobra.
+
+     O parágrafo de abertura costuma ser o MESMO texto de `shortDescription`,
+     que a identidade já mostra logo acima do preço. Repetir a frase a 3cm dela
+     é ruído: quando for igual, entra só a lista. */
+  const resumoCurto = produto.shortDescription.trim();
+  const aberturaRepetida = resumoCurto ? `<p>${resumoCurto}</p>` : "";
+  const descricaoNaDobra =
+    aberturaRepetida && descricao.startsWith(aberturaRepetida)
+      ? descricao.slice(aberturaRepetida.length).trim()
+      : descricao;
+
+  /* A seção de largura inteira só se justifica com texto de verdade. Abaixo
+     deste tamanho ela seria uma moldura em volta de cinco linhas que já estão
+     na dobra — e, como o corte é o mesmo para todo produto, a ficha não muda
+     de forma de um item para o outro. */
+  const DESCRICAO_LONGA = 900;
+  const descricaoMereceSecao = tamanhoDaDescricao > DESCRICAO_LONGA;
+  /* Identidade sozinha não é ficha técnica.
+
+     `construirFicha` sempre devolve pelo menos SKU e condição — eles existem
+     em todo cadastro. Se a seção aparecesse por causa deles, um produto sem
+     nenhuma especificação ganharia uma "Ficha técnica" com duas linhas de
+     identificação, que é exatamente a âncora sem conteúdo que a PDP evita
+     fabricar. A seção existe quando há dado técnico: desempenho, instalação,
+     o que vem junto ou a unidade física. */
+  const linhasTecnicas = ficha.grupos
+    .filter((grupo) => grupo.id !== "identidade")
+    .reduce((soma, grupo) => soma + grupo.linhas.length, 0);
+  const temEspecificacoes = linhasTecnicas > 0;
+  /* Contador derivado. Nunca literal: foi um "6 especificações" escrito à mão
+     numa página com nove atributos que expôs a falta de fonte única. */
+  const totalEspecificacoes = ficha.total;
+
+  /* No topo ficam TRÊS atributos, não seis.
+
+     A prévia de seis linhas repetia a ficha inteira 600 px acima dela — e o
+     link "Ficha completa" levava a um bloco cujo conteúdo principal era
+     idêntico ao que a pessoa acabara de ler. Três atributos respondem "é este
+     o equipamento?"; a ficha responde "serve na minha sala?". São perguntas
+     diferentes, e só a segunda precisa da tabela inteira.
+
+     Quais três não é escolha de layout: vêm de `decisive` no registro da
+     família. Para autoclave, capacidade, ciclo e bandejas; para seladora, a
+     barra de selagem. */
+  const temFichaTecnica = temEspecificacoes || documentos.length > 0;
+
+  const temInfraestrutura = Boolean(
+    produto.voltage?.trim() ||
+      (produto.weightGrams ?? 0) > 0 ||
+      ((produto.widthMm ?? 0) > 0 &&
+        (produto.heightMm ?? 0) > 0 &&
+        (produto.depthMm ?? 0) > 0) ||
+      produto.infrastructureNotes.length > 0,
+  );
+  const temConteudoDaCaixa = produto.boxContents.length > 0;
+  const temBlocoDeInstalacao = produto.installationPolicy !== "nao_informada";
+  const geraEquipamentoNoPosCompra = produto.isEquipment;
+  const temPreparo =
+    temInfraestrutura ||
+    temConteudoDaCaixa ||
+    temBlocoDeInstalacao ||
+    geraEquipamentoNoPosCompra;
+
+  const temFrete = Boolean(
+    produto.shippingProfile && produto.shippingProfile.kind !== "nao_aplicavel",
+  );
+  const retirada = ligado(s.retirada_disponivel) ? s.retirada_instrucoes.trim() || null : null;
+  const temCondicoesDeCompra = Boolean(
+    (garantiaMeses ?? 0) > 0 || temFrete || retirada || produto.voltage?.trim(),
+  );
+  const temAjudaDaEquipe = Boolean(s.telefone.trim() || s.whatsapp.trim() || s.email.trim());
+  const temServicos = servicos.length > 0 && !arquivado;
+  const temEntregaESuporte = temCondicoesDeCompra || temAjudaDaEquipe || temServicos;
 
   const trilha = [
     { rotulo: "Início", href: "/" },
-    { rotulo: "Equipamentos", href: "/loja" },
+    { rotulo: "Loja", href: "/loja" },
     ...(produto.category
       ? [{ rotulo: produto.category.name, href: `/categoria/${produto.category.slug}` }]
       : []),
     { rotulo: produto.name },
   ];
-
-  /* ------------------------------------------------------ dados estruturados */
 
   const dadosDoProduto: DadosJsonLd = produtoJsonLd({
     nome: produto.name,
@@ -386,9 +342,6 @@ export default async function ProdutoPage({ params }: Props) {
     vendedor: s.empresa_nome,
     gtin: produto.gtin,
     mpn: produto.mpn,
-    /* Perfil sob orçamento não declara entrega nenhuma: o preço dele não
-       existe ainda. Faixa sem preço também fica de fora — zero real é outra
-       coisa, e o perfil "grátis" tem tipo próprio. */
     entrega:
       produto.shippingProfile && produto.shippingProfile.kind !== "sob_orcamento"
         ? produto.shippingProfile.zones.map((faixa) => ({
@@ -401,9 +354,6 @@ export default async function ProdutoPage({ params }: Props) {
     devolucao: politicaDeDevolucao(s),
   });
 
-  // Fora de linha é diferente de "sem estoque": o buscador precisa ler
-  // Discontinued. O construtor genérico não conhece esse estado, então a oferta
-  // é ajustada aqui — sem reescrever o resto do objeto na mão.
   if (arquivado) {
     const oferta = dadosDoProduto.offers;
     if (oferta && typeof oferta === "object" && !Array.isArray(oferta)) {
@@ -414,32 +364,33 @@ export default async function ProdutoPage({ params }: Props) {
     }
   }
 
-  /* ------------------------------------------------------------- âncoras
-
-     A faixa de navegação só lista o que a página realmente tem. Uma âncora
-     para uma seção que não foi renderizada leva a lugar nenhum — e é
-     exatamente o defeito que o menu de abas costuma esconder. A ordem aqui é
-     a ordem do documento, porque é ela que o destaque da seção ativa segue. */
   const ancoras: AncoraDoProduto[] = [
     { id: "visao-geral", rotulo: "Visão geral" },
-    ...(unidade ? [{ id: "unidade", rotulo: "Esta unidade" }] : []),
-    ...(temDescricao ? [{ id: "sobre", rotulo: "Sobre" }] : []),
-    ...(temFichaTecnica ? [{ id: "ficha-tecnica", rotulo: "Ficha técnica" }] : []),
-    { id: "antes-de-comprar", rotulo: "Antes de comprar" },
-    ...(servicos.length > 0 && !arquivado
-      ? [{ id: "servicos-jb", rotulo: "Serviços da JB" }]
+    ...(produto.condition !== "novo" ? [{ id: "laudo", rotulo: "Laudo de inspeção" }] : []),
+    ...(temFichaTecnica
+      ? [{ id: "ficha-tecnica", rotulo: "Especificações" }]
+      : []),
+    ...(temPreparo ? [{ id: "preparo", rotulo: "Antes de comprar" }] : []),
+    ...(temEntregaESuporte
+      ? [{ id: "entrega-e-garantia", rotulo: "Entrega e garantia" }]
       : []),
     ...(arquivado ? [] : [{ id: "duvidas", rotulo: "Dúvidas" }]),
-    { id: "relacionados", rotulo: "Relacionados" },
   ];
 
-  /* A barra do celular repete o preço, então repete a MESMA conta de
-     parcelamento da caixa de compra — dois números diferentes para a mesma
-     compra, na mesma tela, seria erro de confiança e não de layout. */
+  const temInstalacao = !["nao_informada", "nao_oferecida"].includes(
+    produto.installationPolicy,
+  );
   const parcelasDaBarra =
     produto.allowDirectPurchase && produto.priceCents > 0
       ? calcularParcelas(produto.priceCents, maxParcelas, minParcelaCents)
       : null;
+
+  const compraDaBarra: CompraDaBarra = {
+    precoCents: produto.priceCents,
+    parcelas: parcelasDaBarra,
+    soOrcamento: !produto.allowDirectPurchase || produto.priceCents <= 0,
+    indisponivel: arquivado || semEstoque,
+  };
 
   const estruturados: DadosJsonLd[] = [trilhaJsonLd(trilha), dadosDoProduto];
   if (produto.faqs.length > 0) {
@@ -450,149 +401,225 @@ export default async function ProdutoPage({ params }: Props) {
 
   return (
     <>
-      {/* Tudo do próprio catálogo — nada de nota ou avaliação inventada.
-          JsonLd escapa "<": nome de produto com "</script>" fecharia a tag. */}
       <JsonLd dados={estruturados} />
 
-      {/* ==================================================== PRIMEIRA DOBRA */}
-      {/* `espaco="nenhum"` de propósito: o respiro é escrito aqui inteiro, para
-          o `pb` não disputar com o `md:py` do preset e perder no desktop. */}
-      <Secao
-        como="div"
-        id="visao-geral"
-        espaco="nenhum"
-        className="scroll-mt-36 pt-6 pb-16 lg:pt-8 lg:pb-24"
-      >
-        <Trilha itens={trilha} className="mb-6 lg:mb-8" />
-
-        {/* A ordem do DOM é a do celular: nome e condição, depois a foto,
-            depois o preço. No desktop as posições explícitas montam o outro
-            desenho — galeria à esquerda ocupando as duas linhas, identidade e
-            compra empilhadas na coluna da direita. */}
-        <div className="grid gap-y-8 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-10 xl:gap-x-16">
-          {/* A ordem do DOM é a do celular: foto, identidade e compra, e só
-              então as condições. No desktop as posições explícitas montam o
-              outro desenho — foto em cima à esquerda, coluna de compra
-              atravessando as duas linhas à direita, e as condições fechando o
-              vão embaixo da foto.
-
-              NADA gruda nesta página. A galeria já foi `sticky`, com o
-              argumento de que a foto deve acompanhar cada decisão que a coluna
-              de compra pede. O argumento é bom no papel e ruim na tela: a
-              pessoa rola, o texto anda e a foto não, e a página inteira dá a
-              impressão de estar travada. Foi a primeira coisa que apareceu na
-              revisão, duas vezes. */}
-          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-1">
-            <GaleriaProduto fotos={fotos} nome={produto.name} />
-          </div>
-
-          {/* A coluna que decide: quem é o equipamento, o que dá para fazer com
-              ele e quanto custa — sem quebra entre as três coisas. Ela
-              atravessa as duas linhas da grade, e é isso que faz a foto e as
-              condições dividirem a coluna da esquerda em vez de deixarem meia
-              tela em branco embaixo da imagem. */}
-          <div className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1">
-              <IdentidadeProduto
-                nome={produto.name}
-                modelo={produto.model}
-                sku={produto.sku}
-                codigoDoFabricante={produto.mpn}
-                gtin={produto.gtin}
-                codigoAnvisa={produto.anvisaCode}
-                numeroDeSerie={unidade?.serialNumber ?? null}
-                condicao={produto.condition}
-                definicaoDaCondicao={definicao}
-                marca={
-                  produto.brand
-                    ? {
-                        nome: produto.brand.name,
-                        slug: produto.brand.slug,
-                        logo: produto.brand.logo
-                          ? {
-                              url: produto.brand.logo.url,
-                              alt: produto.brand.logo.alt || produto.brand.name,
-                              largura: produto.brand.logo.width,
-                              altura: produto.brand.logo.height,
-                            }
-                          : null,
-                      }
+      <TopoMarketplace
+        trilha={<Trilha itens={trilha} />}
+        galeria={<GaleriaProduto fotos={fotos} nome={produto.name} />}
+        resumo={
+          <ResumoTecnicoProduto
+            nome={produto.name}
+            resumo={produto.shortDescription}
+            sku={produto.sku}
+            condicao={produto.condition}
+            definicao={definicao}
+            marca={produto.brand ? { nome: produto.brand.name, slug: produto.brand.slug } : null}
+            categoria={
+              produto.category
+                ? { nome: produto.category.name, slug: produto.category.slug }
+                : null
+            }
+          />
+        }
+        detalhes={
+          <DetalhesDoProduto
+            descricaoHtml={
+              descricaoNaDobra ? sanitizarHtml(descricaoNaDobra) : undefined
+            }
+            modelo={produto.model}
+            sku={produto.sku}
+            codigoDoFabricante={produto.mpn}
+            gtin={produto.gtin}
+            numeroDeSerie={unidade?.serialNumber ?? null}
+            categoria={
+              produto.category
+                ? { nome: produto.category.name, slug: produto.category.slug }
+                : null
+            }
+            ficha={ficha}
+          />
+        }
+        compra={
+          <>
+            {arquivado ? (
+              <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
+            ) : (
+              <CaixaCompra
+                produtoId={produto.id}
+                precoCents={produto.priceCents}
+                compareAtCents={produto.compareAtCents}
+                permiteCompra={produto.allowDirectPurchase}
+                permiteOrcamento={produto.allowQuoteRequest}
+                estoque={produto.stock}
+                controlaEstoque={produto.trackInventory}
+                unico={produto.unique}
+                addons={addons}
+                hrefOrcamento={hrefOrcamento}
+                maxParcelas={maxParcelas}
+                minParcelaCents={minParcelaCents}
+                garantia={
+                  garantiaMeses && garantiaMeses > 0
+                    ? { meses: garantiaMeses, daUnidade: Boolean(unidade?.warrantyMonths) }
                     : null
                 }
-                categoria={
-                  produto.category
-                    ? { nome: produto.category.name, slug: produto.category.slug }
-                    : null
+              />
+            )}
+
+            {!arquivado && semEstoque ? (
+              <SemEstoque
+                unico={produto.unique}
+                hrefAlternativas={
+                  produto.condition === "novo"
+                    ? "/loja"
+                    : produto.condition === "seminovo"
+                      ? "/seminovos"
+                      : produto.condition === "recondicionado"
+                        ? "/recondicionados"
+                        : "/usados"
                 }
-                resumo={produto.shortDescription}
+              />
+            ) : null}
+
+            {certificado ? <SeloCertificado certificado={certificado} /> : null}
+
+            <VendidoPelaJB
+              empresa={s.empresa_nome}
+              desde={s.empresa_desde}
+              cidade={s.endereco_cidade}
+              uf={s.endereco_uf}
+              garantiaMeses={produto.warrantyMonths}
+            />
+          </>
+        }
+      />
+
+      <FaixaConfianca
+        certificado={Boolean(certificado)}
+        garantiaMeses={garantiaMeses}
+        temFrete={temFrete}
+        temInstalacao={temInstalacao}
+      />
+
+      <NavegacaoDoProduto ancoras={ancoras} compra={compraDaBarra} />
+
+      {/* O laudo é seção fixa de todo equipamento que não é novo — com ou sem
+          registro publicado. A condição anterior (`unidade ? ... : null`) é o
+          que fazia a página prometer o laudo na caixa de condição e no FAQ e
+          não entregar nada: sem unidade cadastrada, a seção inteira sumia e as
+          duas frases continuavam no ar. Sem registro, agora a seção diz que
+          não há e oferece o caminho. */}
+      <UnidadeFisica
+        id="laudo"
+        condicao={produto.condition}
+        numeroDeSerie={unidade?.serialNumber ?? null}
+        anoDeFabricacao={unidade?.manufactureYear ?? null}
+        horasDeUso={unidade?.usageHours ?? null}
+        ciclos={unidade?.usageCycles ?? null}
+        garantiaMeses={unidade?.warrantyMonths ?? null}
+        notasDeEstado={unidade?.conditionNotes ?? ""}
+        notasDeInspecao={unidade?.inspectionNotes ?? ""}
+        checklist={checklist}
+        certificado={certificado}
+        vendida={unidade?.status === "vendido"}
+        hrefAjuda={hrefWhatsapp || "/contato"}
+      />
+
+      <div className="container-loja">
+        {temDescricao && descricaoMereceSecao ? (
+          <BlocoDecisao
+            id="sobre"
+            titulo="Sobre o produto"
+            resumo="O que vale saber sobre uso, proposta e aplicação deste modelo."
+          >
+            <div
+              className="prose-jb max-w-[68ch] [&_img]:h-auto [&_img]:max-w-full"
+              dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.description) }}
+            />
+          </BlocoDecisao>
+        ) : null}
+
+        {temFichaTecnica ? (
+          <BlocoDecisao
+            id="ficha-tecnica"
+            titulo="Especificações técnicas"
+            contador={
+              totalEspecificacoes > 0
+                ? plural(totalEspecificacoes, "especificação", "especificações")
+                : undefined
+            }
+            /* A única que nasce aberta.
+
+               Num equipamento de clínica a tabela de especificação é o que
+               decide a compra — voltagem, capacidade, ciclo, medida de
+               bancada. Com as cinco seções fechadas, a metade de baixo da
+               ficha virava quatro gavetas iguais e a informação que mais pesa
+               ficava a um clique de distância de quem já decidiu comparar. */
+            aberto
+          >
+            <div className="min-w-0 space-y-8">
+              <SpecSheet
+                ficha={ficha}
+                fonte={
+                  ficha.procedencias.includes("inspecao-jb")
+                    ? "cadastro do fabricante e inspeção da JB nesta unidade"
+                    : "cadastro do fabricante"
+                }
               />
 
-              {/* Guardar e comparar ficam com a identidade, não com o preço: são
-                  gestos de quem ainda está decidindo, e a caixa de compra é de
-                  quem já decidiu. O `<Suspense>` mantém a casca prerenderizada —
-                  só o estado do favorito depende de sessão. */}
-              {arquivado ? null : (
-                <div className="mt-5">
-                  <Suspense fallback={<AcoesDoProdutoEsqueleto />}>
-                    <AcoesDoProduto
-                      produtoId={produto.id}
-                      nome={produto.name}
-                      slug={produto.slug}
-                    />
-                  </Suspense>
-                </div>
-              )}
+              {produto.regulatoryNote?.trim() ? (
+                <p className="texto-apoio max-w-[70ch] text-graf-600">
+                  <span className="font-semibold text-graf-800">Observação regulatória:</span>{" "}
+                  {produto.regulatoryNote.trim()}
+                </p>
+              ) : null}
 
-              <div id="caixa-de-compra" className="scroll-mt-32 space-y-8">
-                {arquivado ? (
-                  <ForaDeLinha hrefOrcamento={hrefOrcamento} hrefWhatsapp={hrefWhatsapp} />
-                ) : (
-                  <CaixaCompra
-                    produtoId={produto.id}
-                    precoCents={produto.priceCents}
-                    compareAtCents={produto.compareAtCents}
-                    permiteCompra={produto.allowDirectPurchase}
-                    permiteOrcamento={produto.allowQuoteRequest}
-                    estoque={produto.stock}
-                    controlaEstoque={produto.trackInventory}
-                    unico={produto.unique}
-                    addons={addons}
-                    hrefOrcamento={hrefOrcamento}
-                    maxParcelas={maxParcelas}
-                    minParcelaCents={minParcelaCents}
-                  />
-                )}
+              <Documentacao documentos={documentos} />
+            </div>
+          </BlocoDecisao>
+        ) : null}
 
-                {!arquivado && semEstoque ? (
-                  <SemEstoque
-                    unico={produto.unique}
-                    hrefAlternativas={
-                      produto.condition === "novo"
-                        ? "/loja"
-                        : produto.condition === "seminovo"
-                          ? "/seminovos"
-                          : produto.condition === "recondicionado"
-                            ? "/recondicionados"
-                            : "/usados"
-                    }
-                  />
-                ) : null}
+        {temPreparo ? (
+          <BlocoDecisao
+            id="preparo"
+            titulo="Antes de comprar"
+            /* Aberta, como a ficha técnica: requisito de instalação —
+               voltagem, ponto de água, espaço de bancada — é justamente o que
+               o cliente precisa descobrir ANTES de comprar, e é o que o
+               contrato medido em 11/09 contra dez fichas de referência
+               registra como visível no desktop. */
+            aberto
+          >
+            <div className="grid gap-x-10 gap-y-8 xl:grid-cols-2">
+              <AntesDeComprar
+                dados={{
+                  voltagem: produto.voltage,
+                  pesoGramas: produto.weightGrams,
+                  larguraMm: produto.widthMm,
+                  alturaMm: produto.heightMm,
+                  profundidadeMm: produto.depthMm,
+                  requisitos: produto.infrastructureNotes,
+                }}
+              />
+              <OQueVemNaCaixa itens={produto.boxContents} />
+              <Instalacao
+                politica={produto.installationPolicy}
+                observacao={produto.installationNote}
+                precoCents={precoDaInstalacao}
+              />
+              <DepoisDaCompraNoProduto
+                garantiaMeses={produto.warrantyMonths}
+                geraEquipamento={geraEquipamentoNoPosCompra}
+              />
+            </div>
+          </BlocoDecisao>
+        ) : null}
 
-                {/* O selo fica na coluna que decide, não só na faixa lá
-                    embaixo: quem está olhando o preço de um seminovo está
-                    pesando exatamente o risco que ele responde. */}
-                {certificado ? <SeloCertificado certificado={certificado} /> : null}
-              </div>
-          </div>
-
-          {/* Condições e contato fecham o vão debaixo da foto.
-
-              Empilhados no trilho de compra, eles faziam a coluna da direita
-              medir quase o dobro da imagem, e sobrava meia tela branca — o
-              buraco que aparecia em toda ficha. Aqui eles também leem melhor,
-              lado a lado: garantia, frete e voltagem são o que se confere
-              ANTES de clicar em comprar. */}
-          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-2">
-            <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+        {temEntregaESuporte ? (
+          <BlocoDecisao
+            id="entrega-e-garantia"
+            titulo="Entrega, garantia e suporte"
+          >
+            <div className="grid gap-x-10 gap-y-8 xl:grid-cols-2">
               <CondicoesDeCompra
                 garantiaMeses={garantiaMeses}
                 garantiaDaUnidade={Boolean(unidade?.warrantyMonths)}
@@ -606,378 +633,70 @@ export default async function ProdutoPage({ params }: Props) {
                       }
                     : null
                 }
-                retirada={
-                  ligado(s.retirada_disponivel)
-                    ? s.retirada_instrucoes.trim() || null
-                    : null
-                }
+                retirada={retirada}
                 voltagem={produto.voltage}
               />
-
-              <div>
-                <AjudaDaEquipe
-                  nomeDoProduto={produto.name}
-                  sku={produto.sku}
-                  telefone={s.telefone}
-                  whatsapp={s.whatsapp}
-                  email={s.email}
-                  horario={s.horario}
-                />
-
-                {/* Atalho para quem já tem o equipamento e caiu aqui
-                    procurando conserto — sem virar mais um cartão. */}
-                <Link
-                  href="/assistencia-tecnica"
-                  className="foco-jb group mt-6 inline-flex min-h-11 items-center gap-2 rounded-md text-[0.9375rem] font-semibold text-jb-700 transition-colors duration-150 hover:text-jb-500"
-                >
-                  <Wrench className="size-4 shrink-0" aria-hidden />
-                  Já tem este equipamento? Ver assistência técnica
-                  <ArrowRight
-                    className="size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
-                    aria-hidden
-                  />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Secao>
-
-      {/* ============================================ NAVEGAÇÃO DAS SEÇÕES */}
-      {/* Fora de qualquer `Secao`: o `sticky` precisa de um pai que atravesse
-          o resto da página, e cada faixa termina no fim de si mesma. */}
-      <NavegacaoDoProduto ancoras={ancoras} />
-
-      {/* ==================================================== UNIDADE FÍSICA */}
-      {/* A faixa vem montada de dentro do componente: sem nenhum campo da
-          unidade preenchido ela some inteira, em vez de sobrar uma tira vazia. */}
-      {unidade ? (
-        <UnidadeFisica
-          id="unidade"
-          condicao={produto.condition}
-          numeroDeSerie={unidade.serialNumber}
-          anoDeFabricacao={unidade.manufactureYear}
-          horasDeUso={unidade.usageHours}
-          ciclos={unidade.usageCycles}
-          garantiaMeses={unidade.warrantyMonths}
-          notasDeEstado={unidade.conditionNotes}
-          notasDeInspecao={unidade.inspectionNotes}
-          checklist={checklist}
-          certificado={certificado}
-          vendida={unidade.status === "vendido"}
-        />
-      ) : null}
-
-      {/* ========================================================== DESCRIÇÃO */}
-      {temDescricao ? (
-        <Secao
-          id="sobre"
-          fundo="afundada"
-          espaco={descricaoLonga ? "lg" : "md"}
-          separador
-          className="scroll-mt-32"
-        >
-          {/* Título de um lado, texto do outro em medida curta: texto corrido
-              em 1400px de largura ninguém lê. */}
-          <div className="grid gap-6 lg:grid-cols-12 lg:gap-16">
-            <div className="lg:col-span-4">
-              <h2 className="manchete text-[clamp(1.5rem,1.2rem+1.1vw,2rem)] text-graf-950">Sobre este equipamento</h2>
-            </div>
-            <div className="min-w-0 lg:col-span-8">
-              <div
-                /* `max-w-full` na imagem do editor: conteúdo migrado do site
-                   antigo traz `width` fixo, que estouraria a coluna no
-                   celular e daria rolagem horizontal na página. */
-                className="prose-jb max-w-[68ch] [&_img]:h-auto [&_img]:max-w-full"
-                /* Saneado na exibição além da gravação: descrição migrada do
-                   site antigo nunca passou pela lista branca, e esta é a
-                   única página pública que renderiza HTML de editor. */
-                dangerouslySetInnerHTML={{ __html: sanitizarHtml(produto.description) }}
+              <AjudaDaEquipe
+                nomeDoProduto={produto.name}
+                sku={produto.sku}
+                telefone={s.telefone}
+                whatsapp={s.whatsapp}
+                email={s.email}
+                horario={s.horario}
               />
             </div>
-          </div>
-        </Secao>
-      ) : null}
 
-      {/* ====================================================== FICHA TÉCNICA */}
-      {temFichaTecnica ? (
-        <Secao id="ficha-tecnica" espaco="lg" separador className="scroll-mt-32">
-          <TituloSecao como="h2" tamanho="vitrine" titulo="Ficha técnica" />
-
-          <div
-            className={
-              duasColunasNaFicha
-                ? "mt-10 grid gap-12 lg:mt-12 lg:grid-cols-12 lg:gap-16"
-                : "mt-10 max-w-3xl lg:mt-12"
-            }
-          >
-            {temEspecificacoes ? (
-              <div className={duasColunasNaFicha ? "min-w-0 lg:col-span-7" : "min-w-0"}>
-                <FichaTecnica grupos={grupos} />
+            {temServicos ? (
+              <div className="mt-8 border-t border-graf-200 pt-6">
+                <h3 className="text-base font-extrabold text-graf-950">
+                  Serviços disponíveis para este produto
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm leading-5 text-graf-600">
+                  Podem entrar no mesmo pedido, com valores separados e execução pela JB.
+                </p>
+                <div className="mt-4">
+                  <ServicosDoProduto servicos={servicos} />
+                </div>
               </div>
             ) : null}
+          </BlocoDecisao>
+        ) : null}
 
-            {temApoioTecnico ? (
-              <div
-                className={
-                  duasColunasNaFicha
-                    ? "min-w-0 space-y-10 lg:col-span-5"
-                    : "min-w-0 space-y-10"
-                }
-              >
-                <MedidasEPeso
-                  larguraMm={produto.widthMm}
-                  alturaMm={produto.heightMm}
-                  profundidadeMm={produto.depthMm}
-                  pesoG={produto.weightGrams}
-                />
-                <Regulatorio
-                  codigoAnvisa={produto.anvisaCode}
-                  fabricante={produto.manufacturer}
-                  detentor={produto.regulatoryHolder}
-                  observacao={produto.regulatoryNote}
-                />
-                <Documentacao documentos={documentos} />
-              </div>
-            ) : null}
-          </div>
-        </Secao>
-      ) : null}
-
-      {/* ============================================ ANTES E DEPOIS DA COMPRA
-
-          Estas quatro seções respondem, nesta ordem, às perguntas que fazem
-          alguém desistir quando ficam sem resposta: cabe na minha sala, preciso
-          comprar mais alguma coisa, quem instala, e o que acontece depois.
-
-          Cada uma some inteira quando o cadastro está vazio. Uma ficha cheia
-          de "não informado" é pior que a ausência da seção — ela ocupa espaço
-          para dizer que a JB não sabe. */}
-      <Secao id="antes-de-comprar" espaco="lg" separador className="scroll-mt-32">
-        {/* Duas colunas: empilhados numa coluna de 56rem, os quatro blocos
-            desciam a página com metade da tela vazia à direita. */}
-        <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
-          <AntesDeComprar
-            dados={{
-              voltagem: produto.voltage,
-              pesoGramas: produto.weightGrams,
-              larguraMm: produto.widthMm,
-              alturaMm: produto.heightMm,
-              profundidadeMm: produto.depthMm,
-              requisitos: produto.infrastructureNotes,
-            }}
-          />
-
-          <OQueVemNaCaixa itens={produto.boxContents} />
-
-          <Instalacao
-            politica={produto.installationPolicy}
-            observacao={produto.installationNote}
-            precoCents={precoDaInstalacao}
-          />
-
-          <DepoisDaCompraNoProduto
-            garantiaMeses={produto.warrantyMonths}
-            /* Só produto vira equipamento no prontuário. Serviço, peça e
-               acessório não — dizer que viram encheria a Área da Clínica de
-               linhas que não são máquina nenhuma. */
-            geraEquipamento={produto.condition !== "novo" || produto.trackInventory}
-          />
-        </div>
-      </Secao>
-
-      {/* ====================================================== POR QUE NA JB */}
-      {arquivado ? null : (
-        <MotivosJB
-          desde={s.empresa_desde}
-          cidade={s.endereco_cidade}
-          uf={s.endereco_uf}
-          garantiaMeses={garantiaMeses}
-          temServicos={servicos.length > 0}
-        />
-      )}
-
-      {/* ==================================================== SERVIÇOS DA JB */}
-      {servicos.length > 0 && !arquivado ? (
-        <Secao id="servicos-jb" fundo="clara" espaco="lg" separador className="scroll-mt-32">
-          <TituloSecao
-            tamanho="vitrine"
-            sobretitulo="Equipe técnica JB"
-            titulo="O que a JB faz neste equipamento"
-            descricao="Cada serviço é executado pela equipe da própria JB e entra no mesmo pedido do equipamento — é só marcar antes de adicionar ao carrinho."
-          />
-          <div className="mt-10 lg:mt-12">
-            <ServicosDoProduto servicos={servicos} />
-          </div>
-        </Secao>
-      ) : null}
-
-      {/* ================================================================ FAQ */}
-      {/* A faixa existe mesmo sem pergunta publicada: sem ela, o equipamento
-          que ainda não acumulou dúvidas seria justamente o que não oferece
-          para onde mandar a sua. Fora de linha é exceção — não faz sentido
-          abrir canal de dúvida sobre o que a JB não vende mais. */}
-      {arquivado ? null : (
-        /* `largura="padrao"` e não "estreita": a medida estreita centrava a
-           faixa e fazia este título começar 190px à direita de todos os
-           outros da ficha. A leitura confortável continua garantida pelo
-           `max-w` do miolo, que é onde ela pertence. */
-        <Secao id="duvidas" espaco="lg" separador className="scroll-mt-32">
-          <TituloSecao
-            como="h2"
-            tamanho="vitrine"
-            titulo="Dúvidas sobre este equipamento"
-            descricao={
+        {arquivado ? null : (
+          <BlocoDecisao
+            id="duvidas"
+            titulo="Dúvidas"
+            resumo="Respostas técnicas e um canal direto para perguntar sobre este produto."
+            contador={
               produto.faqs.length > 0
-                ? "As perguntas que a equipe da JB já respondeu sobre este equipamento."
+                ? plural(produto.faqs.length, "pergunta respondida", "perguntas respondidas")
                 : undefined
             }
-          />
-
-          {/* Medida de leitura no miolo, não na faixa: pergunta e resposta em
-              1400px de largura ninguém lê, mas a borda da seção precisa bater
-              com a das outras. */}
-          {produto.faqs.length > 0 ? (
-            <div className="mt-8 max-w-3xl">
-              <PerguntasDoProduto
-                perguntas={produto.faqs.map((faq) => ({
-                  id: faq.id,
-                  pergunta: faq.question,
-                  resposta: faq.answer,
-                }))}
-              />
+          >
+            <div className={produto.faqs.length > 0 ? "grid gap-x-10 gap-y-8 xl:grid-cols-2" : "max-w-3xl"}>
+              {produto.faqs.length > 0 ? (
+                <PerguntasDoProduto
+                  perguntas={produto.faqs.map((faq) => ({
+                    id: faq.id,
+                    pergunta: faq.question,
+                    resposta: faq.answer,
+                  }))}
+                />
+              ) : null}
+              <PerguntarSobreProduto produtoId={produto.id} nomeDoProduto={produto.name} />
             </div>
-          ) : null}
+          </BlocoDecisao>
+        )}
+      </div>
 
-          <div className="mt-8 max-w-3xl">
-            <PerguntarSobreProduto produtoId={produto.id} nomeDoProduto={produto.name} />
-          </div>
-        </Secao>
-      )}
-
-      {/* ======================================================= RELACIONADOS */}
-      <Secao id="relacionados" fundo="clara" espaco="lg" separador className="scroll-mt-32">
-        {/* Título neutro de propósito: a lista mistura relação cadastrada com
-            complemento por categoria e marca. Chamar tudo de "substituto"
-            afirmaria uma equivalência técnica que ninguém registrou. */}
-        <TituloSecao como="h2" tamanho="vitrine" titulo="Equipamentos relacionados" />
-        <div className="mt-8 lg:mt-10">
-          <Suspense fallback={<EsqueletoRelacionados />}>
-            <Relacionados
-              produtoId={produto.id}
-              categoriaId={produto.categoryId}
-              marcaId={produto.brandId}
-              escolhidos={produto.relatedFrom
-                .map((relacao) => relacao.target)
-                .filter((alvo) => alvo.status === "active")}
-            />
-          </Suspense>
-        </div>
-      </Secao>
-
-      {/* ================================================ VISTOS RECENTEMENTE */}
-      {/* Registro da visita e a tira do que já foi visto. Os dois só existem no
-          navegador de quem está lendo — nenhum histórico de navegação de
-          visitante entra no banco. */}
       <RegistrarVisita slug={produto.slug} />
-      <VistosRecentemente excluir={produto.slug} />
 
-      {/* ========================================================= ASSISTÊNCIA */}
-      <AssistenciaRelacionada desde={s.empresa_desde} cidade={s.endereco_cidade} />
-
-      {/* ============================================ BARRA DE COMPRA (CELULAR) */}
-      {/* No desktop a caixa de compra fica grudada e nunca sai da tela; no
-          celular ela sobe com a rolagem. Esta barra devolve preço e caminho de
-          volta — sem duplicar a escolha de serviço e quantidade. */}
       <BarraCompraMobile
-        precoCents={produto.priceCents}
-        parcelas={parcelasDaBarra}
-        soOrcamento={!produto.allowDirectPurchase || produto.priceCents <= 0}
-        indisponivel={arquivado || semEstoque}
+        precoCents={compraDaBarra.precoCents}
+        parcelas={compraDaBarra.parcelas}
+        soOrcamento={compraDaBarra.soOrcamento}
+        indisponivel={compraDaBarra.indisponivel}
       />
     </>
-  );
-}
-
-/* ==========================================================================
-   Relacionados
-
-   As relações cadastradas à mão vêm primeiro — foi a JB que disse que um
-   equipamento substitui o outro. Só o que faltar para fechar quatro cartões é
-   completado por categoria e marca.
-   ========================================================================== */
-
-async function Relacionados({
-  produtoId,
-  categoriaId,
-  marcaId,
-  escolhidos,
-}: {
-  produtoId: string;
-  categoriaId: string | null;
-  marcaId: string | null;
-  escolhidos: LinhaRelacionada[];
-}) {
-  const manuais = escolhidos.slice(0, 4);
-  const faltam = 4 - manuais.length;
-
-  const complemento =
-    faltam > 0 && (categoriaId || marcaId)
-      ? await prisma.product.findMany({
-          where: {
-            status: "active",
-            id: { notIn: [produtoId, ...manuais.map((item) => item.id)] },
-            OR: [
-              ...(categoriaId ? [{ categoryId: categoriaId }] : []),
-              ...(marcaId ? [{ brandId: marcaId }] : []),
-            ],
-          },
-          orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
-          take: faltam,
-          select: SELECAO_CARD,
-        })
-      : [];
-
-  const produtos = [...manuais.map(paraCard), ...complemento.map(paraCard)];
-
-  if (produtos.length === 0) {
-    return (
-      <p className="text-base leading-relaxed text-graf-600">
-        Ainda não há outro equipamento parecido publicado.{" "}
-        <Link
-          href="/loja"
-          className="foco-jb font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
-        >
-          Ver o catálogo completo
-        </Link>
-        .
-      </p>
-    );
-  }
-
-  /* Com um relacionado só, o grid de quatro colunas deixava o cartão sozinho
-     ao lado de três buracos. As colunas acompanham a quantidade, e abaixo de
-     três a faixa para de esticar — cartão de produto com a largura da seção
-     inteira não parece destaque, parece erro. */
-  return (
-    <GradeProdutos
-      produtos={produtos}
-      colunas={colunasAte(produtos.length, { base: 1, sm: 2, lg: 3, xl: 4 })}
-      className={produtos.length < 3 ? "max-w-3xl" : undefined}
-    />
-  );
-}
-
-function EsqueletoRelacionados() {
-  return (
-    <div
-      role="status"
-      aria-label="Carregando equipamentos relacionados"
-      className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4"
-    >
-      {Array.from({ length: 4 }).map((_, indice) => (
-        <EsqueletoCartaoProduto key={indice} />
-      ))}
-    </div>
   );
 }

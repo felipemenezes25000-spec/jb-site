@@ -134,9 +134,14 @@ export function sanitizarDestino(caminho: unknown, padrao = "/"): string {
   if (valor.includes("\\")) return padrao;
   // caractere de controle — inclusive nova linha, que quebraria o cabeçalho
   // Location — não tem o que fazer numa URL de volta
+  /* Espaço entra na lista junto com os de controle. Um caminho legítimo
+     traz `%20`; espaço cru só aparece em valor colado à mão ou montado por
+     quem está testando o filtro. A versão que vivia em `@/app/acoes/conta`
+     barrava `<= 32`, e esta função passou a ser a única do projeto: perder
+     essa checagem ao unificar seria afrouxar sem querer. */
   for (let i = 0; i < valor.length; i += 1) {
     const codigo = valor.charCodeAt(i);
-    if (codigo < 0x20 || codigo === 0x7f) return padrao;
+    if (codigo <= 0x20 || codigo === 0x7f) return padrao;
   }
 
   return valor;

@@ -1,22 +1,6 @@
-import { PackageCheck, Plug, ShieldCheck, Store, Truck, Wrench } from "lucide-react";
+import { PackageCheck, Plug, ShieldCheck, Store, Truck } from "lucide-react";
 
 import { formatarPreco } from "@/lib/format";
-
-/* ============================================================================
-   Condições desta compra
-
-   O que muda de equipamento para equipamento: garantia, frete, retirada,
-   voltagem. Cada linha existe apenas se o campo correspondente está
-   preenchido no cadastro ou na configuração da loja — a lista encolhe em vez
-   de exibir travessão.
-
-   Sem moldura de propósito: este bloco corre logo abaixo da caixa de compra,
-   e uma segunda borda ali dentro faria a coluna virar uma pilha de cartões.
-   Fio fino entre as linhas basta.
-
-   A única linha fixa é a assistência própria, porque é fato da JB: quem vende
-   é a mesma equipe técnica que atende depois.
-   ============================================================================ */
 
 export type PerfilDeFrete = {
   nome: string;
@@ -25,12 +9,11 @@ export type PerfilDeFrete = {
   gratisAcimaCents: number | null;
 };
 
-/** Leitura em português de cada tipo de perfil de frete cadastrado. */
 const TIPO_DE_FRETE: Record<string, string> = {
   retirada: "Retirada no endereço da JB.",
-  entrega_local: "Entrega feita pela própria equipe da JB.",
+  entrega_local: "Entrega feita pela equipe da JB.",
   transportadora: "Envio por transportadora.",
-  sob_orcamento: "O valor do frete é fechado depois da análise do pedido.",
+  sob_orcamento: "O frete é confirmado antes da cobrança.",
   gratis: "Frete incluído no preço.",
   nao_aplicavel: "",
 };
@@ -49,10 +32,8 @@ export function CondicoesDeCompra({
   voltagem,
 }: {
   garantiaMeses: number | null;
-  /** `true` quando a garantia veio da unidade física, não do modelo. */
   garantiaDaUnidade?: boolean;
   frete: PerfilDeFrete | null;
-  /** Instruções de retirada, quando a JB aceita retirada no local. */
   retirada: string | null;
   voltagem: string | null;
 }) {
@@ -61,10 +42,10 @@ export function CondicoesDeCompra({
   if (garantiaMeses && garantiaMeses > 0) {
     linhas.push({
       icone: ShieldCheck,
-      titulo: `Garantia de ${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"}`,
+      titulo: `${garantiaMeses} ${garantiaMeses === 1 ? "mês" : "meses"} de garantia`,
       detalhe: garantiaDaUnidade
-        ? "Registrada para esta unidade específica."
-        : undefined,
+        ? "Cobertura desta unidade específica."
+        : "Prazo de garantia informado para este produto.",
     });
   }
 
@@ -76,7 +57,7 @@ export function CondicoesDeCompra({
       detalhe: [
         explicacao,
         frete.gratisAcimaCents && frete.gratisAcimaCents > 0
-          ? `Frete incluído em pedidos acima de ${formatarPreco(frete.gratisAcimaCents)}.`
+          ? `Grátis acima de ${formatarPreco(frete.gratisAcimaCents)}.`
           : "",
       ]
         .filter(Boolean)
@@ -84,12 +65,10 @@ export function CondicoesDeCompra({
     });
   }
 
-  // Quando o próprio perfil de frete já é "retirada", a linha da configuração
-  // repetiria o mesmo recado com outras palavras.
   if (retirada && frete?.tipo !== "retirada") {
     linhas.push({
       icone: PackageCheck,
-      titulo: "Retirada no local",
+      titulo: "Retirada disponível",
       detalhe: retirada,
     });
   }
@@ -97,39 +76,27 @@ export function CondicoesDeCompra({
   if (voltagem) {
     linhas.push({
       icone: Plug,
-      titulo: voltagem === "bivolt" ? "Bivolt" : `Alimentação em ${voltagem} V`,
-      detalhe: "Confira a rede elétrica da sala antes de fechar o pedido.",
+      titulo: voltagem.toLowerCase() === "bivolt" ? "Bivolt" : `${voltagem} V`,
+      detalhe: "Confira a alimentação elétrica antes da compra.",
     });
   }
 
-  linhas.push({
-    icone: Wrench,
-    titulo: "Assistência técnica própria",
-    detalhe: "A mesma equipe que vende é a que atende o equipamento depois.",
-  });
+  if (linhas.length === 0) return null;
 
   return (
-    <section aria-labelledby="condicoes-desta-compra">
-      <h2
-        id="condicoes-desta-compra"
-        className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
-      >
-        Condições desta compra
-      </h2>
-      <ul className="mt-3 divide-y divide-graf-200 border-t border-graf-200">
+    <section aria-label="Condições do produto" className="border-t border-graf-200">
+      <ul className="divide-y divide-hairline">
         {linhas.map((linha) => {
           const Icone = linha.icone;
           return (
-            <li key={linha.titulo} className="flex gap-3 py-3.5">
-              <Icone className="mt-0.5 size-[18px] shrink-0 text-graf-500" aria-hidden />
-              <div className="min-w-0">
-                <p className="text-[0.9375rem] font-semibold text-graf-900">
-                  {linha.titulo}
-                </p>
+            <li key={linha.titulo} className="flex min-w-0 items-start gap-3 py-3.5">
+              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">
+                <Icone className="size-4" aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold leading-5 text-graf-950">{linha.titulo}</p>
                 {linha.detalhe ? (
-                  <p className="mt-0.5 text-sm leading-relaxed text-graf-500">
-                    {linha.detalhe}
-                  </p>
+                  <p className="mt-0.5 text-xs leading-5 text-graf-500">{linha.detalhe}</p>
                 ) : null}
               </div>
             </li>

@@ -180,7 +180,7 @@ export default async function PaginaTecnicos() {
                 />
                 <span className="text-sm text-graf-700">
                   <span className="font-medium text-graf-800">Ativo na escala</span>
-                  <span className="mt-0.5 block text-[0.8125rem] text-graf-500">
+                  <span className="mt-0.5 block text-apoio text-graf-500">
                     Só técnico ativo aparece nos formulários de agendamento.
                   </span>
                 </span>

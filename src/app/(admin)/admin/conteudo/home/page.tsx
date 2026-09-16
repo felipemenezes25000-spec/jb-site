@@ -182,7 +182,7 @@ export default async function PaginaSecoesDaHome({
                       <p className="mt-0.5 line-2 text-sm text-graf-500">{secao.subtitle}</p>
                     ) : null}
 
-                    <p className="mt-2 text-[0.8125rem] text-graf-500">
+                    <p className="mt-2 text-apoio text-graf-500">
                       {tipo?.descricao ?? "Tipo não reconhecido pelo site."}
                       {secao.ctaLabel ? ` · Botão: ${secao.ctaLabel} → ${secao.ctaHref}` : ""}
                       {` · alterada em ${formatarDataHora(secao.updatedAt)}`}

@@ -62,6 +62,7 @@ export function definicaoDaCondicao(
   provas: { itensDeChecklist: number; temNotasDeEstado: boolean },
 ): string | null {
   const temLaudo = provas.itensDeChecklist > 0;
+  const quantos = provas.itensDeChecklist;
 
   switch (condicao) {
     case "novo":
@@ -69,21 +70,26 @@ export function definicaoDaCondicao(
       return null;
     case "seminovo":
       if (temLaudo) {
-        return "Unidade usada que passou pela bancada da JB. O laudo de inspeção desta unidade está mais abaixo.";
+        /* A frase diz quantos itens existem e para onde ir. "Está mais abaixo"
+           sozinho é uma promessa que a página já quebrou uma vez: o componente
+           do laudo virou `return null` e esta frase continuou no ar, apontando
+           para uma seção que não existia mais. Com o número, a frase e a seção
+           passam a ter que combinar — e uma some junto com a outra. */
+        return `Unidade usada que passou pela bancada da JB. O laudo de inspeção desta unidade tem ${quantos} ${quantos === 1 ? "item conferido" : "itens conferidos"} e está na seção "Laudo de inspeção".`;
       }
       return provas.temNotasDeEstado
-        ? "Unidade usada. O estado de conservação registrado pela equipe está mais abaixo."
+        ? 'Unidade usada. O estado de conservação registrado pela equipe está na seção "Laudo de inspeção".'
         : null;
     case "recondicionado":
       if (temLaudo) {
-        return "Unidade recondicionada pela equipe técnica da JB. O que foi verificado e o que foi trocado está mais abaixo.";
+        return `Unidade recondicionada pela equipe técnica da JB. O que foi verificado e o que foi trocado está na seção "Laudo de inspeção", com ${quantos} ${quantos === 1 ? "item" : "itens"}.`;
       }
       return provas.temNotasDeEstado
-        ? "Unidade recondicionada pela equipe técnica da JB. O estado registrado está mais abaixo."
+        ? 'Unidade recondicionada pela equipe técnica da JB. O estado registrado está na seção "Laudo de inspeção".'
         : null;
     case "usado":
       return provas.temNotasDeEstado || temLaudo
-        ? "Unidade usada. O estado de conservação registrado pela equipe está mais abaixo."
+        ? 'Unidade usada. O estado de conservação registrado pela equipe está na seção "Laudo de inspeção".'
         : null;
   }
 }

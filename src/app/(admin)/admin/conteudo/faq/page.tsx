@@ -151,7 +151,7 @@ export default async function PaginaFaq({
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-[0.9375rem] font-semibold text-graf-950">
+                          <h3 className="text-corpo font-semibold text-graf-950">
                             {pergunta.question}
                           </h3>
                           {pergunta.published ? null : (
@@ -162,7 +162,7 @@ export default async function PaginaFaq({
                         </div>
                         <p className="mt-1 line-2 text-sm text-graf-600">{pergunta.answer}</p>
                         {pergunta.product ? (
-                          <p className="mt-1.5 text-[0.8125rem] text-graf-500">
+                          <p className="mt-1.5 text-apoio text-graf-500">
                             Aparece só na ficha de {pergunta.product.name}
                           </p>
                         ) : null}

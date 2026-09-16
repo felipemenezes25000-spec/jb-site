@@ -152,7 +152,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: B
       renderizar: (linha) => (
         <span className="block min-w-0">
           <span className="tabular block font-semibold">{linha.order.number}</span>
-          <span className="block truncate text-[0.8125rem] text-graf-500">
+          <span className="block truncate text-apoio text-graf-500">
             {linha.order.buyerName}
           </span>
         </span>
@@ -173,7 +173,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: B
         <span className="block">
           {ROTULO_METODO[linha.method]}
           {linha.installments > 1 ? (
-            <span className="tabular block text-[0.8125rem] text-graf-500">
+            <span className="tabular block text-apoio text-graf-500">
               em {linha.installments}x
             </span>
           ) : null}

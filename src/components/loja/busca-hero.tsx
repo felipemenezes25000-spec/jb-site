@@ -17,7 +17,7 @@ import { BuscaComSugestoes } from "@/components/loja/busca-sugestoes";
  * porque "a busca grande" é uma decisão de página, não do componente.
  */
 export function BuscaHero({
-  placeholder = "Busque equipamento, marca, modelo ou SKU",
+  placeholder = "Busque produto, marca, modelo ou SKU",
   rotulo = "Buscar no catálogo",
 }: {
   placeholder?: string;

@@ -66,7 +66,7 @@ function Recusa({
           <ShieldAlert className="size-4 shrink-0 text-graf-500" aria-hidden />
           {titulo}
         </p>
-        <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">{texto}</p>
+        <p className="mt-2 text-corpo leading-relaxed text-graf-600">{texto}</p>
         {acao ? <div className="mt-5">{acao}</div> : null}
       </Cartao>
     </main>
@@ -153,7 +153,7 @@ export default async function EtiquetaPage({ params }: Props) {
     <main className="mx-auto max-w-lg px-5 py-8">
       <p className="label-mono text-xs text-graf-500">JB · Prontuário Técnico</p>
       <h1 className="mt-1 text-title texto-forte">{equipamento.name}</h1>
-      <p className="mt-1 text-[0.9375rem] text-graf-600">
+      <p className="mt-1 text-corpo text-graf-600">
         {[equipamento.brandName, equipamento.modelName].filter(Boolean).join(" ") ||
           "Marca e modelo não cadastrados"}
       </p>
@@ -168,7 +168,7 @@ export default async function EtiquetaPage({ params }: Props) {
       </div>
 
       <Cartao className="mt-6 p-5">
-        <dl className="space-y-2.5 text-[0.9375rem]">
+        <dl className="space-y-2.5 text-corpo">
           <Linha
             rotulo="Número de série"
             valor={equipamento.serialNumber || "a atribuir"}

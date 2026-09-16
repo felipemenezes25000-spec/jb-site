@@ -183,14 +183,14 @@ export default async function PaginaDetalheDoTicket({
                     >
                       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                         <span className="text-sm font-bold text-graf-900">{autor}</span>
-                        <span className="text-[0.8125rem] text-graf-500">
+                        <span className="text-apoio text-graf-500">
                           {formatarDataHora(mensagem.createdAt)}
                         </span>
                         {!mensagem.visibleToCustomer ? (
                           <Etiqueta tom="aguardando">Nota interna</Etiqueta>
                         ) : null}
                       </div>
-                      <p className="whitespace-pre-line text-[0.9375rem] leading-relaxed text-graf-700">
+                      <p className="whitespace-pre-line text-corpo leading-relaxed text-graf-700">
                         {mensagem.body}
                       </p>
                     </li>
@@ -265,7 +265,7 @@ export default async function PaginaDetalheDoTicket({
                 >
                   {produto.name}
                 </Link>
-                <p className="mt-1 text-[0.8125rem] text-graf-500">SKU {produto.sku}</p>
+                <p className="mt-1 text-apoio text-graf-500">SKU {produto.sku}</p>
               </div>
             </Cartao>
           ) : null}

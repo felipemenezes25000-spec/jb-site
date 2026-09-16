@@ -1,23 +1,36 @@
 .shell {
+  --clinic-sidebar: 16rem;
+  --clinic-content: 140rem;
   --clinic-canvas: #f7f8fa;
   --clinic-surface: #ffffff;
-  --clinic-border: rgba(220, 223, 228, 0.92);
-  --clinic-border-strong: rgba(205, 209, 215, 0.96);
-  --clinic-shadow: 0 1px 2px rgba(18, 24, 35, 0.025), 0 18px 46px -34px rgba(18, 24, 35, 0.32);
-  --clinic-shadow-hover: 0 3px 8px rgba(18, 24, 35, 0.04), 0 20px 48px -28px rgba(18, 24, 35, 0.28);
+  --clinic-surface-soft: #fbfbfc;
+  --clinic-border: rgba(219, 223, 228, 0.9);
+  --clinic-border-strong: rgba(198, 204, 211, 0.98);
+  --clinic-shadow: 0 1px 2px rgba(18, 24, 35, 0.025), 0 18px 46px -36px rgba(18, 24, 35, 0.34);
+  --clinic-shadow-raised: 0 4px 12px rgba(18, 24, 35, 0.035), 0 24px 56px -34px rgba(18, 24, 35, 0.32);
+  --clinic-shadow-hover: 0 7px 18px rgba(18, 24, 35, 0.045), 0 26px 58px -32px rgba(18, 24, 35, 0.34);
 
   background:
-    radial-gradient(circle at 78% -8%, rgba(220, 38, 38, 0.055), transparent 28rem),
-    linear-gradient(180deg, #fbfbfc 0, var(--clinic-canvas) 22rem, #f8f9fb 100%);
+    radial-gradient(circle at 78% -6%, rgba(229, 27, 35, 0.045), transparent 30rem),
+    linear-gradient(180deg, #fcfcfd 0, var(--clinic-canvas) 23rem, #f8f9fb 100%);
 }
 
 /* --------------------------------------------------------------------------
-   Topo global da Área da Clínica
+   Estrutura e alinhamento geral
    -------------------------------------------------------------------------- */
 
+.shell :global(main) {
+  width: 100%;
+}
+
+.shell :global(main > div) {
+  width: 100%;
+  min-width: 0;
+}
+
 .shell > :global(header) {
-  border-bottom-color: rgba(222, 225, 230, 0.78);
-  background: rgba(255, 255, 255, 0.91);
+  border-bottom-color: rgba(222, 225, 230, 0.8);
+  background: rgba(255, 255, 255, 0.93);
   box-shadow: 0 1px 0 rgba(18, 24, 35, 0.025);
   backdrop-filter: blur(18px);
 }
@@ -25,100 +38,75 @@
 .shell > :global(header) :global(.container-jb),
 .shell > :global(footer) :global(.container-jb) {
   width: 100%;
-  max-width: 112rem;
-  padding-left: clamp(1rem, 2.2vw, 3rem);
-  padding-right: clamp(1rem, 2.2vw, 3rem);
+  max-width: var(--clinic-content);
+  margin-inline: auto;
+  padding-left: clamp(1rem, 1.5vw, 2rem);
+  padding-right: clamp(1rem, 1.5vw, 2rem);
 }
 
-.shell > :global(header) a[href="/loja"] {
-  border: 1px solid rgba(220, 223, 228, 0.9);
-  background: rgba(248, 249, 251, 0.92);
-}
-
-.shell > :global(header) a[href="/loja"]:hover {
-  border-color: rgba(205, 209, 215, 0.96);
-  background: #ffffff;
-}
-
-.shell > :global(header) a[href="/minha-jb/perfil"] {
-  border: 1px solid transparent;
-}
-
-.shell > :global(header) a[href="/minha-jb/perfil"]:hover {
-  border-color: rgba(220, 223, 228, 0.82);
-  background: rgba(248, 249, 251, 0.96);
-}
-
-/* --------------------------------------------------------------------------
-   Navegação lateral
-   -------------------------------------------------------------------------- */
-
-.shell :global(nav[aria-label="Área da Clínica"]) > div {
-  border-radius: 1.25rem;
-  border-color: var(--clinic-border);
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: var(--clinic-shadow);
-  padding: 0.8rem;
-}
-
-.shell :global(nav[aria-label="Área da Clínica"]) a[aria-current="page"] {
-  background: linear-gradient(90deg, rgba(254, 242, 242, 1), rgba(255, 247, 247, 0.88));
-  color: #17191d;
-  box-shadow: inset 3px 0 0 #e51b23, inset 0 0 0 1px rgba(229, 27, 35, 0.05);
-}
-
-.shell :global(nav[aria-label="Área da Clínica"]) a[aria-current="page"] svg {
-  color: #d71920;
-}
-
-.shell :global(nav[aria-label="Área da Clínica"]) a:not([aria-current="page"]):hover {
-  background: #f6f7f9;
-}
-
-.shell :global(nav[aria-label="Área da Clínica"]) p[class*="uppercase"] {
-  letter-spacing: 0.11em;
-  color: #7b828c;
+.shell :global(.clinic-search) input::-webkit-search-cancel-button {
+  opacity: 0.5;
 }
 
 /* --------------------------------------------------------------------------
    Cabeçalhos de página
    -------------------------------------------------------------------------- */
 
+.shell :global(main > div > header),
 .shell :global(main > header) {
-  margin-bottom: 1.65rem;
+  margin-bottom: 1.5rem;
 }
 
-.shell :global(main > header h1) {
-  letter-spacing: -0.035em;
+.shell :global(main h1) {
+  letter-spacing: -0.045em;
+  text-wrap: balance;
 }
 
+.shell :global(main h2),
+.shell :global(main h3) {
+  text-wrap: balance;
+}
+
+.shell :global(main > div > header p),
 .shell :global(main > header p) {
-  max-width: 52rem;
+  max-width: 54rem;
 }
 
 /* --------------------------------------------------------------------------
-   Cartões, métricas e superfícies
+   Superfícies, cards e elevação
    -------------------------------------------------------------------------- */
 
-.shell :global(main [class~="rounded-xl"][class~="border"][class~="bg-white"]) {
-  border-radius: 1rem;
+.shell :global(main [class~="rounded-xl"][class~="border"][class~="bg-white"]),
+.shell :global(main [class~="rounded-2xl"][class~="border"][class~="bg-white"]),
+.shell :global(main article[class~="border"][class~="bg-white"]) {
   border-color: var(--clinic-border);
   box-shadow: var(--clinic-shadow);
 }
 
-.shell :global(main a[class~="rounded-xl"][class~="border"][class~="bg-white"]) {
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+.shell :global(main [class~="rounded-xl"][class~="border"][class~="bg-white"]),
+.shell :global(main [class~="rounded-2xl"][class~="border"][class~="bg-white"]),
+.shell :global(main article[class~="border"][class~="bg-white"]) {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    background-color 160ms ease;
 }
 
-.shell :global(main a[class~="rounded-xl"][class~="border"][class~="bg-white"]:hover) {
+.shell :global(main a[class~="rounded-xl"][class~="border"][class~="bg-white"]:hover),
+.shell :global(main a[class~="rounded-2xl"][class~="border"][class~="bg-white"]:hover),
+.shell :global(main article[class~="border"][class~="bg-white"]:has(a:hover)) {
   transform: translateY(-1px);
   border-color: var(--clinic-border-strong);
   box-shadow: var(--clinic-shadow-hover);
 }
 
-.shell :global(main [class~="rounded-2xl"][class~="border"][class~="bg-white"]) {
-  border-color: var(--clinic-border);
+.shell :global(main [class~="shadow-card"]) {
   box-shadow: var(--clinic-shadow);
+}
+
+.shell :global(main [class~="shadow-raised"]) {
+  box-shadow: var(--clinic-shadow-raised);
 }
 
 .shell :global(main [class~="border-b"][class~="border-graf-200"]) {
@@ -129,41 +117,75 @@
   background-color: #f8f9fb;
 }
 
-/* Estados vazios mais leves, com cara de produto e não de wireframe. */
 .shell :global(main [class~="border-dashed"]) {
-  border-color: rgba(205, 209, 215, 0.9);
-  background: linear-gradient(180deg, rgba(250, 251, 252, 0.95), rgba(247, 248, 250, 0.72));
+  border-color: rgba(203, 208, 214, 0.92);
+  background:
+    radial-gradient(circle at 50% 0, rgba(229, 27, 35, 0.035), transparent 15rem),
+    linear-gradient(180deg, rgba(251, 252, 253, 0.98), rgba(247, 248, 250, 0.82));
+}
+
+/* Empty states que antes pareciam texto solto ganham uma área de leitura real. */
+.shell :global(main [class~="flex-1"][class~="p-5"] > p[class~="py-4"]) {
+  display: flex;
+  min-height: 7.25rem;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1.25rem;
+  text-align: center;
+  color: #747b85;
 }
 
 /* --------------------------------------------------------------------------
-   Formulários, filtros e controles do portal inteiro
+   Formulários, filtros e controles
    -------------------------------------------------------------------------- */
 
 .shell :global(main input:not([type="checkbox"]):not([type="radio"])),
 .shell :global(main select),
 .shell :global(main textarea) {
-  border-radius: 0.75rem;
-  border-color: rgba(205, 209, 215, 0.98);
-  background-color: rgba(255, 255, 255, 0.98);
-  box-shadow: inset 0 1px 0 rgba(18, 24, 35, 0.015);
-  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  border-radius: 0.8rem;
+  border-color: rgba(203, 208, 214, 0.98);
+  background-color: rgba(255, 255, 255, 0.995);
+  box-shadow: inset 0 1px 0 rgba(18, 24, 35, 0.015), 0 1px 2px rgba(18, 24, 35, 0.02);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
 }
 
 .shell :global(main input:not([type="checkbox"]):not([type="radio"]):hover),
 .shell :global(main select:hover),
 .shell :global(main textarea:hover) {
   border-color: #aeb4bd;
+  background-color: #fff;
 }
 
 .shell :global(main input:not([type="checkbox"]):not([type="radio"]):focus),
 .shell :global(main select:focus),
 .shell :global(main textarea:focus) {
   border-color: #e51b23;
-  box-shadow: 0 0 0 4px rgba(229, 27, 35, 0.09);
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(229, 27, 35, 0.085), 0 2px 6px rgba(18, 24, 35, 0.035);
+}
+
+.shell :global(main label) {
+  letter-spacing: -0.005em;
+}
+
+.shell :global(main form[role="search"]) {
+  border-radius: 1rem;
+}
+
+/* Chips de filtros ficam com leitura de produto, não de formulário bruto. */
+.shell :global(main nav[aria-label] ul > li > a[class~="border"]) {
+  box-shadow: 0 1px 2px rgba(18, 24, 35, 0.018);
+}
+
+.shell :global(main nav[aria-label] ul > li > a[aria-current="true"]) {
+  box-shadow: inset 0 0 0 1px rgba(229, 27, 35, 0.06), 0 3px 10px -8px rgba(229, 27, 35, 0.35);
 }
 
 /* --------------------------------------------------------------------------
-   Tabelas e listas densas
+   Tabelas, listas e linhas densas
    -------------------------------------------------------------------------- */
 
 .shell :global(main table) {
@@ -173,14 +195,23 @@
 }
 
 .shell :global(main thead) {
-  background: rgba(248, 249, 251, 0.96);
+  background: rgba(248, 249, 251, 0.98);
 }
 
 .shell :global(main th) {
-  color: #6f7680;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.045em;
+  /* Era `#6f7680`, cravado à mão fora do sistema de tokens — e a conta não
+     fechava: sobre o `rgba(248,249,251,.98)` do `thead` acima, esse cinza dá
+     **4,35:1**, logo abaixo dos 4,5 que o AA exige. Todo cabeçalho de tabela
+     da Área da Clínica falhava no axe por causa desta linha.
+
+     `graf-500` é o token para texto de apoio em fundo claro e dá 4,97:1 no
+     mesmo fundo. O `globals.css` já avisa, no comentário da paleta, que o
+     degrau mais claro (graf-400) "é só borda, ícone decorativo e divisor:
+     nunca texto". */
+  color: var(--color-graf-500);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -189,11 +220,80 @@
 }
 
 .shell :global(main tbody tr:hover) {
-  background: rgba(248, 249, 251, 0.8);
+  background: rgba(248, 249, 251, 0.86);
+}
+
+.shell :global(main ul[class*="divide-y"] > li),
+.shell :global(main ol[class*="divide-y"] > li) {
+  border-color: rgba(232, 234, 237, 0.96);
 }
 
 .shell :global(main hr) {
   border-color: rgba(228, 230, 234, 0.95);
+}
+
+.shell :global(main dl) {
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Botões e ações
+   -------------------------------------------------------------------------- */
+
+.shell :global(main a[class*="bg-jb-"][class*="text-white"]),
+.shell :global(main button[class*="bg-jb-"][class*="text-white"]) {
+  box-shadow: 0 8px 22px -14px rgba(229, 27, 35, 0.62);
+}
+
+.shell :global(main a[class*="bg-jb-"][class*="text-white"]:hover),
+.shell :global(main button[class*="bg-jb-"][class*="text-white"]:hover) {
+  box-shadow: 0 11px 26px -14px rgba(229, 27, 35, 0.7);
+}
+
+.shell :global(main a[class*="border-graf-"][class*="bg-white"]),
+.shell :global(main button[class*="border-graf-"][class*="bg-white"]) {
+  box-shadow: 0 1px 2px rgba(18, 24, 35, 0.02);
+}
+
+/* --------------------------------------------------------------------------
+   Atalhos da visão geral
+   -------------------------------------------------------------------------- */
+
+.shell :global(section[aria-labelledby="atalhos"] > h2) {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  letter-spacing: -0.015em;
+}
+
+.shell :global(section[aria-labelledby="atalhos"] a) {
+  min-height: 3.75rem;
+  align-items: center;
+  border-radius: 0.95rem;
+  padding: 0.72rem 0.9rem;
+}
+
+.shell :global(section[aria-labelledby="atalhos"] a > svg) {
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0.62rem;
+  border-radius: 999px;
+  background: rgba(229, 27, 35, 0.075);
+  color: #d71920;
+  box-shadow: inset 0 0 0 1px rgba(229, 27, 35, 0.06);
+}
+
+.shell :global(section[aria-labelledby="atalhos"] a::after) {
+  content: "›";
+  margin-left: auto;
+  padding-left: 0.5rem;
+  color: #e51b23;
+  font-size: 1.35rem;
+  line-height: 1;
+  transition: transform 150ms ease;
+}
+
+.shell :global(section[aria-labelledby="atalhos"] a:hover::after) {
+  transform: translateX(2px);
 }
 
 /* --------------------------------------------------------------------------
@@ -201,17 +301,37 @@
    -------------------------------------------------------------------------- */
 
 .shell > :global(footer) {
-  border-top-color: rgba(222, 225, 230, 0.8);
-  background: rgba(255, 255, 255, 0.94);
+  border-top-color: rgba(222, 225, 230, 0.82);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 /* --------------------------------------------------------------------------
-   Responsividade
+   Responsividade e alinhamento do desktop
    -------------------------------------------------------------------------- */
 
-@media (max-width: 1023px) {
+@media (min-width: 1024px) {
+  .shell > :global(header),
+  .shell > :global(footer) {
+    width: calc(100% - var(--clinic-sidebar));
+    margin-left: var(--clinic-sidebar);
+  }
+
+  .shell :global(main) {
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .shell :global(main > div > header),
   .shell :global(main > header) {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.6rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .shell :global(main > div > header),
+  .shell :global(main > header) {
+    margin-bottom: 1.2rem;
   }
 
   .shell :global(main [class~="rounded-xl"][class~="border"][class~="bg-white"]) {
@@ -230,8 +350,13 @@
     padding-right: 1rem;
   }
 
-  .shell :global(main [class~="rounded-xl"][class~="border"][class~="bg-white"]) {
-    border-radius: 0.875rem;
-    box-shadow: 0 1px 2px rgba(18, 24, 35, 0.025);
+  .shell :global(main [class~="rounded-xl"][class~="border"][class~="bg-white"]),
+  .shell :global(main [class~="rounded-2xl"][class~="border"][class~="bg-white"]) {
+    border-radius: 0.9rem;
+    box-shadow: 0 1px 2px rgba(18, 24, 35, 0.025), 0 10px 28px -26px rgba(18, 24, 35, 0.3);
+  }
+
+  .shell :global(section[aria-labelledby="atalhos"] a) {
+    min-height: 4rem;
   }
 }

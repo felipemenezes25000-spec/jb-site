@@ -140,7 +140,7 @@ export function LeitorDeEtiqueta({
       {resposta?.ok ? (
         <div className="mt-4 space-y-4 rounded-lg border border-graf-300 bg-white p-4">
           {/* A frase é a do escopo, ao pé da letra, e vem antes dos campos. */}
-          <p className="text-[0.9375rem] font-semibold text-graf-950">{resposta.aviso}</p>
+          <p className="text-corpo font-semibold text-graf-950">{resposta.aviso}</p>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <CampoSugerido
@@ -176,7 +176,7 @@ export function LeitorDeEtiqueta({
 
           {/* O limite do OCR, em toda leitura. Ele muda o que o número
               significa: identificar não é atestar. */}
-          <p className="flex gap-2 border-t border-graf-200 pt-3 text-[0.8125rem] leading-relaxed text-graf-500">
+          <p className="flex gap-2 border-t border-graf-200 pt-3 text-apoio leading-relaxed text-graf-500">
             <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
             <span>{resposta.limite}</span>
           </p>

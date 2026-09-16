@@ -3,25 +3,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ImageOff, Info, Scale } from "lucide-react";
 
+import { Aviso } from "@/components/ui/aviso";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
 import { Secao } from "@/components/ui/secao";
-import { CONDICAO } from "@/components/loja/card-produto";
+import { compararProdutos } from "@/domain/specs/comparar";
+import { SELECT_FICHA, paraFicha } from "@/lib/ficha-do-produto";
+import { definicaoDe } from "@/domain/specs/definicoes";
 import {
   AUSENTE,
   PERGUNTAS,
-  TEXTO_AUSENTE,
-  dimensoesLegiveis,
-  garantiaLegivel,
-  pesoLegivel,
   recomendar,
   textoDoValor,
   type LinhaDaComparacao,
   type RespostasDaClinica,
   type ValorDoAtributo,
 } from "@/lib/comparador";
-import { PUBLICADO } from "@/lib/catalogo";
+import { PUBLICADO, UNIDADE_VENDIDA } from "@/lib/catalogo";
+import { chaveDeNome } from "@/lib/homonimos";
 import { formatarPreco } from "@/lib/format";
+import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { prisma } from "@/lib/prisma";
 import { metadataDePagina } from "@/lib/seo";
 
@@ -65,12 +66,13 @@ const TRILHA = [{ rotulo: "Início", href: "/" }, { rotulo: "Comparar" }];
 /** No máximo três: acima disso a tabela deixa de caber na tela do celular. */
 const MAXIMO = 3;
 
-const ROTULO_INSTALACAO: Record<string, string> = {
-  nao_informada: TEXTO_AUSENTE,
-  nao_oferecida: "A JB não instala",
-  opcional: "Opcional, à parte",
-  inclusa: "Inclusa no preço",
-  sob_consulta: "Sob consulta",
+/** Uma opção da fileira de escolha — o suficiente para reconhecer o aparelho. */
+type OpcaoDeComparacao = {
+  slug: string;
+  nome: string;
+  marca: string | null;
+  preco: string;
+  foto: string | null;
 };
 
 type Props = {
@@ -107,7 +109,14 @@ function slugsDe(valor: string | string[] | undefined) {
 export default async function CompararPage({ searchParams }: Props) {
   const params = await searchParams;
 
-  const escolhidos = slugsDe(params.p).slice(0, MAXIMO);
+  const pedidos = slugsDe(params.p);
+  const escolhidos = pedidos.slice(0, MAXIMO);
+  /* O que ficou de fora do limite de três.
+
+     A auditoria passou quatro produtos pela URL e o quarto foi descartado em
+     silêncio: a tabela abriu com três e nada dizia que havia um quarto. Corte
+     silencioso lê-se como "o site perdeu o que eu pedi". */
+  const excedentes = pedidos.slice(MAXIMO);
 
   const respostas: RespostasDaClinica = {
     volume: (primeiro(params.volume) || "nao_sei") as RespostasDaClinica["volume"],
@@ -118,30 +127,37 @@ export default async function CompararPage({ searchParams }: Props) {
   };
 
   const [catalogo, produtos] = await Promise.all([
+    /* A lista de escolha deixou de ser só `slug` e `name`: comparar
+       equipamento de dez mil reais escolhendo numa lista de caixas de texto
+       era pedir que a pessoa reconhecesse o aparelho pelo nome de cadastro.
+       Agora cada opção mostra foto, marca, nome e preço — e a fileira é
+       agrupada por categoria, para o comparador oferecer o que de fato se
+       compara entre si. */
     prisma.product.findMany({
-      where: PUBLICADO,
-      orderBy: { name: "asc" },
+      where: { ...PUBLICADO, NOT: UNIDADE_VENDIDA },
+      orderBy: [{ category: { order: "asc" } }, { name: "asc" }],
       take: 60,
-      select: { slug: true, name: true },
+      select: {
+        slug: true,
+        name: true,
+        priceCents: true,
+        allowDirectPurchase: true,
+        brand: { select: { name: true } },
+        category: { select: { name: true } },
+        media: {
+          orderBy: { order: "asc" },
+          take: 1,
+          select: { alt: true, media: { select: { url: true, alt: true } } },
+        },
+      },
     }),
     escolhidos.length > 0
       ? prisma.product.findMany({
           where: { ...PUBLICADO, slug: { in: escolhidos } },
           select: {
+            ...SELECT_FICHA,
             slug: true,
-            name: true,
             priceCents: true,
-            condition: true,
-            voltage: true,
-            warrantyMonths: true,
-            weightGrams: true,
-            widthMm: true,
-            heightMm: true,
-            depthMm: true,
-            infrastructureNotes: true,
-            boxContents: true,
-            installationPolicy: true,
-            brand: { select: { name: true } },
             /* A foto entra porque comparar equipamento sem ver o equipamento é
                comparar nome. Uma só: a comparação é tabela, não galeria. */
             media: {
@@ -159,6 +175,23 @@ export default async function CompararPage({ searchParams }: Props) {
     .map((slug) => produtos.find((produto) => produto.slug === slug))
     .filter((produto): produto is (typeof produtos)[number] => Boolean(produto));
 
+  /* A comparação técnica vem da MESMA ficha da página do produto.
+
+     Antes, esta tabela montava a própria lista: preço, condição, marca,
+     voltagem, dimensões, peso, garantia, instalação, local e caixa — dez
+     atributos, nenhum deles capacidade, ciclo ou bandejas. Para autoclave,
+     capacidade é O atributo de decisão, e o comparador "completo" era o único
+     lugar do site que não o mostrava. Pior: ele anunciava "8 de 10 atributos
+     mudam" contando linhas que não são o que muda.
+
+     `compararProdutos` devolve a ficha de cada produto lado a lado, com as
+     unidades já normalizadas — é o que faz "220" e "220 V" pararem de contar
+     como diferença e "6 meses" e "1 ano" pararem de ser colunas em unidades
+     diferentes. */
+  const comparacaoTecnica = compararProdutos(
+    ordenados.map((produto) => paraFicha(produto)),
+  );
+
   const linhas: LinhaDaComparacao[] =
     ordenados.length === 0
       ? []
@@ -172,60 +205,28 @@ export default async function CompararPage({ searchParams }: Props) {
                 : { tipo: "texto", valor: "Sob orçamento" },
             ),
           },
-          {
-            chave: "condicao",
-            rotulo: "Condição",
-            valores: ordenados.map((produto): ValorDoAtributo => ({
-              tipo: "texto",
-              valor:
-                CONDICAO[produto.condition as keyof typeof CONDICAO]?.rotulo ?? produto.condition,
-            })),
-          },
-          {
-            chave: "marca",
-            rotulo: "Marca",
-            valores: ordenados.map((produto): ValorDoAtributo =>
-              produto.brand ? { tipo: "texto", valor: produto.brand.name } : AUSENTE,
-            ),
-          },
-          {
-            chave: "voltagem",
-            rotulo: "Voltagem",
-            valores: ordenados.map((produto): ValorDoAtributo =>
-              produto.voltage ? { tipo: "texto", valor: produto.voltage } : AUSENTE,
-            ),
-          },
-          {
-            chave: "dimensoes",
-            rotulo: "Dimensões",
-            ajuda: "Confira contra o espaço da bancada antes de comprar.",
-            valores: ordenados.map((produto) =>
-              dimensoesLegiveis(produto.widthMm, produto.heightMm, produto.depthMm),
-            ),
-          },
-          {
-            chave: "peso",
-            rotulo: "Peso",
-            valores: ordenados.map((produto) => pesoLegivel(produto.weightGrams)),
-          },
-          {
-            chave: "garantia",
-            rotulo: "Garantia",
-            valores: ordenados.map((produto) => garantiaLegivel(produto.warrantyMonths)),
-          },
-          {
-            chave: "instalacao",
-            rotulo: "Instalação",
-            valores: ordenados.map((produto): ValorDoAtributo => {
-              const rotulo = ROTULO_INSTALACAO[produto.installationPolicy];
-              return rotulo && rotulo !== TEXTO_AUSENTE
-                ? { tipo: "texto", valor: rotulo }
-                : AUSENTE;
+          ...comparacaoTecnica.linhas.map(
+            (linha): LinhaDaComparacao => ({
+              chave: linha.key,
+              rotulo: linha.label,
+              ajuda: linha.decisive
+                ? "Atributo que decide a compra neste tipo de equipamento."
+                : undefined,
+              valores: linha.valores.map((valor): ValorDoAtributo =>
+                valor === null ? AUSENTE : { tipo: "texto", valor },
+              ),
             }),
-          },
+          ),
           {
+            /* Os rótulos vêm do dicionário, não da tela.
+
+               Este atributo tinha três nomes no site: "Requisitos do local" na
+               ficha, "O local precisa ter" aqui e nada no resto. O irmão dele
+               tinha outros três: "Itens inclusos", "Vem na caixa" e "O que vem
+               na caixa". Três nomes para um campo fazem a pessoa procurar de
+               novo o que já leu. */
             chave: "infraestrutura",
-            rotulo: "O local precisa ter",
+            rotulo: definicaoDe("requisitos")?.label ?? "Requisitos do local",
             ajuda: "Requisitos cadastrados. Célula vazia quer dizer que ninguém preencheu — não que não há requisito.",
             valores: ordenados.map((produto): ValorDoAtributo =>
               produto.infrastructureNotes.length > 0
@@ -235,7 +236,7 @@ export default async function CompararPage({ searchParams }: Props) {
           },
           {
             chave: "caixa",
-            rotulo: "Vem na caixa",
+            rotulo: definicaoDe("itens-inclusos")?.label ?? "Itens inclusos",
             valores: ordenados.map((produto): ValorDoAtributo =>
               produto.boxContents.length > 0
                 ? { tipo: "lista", valores: produto.boxContents }
@@ -243,6 +244,36 @@ export default async function CompararPage({ searchParams }: Props) {
             ),
           },
         ];
+
+  /* Agrupamento da escolha, por categoria e na ordem editorial do painel.
+     Categorias homônimas — o catálogo tem duas chamadas "Biossegurança" —
+     entram no mesmo grupo, senão a fileira ofereceria duas prateleiras com o
+     mesmo nome, que é o defeito que a auditoria apontou nos filtros. */
+  const grupos = (() => {
+    const ordem: string[] = [];
+    const porChave = new Map<string, { nome: string; produtos: OpcaoDeComparacao[] }>();
+
+    for (const produto of catalogo) {
+      const nome = produto.category?.name ?? "Outros equipamentos";
+      const chave = chaveDeNome(nome);
+      if (!porChave.has(chave)) {
+        porChave.set(chave, { nome, produtos: [] });
+        ordem.push(chave);
+      }
+      porChave.get(chave)!.produtos.push({
+        slug: produto.slug,
+        nome: produto.name,
+        marca: produto.brand?.name ?? null,
+        preco:
+          produto.allowDirectPurchase && produto.priceCents > 0
+            ? formatarPreco(produto.priceCents)
+            : "Sob orçamento",
+        foto: imagemProdutoSemFundo(produto.media[0]?.media.url ?? null),
+      });
+    }
+
+    return ordem.map((chave) => porChave.get(chave)!);
+  })();
 
   const recomendacao = recomendar(
     ordenados.map((produto) => ({
@@ -259,21 +290,52 @@ export default async function CompararPage({ searchParams }: Props) {
 
   const eleito = ordenados.find((produto) => produto.slug === recomendacao.slug);
 
-  return (
-    <>
-      <Secao espaco="sm">
-        <Trilha itens={TRILHA} className="mb-6" />
-        <TituloSecao
-          como="h1"
-          sobretitulo="Comparar"
-          titulo="Lado a lado, com o que o catálogo realmente tem"
-          descricao="Célula vazia quer dizer que o dado não foi cadastrado — nunca que o valor é zero, e nunca que o equipamento leva vantagem por isso."
-        />
+  const comparando = ordenados.length >= 2;
 
-        {/* Seleção e as três perguntas num formulário GET só: o estado vive na
-            URL, o que torna a comparação compartilhável e o botão voltar
-            previsível. */}
-        <form method="get" className="mt-8 rounded-xl border border-graf-200 bg-graf-50 p-5">
+  /* ==========================================================================
+     O que muda entre os equipamentos
+
+     Numa tabela de dez atributos por três produtos, boa parte das linhas diz a
+     mesma coisa nas três colunas — e é justamente o que **não** muda que não
+     ajuda a decidir. A comparação estava com todas as linhas no mesmo peso, e
+     achar a diferença era trabalho de quem lê.
+
+     "Diferente" aqui é comparação de texto renderizado, o mesmo que aparece na
+     célula. Linha sem nenhum dado preenchido não conta como diferença: três
+     "não informado" são três buracos iguais, não uma distinção.
+
+     O recorte vive na URL (`?so=diferencas`), como o resto do estado desta
+     página — continua compartilhável, e o botão voltar continua previsível.
+     ========================================================================== */
+  const linhaTemDiferenca = (linha: LinhaDaComparacao) => {
+    const preenchidos = linha.valores.filter((valor) => valor.tipo !== "ausente");
+    if (preenchidos.length === 0) return false;
+    // um preenchido e o resto vazio já é diferença: um tem o dado, o outro não
+    if (preenchidos.length !== linha.valores.length) return true;
+    const textos = new Set(preenchidos.map((valor) => textoDoValor(valor)));
+    return textos.size > 1;
+  };
+
+  const linhasDiferentes = linhas.filter(linhaTemDiferenca);
+  const soDiferencas = primeiro(params.so) === "diferencas";
+  const linhasVisiveis = soDiferencas ? linhasDiferentes : linhas;
+
+  const enderecoCom = (so: string | null) => {
+    const busca = new URLSearchParams();
+    for (const slug of escolhidos) busca.append("p", slug);
+    for (const chave of ["volume", "infra", "prioridade"] as const) {
+      const valor = primeiro(params[chave]);
+      if (valor && valor !== "nao_sei") busca.set(chave, valor);
+    }
+    if (so) busca.set("so", so);
+    const consulta = busca.toString();
+    return consulta ? `/comparar?${consulta}` : "/comparar";
+  };
+
+  /* Seleção e as três perguntas num formulário GET só: o estado vive na URL, o
+     que torna a comparação compartilhável e o botão voltar previsível. */
+  const seletor = (
+    <form method="get" className="rounded-xl border border-graf-200 bg-graf-50 p-5">
           {/* `min-w-0` no fieldset e em cada rótulo. Sem ele, o item de grade
               assume largura mínima igual ao conteúdo, e um nome comprido de
               equipamento empurra a coluna inteira para fora da tela em 320px —
@@ -282,23 +344,60 @@ export default async function CompararPage({ searchParams }: Props) {
             <legend className="text-sm font-bold text-graf-950">
               Escolha até {MAXIMO} equipamentos
             </legend>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {catalogo.map((produto) => (
-                <label
-                  key={produto.slug}
-                  className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-lg border border-graf-200 bg-white px-3 py-2 text-[0.875rem] text-graf-800 has-[:checked]:border-jb-500 has-[:checked]:bg-jb-50"
-                >
-                  <input
-                    type="checkbox"
-                    name="p"
-                    value={produto.slug}
-                    defaultChecked={escolhidos.includes(produto.slug)}
-                    className="size-4 accent-jb-600"
-                  />
-                  <span className="min-w-0 truncate">{produto.name}</span>
-                </label>
-              ))}
-            </div>
+            {grupos.map((grupo) => (
+              <div key={grupo.nome} className="mt-4 min-w-0">
+                <p className="micro text-graf-500">{grupo.nome}</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {grupo.produtos.map((produto) => (
+                    <label
+                      key={produto.slug}
+                      className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg border border-graf-200 bg-white p-2 text-[0.875rem] text-graf-800 transition-colors hover:border-graf-400 has-[:checked]:border-jb-500 has-[:checked]:bg-jb-50"
+                    >
+                      <input
+                        type="checkbox"
+                        name="p"
+                        value={produto.slug}
+                        defaultChecked={escolhidos.includes(produto.slug)}
+                        className="size-4 shrink-0 accent-jb-600"
+                      />
+                      <span
+                        data-palco-imagem-produto
+                        className="relative size-12 shrink-0 overflow-hidden rounded-md bg-surface-muted"
+                      >
+                        {produto.foto ? (
+                          <Image
+                            data-imagem-produto
+                            src={produto.foto}
+                            alt=""
+                            fill
+                            unoptimized={produto.foto.startsWith("/")}
+                            sizes="48px"
+                            className="object-contain p-0.5"
+                          />
+                        ) : (
+                          <span className="flex size-full items-center justify-center text-graf-300">
+                            <ImageOff className="size-4" aria-hidden />
+                          </span>
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        {produto.marca ? (
+                          <span className="block truncate micro text-graf-500">
+                            {produto.marca}
+                          </span>
+                        ) : null}
+                        <span className="block truncate font-semibold text-graf-950">
+                          {produto.nome}
+                        </span>
+                        <span className="tabular block truncate text-apoio text-graf-600">
+                          {produto.preco}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
           </fieldset>
 
           <fieldset className="mt-6 min-w-0">
@@ -354,7 +453,34 @@ export default async function CompararPage({ searchParams }: Props) {
             <Scale className="size-4" aria-hidden />
             Comparar
           </button>
-        </form>
+    </form>
+  );
+
+  /* ==========================================================================
+     A resposta vem antes do formulário que a produziu
+
+     Com `?p=a&p=b&p=c` a página abria pelo seletor inteiro — as sete famílias
+     de equipamento, uma caixa por produto do catálogo, mais as três perguntas
+     — e só então a comparação. Medido a 1440px: a tabela começava em **2.359px
+     numa página de 3.966**. Quem clica em "Comparar", ou abre um link que
+     alguém mandou, rolava duas telas e meia até ver aquilo que pediu.
+
+     Agora o seletor só abre primeiro quando não há nada para comparar, que é
+     quando ele *é* a página. Com comparação montada ele desce e vira gaveta
+     fechada — continua a um clique, e some do caminho de quem já escolheu.
+     ========================================================================== */
+  return (
+    <>
+      <Secao espaco="sm">
+        <Trilha itens={TRILHA} className="mb-6" />
+        <TituloSecao
+          como="h1"
+          sobretitulo="Comparar"
+          titulo="Lado a lado, com o que o catálogo realmente tem"
+          descricao="Célula vazia quer dizer que o dado não foi cadastrado — nunca que o valor é zero, e nunca que o equipamento leva vantagem por isso."
+        />
+
+        {comparando ? null : <div className="mt-8">{seletor}</div>}
       </Secao>
 
       {ordenados.length < 2 ? (
@@ -383,7 +509,7 @@ export default async function CompararPage({ searchParams }: Props) {
                   {recomendacao.criterios.map((criterio) => (
                     <li
                       key={criterio}
-                      className="flex gap-2.5 text-[0.9375rem] leading-relaxed text-graf-700"
+                      className="flex gap-2.5 text-corpo leading-relaxed text-graf-700"
                     >
                       <span
                         aria-hidden
@@ -399,14 +525,14 @@ export default async function CompararPage({ searchParams }: Props) {
                   ela impede que a ausência de dado pareça um empate técnico. */}
               {recomendacao.lacunas.length > 0 ? (
                 <div className="mt-4 border-t border-graf-200 pt-4">
-                  <p className="text-[0.8125rem] font-semibold text-graf-700">
+                  <p className="text-apoio font-semibold text-graf-700">
                     O que não entrou na conta
                   </p>
                   <ul className="mt-2 space-y-1.5">
                     {recomendacao.lacunas.map((lacuna) => (
                       <li
                         key={lacuna}
-                        className="flex gap-2.5 text-[0.8125rem] leading-relaxed text-graf-600"
+                        className="flex gap-2.5 text-apoio leading-relaxed text-graf-600"
                       >
                         <Info className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
                         <span>{lacuna}</span>
@@ -416,7 +542,7 @@ export default async function CompararPage({ searchParams }: Props) {
                 </div>
               ) : null}
 
-              <p className="mt-4 border-t border-graf-200 pt-4 text-[0.8125rem] leading-relaxed text-graf-500">
+              <p className="mt-4 border-t border-graf-200 pt-4 text-apoio leading-relaxed text-graf-500">
                 Esta orientação usa preço, garantia e requisitos de instalação cadastrados. Ela
                 não afirma que um equipamento atende a um procedimento clínico — isso depende de
                 informação que o catálogo não tem, e quem responde é a equipe técnica.
@@ -431,7 +557,67 @@ export default async function CompararPage({ searchParams }: Props) {
 
           {/* ------------------------------------------- a comparação --- */}
           <Secao espaco="sm">
-            <h2 className="text-title texto-forte">Atributo por atributo</h2>
+            {/* Dois avisos que faltavam, e os dois são sobre o que a tabela
+                NÃO está dizendo.
+
+                O primeiro: o limite de três é aplicado no servidor, e o
+                quarto produto passado pela URL era descartado em silêncio. A
+                tabela abria com três e nada indicava que havia um quarto.
+
+                O segundo: dava para comparar autoclave com cuba e com
+                seladora. A tabela monta — e fica quase toda de travessões,
+                porque os atributos de uma família não existem na outra. Dizer
+                isso antes evita que a pessoa leia o travessão como defeito do
+                equipamento. */}
+            {excedentes.length > 0 ? (
+              <Aviso
+                tom="atencao"
+                titulo={`A comparação mostra ${MAXIMO} equipamentos por vez`}
+                className="mb-5"
+              >
+                {excedentes.length === 1
+                  ? "Um equipamento ficou de fora desta tabela."
+                  : `${excedentes.length} equipamentos ficaram de fora desta tabela.`}{" "}
+                Tire um dos três acima para colocar outro no lugar — acima de três, a tabela
+                deixa de caber na tela do celular.
+              </Aviso>
+            ) : null}
+
+            {comparacaoTecnica.familiasMisturadas ? (
+              <Aviso
+                tom="info"
+                titulo="Estes equipamentos são de tipos diferentes"
+                className="mb-5"
+              >
+                Capacidade, ciclo e potência significam coisas distintas em cada um deles, e
+                por isso várias linhas aparecem vazias. A comparação continua válida para
+                preço, garantia e instalação.
+              </Aviso>
+            ) : null}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-title texto-forte">Atributo por atributo</h2>
+                <p className="texto-apoio mt-1 text-graf-600">
+                  {linhasDiferentes.length === 0
+                    ? "Nestes atributos, os equipamentos empatam."
+                    : `${linhasDiferentes.length} de ${linhas.length} ${linhas.length === 1 ? "atributo muda" : "atributos mudam"} entre eles.`}
+                </p>
+              </div>
+
+              {linhasDiferentes.length > 0 && linhasDiferentes.length < linhas.length ? (
+                <Link
+                  href={enderecoCom(soDiferencas ? null : "diferencas")}
+                  scroll={false}
+                  aria-current={soDiferencas ? "true" : undefined}
+                  className="foco-jb inline-flex min-h-11 w-fit shrink-0 items-center gap-2 rounded-lg border px-4 text-sm font-bold transition-colors aria-[current=true]:border-jb-300 aria-[current=true]:bg-jb-50 aria-[current=true]:text-jb-800 border-graf-300 text-graf-800 hover:border-graf-400 hover:bg-graf-50"
+                >
+                  {soDiferencas
+                    ? "Mostrar todos os atributos"
+                    : `Mostrar só o que muda (${linhasDiferentes.length})`}
+                </Link>
+              ) : null}
+            </div>
 
             {/* Em telas estreitas, uma coluna por equipamento — e não uma
                 tabela de três colunas que estoura a largura. O atributo é
@@ -441,10 +627,14 @@ export default async function CompararPage({ searchParams }: Props) {
               {ordenados.map((produto, indice) => (
                 <Cartao key={produto.slug} className="p-5">
                   <div className="flex items-center gap-4">
-                    <span className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-graf-200 bg-white p-1.5">
+                    <span
+                      data-palco-imagem-produto
+                      className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted p-1.5"
+                    >
                       {produto.media[0] ? (
                         <Image
-                          src={produto.media[0].media.url}
+                          data-imagem-produto
+                          src={imagemProdutoSemFundo(produto.media[0].media.url)}
                           alt={produto.media[0].alt || produto.media[0].media.alt || produto.name}
                           width={160}
                           height={160}
@@ -458,7 +648,7 @@ export default async function CompararPage({ searchParams }: Props) {
                     <h3 className="min-w-0 text-[1.0625rem] font-bold text-graf-950">{produto.name}</h3>
                   </div>
                   <dl className="mt-3 space-y-2 text-[0.875rem]">
-                    {linhas.map((linha) => (
+                    {linhasVisiveis.map((linha) => (
                       <div
                         key={linha.chave}
                         className="flex flex-wrap items-baseline justify-between gap-x-4 border-b border-graf-100 pb-2 last:border-0"
@@ -488,7 +678,18 @@ export default async function CompararPage({ searchParams }: Props) {
             </div>
 
             <div className="mt-4 hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[48rem] border-collapse text-left text-[0.9375rem]">
+              {/* `table-fixed` com as colunas de produto dividindo o que sobra em partes
+                    iguais. Com largura automática, a coluna cujas células eram
+                    curtas — no caso, a do equipamento sem dimensões nem peso
+                    cadastrados — encolhia para menos de um terço da vizinha, e a
+                    tabela parecia quebrada em vez de comparável. */}
+              <table className="w-full min-w-[48rem] table-fixed border-collapse text-left text-corpo">
+                <colgroup>
+                  <col className="w-52" />
+                  {ordenados.map((produto) => (
+                    <col key={produto.slug} style={{ width: `${(100 - 22) / ordenados.length}%` }} />
+                  ))}
+                </colgroup>
                 <caption className="sr-only">
                   Comparação de atributos entre os equipamentos escolhidos
                 </caption>
@@ -510,10 +711,14 @@ export default async function CompararPage({ searchParams }: Props) {
                           href={`/loja/${produto.slug}`}
                           className="group block hover:text-jb-700"
                         >
-                          <span className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-lg border border-graf-200 bg-white p-2">
+                          <span
+                            data-palco-imagem-produto
+                            className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-lg bg-surface-muted p-2"
+                          >
                             {produto.media[0] ? (
                               <Image
-                                src={produto.media[0].media.url}
+                                data-imagem-produto
+                                src={imagemProdutoSemFundo(produto.media[0].media.url)}
                                 alt={
                                   produto.media[0].alt ||
                                   produto.media[0].media.alt ||
@@ -535,8 +740,19 @@ export default async function CompararPage({ searchParams }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {linhas.map((linha) => (
-                    <tr key={linha.chave} className="border-t border-graf-200">
+                  {linhasVisiveis.map((linha) => (
+                    <tr
+                      key={linha.chave}
+                      /* Sem tingir a linha que muda.
+                         Medido nesta comparação: 9 de 10 atributos mudam. Pintar
+                         nove de dez linhas não destaca nada — só deixa a tabela
+                         listrada. O destaque de verdade é o recorte "mostrar só
+                         o que muda", que remove as linhas que empatam em vez de
+                         colorir as que não empatam. `data-muda` fica para quem
+                         precisar estilizar ou testar. */
+                      data-muda={linhaTemDiferenca(linha) ? "sim" : undefined}
+                      className="border-t border-graf-200"
+                    >
                       <th scope="row" className="py-3 pr-4 align-top font-normal text-graf-600">
                         {linha.rotulo}
                         {linha.ajuda ? (
@@ -562,6 +778,23 @@ export default async function CompararPage({ searchParams }: Props) {
                 </tbody>
               </table>
             </div>
+          </Secao>
+
+          {/* O seletor, agora como controle e não como abertura. */}
+          <Secao espaco="sm">
+            <details className="group rounded-xl border border-graf-200 bg-white">
+              <summary className="foco-jb flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 text-sm font-bold text-graf-950 [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center gap-2">
+                  <Scale className="size-4 text-jb-600" aria-hidden />
+                  Trocar equipamentos ou refazer as perguntas
+                </span>
+                <ArrowRight
+                  className="size-4 shrink-0 text-graf-500 transition-transform group-open:rotate-90"
+                  aria-hidden
+                />
+              </summary>
+              <div className="border-t border-graf-200 p-5">{seletor}</div>
+            </details>
           </Secao>
         </>
       )}
