@@ -1,10 +1,24 @@
 import Link from "next/link";
 import type { ServiceKind } from "@prisma/client";
-import { ArrowRight, Wrench } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { ROTULO_SERVICO } from "@/components/assistencia/rotulos";
 import { Etiqueta } from "@/components/ui/data";
 import { formatarPreco } from "@/lib/format";
+
+/* ============================================================================
+   Serviços que a JB executa neste equipamento
+
+   São os `ProductAddon` do cadastro — os mesmos que aparecem para marcar na
+   caixa de compra, aqui abertos com explicação e preço. Uma lista de preços,
+   não uma grade de cartões: são dois ou três itens, e cartão para cada um só
+   repetiria moldura.
+
+   O valor exibido é o que o PRODUTO define para aquele serviço
+   (`ProductAddon.priceCents`); só cai no preço padrão do serviço quando o
+   produto não sobrescreve, que é exatamente a conta que o carrinho e o pedido
+   fazem.
+   ============================================================================ */
 
 export type ServicoDoProduto = {
   serviceId: string;
@@ -20,44 +34,46 @@ export function ServicosDoProduto({ servicos }: { servicos: ServicoDoProduto[] }
   if (servicos.length === 0) return null;
 
   return (
-    <ul className="divide-y divide-hairline border-t border-graf-200">
+    <ul className="divide-y divide-graf-200 border-y border-graf-200">
       {servicos.map((servico) => {
         const preco = servico.precoCents ?? 0;
 
         return (
-          <li key={servico.serviceId} className="group py-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
-              <div className="flex min-w-0 gap-3">
-                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-graf-50 text-jb-700">
-                  <Wrench className="size-4" aria-hidden />
+          <li
+            key={servico.serviceId}
+            className="flex flex-col gap-x-10 gap-y-4 py-6 md:flex-row md:items-start md:justify-between"
+          >
+            <div className="min-w-0 max-w-2xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500">
+                  {ROTULO_SERVICO[servico.tipo]}
                 </span>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="micro text-graf-500">
-                      {ROTULO_SERVICO[servico.tipo]}
-                    </p>
-                    {servico.obrigatorio ? <Etiqueta tom="alerta">Obrigatório</Etiqueta> : null}
-                  </div>
-                  <h3 className="mt-1 text-sm font-extrabold text-graf-950">{servico.nome}</h3>
-                  {servico.descricao ? (
-                    <p className="mt-1 max-w-2xl text-xs leading-5 text-graf-600">{servico.descricao}</p>
-                  ) : null}
-                </div>
+                {servico.obrigatorio ? (
+                  <Etiqueta tom="alerta">Obrigatório nesta compra</Etiqueta>
+                ) : null}
               </div>
 
-              <div className="flex shrink-0 items-center justify-between gap-4 pl-11 sm:block sm:pl-0 sm:text-right">
-                <p className="tabular text-sm font-extrabold text-graf-950">
-                  {preco > 0 ? formatarPreco(preco) : "Sob orçamento"}
+              <h3 className="mt-2 text-lg font-bold text-graf-950">{servico.nome}</h3>
+
+              {servico.descricao ? (
+                <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+                  {servico.descricao}
                 </p>
-                <Link
-                  href={`/servicos/${servico.slug}`}
-                  className="foco-jb -mx-2 mt-1 inline-flex min-h-11 items-center gap-1 px-2 text-xs font-bold text-jb-700 hover:text-jb-800"
-                >
-                  Como funciona
-                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
-                  <span className="sr-only">— {servico.nome}</span>
-                </Link>
-              </div>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 md:shrink-0 md:flex-col md:items-end md:gap-y-3">
+              <p className="text-xl font-extrabold tabular text-graf-950">
+                {preco > 0 ? formatarPreco(preco) : "Sob orçamento"}
+              </p>
+              <Link
+                href={`/servicos/${servico.slug}`}
+                className="foco-jb inline-flex min-h-11 items-center gap-1.5 rounded-md text-[0.9375rem] font-semibold text-jb-700 transition-colors duration-150 hover:text-jb-500"
+              >
+                Como funciona
+                <ArrowRight className="size-4" aria-hidden />
+                <span className="sr-only">— {servico.nome}</span>
+              </Link>
             </div>
           </li>
         );

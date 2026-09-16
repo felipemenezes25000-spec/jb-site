@@ -20,8 +20,7 @@ import { cn } from "@/lib/utils";
 
 export type FundoSecao = "branco" | "clara" | "afundada" | "marca";
 export type EspacoSecao = "sm" | "md" | "lg" | "xl" | "nenhum";
-/** `loja` é a caixa de 1600px da vitrine; `padrao`, a de 1440px da plataforma. */
-export type LarguraSecao = "padrao" | "loja" | "estreita" | "cheia";
+export type LarguraSecao = "padrao" | "estreita" | "cheia";
 
 const FUNDOS: Record<FundoSecao, string> = {
   branco: "bg-white",
@@ -41,7 +40,6 @@ const ESPACOS: Record<EspacoSecao, string> = {
 
 const LARGURAS: Record<LarguraSecao, string> = {
   padrao: "container-jb",
-  loja: "container-loja",
   estreita: "container-estreito",
   cheia: "w-full",
 };

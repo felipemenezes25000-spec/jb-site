@@ -36,7 +36,6 @@ export type ProdutoBasico = {
   categoryId: string | null;
   brandId: string | null;
   condition: string;
-  isEquipment: boolean;
   status: string;
   featured: boolean;
 };
@@ -140,14 +139,6 @@ export function FormularioProdutoBasico({
                 ))}
               </Selecao>
             </Grade>
-
-            <Marcador
-              name="isEquipment"
-              value="on"
-              defaultChecked={produto.isEquipment}
-              rotulo="Gera prontuário técnico após a compra"
-              ajuda="Ative para equipamentos. Desative para peças, acessórios e consumíveis: eles continuam no pedido, mas não entram no parque técnico da clínica."
-            />
 
             <Marcador
               name="featured"

@@ -74,7 +74,7 @@ export default async function ContatoPage() {
         acoes={
           <>
             {s.telefone ? (
-              <a href={telHref(s.telefone)} className={classesBotao("secundario", "md")}>
+              <a href={telHref(s.telefone)} className={classesBotao("primario", "md")}>
                 <Phone className="size-4" aria-hidden />
                 {formatarTelefone(s.telefone)}
               </a>

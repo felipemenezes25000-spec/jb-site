@@ -3,49 +3,57 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { OrderStatus, Urgency } from "@prisma/client";
 import {
-  ArrowRight,
   CalendarClock,
-  ChartColumn,
   ClipboardList,
-  CreditCard,
   FileText,
   ShieldAlert,
   ShoppingCart,
   Stethoscope,
   TriangleAlert,
   Wallet,
-  Wrench,
 } from "lucide-react";
 
 import { Indicador, Indicadores } from "@/components/admin/indicador";
-import {
-  Cartao,
-  CabecalhoCartao,
-  Esqueleto,
-  Etiqueta,
-  Vazio,
-  type Tom,
-} from "@/components/ui/data";
+import { Cartao, CabecalhoCartao, Esqueleto, Etiqueta, Vazio, type Tom } from "@/components/ui/data";
 import { LinkBotao } from "@/components/ui/button";
 import type { StaffUser } from "@/lib/auth";
-import {
-  distanciaEmDias,
-  formatarData,
-  formatarDataExtensa,
-  formatarPreco,
-  plural,
-} from "@/lib/format";
+import { distanciaEmDias, formatarData, formatarDataExtensa, formatarPreco, plural } from "@/lib/format";
 import { ROTULO_STATUS } from "@/lib/pedido";
 import { AREAS, exigirStaffAdmin, podeVer, type AreaAdmin } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
+/*
+ * Toda tela do painel lê a sessão do staff antes de qualquer outra coisa, e
+ * sessão é dado de requisição: nenhuma delas prerenderiza, nem deveria.
+ *
+ * `instant = false` é a saída documentada, e o guia é explícito em que ela vale
+ * para o SEGMENTO que levanta a validação — não cascateia do layout
+ * (node_modules/next/dist/docs/01-app/02-guides/migrating-to-cache-components.md,
+ * "Adopting incrementally"). Sem esta linha em cada página, a validação dispara
+ * na compilação sob demanda e o vigia de console do E2E derruba o teste que
+ * estiver rodando na hora.
+ */
 export const instant = false;
 
 export const metadata: Metadata = {
   title: "Visão geral",
 };
 
+/**
+ * Painel inicial do backoffice.
+ *
+ * Cada número aqui sai do banco e leva para a lista que o explica — não existe
+ * bloco decorativo. O que aparece depende do papel: quem não abre uma área não
+ * vê nem o número dela, e a consulta correspondente nem chega a rodar.
+ */
+
+/* ------------------------------------------------------------------- datas */
+
+/**
+ * Início do mês no fuso de São Paulo. O Brasil não usa mais horário de verão
+ * desde 2019, então o deslocamento é fixo em -03:00.
+ */
 function inicioDoMes(deslocamentoMeses = 0) {
   const partes = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
@@ -65,6 +73,8 @@ function variacaoPercentual(atual: number, anterior: number) {
   return ((atual - anterior) / anterior) * 100;
 }
 
+/* ------------------------------------------------------------------ rótulos */
+
 const ORDEM_STATUS: OrderStatus[] = [
   "aguardando_pagamento",
   "pagamento_em_analise",
@@ -81,6 +91,7 @@ const ORDEM_STATUS: OrderStatus[] = [
   "reembolsado",
 ];
 
+/** Pedidos que dependem de alguém da JB mexer. */
 const AGUARDANDO_ACAO: OrderStatus[] = [
   "pagamento_em_analise",
   "pago",
@@ -94,19 +105,8 @@ const AGUARDANDO_ACAO: OrderStatus[] = [
 function tomDoPedido(status: OrderStatus): Tom {
   if (status === "cancelado" || status === "reembolsado") return "alerta";
   if (status === "concluido" || status === "entregue") return "ok";
-  if (status === "aguardando_pagamento" || status === "pagamento_em_analise") {
-    return "aguardando";
-  }
+  if (status === "aguardando_pagamento" || status === "pagamento_em_analise") return "aguardando";
   return "andamento";
-}
-
-function pontoDoPedido(status: OrderStatus) {
-  if (status === "cancelado" || status === "reembolsado") return "bg-jb-500";
-  if (status === "concluido" || status === "entregue") return "bg-ok-500";
-  if (status === "aguardando_pagamento" || status === "pagamento_em_analise") {
-    return "bg-warn-500";
-  }
-  return "bg-info-500";
 }
 
 const ROTULO_URGENCIA: Record<Urgency, string> = {
@@ -125,62 +125,24 @@ const TOM_URGENCIA: Record<Urgency, Tom> = {
 
 const ORDEM_URGENCIA: Urgency[] = ["parado", "alta", "normal", "baixa"];
 
+/* -------------------------------------------------------------- utilitários */
+
 function Secao({
   titulo,
   descricao,
-  icone: Icone,
-  relatorioHref,
-  destaque = false,
   children,
 }: {
   titulo: string;
   descricao: string;
-  icone: React.ComponentType<{ className?: string }>;
-  relatorioHref?: string;
-  destaque?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section
-      className={cn(
-        "space-y-4",
-        destaque &&
-          // O recuo negativo sangra a faixa até a borda da página, então tem de
-          // espelhar o respiro dela — `px-4 sm:px-5 lg:px-6 xl:px-7 2xl:px-8`, em
-          // `casca.tsx`. Estava um degrau adiantado a partir de 640px e a faixa
-          // ficava 4px mais larga que a tela em todas as larguras de tablet para
-          // cima.
-          "-mx-4 border-y border-jb-500/5 bg-gradient-to-br from-jb-50/55 via-white/75 to-jb-50/20 px-4 py-6 sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6 xl:-mx-7 xl:px-7 2xl:-mx-8 2xl:px-8",
-      )}
-    >
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div className="flex items-start gap-3">
-          <span
-            className={cn(
-              "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg",
-              destaque ? "bg-jb-50 text-jb-600" : "bg-white text-jb-600 shadow-sm ring-1 ring-inset ring-graf-200",
-            )}
-            aria-hidden
-          >
-            <Icone className="size-[17px]" />
-          </span>
-          <div>
-            <h2 className="text-[1.15rem] font-bold leading-tight tracking-[-0.015em] text-graf-950">
-              {titulo}
-            </h2>
-            <p className="mt-0.5 text-[0.78rem] leading-relaxed text-graf-500">{descricao}</p>
-          </div>
-        </div>
-
-        {relatorioHref ? (
-          <Link
-            href={relatorioHref}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[0.75rem] font-semibold text-graf-600 transition-colors hover:bg-white hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-          >
-            Ver relatório completo
-            <ArrowRight className="size-3.5" aria-hidden />
-          </Link>
-        ) : null}
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-[1.1875rem] font-bold leading-tight tracking-[-0.01em] text-graf-950">
+          {titulo}
+        </h2>
+        <p className="mt-1 text-[0.9375rem] leading-relaxed text-graf-500">{descricao}</p>
       </div>
       {children}
     </section>
@@ -205,60 +167,49 @@ function Linha({
       <Link
         href={href}
         className={cn(
-          "flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 transition-colors",
+          "flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 transition-colors",
           "hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500",
         )}
       >
-        <span className="min-w-[11rem] flex-1">
-          <span className="block truncate text-[0.78rem] font-semibold text-graf-900">{titulo}</span>
-          <span className="block truncate text-xs text-graf-500">{detalhe}</span>
+        {/* Com `flex-1` de base zero a coluna do texto encolhe em vez de
+            quebrar a linha: em 360px o pedido virava "JB…" com 24px visíveis
+            ao lado do valor e da etiqueta. A largura mínima empurra valor e
+            etiqueta para a linha de baixo. */}
+        <span className="min-w-[12rem] flex-1">
+          <span className="block truncate text-sm font-semibold text-graf-900">{titulo}</span>
+          <span className="block truncate text-[0.8125rem] text-graf-500">{detalhe}</span>
         </span>
         {valor ? (
-          <span className="tabular shrink-0 text-[0.75rem] font-semibold text-graf-800">{valor}</span>
+          <span className="tabular shrink-0 text-sm font-semibold text-graf-800">{valor}</span>
         ) : null}
         {etiqueta ? <Etiqueta tom={etiqueta.tom}>{etiqueta.texto}</Etiqueta> : null}
-        <ArrowRight className="size-3.5 shrink-0 text-graf-400" aria-hidden />
-      </Link>
-    </li>
-  );
-}
-
-function LinhaStatusPedido({ status, quantidade }: { status: OrderStatus; quantidade: number }) {
-  return (
-    <li>
-      <Link
-        href={`/admin/pedidos?status=${status}`}
-        className="flex min-h-11 items-center gap-2.5 px-4 py-2 text-[0.75rem] transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
-      >
-        <span className={cn("size-2 shrink-0 rounded-full", pontoDoPedido(status))} aria-hidden />
-        <span className="min-w-0 flex-1 truncate font-medium text-graf-700">{ROTULO_STATUS[status]}</span>
-        <Etiqueta tom={tomDoPedido(status)}>{quantidade}</Etiqueta>
-        <ArrowRight className="size-3.5 shrink-0 text-graf-400" aria-hidden />
       </Link>
     </li>
   );
 }
 
 function CorpoVazio({ texto }: { texto: string }) {
-  return <Vazio titulo={texto} className="m-4 border-graf-200 bg-transparent py-7" />;
+  return <Vazio titulo={texto} className="m-4 border-graf-200 bg-transparent py-8" />;
 }
 
 function EsqueletoBloco() {
   return (
     <div className="space-y-3">
       <Esqueleto className="h-5 w-40" />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <Esqueleto key={i} className="h-36" />
+          <Esqueleto key={i} className="h-32" />
         ))}
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <Esqueleto className="h-60" />
-        <Esqueleto className="h-60" />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Esqueleto className="h-64" />
+        <Esqueleto className="h-64" />
       </div>
     </div>
   );
 }
+
+/* ------------------------------------------------------------------- página */
 
 export default async function PaginaPainel({
   searchParams,
@@ -276,48 +227,22 @@ export default async function PaginaPainel({
   const verAssistencia = podeVer(usuario, "assistencia");
   const verEstoque = podeVer(usuario, "estoque") || podeVer(usuario, "produtos");
   const verLeads = podeVer(usuario, "leads");
-  const verInsights = podeVer(usuario, "insights");
 
   const semBlocos = !verComercial && !verOrcamentos && !verAssistencia && !verEstoque && !verLeads;
-  const primeiroNome = usuario.name.trim().split(/\s+/)[0] || "Equipe";
 
   return (
-    <div className="space-y-7">
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
-        <header>
-          <p className="text-xs font-medium text-graf-500">
-            {formatarDataExtensa(new Date())}
-          </p>
-          <h1 className="mt-1.5 text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.035em] text-graf-950 sm:text-[2.1rem]">
-            Olá, {primeiroNome} <span aria-hidden>👋</span>
-          </h1>
-          <p className="mt-1.5 text-[0.82rem] leading-relaxed text-graf-500">
-            Abaixo está o que depende da JB para andar hoje.
-          </p>
-        </header>
-
-        {verInsights ? (
-          <Link
-            href="/admin/insights"
-            className="group hidden min-h-[4.8rem] items-center gap-4 overflow-hidden rounded-xl border border-jb-500/8 bg-gradient-to-r from-jb-50 via-[#fff1f2] to-[#ffe9eb] px-5 py-3.5 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-22px_rgba(224,20,27,0.35)] xl:flex"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/80 text-jb-600 shadow-sm ring-1 ring-inset ring-jb-500/8">
-              <ChartColumn className="size-6" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[0.8rem] font-bold text-graf-950">
-                Mais vendas, mais equipamentos em movimento
-              </span>
-              <span className="mt-0.5 block text-xs text-graf-500">
-                Acompanhe seus resultados em tempo real.
-              </span>
-            </span>
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/85 text-graf-600 transition-transform group-hover:translate-x-0.5">
-              <ArrowRight className="size-4" aria-hidden />
-            </span>
-          </Link>
-        ) : null}
-      </div>
+    <div className="space-y-10">
+      <header>
+        <p className="text-[0.8125rem] font-medium text-graf-500">
+          {formatarDataExtensa(new Date())}
+        </p>
+        <h1 className="mt-2 text-[1.625rem] font-bold leading-[1.15] tracking-[-0.02em] text-graf-950 sm:text-[1.75rem]">
+          Olá, {usuario.name.split(" ")[0]}
+        </h1>
+        <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-500">
+          Abaixo está o que depende da JB para andar hoje.
+        </p>
+      </header>
 
       {areaNegada || erro === "permissao" ? (
         <p
@@ -335,13 +260,13 @@ export default async function PaginaPainel({
 
       {verComercial ? (
         <Suspense fallback={<EsqueletoBloco />}>
-          <BlocoComercial usuario={usuario} verInsights={verInsights} />
+          <BlocoComercial usuario={usuario} />
         </Suspense>
       ) : null}
 
       {verAssistencia ? (
         <Suspense fallback={<EsqueletoBloco />}>
-          <BlocoAssistencia verInsights={verInsights} />
+          <BlocoAssistencia />
         </Suspense>
       ) : null}
 
@@ -361,13 +286,9 @@ export default async function PaginaPainel({
   );
 }
 
-async function BlocoComercial({
-  usuario,
-  verInsights,
-}: {
-  usuario: StaffUser;
-  verInsights: boolean;
-}) {
+/* --------------------------------------------------------------- comercial */
+
+async function BlocoComercial({ usuario }: { usuario: StaffUser }) {
   const mesAtual = inicioDoMes();
   const mesAnterior = inicioDoMes(-1);
   const verOrcamentos = podeVer(usuario, "orcamentos");
@@ -436,18 +357,13 @@ async function BlocoComercial({
   const aguardandoPagamento = contagem.get("aguardando_pagamento") ?? 0;
 
   return (
-    <Secao
-      titulo="Comercial"
-      descricao="Vendas da loja, fila de expedição e propostas abertas."
-      icone={ShoppingCart}
-      relatorioHref={verInsights ? "/admin/insights" : undefined}
-    >
-      <Indicadores className={verOrcamentos ? undefined : "xl:grid-cols-3"}>
+    <Secao titulo="Comercial" descricao="Vendas da loja, fila de expedição e propostas abertas">
+      <Indicadores>
         <Indicador
           rotulo="Faturamento do mês"
           valor={formatarPreco(receitaMes)}
           detalhe={`${plural(faturamento._count._all, "pedido pago", "pedidos pagos")} desde ${formatarData(mesAtual)}`}
-          icone={ChartColumn}
+          icone={Wallet}
           tom="ok"
           href="/admin/pedidos?status=pago"
           hrefRotulo="Ver pedidos pagos"
@@ -460,7 +376,7 @@ async function BlocoComercial({
         <Indicador
           rotulo="Aguardando ação da JB"
           valor={aguardandoAcao}
-          detalhe="Pagos, em separação, revisão técnica ou prontos para sair."
+          detalhe="Pagos, em separação, revisão técnica ou prontos para sair"
           icone={ShoppingCart}
           tom={aguardandoAcao > 0 ? "aviso" : "neutro"}
           href="/admin/pedidos"
@@ -469,52 +385,47 @@ async function BlocoComercial({
         <Indicador
           rotulo="Aguardando pagamento"
           valor={aguardandoPagamento}
-          detalhe="Pedidos fechados que ainda não foram pagos."
-          icone={CreditCard}
-          tom={aguardandoPagamento > 0 ? "info" : "neutro"}
+          detalhe="Pedidos fechados que ainda não foram pagos"
+          icone={ShoppingCart}
+          tom="neutro"
           href="/admin/pedidos?status=aguardando_pagamento"
         />
         {verOrcamentos ? (
           <Indicador
             rotulo="Orçamentos sem resposta"
             valor={orcamentos}
-            detalhe="Enviados ao cliente, esperando aprovação."
+            detalhe="Enviados ao cliente, esperando aprovação"
             icone={FileText}
-            tom={orcamentos > 0 ? "marca" : "neutro"}
+            tom={orcamentos > 0 ? "aviso" : "neutro"}
             href="/admin/orcamentos?status=enviado"
           />
         ) : null}
       </Indicadores>
 
-      <div
-        className={cn(
-          "grid gap-3",
-          verOrcamentos ? "xl:grid-cols-12" : "lg:grid-cols-2",
-        )}
-      >
-        <Cartao className={verOrcamentos ? "xl:col-span-4" : undefined}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Cartao>
           <CabecalhoCartao
             titulo="Pedidos por status"
-            descricao="Toda a base, do mais recente ao mais antigo."
+            descricao="Toda a base, do mais recente ao encerrado"
           />
           {porStatus.length === 0 ? (
             <CorpoVazio texto="Nenhum pedido registrado ainda" />
           ) : (
             <ul className="divide-y divide-graf-100">
-              {ORDEM_STATUS.filter((status) => (contagem.get(status) ?? 0) > 0)
-                .slice(0, 7)
-                .map((status) => (
-                  <LinhaStatusPedido
-                    key={status}
-                    status={status}
-                    quantidade={contagem.get(status) ?? 0}
-                  />
-                ))}
+              {ORDEM_STATUS.filter((status) => (contagem.get(status) ?? 0) > 0).map((status) => (
+                <Linha
+                  key={status}
+                  href={`/admin/pedidos?status=${status}`}
+                  titulo={ROTULO_STATUS[status]}
+                  detalhe={plural(contagem.get(status) ?? 0, "pedido", "pedidos")}
+                  etiqueta={{ texto: String(contagem.get(status) ?? 0), tom: tomDoPedido(status) }}
+                />
+              ))}
             </ul>
           )}
         </Cartao>
 
-        <Cartao className={verOrcamentos ? "overflow-hidden xl:col-span-5" : "overflow-hidden"}>
+        <Cartao>
           <CabecalhoCartao
             titulo="Últimos pedidos"
             acao={
@@ -526,101 +437,64 @@ async function BlocoComercial({
           {ultimos.length === 0 ? (
             <CorpoVazio texto="Nenhum pedido registrado ainda" />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-[34rem]">
-                <thead>
-                  <tr>
-                    <th className="border-b border-graf-200 px-4 py-2 text-left">Pedido</th>
-                    <th className="border-b border-graf-200 px-3 py-2 text-left">Cliente</th>
-                    <th className="border-b border-graf-200 px-3 py-2 text-left">Valor</th>
-                    <th className="border-b border-graf-200 px-3 py-2 text-left">Status</th>
-                    <th className="border-b border-graf-200 px-4 py-2 text-right">Data</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ultimos.slice(0, 5).map((pedido) => (
-                    <tr key={pedido.id} className="border-b border-graf-100 last:border-b-0">
-                      <td className="border-b border-graf-100 px-4 py-2.5">
-                        <Link
-                          href={`/admin/pedidos/${pedido.id}`}
-                          className="font-semibold text-graf-900 hover:text-jb-700"
-                        >
-                          {pedido.number}
-                        </Link>
-                      </td>
-                      <td className="border-b border-graf-100 px-3 py-2.5 text-graf-700">
-                        {pedido.buyerName}
-                      </td>
-                      <td className="tabular border-b border-graf-100 px-3 py-2.5 font-medium text-graf-800">
-                        {formatarPreco(pedido.totalCents)}
-                      </td>
-                      <td className="border-b border-graf-100 px-3 py-2.5">
-                        <Etiqueta tom={tomDoPedido(pedido.status)}>
-                          {ROTULO_STATUS[pedido.status]}
-                        </Etiqueta>
-                      </td>
-                      <td className="tabular border-b border-graf-100 px-4 py-2.5 text-right text-graf-500">
-                        {formatarData(pedido.placedAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul className="divide-y divide-graf-100">
+              {ultimos.map((pedido) => (
+                <Linha
+                  key={pedido.id}
+                  href={`/admin/pedidos/${pedido.id}`}
+                  titulo={`${pedido.number} · ${pedido.buyerName}`}
+                  detalhe={formatarData(pedido.placedAt)}
+                  valor={formatarPreco(pedido.totalCents)}
+                  etiqueta={{
+                    texto: ROTULO_STATUS[pedido.status],
+                    tom: tomDoPedido(pedido.status),
+                  }}
+                />
+              ))}
+            </ul>
           )}
         </Cartao>
-
-        {verOrcamentos ? (
-          <Cartao className="flex min-h-full flex-col xl:col-span-3">
-            <CabecalhoCartao
-              titulo="Orçamentos esperando o cliente"
-              descricao="Ordenados pelo que vence primeiro."
-            />
-            {orcamentosLista.length === 0 ? (
-              <CorpoVazio texto="Nenhum orçamento aguardando resposta" />
-            ) : (
-              <ul className="flex-1 divide-y divide-graf-100">
-                {orcamentosLista.slice(0, 4).map((orcamento) => (
-                  <li key={orcamento.id}>
-                    <Link
-                      href={`/admin/orcamentos/${orcamento.id}`}
-                      className="block px-4 py-3 transition-colors hover:bg-graf-50"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold text-graf-900">
-                            {orcamento.number} · {orcamento.customer?.name ?? (orcamento.contactName || "Contato não informado")}
-                          </p>
-                          <p className="mt-1 text-xs text-graf-500">
-                            {orcamento.validUntil
-                              ? `Válido até ${formatarData(orcamento.validUntil)} (${distanciaEmDias(orcamento.validUntil)})`
-                              : "Sem prazo de validade"}
-                          </p>
-                        </div>
-                        <span className="tabular shrink-0 text-xs font-semibold text-graf-800">
-                          {formatarPreco(orcamento.totalCents)}
-                        </span>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link
-              href="/admin/orcamentos"
-              className="mx-4 mb-3 mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-xs font-semibold text-graf-700 hover:text-jb-700"
-            >
-              Ver todos os orçamentos
-              <ArrowRight className="size-3.5" aria-hidden />
-            </Link>
-          </Cartao>
-        ) : null}
       </div>
+
+      {verOrcamentos ? (
+        <Cartao>
+          <CabecalhoCartao
+            titulo="Orçamentos esperando o cliente"
+            descricao="Ordenados pelo que vence primeiro"
+            acao={
+              <LinkBotao href="/admin/orcamentos" variante="secundario" tamanho="sm">
+                Ver orçamentos
+              </LinkBotao>
+            }
+          />
+          {orcamentosLista.length === 0 ? (
+            <CorpoVazio texto="Nenhum orçamento aguardando resposta" />
+          ) : (
+            <ul className="divide-y divide-graf-100">
+              {orcamentosLista.map((orcamento) => (
+                <Linha
+                  key={orcamento.id}
+                  href={`/admin/orcamentos/${orcamento.id}`}
+                  titulo={`${orcamento.number} · ${orcamento.customer?.name ?? (orcamento.contactName || "Contato não informado")}`}
+                  detalhe={
+                    orcamento.validUntil
+                      ? `Vale até ${formatarData(orcamento.validUntil)} (${distanciaEmDias(orcamento.validUntil)})`
+                      : "Sem prazo de validade"
+                  }
+                  valor={formatarPreco(orcamento.totalCents)}
+                />
+              ))}
+            </ul>
+          )}
+        </Cartao>
+      ) : null}
     </Secao>
   );
 }
 
-async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
+/* -------------------------------------------------------------- assistência */
+
+async function BlocoAssistencia() {
   const agora = new Date();
   const em30Dias = new Date(agora.getTime() + 30 * 86_400_000);
 
@@ -633,9 +507,7 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
       }),
       prisma.workOrder.groupBy({
         by: ["status"],
-        where: {
-          status: { in: ["aberta", "em_execucao", "aguardando_peca", "aguardando_aprovacao"] },
-        },
+        where: { status: { in: ["aberta", "em_execucao", "aguardando_peca", "aguardando_aprovacao"] } },
         _count: { _all: true },
       }),
       prisma.maintenanceVisit.count({
@@ -686,16 +558,13 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
   return (
     <Secao
       titulo="Assistência técnica"
-      descricao="Chamados em aberto, ordens de serviço e agenda preventiva."
-      icone={Wrench}
-      relatorioHref={verInsights ? "/admin/insights" : undefined}
-      destaque
+      descricao="Chamados em aberto, ordens de serviço e a agenda preventiva"
     >
       <Indicadores>
         <Indicador
           rotulo="Chamados em aberto"
           valor={chamadosAbertos}
-          detalhe="Da solicitação recebida até os testes finais."
+          detalhe="Da solicitação recebida até os testes finais"
           icone={Stethoscope}
           tom="marca"
           href="/admin/assistencia"
@@ -704,7 +573,7 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
         <Indicador
           rotulo="Urgentes"
           valor={chamadosCriticos}
-          detalhe="Equipamento parado ou urgência alta."
+          detalhe="Equipamento parado ou urgência alta"
           icone={TriangleAlert}
           tom={chamadosCriticos > 0 ? "aviso" : "neutro"}
           href="/admin/assistencia?urgencia=parado"
@@ -712,7 +581,7 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
         <Indicador
           rotulo="OS em execução"
           valor={osEmExecucao}
-          detalhe={`${plural(osAbertas, "ordem aberta", "ordens abertas")} no total.`}
+          detalhe={`${plural(osAbertas, "ordem aberta", "ordens abertas")} no total`}
           icone={ClipboardList}
           tom={osEmExecucao > 0 ? "info" : "neutro"}
           href="/admin/os?status=em_execucao"
@@ -722,21 +591,21 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
           valor={visitasTotal}
           detalhe={
             visitasAtrasadas > 0
-              ? `${plural(visitasAtrasadas, "visita vencida", "visitas vencidas")} nesse total.`
-              : "Nenhuma visita vencida."
+              ? `${plural(visitasAtrasadas, "visita vencida", "visitas vencidas")} nesse total`
+              : "Nenhuma visita vencida"
           }
           icone={CalendarClock}
-          tom={visitasAtrasadas > 0 ? "aviso" : "info"}
+          tom={visitasAtrasadas > 0 ? "aviso" : "neutro"}
           href="/admin/manutencao"
           hrefRotulo="Ver agenda"
         />
       </Indicadores>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Cartao>
           <CabecalhoCartao
             titulo="Chamados por urgência"
-            descricao="Somente os que ainda não foram concluídos."
+            descricao="Somente os que ainda não foram concluídos"
           />
           {chamadosAbertos === 0 ? (
             <CorpoVazio texto="Nenhum chamado em aberto" />
@@ -758,22 +627,22 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
               </ul>
 
               {urgentes.length > 0 ? (
-                <div className="border-t border-graf-200 bg-graf-50/60 px-4 py-3">
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-graf-500">
+                <div className="border-t border-graf-200 bg-graf-50/60 px-5 py-3">
+                  <p className="mb-2 text-[0.8125rem] font-semibold uppercase tracking-[0.08em] text-graf-500">
                     Precisa de resposta
                   </p>
-                  <ul className="space-y-1">
+                  <ul className="space-y-1.5">
                     {urgentes.map((chamado) => (
                       <li key={chamado.id}>
                         <Link
                           href={`/admin/assistencia/${chamado.id}`}
-                          className="flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-0.5 rounded text-xs text-graf-700 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                          className="flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-0.5 rounded text-sm text-graf-700 hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
                         >
                           <span className="label-mono text-graf-500">{chamado.number}</span>
                           <span className="min-w-0 flex-1 truncate font-medium">
                             {chamado.customer?.name ?? chamado.contactName}
                           </span>
-                          <span className="text-xs text-graf-500">
+                          <span className="text-[0.8125rem] text-graf-500">
                             aberto {distanciaEmDias(chamado.createdAt)}
                           </span>
                         </Link>
@@ -789,7 +658,7 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
         <Cartao>
           <CabecalhoCartao
             titulo="Próximas visitas de manutenção"
-            descricao="Previstas e agendadas para os próximos 30 dias."
+            descricao="Previstas e agendadas para os próximos 30 dias"
             acao={
               <LinkBotao href="/admin/manutencao" variante="secundario" tamanho="sm">
                 Ver agenda
@@ -820,6 +689,8 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
     </Secao>
   );
 }
+
+/* ------------------------------------------------------------ estoque/leads */
 
 async function BlocoApoio({
   verEstoque,
@@ -864,18 +735,17 @@ async function BlocoApoio({
   return (
     <Secao
       titulo="Catálogo e captação"
-      descricao="O que pode faltar na prateleira e quem chegou pelo site."
-      icone={Wallet}
+      descricao="O que pode faltar na prateleira e quem chegou pelo site"
     >
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {verEstoque ? (
           <Cartao>
             <CabecalhoCartao
               titulo="Estoque baixo"
               descricao={
                 estoqueTotal > 0
-                  ? `${plural(estoqueTotal, "produto ativo", "produtos ativos")} no ou abaixo do alerta.`
-                  : "Comparação com o alerta configurado em cada produto."
+                  ? `${plural(estoqueTotal, "produto ativo", "produtos ativos")} no ou abaixo do alerta`
+                  : "Comparação com o alerta configurado em cada produto"
               }
               acao={
                 <LinkBotao href="/admin/estoque" variante="secundario" tamanho="sm">
@@ -913,8 +783,8 @@ async function BlocoApoio({
               titulo="Leads novos"
               descricao={
                 leadsNovos > 0
-                  ? `${plural(leadsNovos, "contato aguardando", "contatos aguardando")} retorno.`
-                  : "Contatos vindos dos formulários do site."
+                  ? `${plural(leadsNovos, "contato aguardando", "contatos aguardando")} retorno`
+                  : "Contatos vindos dos formulários do site"
               }
               acao={
                 <LinkBotao href="/admin/leads" variante="secundario" tamanho="sm">
@@ -931,7 +801,9 @@ async function BlocoApoio({
                     key={lead.id}
                     href={`/admin/leads/${lead.id}`}
                     titulo={lead.nome}
-                    detalhe={[lead.cidade, lead.estado].filter(Boolean).join(" · ") || lead.email}
+                    detalhe={
+                      [lead.cidade, lead.estado].filter(Boolean).join(" · ") || lead.email
+                    }
                     etiqueta={{ texto: distanciaEmDias(lead.createdAt), tom: "andamento" }}
                   />
                 ))}

@@ -15,7 +15,6 @@ import {
   escoposComparaveis,
   paraPlanoPublico,
   precoDoPlano,
-  regraDoPlano,
   SELECAO_PLANO_PUBLICO,
   type PlanoPublico,
 } from "@/lib/plano";
@@ -152,17 +151,12 @@ const LINHAS_COMPARATIVO: {
   {
     rotulo: "Peças",
     valor: (plano) =>
-      regraDoPlano(plano, plano.politicaDePecas, /pe[çc]a/i) ||
+      plano.politicaDePecas ||
       (plano.descontoEmPecas > 0 ? `${plano.descontoEmPecas}% de desconto` : "Orçadas à parte"),
   },
   {
-    /* `regraDoPlano` antes do "A combinar": com o campo próprio vazio, a
-       linha contradizia o benefício que o cartão logo acima anunciava. Ver o
-       comentário em `src/lib/plano.ts`. */
     rotulo: "Deslocamento",
-    valor: (plano) =>
-      regraDoPlano(plano, plano.politicaDeDeslocamento, /desloca|visita t[ée]cnica|regi[ãa]o/i) ||
-      "A combinar",
+    valor: (plano) => plano.politicaDeDeslocamento || "A combinar",
   },
 ];
 
@@ -303,7 +297,7 @@ export default async function PlanosPage({
                 <h2 id="comparar-planos" className="text-title texto-forte">
                   Lado a lado
                 </h2>
-                <p className="mt-3 max-w-2xl text-corpo leading-relaxed text-graf-600">
+                <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-graf-600">
                   Os mesmos números dos cartões acima, um do lado do outro. Plano sem
                   valor publicado sai como sob consulta — o preço fecha na proposta,
                   depois de saber quantos equipamentos entram.
@@ -341,7 +335,7 @@ export default async function PlanosPage({
                       <tr className="border-b border-graf-300">
                         <th
                           scope="col"
-                          className="w-40 py-4 pr-5 align-bottom text-apoio font-bold uppercase tracking-wider text-graf-500"
+                          className="w-40 py-4 pr-5 align-bottom text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500"
                         >
                           Plano
                         </th>
@@ -380,7 +374,7 @@ export default async function PlanosPage({
                           {lista.map((plano) => (
                             <td
                               key={plano.slug}
-                              className="tabular px-5 py-4 align-top text-corpo font-semibold text-graf-900"
+                              className="tabular px-5 py-4 align-top text-[0.9375rem] font-semibold text-graf-900"
                             >
                               {linha.valor(plano)}
                             </td>
@@ -413,7 +407,7 @@ export default async function PlanosPage({
                       <span className="flex size-10 items-center justify-center rounded-lg bg-graf-100 text-graf-700">
                         <item.icone className="size-5" aria-hidden />
                       </span>
-                      <p className="mt-4 text-corpo font-bold text-graf-950">
+                      <p className="mt-4 text-[0.9375rem] font-bold text-graf-950">
                         {item.titulo}
                       </p>
                       <p className="mt-1.5 text-sm leading-relaxed text-graf-600">
@@ -424,7 +418,7 @@ export default async function PlanosPage({
                 ))}
               </Grade>
 
-              <p className="mt-7 text-corpo leading-relaxed text-graf-600">
+              <p className="mt-7 text-[0.9375rem] leading-relaxed text-graf-600">
                 Ainda em dúvida se compensa?{" "}
                 <Link
                   href="/manutencao-preventiva"

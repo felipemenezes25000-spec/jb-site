@@ -1,28 +1,55 @@
 /**
- * Navegação pública da JB. Cabeçalho, gaveta mobile, rodapé e sitemap partem
- * destas listas para não existir uma nomenclatura diferente em cada tela.
+ * Navegação da loja — um só lugar para cabeçalho, rodapé e gaveta do celular.
+ *
+ * Só rota que existe entra aqui: `RODAPE_LOJA`, `RODAPE_ASSISTENCIA`,
+ * `RODAPE_INSTITUCIONAL` e `RODAPE_POLITICAS` também alimentam o sitemap,
+ * então um item a mais nessas listas é uma URL a mais anunciada ao Google.
  */
 
+/** Painéis grandes que o cabeçalho sabe abrir. */
 export type ChaveMega = "catalogo" | "assistencia";
 
 export type ItemMenu = {
   rotulo: string;
   href: string;
+  /** Linha de apoio — aparece no mega menu e na gaveta do celular. */
   descricao?: string;
+  /** Abre o painel do cabeçalho em vez de só navegar. */
   megaMenu?: ChaveMega;
 };
 
+/**
+ * As descrições descrevem o destino, não prometem nada sobre o produto:
+ * quem escreve prazo, garantia ou revisão é a página, com dado do banco.
+ */
+/**
+ * Direção principal do cabeçalho.
+ *
+ * Cinco itens: **Equipamentos · Seminovos · Assistência · Manutenção · Central
+ * Técnica**. Busca, Área da Clínica e carrinho continuam à direita, com
+ * prioridade própria.
+ *
+ * Duas mudanças, e as duas têm motivo:
+ *
+ * "Peças e acessórios" saiu da barra e vive dentro de Equipamentos, no mega
+ * menu. Quem procura peça procura pela peça, pela busca ou pelo equipamento a
+ * que ela pertence — raramente por uma aba chamada "peças".
+ *
+ * "Sobre a JB" saiu porque institucional não disputa atenção com o que a
+ * clínica veio fazer. Continua encontrável no rodapé, junto de Estrutura,
+ * Central Técnica, Cases e Depoimentos.
+ */
 export const MENU_PRINCIPAL: ItemMenu[] = [
   {
-    rotulo: "Loja",
+    rotulo: "Equipamentos",
     href: "/loja",
-    descricao: "Produtos por categoria e condição",
+    descricao: "Catálogo completo por categoria e condição",
     megaMenu: "catalogo",
   },
   {
     rotulo: "Seminovos",
     href: "/seminovos",
-    descricao: "Unidades seminovas disponíveis",
+    descricao: "Equipamentos seminovos disponíveis",
   },
   {
     rotulo: "Assistência técnica",
@@ -38,7 +65,7 @@ export const MENU_PRINCIPAL: ItemMenu[] = [
   {
     rotulo: "Central Técnica",
     href: "/central-tecnica",
-    descricao: "Conteúdo técnico da equipe JB",
+    descricao: "O que a bancada aprendeu sobre estes equipamentos",
   },
 ];
 
@@ -63,15 +90,20 @@ export const MENU_ASSISTENCIA: ItemMenu[] = [
   {
     rotulo: "Manutenção preventiva",
     href: "/manutencao-preventiva",
-    descricao: "Organize o cuidado antes da parada",
+    descricao: "Evite a parada antes que ela aconteça",
   },
   {
     rotulo: "Planos de manutenção",
     href: "/planos-de-manutencao",
-    descricao: "Opções de acompanhamento para a clínica",
+    descricao: "Cobertura contínua para a clínica",
   },
 ];
 
+/**
+ * Atalhos da área da clínica na gaveta do celular. Rótulos curtos de
+ * propósito: entram numa grade de duas colunas, e nome que quebra em duas
+ * linhas estraga a leitura de um menu.
+ */
 export const ATALHOS_CLIENTE: ItemMenu[] = [
   { rotulo: "Pedidos", href: "/minha-jb/pedidos" },
   { rotulo: "Equipamentos", href: "/minha-jb/equipamentos" },
@@ -81,11 +113,7 @@ export const ATALHOS_CLIENTE: ItemMenu[] = [
 ];
 
 export const RODAPE_LOJA: ItemMenu[] = [
-  /* "Todos os produtos" e "Novos" apontavam para a mesma lista: /loja era a
-     coleção de novos com outro endereço. Agora /loja é o catálogo inteiro e os
-     dois rótulos passam a descrever destinos diferentes — que é o que um menu
-     com dois itens deveria significar desde sempre. */
-  { rotulo: "Todos os produtos", href: "/loja" },
+  { rotulo: "Todos os equipamentos", href: "/loja" },
   { rotulo: "Novos", href: "/novos" },
   { rotulo: "Seminovos JB", href: "/seminovos" },
   { rotulo: "Usados", href: "/usados" },
@@ -106,17 +134,12 @@ export const RODAPE_ASSISTENCIA: ItemMenu[] = [
 ];
 
 /**
- * Só o que é verdade nos dois estados.
- *
- * "Entrar" e "Criar conta" saíram daqui: o rodapé os oferecia a quem o
- * cabeçalho, quatro telas acima, cumprimentava pelo nome — e convidar a criar
- * conta quem já tem uma sugere que a sessão caiu. Estes links servem aos dois:
- * sem sessão, todos levam à tela de entrada e voltam ao destino depois.
- *
- * O caminho de entrar vive no cabeçalho (`AcessoDaConta`), que é dinâmico por
- * `<Suspense>` e sabe quem está do outro lado. O rodapé é cacheado e não sabe
- * — ver a nota em `rodape.tsx` sobre por que não vale abrir uma exceção. */
+ * Coluna da área da clínica no rodapé. Fora do sitemap de propósito: são
+ * páginas de sessão, que só fazem sentido para quem já é cliente.
+ */
 export const RODAPE_CLIENTE: ItemMenu[] = [
+  { rotulo: "Entrar", href: "/entrar" },
+  { rotulo: "Criar conta", href: "/cadastro" },
   { rotulo: "Meus pedidos", href: "/minha-jb/pedidos" },
   { rotulo: "Meus equipamentos", href: "/minha-jb/equipamentos" },
   { rotulo: "Assistência", href: "/minha-jb/assistencia" },
@@ -153,6 +176,10 @@ export const MENU_CLIENTE: ItemMenu[] = [
   { rotulo: "Meus dados", href: "/minha-jb/perfil" },
 ];
 
+/**
+ * Um item está ativo na rota exata ou em qualquer rota abaixo dela.
+ * `startsWith` cru marcaria `/seminovos` dentro de `/seminovos-x`.
+ */
 export function rotaAtiva(pathname: string, href: string) {
   const alvo = href.split("#")[0];
   if (alvo === "/") return pathname === "/";

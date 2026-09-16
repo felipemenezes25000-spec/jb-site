@@ -400,15 +400,7 @@ function CartaoTokenizado({
 
       <p className="text-sm leading-relaxed text-graf-600">
         {parcelas > 1
-          ? (() => {
-              /* Mesma regra do seletor de parcelamento: a sobra do
-                 arredondamento entra na primeira, e a frase diz isso. */
-              const valor = Math.floor(valorCents / parcelas);
-              const sobra = valorCents - valor * parcelas;
-              return sobra > 0
-                ? `Cobrança em ${parcelas}× de ${formatarPreco(valor)}, a 1ª de ${formatarPreco(valor + sobra)}, sem juros.`
-                : `Cobrança em ${parcelas}× de ${formatarPreco(valor)}, sem juros.`;
-            })()
+          ? `Cobrança em ${parcelas}× de ${formatarPreco(Math.floor(valorCents / parcelas))}, sem juros.`
           : `Cobrança de ${formatarPreco(valorCents)} à vista.`}{" "}
         Nada é debitado antes de você confirmar o pedido.
       </p>

@@ -222,36 +222,6 @@ export default async function preparar() {
       data: { stock: 99 },
     });
 
-    /* ------------------------------------------------- produto-equipamento
-
-       O produto padrão da suíte é escolhido pelo preço, e o mais barato do
-       catálogo costuma ser consumível. Comprar consumível não cria prontuário,
-       e prontuário sem ficha herdada não prova nada — por isso o teste do
-       prontuário pede um produto que seja equipamento E tenha especificações
-       cadastradas. Se o catálogo semeado não tiver nenhum, a fixture vem nula
-       e o teste se pula dizendo o motivo. */
-    const equipamento = await prisma.product.findFirst({
-      where: {
-        status: "active",
-        allowDirectPurchase: true,
-        priceCents: { gt: 0 },
-        unique: false,
-        isEquipment: true,
-        slug: { not: SLUG_FRETE },
-        specs: { some: {} },
-        OR: [{ trackInventory: false }, { stock: { gte: 5 } }],
-      },
-      orderBy: { priceCents: "asc" },
-      select: { slug: true, name: true },
-    });
-
-    if (equipamento) {
-      await prisma.product.updateMany({
-        where: { slug: equipamento.slug, trackInventory: true, stock: { lt: 20 } },
-        data: { stock: 99 },
-      });
-    }
-
     /* --------------------------------------------- perfil e faixa de frete */
 
     /*
@@ -414,9 +384,6 @@ export default async function preparar() {
         nome: produto.name,
         precoCents: produto.priceCents,
       },
-      equipamento: equipamento
-        ? { slug: equipamento.slug, nome: equipamento.name }
-        : null,
       condicoes: condicoes
         .map((c) => c.condition)
         .sort((a, b) => a.localeCompare(b, "pt-BR")),

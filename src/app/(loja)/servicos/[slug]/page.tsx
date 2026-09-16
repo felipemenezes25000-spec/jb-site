@@ -41,8 +41,14 @@ export const instant = false;
 
 type Parametros = { params: Promise<{ slug: string }> };
 
-// Resolve o serviço na visita: o catálogo pode estar vazio durante o build.
-// Cache Components não aceita generateStaticParams retornando uma lista vazia.
+export async function generateStaticParams() {
+  const servicos = await prisma.service.findMany({
+    where: { published: true },
+    select: { slug: true },
+    orderBy: { order: "asc" },
+  });
+  return servicos.map((servico) => ({ slug: servico.slug }));
+}
 
 async function buscarServico(slug: string) {
   return prisma.service.findFirst({
@@ -177,7 +183,7 @@ export default async function ServicoPage({ params }: Parametros) {
 
             {/* Fio à esquerda em vez de caixa: é uma ressalva de leitura, não
                 um aviso de sistema. */}
-            <p className="mt-8 border-l-2 border-jb-200 pl-5 text-corpo leading-relaxed text-graf-600">
+            <p className="mt-8 border-l-2 border-jb-200 pl-5 text-[0.9375rem] leading-relaxed text-graf-600">
               <strong className="font-semibold text-graf-900">Sobre prazo: </strong>
               a data de execução é combinada no orçamento, depois de a equipe saber o que o
               serviço envolve. Prometer prazo antes de olhar o equipamento é chute, e chute
@@ -202,7 +208,7 @@ export default async function ServicoPage({ params }: Parametros) {
                         <span className="block text-sm font-bold text-graf-950">
                           {outro.name}
                         </span>
-                        <span className="mt-1 block text-apoio text-graf-500">
+                        <span className="mt-1 block text-[0.8125rem] text-graf-500">
                           {ROTULO_SERVICO[outro.kind]}
                         </span>
                       </span>

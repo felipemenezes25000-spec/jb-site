@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { CircleCheck, Plus, Send, Trash2 } from "lucide-react";
 
@@ -58,23 +58,6 @@ export function FormularioOrcamento({
     {},
   );
 
-  /* A confirmação nascia no rodapé.
-
-     O formulário é longo; quando ele é trocado pela tela de sucesso, o
-     navegador mantém a posição de rolagem e a pessoa continua olhando o
-     rodapé. A auditoria só descobriu que o pedido tinha dado certo depois de
-     rolar para cima. Um efeito no primeiro render da confirmação leva a página
-     de volta ao topo, respeitando quem pediu menos movimento. */
-  useEffect(() => {
-    if (!estado.ok) return;
-    window.scrollTo({
-      top: 0,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-    });
-  }, [estado.ok]);
-
   const [tipo, setTipo] = useState<TipoPedido>(tipoInicial);
   const [linhas, setLinhas] = useState<Linha[]>(() => [novaLinha(itemInicial)]);
   const [tel, setTel] = useState(cliente?.telefone ?? "");
@@ -92,20 +75,11 @@ export function FormularioOrcamento({
         </span>
         <h2 className="mt-6 text-title texto-forte">Pedido registrado</h2>
         <p className="texto-guia mt-4 text-graf-600">{estado.ok}</p>
-        <p className="mt-4 text-corpo leading-relaxed text-graf-600">
+        <p className="mt-4 text-[0.9375rem] leading-relaxed text-graf-600">
           Enquanto a equipe monta a proposta, dá para conhecer o catálogo ou ver como
           funciona a assistência técnica da JB.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          {/* Pedido e chamado têm página de acompanhamento; o orçamento não
-              tinha nenhum caminho a partir daqui. Quem está logado vai direto
-              para a proposta na Área da Clínica — ela já aparece lá, em
-              "Em análise". */}
-          {estado.numero && cliente ? (
-            <LinkBotao href={`/minha-jb/orcamentos/${encodeURIComponent(estado.numero)}`}>
-              Acompanhar {estado.numero}
-            </LinkBotao>
-          ) : null}
           <LinkBotao href="/loja" variante="secundario">
             Ver equipamentos
           </LinkBotao>
@@ -133,7 +107,7 @@ export function FormularioOrcamento({
           <legend>
             <h2 className="text-title texto-forte">Do que você precisa?</h2>
           </legend>
-          <p className="mt-2.5 text-corpo leading-relaxed text-graf-500">
+          <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-500">
             Isso define para quem o pedido vai dentro da JB — vendas, técnica ou
             manutenção programada.
           </p>
@@ -229,7 +203,7 @@ export function FormularioOrcamento({
           </div>
 
           <div className="border-t border-graf-200 pt-7">
-            <h3 className="text-corpo font-bold text-graf-950">
+            <h3 className="text-[0.9375rem] font-bold text-graf-950">
               Prazo e detalhes do pedido
             </h3>
             <p className="mt-1.5 text-sm leading-relaxed text-graf-500">
@@ -345,7 +319,7 @@ export function FormularioOrcamento({
             {pendente ? null : <Send className="size-4" aria-hidden />}
             {pendente ? "Enviando pedido…" : "Pedir orçamento"}
           </Botao>
-          <p className="mt-5 text-apoio leading-relaxed text-graf-500">
+          <p className="mt-5 text-[0.8125rem] leading-relaxed text-graf-500">
             Ao enviar, você concorda que a JB use estes dados para responder ao pedido.
           </p>
         </div>
@@ -371,7 +345,7 @@ function Bloco({
     <section className="mt-10 border-t border-graf-200 pt-9">
       <h2 className="text-title texto-forte">{titulo}</h2>
       {descricao ? (
-        <p className="mt-2.5 text-corpo leading-relaxed text-graf-500">{descricao}</p>
+        <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-500">{descricao}</p>
       ) : null}
       <div className="mt-6 grid gap-6">{children}</div>
     </section>

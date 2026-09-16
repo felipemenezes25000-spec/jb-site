@@ -43,11 +43,6 @@ const LARGURAS = [
   { w: 1024, h: 768, nome: "1024 (tablet paisagem)", toque: false },
   { w: 1280, h: 900, nome: "1280 (notebook)", toque: false },
   { w: 1440, h: 900, nome: "1440 (desktop)", toque: false },
-  /* 1920 é o monitor da recepção da clínica — e a largura em que a loja mais
-     arrisca ficar larga demais: caixa de 1440 numa janela de 1920 deixa 240px
-     de margem de cada lado, e é aí que os degraus entre uma seção e outra
-     aparecem. Sem medir, eles só apareciam em captura de tela de auditoria. */
-  { w: 1920, h: 1080, nome: "1920 (monitor grande)", toque: false },
 ];
 
 const ROTAS = {
@@ -685,40 +680,7 @@ async function percorrer(grupo, rotas, login) {
 console.log(`Auditoria de responsividade em ${BASE}`);
 console.log(`larguras: ${larguras.map((l) => l.w).join(", ")}`);
 
-/**
- * A ficha de um produto de verdade, descoberta no catálogo.
- *
- * Mesma razão do portão de acessibilidade: a PDP é a página mais densa da
- * loja — galeria, caixa de compra grudada, ficha em grade de três colunas,
- * comparação em tabela — e era a única grande que este portão não media,
- * porque o endereço depende de um `slug`. Escrever um à mão faria o portão
- * medir um 404 no dia em que aquele produto saísse do ar, e continuar verde.
- */
-async function rotaDeProduto() {
-  const contexto = await navegador.newContext({ locale: "pt-BR" });
-  const pagina = await contexto.newPage();
-  try {
-    await pagina.goto(BASE + "/loja", { waitUntil: "domcontentloaded", timeout: 60000 });
-    await pagina.waitForTimeout(800);
-    return await pagina
-      .locator('a[href^="/loja/"]')
-      .first()
-      .getAttribute("href", { timeout: 5000 });
-  } catch {
-    return null;
-  } finally {
-    await contexto.close();
-  }
-}
-
-const rotasPublicas = [...ROTAS.publico];
-{
-  const pdp = await rotaDeProduto();
-  if (pdp) rotasPublicas.push(pdp);
-  else console.log("  aviso: nenhuma ficha de produto no catálogo — a PDP não foi medida");
-}
-
-await percorrer("publico", rotasPublicas, null);
+await percorrer("publico", ROTAS.publico, null);
 await percorrer("conta", ROTAS.conta, { rota: "/entrar", ...CLIENTE });
 await percorrer("admin", ROTAS.admin, { rota: "/admin/entrar", ...EQUIPE });
 

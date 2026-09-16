@@ -12,10 +12,7 @@ import {
   type Operacao,
 } from "@/components/assistencia/rotulos";
 import { LeitorDeEtiqueta } from "@/components/conta/mj-leitor-etiqueta";
-import {
-  EnvioDeFotos,
-  type ResumoDoEnvio,
-} from "@/components/assistencia/envio-de-fotos";
+import { EnvioDeFotos } from "@/components/assistencia/envio-de-fotos";
 import { Verificacao } from "@/components/assistencia/verificacao";
 import { abrirChamadoPublico, type EstadoAssistencia } from "@/app/acoes/assistencia";
 import { Aviso } from "@/components/ui/aviso";
@@ -72,17 +69,6 @@ export type UnidadeEscolha = {
 };
 
 export type CategoriaEscolha = { id: string; nome: string };
-
-/** O endereço padrão da conta, para começar a etapa 4 preenchida. */
-export type EnderecoPadrao = {
-  cep: string;
-  logradouro: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-};
 
 type Rascunho = {
   equipamentoId: string;
@@ -155,16 +141,9 @@ const ETAPA_DO_CAMPO: Record<string, number> = {
 function vazio(
   cliente: { nome: string; email: string; telefone: string } | null,
   unidades: UnidadeEscolha[],
-  equipamentos: EquipamentoEscolha[],
-  endereco: EnderecoPadrao | null,
 ): Rascunho {
   return {
-    /* Com um equipamento só na conta, "Outro equipamento" vinha marcado e a
-       integração se anulava sozinha: o chamado saía sem histórico, sem série e
-       sem prontuário, para alguém que tinha exatamente um aparelho cadastrado.
-       Mesma regra da unidade única logo abaixo — não é presunção quando não há
-       alternativa a presumir. */
-    equipamentoId: equipamentos.length === 1 ? equipamentos[0].id : "",
+    equipamentoId: "",
     categoriaId: "",
     marca: "",
     modelo: "",
@@ -176,13 +155,13 @@ function vazio(
     aindaOpera: "sim",
     // Com uma unidade só, escolher por ela não é presunção — é o único caso.
     unidadeEscolha: unidades.length === 1 ? unidades[0].id : "",
-    cep: endereco?.cep ?? "",
-    logradouro: endereco?.logradouro ?? "",
-    numero: endereco?.numero ?? "",
-    complemento: endereco?.complemento ?? "",
-    bairro: endereco?.bairro ?? "",
-    cidade: endereco?.cidade ?? "",
-    uf: endereco?.uf ?? "",
+    cep: "",
+    logradouro: "",
+    numero: "",
+    complemento: "",
+    bairro: "",
+    cidade: "",
+    uf: "",
     disponibilidade: "",
     nome: cliente?.nome ?? "",
     email: cliente?.email ?? "",
@@ -191,12 +170,6 @@ function vazio(
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-/** As 27 unidades federativas, como no checkout. */
-const UFS = [
-  "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT",
-  "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO",
-];
 
 /** O que a conferência local devolve: a frase e, quando dá, o campo culpado. */
 type Pendencia = { campo?: string; texto: string };
@@ -241,7 +214,6 @@ export function AssistenteChamado({
   categorias,
   equipamentos,
   unidades,
-  enderecoPadrao = null,
   cliente,
   logado,
   telefone,
@@ -252,7 +224,6 @@ export function AssistenteChamado({
   categorias: CategoriaEscolha[];
   equipamentos: EquipamentoEscolha[];
   unidades: UnidadeEscolha[];
-  enderecoPadrao?: EnderecoPadrao | null;
   cliente: { nome: string; email: string; telefone: string } | null;
   logado: boolean;
   telefone: string;
@@ -264,17 +235,10 @@ export function AssistenteChamado({
     {},
   );
 
-  const [dados, setDados] = useState<Rascunho>(() =>
-    vazio(cliente, unidades, equipamentos, enderecoPadrao),
-  );
+  const [dados, setDados] = useState<Rascunho>(() => vazio(cliente, unidades));
   const [etapa, setEtapa] = useState(0);
   const [montado, setMontado] = useState(false);
   const [pendencia, setPendencia] = useState<Pendencia | undefined>();
-  const [arquivos, setArquivos] = useState<ResumoDoEnvio>({
-    fotos: 0,
-    videos: 0,
-    falharam: 0,
-  });
   const refTopo = useRef<HTMLDivElement>(null);
   const refRecado = useRef<HTMLDivElement>(null);
   useFocoNaEtapa(etapa, montado, refTopo);
@@ -358,27 +322,8 @@ export function AssistenteChamado({
       if (somenteDigitos(dados.telefone).length < 10) {
         return { campo: "telefone", texto: "Informe o telefone com DDD." };
       }
-      /* O endereço define a rota do técnico — é o que a própria etapa diz.
-         Antes, só a cidade era cobrada: dava para abrir uma visita técnica sem
-         rua e sem número, e a equipe descobria isso ao tentar agendar. Rua,
-         número e cidade são o mínimo para alguém chegar; bairro e CEP ajudam,
-         e a consulta de CEP preenche os dois. */
-      if (usaEnderecoDigitado) {
-        if (dados.logradouro.trim().length < 3) {
-          return {
-            campo: "logradouro",
-            texto: "Informe a rua ou avenida do atendimento — é por ela que o técnico chega.",
-          };
-        }
-        if (!dados.numero.trim()) {
-          return {
-            campo: "numero",
-            texto: "Informe o número. Se não houver, escreva “S/N”.",
-          };
-        }
-        if (!dados.cidade.trim()) {
-          return { campo: "cidade", texto: "Informe a cidade do atendimento." };
-        }
+      if (usaEnderecoDigitado && !dados.cidade.trim()) {
+        return { campo: "cidade", texto: "Informe ao menos a cidade do atendimento." };
       }
       return undefined;
     }
@@ -430,11 +375,7 @@ export function AssistenteChamado({
           passos={ETAPAS}
           atual={etapa}
           rotulo="Etapas do chamado"
-          /* No celular a descrição da etapa repetiria o título logo abaixo. A
-             régua fica só com "Etapa 1 de 5", o nome e a barra — o progresso
-             continua inteiro e o primeiro campo sobe uma linha. */
-          descricaoNoCelular={false}
-          className="mb-6 border-b border-graf-200 pb-6 lg:mb-9 lg:pb-8"
+          className="mb-9 border-b border-graf-200 pb-8"
         />
       ) : null}
 
@@ -631,39 +572,13 @@ export function AssistenteChamado({
                 descricao="É o que define a ordem de atendimento na fila da equipe."
                 divisor
               >
-                {/* Uma pergunta, não duas.
-
-                    "Urgência: Parado" e "O equipamento ainda opera?: Não, está
-                    parado" pediam o mesmo dado em dois lugares, e nada impedia
-                    que se contradissessem: dava para marcar "Baixa" e "está
-                    parado" no mesmo chamado, e a fila da equipe recebia os dois
-                    sinais brigando.
-
-                    Agora o estado do equipamento é a pergunta, e "Parado" saiu
-                    da lista de urgência: ele é DERIVADO. Quem responde "está
-                    parado" tem a urgência definida por isso — e quem responde
-                    que funciona escolhe entre três graus de impacto, que é o
-                    que a equipe realmente precisa para ordenar a fila. De
-                    quebra, os chips deixaram de ser 3+1 com um órfão na segunda
-                    linha. */}
-                {dados.aindaOpera === "nao" ? (
-                  <Aviso tom="atencao" titulo="Urgência: equipamento parado">
-                    Você marcou que o equipamento está fora de uso, então este chamado entra
-                    na fila como parada. Para escolher outro grau de urgência, mude a resposta
-                    de &ldquo;O equipamento ainda opera?&rdquo;.
-                  </Aviso>
-                ) : (
-                  <Opcoes
-                    nome="urgencia"
-                    rotulo="Urgência"
-                    valor={dados.urgencia}
-                    aoMudar={(valor) => alterar({ urgencia: valor })}
-                    opcoes={OPCOES_URGENCIA.filter((opcao) => opcao.valor !== "parado")}
-                  />
-                )}
-                {dados.aindaOpera === "nao" ? (
-                  <input type="hidden" name="urgencia" value="parado" />
-                ) : null}
+                <Opcoes
+                  nome="urgencia"
+                  rotulo="Urgência"
+                  valor={dados.urgencia}
+                  aoMudar={(valor) => alterar({ urgencia: valor })}
+                  opcoes={OPCOES_URGENCIA}
+                />
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Selecao
@@ -684,20 +599,7 @@ export function AssistenteChamado({
                     nome="aindaOpera"
                     rotulo="O equipamento ainda opera?"
                     valor={dados.aindaOpera}
-                    aoMudar={(valor) =>
-                      alterar({
-                        aindaOpera: valor,
-                        /* Estado e urgência param de poder discordar: parado
-                           vira "parado"; voltando a operar, a urgência cai
-                           para "alta" em vez de continuar declarando parada. */
-                        urgencia:
-                          valor === "nao"
-                            ? "parado"
-                            : dados.urgencia === "parado"
-                              ? "alta"
-                              : dados.urgencia,
-                      })
-                    }
+                    aoMudar={(valor) => alterar({ aindaOpera: valor })}
                     opcoes={(Object.keys(ROTULO_OPERACAO) as Operacao[]).map((chave) => ({
                       valor: chave,
                       rotulo: ROTULO_OPERACAO[chave],
@@ -724,7 +626,7 @@ export function AssistenteChamado({
 
             <div className="mt-7 space-y-6">
               {logado ? (
-                <EnvioDeFotos aoMudar={setArquivos} />
+                <EnvioDeFotos />
               ) : (
                 <Aviso tom="info" titulo="Para anexar fotos, entre na sua conta">
                   <p>
@@ -742,12 +644,8 @@ export function AssistenteChamado({
               )}
 
               {whatsapp ? (
-                <p className="text-apoio leading-relaxed text-graf-500">
-                  {/* Este parágrafo dizia "pelo site entram imagens e PDF; o vídeo vai
-                      pelo WhatsApp" — e contradizia a caixa logo acima em dois pontos:
-                      vídeo ENTRA pelo site, e PDF não. O que sobra de verdadeiro é o
-                      PDF, que continua sendo caso de WhatsApp. */}
-                  Precisa mandar um documento em PDF — orçamento antigo, nota, manual? Ele
+                <p className="text-[0.8125rem] leading-relaxed text-graf-500">
+                  Tem um vídeo curto do problema? Pelo site entram imagens e PDF; o vídeo
                   vai pelo{" "}
                   <a
                     href={whatsappHref(
@@ -808,7 +706,7 @@ export function AssistenteChamado({
                 />
 
                 {unidadeEscolhida ? (
-                  <p className="text-corpo leading-relaxed text-graf-600">
+                  <p className="text-[0.9375rem] leading-relaxed text-graf-600">
                     O atendimento será no endereço cadastrado de{" "}
                     <strong className="font-semibold text-graf-950">
                       {unidadeEscolhida.nome}
@@ -833,19 +731,12 @@ export function AssistenteChamado({
                       ajuda="Preenche o endereço sozinho."
                       className="sm:col-span-2"
                     />
-                    {/* "Logradouro" e "Estado", os mesmos rótulos do checkout.
-
-                        Aqui eram "Endereço" e "UF", e o campo de estado era
-                        texto livre enquanto lá era uma lista — o mesmo dado,
-                        da mesma clínica, com dois nomes e duas regras. Quem
-                        preenche os dois formulários no mesmo mês percebe. */}
                     <Campo
-                      rotulo="Logradouro"
+                      rotulo="Endereço"
                       name="logradouro"
                       value={dados.logradouro}
                       onChange={(evento) => alterar({ logradouro: evento.target.value })}
                       autoComplete="street-address"
-                      erro={erroDoCampo("logradouro")}
                       className="sm:col-span-4"
                     />
                     <Campo
@@ -853,7 +744,6 @@ export function AssistenteChamado({
                       name="numero"
                       value={dados.numero}
                       onChange={(evento) => alterar({ numero: evento.target.value })}
-                      erro={erroDoCampo("numero")}
                       className="sm:col-span-2"
                     />
                     <Campo
@@ -880,21 +770,15 @@ export function AssistenteChamado({
                       erro={erroDoCampo("cidade")}
                       className="sm:col-span-2"
                     />
-                    <Selecao
-                      rotulo="Estado"
+                    <Campo
+                      rotulo="UF"
                       name="uf"
                       value={dados.uf}
-                      onChange={(evento) => alterar({ uf: evento.target.value })}
+                      onChange={(evento) => alterar({ uf: evento.target.value.toUpperCase() })}
+                      maxLength={2}
                       autoComplete="address-level1"
                       className="sm:col-span-1"
-                    >
-                      <option value="">UF</option>
-                      {UFS.map((sigla) => (
-                        <option key={sigla} value={sigla}>
-                          {sigla}
-                        </option>
-                      ))}
-                    </Selecao>
+                    />
                   </div>
                 )}
 
@@ -1011,28 +895,6 @@ export function AssistenteChamado({
                 }
                 aoEditar={() => setEtapa(3)}
               />
-              {/* Fotos aparecem na revisão porque a etapa 3 promete que elas
-                  "resolvem metade do diagnóstico". Sem esta linha, quem teve
-                  um envio recusado chegava aqui achando que tinha mandado. */}
-              <Resumo
-                rotulo="Fotos e vídeo"
-                valor={
-                  arquivos.fotos + arquivos.videos > 0
-                    ? [
-                        arquivos.fotos > 0
-                          ? `${arquivos.fotos} ${arquivos.fotos === 1 ? "foto" : "fotos"}`
-                          : "",
-                        arquivos.videos > 0 ? `${arquivos.videos} vídeo` : "",
-                        arquivos.falharam > 0
-                          ? `${arquivos.falharam} não ${arquivos.falharam === 1 ? "entrou" : "entraram"}`
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")
-                    : "Nenhuma — o chamado segue, e a equipe pode pedir por WhatsApp"
-                }
-                aoEditar={() => setEtapa(2)}
-              />
               <Resumo
                 rotulo="Horário preferido"
                 valor={dados.disponibilidade}
@@ -1053,7 +915,7 @@ export function AssistenteChamado({
               className="mt-6"
             />
 
-            <p className="mt-6 text-apoio leading-relaxed text-graf-500">
+            <p className="mt-6 text-[0.8125rem] leading-relaxed text-graf-500">
               Ao enviar, você concorda que a JB use os dados acima para o atendimento deste
               chamado.
             </p>
@@ -1143,7 +1005,7 @@ export function AssistenteChamado({
           </div>
 
           {pendente ? (
-            <p role="status" className="mt-4 text-apoio text-graf-500">
+            <p role="status" className="mt-4 text-[0.8125rem] text-graf-500">
               Estamos registrando o chamado. Não feche esta página.
             </p>
           ) : null}
@@ -1187,7 +1049,7 @@ function CabecalhoEtapa({
         {titulo}
       </h2>
       {descricao ? (
-        <p className="mt-2.5 text-corpo leading-relaxed text-graf-500">{descricao}</p>
+        <p className="mt-2.5 text-[0.9375rem] leading-relaxed text-graf-500">{descricao}</p>
       ) : null}
     </div>
   );
@@ -1218,7 +1080,7 @@ function Grupo({
 
   return (
     <div className={cn(divisor && "border-t border-graf-200 pt-7", className)}>
-      {titulo ? <h3 className="text-corpo font-bold text-graf-950">{titulo}</h3> : null}
+      {titulo ? <h3 className="text-[0.9375rem] font-bold text-graf-950">{titulo}</h3> : null}
       {descricao ? (
         <p className="mt-1.5 text-sm leading-relaxed text-graf-500">{descricao}</p>
       ) : null}
@@ -1244,7 +1106,7 @@ function Resumo({
     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 py-4">
       <div className="min-w-0 flex-1">
         <p className="label-mono uppercase text-graf-500">{rotulo}</p>
-        <p className="mt-1.5 whitespace-pre-line break-words text-corpo leading-relaxed text-graf-900">
+        <p className="mt-1.5 whitespace-pre-line break-words text-[0.9375rem] leading-relaxed text-graf-900">
           {texto}
         </p>
       </div>

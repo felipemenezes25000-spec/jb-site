@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 const BASE_CAMPO =
   // 16px no celular de propósito: abaixo disso o iOS dá zoom ao focar o campo.
-  "w-full rounded-lg border bg-white text-base text-graf-900 shadow-xs sm:text-corpo " +
+  "w-full rounded-lg border bg-white text-base text-graf-900 shadow-xs sm:text-[0.9375rem] " +
   "transition-[border-color,box-shadow] duration-150 " +
   "placeholder:text-graf-500 " +
   "focus:outline-none focus:ring-4 " +
@@ -53,7 +53,7 @@ function Rotulo({
 function Ajuda({ id, texto }: { id: string; texto?: string }) {
   if (!texto) return null;
   return (
-    <p id={id} className="mt-1.5 text-apoio leading-relaxed text-graf-500">
+    <p id={id} className="mt-1.5 text-[0.8125rem] leading-relaxed text-graf-500">
       {texto}
     </p>
   );
@@ -168,7 +168,7 @@ export function Selecao({
         required={required}
         aria-invalid={erro ? true : undefined}
         aria-describedby={erro ? `${id}-erro` : ajuda ? `${id}-ajuda` : undefined}
-        className={cn(BASE_CAMPO, erro ? COM_ERRO : NORMAL, "select-jb h-11 px-3 pr-9")}
+        className={cn(BASE_CAMPO, erro ? COM_ERRO : NORMAL, "h-11 px-3 pr-9")}
       >
         {children}
       </select>
@@ -209,31 +209,14 @@ export function Marcador({
       >
         <span className="font-medium text-graf-800">{rotulo}</span>
         {ajuda ? (
-          <span className="mt-0.5 block text-apoio text-graf-500">{ajuda}</span>
+          <span className="mt-0.5 block text-[0.8125rem] text-graf-500">{ajuda}</span>
         ) : null}
       </label>
     </div>
   );
 }
 
-/**
- * Grupo de opções em forma de "pílulas" — urgência, condição, filtros.
- *
- * Em grade, não em `flex-wrap`. Com o flex, cada pílula tinha a largura do
- * próprio texto e as linhas saíam desalinhadas: "Baixa" ao lado de "Assim que
- * possível" ao lado de "Equipamento parado", com a terceira caindo sozinha na
- * linha de baixo e ocupando meia tela. Numa escolha de urgência isso importa
- * além da estética — o tamanho do alvo passava a variar com o comprimento da
- * palavra, e a opção mais grave ficava com o maior botão por acidente de
- * redação.
- *
- * `auto-fit` com `minmax` resolve os dois: as colunas têm a mesma largura, a
- * quantidade delas se ajusta ao espaço, e `min(100%, …)` garante uma coluna só
- * a 360px em vez de estourar a linha.
- *
- * O piso muda quando há descrição: um nome de equipamento com marca e modelo
- * embaixo não cabe em 14rem sem virar quatro linhas de texto.
- */
+/** Grupo de opções em forma de "pílulas" — usado em urgência, condição, filtros. */
 export function Opcoes<T extends string>({
   nome,
   rotulo,
@@ -254,14 +237,7 @@ export function Opcoes<T extends string>({
       {rotulo ? (
         <legend className="mb-2 text-sm font-semibold text-graf-800">{rotulo}</legend>
       ) : null}
-      <div
-        className="grid gap-2"
-        style={{
-          gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${
-            opcoes.some((opcao) => opcao.descricao) ? "20rem" : "14rem"
-          }), 1fr))`,
-        }}
-      >
+      <div className="flex flex-wrap gap-2">
         {opcoes.map((opcao) => {
           const ativo = opcao.valor === valor;
           return (
@@ -286,7 +262,7 @@ export function Opcoes<T extends string>({
               />
               {opcao.rotulo}
               {opcao.descricao ? (
-                <span className="mt-0.5 block text-apoio font-normal text-graf-500">
+                <span className="mt-0.5 block text-[0.8125rem] font-normal text-graf-500">
                   {opcao.descricao}
                 </span>
               ) : null}

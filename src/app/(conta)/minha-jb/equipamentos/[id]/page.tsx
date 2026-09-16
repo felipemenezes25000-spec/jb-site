@@ -10,7 +10,6 @@ import {
   History,
   LifeBuoy,
   Pencil,
-  ClipboardCheck,
   ShieldCheck,
   Wrench,
 } from "lucide-react";
@@ -19,13 +18,9 @@ import { Destaques, type Destaque } from "@/components/conta/mj-destaques";
 import { Historico } from "@/components/conta/mj-historico";
 import { ListaDeDocumentos } from "@/components/conta/mj-lista-documentos";
 import { Topo } from "@/components/conta/mj-topo";
-import { ResultadoDoChecklist } from "@/components/loja/produto/unidade-fisica";
-import { SpecGroup } from "@/components/specs/spec-sheet";
 import { Aviso } from "@/components/ui/aviso";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao, Etiqueta, type Tom } from "@/components/ui/data";
-import { construirFicha } from "@/domain/specs/construir";
-import { normalizarTensao } from "@/domain/specs/formatar";
 import { ROTULO_CHAMADO, STATUS_CHAMADO_ABERTOS } from "@/lib/assistencia";
 import { exigirCliente } from "@/lib/auth-cliente";
 import {
@@ -33,7 +28,6 @@ import {
   ROTULO_ORIGEM,
   historicoDoEquipamento,
 } from "@/lib/equipamento";
-import { SELECT_FICHA, paraFicha } from "@/lib/ficha-do-produto";
 import { distanciaEmDias, formatarData, plural } from "@/lib/format";
 import { ROTULO_CONTRATO, ROTULO_VISITA, STATUS_VISITA_ABERTOS } from "@/lib/manutencao";
 import { ROTULO_OS } from "@/lib/os";
@@ -63,45 +57,13 @@ const ROTULO_CONDICAO: Record<ProductCondition, string> = {
 
 type Params = Promise<{ id: string }>;
 
-/* ============================================================================
-   O prontuário é uma VIEW da ficha do produto, não uma cópia dela
-
-   Esta página tinha a própria lista de campos, digitada à mão: `Marca e
-   modelo`, `Voltagem`, `Condição`. O resultado medido na auditoria foi
-   "Voltagem: 220" — sem unidade — e "Marca e modelo: Cristófoli" — sem modelo
-   — enquanto a página do MESMO produto, dois cliques adiante, dizia "Bivolt
-   (110/220 V)", trazia capacidade, bandejas e ciclo, e tinha o laudo de
-   inspeção da unidade. A clínica que comprou o equipamento via menos sobre ele
-   do que quem ainda não comprou.
-
-   A separação que esta página passa a fazer, e que é a regra:
-
-   · **A ficha técnica pertence ao MODELO.** Ela é herdada por referência, via
-     `productId`, e renderizada com o mesmo `SpecGroup` da PDP. Nada é digitado
-     de novo aqui: se o cadastro do produto ganhar uma especificação, ela
-     aparece no prontuário no mesmo deploy.
-
-   · **Esta unidade tem os fatos dela.** Série, onde fica, quando chegou, até
-     quando tem garantia, o que a clínica anotou. Isso não existe no produto e
-     não pode ser herdado de lugar nenhum.
-
-   · **O laudo de inspeção pertence à unidade física.** Ele vivia só na
-     vitrine, onde some quando a unidade é vendida — exatamente quando ele
-     passa a interessar mais, porque agora é o registro do aparelho que está na
-     sala da clínica.
-
-   · **Sem produto de origem, a ficha não some.** Equipamento cadastrado pela
-     própria clínica não tem `productId`; a ficha é montada dos campos dele
-     pelo MESMO `construirFicha`, para que "220" continue lendo "220 V".
-   ============================================================================ */
-
 /**
  * Uma linha da ficha. Só é chamada quando existe valor — campo sem dado não
  * vira travessão repetido: ele some, e a ficha fica do tamanho do que se sabe.
  */
 function Linha({ rotulo, valor }: { rotulo: string; valor: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[minmax(7rem,auto)_minmax(0,1fr)] gap-x-4 gap-y-1 py-2.5">
+    <div className="grid grid-cols-[minmax(7rem,auto)_1fr] gap-x-4 gap-y-1 py-2.5">
       <dt className="text-sm text-graf-500">{rotulo}</dt>
       <dd className="min-w-0 text-sm text-graf-900">{valor}</dd>
     </div>
@@ -126,13 +88,10 @@ export default async function EquipamentoPage({ params }: { params: Params }) {
   const equipamento = await prisma.equipment.findFirst({
     where: { id, customerId: cliente.id },
     include: {
-      category: { select: { name: true, slug: true } },
+      category: { select: { name: true } },
       location: { select: { name: true } },
       order: { select: { number: true } },
-      /* A ficha inteira do produto de origem, pelo mesmo `select` da PDP. É o
-         "herde por referência": não há campo copiado para `Equipment`, e um
-         atributo novo no cadastro aparece aqui sem tocar nesta página. */
-      product: { select: { ...SELECT_FICHA, slug: true } },
+      product: { select: { slug: true, name: true } },
       media: {
         orderBy: { order: "asc" },
         select: { id: true, media: { select: { url: true, alt: true } } },
@@ -189,60 +148,6 @@ export default async function EquipamentoPage({ params }: { params: Params }) {
 
   if (!equipamento) notFound();
 
-  /* ------------------------------------------------- a unidade física
-
-     `Equipment` é o prontuário do cliente; `InventoryUnit` é a peça que passou
-     pela bancada da JB, com o laudo de inspeção. Não há chave entre os dois —
-     e inventar uma seria pior do que não ter: atribuir o laudo errado a um
-     aparelho é afirmar que uma resistência foi trocada numa máquina em que ela
-     não foi.
-
-     Então o vínculo é feito por prova, em duas tentativas, nesta ordem:
-
-       1. **Pelo número de série.** É a identificação da peça; se bate, é ela.
-       2. **Pelo pedido, e só quando não há ambiguidade.** Se o pedido gerou um
-          único prontuário deste produto, a unidade daquele item é esta. Duas
-          autoclaves no mesmo pedido param aqui: sem série, não dá para saber
-          qual laudo é de qual, e a página não mostra laudo nenhum.
-  */
-  const serial = equipamento.serialNumber.trim();
-  const SELECT_LAUDO = {
-    serialNumber: true,
-    manufactureYear: true,
-    usageHours: true,
-    usageCycles: true,
-    warrantyMonths: true,
-    acquiredFrom: true,
-    conditionNotes: true,
-    inspectionNotes: true,
-    checklist: {
-      orderBy: { order: "asc" as const },
-      select: { id: true, label: true, result: true, note: true },
-    },
-  };
-
-  let unidade = null;
-  if (equipamento.productId && serial) {
-    unidade = await prisma.inventoryUnit.findFirst({
-      where: { productId: equipamento.productId, serialNumber: serial },
-      select: SELECT_LAUDO,
-    });
-  }
-  if (!unidade && equipamento.productId && equipamento.orderId) {
-    const irmaos = await prisma.equipment.count({
-      where: { orderId: equipamento.orderId, productId: equipamento.productId },
-    });
-    if (irmaos === 1) {
-      unidade = await prisma.inventoryUnit.findFirst({
-        where: {
-          productId: equipamento.productId,
-          orderItem: { orderId: equipamento.orderId },
-        },
-        select: SELECT_LAUDO,
-      });
-    }
-  }
-
   const [historico, chamadosAbertos, chamados12Meses] = await Promise.all([
     historicoDoEquipamento(equipamento.id),
     prisma.serviceRequest.count({
@@ -271,96 +176,6 @@ export default async function EquipamentoPage({ params }: { params: Params }) {
   const identificacao =
     [equipamento.brandName, equipamento.modelName].filter(Boolean).join(" ") ||
     "Marca e modelo não informados";
-
-  /* ------------------------------------------------------------- a ficha
-
-     Com produto de origem, a ficha é a DELE: capacidade, bandejas, ciclo,
-     dimensões, peso, registro Anvisa — tudo o que a PDP mostra, pelo mesmo
-     `construirFicha`, sem um campo sequer redigitado neste arquivo.
-
-     Sem produto de origem — equipamento que a clínica cadastrou sozinha — a
-     ficha é montada dos campos do próprio prontuário. Ela fica curta, e é o
-     que se sabe: o ponto de passar por `construirFicha` mesmo aqui é que
-     "220" saia "220 V" e "bivolt" saia "Bivolt (110/220 V)" nos dois casos.
-     Era essa a diferença que a auditoria fotografou lado a lado.
-
-     A unidade física entra junto quando foi identificada: série, ano, horas e
-     ciclos de uso passam a compor a ficha com procedência "inspeção JB", em
-     vez de ficarem fora dela. */
-  const dadosDaUnidade = unidade
-    ? {
-        serialNumber: unidade.serialNumber,
-        manufactureYear: unidade.manufactureYear,
-        usageHours: unidade.usageHours,
-        usageCycles: unidade.usageCycles,
-        warrantyMonths: unidade.warrantyMonths,
-        acquiredFrom: unidade.acquiredFrom,
-      }
-    : serial
-      ? {
-          /* Sem `InventoryUnit`, a série ainda é um fato desta unidade e entra
-             na ficha — só não vem acompanhada de laudo. */
-          serialNumber: serial,
-          manufactureYear: equipamento.manufacturedAt?.getFullYear() ?? null,
-          usageHours: null,
-          usageCycles: null,
-          warrantyMonths: null,
-        }
-      : null;
-
-  const ficha = equipamento.product
-    ? construirFicha(paraFicha(equipamento.product, dadosDaUnidade))
-    : construirFicha({
-        nome: equipamento.name,
-        sku: "",
-        modelo: equipamento.modelName,
-        condicao: equipamento.condition ?? "",
-        marca: equipamento.brandName,
-        categoria: equipamento.category
-          ? { slug: equipamento.category.slug, nome: equipamento.category.name }
-          : null,
-        voltagem: equipamento.voltage,
-        specs: [],
-        unidade: dadosDaUnidade,
-      });
-
-  /* A tensão DE USO é um fato da instalação, não do modelo.
-
-     Um modelo bivolt ligado em 220 na sala de esterilização é exatamente a
-     informação que o técnico precisa antes de sair. Ela só aparece quando diz
-     algo que a ficha do modelo não diz — repetir "Bivolt (110/220 V)" duas
-     vezes na mesma tela seria voltar ao problema que a ficha única resolveu. */
-  const tensaoDeUso = equipamento.voltage?.trim()
-    ? normalizarTensao(equipamento.voltage)
-    : null;
-  const tensaoDoModelo = equipamento.product?.voltage?.trim()
-    ? normalizarTensao(equipamento.product.voltage)
-    : null;
-  const tensaoPropria =
-    equipamento.product && tensaoDeUso && tensaoDeUso !== tensaoDoModelo
-      ? tensaoDeUso
-      : null;
-
-  /* Idem para marca e modelo: a ficha já os traz do catálogo. A linha só volta
-     quando o que está cadastrado no prontuário é OUTRA coisa — aí as duas
-     versões precisam aparecer, porque uma delas está errada e quem lê é quem
-     sabe qual. */
-  const identidadeNaFicha = ficha.grupos.some((grupo) => grupo.id === "identidade");
-  const identificacaoDoModelo = equipamento.product
-    ? [equipamento.product.brand?.name, equipamento.product.model]
-        .filter(Boolean)
-        .join(" ")
-    : "";
-  const identificacaoPropria =
-    identidadeNaFicha && identificacao === identificacaoDoModelo ? null : identificacao;
-
-  const itensDoLaudo = unidade?.checklist ?? [];
-  const notasDoLaudo = [unidade?.conditionNotes, unidade?.inspectionNotes]
-    .map((nota) => nota?.trim() ?? "")
-    .filter(Boolean);
-  const temLaudo = itensDoLaudo.length > 0 || notasDoLaudo.length > 0;
-  const trocados = itensDoLaudo.filter((item) => item.result === "substituido").length;
-  const conferidos = itensDoLaudo.filter((item) => item.result !== "nao_aplicavel").length;
 
   /*
    * Índice de manutenção deste aparelho.
@@ -503,24 +318,22 @@ export default async function EquipamentoPage({ params }: { params: Params }) {
         <div className="space-y-6">
           <Cartao>
             <CabecalhoCartao
-              titulo="Esta unidade"
-              descricao="Os fatos deste aparelho específico: de onde veio, onde está e até quando tem cobertura."
+              titulo="Ficha do equipamento"
+              descricao="O que a JB tem registrado sobre este aparelho."
             />
             <dl className="divide-y divide-graf-100 p-5">
               {equipamento.category?.name ? (
                 <Linha rotulo="Tipo" valor={equipamento.category.name} />
               ) : null}
-              {identificacaoPropria ? (
-                <Linha rotulo="Marca e modelo" valor={identificacaoPropria} />
-              ) : null}
+              <Linha rotulo="Marca e modelo" valor={identificacao} />
               {equipamento.serialNumber ? (
                 <Linha
                   rotulo="Número de série"
                   valor={<span className="tabular">{equipamento.serialNumber}</span>}
                 />
               ) : null}
-              {tensaoPropria ? (
-                <Linha rotulo="Ligado em" valor={tensaoPropria} />
+              {equipamento.voltage ? (
+                <Linha rotulo="Voltagem" valor={equipamento.voltage} />
               ) : null}
               {equipamento.condition ? (
                 <Linha rotulo="Condição" valor={ROTULO_CONDICAO[equipamento.condition]} />
@@ -584,118 +397,6 @@ export default async function EquipamentoPage({ params }: { params: Params }) {
               ) : null}
             </dl>
           </Cartao>
-
-          {ficha.grupos.length > 0 ? (
-            <Cartao id="ficha-tecnica" className="scroll-mt-24">
-              <CabecalhoCartao
-                titulo="Ficha técnica"
-                descricao={
-                  equipamento.product
-                    ? `As ${ficha.total} especificações do modelo, como estão no catálogo da JB.`
-                    : `As ${ficha.total} especificações cadastradas para este aparelho.`
-                }
-                acao={
-                  equipamento.product ? (
-                    <Link
-                      href={`/loja/${equipamento.product.slug}`}
-                      className="foco-jb text-sm font-bold text-jb-700 underline-offset-4 hover:underline"
-                    >
-                      Ver no catálogo
-                    </Link>
-                  ) : undefined
-                }
-              />
-              <div className="p-5">
-                {/* O mesmo `SpecGroup` da PDP, e não uma tabela parecida: se a
-                    ficha do produto muda de forma, o prontuário muda junto. */}
-                <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
-                  {ficha.grupos.map((grupo) => (
-                    <SpecGroup key={grupo.id} grupo={grupo} />
-                  ))}
-                </div>
-                {equipamento.product ? (
-                  <p className="texto-apoio mt-6 border-t border-graf-100 pt-4 text-graf-500">
-                    Herdada de {equipamento.product.name}. Quando a JB corrige uma
-                    especificação no catálogo, ela se corrige aqui também — o prontuário
-                    lê a ficha do produto, não uma cópia dela.
-                  </p>
-                ) : null}
-              </div>
-            </Cartao>
-          ) : null}
-
-          {temLaudo ? (
-            <Cartao id="laudo" className="scroll-mt-24">
-              <CabecalhoCartao
-                titulo="Laudo de inspeção desta unidade"
-                descricao={
-                  itensDoLaudo.length > 0
-                    ? `${conferidos} de ${itensDoLaudo.length} conferidos na bancada da JB${
-                        trocados > 0
-                          ? ` · ${plural(trocados, "peça trocada", "peças trocadas")}`
-                          : ""
-                      }.`
-                    : "O registro que a equipe técnica fez desta unidade, como foi escrito."
-                }
-              />
-              <div className="p-5">
-                {/* O laudo não é da vitrine: ele é o registro desta peça física.
-                    Ficar só na PDP significava sumir no instante em que a unidade
-                    é vendida — que é quando ele passa a valer mais, porque agora
-                    o aparelho está na sala da clínica. */}
-                {itensDoLaudo.length > 0 ? (
-                  <ul className="divide-y divide-graf-100">
-                    {itensDoLaudo.map((item) => (
-                      <li
-                        key={item.id}
-                        className="flex flex-wrap items-start justify-between gap-x-5 gap-y-1.5 py-3 first:pt-0 last:pb-0"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold leading-5 text-graf-950">
-                            {item.label}
-                          </p>
-                          {item.note.trim() ? (
-                            <p className="texto-apoio mt-0.5 text-graf-600">
-                              {item.note.trim()}
-                            </p>
-                          ) : null}
-                        </div>
-                        <ResultadoDoChecklist resultado={item.result} />
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-
-                {notasDoLaudo.length > 0 ? (
-                  <div
-                    className={
-                      itensDoLaudo.length > 0
-                        ? "mt-5 space-y-3 border-t border-graf-100 pt-4"
-                        : "space-y-3"
-                    }
-                  >
-                    {notasDoLaudo.map((nota) => (
-                      <p key={nota} className="text-sm leading-6 text-graf-700">
-                        {nota}
-                      </p>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </Cartao>
-          ) : equipamento.condition && equipamento.condition !== "novo" ? (
-            <Cartao>
-              <CabecalhoCartao titulo="Laudo de inspeção desta unidade" />
-              <p className="flex items-start gap-2.5 p-5 text-sm leading-relaxed text-graf-600">
-                <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
-                <span>
-                  A inspeção desta unidade não está publicada aqui. Ela existe na bancada —
-                  nenhum seminovo sai da JB sem passar por lá — e a equipe envia o registro
-                  item a item se você pedir pelo chamado.
-                </span>
-              </p>
-            </Cartao>
-          ) : null}
 
           {equipamento.media.length > 0 ? (
             <Cartao>

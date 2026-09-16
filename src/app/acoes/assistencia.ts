@@ -912,7 +912,6 @@ export async function pedirOrcamento(
           .join("\n\n"),
         notaInterna: `Pedido pelo site${entrada.empresa ? ` — ${entrada.empresa}` : ""}.`,
         itens,
-        pedidoDoCliente: true,
       });
       numeroDoOrcamento = orcamento.number;
     }

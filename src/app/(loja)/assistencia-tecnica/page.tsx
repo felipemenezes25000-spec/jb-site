@@ -24,7 +24,6 @@ import { IconeCategoria } from "@/components/ui/icone";
 import { Secao } from "@/components/ui/secao";
 import { whatsappHref } from "@/lib/format";
 import { textoDeHtml } from "@/lib/html";
-import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { prisma } from "@/lib/prisma";
 import {
   JsonLd,
@@ -122,30 +121,11 @@ export default async function AssistenciaTecnicaPage() {
     /* A foto do topo é de equipamento de verdade, do catálogo da própria JB —
        é o argumento da página inteira: quem vende é quem conserta. Sem
        equipamento com foto publicada, o hero fica só com o texto, em coluna
-       única, em vez de abrir espaço para uma imagem que não existe.
-
-       Duas candidatas, e não uma: a consulta era idêntica à do destaque da
-       home, então a assistência abria com EXATAMENTE a mesma autoclave da
-       primeira dobra da vitrine. Compra e serviço ficavam com a mesma cara, e
-       a página que fala de bancada não mostrava nada de bancada. A escolha
-       abaixo prefere um seminovo — unidade que de fato passou pela revisão da
-       JB — e, na falta dele, pega a segunda foto do catálogo em vez da
-       primeira.
-
-       Isto reduz a repetição; não a resolve. A correção completa é
-       fotografia própria de diagnóstico e manutenção, que está registrada na
-       auditoria de 08/09/2026 como produção de conteúdo. */
-    prisma.product.findMany({
+       única, em vez de abrir espaço para uma imagem que não existe. */
+    prisma.product.findFirst({
       where: { status: "active", media: { some: {} } },
-      orderBy: [
-        { condition: "asc" },
-        { featured: "desc" },
-        { publishedAt: "desc" },
-        { createdAt: "desc" },
-      ],
-      take: 2,
+      orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
       select: {
-        condition: true,
         media: {
           orderBy: { order: "asc" },
           take: 1,
@@ -155,9 +135,7 @@ export default async function AssistenciaTecnicaPage() {
     }),
   ]);
 
-  const daBancada = vitrine.find((produto) => produto.condition === "seminovo");
-  const escolhida = daBancada ?? vitrine[1] ?? vitrine[0];
-  const foto = escolhida?.media[0]?.media.url ?? null;
+  const foto = vitrine?.media[0]?.media.url ?? null;
 
   /* Cartão com foto e cartão sem foto na mesma grade viram uma fileira
      desalinhada. Ou a JB cadastrou imagem em todas as frentes e a seção é
@@ -211,7 +189,7 @@ export default async function AssistenciaTecnicaPage() {
           }
         >
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 py-1.5 text-apoio font-semibold text-graf-600 shadow-xs">
+            <p className="inline-flex items-center gap-2 rounded-full border border-graf-200 bg-white px-3.5 py-1.5 text-[0.8125rem] font-semibold text-graf-600 shadow-xs">
               <Wrench className="size-3.5 text-jb-600" aria-hidden />
               Equipe técnica própria · {s.endereco_cidade} e região
             </p>
@@ -262,7 +240,7 @@ export default async function AssistenciaTecnicaPage() {
             <figure className="overflow-hidden rounded-2xl border border-graf-200 bg-white shadow-card">
               <div className="relative aspect-[4/3] bg-gradient-to-b from-white to-graf-50">
                 <Image
-                  src={imagemProdutoSemFundo(foto)}
+                  src={foto}
                   alt=""
                   fill
                   sizes="(max-width: 1024px) 92vw, 44vw"
@@ -287,7 +265,7 @@ export default async function AssistenciaTecnicaPage() {
           {COMBINADO.map((item) => (
             <li key={item.titulo}>
               <item.icone className="size-5 text-jb-600" aria-hidden />
-              <p className="mt-3.5 text-corpo font-bold text-graf-950">{item.titulo}</p>
+              <p className="mt-3.5 text-[0.9375rem] font-bold text-graf-950">{item.titulo}</p>
               <p className="mt-1.5 text-sm leading-relaxed text-graf-600">{item.texto}</p>
             </li>
           ))}
@@ -311,7 +289,7 @@ export default async function AssistenciaTecnicaPage() {
                   <Cartao className="flex h-full flex-col overflow-hidden">
                     <div className="relative aspect-[5/4] bg-graf-50">
                       <Image
-                        src={imagemProdutoSemFundo(categoria.foto)}
+                        src={categoria.foto}
                         alt=""
                         fill
                         sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 24vw"
@@ -319,7 +297,7 @@ export default async function AssistenciaTecnicaPage() {
                       />
                     </div>
                     <div className="border-t border-graf-200 p-5">
-                      <p className="text-corpo font-bold text-graf-950">
+                      <p className="text-[0.9375rem] font-bold text-graf-950">
                         {categoria.name}
                       </p>
                       {textoDeHtml(categoria.description) ? (
@@ -356,7 +334,7 @@ export default async function AssistenciaTecnicaPage() {
           )}
 
           {servicos > 0 ? (
-            <p className="mt-9 text-corpo leading-relaxed text-graf-600">
+            <p className="mt-9 text-[0.9375rem] leading-relaxed text-graf-600">
               Além do conserto, a equipe também instala, revisa e treina.{" "}
               <Link
                 href="/servicos"
@@ -390,8 +368,8 @@ export default async function AssistenciaTecnicaPage() {
             />
 
             <div className="mt-9">
-              <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario" tamanho="lg">
-                Abrir chamado técnico
+              <LinkBotao href="/assistencia-tecnica/solicitar" variante="primario" tamanho="lg">
+                Começar pela etapa 1
                 <ArrowRight className="size-4" aria-hidden />
               </LinkBotao>
             </div>
@@ -427,7 +405,7 @@ export default async function AssistenciaTecnicaPage() {
                       <h3 className="text-lg font-bold leading-tight text-graf-950 sm:text-xl">
                         {etapa.titulo}
                       </h3>
-                      <p className="texto-suave mt-2.5 max-w-xl text-corpo leading-relaxed">
+                      <p className="texto-suave mt-2.5 max-w-xl text-[0.9375rem] leading-relaxed">
                         {etapa.texto}
                       </p>
                     </div>
@@ -494,13 +472,13 @@ export default async function AssistenciaTecnicaPage() {
                   >
                     {opcao.rotulo}
                   </Etiqueta>
-                  <span className="flex-1 text-corpo text-graf-600">
+                  <span className="flex-1 text-[0.9375rem] text-graf-600">
                     {opcao.descricao}
                   </span>
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-corpo leading-relaxed text-graf-600">
+            <p className="mt-5 text-[0.9375rem] leading-relaxed text-graf-600">
               Equipamento parado sobe na fila de triagem. Isso não é promessa de hora
               marcada: é a ordem com que a equipe olha os chamados do dia.
             </p>
@@ -513,7 +491,7 @@ export default async function AssistenciaTecnicaPage() {
 
             {temContatoDireto ? (
               <>
-                <p className="mt-4 text-corpo leading-relaxed text-graf-700">
+                <p className="mt-4 text-[0.9375rem] leading-relaxed text-graf-700">
                   Prefere explicar o defeito falando? A equipe abre o chamado com você.
                 </p>
                 <CanaisDiretos
@@ -528,8 +506,8 @@ export default async function AssistenciaTecnicaPage() {
             <ul
               className={
                 temContatoDireto
-                  ? "mt-6 space-y-6 border-t border-graf-200 pt-6 text-corpo"
-                  : "mt-6 space-y-6 text-corpo"
+                  ? "mt-6 space-y-6 border-t border-graf-200 pt-6 text-[0.9375rem]"
+                  : "mt-6 space-y-6 text-[0.9375rem]"
               }
             >
               <li className="flex gap-3.5">

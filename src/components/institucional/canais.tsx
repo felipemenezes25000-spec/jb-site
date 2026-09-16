@@ -40,7 +40,7 @@ function Linha({
     <>
       <Icone className="mt-1 size-4.5 shrink-0 text-graf-500" aria-hidden />
       <span className="min-w-0">
-        <span className="block text-apoio leading-tight text-graf-500">{rotulo}</span>
+        <span className="block text-[0.8125rem] leading-tight text-graf-500">{rotulo}</span>
         {/* E-mail e endereço são palavras longas e sem espaço. Sem quebra
             forçada, a largura mínima deles empurra a coluna inteira para fora
             da tela no celular — e corta o texto no cartão do desktop. */}
@@ -195,27 +195,22 @@ export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: s
           </p>
         </div>
 
-        {/* Três botões desenhados para faixa grafite, numa faixa clara.
-
-            `claro` é branco sobre branco e `contorno-claro` é texto branco com
-            borda branca a 35% — o próprio `button.tsx` avisa: "Não use nenhum
-            dos dois sobre fundo claro". Sobre `bg-surface-muted` os três
-            sumiam, e a auditoria registrou os dois de contato como invisíveis
-            na página 404. As variantes de fundo claro são estas. */}
         <div className="flex flex-wrap gap-3">
-          <LinkBotao href="/contato">Enviar mensagem</LinkBotao>
+          <LinkBotao href="/contato" variante="claro">
+            Enviar mensagem
+          </LinkBotao>
           {whatsapp ? (
             <a
               href={whatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className={classesBotao("secundario", "md")}
+              className={classesBotao("contorno-claro", "md")}
             >
               WhatsApp
             </a>
           ) : null}
           {s.telefone ? (
-            <a href={telHref(s.telefone)} className={classesBotao("secundario", "md")}>
+            <a href={telHref(s.telefone)} className={classesBotao("contorno-claro", "md")}>
               {formatarTelefone(s.telefone)}
             </a>
           ) : null}

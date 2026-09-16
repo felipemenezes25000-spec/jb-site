@@ -3,9 +3,10 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, SearchX, Stethoscope, Wrench } from "lucide-react";
 
 import { LinkBotao } from "@/components/ui/button";
-import { Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
-import { GradeMarketplace } from "@/components/loja/marketplace/grade-marketplace";
-import type { ParcelamentoMarketplace } from "@/components/loja/marketplace/tipos";
+import { Cartao, Etiqueta, TituloSecao, Trilha, Vazio } from "@/components/ui/data";
+import { type Parcelamento } from "@/components/loja/card-produto";
+import { GradeVitrine } from "@/components/loja/card-vitrine";
+import { colunasAte } from "@/components/ui/grade";
 import { Secao } from "@/components/ui/secao";
 import {
   ORDEM_POR_INTENCAO,
@@ -20,12 +21,31 @@ import { ROTULO_EQUIPAMENTO } from "@/lib/rotulos-equipamento";
 import { metadataDePagina } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
+/*
+ * Migração para Cache Components — esta rota ainda não foi migrada.
+ * Ver docs/evolucao-jb/cobertura.md, fase 5.
+ */
 export const instant = false;
+
+/* ============================================================================
+   Busca universal
+
+   Quatro grupos numa página só: catálogo, Central Técnica, serviços e — para
+   quem tem sessão — os equipamentos da própria clínica.
+
+   A intenção da consulta **ordena** os grupos e não esconde nenhum. Quem
+   digita "compressor fazendo barulho" vê o texto técnico primeiro e os
+   compressores logo abaixo; quem digita "compressor 40 litros" vê o contrário.
+   Nenhuma das duas buscas fica sem o outro lado.
+
+   `noindex`: página de resultado não é conteúdo, e uma busca indexada compete
+   com a própria categoria que ela lista.
+   ============================================================================ */
 
 export const metadata: Metadata = {
   ...metadataDePagina({
     titulo: "Busca",
-    descricao: "Produtos, conteúdo técnico, serviços e equipamentos da sua clínica em uma única busca.",
+    descricao: "Equipamentos, textos técnicos, serviços e o prontuário da sua clínica.",
     caminho: "/busca",
   }),
   robots: { index: false, follow: true },
@@ -43,14 +63,17 @@ function CabecalhoDoGrupo({
   quantidade: number;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1.5 border-b border-graf-200 pb-3">
-      <h2 id={`g-${grupo}`} className="text-xl font-extrabold tracking-[-0.02em] text-graf-950">
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+      {/* O `id` vem daqui e o `aria-labelledby` da seção aponta para ele.
+          Sem esta linha o rótulo da seção referencia um id inexistente, e o
+          leitor de tela anuncia a região sem nome. */}
+      <h2 id={`g-${grupo}`} className="text-title texto-forte">
         {ROTULO_DO_GRUPO[grupo]}
-        <span className="tabular ml-2 text-sm font-semibold text-graf-500">{quantidade}</span>
+        <span className="tabular ml-2 text-base font-semibold text-graf-500">{quantidade}</span>
       </h2>
-      <p className="max-w-xl text-apoio leading-5 text-graf-500">
-        {porQueEsteGrupo(grupo, intencao)}
-      </p>
+      {/* Por que este grupo é útil para ESTA busca. O escopo pede que o
+          resultado explique a própria pertinência. */}
+      <p className="text-[0.875rem] text-graf-500">{porQueEsteGrupo(grupo, intencao)}</p>
     </div>
   );
 }
@@ -63,8 +86,10 @@ function Grupo({
 }: {
   grupo: GrupoDeResultado;
   resultado: ResultadoUniversal;
+  /** O termo buscado, para levar junto ao catálogo. */
   consulta: string;
-  parcelamento: ParcelamentoMarketplace;
+  /** Regras de parcelamento da loja — as mesmas do catálogo. */
+  parcelamento: Parcelamento;
 }) {
   if (grupo === "produtos") {
     if (resultado.produtos.length === 0) return null;
@@ -75,15 +100,34 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.produtos.length}
         />
-        <div className="mt-5">
-          <GradeMarketplace produtos={resultado.produtos} parcelamento={parcelamento} />
-        </div>
+        {/* Esta lista responde "achei isto"; o catálogo é onde se refina por
+            condição, marca, voltagem e preço. Os links de "ver o catálogo" da
+            página iam para /loja sem o termo, então quem quisesse filtrar
+            recomeçava a busca do zero.
+
+            O cartão é o MESMO da vitrine. Antes esta página desenhava uma
+            linha estreita com miniatura de 64px: o resultado de uma busca por
+            equipamento parecia item de lista de sistema, e não o equipamento
+            que a pessoa está procurando comprar. */}
+        {/* Com um ou dois achados, a grade cheia deixaria cada cartão com
+            700px de largura — o equipamento vira cartaz e a foto some no
+            branco. As colunas acompanham a quantidade e, abaixo de três, a
+            faixa para de esticar. É a mesma regra dos relacionados da ficha. */}
+        <GradeVitrine
+          produtos={resultado.produtos}
+          parcelamento={parcelamento}
+          colunas={colunasAte(resultado.produtos.length, { base: 1, sm: 2, lg: 3, xl: 4 })}
+          className={
+            resultado.produtos.length < 3 ? "mt-6 max-w-3xl" : "mt-6"
+          }
+        />
+
         <p className="mt-4">
           <Link
             href={`/loja?q=${encodeURIComponent(consulta)}`}
-            className="foco-jb inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-jb-700 underline-offset-4 hover:underline"
+            className="foco-jb inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500"
           >
-            Ver no catálogo com filtros
+            Refinar no catálogo, com filtros
             <ArrowRight className="size-4" aria-hidden />
           </Link>
         </p>
@@ -100,25 +144,27 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.conteudo.length}
         />
-        <ul className="divide-y divide-hairline">
+        <ul className="mt-4 space-y-3">
           {resultado.conteudo.map((artigo) => (
             <li key={artigo.slug}>
+              <Cartao>
               <Link
                 href={`/central-tecnica/${artigo.slug}`}
-                className="foco-jb flex min-h-16 items-start gap-3.5 rounded-lg px-1 py-4 transition-colors hover:bg-graf-50 sm:px-3"
+                className="flex items-start gap-3.5 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
-                <BookOpen className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+                <BookOpen className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-corpo font-bold text-graf-950">
+                  <span className="block text-[0.9375rem] font-semibold text-graf-950">
                     {artigo.titulo}
                   </span>
                   {artigo.chamada ? (
-                    <span className="mt-0.5 block text-apoio leading-5 text-graf-600">
+                    <span className="mt-0.5 block text-[0.875rem] leading-relaxed text-graf-600">
                       {artigo.chamada}
                     </span>
                   ) : null}
                 </span>
               </Link>
+              </Cartao>
             </li>
           ))}
         </ul>
@@ -135,25 +181,27 @@ function Grupo({
           intencao={resultado.intencao}
           quantidade={resultado.servicos.length}
         />
-        <ul className="divide-y divide-hairline">
+        <ul className="mt-4 space-y-3">
           {resultado.servicos.map((servico) => (
             <li key={servico.href}>
+              <Cartao>
               <Link
                 href={servico.href}
-                className="foco-jb flex min-h-16 items-start gap-3.5 rounded-lg px-1 py-4 transition-colors hover:bg-graf-50 sm:px-3"
+                className="flex items-start gap-3.5 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
               >
-                <Wrench className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+                <Wrench className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-corpo font-bold text-graf-950">
+                  <span className="block text-[0.9375rem] font-semibold text-graf-950">
                     {servico.titulo}
                   </span>
                   {servico.descricao ? (
-                    <span className="mt-0.5 block text-apoio leading-5 text-graf-600">
+                    <span className="mt-0.5 block text-[0.875rem] leading-relaxed text-graf-600">
                       {servico.descricao}
                     </span>
                   ) : null}
                 </span>
               </Link>
+              </Cartao>
             </li>
           ))}
         </ul>
@@ -161,6 +209,9 @@ function Grupo({
     );
   }
 
+  /* Equipamentos da própria clínica. A consulta que os produz filtra por
+     `customerId` da sessão; sem sessão a lista vem vazia e este bloco não
+     existe. Nunca há sugestão de equipamento de terceiro. */
   if (resultado.meusEquipamentos.length === 0) return null;
 
   return (
@@ -170,20 +221,21 @@ function Grupo({
         intencao={resultado.intencao}
         quantidade={resultado.meusEquipamentos.length}
       />
-      <ul className="divide-y divide-hairline">
+      <ul className="mt-4 space-y-3">
         {resultado.meusEquipamentos.map((equipamento) => (
           <li key={equipamento.id}>
+            <Cartao>
             <Link
               href={`/minha-jb/equipamentos/${equipamento.id}`}
-              className="foco-jb flex min-h-16 items-center justify-between gap-4 rounded-lg px-1 py-4 transition-colors hover:bg-graf-50 sm:px-3"
+              className="flex items-center justify-between gap-4 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
             >
               <span className="flex min-w-0 items-start gap-3.5">
-                <Stethoscope className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+                <Stethoscope className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block text-corpo font-bold text-graf-950">
+                  <span className="block text-[0.9375rem] font-semibold text-graf-950">
                     {equipamento.nome}
                   </span>
-                  <span className="mt-0.5 block text-apoio text-graf-600">
+                  <span className="mt-0.5 block text-[0.875rem] text-graf-600">
                     {[equipamento.marca, equipamento.modelo].filter(Boolean).join(" ") ||
                       "Marca e modelo não cadastrados"}
                   </span>
@@ -193,6 +245,7 @@ function Grupo({
                 {ROTULO_EQUIPAMENTO[equipamento.situacao as keyof typeof ROTULO_EQUIPAMENTO]}
               </Etiqueta>
             </Link>
+            </Cartao>
           </li>
         ))}
       </ul>
@@ -211,21 +264,21 @@ export default async function BuscaPage({
 
   if (!validada.ok) {
     return (
-      <Secao espaco="sm" largura="loja">
-        <Trilha itens={TRILHA} className="mb-5" />
+      <Secao espaco="sm">
+        <Trilha itens={TRILHA} className="mb-6" />
         <TituloSecao
           como="h1"
           sobretitulo="Busca"
           titulo="O que você procura?"
           descricao={
             validada.motivo === "curta"
-              ? "Escreva pelo menos três letras para encontrar resultados úteis."
-              : "Procure por produto, marca ou modelo. Para assistência técnica, você também pode descrever o sintoma do equipamento."
+              ? "Escreva pelo menos três letras. Com menos que isso, o resultado seria o catálogo inteiro."
+              : "Procure por equipamento, marca, modelo — ou descreva o que está acontecendo com o aparelho. A busca entende as duas coisas."
           }
         />
-        <div className="mt-6 flex flex-wrap gap-2.5">
+        <div className="mt-8 flex flex-wrap gap-3">
           <LinkBotao href="/loja" variante="secundario" tamanho="sm">
-            Ver catálogo
+            Ver o catálogo
           </LinkBotao>
           <LinkBotao href="/central-tecnica" variante="secundario" tamanho="sm">
             Central Técnica
@@ -238,84 +291,49 @@ export default async function BuscaPage({
     );
   }
 
+  /* O parcelamento sai da configuração da loja, igual ao catálogo: prometer
+     12× aqui e 6× na ficha seria mentira de vitrine. */
   const [resultado, s] = await Promise.all([buscarTudo(validada.consulta), getSettings()]);
-  const parcelamento: ParcelamentoMarketplace = {
+  const parcelamento: Parcelamento = {
     max: Math.min(12, Math.max(1, Number(s.parcelas_max) || 1)),
     minimoCents: paraCentavos(s.parcela_minima),
   };
   const ordem = ORDEM_POR_INTENCAO[resultado.intencao];
-  const gruposComResultado = ordem.filter((grupo) => temAlgo(grupo, resultado)).length;
 
   return (
     <>
-      <Secao espaco="sm" largura="loja">
-        <Trilha itens={TRILHA} className="mb-5" />
+      <Secao espaco="sm">
+        <Trilha itens={TRILHA} className="mb-6" />
         <TituloSecao
           como="h1"
           sobretitulo="Busca"
           titulo={`Resultados para “${validada.consulta}”`}
           descricao={
             resultado.total > 0
-              ? `${resultado.total} ${resultado.total === 1 ? "resultado" : "resultados"} em ${gruposComResultado} ${gruposComResultado === 1 ? "categoria" : "categorias"}.`
+              ? `${resultado.total} ${resultado.total === 1 ? "resultado" : "resultados"} em ${ordem.filter((grupo) => temAlgo(grupo, resultado)).length} ${ordem.filter((grupo) => temAlgo(grupo, resultado)).length === 1 ? "categoria" : "categorias"}.`
               : undefined
           }
         />
 
         {resultado.total === 0 ? (
           <Vazio
-            className="mt-7"
+            className="mt-8"
             icone={SearchX}
             titulo="Nada encontrado com esse termo"
-            descricao="Tente outro nome, marca ou modelo. Se você estiver descrevendo um problema de um equipamento, a equipe técnica também pode ajudar por chamado."
+            descricao="Tente outra palavra, ou descreva o que está acontecendo com o equipamento. Se for um sintoma, a equipe responde por chamado — sem exigir cadastro."
             acao={
-              /* O botão vermelho vai para o catálogo, não para o chamado.
-
-                 Quem digitou o nome de um equipamento e não achou nada quer,
-                 quase sempre, procurar de outro jeito — não abrir um chamado
-                 técnico, que é o caminho de quem já TEM o aparelho e ele
-                 quebrou. A auditoria registrou o destaque invertido: a ação
-                 mais provável estava em cinza e a menos provável em vermelho.
-
-                 E, antes dos dois, o campo de busca de novo: refinar o termo é
-                 o que a pessoa faria primeiro se a tela deixasse. */
-              <div className="mx-auto w-full max-w-md space-y-4">
-                <form action="/busca" method="get" className="flex gap-2">
-                  <label htmlFor="busca-refinar" className="sr-only">
-                    Buscar outro termo
-                  </label>
-                  <input
-                    id="busca-refinar"
-                    name="q"
-                    type="search"
-                    defaultValue={validada.consulta}
-                    placeholder="Tente outro nome, marca ou modelo"
-                    className="min-h-11 w-full rounded-lg border border-graf-300 bg-white px-3 text-base text-graf-900 outline-none focus:border-jb-500 focus:ring-4 focus:ring-jb-500/10 sm:text-sm"
-                  />
-                  <button
-                    type="submit"
-                    className="foco-jb min-h-11 shrink-0 rounded-lg border border-graf-300 px-4 text-sm font-bold text-graf-800 transition-colors hover:border-graf-400 hover:bg-graf-50"
-                  >
-                    Buscar
-                  </button>
-                </form>
-
-                <div className="flex flex-wrap justify-center gap-2">
-                  <LinkBotao href="/loja" tamanho="sm">
-                    Ver o catálogo
-                  </LinkBotao>
-                  <LinkBotao
-                    href="/assistencia-tecnica/solicitar"
-                    tamanho="sm"
-                    variante="secundario"
-                  >
-                    Meu equipamento quebrou
-                  </LinkBotao>
-                </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                <LinkBotao href="/loja" tamanho="sm" variante="secundario">
+                  Ver o catálogo
+                </LinkBotao>
+                <LinkBotao href="/assistencia-tecnica/solicitar" tamanho="sm">
+                  Abrir chamado
+                </LinkBotao>
               </div>
             }
           />
         ) : (
-          <div className="mt-7 space-y-9 lg:space-y-11">
+          <div className="mt-8 space-y-10">
             {ordem.map((grupo) => (
               <Grupo
                 key={grupo}
@@ -329,15 +347,16 @@ export default async function BuscaPage({
         )}
       </Secao>
 
+      {/* Quem buscou um sintoma sai daqui com o caminho do atendimento à
+          vista, independentemente de ter achado texto ou não. */}
       {resultado.intencao === "problema" || resultado.intencao === "meu_equipamento" ? (
         <Secao fundo="clara" espaco="sm">
-          <div className="flex flex-wrap items-center justify-between gap-5">
+          <div className="flex flex-wrap items-center justify-between gap-6">
             <div className="max-w-xl">
-              <h2 className="text-xl font-extrabold tracking-[-0.02em] text-graf-950">
-                Precisa de ajuda técnica?
-              </h2>
-              <p className="mt-1.5 text-sm leading-6 text-graf-600">
-                Envie o sintoma e, se quiser, uma foto ou vídeo. A equipe recebe o contexto sem você precisar procurar o artigo certo.
+              <h2 className="text-title texto-forte">Prefere falar com a equipe?</h2>
+              <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-600">
+                Descrever o sintoma por escrito costuma resolver mais rápido do que procurar o
+                texto certo — e você pode anexar foto ou vídeo.
               </p>
             </div>
             <LinkBotao href="/assistencia-tecnica/solicitar">

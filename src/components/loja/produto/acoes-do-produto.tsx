@@ -4,7 +4,6 @@ import { alternarFavorito } from "@/app/acoes/minha-jb";
 import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import { sessaoCliente } from "@/lib/auth-cliente";
 import { prisma } from "@/lib/prisma";
-import { BotaoEnvio } from "@/components/ui/botao-envio";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -52,11 +51,11 @@ export async function AcoesDoProduto({
       <form action={alternarFavorito}>
         <input type="hidden" name="produtoId" value={produtoId} />
         <input type="hidden" name="voltar" value={`/loja/${slug}`} />
-        <BotaoEnvio
+        <button
+          type="submit"
           aria-pressed={favoritado}
-          carregando={<span>Salvando…</span>}
           className={cn(
-            "foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold transition-colors duration-150",
+            "foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border px-3.5 text-[0.875rem] font-semibold transition-colors duration-150",
             favoritado
               ? "border-jb-300 bg-jb-50 text-jb-700"
               : "border-graf-300 text-graf-800 hover:border-graf-450 hover:bg-graf-50",
@@ -67,7 +66,7 @@ export async function AcoesDoProduto({
             aria-hidden
           />
           {favoritado ? "Salvo" : "Salvar"}
-        </BotaoEnvio>
+        </button>
       </form>
 
       <BotaoComparar slug={slug} nome={nome} forma="linha" />

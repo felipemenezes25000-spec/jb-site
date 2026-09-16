@@ -1,7 +1,18 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock, Mail, MessageCircle, Phone } from "lucide-react";
+import { Clock, Mail, MessageCircle, Phone } from "lucide-react";
 
 import { telHref, whatsappHref } from "@/lib/format";
+
+/* ============================================================================
+   Falar com a equipe
+
+   Equipamento caro raramente é comprado sem uma conversa. Este bloco fecha a
+   coluna de compra com os canais reais da JB — nada de formulário genérico de
+   "fale conosco" e nada de canal que não esteja configurado.
+
+   Sem moldura, pelo mesmo motivo das condições de compra: a coluna já tem uma
+   caixa, a de comprar. O resto corre em fio fino.
+   ============================================================================ */
 
 export function AjudaDaEquipe({
   nomeDoProduto,
@@ -18,63 +29,65 @@ export function AjudaDaEquipe({
   email: string;
   horario: string;
 }) {
-  const mensagem = `Olá! Tenho uma dúvida sobre o produto ${nomeDoProduto} (SKU ${sku}).`;
+  const mensagem = `Olá! Tenho uma dúvida sobre o equipamento ${nomeDoProduto} (SKU ${sku}).`;
   const linkWhatsapp = whatsapp ? whatsappHref(whatsapp, mensagem) : "";
   const linkTelefone = telefone ? telHref(telefone) : "";
 
   if (!linkWhatsapp && !linkTelefone && !email) return null;
 
-  return (
-    <section aria-labelledby="falar-com-a-equipe" className="border-t border-graf-200 pt-3.5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
-        <div className="min-w-0">
-          <h3 id="falar-com-a-equipe" className="text-sm font-extrabold text-graf-950">
-            Precisa de ajuda para decidir?
-          </h3>
-          <p className="mt-0.5 max-w-xl text-xs leading-5 text-graf-500">
-            Fale com a equipe JB já com este produto identificado.
-          </p>
-        </div>
+  const linha =
+    "foco-jb flex min-h-11 items-center gap-3 py-3 text-[0.9375rem] font-semibold text-graf-800 transition-colors duration-150 hover:text-jb-700";
 
-        <div className="flex flex-wrap gap-2 lg:shrink-0 lg:justify-end">
-          {linkWhatsapp ? (
+  return (
+    <section aria-labelledby="falar-com-a-equipe">
+      <h2
+        id="falar-com-a-equipe"
+        className="text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-graf-500"
+      >
+        Falar com a equipe
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-graf-600">
+        Dúvida de medida, instalação, voltagem ou prazo: a mensagem já sai com este
+        equipamento identificado.
+      </p>
+
+      <ul className="mt-3 divide-y divide-graf-200 border-t border-graf-200">
+        {linkWhatsapp ? (
+          <li>
             <a
               href={linkWhatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border border-graf-450 bg-white px-3.5 text-xs font-semibold text-graf-900 transition-colors hover:bg-graf-50"
+              className={linha}
             >
-              <MessageCircle className="size-4 shrink-0" aria-hidden />
-              WhatsApp
-              <ArrowUpRight className="size-3.5" aria-hidden />
+              <MessageCircle className="size-[18px] shrink-0 text-ok-700" aria-hidden />
+              WhatsApp {whatsapp}
             </a>
-          ) : null}
+          </li>
+        ) : null}
 
-          {linkTelefone ? (
-            <a
-              href={linkTelefone}
-              className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border border-graf-300 bg-white px-3.5 text-xs font-semibold text-graf-800 hover:bg-graf-50"
-            >
-              <Phone className="size-4 shrink-0 text-jb-600" aria-hidden />
+        {linkTelefone ? (
+          <li>
+            <a href={linkTelefone} className={linha}>
+              <Phone className="size-[18px] shrink-0 text-graf-500" aria-hidden />
               {telefone}
             </a>
-          ) : null}
+          </li>
+        ) : null}
 
-          {email ? (
-            <Link
-              href="/contato"
-              className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-xs font-semibold text-graf-700 hover:bg-graf-50 hover:text-jb-700"
-            >
-              <Mail className="size-4 text-jb-600" aria-hidden />
-              Escrever
+        {email ? (
+          <li>
+            <Link href="/contato" className={linha}>
+              <Mail className="size-[18px] shrink-0 text-graf-500" aria-hidden />
+              Enviar uma pergunta por escrito
             </Link>
-          ) : null}
-        </div>
-      </div>
+          </li>
+        ) : null}
+      </ul>
 
       {horario ? (
-        <p className="mt-3 flex items-start gap-2 border-t border-hairline pt-2.5 texto-apoio text-graf-500">
-          <Clock className="mt-px size-3.5 shrink-0" aria-hidden />
+        <p className="mt-3 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
+          <Clock className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
           {horario}
         </p>
       ) : null}

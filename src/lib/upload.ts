@@ -297,79 +297,6 @@ function usaBlob() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
-/* -------------------------------------------------- arquivo no banco
-
-   O terceiro destino, e o que existe para o ambiente sem loja de blobs.
-
-   Antes havia dois: Vercel Blob (quando há token) e sistema de arquivos do
-   projeto (quando não há). O segundo não funciona em serverless — o disco é
-   somente leitura fora de `/tmp`, e `/tmp` não sobrevive à invocação. Era por
-   isso que toda foto de chamado no preview devolvia erro genérico e "tentar de
-   novo" nunca resolvia: não era falha transitória, era ausência de lugar onde
-   gravar.
-
-   `/banco/<pathname>` é o endereço. Ele não abre no navegador — é lido pela
-   mesma rota autenticada que já servia `/arquivos/...`. */
-
-const PREFIXO_BANCO = "/banco";
-
-function ehCaminhoDeBanco(valor: string) {
-  return valor.startsWith(`${PREFIXO_BANCO}/`);
-}
-
-function pathnameDoBanco(valor: string) {
-  return valor.slice(PREFIXO_BANCO.length + 1);
-}
-
-/** Erro de disco somente leitura — o caso do serverless. */
-function discoNaoAceitaEscrita(erro: unknown) {
-  const codigo = (erro as NodeJS.ErrnoException)?.code;
-  return codigo === "EROFS" || codigo === "EACCES" || codigo === "EPERM";
-}
-
-async function guardarNoBanco(
-  pathname: string,
-  bytes: Buffer,
-  mime: string,
-): Promise<Guardado> {
-  const { prisma } = await import("@/lib/prisma");
-  const conteudo = new Uint8Array(bytes);
-  await prisma.storedBlob.upsert({
-    where: { pathname },
-    update: { bytes: conteudo, mime, size: conteudo.byteLength },
-    create: { pathname, bytes: conteudo, mime, size: conteudo.byteLength },
-  });
-  return {
-    url: `${PREFIXO_BANCO}/${pathname}`,
-    pathname,
-    visibilidade: "privado",
-  };
-}
-
-async function abrirNoBanco(valor: string): Promise<ArquivoAberto | null> {
-  const { prisma } = await import("@/lib/prisma");
-  const linha = await prisma.storedBlob.findUnique({
-    where: { pathname: pathnameDoBanco(valor) },
-    select: { bytes: true, mime: true, size: true },
-  });
-  if (!linha) return null;
-
-  const dados = Buffer.from(linha.bytes);
-  const corpo = new ReadableStream<Uint8Array>({
-    start(controlador) {
-      controlador.enqueue(new Uint8Array(dados));
-      controlador.close();
-    },
-  });
-
-  return {
-    corpo,
-    contentType: linha.mime || null,
-    tamanho: linha.size,
-    tamanhoConfiavel: true,
-  };
-}
-
 /** Só o host da Vercel Blob é buscado pelo servidor — o resto seria SSRF. */
 const SUFIXO_HOST_BLOB = ".blob.vercel-storage.com";
 
@@ -470,36 +397,6 @@ export async function guardarPrivado(
   };
 }
 
-/**
- * O último destino privado que sempre existe: o próprio banco.
- *
- * Existe porque há DOIS jeitos de o armazenamento privado faltar, e o segundo
- * passou despercebido no conserto anterior:
- *
- *   1. Sem `BLOB_READ_WRITE_TOKEN` o código cai no disco do projeto, que em
- *      serverless é somente leitura. Esse caminho já caía aqui.
- *   2. COM token, a loja de blobs pode recusar `access: "private"` por falta
- *      do recurso no plano. Aí `guardarPrivado` devolve `privado: false`, e
- *      `guardarPrivadoEstrito` apagava o objeto público e lançava 503 — com
- *      razão, porque nome difícil de adivinhar não é controle de acesso.
- *
- * O preview da JB está no caso 2: o token existe e o plano recusa objeto
- * privado, então toda foto de chamado respondia 503, inclusive no "tentar de
- * novo". A recusa estava certa; o que faltava era ter para onde ir.
- *
- * O banco é privado de verdade — os bytes só saem pelas rotas que conferem
- * sessão e dono. Não é destino ideal para acervo de mídia, e continua sendo o
- * piso: com objeto privado disponível na loja, nada passa por aqui.
- */
-export async function guardarPrivadoNoBanco(
-  pathname: string,
-  bytes: Buffer,
-  mime: string,
-): Promise<{ url: string; pathname: string; privado: true }> {
-  const guardado = await guardarNoBanco(pathname, bytes, mime);
-  return { url: guardado.url, pathname: guardado.pathname, privado: true };
-}
-
 /** Cria a raiz privada já ignorada pelo git, independente do `.gitignore` da raiz. */
 async function garantirRaizPrivada() {
   await fs.mkdir(RAIZ_PRIVADA, { recursive: true });
@@ -519,37 +416,12 @@ async function guardar(
 ): Promise<Guardado> {
   if (usaBlob()) return guardarNoBlob(pathname, bytes, tipo, visibilidade);
 
-  try {
-    if (visibilidade === "privado") await garantirRaizPrivada();
+  if (visibilidade === "privado") await garantirRaizPrivada();
 
-    const destino = caminhoLocal(raizDe(visibilidade), pathname);
-    await fs.mkdir(path.dirname(destino), { recursive: true });
-    await fs.writeFile(destino, bytes);
-    return { url: `${prefixoDe(visibilidade)}/${pathname}`, pathname, visibilidade };
-  } catch (erro) {
-    /* Disco somente leitura — serverless sem loja de blobs.
-
-       Para arquivo privado o banco resolve, e resolve mantendo a regra: o
-       endereço continua não abrindo no navegador. Para arquivo público não há
-       equivalente: uma foto de catálogo precisa de URL servível pelo CDN, e
-       inventar uma rota de leitura para ela seria trocar o problema de lugar.
-       Aí o erro sobe com o motivo real, em vez do genérico "tente de novo"
-       que a auditoria encontrou. */
-    if (!discoNaoAceitaEscrita(erro)) throw erro;
-
-    if (visibilidade === "privado") {
-      console.warn(
-        "[upload] disco somente leitura e sem BLOB_READ_WRITE_TOKEN: gravando no banco.",
-      );
-      return guardarNoBanco(pathname, bytes, tipo);
-    }
-
-    throw new ErroDeUpload(
-      "O armazenamento de arquivos públicos não está configurado neste ambiente. " +
-        "Defina BLOB_READ_WRITE_TOKEN para publicar imagens.",
-      503,
-    );
-  }
+  const destino = caminhoLocal(raizDe(visibilidade), pathname);
+  await fs.mkdir(path.dirname(destino), { recursive: true });
+  await fs.writeFile(destino, bytes);
+  return { url: `${prefixoDe(visibilidade)}/${pathname}`, pathname, visibilidade };
 }
 
 export type ArquivoEnviado = {
@@ -757,8 +629,6 @@ export async function abrirArquivo(chave: string): Promise<ArquivoAberto | null>
     return abrirNoBlob(valor);
   }
 
-  if (ehCaminhoDeBanco(valor)) return abrirNoBanco(valor);
-
   return abrirLocal(valor);
 }
 
@@ -886,14 +756,6 @@ export async function respostaDeArquivo(
 export async function removerArquivo(url: string): Promise<boolean> {
   const valor = (url ?? "").trim();
   if (!valor) return false;
-
-  if (ehCaminhoDeBanco(valor)) {
-    const { prisma } = await import("@/lib/prisma");
-    const apagados = await prisma.storedBlob.deleteMany({
-      where: { pathname: pathnameDoBanco(valor) },
-    });
-    return apagados.count > 0;
-  }
 
   if (valor.startsWith(`${PREFIXO_PUBLICO}/`) || valor.startsWith(`${PREFIXO_PRIVADO}/`)) {
     let removeu = false;

@@ -103,12 +103,6 @@ export function totalDoCenario(cenario: Cenario): TotalDoCenario {
   };
 }
 
-/** "a, b e c" — a lista em português, para a ressalva. */
-function listar(itens: readonly string[]): string {
-  if (itens.length <= 1) return itens[0] ?? "";
-  return `${itens.slice(0, -1).join(", ")} e ${itens[itens.length - 1]}`;
-}
-
 /* --------------------------------------------------------- comparação */
 
 export type Comparacao =
@@ -133,21 +127,7 @@ export type Comparacao =
  * restante, revenda nem probabilidade de falha — porque nenhum desses números
  * existe aqui.
  */
-export function compararCenarios(
-  cenarios: readonly Cenario[],
-  anosDeHorizonte: number,
-  /**
-   * Dimensões que ficaram inteiramente de fora por ninguém ter informado —
-   * manutenção, instalação, custo de parada.
-   *
-   * Elas não são linha `ausente`: são custo que a simulação declaradamente não
-   * cobre. A diferença importa. Uma linha ausente num cenário e presente no
-   * outro torna os totais incomparáveis, e a comparação recusa. Uma dimensão
-   * ausente nos TRÊS não desequilibra nada — só encurta o que o número
-   * significa, e a ressalva é onde isso é dito em voz alta.
-   */
-  foraDaConta: readonly string[] = [],
-): Comparacao {
+export function compararCenarios(cenarios: readonly Cenario[], anosDeHorizonte: number): Comparacao {
   const totais = cenarios.map(totalDoCenario);
 
   if (cenarios.length < 2) {
@@ -176,10 +156,7 @@ export function compararCenarios(
     ressalva:
       `Simulação para ${anosDeHorizonte} ${anosDeHorizonte === 1 ? "ano" : "anos"}, com os ` +
       "valores acima. Ela não estima vida útil restante, probabilidade de falha, valor de " +
-      "revenda nem economia futura — nenhum desses números foi medido." +
-      (foraDaConta.length > 0
-        ? ` E não inclui ${listar(foraDaConta)}: você não informou ${foraDaConta.length === 1 ? "esse custo" : "esses custos"} em nenhum cenário, então ${foraDaConta.length === 1 ? "ele ficou" : "eles ficaram"} de fora dos três — e não valem zero.`
-        : ""),
+      "revenda nem economia futura — nenhum desses números foi medido.",
   };
 }
 

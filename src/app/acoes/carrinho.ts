@@ -23,11 +23,6 @@ const adicionar = z.object({
 /**
  * Adiciona ao carrinho. Preço nunca vem do formulário — o servidor lê do
  * banco na hora de fechar o pedido. Aqui só se guarda o que e quanto.
- *
- * Serviços obrigatórios também nunca dependem do formulário: um cliente
- * alterado pode omitir qualquer hidden input. A fonte de verdade é
- * ProductAddon.required. Se um serviço que precisa entrar no pedido está sob
- * orçamento, a compra direta para antes de criar/alterar qualquer item.
  */
 export async function adicionarAoCarrinho(
   _anterior: EstadoCarrinho,
@@ -46,7 +41,6 @@ export async function adicionarAoCarrinho(
       id: true,
       name: true,
       status: true,
-      priceCents: true,
       trackInventory: true,
       stock: true,
       unique: true,
@@ -54,48 +48,8 @@ export async function adicionarAoCarrinho(
     },
   });
 
-  if (
-    !produto ||
-    produto.status !== "active" ||
-    !produto.allowDirectPurchase ||
-    produto.priceCents <= 0
-  ) {
+  if (!produto || produto.status !== "active" || !produto.allowDirectPurchase) {
     return { erro: "Este item não está disponível para compra direta." };
-  }
-
-  /* Resolve todos os adicionais antes de tocar no carrinho. Além de garantir
-     os obrigatórios, isto impede uma compra parcialmente criada quando algum
-     serviço selecionado ainda depende de orçamento. */
-  const adicionais = await prisma.productAddon.findMany({
-    where: { productId: produto.id },
-    select: {
-      serviceId: true,
-      required: true,
-      priceCents: true,
-      service: { select: { priceCents: true } },
-    },
-  });
-
-  const porId = new Map(adicionais.map((addon) => [addon.serviceId, addon]));
-  const idsFinais = new Set<string>();
-
-  for (const addon of adicionais) {
-    if (addon.required) idsFinais.add(addon.serviceId);
-  }
-  for (const serviceId of dados.data.addons) {
-    if (porId.has(serviceId)) idsFinais.add(serviceId);
-  }
-
-  const semPreco = [...idsFinais]
-    .map((serviceId) => porId.get(serviceId))
-    .find((addon) => addon && (addon.priceCents ?? addon.service.priceCents ?? 0) <= 0);
-
-  if (semPreco) {
-    return {
-      erro: semPreco.required
-        ? "Este equipamento possui um serviço obrigatório sob orçamento. Solicite uma proposta para fechar a compra."
-        : "Um dos serviços selecionados está sob orçamento. Remova esse serviço ou solicite uma proposta.",
-    };
   }
 
   const cliente = await sessaoCliente();
@@ -127,21 +81,27 @@ export async function adicionarAoCarrinho(
         data: { cartId: carrinho.id, productId: produto.id, quantity: dados.data.quantidade },
       });
 
-  // Serviços entram como filhos do produto para ficarem auditáveis. A lista
-  // final já contém todos os required do banco mesmo se o navegador os omitir.
-  for (const serviceId of idsFinais) {
-    const existe = carrinho.items.find(
-      (i) => i.parentId === item.id && i.serviceId === serviceId,
-    );
-    if (!existe) {
-      await prisma.cartItem.create({
-        data: {
-          cartId: carrinho.id,
-          serviceId,
-          parentId: item.id,
-          quantity: 1,
-        },
-      });
+  // serviços adicionais entram como filhos do item, para ficarem auditáveis
+  if (dados.data.addons.length) {
+    const permitidos = await prisma.productAddon.findMany({
+      where: { productId: produto.id, serviceId: { in: dados.data.addons } },
+      select: { serviceId: true },
+    });
+
+    for (const addon of permitidos) {
+      const existe = carrinho.items.find(
+        (i) => i.parentId === item.id && i.serviceId === addon.serviceId,
+      );
+      if (!existe) {
+        await prisma.cartItem.create({
+          data: {
+            cartId: carrinho.id,
+            serviceId: addon.serviceId,
+            parentId: item.id,
+            quantity: 1,
+          },
+        });
+      }
     }
   }
 
@@ -215,45 +175,4 @@ export async function aplicarCupom(
   await prisma.cart.update({ where: { id: carrinho.id }, data: { couponId: cupom.id } });
   revalidatePath("/carrinho");
   return { ok: "Cupom aplicado." };
-}
-
-/**
- * Adicionar direto do cartão do catálogo.
- *
- * `adicionarAoCarrinho` tem a forma de `useActionState` — recebe o estado
- * anterior e devolve o novo — e por isso não serve a um `<form action>` puro.
- * O cartão do catálogo tem vinte e quatro instâncias numa página: montar um
- * `useActionState` em cada um transforma a grade inteira em componente de
- * cliente para um botão.
- *
- * Este invólucro existe só para isso: mesma regra, mesma validação, mesmo
- * estoque — só a assinatura muda. Erro não vira tela de erro; o carrinho já
- * revalida e o contador do topo mostra o resultado. Quem precisa de mensagem
- * (a ficha do produto, o carrinho) continua usando a versão com estado.
- */
-export async function adicionarAoCarrinhoDoCartao(formData: FormData): Promise<void> {
-  await adicionarAoCarrinho({}, formData);
-}
-
-/**
- * Adicionar o conjunto inteiro de uma vez.
- *
- * A seção "Para completar este equipamento" mostra o modelo mais os acessórios
- * que a JB vinculou a ele. Até aqui, levar os três para o carrinho era três
- * cliques em três formulários — e cada um recarregava a página no meio da
- * decisão.
- *
- * Os itens entram um a um, pela mesma `adicionarAoCarrinho`, então cada um
- * passa pela sua própria checagem de estoque, unidade única e serviço
- * obrigatório. O que falhar fica de fora sem derrubar o resto: é melhor o
- * carrinho receber dois dos três do que nenhum.
- */
-export async function adicionarConjuntoAoCarrinho(formData: FormData): Promise<void> {
-  const ids = formData.getAll("produtoId").map(String).filter(Boolean);
-  for (const produtoId of ids) {
-    const item = new FormData();
-    item.set("produtoId", produtoId);
-    item.set("quantidade", "1");
-    await adicionarAoCarrinho({}, item);
-  }
 }

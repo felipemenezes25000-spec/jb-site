@@ -10,18 +10,8 @@ import { Aviso } from "@/components/ui/aviso";
 import { LinkBotao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao, Etiqueta, LinhaDoTempo } from "@/components/ui/data";
 import { exigirCliente } from "@/lib/auth-cliente";
-import {
-  distanciaEmDias,
-  formatarData,
-  formatarDataHora,
-  formatarPreco,
-  plural,
-} from "@/lib/format";
-import {
-  ROTULO_ORCAMENTO,
-  STATUS_ORCAMENTO_VISIVEIS,
-  passosDoOrcamento,
-} from "@/lib/orcamento";
+import { distanciaEmDias, formatarData, formatarDataHora, formatarPreco } from "@/lib/format";
+import { ROTULO_ORCAMENTO, passosDoOrcamento } from "@/lib/orcamento";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -48,7 +38,7 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
   const orcamento = await prisma.quote.findFirst({
     where: {
       customerId: cliente.id,
-      status: { in: STATUS_ORCAMENTO_VISIVEIS },
+      status: { not: "rascunho" },
       OR: [{ number: chave }, { id: chave }],
     },
     include: {
@@ -70,30 +60,20 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
   const emAberto = orcamento.status === "enviado" || orcamento.status === "em_duvida";
   const podeDecidir = emAberto && !venceu;
 
-  /* Pedido não é proposta.
-     `solicitado` é o formulário que a clínica enviou pelo /orcamento: ninguém
-     montou valores ainda. Mostrá-lo com a moldura de proposta imprimia
-     "Subtotal R$ 0,00 · Total R$ 0,00" e "Validade: Sem prazo" — a página
-     respondendo com número o que ainda não tem número, e o número sendo zero.
-     Aqui a tela diz o que sabe: o que foi pedido e que a equipe está montando. */
-  const ehPedido = orcamento.status === "solicitado";
-
   return (
     <div>
       <Topo
         voltar={{ href: "/minha-jb/orcamentos", rotulo: "Meus orçamentos" }}
-        titulo={`${ehPedido ? "Pedido de orçamento" : "Orçamento"} ${orcamento.number}`}
+        titulo={`Orçamento ${orcamento.number}`}
         etiqueta={
           <Etiqueta tom={tomDoOrcamento(orcamento.status)}>
             {ROTULO_ORCAMENTO[orcamento.status]}
           </Etiqueta>
         }
         descricao={
-          ehPedido
-            ? "Recebemos o seu pedido. A equipe está montando a proposta com os valores."
-            : orcamento.kind === "assistencia"
-              ? "Proposta de reparo da assistência técnica."
-              : "Proposta comercial de equipamentos e serviços."
+          orcamento.kind === "assistencia"
+            ? "Proposta de reparo da assistência técnica."
+            : "Proposta comercial de equipamentos e serviços."
         }
       />
 
@@ -135,14 +115,7 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <div className="space-y-6">
           <Cartao>
-            <CabecalhoCartao
-              titulo={ehPedido ? "O que você pediu" : "Itens da proposta"}
-              descricao={
-                ehPedido
-                  ? "Como foi enviado no formulário. Os valores entram quando a proposta ficar pronta."
-                  : undefined
-              }
-            />
+            <CabecalhoCartao titulo="Itens da proposta" />
             <ul className="divide-y divide-graf-100 p-5">
               {orcamento.items.map((item) => (
                 <li
@@ -152,41 +125,22 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-graf-950">{item.description}</p>
                     <p className="mt-0.5 text-xs text-graf-500">
-                      {ehPedido
-                        ? plural(item.quantity, "unidade", "unidades")
-                        : `${item.quantity} × ${formatarPreco(item.unitPriceCents)}`}
+                      {item.quantity} × {formatarPreco(item.unitPriceCents)}
                     </p>
                   </div>
-                  {ehPedido ? null : (
-                    <p className="tabular text-sm font-bold text-graf-900">
-                      {formatarPreco(item.totalCents)}
-                    </p>
-                  )}
+                  <p className="tabular text-sm font-bold text-graf-900">
+                    {formatarPreco(item.totalCents)}
+                  </p>
                 </li>
               ))}
               {orcamento.items.length === 0 ? (
                 <li className="py-3 text-sm text-graf-500">
-                  {ehPedido
-                    ? "Este pedido chegou sem itens detalhados. A equipe vai entrar em contato para entender o que você precisa."
-                    : "Esta proposta ainda não tem itens detalhados. Fale com a equipe antes de decidir."}
+                  Esta proposta ainda não tem itens detalhados. Fale com a equipe antes de
+                  decidir.
                 </li>
               ) : null}
             </ul>
 
-            {ehPedido ? (
-              <p className="border-t border-graf-200 p-5 text-sm leading-relaxed text-graf-600">
-                Ainda não há valores: preço de equipamento depende de configuração,
-                voltagem, frete e prazo, e a equipe monta isso caso a caso. Quando a
-                proposta ficar pronta, ela aparece em{" "}
-                <Link
-                  href="/minha-jb/orcamentos?aba=propostas"
-                  className="font-semibold text-jb-700 underline-offset-4 hover:underline"
-                >
-                  Propostas recebidas
-                </Link>{" "}
-                com total, prazo de validade e os botões de aprovar ou recusar.
-              </p>
-            ) : (
             <dl className="space-y-2.5 border-t border-graf-200 p-5 text-sm">
               <div className="flex justify-between gap-4">
                 <dt className="text-graf-600">Subtotal</dt>
@@ -217,7 +171,6 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
                 </dd>
               </div>
             </dl>
-            )}
           </Cartao>
 
           {orcamento.message || orcamento.conditions ? (
@@ -244,15 +197,7 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
           ) : null}
 
           <Cartao>
-            <CabecalhoCartao
-              titulo={
-                podeDecidir
-                  ? "Sua decisão"
-                  : ehPedido
-                    ? "Andamento do pedido"
-                    : "Histórico da proposta"
-              }
-            />
+            <CabecalhoCartao titulo={podeDecidir ? "Sua decisão" : "Histórico da proposta"} />
             <div className="p-5">
               {podeDecidir ? (
                 <DecisaoDoOrcamento
@@ -279,9 +224,7 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
                 </ul>
               ) : (
                 <p className="text-sm leading-relaxed text-graf-600">
-                  {ehPedido
-                    ? "Nenhum registro adicional neste pedido ainda."
-                    : "Nenhum registro adicional nesta proposta."}
+                  Nenhum registro adicional nesta proposta.
                 </p>
               )}
             </div>
@@ -297,10 +240,10 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
           </Cartao>
 
           <Cartao>
-            <CabecalhoCartao titulo={ehPedido ? "Dados do pedido" : "Dados da proposta"} />
+            <CabecalhoCartao titulo="Dados da proposta" />
             <dl className="space-y-2.5 p-5 text-sm">
               <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
-                <dt className="text-graf-500">{ehPedido ? "Enviado em" : "Emitida em"}</dt>
+                <dt className="text-graf-500">Emitida em</dt>
                 <dd className="text-graf-900">{formatarData(orcamento.createdAt)}</dd>
               </div>
               {orcamento.sentAt ? (
@@ -309,16 +252,12 @@ export default async function OrcamentoPage({ params }: { params: Params }) {
                   <dd className="text-graf-900">{formatarData(orcamento.sentAt)}</dd>
                 </div>
               ) : null}
-              {/* Validade é campo de proposta. Num pedido, "Sem prazo" seria
-                  responder a uma pergunta que ninguém fez ainda. */}
-              {ehPedido ? null : (
-                <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
-                  <dt className="text-graf-500">Validade</dt>
-                  <dd className="text-graf-900">
-                    {orcamento.validUntil ? formatarData(orcamento.validUntil) : "Sem prazo"}
-                  </dd>
-                </div>
-              )}
+              <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                <dt className="text-graf-500">Validade</dt>
+                <dd className="text-graf-900">
+                  {orcamento.validUntil ? formatarData(orcamento.validUntil) : "Sem prazo"}
+                </dd>
+              </div>
               {orcamento.version > 1 ? (
                 <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
                   <dt className="text-graf-500">Versão</dt>

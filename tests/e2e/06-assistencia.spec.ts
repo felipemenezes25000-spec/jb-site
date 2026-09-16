@@ -53,15 +53,9 @@ test.describe("Assistência técnica", () => {
     /* 3. fotos — opcional e, sem conta, nem há envio */
     await avancar(page, "Onde é o atendimento e com quem falamos?");
 
-    /* 4. local e contato
-
-       Rua e número passaram a ser obrigatórios: a etapa diz "o endereço
-       define a rota do técnico", e antes dava para abrir uma visita sem
-       nenhum dos dois — a equipe descobria isso na hora de agendar. */
-    await page.getByLabel("Logradouro").fill("Rua Domingos de Braga");
-    await page.getByLabel("Número", { exact: true }).fill("200");
+    /* 4. local e contato */
     await page.getByLabel("Cidade").fill("São Paulo");
-    await page.getByLabel("Estado").selectOption("SP");
+    await page.getByLabel("UF").fill("SP");
     await page.getByLabel("Nome de quem acompanha").fill("Responsável de Teste JB");
     await page.getByLabel("E-mail").fill(email);
     await page.getByLabel("Telefone").fill(TELEFONE_DE_TESTE);

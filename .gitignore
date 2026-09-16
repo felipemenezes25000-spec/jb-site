@@ -53,11 +53,6 @@ prisma/*.db-journal
 
 .shots/
 
-# Capturas, log de console e despejo de página do navegador do MCP. São
-# artefatos de ferramenta — PNGs de 1 MB que reaparecem a cada sessão que
-# abre o navegador —, não fonte. `.shots/` já saía pelo mesmo motivo.
-.playwright-mcp/
-
 # o exemplo precisa ir para o repositório
 !.env.example
 
@@ -70,7 +65,3 @@ _prod.sh
 # nunca versionar nem manter: aponta para o banco de produção
 .env.local
 .env.preview
-
-# Scripts de investigação — medição pontual, não fazem parte da suíte.
-# Nascem com "_" de propósito: são descartáveis e não devem entrar no repo.
-scripts/_*

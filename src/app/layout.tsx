@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Caveat, JetBrains_Mono, Manrope } from "next/font/google";
+import { Caveat, JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { cacheLife, cacheTag } from "next/cache";
@@ -11,30 +11,12 @@ import { getSettings } from "@/lib/settings";
 
 import "./globals.css";
 import "./footer-alignment.css";
-import "./cabecalho.css";
+import "./header-search.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
   display: "swap",
-});
-
-/**
- * A fonte dos títulos.
- *
- * Até aqui título e corpo eram a mesma Manrope, e a hierarquia se apoiava só em
- * tamanho e peso. A Bricolage Grotesque dá ao título um desenho próprio — mais
- * estreita e de contraste maior — sem sair da família grotesca do corpo, que é
- * o que mantém a página como uma peça só.
- *
- * Só nos degraus de título. Corpo, rótulo e número continuam em Manrope: fonte
- * de display em texto corrido cansa, e a JB tem ficha técnica para ler.
- */
-const display = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: "--font-bricolage",
-  display: "swap",
-  axes: ["opsz"],
 });
 
 /**
@@ -144,26 +126,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       /* o CSS define scroll-behavior: smooth; isto avisa o Next de que a
          escolha é deliberada e não deve ser desligada na troca de rota */
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${display.variable} ${mono.variable} ${manuscrita.variable}`}
+      className={`${manrope.variable} ${mono.variable} ${manuscrita.variable}`}
     >
       <body className="antialiased">
         {children}
         <Medicao identificador={await codigoDeMedicao()} />
-        {/* Seis segundos, e com um X.
-
-            O padrão do sonner são quatro, e quatro segundos é menos do que uma
-            pessoa leva para terminar de ler "Autoclave adicionada ao carrinho"
-            e decidir se clica em "Ver carrinho" — o aviso e a ação sumiam
-            juntos, antes da decisão. Seis dá tempo sem virar entulho na tela.
-
-            E `closeButton`, porque quem já leu não deveria esperar o relógio:
-            um aviso que só some sozinho é um aviso que a pessoa não controla,
-            e no celular ele cobre a barra de compra enquanto estiver lá. */}
         <Toaster
           position="bottom-right"
           richColors
-          closeButton
-          duration={6000}
           toastOptions={{ style: { fontFamily: "var(--font-manrope)" } }}
         />
       </body>

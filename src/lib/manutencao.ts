@@ -411,9 +411,6 @@ export async function concluirVisita(entrada: EntradaConclusaoVisita) {
         description: entrada.notas ?? "",
         happenedAt: agora,
         workOrderId: ordem?.id ?? null,
-        /* A visita já é uma linha da timeline por si só. A referência é o que
-           permite que as duas virem uma. */
-        visitId: visita.id,
       },
     });
 

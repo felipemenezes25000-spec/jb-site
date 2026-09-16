@@ -140,7 +140,7 @@ export default async function EtiquetasPage() {
               key={etiqueta.id}
               className="flex break-inside-avoid flex-col items-center gap-2 rounded-lg border border-graf-300 bg-white p-3 text-center print:border-graf-400"
             >
-              <p className="label-mono text-xs uppercase tracking-wide print:text-xs text-graf-500">
+              <p className="label-mono text-xs uppercase tracking-wide print:text-[0.625rem] text-graf-500">
                 JB · Prontuário Técnico
               </p>
 
@@ -152,19 +152,19 @@ export default async function EtiquetasPage() {
                 dangerouslySetInnerHTML={{ __html: etiqueta.qr }}
               />
 
-              <p className="text-apoio font-bold leading-tight text-graf-950">
+              <p className="text-[0.8125rem] font-bold leading-tight text-graf-950">
                 {etiqueta.name}
               </p>
-              <p className="text-xs leading-tight text-graf-600 print:text-xs">
+              <p className="text-xs leading-tight text-graf-600 print:text-[0.6875rem]">
                 {[etiqueta.brandName, etiqueta.modelName].filter(Boolean).join(" ") || "—"}
               </p>
               {etiqueta.serialNumber ? (
-                <p className="label-mono text-xs text-graf-500 print:text-xs">
+                <p className="label-mono text-xs text-graf-500 print:text-[0.625rem]">
                   Série {etiqueta.serialNumber}
                 </p>
               ) : null}
 
-              <p className="label-mono mt-auto text-xs tracking-wide text-graf-700 print:text-xs">
+              <p className="label-mono mt-auto text-xs tracking-wide text-graf-700 print:text-[0.6875rem]">
                 {codigoLegivel(etiqueta.locator)}
               </p>
             </li>

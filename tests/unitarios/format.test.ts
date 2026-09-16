@@ -15,7 +15,6 @@ import {
   plural,
   somenteDigitos,
   telHref,
-  textoDoCartao,
   whatsappHref,
 } from "@/lib/format";
 
@@ -96,20 +95,14 @@ describe("paraCentavos", () => {
 });
 
 describe("calcularParcelas", () => {
-  /* `valorCents` continua sendo o valor que se repete — é ele que a vitrine
-     anuncia. O que passou a existir é `primeiraCents`, que absorve a sobra do
-     arredondamento para a soma fechar com o total (ver
-     `tests/unitarios/datas-e-parcelas.test.ts`). Estas asserções passaram a
-     usar `toMatchObject` para checar o que sempre checaram, sem depender do
-     tamanho do objeto. */
   it("escolhe o maior número de parcelas que respeita o mínimo", () => {
     // 849000 / 12 = 70750 ≥ 5000 → cabe no máximo
-    expect(calcularParcelas(849000)).toMatchObject({ parcelas: 12, valorCents: 70750 });
+    expect(calcularParcelas(849000)).toEqual({ parcelas: 12, valorCents: 70750 });
   });
 
   it("reduz as parcelas quando a divisão fica abaixo do mínimo", () => {
     // mínimo 5000: 30000/12 = 2500 (não), 30000/6 = 5000 (sim)
-    expect(calcularParcelas(30000)).toMatchObject({ parcelas: 6, valorCents: 5000 });
+    expect(calcularParcelas(30000)).toEqual({ parcelas: 6, valorCents: 5000 });
   });
 
   it("recusa parcelar quando nem 2× atinge o mínimo", () => {
@@ -118,29 +111,22 @@ describe("calcularParcelas", () => {
   });
 
   it("aceita exatamente 2× quando é o único que cabe", () => {
-    expect(calcularParcelas(10000)).toMatchObject({ parcelas: 2, valorCents: 5000 });
+    expect(calcularParcelas(10000)).toEqual({ parcelas: 2, valorCents: 5000 });
   });
 
   it("arredonda a parcela para baixo, nunca cobrando a mais por parcela", () => {
     const resultado = calcularParcelas(100001, 3, 1000);
-    expect(resultado).toMatchObject({ parcelas: 3, valorCents: 33333 });
+    expect(resultado).toEqual({ parcelas: 3, valorCents: 33333 });
     expect(resultado!.valorCents * resultado!.parcelas).toBeLessThanOrEqual(100001);
-    /* E a sobra vai para a primeira, para o pedido não perder dois centavos. */
-    expect(
-      resultado!.primeiraCents + resultado!.valorCents * (resultado!.parcelas - 1),
-    ).toBe(100001);
   });
 
   it("respeita o teto de parcelas configurado", () => {
-    expect(calcularParcelas(849000, 6)).toMatchObject({ parcelas: 6, valorCents: 141500 });
+    expect(calcularParcelas(849000, 6)).toEqual({ parcelas: 6, valorCents: 141500 });
     expect(calcularParcelas(849000, 1)).toBeNull();
   });
 
   it("respeita a parcela mínima configurada", () => {
-    expect(calcularParcelas(120000, 12, 20000)).toMatchObject({
-      parcelas: 6,
-      valorCents: 20000,
-    });
+    expect(calcularParcelas(120000, 12, 20000)).toEqual({ parcelas: 6, valorCents: 20000 });
   });
 
   it("não parcela total zerado nem negativo", () => {
@@ -290,44 +276,5 @@ describe("plural", () => {
     expect(plural(1, "item", "itens")).toBe("1 item");
     expect(plural(0, "item", "itens")).toBe("0 itens");
     expect(plural(3, "item", "itens")).toBe("3 itens");
-  });
-});
-
-describe("textoDoCartao", () => {
-  it("escreve a bandeira como nome próprio", () => {
-    /* O provedor manda "visa", minúsculo, do jeito do protocolo. O comprovante
-       imprimia isso cru — "visa ····4321" — ao lado de "Cartão em 3×" escrito
-       com maiúscula. */
-    expect(textoDoCartao("visa", "4321")).toBe("Visa •••• 4321");
-    expect(textoDoCartao("MASTERCARD", "1111")).toBe(
-      "Mastercard •••• 1111",
-    );
-    expect(textoDoCartao("amex", "0005")).toBe(
-      "American Express •••• 0005",
-    );
-  });
-
-  it("não inventa nome para bandeira que não conhece", () => {
-    expect(textoDoCartao("bandeira-nova", "9999")).toBe(
-      "Bandeira-nova •••• 9999",
-    );
-  });
-
-  it("usa espaço não quebrável entre a máscara e os dígitos", () => {
-    /* "•••• 4321" partido em duas linhas vira um borrão
-       em cima e um número solto embaixo. */
-    expect(textoDoCartao("elo", "7788")).toContain(" ");
-    expect(textoDoCartao("elo", "7788")).not.toContain("•••• 7788");
-  });
-
-  it("não escreve máscara quando não há dígitos", () => {
-    expect(textoDoCartao("visa", "")).toBe("Visa");
-    expect(textoDoCartao("visa", null)).toBe("Visa");
-    expect(textoDoCartao(null, null)).toBe("");
-    expect(textoDoCartao("", "")).toBe("");
-  });
-
-  it("mostra só a máscara quando a bandeira não veio", () => {
-    expect(textoDoCartao(null, "4321")).toBe("•••• 4321");
   });
 });

@@ -5,8 +5,8 @@ import { History } from "lucide-react";
 
 import { cartoesVistos, type VistosRecentes } from "@/app/acoes/vistos";
 import { CardProduto } from "@/components/loja/card-produto";
-import { Secao, type EspacoSecao, type LarguraSecao } from "@/components/ui/secao";
-import { TituloSecao, type TamanhoTitulo } from "@/components/ui/data";
+import { Secao } from "@/components/ui/secao";
+import { TituloSecao } from "@/components/ui/data";
 
 /* ============================================================================
    Vistos recentemente
@@ -19,6 +19,10 @@ import { TituloSecao, type TamanhoTitulo } from "@/components/ui/data";
    estoque e condição vêm do servidor a cada renderização, por
    `cartoesVistos`: preço guardado no `localStorage` envelhece, e valor
    exibido vincula quem anuncia.
+
+   A tira não aparece para quem não tem histórico, e não conta a própria
+   página: estar vendo uma autoclave e ver "visto recentemente: esta
+   autoclave" é ruído.
    ============================================================================ */
 
 const CHAVE = "jb:vistos";
@@ -37,9 +41,11 @@ function ler(): string[] {
 }
 
 /**
- * Marca a visita e mantém a faixa de continuidade da PDP no mesmo ponto do
- * documento. O registro continua local; a tira só aparece quando existe
- * histórico suficiente para realmente ajudar.
+ * Marca a visita a um equipamento. Não renderiza nada — é só o registro.
+ *
+ * O slug entra na frente da lista e sai de qualquer posição anterior, para a
+ * ordem ser sempre "o mais recente primeiro" mesmo quando a pessoa volta a um
+ * equipamento que já tinha visto.
  */
 export function RegistrarVisita({ slug }: { slug: string }) {
   useEffect(() => {
@@ -52,50 +58,32 @@ export function RegistrarVisita({ slug }: { slug: string }) {
     }
   }, [slug]);
 
-  /* Na ficha de produto esta tira é mais uma seção entre outras, e não a
-     faixa de abertura que ela é na home: o título usa o mesmo degrau dos
-     outros `h2` da página e o respiro acompanha o das seções vizinhas.
-
-     `largura="loja"` não é detalhe. Sem ela a tira cai na caixa de 1440px no
-     meio de uma página que corre a 1600px — um degrau de 80px de cada lado.
-     Ela só aparece para quem já visitou outros dois produtos, então passa
-     despercebida em navegador limpo. */
-  return (
-    <VistosRecentemente
-      excluir={slug}
-      tamanhoDoTitulo="bloco"
-      espaco="sm"
-      largura="loja"
-    />
-  );
+  return null;
 }
 
 export function VistosRecentemente({
   excluir,
   titulo = "Você viu recentemente",
-  largura,
-  tamanhoDoTitulo = "secao",
-  espaco = "md",
+  larguraInterna,
 }: {
-  /** O que não deve aparecer nesta lista. */
-  excluir?: string | string[];
+  /** Slug da página atual, que não deve aparecer na própria lista. */
+  excluir?: string;
   titulo?: string;
-  /** Caixa desta faixa. `loja` acompanha a vitrine; o padrão é 1440px. */
-  largura?: LarguraSecao;
-  /** Degrau do título. `secao` na home; `bloco` dentro de uma ficha. */
-  tamanhoDoTitulo?: TamanhoTitulo;
-  /** Respiro vertical, para acompanhar o ritmo da página que a hospeda. */
-  espaco?: EspacoSecao;
+  /**
+   * Teto do container desta faixa.
+   *
+   * A faixa é a mesma peça em páginas de medidas diferentes: na ficha do
+   * equipamento as seções vizinhas usam o `container-jb` padrão (90rem), e na
+   * home todas usam 112rem. Sem este parâmetro, a tira entrava na home 190px
+   * mais para dentro que a faixa de cima — o tipo de desencaixe que só aparece
+   * em monitor largo e faz a página parecer montada por pedaços.
+   */
+  larguraInterna?: string;
 }) {
   const [dados, setDados] = useState<VistosRecentes | null>(null);
 
-  /* Serializado para o efeito não redisparar a cada renderização por causa de
-     um array novo com o mesmo conteúdo. */
-  const foraDaLista = Array.isArray(excluir) ? excluir.join(",") : (excluir ?? "");
-
   useEffect(() => {
-    const fora = new Set(foraDaLista.split(",").filter(Boolean));
-    const slugs = ler().filter((slug) => !fora.has(slug));
+    const slugs = ler().filter((slug) => slug !== excluir);
     if (slugs.length === 0) return;
 
     let vivo = true;
@@ -105,30 +93,21 @@ export function VistosRecentemente({
     return () => {
       vivo = false;
     };
-  }, [foraDaLista]);
+  }, [excluir]);
 
-  function limpar() {
-    try {
-      window.localStorage.removeItem(CHAVE);
-    } catch {
-      /* navegação privada: não havia lista guardada para apagar */
-    }
-    setDados(null);
-  }
-
-  // Com menos de dois, a tira é só ruído e não ajuda a comparar nada.
+  // Com menos de dois, a tira é só o equipamento que a pessoa está vendo de
+  // novo — não ajuda a comparar nada.
   if (!dados || dados.produtos.length < 2) return null;
 
   return (
-    <Secao espaco={espaco} largura={largura} separador>
+    <Secao espaco="md" separador classNameInterno={larguraInterna}>
       <TituloSecao
         como="h2"
-        tamanho={tamanhoDoTitulo}
         titulo={titulo}
         descricao="A lista fica só neste navegador. Preço e disponibilidade são os de agora."
       />
 
-      <div className="mt-6">
+      <div className="mt-8">
         <ul className="scrollbar-none -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
           {dados.produtos.map((produto) => (
             <li
@@ -145,24 +124,9 @@ export function VistosRecentemente({
         </ul>
       </div>
 
-      <p className="texto-apoio mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-graf-500">
+      <p className="mt-3 flex items-center gap-2 text-[0.8125rem] text-graf-500">
         <History className="size-4 shrink-0 text-graf-500" aria-hidden />
-        Guardado no seu navegador.
-        {/* Um botão, e não a instrução de limpar os dados do site.
-
-            O texto dizia "Limpar os dados do site apaga esta lista" — ou seja,
-            para tirar daqui um equipamento que a pessoa não quer mais ver (ou
-            que ela não reconhece como seu, num computador compartilhado com a
-            recepção da clínica), a página mandava apagar sessão, carrinho e
-            preferências junto. Quem é dono da lista precisa poder apagar só
-            ela. */}
-        <button
-          type="button"
-          onClick={limpar}
-          className="foco-jb rounded font-semibold text-graf-600 underline underline-offset-2 hover:text-jb-700"
-        >
-          Limpar esta lista
-        </button>
+        Guardado no seu navegador. Limpar os dados do site apaga esta lista.
       </p>
     </Secao>
   );

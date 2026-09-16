@@ -29,13 +29,7 @@ import { PagamentoCartao, type DadosCartao } from "@/components/loja/pagamento-c
 import { ResumoPix } from "@/components/loja/pagamento-pix";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, LinkBotao } from "@/components/ui/button";
-import {
-  CampoCep,
-  CampoDocumento,
-  CampoTelefone,
-  mascararDocumento,
-  type EnderecoCep,
-} from "@/components/ui/campos-br";
+import { CampoCep, CampoDocumento, CampoTelefone, type EnderecoCep } from "@/components/ui/campos-br";
 import { Cartao } from "@/components/ui/data";
 import { Area, Campo, Marcador, Opcoes, Selecao } from "@/components/ui/form";
 import { Passos } from "@/components/ui/passos";
@@ -95,11 +89,7 @@ const FRETE_RETIRADA: FreteExibido = {
   valorCents: 0,
   prazoDias: null,
   orcadoDepois: false,
-  motivo: "retirada",
 };
-
-/** Uma pendência da conferência local: a frase e, quando dá, o campo culpado. */
-type Pendencia = { campo?: string; texto: string };
 
 /** Para onde levar a pessoa quando o servidor recusa um campo. */
 const ETAPA_DO_CAMPO: Record<string, number> = {
@@ -207,7 +197,7 @@ function OpcaoDeAcesso({
       />
       <span className="min-w-0">
         <span className="block text-sm font-bold text-graf-950">{titulo}</span>
-        <span className="mt-0.5 block text-apoio leading-relaxed text-graf-600">
+        <span className="mt-0.5 block text-[0.8125rem] leading-relaxed text-graf-600">
           {detalhe}
         </span>
       </span>
@@ -297,7 +287,7 @@ function BlocoRevisao({
   return (
     <div className="rounded-xl border border-graf-200 bg-white p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="flex items-center gap-2 text-apoio font-bold uppercase tracking-wider text-graf-500">
+        <h3 className="flex items-center gap-2 text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500">
           <Icone className="size-4 shrink-0 text-graf-500" aria-hidden />
           {titulo}
         </h3>
@@ -311,7 +301,7 @@ function BlocoRevisao({
           <span className="sr-only"> {titulo.toLowerCase()}</span>
         </button>
       </div>
-      <div className="mt-3 space-y-1 text-corpo leading-relaxed text-graf-800">
+      <div className="mt-3 space-y-1 text-[0.9375rem] leading-relaxed text-graf-800">
         {children}
       </div>
     </div>
@@ -349,19 +339,7 @@ export function Checkout({
 }) {
   const [estado, acao, enviando] = useActionState<EstadoCheckout, FormData>(finalizarCompra, {});
   const [etapa, setEtapa] = useState(0);
-  /* Todas as pendências da etapa, cada uma presa ao campo que a causou.
-
-     Antes era uma string só, exibida num aviso no topo. Três defeitos vinham
-     junto: a pessoa via um problema por vez (corrigia o CNPJ, submetia, e só
-     então descobria que faltava a razão social); o texto aparecia longe do
-     campo; e, com a página rolada, ele nascia fora da viewport — a auditoria
-     clicou em "Continuar" com o número vazio e concluiu que o botão não fazia
-     nada, porque o recado estava 600 px acima.
-
-     O formulário de chamado já acertava isso. Aqui é o mesmo padrão: lista de
-     pendências, erro colado ao campo, foco no primeiro. */
-  const [pendencias, setPendencias] = useState<Pendencia[]>([]);
-  const erroLocal = pendencias[0]?.texto ?? "";
+  const [erroLocal, setErroLocal] = useState("");
 
   const refFormulario = useRef<HTMLFormElement>(null);
   const refTopo = useRef<HTMLDivElement>(null);
@@ -385,11 +363,6 @@ export function Checkout({
   const [telefone, setTelefone] = useState(inicial.telefone);
   const [tipoPessoa, setTipoPessoa] = useState<"fisica" | "juridica">(inicial.tipoPessoa);
   const [documento, setDocumento] = useState(inicial.documento);
-  /** O documento de cada tipo, guardado ao alternar entre PF e PJ. */
-  const [documentos, setDocumentos] = useState<Record<"fisica" | "juridica", string>>({
-    fisica: inicial.tipoPessoa === "fisica" ? inicial.documento : "",
-    juridica: inicial.tipoPessoa === "juridica" ? inicial.documento : "",
-  });
   const [razaoSocial, setRazaoSocial] = useState(inicial.razaoSocial);
 
   // entrega
@@ -413,129 +386,6 @@ export function Checkout({
   const [observacao, setObservacao] = useState("");
 
   const precisaTokenizar = metodo === "cartao" && !simulado;
-
-  /* ------------------------------------------------- rascunho do checkout
-
-     Recarregar a página devolvia o assistente para a etapa 1 com tudo em
-     branco. Não é hipótese: a auditoria precisou recarregar para recuperar um
-     CPF apagado pelo seletor PF/PJ, e perdeu o resto junto. Num formulário de
-     cinco etapas, quem perde o preenchido raramente volta.
-
-     O que é guardado: etapa, contato, documento e endereço — o que a pessoa
-     digitou e teria de digitar de novo.
-
-     O que NUNCA é guardado, e por quê:
-
-       · senha — credencial não entra em storage, nem por sessão;
-       · token e bandeira do cartão — dado de pagamento não se guarda no
-         navegador, nem tokenizado. O cartão é preenchido de novo, sempre.
-
-     `sessionStorage`, não `localStorage`: o rascunho morre com a aba. Ele
-     existe para sobreviver a um F5, não para ficar no computador da clínica. */
-  const CHAVE_RASCUNHO = "jb:checkout";
-  const [montado, setMontado] = useState(false);
-
-  useEffect(() => {
-    setMontado(true);
-    try {
-      const salvo = sessionStorage.getItem(CHAVE_RASCUNHO);
-      if (!salvo) return;
-      const lido = JSON.parse(salvo) as Record<string, unknown>;
-      const texto = (chave: string) =>
-        typeof lido[chave] === "string" ? (lido[chave] as string) : null;
-
-      const etapaSalva = typeof lido.etapa === "number" ? lido.etapa : null;
-      if (etapaSalva !== null) setEtapa(Math.min(ULTIMA, Math.max(0, etapaSalva)));
-
-      const aplicar = (chave: string, definir: (valor: string) => void) => {
-        const valor = texto(chave);
-        if (valor) definir(valor);
-      };
-
-      aplicar("email", setEmail);
-      aplicar("nome", setNome);
-      aplicar("telefone", setTelefone);
-      aplicar("documento", setDocumento);
-      aplicar("razaoSocial", setRazaoSocial);
-      aplicar("cep", setCep);
-      aplicar("logradouro", setLogradouro);
-      aplicar("numero", setNumero);
-      aplicar("complemento", setComplemento);
-      aplicar("bairro", setBairro);
-      aplicar("cidade", setCidade);
-      aplicar("uf", setUf);
-      aplicar("referencia", setReferencia);
-      aplicar("observacao", setObservacao);
-      if (lido.tipoPessoa === "fisica" || lido.tipoPessoa === "juridica") {
-        setTipoPessoa(lido.tipoPessoa);
-      }
-      if (lido.entrega === "retirada" || lido.entrega === "entrega") {
-        setEntrega(lido.entrega);
-      }
-    } catch {
-      // rascunho ilegível não pode impedir a compra
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!montado) return;
-    try {
-      sessionStorage.setItem(
-        CHAVE_RASCUNHO,
-        JSON.stringify({
-          etapa,
-          email,
-          nome,
-          telefone,
-          tipoPessoa,
-          documento,
-          razaoSocial,
-          entrega,
-          cep,
-          logradouro,
-          numero,
-          complemento,
-          bairro,
-          cidade,
-          uf,
-          referencia,
-          observacao,
-        }),
-      );
-    } catch {
-      // aba anônima com armazenamento bloqueado: segue sem rascunho
-    }
-  }, [
-    montado,
-    etapa,
-    email,
-    nome,
-    telefone,
-    tipoPessoa,
-    documento,
-    razaoSocial,
-    entrega,
-    cep,
-    logradouro,
-    numero,
-    complemento,
-    bairro,
-    cidade,
-    uf,
-    referencia,
-    observacao,
-  ]);
-
-  /* Pedido fechado, rascunho apagado: a próxima compra começa limpa. */
-  useEffect(() => {
-    if (!estado.ok) return;
-    try {
-      sessionStorage.removeItem(CHAVE_RASCUNHO);
-    } catch {
-      // nada a limpar
-    }
-  }, [estado.ok]);
 
   /* ------------------------------------------------------------- frete */
 
@@ -608,7 +458,7 @@ export function Checkout({
   useEffect(() => {
     if (!estado.erro) return;
     const destino = estado.campo ? ETAPA_DO_CAMPO[estado.campo] : undefined;
-    setPendencias([]);
+    setErroLocal("");
     if (destino !== undefined) {
       setEtapa(destino);
       refCampoParaFocar.current = estado.campo ?? null;
@@ -635,152 +485,73 @@ export function Checkout({
 
   /* -------------------------------------------------- validação de etapa */
 
-  function conferir(indice: number): Pendencia[] {
-    const faltas: Pendencia[] = [];
-
+  function conferir(indice: number): string {
     if (indice === 0) {
-      if (!email.trim()) {
-        faltas.push({
-          campo: "email",
-          texto: "Informe o e-mail — é por ele que a confirmação do pedido chega.",
-        });
-      } else if (!EMAIL_PLAUSIVEL.test(email.trim())) {
-        faltas.push({
-          campo: "email",
-          texto: "E-mail inválido. Confira se falta o @ ou o ponto do domínio.",
-        });
+      if (!EMAIL_PLAUSIVEL.test(email.trim())) {
+        return "Informe um e-mail válido — é por ele que a confirmação do pedido chega.";
       }
       if (!logado) {
         if (senha.length === 0) {
-          faltas.push({
-            campo: "senha",
-            texto:
-              modoAcesso === "entrar"
-                ? "Informe a senha da sua conta para continuar."
-                : "Crie uma senha para a conta da clínica.",
-          });
-        } else if (modoAcesso === "criar" && senha.length < 8) {
-          /* O mínimo de 8 vale só para senha nova. Ao entrar, senha curta é
-             senha errada, e quem responde isso é o servidor — a tela não sabe
-             (nem deve saber) o tamanho da senha guardada. */
-          faltas.push({
-            campo: "senha",
-            texto: "A senha da sua conta precisa de pelo menos 8 caracteres.",
-          });
+          return modoAcesso === "entrar"
+            ? "Informe a senha da sua conta para continuar."
+            : "Crie uma senha para a conta da clínica.";
+        }
+        /* O mínimo de 8 vale só para senha nova. Ao entrar, senha curta é
+           senha errada, e quem responde isso é o servidor — a tela não sabe
+           (nem deve saber) o tamanho da senha guardada. */
+        if (modoAcesso === "criar" && senha.length < 8) {
+          return "A senha da sua conta precisa de pelo menos 8 caracteres.";
         }
       }
     }
 
     if (indice === 1) {
-      if (!nome.trim()) {
-        faltas.push({ campo: "nome", texto: "Informe o nome completo do comprador." });
-      } else if (nome.trim().length < 3) {
-        faltas.push({
-          campo: "nome",
-          texto: "O nome está curto demais para a nota fiscal.",
-        });
-      }
-
+      if (nome.trim().length < 3) return "Informe o nome completo do comprador.";
       const digitos = somenteDigitos(telefone);
-      if (digitos.length === 0) {
-        faltas.push({ campo: "telefone", texto: "Informe o telefone com DDD." });
-      } else if (digitos.length !== 10 && digitos.length !== 11) {
-        faltas.push({
-          campo: "telefone",
-          texto: "Telefone incompleto. São 10 ou 11 dígitos, com o DDD.",
-        });
+      if (digitos.length !== 10 && digitos.length !== 11) {
+        return "Informe o telefone com DDD.";
       }
-
-      /* Campo vazio é "obrigatório", não "inválido". A auditoria submeteu o
-         CNPJ em branco e recebeu "CNPJ inválido. Confira os números" — não
-         há número nenhum para conferir. */
-      if (!somenteDigitos(documento)) {
-        faltas.push({
-          campo: "documento",
-          texto: tipoPessoa === "fisica" ? "Informe o CPF." : "Informe o CNPJ.",
-        });
-      } else if (!documentoValido(documento, tipoPessoa)) {
-        faltas.push({
-          campo: "documento",
-          texto:
-            tipoPessoa === "fisica"
-              ? "CPF inválido. Confira os números."
-              : "CNPJ inválido. Confira os números.",
-        });
+      if (!documentoValido(documento, tipoPessoa)) {
+        return tipoPessoa === "fisica"
+          ? "CPF inválido. Confira os números."
+          : "CNPJ inválido. Confira os números.";
       }
-
       if (tipoPessoa === "juridica" && razaoSocial.trim().length < 2) {
-        faltas.push({ campo: "razaoSocial", texto: "Informe a razão social da empresa." });
+        return "Informe a razão social da empresa.";
       }
     }
 
     if (indice === 2 && entrega === "entrega") {
-      if (somenteDigitos(cep).length !== 8) {
-        faltas.push({
-          campo: "cep",
-          texto: somenteDigitos(cep)
-            ? "CEP incompleto. São 8 dígitos."
-            : "Informe o CEP da entrega.",
-        });
-      }
-      if (!logradouro.trim()) {
-        faltas.push({ campo: "logradouro", texto: "Informe o logradouro." });
-      }
-      if (!numero.trim()) {
-        faltas.push({
-          campo: "numero",
-          texto: "Informe o número. Se não houver, escreva “S/N”.",
-        });
-      }
-      if (!bairro.trim()) faltas.push({ campo: "bairro", texto: "Informe o bairro." });
-      if (!cidade.trim()) faltas.push({ campo: "cidade", texto: "Informe a cidade." });
-      if (!uf) faltas.push({ campo: "uf", texto: "Escolha o estado." });
+      if (somenteDigitos(cep).length !== 8) return "Informe o CEP com 8 dígitos.";
+      if (!logradouro.trim()) return "Informe o logradouro.";
+      if (!numero.trim()) return "Informe o número. Se não houver, escreva “S/N”.";
+      if (!bairro.trim()) return "Informe o bairro.";
+      if (!cidade.trim()) return "Informe a cidade.";
+      if (!uf) return "Escolha o estado.";
     }
 
     if (indice === 3) {
-      if (metodos.length === 0) {
-        faltas.push({ texto: "Nenhuma forma de pagamento está disponível agora." });
-      } else if (metodo === "cartao" && !cartao.token) {
-        faltas.push({
-          texto: precisaTokenizar
-            ? "Valide o cartão antes de continuar."
-            : "Escolha a bandeira do cartão para continuar.",
-        });
+      if (metodos.length === 0) return "Nenhuma forma de pagamento está disponível agora.";
+      if (metodo === "cartao" && !cartao.token) {
+        return precisaTokenizar
+          ? "Valide o cartão antes de continuar."
+          : "Escolha a bandeira do cartão para continuar.";
       }
     }
 
-    return faltas;
+    return "";
   }
 
   function avancar() {
-    const faltas = conferir(etapa);
-    setPendencias(faltas);
-    if (faltas.length > 0) {
-      /* O foco vai para o PRIMEIRO campo inválido, não para o topo da página.
-         Com a mensagem já colada a cada campo, levar a pessoa até o campo é o
-         que encurta a correção — e é o que faz a tela responder ao clique em
-         "Continuar" mesmo com o formulário rolado. */
-      const primeiro = faltas.find((falta) => falta.campo)?.campo;
-      requestAnimationFrame(() => {
-        const alvo = primeiro
-          ? refFormulario.current?.querySelector<HTMLElement>(
-              `[name="${primeiro}"]:not([type="hidden"])`,
-            )
-          : null;
-        if (alvo) {
-          alvo.scrollIntoView({
-            block: "center",
-            behavior: rolagemSuave() ? "smooth" : "auto",
-          });
-          alvo.focus({ preventScroll: true });
-          return;
-        }
-        refTopo.current?.scrollIntoView({
-          block: "start",
-          behavior: rolagemSuave() ? "smooth" : "auto",
-        });
-        refAviso.current?.focus();
+    const problema = conferir(etapa);
+    setErroLocal(problema);
+    if (problema) {
+      refTopo.current?.scrollIntoView({
+        block: "start",
+        behavior: rolagemSuave() ? "smooth" : "auto",
       });
+      // depois da pintura, para o elemento já existir
+      requestAnimationFrame(() => refAviso.current?.focus());
       return;
     }
     setEtapa((atual) => Math.min(ULTIMA, atual + 1));
@@ -791,7 +562,7 @@ export function Checkout({
   }
 
   function voltar() {
-    setPendencias([]);
+    setErroLocal("");
     setEtapa((atual) => Math.max(0, atual - 1));
     refTopo.current?.scrollIntoView({
       block: "start",
@@ -800,7 +571,7 @@ export function Checkout({
   }
 
   function irPara(indice: number) {
-    setPendencias([]);
+    setErroLocal("");
     setEtapa(indice);
     refTopo.current?.scrollIntoView({
       block: "start",
@@ -816,8 +587,7 @@ export function Checkout({
    * relacionar mensagem e campo de cabeça.
    */
   function erroDoCampo(nome: string) {
-    if (estado.campo === nome) return estado.erro;
-    return pendencias.find((falta) => falta.campo === nome)?.texto;
+    return estado.campo === nome ? estado.erro : undefined;
   }
 
   function preencherPeloCep(endereco: EnderecoCep) {
@@ -832,22 +602,6 @@ export function Checkout({
       ref={refFormulario}
       action={acao}
       noValidate
-      /* Corrigiu o campo, o erro daquele campo sai.
-
-         Revalidar a cada tecla desde o começo é ruído; deixar o vermelho preso
-         depois da correção é pior — a pessoa conserta e a tela continua
-         acusando. O meio-termo é este: o erro só nasce ao tentar avançar, e
-         morre no primeiro caractere digitado NAQUELE campo. Os outros
-         continuam marcados. */
-      onInput={(evento) => {
-        const alvo = evento.target as HTMLInputElement | HTMLSelectElement;
-        if (!alvo?.name) return;
-        setPendencias((atuais) =>
-          atuais.some((falta) => falta.campo === alvo.name)
-            ? atuais.filter((falta) => falta.campo !== alvo.name)
-            : atuais,
-        );
-      }}
       onKeyDown={(evento) => {
         // Enter em campo de texto não pode fechar o pedido de uma etapa
         // intermediária — só o botão da última etapa envia.
@@ -1091,17 +845,8 @@ export function Checkout({
               { valor: "juridica", rotulo: "Pessoa jurídica", descricao: "CNPJ" },
             ]}
             aoMudar={(valor) => {
-              /* Cada tipo guarda o próprio documento.
-
-                 Apagar o campo ao trocar parecia higiene — CPF e CNPJ têm
-                 máscaras diferentes — e custava o dado: quem tinha o CPF
-                 preenchido pela conta, foi olhar a aba "Pessoa jurídica" e
-                 voltou, encontrava o campo vazio e sem como recuperá-lo a não
-                 ser recarregando o checkout, o que reiniciava o assistente na
-                 etapa 1. Guardando os dois, ir e voltar não perde nada. */
-              setDocumentos((atuais) => ({ ...atuais, [tipoPessoa]: documento }));
               setTipoPessoa(valor);
-              setDocumento(documentos[valor] ?? "");
+              setDocumento("");
             }}
           />
 
@@ -1277,39 +1022,11 @@ export function Checkout({
                     {freteErro}
                   </CaixaFrete>
                 ) : freteEntrega?.orcadoDepois ? (
-                  /* Duas coisas diferentes tinham a mesma frase.
-
-                     "Equipamento de grande porte" tem frete orçado à parte por
-                     política — cadeira e autoclave grande não cabem em tabela
-                     de faixa, e dizer isso tranquiliza. Já um CEP fora da
-                     tabela é lacuna de cadastro, e ali a pessoa precisa de uma
-                     saída, não de um aviso. A auditoria mediu os dois com a
-                     mesma mensagem, inclusive no CEP da própria rua da JB. */
-                  <CaixaFrete
-                    tom="atencao"
-                    titulo={
-                      freteEntrega.motivo === "perfil_orcado"
-                        ? "Este equipamento tem frete orçado à parte"
-                        : "Ainda não temos tabela de entrega para este CEP"
-                    }
-                  >
-                    {freteEntrega.motivo === "perfil_orcado" ? (
-                      <>
-                        Pelo porte, o transporte é contratado caso a caso. O valor{" "}
-                        <strong className="font-semibold">não entra no total agora</strong>: a JB
-                        confere dimensões e acesso, calcula o frete e combina com você antes de
-                        despachar.
-                      </>
-                    ) : (
-                      <>
-                        O pedido segue normalmente e o frete{" "}
-                        <strong className="font-semibold">não entra no total agora</strong> — a
-                        equipe cota com a transportadora e confirma antes de despachar. Se
-                        preferir resolver na hora, escolha{" "}
-                        <strong className="font-semibold">retirar na JB</strong> acima, ou fale
-                        com a equipe pelo WhatsApp.
-                      </>
-                    )}
+                  <CaixaFrete tom="atencao" titulo="O frete deste endereço será orçado à parte">
+                    Este CEP está fora das faixas de entrega da tabela. O valor{" "}
+                    <strong className="font-semibold">não entra no total agora</strong>: a JB
+                    confere as dimensões do equipamento, calcula o frete e combina com você antes
+                    de despachar.
                   </CaixaFrete>
                 ) : freteEntrega ? (
                   <CaixaFrete
@@ -1324,7 +1041,7 @@ export function Checkout({
                       {freteEntrega.rotulo}
                       {prazoDoFrete ? ` · ${prazoDoFrete}` : ""}
                     </p>
-                    <p className="mt-1 text-apoio text-graf-500">
+                    <p className="mt-1 text-[0.8125rem] text-graf-500">
                       O valor já está somado no resumo do pedido.
                     </p>
                   </CaixaFrete>
@@ -1345,7 +1062,7 @@ export function Checkout({
             <span className="text-xl font-extrabold tabular tracking-tight text-graf-950">
               {formatarPreco(totalComFreteCents)}
             </span>
-            <span className="w-full text-apoio leading-relaxed text-graf-500">
+            <span className="w-full text-[0.8125rem] leading-relaxed text-graf-500">
               {entrega === "retirada"
                 ? "Retirada na JB, sem custo de frete."
                 : frete?.orcadoDepois
@@ -1448,27 +1165,15 @@ export function Checkout({
                     um total maior, o servidor nunca permite menos parcelas do
                     que já ofereceu.
                   */}
-                  {parcelas.map((p) => {
-                    /* A sobra do arredondamento vai na primeira parcela.
-
-                       `Math.floor(438000 / 9)` é 48.666, e nove vezes isso dá
-                       437.994 — seis centavos a menos que o pedido. Aqui é a
-                       tela em que a pessoa decide pagar: o número precisa
-                       fechar com o total, e a diferença precisa estar dita. */
-                    const valor = Math.floor(totalComFreteCents / p.numero);
-                    const sobra = totalComFreteCents - valor * p.numero;
-                    return (
-                      <option key={p.numero} value={p.numero}>
-                        {p.numero === 1
-                          ? `À vista — ${formatarPreco(totalComFreteCents)}`
-                          : sobra > 0
-                            ? `${p.numero}× de ${formatarPreco(valor)} — a 1ª de ${formatarPreco(
-                                valor + sobra,
-                              )} — sem juros`
-                            : `${p.numero}× de ${formatarPreco(valor)} sem juros`}
-                      </option>
-                    );
-                  })}
+                  {parcelas.map((p) => (
+                    <option key={p.numero} value={p.numero}>
+                      {p.numero === 1
+                        ? `À vista — ${formatarPreco(totalComFreteCents)}`
+                        : `${p.numero}× de ${formatarPreco(
+                            Math.floor(totalComFreteCents / p.numero),
+                          )} sem juros`}
+                    </option>
+                  ))}
                 </Selecao>
               ) : (
                 <input type="hidden" name="parcelas" value="1" />
@@ -1518,15 +1223,8 @@ export function Checkout({
               {tipoPessoa === "juridica" && razaoSocial ? <p>{razaoSocial}</p> : null}
               {telefone ? <p className="text-graf-600">{telefone}</p> : null}
               {documento ? (
-                /* Com máscara, sempre.
-
-                   O documento vindo da conta chega em dígitos crus, e a
-                   revisão o exibia como "41088397816" — onze dígitos colados
-                   que ninguém confere de relance. Formatar aqui não muda o que
-                   é enviado: o servidor recebe os dígitos do campo. */
-                <p className="tabular text-graf-600">
-                  {tipoPessoa === "fisica" ? "CPF" : "CNPJ"}{" "}
-                  {mascararDocumento(documento, tipoPessoa)}
+                <p className="text-graf-600">
+                  {tipoPessoa === "fisica" ? "CPF" : "CNPJ"} {documento}
                 </p>
               ) : null}
             </BlocoRevisao>

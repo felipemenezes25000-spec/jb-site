@@ -123,7 +123,6 @@ export function rotuloProvedor(provedor: string) {
 
 export const TOM_ORCAMENTO: Record<QuoteStatus, Tom> = {
   rascunho: "neutro",
-  solicitado: "aguardando",
   enviado: "andamento",
   em_duvida: "aguardando",
   aprovado: "ok",
@@ -133,7 +132,6 @@ export const TOM_ORCAMENTO: Record<QuoteStatus, Tom> = {
 };
 
 export const ORDEM_STATUS_ORCAMENTO: QuoteStatus[] = [
-  "solicitado",
   "rascunho",
   "enviado",
   "em_duvida",

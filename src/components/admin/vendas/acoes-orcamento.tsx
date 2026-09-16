@@ -41,7 +41,6 @@ export type SituacaoOrcamento = {
   numero: string;
   status:
     | "rascunho"
-    | "solicitado"
     | "enviado"
     | "em_duvida"
     | "aprovado"
@@ -256,8 +255,7 @@ export function AcoesOrcamento({ situacao }: { situacao: SituacaoOrcamento }) {
       ) : null}
 
       {/* ----------------------------------------------------- excluir */}
-      {(situacao.status === "rascunho" || situacao.status === "solicitado") &&
-      situacao.podeExcluir ? (
+      {situacao.status === "rascunho" && situacao.podeExcluir ? (
         <Cartao className="border-jb-200">
           <CabecalhoCartao
             titulo="Descartar rascunho"

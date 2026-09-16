@@ -13,10 +13,14 @@ import { POST as processarWebhook } from "@/app/api/pagamento/webhook/route";
  * notificação que o provedor mandaria e entrega ao MESMO handler de webhook.
  * Nada de caminho paralelo: se a regra mudar lá, muda aqui junto.
  *
- * A decisão de ambiente não é duplicada aqui: `pagamentoEhSimulado()` já sabe
- * que produção Vercel nunca aceita mock e que self-hosted em produção só aceita
- * com opt-in explícito. Se mock não estiver realmente permitido, a rota se
- * comporta como inexistente.
+ * Três travas, e todas precisam passar:
+ *
+ *   1. o ambiente não pode ser produção;
+ *   2. o provedor configurado precisa ser o de teste;
+ *   3. o pagamento alvo precisa ter sido criado pelo provedor de teste.
+ *
+ * Falhando qualquer uma, a resposta é 404 — a rota se comporta como se não
+ * existisse, sem revelar que existe em outro ambiente.
  */
 
 const esquema = z.object({
@@ -37,7 +41,7 @@ function naoExiste() {
 }
 
 export async function POST(request: Request) {
-  if (!pagamentoEhSimulado()) return naoExiste();
+  if (process.env.VERCEL_ENV === "production" || !pagamentoEhSimulado()) return naoExiste();
 
   let corpo: unknown;
   try {

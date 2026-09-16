@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 
-import { normalizarCep, paraExibicao, type MotivoDoFrete } from "@/lib/frete";
-import { calcularFreteDaPdp } from "@/lib/frete-produto";
+import { calcularFreteDePedido, normalizarCep, paraExibicao } from "@/lib/frete";
 import { prisma } from "@/lib/prisma";
 import { getSettings, ligado } from "@/lib/settings";
 
@@ -14,12 +13,10 @@ import { getSettings, ligado } from "@/lib/settings";
    quando?". Ela só era respondida no checkout — depois do cadastro, depois do
    carrinho. Agora é respondida onde é feita.
 
-   A PDP não usa o carrinho como fonte da cotação. Com o Melhor Envio ativo,
-   `calcularFreteDaPdp` envia exatamente UMA unidade do produto aberto, com o
-   peso e as dimensões cadastrados nele. Isso evita dois erros sutis: carrinho
-   vazio cair sempre na tabela local e carrinho com outro produto cotar o item
-   errado. Se a transportadora estiver indisponível ou o cadastro físico não
-   permitir cotação, a tabela JB continua como fallback honesto.
+   O cálculo é o MESMO do pedido: `calcularFreteDePedido`, com as faixas de CEP
+   cadastradas em /admin/frete. Não existe uma segunda tabela para a vitrine, e
+   não existe número aproximado "só para dar ideia" — o que aparece aqui é o que
+   o checkout vai cobrar, ou a informação honesta de que ainda vai ser orçado.
 
    O subtotal usado é o do próprio equipamento, uma unidade. É o que decide
    "frete grátis acima de X" — e é a leitura correta de quem está olhando um
@@ -37,8 +34,6 @@ export type EstimativaDeEntrega =
       prazoDias: number | null;
       /** `true` quando a JB ainda vai orçar: não há valor a mostrar. */
       orcadoDepois: boolean;
-      /** Por que não há valor — política do produto ou lacuna de tabela. */
-      motivo: MotivoDoFrete;
       /** Instruções de retirada, quando a loja aceita retirar no balcão. */
       retirada: string | null;
     };
@@ -60,20 +55,16 @@ export async function estimarEntrega(
 
   const produto = await prisma.product.findFirst({
     where: { id: dados.data.produtoId, status: { not: "draft" } },
-    select: {
-      id: true,
-      name: true,
-      priceCents: true,
-      weightGrams: true,
-      widthMm: true,
-      heightMm: true,
-      depthMm: true,
-    },
+    select: { id: true, priceCents: true },
   });
   if (!produto) return { ok: false, erro: "Equipamento não encontrado." };
 
   const [frete, s] = await Promise.all([
-    calcularFreteDaPdp({ cep, produto }),
+    calcularFreteDePedido({
+      cep,
+      subtotalCents: produto.priceCents,
+      produtoIds: [produto.id],
+    }),
     getSettings(),
   ]);
 
@@ -86,7 +77,6 @@ export async function estimarEntrega(
     valorCents: exibido.valorCents,
     prazoDias: exibido.prazoDias,
     orcadoDepois: exibido.orcadoDepois,
-    motivo: exibido.motivo,
     retirada: ligado(s.retirada_disponivel) ? s.retirada_instrucoes.trim() || null : null,
   };
 }
