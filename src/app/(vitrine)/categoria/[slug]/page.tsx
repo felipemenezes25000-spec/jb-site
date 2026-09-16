@@ -18,13 +18,8 @@ type Props = {
   searchParams: Promise<ParametrosVitrine>;
 };
 
-export async function generateStaticParams() {
-  const categorias = await prisma.category.findMany({
-    where: { published: true },
-    select: { slug: true },
-  });
-  return categorias.map((c) => ({ slug: c.slug }));
-}
+// Categorias são resolvidas na visita, inclusive quando o catálogo estava
+// vazio no build; Cache Components não aceita generateStaticParams vazio.
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

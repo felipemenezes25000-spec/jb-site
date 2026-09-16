@@ -81,10 +81,18 @@ async function main() {
     });
     const depois = await prisma.order.findUnique({ where: { id: pedido.id } });
 
-    conferir("um equipamento só", equipamentos === 1, `${equipamentos} criado(s)`);
+    conferir("um equipamento por unidade", equipamentos === 2, `${equipamentos} criado(s), esperados 2`);
     conferir("um aviso só", avisos === 1, `${avisos} criado(s)`);
     conferir("um evento 'pago' só", eventos === 1, `${eventos} evento(s)`);
     conferir("pedido ficou pago", depois?.status === "pago" && !!depois.paidAt, `${depois?.status}`);
+
+    await confirmarPagamento(pedido.id);
+    const equipamentosAposReenvio = await prisma.equipment.count({ where: { orderId: pedido.id } });
+    conferir(
+      "reenvio não duplica equipamentos",
+      equipamentosAposReenvio === 2,
+      `${equipamentosAposReenvio} após reenviar a confirmação`,
+    );
 
     await limpar(pedido.id, cliente.id, pedido.number);
   }

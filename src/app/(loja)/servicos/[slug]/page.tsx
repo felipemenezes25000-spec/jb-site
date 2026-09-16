@@ -41,14 +41,8 @@ export const instant = false;
 
 type Parametros = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  const servicos = await prisma.service.findMany({
-    where: { published: true },
-    select: { slug: true },
-    orderBy: { order: "asc" },
-  });
-  return servicos.map((servico) => ({ slug: servico.slug }));
-}
+// Resolve o serviço na visita: o catálogo pode estar vazio durante o build.
+// Cache Components não aceita generateStaticParams retornando uma lista vazia.
 
 async function buscarServico(slug: string) {
   return prisma.service.findFirst({
