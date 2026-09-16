@@ -1,14 +1,5 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import {
-  ArrowRight,
-  BadgeCheck,
-  FileText,
-  History,
-  ShieldCheck,
-  Star,
-  Wrench,
-} from "lucide-react";
+import { BadgeCheck, Star } from "lucide-react";
 
 import {
   ComparacaoRapida,
@@ -181,104 +172,6 @@ function AvaliacoesVerificadas({
   );
 }
 
-function PosVendaJB() {
-  const itens = [
-    {
-      icone: FileText,
-      titulo: "Documentos em um só lugar",
-      texto: "Manual, nota e documentos vinculados ao equipamento ficam acessíveis pela Área da Clínica.",
-    },
-    {
-      icone: ShieldCheck,
-      /* Sem o número. Ele já aparece nos destaques do topo, na ficha técnica e
-         na seção "Entrega, garantia e suporte" — três lugares, todos saindo do
-         mesmo campo. Esta faixa é sobre o pós-venda da JB, e o que ela tem de
-         próprio a dizer é que a data de vencimento fica calculada e visível em
-         vez de depender de alguém achar a nota fiscal. */
-      titulo: "Garantia acompanhada",
-      texto:
-        "O prazo passa a valer da entrega, aparece com a data de vencimento na ficha do equipamento e a JB avisa antes de vencer.",
-    },
-    {
-      icone: Wrench,
-      titulo: "Assistência conectada",
-      texto: "Ao abrir um chamado, a JB já consegue relacionar atendimento e equipamento ao histórico técnico.",
-    },
-    {
-      icone: History,
-      titulo: "Histórico que continua",
-      texto: "Manutenções, serviços e ocorrências passam a compor a trajetória do equipamento na clínica.",
-    },
-  ];
-
-  return (
-    <section
-      className="border-t border-graf-200 py-9 lg:py-10"
-      aria-labelledby="pos-venda-jb-titulo"
-    >
-      {/* Painel claro, e não um bloco preto.
-
-          `globals.css` abre dizendo que a interface é predominantemente clara e
-          que preto é "faixa pontual, nunca a moldura do site" — e a pele preta
-          do protótipo já tinha sido testada e cortada uma vez. Este painel
-          ocupava 1360×385 na ficha do equipamento: não é pontual, é a maior
-          superfície da página depois da foto, e com texto em branco a 55% de
-          opacidade em cima.
-
-          O que sustenta a hierarquia aqui é o mesmo que sustenta o resto da
-          loja: superfície clara, filete fino e o vermelho da marca no sinal —
-          o sobretítulo e o ícone de cada garantia. */}
-      <div className="overflow-hidden rounded-3xl border border-graf-200 bg-surface-muted">
-        <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.85fr_1.4fr] lg:gap-12 lg:p-10">
-          <div>
-            <p className="sobretitulo">O diferencial não termina na entrega</p>
-            <h2
-              id="pos-venda-jb-titulo"
-              className="text-bloco mt-3 text-graf-950"
-            >
-              O equipamento continua dentro do ecossistema JB
-            </h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-graf-600">
-              Compra, documentos e assistência deixam de ser etapas soltas. A Área da Clínica mantém a continuidade do relacionamento com o equipamento.
-            </p>
-            <Link
-              href="/minha-jb"
-              className="foco-jb mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-jb-500 px-4 text-sm font-extrabold text-white transition-colors hover:bg-jb-600"
-            >
-              Conhecer a Área da Clínica
-              <ArrowRight className="size-4" aria-hidden />
-            </Link>
-          </div>
-
-          {/* Um nível de moldura a menos.
-
-              Era `rounded-2xl border bg-graf-200` com quatro células `bg-surface`
-              dentro — uma caixa com borda e canto dentro do painel que já tem
-              borda e canto, dentro de uma seção com `border-t`. Três molduras
-              para quatro frases curtas.
-
-              As células agora dividem o fundo do painel e são separadas só por
-              filete, que é a mesma gramática do resto da ficha. O painel claro
-              continua: ele é a correção deliberada da pele preta que já tinha
-              sido testada e cortada uma vez. */}
-          <div className="grid border-graf-200 sm:grid-cols-2 [&>*:nth-child(n+2)]:border-t sm:[&>*:nth-child(2)]:border-t-0 sm:[&>*:nth-child(even)]:border-l sm:[&>*:nth-child(n+3)]:border-t">
-            {itens.map((item) => {
-              const Icone = item.icone;
-              return (
-                <div key={item.titulo} className="border-graf-200 p-5 sm:p-6">
-                  <Icone className="size-5 text-jb-600" aria-hidden />
-                  <h3 className="mt-4 text-sm font-extrabold text-graf-950">{item.titulo}</h3>
-                  <p className="texto-apoio mt-1.5 text-graf-600">{item.texto}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /* Tudo que `construirFicha` precisa.
 
    A seleção antiga trazia só specs, voltagem e garantia — e por isso o
@@ -442,8 +335,6 @@ export default async function ProdutoLayout({ children, params }: Props) {
     ...alternativasAutomaticas,
   ].slice(0, 3);
 
-  const geraEquipamento = produto.isEquipment;
-
   return (
     <>
       {children}
@@ -471,7 +362,6 @@ export default async function ProdutoLayout({ children, params }: Props) {
             alt: produto.name,
           }}
         />
-        {geraEquipamento ? <PosVendaJB /> : null}
       </div>
     </>
   );

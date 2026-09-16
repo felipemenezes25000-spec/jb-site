@@ -21,7 +21,7 @@ export function TopoMarketplace({ trilha, galeria, resumo, detalhes, acoes, comp
     >
       <div className="mb-4 text-graf-500 lg:mb-5">{trilha}</div>
 
-      <div className="rounded-[1.75rem] border border-graf-200/80 bg-white p-3 shadow-[0_24px_80px_-58px_rgba(15,23,42,0.42)] sm:p-4 lg:p-5 xl:p-6">
+      <div>
         <div className={styles.topo}>
           <div data-pdp-gallery className={styles.galeria}>
             {galeria}

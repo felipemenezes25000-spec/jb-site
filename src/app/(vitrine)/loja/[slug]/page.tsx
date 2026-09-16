@@ -542,7 +542,6 @@ export default async function ProdutoPage({ params }: Props) {
           <BlocoDecisao
             id="ficha-tecnica"
             titulo="Especificações técnicas"
-            resumo="Dados organizados para conferir compatibilidade e comparar o que realmente importa."
             contador={
               totalEspecificacoes > 0
                 ? plural(totalEspecificacoes, "especificação", "especificações")
@@ -583,7 +582,6 @@ export default async function ProdutoPage({ params }: Props) {
           <BlocoDecisao
             id="preparo"
             titulo="Antes de comprar"
-            resumo="Confira infraestrutura, itens inclusos, instalação e o que acontece depois da compra."
             /* Aberta, como a ficha técnica: requisito de instalação —
                voltagem, ponto de água, espaço de bancada — é justamente o que
                o cliente precisa descobrir ANTES de comprar, e é o que o
@@ -620,7 +618,6 @@ export default async function ProdutoPage({ params }: Props) {
           <BlocoDecisao
             id="entrega-e-garantia"
             titulo="Entrega, garantia e suporte"
-            resumo="Condições de compra e acesso direto à equipe JB, sem repetir informação da caixa de compra."
           >
             <div className="grid gap-x-10 gap-y-8 xl:grid-cols-2">
               <CondicoesDeCompra

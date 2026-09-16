@@ -122,10 +122,14 @@ describe("HeroVitrine", () => {
     expect(html).toContain("A clínica escolhe o equipamento. A JB responde pelos próximos anos.");
   });
 
-  /* Laudo, nesta plataforma, é documento de unidade que passou pela bancada.
-     O selo do protótipo dizia "laudo aprovado" em qualquer produto. */
-  it("só promete laudo onde existe unidade física com laudo", () => {
-    expect(renderizarHero([autoclave, compressor])).toContain("Laudo");
-    expect(renderizarHero([compressor, autoclave])).toContain("Garantia");
+  /* O cartão não recebe dados do laudo. A condição pode ser apresentada,
+     mas não deve ser transformada em certificação do equipamento. */
+  it("identifica a condição sem prometer laudo no destaque", () => {
+    const seminovo = renderizarHero([autoclave, compressor]);
+    const novo = renderizarHero([compressor, autoclave]);
+    expect(seminovo).toContain("Seminovo JB");
+    expect(novo).toContain("Em destaque");
+    expect(seminovo).not.toContain("Laudo");
+    expect(novo).not.toContain("Laudo");
   });
 });

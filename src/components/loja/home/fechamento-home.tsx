@@ -27,16 +27,13 @@ export function FechamentoHome() {
     <Secao fundo="clara" largura="loja" espaco="md" separador>
       <TituloSecao
         sobretitulo="Depois da compra"
-        titulo="O pedido termina no checkout. O relacionamento com a JB, não."
-        descricao="Compra, entrega e suporte ficam conectados sem transformar a página em uma sequência de promessas ou etapas que não se aplicam a todos os produtos."
+        titulo="Sua compra continua acompanhada."
+        descricao="Consulte pedidos, acompanhe atendimentos e encontre os registros dos seus equipamentos na Área da Clínica."
         acao={
           <div className="flex flex-col gap-2.5 sm:flex-row">
-            <LinkBotao href="/loja" className="whitespace-nowrap">
-              Explorar loja
+            <LinkBotao href="/minha-jb" variante="secundario" className="whitespace-nowrap">
+              Acessar Área da Clínica
               <ArrowRight className="size-4" aria-hidden />
-            </LinkBotao>
-            <LinkBotao href="/assistencia-tecnica" variante="secundario" className="whitespace-nowrap">
-              Assistência técnica
             </LinkBotao>
           </div>
         }

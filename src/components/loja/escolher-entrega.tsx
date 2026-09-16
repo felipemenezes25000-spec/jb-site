@@ -44,7 +44,7 @@ export function EscolherEntrega({
             <div className="w-full sm:max-w-52">
               <CampoCep name="cep" required valorInicial={estado.cep ?? cepInicial ?? ""} buscarEndereco={false} />
             </div>
-            <Botao type="submit" carregando={consultando} className="sm:mb-px">
+            <Botao type="submit" variante={estado.opcoes?.length ? "secundario" : "primario"} carregando={consultando} className="sm:mb-px">
               Calcular entrega
             </Botao>
           </form>

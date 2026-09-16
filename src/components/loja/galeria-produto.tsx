@@ -15,6 +15,7 @@ import {
 
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
+import styles from "./galeria-produto.module.css";
 
 export type FotoProduto = {
   url: string;
@@ -28,6 +29,7 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
   const [ampliado, setAmpliado] = useState(false);
   const toqueRef = useRef<{ x: number; y: number } | null>(null);
   const fecharRef = useRef<HTMLButtonElement>(null);
+  const dialogoRef = useRef<HTMLDialogElement>(null);
   const temFotosDaUnidade = fotos.some((foto) => foto.daUnidade);
 
   const irPara = useCallback(
@@ -42,11 +44,25 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
     if (!ampliado) return;
 
     const overflowAnterior = document.body.style.overflow;
+    const focoAnterior = document.activeElement;
+    const dialogo = dialogoRef.current;
+    dialogo?.showModal();
     document.body.style.overflow = "hidden";
     fecharRef.current?.focus();
 
     function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === "Escape") {
+      if (evento.key === "Tab") {
+        const controles = dialogo?.querySelectorAll<HTMLButtonElement>("button:not([disabled])");
+        const primeiro = controles?.[0];
+        const ultimo = controles?.[controles.length - 1];
+        if (evento.shiftKey && document.activeElement === primeiro) {
+          evento.preventDefault();
+          ultimo?.focus();
+        } else if (!evento.shiftKey && document.activeElement === ultimo) {
+          evento.preventDefault();
+          primeiro?.focus();
+        }
+      } else if (evento.key === "Escape") {
         setAmpliado(false);
       } else if (evento.key === "ArrowRight") {
         irPara(1);
@@ -58,7 +74,9 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
     document.addEventListener("keydown", aoTeclar);
     return () => {
       document.removeEventListener("keydown", aoTeclar);
+      dialogo?.close();
       document.body.style.overflow = overflowAnterior;
+      if (focoAnterior instanceof HTMLElement && focoAnterior.isConnected) focoAnterior.focus();
     };
   }, [ampliado, irPara]);
 
@@ -94,42 +112,37 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
   const foto = fotos[atual];
 
   return (
-    <div
-      className={cn(
-        "grid min-w-0 gap-3",
-        total > 1 && "lg:grid-cols-[4.75rem_minmax(0,1fr)] lg:items-start",
-      )}
-    >
-      <div
-        className={cn(
-          "relative min-w-0 overflow-hidden rounded-3xl border border-graf-200 bg-surface shadow-[0_18px_60px_-38px_rgba(15,23,42,0.38)]",
-          total > 1 && "lg:col-start-2 lg:row-start-1",
-        )}
-      >
+    <div className="grid min-w-0 gap-4">
+      <div className="relative min-w-0 overflow-hidden rounded-2xl bg-surface">
         <div
           data-pdp-gallery-main
           data-palco-imagem-produto
-          className="relative aspect-square bg-[radial-gradient(circle_at_50%_40%,rgba(248,250,252,0.25),rgba(248,250,252,0.8))]"
+          className={cn("relative aspect-square", styles.palco)}
           onTouchStart={aoEncostar}
           onTouchEnd={aoSoltar}
         >
           <Image
+            key={foto.url}
             data-imagem-produto
             src={imagemProdutoSemFundo(foto.url)}
             alt={foto.alt || nome}
             fill
-            priority
-            sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, (max-width: 1680px) 40vw, 620px"
-            className="object-contain p-5 sm:p-7 lg:p-9"
+            loading="eager"
+            fetchPriority={atual === 0 ? "high" : "auto"}
+            sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1679px) 54vw, 850px"
+            className={styles.foto}
+            onLoad={(evento) => { evento.currentTarget.dataset.carregada = "true"; }}
           />
 
           <button
             type="button"
             onClick={() => setAmpliado(true)}
             aria-label={`Ampliar imagem ${atual + 1} de ${total}`}
-            className="foco-jb absolute right-3 top-3 z-10 flex size-11 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur transition-all hover:-translate-y-0.5 hover:border-graf-300 hover:text-jb-700 hover:shadow-md"
+            className="foco-jb absolute inset-0 z-10 cursor-zoom-in rounded-2xl"
           >
-            <ZoomIn className="size-[18px]" aria-hidden />
+            <span className="absolute right-4 top-4 flex size-11 items-center justify-center rounded-full border border-graf-200 bg-white text-graf-900">
+              <ZoomIn className="size-[18px]" aria-hidden />
+            </span>
           </button>
 
           {foto.daUnidade ? (
@@ -145,7 +158,7 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                 type="button"
                 onClick={() => irPara(-1)}
                 aria-label="Imagem anterior"
-                className="foco-jb absolute left-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur transition hover:scale-105 hover:text-jb-700"
+                className="foco-jb absolute bottom-4 left-4 z-20 flex size-11 items-center justify-center rounded-full border border-graf-200 bg-white text-graf-700 transition-colors hover:border-jb-500 hover:text-jb-700"
               >
                 <ChevronLeft className="size-5" aria-hidden />
               </button>
@@ -153,25 +166,30 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                 type="button"
                 onClick={() => irPara(1)}
                 aria-label="Próxima imagem"
-                className="foco-jb absolute right-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-graf-200 bg-white/95 text-graf-700 shadow-sm backdrop-blur transition hover:scale-105 hover:text-jb-700"
+                className="foco-jb absolute bottom-4 left-17 z-20 flex size-11 items-center justify-center rounded-full border border-graf-200 bg-white text-graf-700 transition-colors hover:border-jb-500 hover:text-jb-700"
               >
                 <ChevronRight className="size-5" aria-hidden />
               </button>
-              <span className="pointer-events-none absolute bottom-3 right-3 z-10 rounded-full bg-graf-950/82 px-2.5 py-1 text-xs font-semibold tabular text-white backdrop-blur">
-                {atual + 1}/{total}
+              <span className="pointer-events-none absolute bottom-6 right-5 z-10 text-sm font-semibold tabular text-graf-950" aria-hidden>
+                {String(atual + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
               </span>
             </>
           ) : null}
         </div>
+        {total > 1 ? (
+          <div className={styles.progresso} aria-hidden>
+            <span style={{ transform: `scaleX(${(atual + 1) / total})` }} />
+          </div>
+        ) : null}
       </div>
 
       {total > 1 ? (
         <ul
           aria-label={`Imagens de ${nome}`}
-          className="scrollbar-none order-2 grid grid-cols-5 gap-2.5 overflow-x-auto sm:grid-cols-7 lg:order-none lg:col-start-1 lg:row-start-1 lg:max-h-[39rem] lg:grid-cols-1 lg:overflow-y-auto lg:pr-1"
+          className="flex flex-wrap gap-2.5"
         >
           {fotos.map((imagem, indice) => (
-            <li key={`${imagem.url}-${indice}`} className="min-w-0">
+            <li key={`${imagem.url}-${indice}`} className="w-14 min-w-0 sm:w-18">
               <button
                 data-palco-imagem-produto
                 type="button"
@@ -179,10 +197,10 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                 aria-label={`Ver imagem ${indice + 1} de ${total}`}
                 aria-current={indice === atual ? "true" : undefined}
                 className={cn(
-                  "foco-jb relative block aspect-square w-full overflow-hidden rounded-xl border bg-surface transition-all",
+                  "foco-jb relative block aspect-square w-full overflow-hidden rounded-lg border bg-surface transition-colors",
                   indice === atual
                     ? "border-jb-500 ring-2 ring-jb-500/15"
-                    : "border-graf-200 hover:-translate-y-0.5 hover:border-graf-400",
+                    : "border-graf-200 hover:border-graf-450",
                 )}
               >
                 <Image
@@ -190,7 +208,7 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                   src={imagemProdutoSemFundo(imagem.url)}
                   alt=""
                   fill
-                  sizes="76px"
+                  sizes="(max-width: 639px) 56px, 72px"
                   className="object-contain p-1.5"
                 />
                 {imagem.daUnidade ? (
@@ -207,12 +225,7 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
       </p>
 
       {temFotosDaUnidade ? (
-        <div
-          className={cn(
-            "flex items-start gap-2.5 rounded-2xl border border-graf-200 bg-graf-50/70 px-4 py-3",
-            total > 1 && "lg:col-start-2",
-          )}
-        >
+        <div className="flex items-start gap-2.5 border-t border-graf-200 py-3">
           <BadgeCheck className="mt-0.5 size-4 shrink-0 text-jb-700" aria-hidden />
           <p className="text-xs leading-5 text-graf-600">
             <strong className="font-extrabold text-graf-900">Fotos reais da unidade.</strong>{" "}
@@ -223,11 +236,11 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
 
       {ampliado && typeof document !== "undefined"
         ? createPortal(
-            <div
-              role="dialog"
-              aria-modal="true"
+            <dialog
+              ref={dialogoRef}
               aria-label={`${nome} — imagem ampliada`}
-              className="fixed inset-0 z-100 flex items-center justify-center bg-graf-950/95 p-4 backdrop-blur-sm sm:p-8"
+              className={styles.dialogo}
+              onCancel={() => setAmpliado(false)}
               onClick={(evento) => {
                 if (evento.target === evento.currentTarget) setAmpliado(false);
               }}
@@ -244,11 +257,13 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
 
               <div className="relative h-[82vh] w-[92vw] max-w-7xl">
                 <Image
+                  key={foto.url}
                   src={imagemProdutoSemFundo(foto.url)}
                   alt={foto.alt || nome}
                   fill
                   sizes="92vw"
-                  className="object-contain"
+                  className={styles.foto}
+                  onLoad={(evento) => { evento.currentTarget.dataset.carregada = "true"; }}
                 />
               </div>
 
@@ -272,7 +287,10 @@ export function GaleriaProduto({ fotos, nome }: { fotos: FotoProduto[]; nome: st
                   </button>
                 </>
               ) : null}
-            </div>,
+              <p className="absolute bottom-5 left-1/2 max-w-[75vw] -translate-x-1/2 text-center text-sm text-graf-900" aria-live="polite">
+                {atual + 1} / {total} · {foto.alt || nome}
+              </p>
+            </dialog>,
             document.body,
           )
         : null}

@@ -178,10 +178,10 @@ export function MarcasCarousel({ marcas }: { marcas: Marca[] }) {
             <div className="mt-9 flex flex-col gap-6 min-[640px]:flex-row min-[640px]:items-center min-[640px]:gap-6">
               <Link
                 href="/marcas"
-                className="group foco-jb micro inline-flex min-h-12 w-fit shrink-0 items-center gap-6 whitespace-nowrap rounded-lg bg-jb-500 py-2 pl-7 pr-3 text-white transition-colors hover:bg-jb-600"
+                className="group foco-jb inline-flex min-h-12 w-fit shrink-0 items-center gap-3 rounded-lg text-corpo font-semibold text-graf-800 underline decoration-graf-300 underline-offset-4 transition-colors hover:text-jb-700"
               >
                 Ver todas as marcas
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white/15 transition-transform group-hover:translate-x-1">
+                <span className="grid size-9 shrink-0 place-items-center transition-transform motion-safe:group-hover:translate-x-1">
                   <ArrowRight className="size-[1.05rem]" aria-hidden />
                 </span>
               </Link>

@@ -9,7 +9,7 @@ import { FaixaVitrine } from "@/components/loja/home/faixa-vitrine";
 import { FechamentoHome } from "@/components/loja/home/fechamento-home";
 import { HeroVitrine, type NumeroDaHome } from "@/components/loja/home/hero-vitrine";
 import { BancadaJB, ChamadaComparador } from "@/components/loja/home/bancada-home";
-import { FaixaCorrendo, ManifestoJB } from "@/components/loja/home/manifesto-home";
+import { FaixaCorrendo } from "@/components/loja/home/manifesto-home";
 import { SecaoAssistencia } from "@/components/loja/home/assistencia";
 import { SecaoCategorias } from "@/components/loja/home/categorias";
 import { SecaoMarcas } from "@/components/loja/home/marcas";
@@ -95,16 +95,6 @@ export default async function HomePage() {
         parcelamento={parcelamentoHome}
       />
 
-      {/* Faixa correndo e manifesto ficam ENTRE a abertura e o catálogo: é o
-          respiro que separa a promessa da prateleira, e é onde o protótipo os
-          coloca. */}
-      <FaixaCorrendo />
-
-      <ManifestoJB
-        garantiaMaximaMeses={catalogo.garantiaMaximaMeses}
-        temSeminovo={catalogo.seminovos.length > 0}
-      />
-
       <AtalhosHome />
 
       <Suspense fallback={<EsqueletoCategoriasHome />}>
@@ -119,6 +109,8 @@ export default async function HomePage() {
         produtos={catalogo.ofertas.slice(0, 4)}
         parcelamento={parcelamentoHome}
       />
+
+      <FaixaCorrendo />
 
       {/* A bancada vem ANTES dos seminovos: é ela que explica por que comprar
           um equipamento usado da JB não é a mesma coisa que comprar usado. */}

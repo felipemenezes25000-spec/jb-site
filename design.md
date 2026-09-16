@@ -700,3 +700,55 @@ E duas guardas contra passar à toa:
   rodapé quando ele tinha caixa de 1840px. Com a caixa em 1600, medido: **−1px**
   de respiro acima de 1800px contra 29px em 1600. O deslocamento saiu; o respiro
   ficou em 37px.
+
+## Ficha de produto — hierarquia de compra (15/09/2026)
+
+A ficha usa duas colunas a partir de 768px: galeria à esquerda e identidade
+com compra à direita. Os detalhes começam abaixo. A galeria tem troca animada
+de foto, indicador de posição e ampliação em diálogo; respeita movimento
+reduzido e mantém navegação por teclado. As animações são locais aos componentes.
+
+Na compra direta, **Comprar agora** é a ação preenchida principal. Adicionar
+ao carrinho é texto sublinhado; orçamento fica depois do frete. Produtos que
+só aceitam orçamento mantêm sua ação principal própria. Preço anterior e atual
+comunicam a oferta sem repetir percentual e valor economizado. Disponibilidade,
+parcelamento e condições reais permanecem visíveis.
+
+Atendimento e adição de conjunto usam tratamento secundário. O pós-venda fica
+em **Depois da compra**, com acesso à Área da Clínica; o painel institucional
+repetido no fim da ficha foi removido. Especificações e requisitos continuam
+abertos. Esta seção substitui as descrições anteriores desses componentes.
+
+
+## Loja pública — hierarquia de ações (15/09/2026)
+
+Esta revisão estende a hierarquia da ficha a todas as páginas públicas por meio
+do cabeçalho, rodapé e cartões compartilhados. Substitui as orientações anteriores
+que exigiam busca e assistência preenchidas de vermelho no topo, carrinho vermelho
+em cada cartão e dois grandes convites comerciais no rodapé.
+
+- **Navegação global:** busca e assistência são utilidades neutras. A faixa da marca
+  permanece vermelha. No celular, o recado inicial cabe inteiro e fica estático.
+- **Home:** abertura, atalhos, categorias e ofertas vêm antes dos argumentos sobre
+  a empresa. Saem o manifesto duplicado, os quatro argumentos repetidos no hero
+  e o selo giratório. Assistência tem uma seção curta; pós-venda aponta para a
+  Área da Clínica, sem reiniciar o convite de compra.
+- **Catálogo e coleções:** foto, condição, nome e preço orientam a escolha. Preço
+  anterior fica junto do atual; não há outro selo percentual em cima da foto.
+  Carrinho, favoritos e comparação mantêm os controles, em tratamento neutro.
+  O convite de orçamento no final da lista é secundário.
+- **Ficha:** Comprar agora é a ação principal. Carrinho, orçamento, ajuda e
+  acessórios têm pesos menores; informações técnicas continuam disponíveis.
+- **Serviços e formulários:** solicitar atendimento ou enviar o formulário mantém
+  destaque. Repetição no final de uma página longa é possível; chamadas
+  intermediárias e canais alternativos ficam em segundo plano.
+- **Carrinho e checkout:** Finalizar compra e avançar/confirmar a etapa continuam
+  principais. Após consultar o frete, recalcular passa a secundário. Preços,
+  disponibilidade, validações e confirmação de pagamento conservam suas regras.
+- **Institucionais, conteúdo e políticas:** a leitura tem prioridade, com a mesma
+  navegação e rodapé simplificados. Não adicionar promoção ou animação ao corpo
+  de políticas ou estados de pedido.
+- **Motion:** transições curtas nas imagens ajudam a perceber a troca de produto.
+  A rotação da home para ao interagir com a vitrine. Fotos, título e preço continuam
+  sincronizados. Respeitar movimento reduzido e impressão; manter o conteúdo
+  visível mesmo antes de a animação iniciar.

@@ -206,8 +206,7 @@ export function CrossSellIntencional({
           Para completar este equipamento
         </h2>
         <p className="texto-apoio mt-1.5 text-graf-600">
-          Acessórios e produtos de uso conjunto que a JB vinculou a este modelo no catálogo — não é
-          sugestão automática por categoria.
+          Acessórios e equipamentos selecionados pela JB para usar com este modelo.
         </p>
       </header>
 
@@ -280,7 +279,7 @@ export function CrossSellIntencional({
             </p>
             <BotaoEnvio
               carregando={<span>Adicionando o conjunto…</span>}
-              className="botao-jb foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg px-5 text-apoio disabled:opacity-70"
+              className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border border-graf-450 bg-white px-5 text-apoio font-semibold text-graf-900 transition-colors hover:bg-graf-50 disabled:opacity-70"
             >
               <ShoppingCart className="size-4" aria-hidden />
               Adicionar o conjunto

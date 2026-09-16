@@ -67,7 +67,7 @@ function chaveDoItem(item: ItemMenu): ChaveMegaPremium {
 
 function recadosDaFaixa(desde: string, cidade: string) {
   return [
-    "Equipamentos, assistência e pós-venda no mesmo relacionamento.",
+    "Equipamentos e assistência própria.",
     "Compare equipamentos lado a lado antes de decidir.",
     cidade.trim()
       ? `Assistência técnica própria — equipe JB em ${cidade}.`
@@ -109,11 +109,8 @@ function IconeMenu({ chave, className }: { chave: ChaveMegaPremium; className?: 
    ============================================================================ */
 const INTERVALO_DO_TICKER = 5200;
 
-/* Abaixo disto a faixa não tem largura para a frase inteira.
-   Medido: a mais longa pede ~372px e sobram 280px a 320 e 350 a 390 — o texto
-   sai com reticências. Uma frase cortada parada já era o comportamento
-   anterior; CINCO frases cortadas passando seria pior que não ter ticker.
-   A partir de 640px sobram ~600px e todas cabem. */
+/* No celular, o primeiro recado é curto e estático para caber por inteiro.
+   A partir de 640px há espaço para alternar as frases mais longas. */
 const LARGURA_MINIMA_DO_TICKER = 640;
 
 function TickerDaFaixa({ recados }: { recados: string[] }) {
@@ -384,7 +381,7 @@ export function Cabecalho({
               <Link
                 href="/assistencia-tecnica/solicitar"
                 className={classesBotao(
-                  "primario",
+                  "secundario",
                   "sm",
                   /* Entra em `xl`, junto com a faixa de categorias.
 
@@ -395,7 +392,7 @@ export function Cabecalho({
                      tela a 1024px. Quem cede é o atalho de assistência, que
                      continua na faixa de utilidade logo acima e no rodapé —
                      é a mesma escolha que a ficha de produto já fazia. */
-                  "jb-cta-topo ml-1.5 hidden min-h-11 rounded-xl px-4 shadow-[0_12px_28px_rgba(196,14,21,0.2)] xl:inline-flex xl:min-h-12 xl:px-5",
+                  "jb-cta-topo ml-1.5 hidden min-h-11 rounded-lg px-4 xl:inline-flex xl:min-h-12 xl:px-5",
                 )}
                 prefetch={false}
               >

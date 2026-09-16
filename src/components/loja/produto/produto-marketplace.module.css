@@ -1,135 +1,47 @@
 .topo {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
   position: relative;
 }
 
-.galeria,
-.resumo,
-.compra,
-.detalhes {
-  min-width: 0;
-}
+.galeria, .resumo, .compra, .detalhes { min-width: 0; }
+.resumo { order: 1; }
+.galeria { order: 2; }
+.compra { order: 3; }
+.detalhes { order: 4; }
 
-/*
- * PDP premium — 13/09/2026
- *
- * A primeira dobra passa a se comportar como uma ficha de equipamento de alto
- * valor: imagem protagonista, contexto técnico legível e caixa de compra com
- * espaço suficiente para preço, entrega e confiança sem virar uma coluna
- * espremida. O desenho continua responsivo e preserva a ordem de leitura no
- * mobile.
- */
-
-.resumo {
-  order: 1;
-  align-self: start;
-}
-
-.galeria {
-  order: 2;
-}
-
-.compra {
-  order: 3;
-}
-
-.detalhes {
-  order: 4;
-}
-
-@media (max-width: 767px) {
+/* Foto e compra têm uma coluna cada. O texto técnico começa depois delas. */
+@media (min-width: 768px) {
   .topo {
-    gap: 1.15rem;
-  }
-}
-
-/* Tablet e notebook estreito: foto à esquerda, decisão à direita. */
-@media (min-width: 768px) and (max-width: 1279px) {
-  .topo {
-    grid-template-columns: minmax(0, 1.08fr) minmax(21rem, 0.92fr);
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: clamp(1.5rem, 4vw, 4rem);
+    row-gap: 1.5rem;
     align-items: start;
-    gap: clamp(1.4rem, 2.4vw, 2rem);
   }
-
   .galeria {
     order: 0;
     grid-column: 1;
-    grid-row: 1 / span 3;
-  }
-
-  .resumo,
-  .compra,
-  .detalhes {
-    order: 0;
-    grid-column: 2;
-  }
-}
-
-@media (min-width: 1024px) {
-  .galeria,
-  .resumo,
-  .compra,
-  .detalhes {
-    order: 0;
-  }
-
-  .resumo {
-    padding-top: 0.1rem;
-  }
-
-  .compra {
-    position: sticky;
-    top: calc(var(--jb-topo) + 1rem);
-  }
-}
-
-/*
- * Desktop: 40 / 32 / 28.
- *
- * A galeria permanece grande sem roubar a tela toda, o centro ganha largura
- * para título e diferenciais e a buybox mantém no mínimo ~350px nos desktops
- * mais comuns. É deliberadamente mais editorial que o catálogo comum.
- */
-@media (min-width: 1280px) {
-  .topo {
-    grid-template-columns:
-      minmax(0, 1.34fr)
-      minmax(20.5rem, 1.08fr)
-      minmax(22rem, 0.94fr);
-    grid-template-rows: auto minmax(0, 1fr);
-    align-items: start;
-    gap: clamp(1.5rem, 1.8vw, 2.25rem);
-  }
-
-  .galeria {
-    grid-column: 1;
     grid-row: 1 / span 2;
   }
-
-  .resumo {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
+  .resumo { order: 0; grid-column: 2; grid-row: 1; }
+  .compra { order: 0; grid-column: 2; grid-row: 2; }
   .detalhes {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  .compra {
-    grid-column: 3;
-    grid-row: 1 / span 2;
+    order: 0;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 1rem;
   }
 }
 
-@media (min-width: 1600px) {
-  .topo {
-    grid-template-columns:
-      minmax(0, 1.36fr)
-      minmax(24rem, 1.12fr)
-      minmax(24rem, 0.96fr);
-    gap: 2.35rem;
-  }
+/* Uma entrada curta; preço e controles de compra não se movem. */
+@media (prefers-reduced-motion: no-preference) {
+  .resumo { animation: apresentar 520ms cubic-bezier(0.22, 1, 0.36, 1); }
+}
+@keyframes apresentar {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce), print {
+  .resumo { animation: none; }
 }

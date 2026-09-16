@@ -2,19 +2,15 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
-  Award,
   Building2,
   Clock3,
   FileText,
-  Headphones,
   Heart,
   Mail,
   MapPin,
   MessageCircle,
   Phone,
-  ShieldCheck,
   ShoppingCart,
-  Truck,
   Wrench,
 } from "lucide-react";
 
@@ -188,28 +184,6 @@ function LinhaContato({
   );
 }
 
-function Prova({
-  icone: IconeProva,
-  titulo,
-  detalhe,
-}: {
-  icone: Icone;
-  titulo: string;
-  detalhe: string;
-}) {
-  return (
-    <li className="flex min-w-0 items-center gap-3.5 px-5 py-4 min-[1100px]:px-7">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-jb-600 ring-1 ring-graf-200/80">
-        <IconeProva className="size-[1.35rem] stroke-[1.9]" />
-      </span>
-      <p className="min-w-0 text-xs leading-[1.4] text-graf-500">
-        <strong className="block text-[0.82rem] font-bold leading-snug text-graf-800">{titulo}</strong>
-        <span className="mt-0.5 block">{detalhe}</span>
-      </p>
-    </li>
-  );
-}
-
 /**
  * O rodapé é cacheado, e por isso ele não fala de sessão.
  *
@@ -251,12 +225,6 @@ export async function Rodape() {
   const whatsapp = s.whatsapp.trim()
     ? whatsappHref(s.whatsapp, "Olá! Vim pelo site da JB.")
     : "";
-  const desdeNumero = Number.parseInt(s.empresa_desde, 10);
-  const anosExperiencia =
-    Number.isFinite(desdeNumero) && desdeNumero > 1900 && desdeNumero <= ano
-      ? ano - desdeNumero
-      : null;
-  const cidade = s.endereco_cidade || "São Paulo";
 
   return (
     <footer className="relative isolate mt-auto overflow-hidden border-t border-graf-200 bg-[#fdfdfd] text-graf-900">
@@ -265,7 +233,7 @@ export async function Rodape() {
       <div className="container-loja relative z-10 py-8 min-[1200px]:py-10">
         <div className="grid gap-4 min-[1200px]:grid-cols-[27rem_minmax(0,1fr)] min-[1400px]:grid-cols-[29rem_minmax(0,1fr)] min-[1200px]:gap-5">
           <section
-            className="rounded-[1.65rem] border border-graf-200/80 bg-[linear-gradient(145deg,#fffafa_0%,#fff_62%,#fff8f8_100%)] p-6 shadow-[0_24px_70px_-48px_rgba(53,23,25,0.38)] min-[1400px]:p-7"
+            className="rounded-xl border border-graf-200 bg-white p-6 min-[1400px]:p-7"
             aria-labelledby="rodape-contato"
           >
             <h2 id="rodape-contato" className="sr-only">
@@ -382,7 +350,7 @@ export async function Rodape() {
             ) : null}
           </section>
 
-          <section className="overflow-hidden rounded-[1.65rem] border border-graf-200/80 bg-white shadow-[0_24px_70px_-52px_rgba(24,24,27,0.34)]">
+          <section className="overflow-hidden rounded-xl border border-graf-200 bg-white">
             <nav
               aria-label="Rodapé"
               className="grid grid-cols-2 gap-x-7 gap-y-9 p-6 min-[900px]:grid-cols-4 min-[1200px]:gap-x-5 min-[1400px]:gap-x-8 min-[1400px]:p-8"
@@ -395,69 +363,19 @@ export async function Rodape() {
 
             <div className="mx-6 border-t border-graf-200/80 min-[1400px]:mx-8" />
 
-            <div className="grid gap-5 p-6 pt-5 sm:grid-cols-2 sm:gap-0 min-[1400px]:p-8 min-[1400px]:pt-6">
-              <div className="sm:pr-7 min-[1400px]:pr-9">
-                <Link
-                  href="/assistencia-tecnica/solicitar"
-                  className="group foco-jb flex min-h-[3.6rem] items-center justify-between gap-4 rounded-[0.95rem] bg-jb-600 px-6 text-corpo font-bold text-white shadow-[0_18px_34px_-20px_rgba(164,10,16,0.85)] transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-jb-700 hover:shadow-[0_22px_38px_-20px_rgba(164,10,16,0.9)]"
-                  prefetch={false}
-                >
-                  <span className="flex items-center gap-3">
-                    <Wrench className="size-[1.15rem] stroke-[2]" aria-hidden />
-                    Solicitar assistência
-                  </span>
-                  <ArrowRight className="size-[1.05rem] transition-transform group-hover:translate-x-1" aria-hidden />
-                </Link>
-                <p className="mt-3 text-center text-apoio leading-[1.45] text-graf-500">
-                  Suporte técnico especializado
-                  <br />e atendimento ágil.
-                </p>
-              </div>
-
-              <div className="sm:border-l sm:border-graf-200 sm:pl-7 min-[1400px]:pl-9">
-                <Link
-                  href="/orcamento"
-                  className="group foco-jb flex min-h-[3.6rem] items-center justify-between gap-4 rounded-[0.95rem] border-[1.5px] border-jb-500 bg-white px-6 text-corpo font-bold text-jb-600 transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-jb-50 hover:shadow-[0_16px_28px_-22px_rgba(164,10,16,0.55)]"
-                  prefetch={false}
-                >
-                  <span className="flex items-center gap-3">
-                    <FileText className="size-[1.15rem] stroke-[2]" aria-hidden />
-                    Pedir orçamento
-                  </span>
-                  <ArrowRight className="size-[1.05rem] transition-transform group-hover:translate-x-1" aria-hidden />
-                </Link>
-                <p className="mt-3 text-center text-apoio leading-[1.45] text-graf-500">
-                  Equipamentos, peças e serviços
-                  <br />com as melhores condições.
-                </p>
-              </div>
+            <div className="flex flex-wrap gap-x-8 gap-y-2 px-6 py-4 min-[1400px]:px-8">
+              <Link href="/assistencia-tecnica/solicitar" prefetch={false} className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-md text-corpo font-semibold text-graf-700 underline decoration-graf-300 underline-offset-4 hover:text-jb-700">
+                <Wrench className="size-4" aria-hidden />
+                Solicitar assistência
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
+              <Link href="/orcamento" prefetch={false} className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-md text-corpo font-semibold text-graf-700 underline decoration-graf-300 underline-offset-4 hover:text-jb-700">
+                <FileText className="size-4" aria-hidden />
+                Pedir orçamento
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
             </div>
           </section>
-        </div>
-
-        <div className="mt-4 overflow-hidden rounded-[1.35rem] border border-graf-200/80 bg-[#fafafa] shadow-[0_18px_48px_-42px_rgba(24,24,27,0.35)]">
-          <ul className="grid sm:grid-cols-2 min-[1100px]:grid-cols-4 min-[1100px]:divide-x min-[1100px]:divide-graf-200/80">
-            <Prova
-              icone={Award}
-              titulo={anosExperiencia ? `+${anosExperiencia} anos de experiência` : "Experiência consolidada"}
-              detalhe="Confiança e expertise no seu consultório."
-            />
-            <Prova
-              icone={Truck}
-              titulo={`Atendimento em ${cidade} e região`}
-              detalhe="Agilidade onde você precisa."
-            />
-            <Prova
-              icone={ShieldCheck}
-              titulo="Equipamentos com garantia e procedência"
-              detalhe="Segurança para o seu investimento."
-            />
-            <Prova
-              icone={Headphones}
-              titulo="Suporte técnico especializado"
-              detalhe="Do diagnóstico à solução."
-            />
-          </ul>
         </div>
 
         <div className="mt-4 grid gap-4 border-t border-graf-200/80 pt-4 min-[1050px]:grid-cols-[1fr_auto_auto] min-[1050px]:items-center min-[1050px]:gap-8">

@@ -56,19 +56,16 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
   return (
     <section
       aria-labelledby="entrega-cep"
-      className="border-t border-hairline bg-[linear-gradient(180deg,rgba(248,250,252,0.72),rgba(255,255,255,1))] px-5 py-4 sm:px-6 sm:py-5"
+      className="border-t border-hairline px-5 py-4 sm:px-6"
     >
       <div className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700 ring-1 ring-jb-100">
+        <span className="flex size-6 shrink-0 items-center justify-center text-graf-700">
           <Truck className="size-[18px]" aria-hidden />
         </span>
         <div className="min-w-0">
           <h3 id="entrega-cep" className="text-sm font-extrabold text-graf-950">
             Entrega para sua clínica
           </h3>
-          <p className="mt-0.5 text-xs leading-4 text-graf-500">
-            Consulte valor e prazo antes de fechar a compra.
-          </p>
         </div>
       </div>
 
@@ -101,7 +98,7 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
               evento.preventDefault();
               calcular();
             }}
-            className="h-11 w-full rounded-xl border border-graf-300 bg-white pl-9 pr-3 text-sm tabular text-graf-900 shadow-[0_8px_24px_-24px_rgba(15,23,42,0.5)] outline-none transition-all placeholder:text-graf-500 focus:border-jb-500 focus:ring-4 focus:ring-jb-500/10"
+            className="h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-sm tabular text-graf-900 outline-none transition-colors placeholder:text-graf-500 focus:border-jb-500 focus:ring-2 focus:ring-jb-500/20"
           />
         </div>
         <button
@@ -109,9 +106,9 @@ export function EntregaPorCep({ produtoId }: { produtoId: string }) {
           onClick={calcular}
           disabled={!completo || calculando}
           className={cn(
-            "foco-jb flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-3.5 text-sm font-extrabold transition-all",
+            "foco-jb flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-3.5 text-sm font-semibold transition-colors",
             completo && !calculando
-              ? "border-graf-900 bg-graf-950 text-white shadow-sm hover:-translate-y-0.5 hover:bg-graf-800"
+              ? "border-graf-450 bg-white text-graf-950 hover:bg-graf-50"
               /* graf-400 sobre graf-100 dá 2,4:1 — o botão desabilitado ficava
                  ilegível. graf-500 mantém o "não dá para clicar" visível. */
               : "cursor-not-allowed border-graf-200 bg-graf-100 text-graf-500",

@@ -165,10 +165,10 @@ export function DetalhesDoProduto({
   }
 
   return (
-    <div className="min-w-0">
+    <div className="grid min-w-0 gap-x-12 gap-y-5 border-t border-graf-200 pt-6 md:grid-cols-2">
       {temDiferencial ? (
-        <div className="border-t border-graf-200 pt-5 lg:mt-6">
-          <p className="micro text-graf-500">Por que este modelo</p>
+        <div>
+          <p className="micro text-graf-500">Destaques do equipamento</p>
           <div
             className="prose-jb mt-2.5 text-corpo text-graf-700 [&_li]:leading-6 [&_p]:leading-6 [&>*+*]:mt-2"
             dangerouslySetInnerHTML={{ __html: descricaoHtml! }}
@@ -177,7 +177,7 @@ export function DetalhesDoProduto({
       ) : null}
 
       {ficha.decisivas.length > 0 ? (
-        <div className={`border-t border-graf-200 pt-5 ${temDiferencial ? "mt-5" : "lg:mt-6"}`}>
+        <div>
           {/* Três linhas e um link honesto.
 
               "Ficha completa" era promessa quebrada: levava a um bloco cujo
@@ -189,7 +189,7 @@ export function DetalhesDoProduto({
       ) : null}
 
       {identificadores.length > 0 ? (
-        <details className="group mt-4 border-t border-hairline pt-2">
+        <details className="group border-t border-hairline pt-2 md:col-span-2">
           <summary className="foco-jb texto-apoio -mx-2 flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 px-2 font-bold text-graf-500 hover:text-graf-900 [&::-webkit-details-marker]:hidden">
             Identificação do produto
             <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden />

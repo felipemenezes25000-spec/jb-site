@@ -42,11 +42,11 @@ export function AjudaDaEquipe({
               href={linkWhatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className="foco-jb group inline-flex min-h-11 items-center gap-2 rounded-lg bg-jb-600 px-3.5 text-xs font-bold text-white transition-colors hover:bg-jb-700"
+              className="foco-jb inline-flex min-h-11 items-center gap-2 rounded-lg border border-graf-450 bg-white px-3.5 text-xs font-semibold text-graf-900 transition-colors hover:bg-graf-50"
             >
               <MessageCircle className="size-4 shrink-0" aria-hidden />
               WhatsApp
-              <ArrowUpRight className="size-3.5 text-white/80" aria-hidden />
+              <ArrowUpRight className="size-3.5" aria-hidden />
             </a>
           ) : null}
 

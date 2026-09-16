@@ -5,39 +5,19 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
-  ClipboardCheck,
   ImageOff,
   Search,
   ShieldCheck,
-  Truck,
   Wrench,
 } from "lucide-react";
 
 import type { ProdutoCard } from "@/components/loja/card-produto";
 import { calcularParcelas, formatarPreco } from "@/lib/format";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
+import styles from "./hero-movimento.module.css";
 
-/* ============================================================================
-   Abertura da home
-
-   Composição trazida do protótipo: manchete grande com a palavra do meio
-   trocando, foto do equipamento grande à direita com selo girando e cartão de
-   preço flutuante, três miniaturas que trocam o equipamento em foco, e a faixa
-   de quatro provas logo abaixo.
-
-   Três coisas mudaram em relação ao protótipo, e cada uma tem motivo:
-
-   1. **A palavra que gira sai do catálogo**, não de uma lista escrita à mão.
-      Se a JB parar de vender cadeira, a manchete para de oferecer cadeira.
-   2. **O artigo acompanha a palavra.** O protótipo dizia "a compressor" e
-      "a motor" — o rodízio trocava só o substantivo. Aqui cada item carrega
-      o seu artigo.
-   3. **O selo não afirma laudo em produto novo.** Laudo, nesta plataforma, é
-      documento de unidade física que passou pela bancada — existe para
-      seminovo e recondicionado. Escrever "laudo aprovado" em cima de um
-      equipamento de caixa seria a mesma classe de erro do "MARKETPLACE" que
-      saiu do cabeçalho: afirmação bonita e falsa.
-   ============================================================================ */
+/* A manchete acompanha o equipamento em foco. A rotação cede ao primeiro
+   contato com a vitrine; condição e preço pertencem ao produto exibido. */
 
 export type NumeroDaHome = { valor: string; rotulo: string };
 
@@ -55,29 +35,6 @@ function comArtigo(palavra: string) {
 function tipoDoEquipamento(nome: string) {
   return nome.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
 }
-
-const PROVAS = [
-  {
-    icone: ShieldCheck,
-    titulo: "Garantia por escrito",
-    texto: "O prazo de cada equipamento está na página dele.",
-  },
-  {
-    icone: Wrench,
-    titulo: "Bancada própria",
-    texto: "Conserto em São Paulo, sem terceirizar.",
-  },
-  {
-    icone: ClipboardCheck,
-    titulo: "Laudo por unidade",
-    texto: "O seminovo sai com o relatório da unidade.",
-  },
-  {
-    icone: Truck,
-    titulo: "Prazo fechado antes",
-    texto: "Frete e entrega definidos antes do pagamento.",
-  },
-];
 
 export function HeroVitrine({
   cidade,
@@ -123,10 +80,6 @@ export function HeroVitrine({
     foco && temPreco
       ? calcularParcelas(foco.priceCents, parcelamento?.max, parcelamento?.minimoCents)
       : null;
-  const desconto =
-    foco?.compareAtCents && foco.compareAtCents > foco.priceCents
-      ? Math.round(((foco.compareAtCents - foco.priceCents) / foco.compareAtCents) * 100)
-      : null;
 
   /* A palavra que gira. Vem dos equipamentos que estão na vitrine agora; sem
      pelo menos dois tipos distintos a manchete fica parada, que é melhor do
@@ -144,8 +97,6 @@ export function HeroVitrine({
   const palavraEmFoco = foco
     ? comArtigo(tipoDoEquipamento(foco.name) || "equipamento")
     : palavras[0];
-
-  const laudoDeUnidade = foco?.condition === "seminovo" || foco?.condition === "recondicionado";
 
   return (
     <section className="relative overflow-hidden">
@@ -211,9 +162,8 @@ export function HeroVitrine({
             className="surge mt-6 max-w-xl text-base leading-7 text-graf-700"
             style={{ animationDelay: "460ms" }}
           >
-            Equipamento novo e seminovo com condição declarada item por item, comparação lado a
-            lado antes de decidir e a mesma equipe na instalação, no chamado e na peça de
-            reposição.
+            Equipamentos novos e seminovos com condição, preço e garantia para conferir.
+            E uma equipe própria para cuidar do que vem depois.
           </p>
 
           <form
@@ -240,7 +190,7 @@ export function HeroVitrine({
             />
             <button
               type="submit"
-              className="botao-jb foco-jb inline-flex min-h-11 shrink-0 items-center rounded-full px-5 text-apoio"
+              className="foco-jb inline-flex min-h-11 shrink-0 items-center rounded-full bg-graf-100 px-5 text-apoio font-semibold text-graf-900 transition-colors hover:bg-graf-200"
             >
               Buscar
             </button>
@@ -260,7 +210,7 @@ export function HeroVitrine({
             </Link>
             <Link
               href="/assistencia-tecnica/solicitar"
-              className="botao-osso foco-jb inline-flex min-h-13 items-center gap-2 rounded-full px-7 text-corpo"
+              className="foco-jb inline-flex min-h-13 items-center gap-2 rounded-lg px-3 text-corpo font-semibold text-graf-700 underline decoration-graf-300 underline-offset-4 hover:text-jb-700"
             >
               <Wrench className="size-4" aria-hidden />
               Abrir chamado técnico
@@ -286,7 +236,12 @@ export function HeroVitrine({
         </div>
 
         {foco ? (
-          <div className="surge relative min-w-0" style={{ animationDelay: "300ms" }}>
+          <div
+            className="surge relative min-w-0"
+            style={{ animationDelay: "300ms" }}
+            onMouseEnter={() => setAssumido(true)}
+            onFocusCapture={() => setAssumido(true)}
+          >
             <div className="relative">
               {/* O bloco deslocado atrás da foto. É sombra sem desfoque: a
                   marca aparece como recorte, não como brilho. */}
@@ -311,13 +266,16 @@ export function HeroVitrine({
                 <div data-palco-imagem-produto className="relative aspect-square w-full bg-surface">
                   {foco.imageUrl ? (
                     <Image
+                      key={foco.slug}
                       data-imagem-produto
                       src={imagemProdutoSemFundo(foco.imageUrl)}
                       alt={foco.imageAlt || foco.name}
                       fill
-                      priority
+                      loading="eager"
+                      fetchPriority={emFoco === 0 ? "high" : "auto"}
                       sizes="(max-width: 1024px) 92vw, 42rem"
-                      className="object-contain p-10"
+                      className={`${styles.imagem} object-contain p-10`}
+                      onLoad={(evento) => { evento.currentTarget.dataset.carregada = "true"; }}
                     />
                   ) : (
                     <Image
@@ -340,40 +298,12 @@ export function HeroVitrine({
                       {foco.name}
                     </span>
                   </span>
-                  {desconto ? (
-                    <span className="micro shrink-0 rounded-full bg-jb-500 px-3 py-1.5 text-white shadow-lg">
-                      −{desconto}%
-                    </span>
-                  ) : null}
                 </div>
               </Link>
 
-              {/* Selo girando. O texto muda com a condição porque laudo é
-                  documento de unidade que passou pela bancada — não existe
-                  para equipamento de caixa. */}
-              <span
-                className="gira absolute -top-4 -left-4 hidden size-24 place-items-center rounded-full border border-jb-200 bg-surface p-2 shadow-card sm:grid"
-                aria-hidden
-              >
-                <span className="grid size-full place-items-center rounded-full border border-jb-100 text-center text-jb-600">
-                  {/* 0,58rem dá 9,3px, e o piso desta plataforma é 10. O selo
-                      cresceu de 80 para 96px para o texto caber maior — o
-                      protótipo não tinha esse piso. */}
-                  <span className="text-[0.65rem] leading-[1.05] font-black tracking-[0.1em] uppercase">
-                    {laudoDeUnidade ? "Laudo" : "Garantia"}
-                    <strong className="my-0.5 block text-base leading-none tracking-normal">
-                      JB
-                    </strong>
-                    {/* Uma palavra por linha: o círculo tem ~80px de miolo, e
-                        "por escrito" quebrava em duas e encostava na borda. */}
-                    {laudoDeUnidade ? "unidade" : "escrita"}
-                  </span>
-                </span>
-              </span>
-
               {temPreco ? (
-                <div className="absolute -right-3 -bottom-6 hidden rounded-2xl border border-graf-200 bg-surface px-5 py-4 shadow-pop sm:block">
-                  <p className="etiqueta">a partir de</p>
+                <div className="mt-3 rounded-xl border border-graf-200 bg-surface px-5 py-4 sm:absolute sm:-right-3 sm:-bottom-6 sm:mt-0 sm:shadow-pop">
+                  <p className="etiqueta">Preço do equipamento</p>
                   <p className="fonte-display tabular text-2xl text-graf-950">
                     {formatarPreco(foco.priceCents)}
                   </p>
@@ -431,20 +361,6 @@ export function HeroVitrine({
             </p>
           </div>
         )}
-      </div>
-
-      {/* Faixa de provas: quatro células dividindo um filete, sem moldura
-          própria — o mesmo desenho do resto do sistema. */}
-      <div className="border-t border-graf-200">
-        <ul className="container-loja grid grid-cols-2 gap-px bg-graf-200 sm:grid-cols-4">
-          {PROVAS.map((prova) => (
-            <li key={prova.titulo} className="bg-surface px-5 py-5">
-              <prova.icone className="size-4 text-jb-500" aria-hidden />
-              <p className="mt-2.5 text-apoio font-bold text-graf-950">{prova.titulo}</p>
-              <p className="micro mt-1 text-graf-500">{prova.texto}</p>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );

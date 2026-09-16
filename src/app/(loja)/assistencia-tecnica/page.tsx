@@ -390,8 +390,8 @@ export default async function AssistenciaTecnicaPage() {
             />
 
             <div className="mt-9">
-              <LinkBotao href="/assistencia-tecnica/solicitar" variante="primario" tamanho="lg">
-                Começar pela etapa 1
+              <LinkBotao href="/assistencia-tecnica/solicitar" variante="secundario" tamanho="lg">
+                Abrir chamado técnico
                 <ArrowRight className="size-4" aria-hidden />
               </LinkBotao>
             </div>

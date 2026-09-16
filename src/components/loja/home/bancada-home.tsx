@@ -88,7 +88,7 @@ export function ChamadaComparador() {
         <div className="relative max-w-2xl">
           <p className="etiqueta">decisão sem achismo</p>
           <h2 className="fonte-display mt-3 text-[clamp(1.9rem,4vw,3rem)] text-graf-950">
-            Três equipamentos, uma tela, nenhuma dúvida.
+            Compare os detalhes que fazem diferença.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-7 text-graf-700">
             O comparador põe especificação, garantia, condição e preço na mesma linha. O que você
@@ -97,14 +97,14 @@ export function ChamadaComparador() {
           <div className="mt-7 flex flex-wrap gap-3">
             <Link
               href="/comparar"
-              className="botao-jb foco-jb inline-flex min-h-12 items-center gap-2 rounded-full px-6 text-corpo"
+              className="botao-osso foco-jb inline-flex min-h-12 items-center gap-2 rounded-lg px-6 text-corpo"
             >
               <GitCompareArrows className="size-4" aria-hidden />
               Abrir comparador
             </Link>
             <Link
               href="/minha-jb"
-              className="botao-osso foco-jb inline-flex min-h-12 items-center gap-2 rounded-full px-6 text-corpo"
+              className="foco-jb inline-flex min-h-12 items-center gap-2 rounded-lg px-3 text-corpo font-semibold text-graf-700 underline decoration-graf-300 underline-offset-4 hover:text-jb-700"
             >
               <BadgeCheck className="size-4" aria-hidden />
               Área da Clínica

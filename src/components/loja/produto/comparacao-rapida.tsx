@@ -78,18 +78,12 @@ export function ComparacaoRapida({ produtos }: { produtos: ProdutoComparavel[] }
     >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="micro text-jb-700">
-            Compare sem sair da ficha
-          </p>
           <h2
             id="comparacao-rapida-titulo"
-            className="text-bloco mt-2 text-graf-950"
+            className="text-bloco text-graf-950"
           >
             O que muda entre este modelo e as alternativas
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-graf-600">
-            Os atributos abaixo são priorizados pelo tipo de equipamento. Acessórios e produtos de uso conjunto ficam fora desta comparação.
-          </p>
         </div>
 
         <Link

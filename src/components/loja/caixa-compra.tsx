@@ -10,7 +10,6 @@ import {
   Plus,
   ShoppingCart,
   Sliders,
-  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -120,10 +119,6 @@ export function CaixaCompra({
 
   const precoAnteriorCents =
     compareAtCents && compareAtCents > precoCents ? compareAtCents : null;
-  const economiaCents = precoAnteriorCents ? precoAnteriorCents - precoCents : 0;
-  const desconto = precoAnteriorCents
-    ? Math.round((economiaCents / precoAnteriorCents) * 100)
-    : 0;
 
   const selecionados = addons.filter((a) => escolhidos.includes(a.serviceId));
   const totalAddons =
@@ -150,10 +145,8 @@ export function CaixaCompra({
   const temOpcoes = baseCompravel && (!unico || addons.length > 0);
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-graf-200 bg-white shadow-[0_28px_80px_-48px_rgba(15,23,42,0.5)] ring-1 ring-black/[0.015]">
-      <div className="h-1 bg-[linear-gradient(90deg,var(--color-jb-700),var(--color-jb-500),var(--color-jb-700))]" />
-
-      <div className="px-5 py-5 sm:px-6 sm:py-6">
+    <div className="overflow-hidden rounded-xl border border-graf-200 bg-white">
+      <div className="px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           {semEstoque ? (
             <Etiqueta tom="neutro">{unico ? "Vendido" : "Sem estoque no momento"}</Etiqueta>
@@ -170,10 +163,6 @@ export function CaixaCompra({
               Disponível
             </Etiqueta>
           )}
-          {/* "Compra direta" ao lado de "Vendido" é a própria contradição. */}
-          {!soOrcamento && ofertaValida ? (
-            <span className="micro text-graf-500">Compra direta</span>
-          ) : null}
         </div>
 
         {soOrcamento ? (
@@ -187,21 +176,19 @@ export function CaixaCompra({
           </div>
         ) : (
           <div>
-            <p className="micro mb-2 text-graf-500">
-              {ofertaValida
-                ? "Preço deste equipamento"
-                : unico
+            {!ofertaValida ? <p className="micro mb-2 text-graf-500">
+              {unico
                   ? "Preço desta unidade, já vendida"
                   : "Preço praticado, enquanto durou o estoque"}
-            </p>
-            {/* Preço riscado e "−15%" são promoção: só existem enquanto houver o
-                que comprar com desconto. */}
+            </p> : null}
+            {/* O preço anterior basta para contextualizar a oferta; desconto
+                percentual e economia em reais repetiam a mesma vantagem. */}
             {precoAnteriorCents && ofertaValida ? (
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="text-sm tabular text-graf-500 line-through">
+                  <span className="sr-only">De </span>
                   {formatarPreco(precoAnteriorCents)}
                 </span>
-                {desconto >= 5 ? <Etiqueta tom="ok">−{desconto}%</Etiqueta> : null}
               </div>
             ) : null}
 
@@ -225,11 +212,6 @@ export function CaixaCompra({
                   <CreditCard className="size-3.5 shrink-0" aria-hidden />
                   Pix ou cartão de crédito
                 </span>
-                {economiaCents > 0 ? (
-                  <span className="inline-flex rounded-full bg-ok-50 px-2.5 py-1 text-xs font-extrabold text-ok-700 ring-1 ring-ok-500/15">
-                    Você economiza {formatarPreco(economiaCents)}
-                  </span>
-                ) : null}
               </div>
             ) : (
               <p className="mt-2.5 max-w-[38ch] text-sm leading-5 text-graf-600">
@@ -250,7 +232,7 @@ export function CaixaCompra({
       </div>
 
       {baseCompravel ? (
-        <form action={acao} className="border-t border-hairline bg-white px-5 py-4 sm:px-6 sm:py-5">
+        <form action={acao} className="bg-white px-5 pb-5 pt-2 sm:px-6">
           <input type="hidden" name="produtoId" value={produtoId} />
           <input type="hidden" name="quantidade" value={quantidade} />
           {escolhidos.map((id) => (
@@ -304,28 +286,24 @@ export function CaixaCompra({
               value="checkout"
               tamanho="lg"
               larguraTotal
-              className="min-h-14 rounded-xl shadow-[0_14px_30px_-18px_rgba(190,24,24,0.7)]"
+              className="min-h-14 rounded-lg"
               disabled={enviando || !podeComprar}
               carregando={enviando && irParaPagamento && podeComprar}
               data-pending={enviando && irParaPagamento ? "true" : undefined}
               onClick={() => setIrParaPagamento(true)}
             >
-              <Zap className="size-[18px]" aria-hidden />
               Comprar agora
             </Botao>
 
-            {/* `secundario`, não `sutil`: cinza sobre cinza dava ao CTA
-                secundário a aparência exata de um botão desabilitado, e a
-                auditoria registrou gente concluindo que o botão não funcionava
-                antes mesmo de clicar. Branco com borda grafite lê como ação. */}
+            {/* Texto sublinhado comunica uma ação secundária sem parecer desabilitada. */}
             <Botao
               type="submit"
               name="destino"
               value="carrinho"
-              variante="secundario"
+              variante="texto"
               tamanho="md"
               larguraTotal
-              className="min-h-11 rounded-xl"
+              className="min-h-11 rounded-lg text-graf-950 underline underline-offset-4"
               disabled={enviando || !podeComprar}
               carregando={enviando && !irParaPagamento && podeComprar}
               data-pending={enviando && !irParaPagamento ? "true" : undefined}
@@ -347,18 +325,6 @@ export function CaixaCompra({
             Serviços e total podem ser revisados antes do pagamento.
           </p>
 
-          {permiteOrcamento ? (
-            <div className="mt-1 text-center">
-              <LinkBotao
-                href={hrefOrcamento}
-                variante="texto"
-                tamanho="sm"
-                className="px-3 text-graf-600"
-              >
-                Prefiro solicitar orçamento
-              </LinkBotao>
-            </div>
-          ) : null}
         </form>
       ) : permiteOrcamento ? (
         <div className="border-t border-hairline p-5 sm:p-6">
@@ -378,6 +344,19 @@ export function CaixaCompra({
       )}
 
       {baseCompravel ? <EntregaPorCep produtoId={produtoId} /> : null}
+
+      {baseCompravel && permiteOrcamento ? (
+        <div className="border-t border-hairline px-5 py-2 sm:px-6">
+          <LinkBotao
+            href={hrefOrcamento}
+            variante="texto"
+            tamanho="sm"
+            className="min-h-11 px-0 text-sm font-normal text-graf-900 underline underline-offset-4 hover:bg-transparent"
+          >
+            Prefiro solicitar orçamento
+          </LinkBotao>
+        </div>
+      ) : null}
 
       {temOpcoes ? (
         <details className="group border-t border-hairline">

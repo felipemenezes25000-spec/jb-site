@@ -158,16 +158,9 @@ export function CardProduto({
           noTrilho ? "aspect-3/2 max-h-72 sm:aspect-4/3" : "p-4",
         )}
       >
-        {/* Condição e desconto empilhados no mesmo canto: são as duas coisas
-            que fazem alguém parar no cartão, e em cantos opostos obrigavam a
-            varrer a foto. */}
+        {/* A foto apresenta a condição; a oferta fica junto do preço. */}
         <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
           <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
-          {claims.descontoPct > 0 ? (
-            <span className="micro rounded-sm bg-jb-500 px-2 py-1 leading-none text-white">
-              −{claims.descontoPct}%
-            </span>
-          ) : null}
         </div>
 
         {produto.imageUrl ? (
@@ -274,11 +267,8 @@ export function CardProduto({
               (carrinho, favorito, comparar) sobem para `z-10`, senão o clique
               neles cairia na camada do cartão e abriria a ficha.
 
-              O vermelho fica só no ícone do carrinho, 44px. Este cartão já
-              teve o convite como retângulo vermelho de largura inteira: numa
-              home com nove equipamentos são nove faixas de vermelho, e o
-              vermelho da JB é sinal de ação — repetido nove vezes deixa de
-              apontar para coisa nenhuma.
+              Explorar o produto é a ação principal da grade. Os controles
+              auxiliares ficam neutros e mantêm seus alvos de 44px.
 
               `flex-wrap` + `shrink-0`: a 320px o cartão do trilho mede 250px,
               e três controles numa linha só espremiam o de comparar de 44 para
@@ -304,7 +294,7 @@ export function CardProduto({
                 <input type="hidden" name="quantidade" value="1" />
                 <BotaoEnvio
                   aria-label={`Adicionar ${produto.name} ao carrinho`}
-                  className="foco-jb grid size-11 shrink-0 place-items-center rounded-lg border border-jb-500 bg-jb-500 text-white transition-colors hover:bg-jb-600 disabled:opacity-70"
+                  className="foco-jb grid size-11 shrink-0 place-items-center rounded-lg border border-graf-200 bg-white text-graf-800 transition-colors hover:border-jb-500 hover:text-jb-700 disabled:opacity-70"
                 >
                   <ShoppingCart className="size-4" aria-hidden />
                 </BotaoEnvio>

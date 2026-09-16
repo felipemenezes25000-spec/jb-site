@@ -493,7 +493,7 @@ function ChamadaCatalogo() {
           disponibilidade e prazo.
         </p>
       </div>
-      <LinkBotao href="/orcamento" tamanho="sm" className="shrink-0">
+      <LinkBotao href="/orcamento" variante="secundario" tamanho="sm" className="shrink-0">
           Pedir orçamento
           <ArrowRight className="size-4" aria-hidden />
       </LinkBotao>

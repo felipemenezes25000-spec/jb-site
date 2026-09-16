@@ -9,6 +9,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { InstallationPolicy } from "@prisma/client";
+import Link from "next/link";
 
 import { formatarPreco } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -46,12 +47,10 @@ function rotuloDeVoltagem(bruto: string | null) {
 
 function Cabecalho({
   icone: Icone,
-  sobretitulo,
   titulo,
   descricao,
 }: {
   icone: React.ComponentType<{ className?: string }>;
-  sobretitulo: string;
   titulo: string;
   descricao?: string;
 }) {
@@ -59,8 +58,7 @@ function Cabecalho({
     <header className="flex items-start gap-2.5 border-b border-graf-200 pb-2.5">
       <Icone className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
       <div className="min-w-0">
-        <p className="micro text-jb-700">{sobretitulo}</p>
-        <h3 className="mt-0.5 text-sm font-extrabold text-graf-950">{titulo}</h3>
+        <h3 className="text-sm font-extrabold text-graf-950">{titulo}</h3>
         {descricao ? <p className="texto-apoio mt-0.5 text-graf-500">{descricao}</p> : null}
       </div>
     </header>
@@ -107,9 +105,7 @@ export function AntesDeComprar({
       <div id="antes-de-comprar">
         <Cabecalho
           icone={Ruler}
-          sobretitulo="Prepare a clínica"
           titulo="Compatibilidade com o local"
-          descricao="Espaço, alimentação e infraestrutura."
         />
       </div>
 
@@ -159,7 +155,6 @@ export function OQueVemNaCaixa({
       <div id="o-que-vem-na-caixa">
         <Cabecalho
           icone={PackageOpen}
-          sobretitulo="Conteúdo confirmado"
           /* Mesmo nome da ficha e do comparador — ver a nota no comparador
              sobre os três nomes que este campo tinha. */
           titulo="Itens inclusos"
@@ -223,9 +218,7 @@ export function Instalacao({
       <div id="instalacao">
         <Cabecalho
           icone={Wrench}
-          sobretitulo="Implantação"
           titulo="Instalação"
-          descricao="Como o equipamento entra em operação."
         />
       </div>
 
@@ -320,13 +313,11 @@ export function DepoisDaCompraNoProduto({
       <div id="depois-da-compra">
         <Cabecalho
           icone={ClipboardList}
-          sobretitulo="Continuidade"
           titulo="Depois da compra"
-          descricao="O básico do ciclo de vida dentro da JB."
         />
       </div>
 
-      <ul className="grid grid-cols-2 lg:grid-cols-4">
+      <ul className="grid grid-cols-2">
         {passos.map((passo, indice) => {
           const Icone = passo.icone;
           return (
@@ -334,9 +325,7 @@ export function DepoisDaCompraNoProduto({
               key={passo.titulo}
               className={`min-w-0 border-hairline py-3 pr-4 ${
                 indice % 2 === 1 ? "border-l pl-4" : ""
-              } ${indice >= 2 ? "border-t lg:border-t-0" : ""} ${
-                indice > 0 ? "lg:border-l lg:pl-4" : ""
-              }`}
+              } ${indice >= 2 ? "border-t" : ""}`}
             >
               <Icone className="size-3.5 text-jb-600" aria-hidden />
               <p className="mt-2 text-sm font-extrabold leading-5 text-graf-950">
@@ -347,6 +336,9 @@ export function DepoisDaCompraNoProduto({
           );
         })}
       </ul>
+      <Link href="/minha-jb" className="foco-jb inline-flex min-h-11 items-center text-sm font-semibold text-graf-900 underline underline-offset-4 hover:text-jb-700">
+        Conhecer a Área da Clínica
+      </Link>
     </section>
   );
 }

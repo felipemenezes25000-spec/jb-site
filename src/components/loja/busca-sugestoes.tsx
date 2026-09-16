@@ -326,16 +326,12 @@ export function BuscaComSugestoes({
               Buscar
             </button>
           ) : (
-            /* Botão cheio, com a palavra, como no desenho de referência: a
-               busca do topo é a ação principal da loja e estava terminando num
-               ícone do mesmo peso do resto da linha.
-
-               Abaixo de 640px continua só o ícone — ali a barra tem ~200px, e
-               uma palavra dentro dela come o campo. */
+            /* Busca é uma utilidade global; o vermelho fica com a ação da
+               página. Em telas estreitas, a lupa preserva espaço para digitar. */
             <button
               type="submit"
               aria-label="Buscar"
-              className="botao-jb foco-jb mr-1 flex min-h-11 shrink-0 items-center justify-center rounded-lg px-3 text-white transition-colors sm:px-5"
+              className="foco-jb mr-1 flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-graf-100 px-3 text-graf-900 transition-colors hover:bg-graf-200 sm:px-5"
             >
               <Search className="size-4.5 sm:hidden" aria-hidden />
               <span className="hidden text-apoio font-extrabold tracking-wide uppercase sm:inline">

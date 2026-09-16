@@ -63,6 +63,32 @@ async function esperarRecortesReais(page: import("@playwright/test").Page) {
 }
 
 test.describe("Imagens de produto sem moldura branca", () => {
+  test("a ampliação mantém foco no diálogo e respeita movimento reduzido", async ({ page }) => {
+    const { produto } = fixtures();
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(`/loja/${produto.slug}`);
+    const abrir = page.getByRole("button", { name: /^Ampliar imagem/ });
+    await abrir.click();
+    const dialogo = page.getByRole("dialog");
+    await expect(dialogo).toBeVisible();
+    await expect.poll(() => dialogo.evaluate((elemento) => elemento.matches(":modal"))).toBe(true);
+    await expect(page.getByRole("button", { name: "Fechar imagem ampliada" })).toBeFocused();
+
+    // Percorre todos os controles e uma volta: o foco não alcança a compra ao fundo.
+    const controles = await dialogo.getByRole("button").count();
+    for (let i = 0; i <= controles; i++) {
+      await page.keyboard.press("Tab");
+      await expect.poll(() => dialogo.evaluate((elemento) => elemento.contains(document.activeElement))).toBe(true);
+    }
+    expect(await dialogo.evaluate((elemento) => getComputedStyle(elemento).animationName)).toBe("none");
+    await expect.poll(() => dialogo.locator("img").evaluate((elemento) => (elemento as HTMLImageElement).complete)).toBe(true);
+    expect(await dialogo.locator("img").evaluate((elemento) => getComputedStyle(elemento).animationName)).toBe("none");
+
+    await page.keyboard.press("Escape");
+    await expect(dialogo).toHaveCount(0);
+    await expect(abrir).toBeFocused();
+  });
+
   test("a home trata todas as fotos de produto como recortes integrados ao fundo", async ({ page }) => {
     await page.goto("/");
     await esperarImagens(page);

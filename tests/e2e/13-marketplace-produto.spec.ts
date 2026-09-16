@@ -21,7 +21,8 @@ test.describe("Marketplace — página do produto", () => {
       compra.boundingBox(),
     ]);
     expect(g!.x).toBeLessThan(r!.x);
-    expect(r!.x).toBeLessThan(c!.x);
+    expect(Math.abs(r!.x - c!.x)).toBeLessThan(2);
+    expect(c!.y).toBeGreaterThan(r!.y);
     expect(Math.max(g!.y, r!.y, c!.y)).toBeLessThan(900);
     await expect(compra.getByRole("button", { name: "Comprar agora" })).toBeVisible();
     await expect(
