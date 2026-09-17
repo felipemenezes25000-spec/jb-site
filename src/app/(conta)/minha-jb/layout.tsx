@@ -52,7 +52,11 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
   };
 
   return (
-    <div className={`flex min-h-dvh flex-col text-graf-900 ${styles.shell}`}>
+    <div
+      data-clinica-shell
+      data-motion-scene="clinica"
+      className={`flex min-h-dvh flex-col text-graf-900 ${styles.shell}`}
+    >
       <TopoClinica
         nome={cliente.name}
         email={cliente.email}
@@ -83,7 +87,7 @@ export default async function MinhaJbLayout({ children }: { children: React.Reac
             }
           />
 
-          <main id="conteudo" className="min-w-0 pb-6">
+          <main id="conteudo" data-clinica-content className="min-w-0 pb-6">
             {children}
           </main>
         </div>
