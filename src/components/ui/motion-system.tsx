@@ -9,6 +9,7 @@ const SELETOR_REVELAVEL = [
   "main section",
   "main [data-cartao-produto]",
   "main [data-motion-reveal]",
+  "main [data-motion-chapter]",
   "main > article",
   "main > div > article",
   '[role="dialog"][aria-modal="true"]',
@@ -29,41 +30,39 @@ function zonaDaRota(pathname: string): ZonaDeMotion {
   return "publico";
 }
 
+function cenaDaRota(pathname: string) {
+  if (pathname === "/") return "home";
+  if (pathname === "/loja" || pathname.startsWith("/categoria/") || pathname === "/seminovos") return "catalogo";
+  if (pathname.startsWith("/loja/")) return "produto";
+  if (pathname.startsWith("/comparar")) return "comparador";
+  if (pathname.startsWith("/minha-jb")) return "clinica";
+  if (pathname.startsWith("/checkout") || pathname.startsWith("/carrinho")) return "checkout";
+  if (pathname.startsWith("/admin")) return "admin";
+  return "institucional";
+}
+
 function tipoDoElemento(elemento: HTMLElement) {
   if (elemento.matches("[data-cartao-produto]")) return "produto";
+  if (elemento.matches("[data-motion-chapter]")) return "capitulo";
   if (elemento.matches('[role="dialog"]')) return "dialogo";
   if (elemento.matches("section")) return "secao";
   return "bloco";
 }
 
-/**
- * Linguagem de movimento transversal da plataforma.
- *
- * O componente não muda a estrutura que veio do servidor e não precisa
- * transformar páginas em Client Components. Ele só marca, depois da
- * hidratação, peças semânticas que já existem e deixa a folha `motion.css`
- * cuidar do desenho.
- *
- * Dois cuidados são deliberados:
- *
- * 1. nada nasce invisível no HTML do servidor. Se JS falhar, todo o conteúdo
- *    continua visível;
- * 2. elementos que já estão na primeira dobra entram direto. A revelação por
- *    observador fica para o que ainda não apareceu, evitando flash de conteúdo
- *    que some e volta.
- */
 export function MotionSystem() {
   const pathname = usePathname();
 
   useEffect(() => {
     const raiz = document.documentElement;
     const zona = zonaDaRota(pathname);
+    const cena = cenaDaRota(pathname);
     const mediaMovimentoReduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
     const mediaPonteiroFino = window.matchMedia("(pointer: fine)");
     const movimentoReduzido = mediaMovimentoReduzido.matches;
 
     raiz.dataset.motionEnhanced = "true";
     raiz.dataset.motionZone = zona;
+    raiz.dataset.motionScene = cena;
     raiz.dataset.motionPointer = mediaPonteiroFino.matches ? "fine" : "coarse";
 
     if (movimentoReduzido) {
@@ -99,7 +98,10 @@ export function MotionSystem() {
       elemento.dataset.jbMotion = "true";
       elemento.dataset.jbMotionKind = tipoDoElemento(elemento);
 
-      const atraso = (contador % 6) * (zona === "publico" ? 58 : 34);
+      const atrasoBase = zona === "publico" ? 58 : 34;
+      const capitulo = elemento.dataset.motionChapter;
+      const acrescimoDeCapitulo = capitulo ? 18 : 0;
+      const atraso = (contador % 6) * atrasoBase + acrescimoDeCapitulo;
       contador += 1;
       elemento.style.setProperty("--jb-motion-delay", `${atraso}ms`);
 
@@ -133,8 +135,6 @@ export function MotionSystem() {
     });
     observadorDom.observe(document.body, { childList: true, subtree: true });
 
-    /* Entrada de rota. Mais expressiva na vitrine; quase instantânea onde a
-       pessoa está operando pedido, estoque ou checkout. */
     const principal = document.querySelector<HTMLElement>("main");
     if (principal) {
       const publico = zona === "publico";
