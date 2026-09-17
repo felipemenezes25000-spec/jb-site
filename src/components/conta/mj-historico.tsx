@@ -57,7 +57,7 @@ const COR_DO_TIPO: Record<TipoHistorico, string> = {
 
 export function Historico({ itens }: { itens: ItemHistorico[] }) {
   return (
-    <ol className="relative">
+    <ol className="relative" data-motion-clinic-history>
       {itens.map((item, indice) => {
         const Icone = ICONE[item.tipo];
         const ultimo = indice === itens.length - 1;
@@ -65,7 +65,11 @@ export function Historico({ itens }: { itens: ItemHistorico[] }) {
         const distancia = distanciaEmDias(item.quando);
 
         return (
-          <li key={item.id} className="flex gap-3 pb-5 last:pb-0 sm:gap-4">
+          <li
+            key={item.id}
+            data-motion-history-item
+            className="flex gap-3 pb-5 last:pb-0 sm:gap-4"
+          >
             <div className="hidden w-[6.75rem] shrink-0 pt-2 text-right sm:block">
               <p className="tabular text-xs font-bold text-graf-700">{data}</p>
               <p className="mt-0.5 text-xs text-graf-500">{distancia}</p>
@@ -80,6 +84,7 @@ export function Historico({ itens }: { itens: ItemHistorico[] }) {
               ) : null}
               <span
                 aria-hidden
+                data-motion-history-marker
                 className={cn(
                   "relative z-10 flex size-9 items-center justify-center rounded-full ring-4 ring-white",
                   COR_DO_TIPO[item.tipo],
@@ -89,7 +94,10 @@ export function Historico({ itens }: { itens: ItemHistorico[] }) {
               </span>
             </div>
 
-            <div className="min-w-0 flex-1 rounded-xl border border-graf-200 bg-white p-4">
+            <div
+              data-motion-history-card
+              className="min-w-0 flex-1 rounded-xl border border-graf-200 bg-white p-4"
+            >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <p className="text-xs font-bold uppercase tracking-[0.07em] text-graf-500">
                   {NOME_DO_TIPO[item.tipo]}
