@@ -68,10 +68,6 @@ html[data-motion-zone="publico"][data-motion-pointer="fine"] .jb-motion-aura[dat
   opacity: 1;
 }
 
-/* --------------------------------------------------------------------------
-   Revelação base
-   -------------------------------------------------------------------------- */
-
 html[data-motion-enhanced="true"] [data-jb-motion="true"] {
   --jb-motion-x: 0px;
   --jb-motion-y: 18px;
@@ -117,10 +113,6 @@ html[data-motion-zone="publico"] [data-jb-motion-kind="produto"] {
   --jb-motion-y: 24px;
   --jb-motion-scale: 0.975;
 }
-
-/* --------------------------------------------------------------------------
-   Home — capítulos com personalidade diferente
-   -------------------------------------------------------------------------- */
 
 html[data-motion-scene="home"] [data-motion-chapter] {
   position: relative;
@@ -168,8 +160,6 @@ html[data-motion-scene="home"] [data-motion-chapter="fechamento"] {
   --jb-motion-scale: 0.98;
 }
 
-/* Uma linha de luz acompanha apenas os grandes capítulos da Home. É um gesto
-   recorrente da marca, não uma borda nova no layout. */
 html[data-motion-scene="home"] [data-motion-chapter="bancada"]::after,
 html[data-motion-scene="home"] [data-motion-chapter="comparador"]::after,
 html[data-motion-scene="home"] [data-motion-chapter="fechamento"]::after {
@@ -191,10 +181,6 @@ html[data-motion-scene="home"] [data-motion-chapter][data-jb-motion-state="visiv
   transform: scaleX(1);
   opacity: 0.55;
 }
-
-/* --------------------------------------------------------------------------
-   Catálogo — grade se monta como bancada técnica
-   -------------------------------------------------------------------------- */
 
 html[data-motion-scene="catalogo"] [data-cartao-produto] {
   transform-origin: 50% 70%;
@@ -220,10 +206,6 @@ html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-of-type(4n + 4) {
   --jb-motion-rotate: 0.35deg;
 }
 
-/* --------------------------------------------------------------------------
-   PDP — fotografia e compra parecem planos diferentes
-   -------------------------------------------------------------------------- */
-
 html[data-motion-scene="produto"] main [data-palco-imagem-produto] {
   transform-origin: 50% 55%;
   transition: transform 760ms var(--jb-motion-ease-spring), filter 520ms ease;
@@ -241,10 +223,6 @@ html[data-motion-scene="produto"][data-motion-pointer="fine"] main :where([data-
   transform: translate3d(0, -3px, 0);
   box-shadow: var(--shadow-pop);
 }
-
-/* --------------------------------------------------------------------------
-   Área da Clínica — software calmo, mas vivo
-   -------------------------------------------------------------------------- */
 
 html[data-motion-scene="clinica"] [data-jb-motion-kind="capitulo"],
 html[data-motion-scene="clinica"] [data-jb-motion-kind="secao"] {
@@ -264,10 +242,6 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] :where([data-statu
   transform: translate3d(0, -2px, 0);
 }
 
-/* --------------------------------------------------------------------------
-   Áreas operacionais
-   -------------------------------------------------------------------------- */
-
 html:is([data-motion-zone="checkout"], [data-motion-zone="clinica"], [data-motion-zone="admin"], [data-motion-zone="acesso"])
   [data-jb-motion="true"] {
   --jb-motion-y: 8px;
@@ -280,10 +254,6 @@ html:is([data-motion-zone="checkout"], [data-motion-zone="clinica"], [data-motio
   filter: none;
   clip-path: none;
 }
-
-/* --------------------------------------------------------------------------
-   Produto — profundidade direcional
-   -------------------------------------------------------------------------- */
 
 html[data-motion-zone="publico"][data-motion-pointer="fine"] [data-cartao-produto] {
   --jb-pointer-x: 50%;
@@ -318,7 +288,7 @@ html[data-motion-zone="publico"][data-motion-pointer="fine"]
     perspective(1100px)
     translate3d(0, -5px, 0)
     rotateX(var(--jb-tilt-x))
-    rotateY(var(--jb-tilt-y));
+    rotateY(var(--jb-tilt-y)) !important;
   border-color: color-mix(in srgb, var(--color-jb-500) 24%, var(--color-graf-200));
   box-shadow:
     0 18px 44px -28px rgb(26 28 30 / 0.48),
@@ -338,10 +308,6 @@ html[data-motion-zone="publico"][data-motion-pointer="fine"]
   [data-cartao-produto][data-jb-tilt="true"] [data-imagem-produto] {
   transform: translateZ(18px) scale(1.045);
 }
-
-/* --------------------------------------------------------------------------
-   Controles
-   -------------------------------------------------------------------------- */
 
 html[data-motion-enhanced="true"] :where(button, a) :where(svg) {
   transition: transform var(--jb-motion-base) var(--jb-motion-ease);
