@@ -41,10 +41,6 @@ export default async function HomePage() {
   const parcelamento = lerParcelamento(s);
   const parcelamentoHome = { max: parcelamento.max, minimoCents: parcelamento.minimaCents };
 
-  /* Rótulo curto de propósito: em caixa alta e espaçado, "Produtos publicados"
-     quebrava em duas linhas dentro de uma coluna de um terço e empurrava o
-     número para fora da primeira tela. A `<dl>` tem `aria-label="Catálogo JB"`,
-     então "no catálogo" é lido em contexto. */
   const numeros: NumeroDaHome[] = [
     catalogo.totalPublicado > 0
       ? { valor: String(catalogo.totalPublicado), rotulo: "no catálogo" }
@@ -55,10 +51,6 @@ export default async function HomePage() {
       : null,
   ].filter((numero) => numero !== null);
 
-  /* Os três equipamentos que a abertura alterna. O destaque abre, e os dois
-     seguintes vêm de tipos DIFERENTES dele — é a troca de tipo que dá sentido
-     ao rodízio da manchete ("a clínica escolhe a autoclave / o compressor").
-     Três do mesmo tipo girariam a mesma palavra três vezes. */
   const tipoDe = (nome: string) => nome.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
   const vitrine: typeof catalogo.procurados = [];
   const tiposUsados = new Set<string>();
@@ -84,56 +76,81 @@ export default async function HomePage() {
   ].filter((slug): slug is string => Boolean(slug));
 
   return (
-    <div data-jb-home="true">
+    <div data-jb-home="true" data-motion-scene="home">
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
 
-      <HeroVitrine
-        cidade={s.endereco_cidade}
-        desde={s.empresa_desde}
-        numeros={numeros}
-        vitrine={vitrine}
-        parcelamento={parcelamentoHome}
-      />
+      <div data-motion-chapter="hero">
+        <HeroVitrine
+          cidade={s.endereco_cidade}
+          desde={s.empresa_desde}
+          numeros={numeros}
+          vitrine={vitrine}
+          parcelamento={parcelamentoHome}
+        />
+      </div>
 
-      <AtalhosHome />
+      <div data-motion-chapter="atalhos">
+        <AtalhosHome />
+      </div>
 
-      <Suspense fallback={<EsqueletoCategoriasHome />}>
-        <SecaoCategorias />
-      </Suspense>
+      <div data-motion-chapter="categorias">
+        <Suspense fallback={<EsqueletoCategoriasHome />}>
+          <SecaoCategorias />
+        </Suspense>
+      </div>
 
-      <FaixaVitrine
-        sobretitulo="Ofertas"
-        titulo="Boas oportunidades do catálogo"
-        href="/loja"
-        rotuloDoLink="Ver catálogo"
-        produtos={catalogo.ofertas.slice(0, 4)}
-        parcelamento={parcelamentoHome}
-      />
+      <div data-motion-chapter="ofertas">
+        <FaixaVitrine
+          sobretitulo="Ofertas"
+          titulo="Boas oportunidades do catálogo"
+          href="/loja"
+          rotuloDoLink="Ver catálogo"
+          produtos={catalogo.ofertas.slice(0, 4)}
+          parcelamento={parcelamentoHome}
+        />
+      </div>
 
-      <FaixaCorrendo />
+      <div data-motion-chapter="manifesto">
+        <FaixaCorrendo />
+      </div>
 
-      {/* A bancada vem ANTES dos seminovos: é ela que explica por que comprar
-          um equipamento usado da JB não é a mesma coisa que comprar usado. */}
-      <BancadaJB />
+      <div data-motion-chapter="bancada">
+        <BancadaJB />
+      </div>
 
-      <SeminovosHome produtos={catalogo.seminovos} parcelamento={parcelamentoHome} />
-      <ProcuradosHome produtos={catalogo.procurados} parcelamento={parcelamentoHome} />
+      <div data-motion-chapter="seminovos">
+        <SeminovosHome produtos={catalogo.seminovos} parcelamento={parcelamentoHome} />
+      </div>
 
-      <ChamadaComparador />
+      <div data-motion-chapter="procurados">
+        <ProcuradosHome produtos={catalogo.procurados} parcelamento={parcelamentoHome} />
+      </div>
 
-      <VistosRecentemente
-        titulo="Continue de onde parou"
-        excluir={jaNaHome}
-        largura="loja"
-      />
+      <div data-motion-chapter="comparador">
+        <ChamadaComparador />
+      </div>
 
-      <SecaoAssistencia configuracoes={s} />
+      <div data-motion-chapter="recentes">
+        <VistosRecentemente
+          titulo="Continue de onde parou"
+          excluir={jaNaHome}
+          largura="loja"
+        />
+      </div>
 
-      <Suspense fallback={<EsqueletoMarcasHome />}>
-        <SecaoMarcas />
-      </Suspense>
+      <div data-motion-chapter="assistencia">
+        <SecaoAssistencia configuracoes={s} />
+      </div>
 
-      <FechamentoHome />
+      <div data-motion-chapter="marcas">
+        <Suspense fallback={<EsqueletoMarcasHome />}>
+          <SecaoMarcas />
+        </Suspense>
+      </div>
+
+      <div data-motion-chapter="fechamento">
+        <FechamentoHome />
+      </div>
     </div>
   );
 }
