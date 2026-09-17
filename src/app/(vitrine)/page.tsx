@@ -76,8 +76,13 @@ export default async function HomePage() {
   ].filter((slug): slug is string => Boolean(slug));
 
   return (
-    <div data-jb-home="true" data-motion-scene="home">
+    <div data-jb-home="true" data-motion-scene="home" className="relative">
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
+      <div className="jb-home-stage" aria-hidden="true">
+        <span className="jb-home-orbit jb-home-orbit-a" />
+        <span className="jb-home-orbit jb-home-orbit-b" />
+        <span className="jb-home-orbit jb-home-orbit-c" />
+      </div>
 
       <div data-motion-chapter="hero">
         <HeroVitrine
@@ -89,16 +94,8 @@ export default async function HomePage() {
         />
       </div>
 
-      <div data-motion-chapter="atalhos">
-        <AtalhosHome />
-      </div>
-
-      <div data-motion-chapter="categorias">
-        <Suspense fallback={<EsqueletoCategoriasHome />}>
-          <SecaoCategorias />
-        </Suspense>
-      </div>
-
+      <div data-motion-chapter="atalhos"><AtalhosHome /></div>
+      <div data-motion-chapter="categorias"><Suspense fallback={<EsqueletoCategoriasHome />}><SecaoCategorias /></Suspense></div>
       <div data-motion-chapter="ofertas">
         <FaixaVitrine
           sobretitulo="Ofertas"
@@ -109,48 +106,15 @@ export default async function HomePage() {
           parcelamento={parcelamentoHome}
         />
       </div>
-
-      <div data-motion-chapter="manifesto">
-        <FaixaCorrendo />
-      </div>
-
-      <div data-motion-chapter="bancada">
-        <BancadaJB />
-      </div>
-
-      <div data-motion-chapter="seminovos">
-        <SeminovosHome produtos={catalogo.seminovos} parcelamento={parcelamentoHome} />
-      </div>
-
-      <div data-motion-chapter="procurados">
-        <ProcuradosHome produtos={catalogo.procurados} parcelamento={parcelamentoHome} />
-      </div>
-
-      <div data-motion-chapter="comparador">
-        <ChamadaComparador />
-      </div>
-
-      <div data-motion-chapter="recentes">
-        <VistosRecentemente
-          titulo="Continue de onde parou"
-          excluir={jaNaHome}
-          largura="loja"
-        />
-      </div>
-
-      <div data-motion-chapter="assistencia">
-        <SecaoAssistencia configuracoes={s} />
-      </div>
-
-      <div data-motion-chapter="marcas">
-        <Suspense fallback={<EsqueletoMarcasHome />}>
-          <SecaoMarcas />
-        </Suspense>
-      </div>
-
-      <div data-motion-chapter="fechamento">
-        <FechamentoHome />
-      </div>
+      <div data-motion-chapter="manifesto"><FaixaCorrendo /></div>
+      <div data-motion-chapter="bancada"><BancadaJB /></div>
+      <div data-motion-chapter="seminovos"><SeminovosHome produtos={catalogo.seminovos} parcelamento={parcelamentoHome} /></div>
+      <div data-motion-chapter="procurados"><ProcuradosHome produtos={catalogo.procurados} parcelamento={parcelamentoHome} /></div>
+      <div data-motion-chapter="comparador"><ChamadaComparador /></div>
+      <div data-motion-chapter="recentes"><VistosRecentemente titulo="Continue de onde parou" excluir={jaNaHome} largura="loja" /></div>
+      <div data-motion-chapter="assistencia"><SecaoAssistencia configuracoes={s} /></div>
+      <div data-motion-chapter="marcas"><Suspense fallback={<EsqueletoMarcasHome />}><SecaoMarcas /></Suspense></div>
+      <div data-motion-chapter="fechamento"><FechamentoHome /></div>
     </div>
   );
 }
