@@ -15,6 +15,7 @@ import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
 export type ProdutoCard = {
+  /** Chave do produto — usada por quem precisa agir sobre ele (guardar, etc.). */
   id: string;
   slug: string;
   name: string;
@@ -29,7 +30,9 @@ export type ProdutoCard = {
   brandName: string | null;
   imageUrl: string | null;
   imageAlt: string;
+  /** Só o catálogo traz: dois atributos que decidem, lidos da ficha. */
   destaques?: DestaqueTecnico[];
+  /** Fallback da linha da marca quando o produto não tem marca cadastrada. */
   categoryName?: string | null;
 };
 
@@ -66,7 +69,9 @@ export function CardProduto({
   variante?: VarianteDoCartao;
   prioridade?: boolean;
   parcelamento?: Parcelamento;
+  /** Já guardado por quem está logado. */
   favoritado?: boolean;
+  /** Endereço desta listagem, para o formulário de favorito voltar para cá. */
   voltar?: string;
   nivelDoTitulo?: "h2" | "h3";
   className?: string;
