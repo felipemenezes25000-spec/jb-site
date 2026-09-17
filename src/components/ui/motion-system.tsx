@@ -56,21 +56,25 @@ export function MotionSystem() {
     const cena = cenaDaRota(pathname);
     const mediaMovimentoReduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
     const mediaPonteiroFino = window.matchMedia("(pointer: fine)");
-    const movimentoReduzido = mediaMovimentoReduzido.matches;
 
     raiz.dataset.motionEnhanced = "true";
     raiz.dataset.motionZone = zona;
     raiz.dataset.motionScene = cena;
     raiz.dataset.motionPointer = mediaPonteiroFino.matches ? "fine" : "coarse";
 
-    if (movimentoReduzido) {
-      raiz.dataset.motionReduced = "true";
+    const sincronizarPreferencia = () => {
+      if (mediaMovimentoReduzido.matches) raiz.dataset.motionReduced = "true";
+      else delete raiz.dataset.motionReduced;
+    };
+    sincronizarPreferencia();
+    mediaMovimentoReduzido.addEventListener("change", sincronizarPreferencia);
+
+    if (mediaMovimentoReduzido.matches) {
       return () => {
+        mediaMovimentoReduzido.removeEventListener("change", sincronizarPreferencia);
         delete raiz.dataset.motionReduced;
       };
     }
-
-    delete raiz.dataset.motionReduced;
 
     const observador = new IntersectionObserver(
       (entradas) => {
@@ -121,39 +125,42 @@ export function MotionSystem() {
     };
 
     const registrar = (origem: ParentNode) => {
-      if (origem instanceof HTMLElement && origem.matches(SELETOR_REVELAVEL)) {
-        preparar(origem);
-      }
-
+      if (origem instanceof HTMLElement && origem.matches(SELETOR_REVELAVEL)) preparar(origem);
       origem.querySelectorAll<HTMLElement>(SELETOR_REVELAVEL).forEach(preparar);
     };
 
     registrar(document);
 
-    const observadorDom = new MutationObserver((mutacoes) => {
-      for (const mutacao of mutacoes) {
-        for (const no of mutacao.addedNodes) {
-          if (no instanceof HTMLElement) registrar(no);
-        }
-      }
-    });
-    observadorDom.observe(document.body, { childList: true, subtree: true });
+    /* Admin muda muito DOM por tabela/filtro. A animação ali é deliberadamente
+       sóbria e não justifica observar cada mutação da árvore inteira. */
+    const observadorDom =
+      zona === "admin"
+        ? null
+        : new MutationObserver((mutacoes) => {
+            for (const mutacao of mutacoes) {
+              for (const no of mutacao.addedNodes) {
+                if (no instanceof HTMLElement) registrar(no);
+              }
+            }
+          });
+    observadorDom?.observe(document.body, { childList: true, subtree: true });
 
     const principal = document.querySelector<HTMLElement>("main");
     if (principal) {
       const publico = zona === "publico";
+      const cinematografico = publico && mediaPonteiroFino.matches;
       principal.animate(
-        publico
+        cinematografico
           ? [
               { opacity: 0.72, transform: "translate3d(0, 12px, 0)", filter: "blur(4px)" },
               { opacity: 1, transform: "translate3d(0, 0, 0)", filter: "blur(0px)" },
             ]
           : [
-              { opacity: 0.88, transform: "translate3d(0, 6px, 0)" },
+              { opacity: publico ? 0.84 : 0.9, transform: `translate3d(0, ${publico ? 8 : 5}px, 0)` },
               { opacity: 1, transform: "translate3d(0, 0, 0)" },
             ],
         {
-          duration: publico ? 560 : 260,
+          duration: publico ? (cinematografico ? 560 : 380) : 240,
           easing: "cubic-bezier(0.22, 1, 0.36, 1)",
           fill: "both",
         },
@@ -175,13 +182,28 @@ export function MotionSystem() {
       cartao.style.removeProperty("--jb-tilt-y");
     };
 
+    const esconderAura = () => {
+      if (aura) delete aura.dataset.visible;
+      if (quadroDoCursor) {
+        window.cancelAnimationFrame(quadroDoCursor);
+        quadroDoCursor = 0;
+      }
+    };
+
     const aoMoverPonteiro = (evento: PointerEvent) => {
-      if (!mediaPonteiroFino.matches) return;
+      if (
+        zona !== "publico" ||
+        !mediaPonteiroFino.matches ||
+        mediaMovimentoReduzido.matches ||
+        document.hidden
+      ) {
+        return;
+      }
 
       cursorX = evento.clientX;
       cursorY = evento.clientY;
 
-      if (zona === "publico" && aura && quadroDoCursor === 0) {
+      if (aura && quadroDoCursor === 0) {
         quadroDoCursor = window.requestAnimationFrame(() => {
           aura.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate3d(-50%, -50%, 0)`;
           aura.dataset.visible = "true";
@@ -189,7 +211,6 @@ export function MotionSystem() {
         });
       }
 
-      if (zona !== "publico") return;
       const alvo = evento.target instanceof Element ? evento.target : null;
       const cartao = alvo?.closest<HTMLElement>("[data-cartao-produto]") ?? null;
 
@@ -220,17 +241,31 @@ export function MotionSystem() {
       cartaoAtivo = null;
     };
 
-    document.addEventListener("pointermove", aoMoverPonteiro, { passive: true });
-    document.addEventListener("pointerout", aoSairDoPonteiro, { passive: true });
+    const aoMudarVisibilidade = () => {
+      if (!document.hidden) return;
+      esconderAura();
+      limparCartao(cartaoAtivo);
+      cartaoAtivo = null;
+    };
+
+    const usaPonteiro = zona === "publico" && mediaPonteiroFino.matches;
+    if (usaPonteiro) {
+      document.addEventListener("pointermove", aoMoverPonteiro, { passive: true });
+      document.addEventListener("pointerout", aoSairDoPonteiro, { passive: true });
+      document.addEventListener("visibilitychange", aoMudarVisibilidade);
+    }
 
     return () => {
       observador.disconnect();
-      observadorDom.disconnect();
-      document.removeEventListener("pointermove", aoMoverPonteiro);
-      document.removeEventListener("pointerout", aoSairDoPonteiro);
-      if (quadroDoCursor) window.cancelAnimationFrame(quadroDoCursor);
+      observadorDom?.disconnect();
+      mediaMovimentoReduzido.removeEventListener("change", sincronizarPreferencia);
+      if (usaPonteiro) {
+        document.removeEventListener("pointermove", aoMoverPonteiro);
+        document.removeEventListener("pointerout", aoSairDoPonteiro);
+        document.removeEventListener("visibilitychange", aoMudarVisibilidade);
+      }
+      esconderAura();
       limparCartao(cartaoAtivo);
-      if (aura) delete aura.dataset.visible;
     };
   }, [pathname]);
 
