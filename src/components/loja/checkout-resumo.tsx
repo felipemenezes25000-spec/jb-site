@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
 import { ImageOff, Receipt } from "lucide-react";
 
 import { Botao } from "@/components/ui/button";
@@ -64,6 +65,32 @@ export function freteQueSoma(frete: FreteExibido | null): number {
   return frete && !frete.orcadoDepois ? frete.valorCents : 0;
 }
 
+function ValorComContinuidade({
+  chave,
+  children,
+  className,
+}: {
+  chave: string | number;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const reduzido = useReducedMotion();
+
+  return (
+    <span className={className} data-motion-commerce-value>
+      <motion.span
+        key={chave}
+        initial={reduzido ? false : { opacity: 0, y: 5, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={reduzido ? { duration: 0 } : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        className="inline-block"
+      >
+        {children}
+      </motion.span>
+    </span>
+  );
+}
+
 function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
   return (
     <ul className="divide-y divide-hairline">
@@ -114,24 +141,39 @@ function Itens({ linhas }: { linhas: LinhaCarrinho[] }) {
 
 function ValorDoFrete({ frete, carregando }: EstadoFrete) {
   if (carregando) {
-    return <dd className="text-right text-apoio text-graf-500">calculando…</dd>;
+    return (
+      <dd className="text-right text-apoio text-graf-500" aria-live="polite">
+        <ValorComContinuidade chave="carregando">calculando…</ValorComContinuidade>
+      </dd>
+    );
   }
 
   if (!frete) {
-    return <dd className="max-w-36 text-right text-apoio leading-5 text-graf-500">informe o CEP na entrega</dd>;
+    return (
+      <dd className="max-w-36 text-right text-apoio leading-5 text-graf-500" aria-live="polite">
+        <ValorComContinuidade chave="sem-frete">informe o CEP na entrega</ValorComContinuidade>
+      </dd>
+    );
   }
 
   if (frete.orcadoDepois) {
-    return <dd className="max-w-36 text-right text-apoio leading-5 text-warn-700">a combinar</dd>;
+    return (
+      <dd className="max-w-36 text-right text-apoio leading-5 text-warn-700" aria-live="polite">
+        <ValorComContinuidade chave={`orcado-${frete.rotulo}`}>a combinar</ValorComContinuidade>
+      </dd>
+    );
   }
 
   const prazo = textoDoPrazo(frete.prazoDias);
 
   return (
-    <dd className="text-right">
-      <span className={frete.valorCents === 0 ? "text-sm font-semibold text-ok-700" : "text-sm font-semibold tabular text-graf-900"}>
+    <dd className="text-right" aria-live="polite">
+      <ValorComContinuidade
+        chave={`${frete.valorCents}-${frete.prazoDias ?? 0}`}
+        className={frete.valorCents === 0 ? "text-sm font-semibold text-ok-700" : "text-sm font-semibold tabular text-graf-900"}
+      >
         {frete.valorCents === 0 ? "Sem custo" : formatarPreco(frete.valorCents)}
-      </span>
+      </ValorComContinuidade>
       {prazo ? <span className="block text-[0.75rem] leading-5 text-graf-500">{prazo}</span> : null}
     </dd>
   );
@@ -174,7 +216,12 @@ function Totais({
 
       <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-graf-200 pt-4">
         <span className="text-base font-bold text-graf-900">Total</span>
-        <span className="text-2xl font-extrabold tracking-tight tabular text-graf-950">{formatarPreco(total)}</span>
+        <ValorComContinuidade
+          chave={total}
+          className="text-2xl font-extrabold tracking-tight tabular text-graf-950"
+        >
+          {formatarPreco(total)}
+        </ValorComContinuidade>
       </div>
 
       {frete?.orcadoDepois ? (
@@ -200,7 +247,7 @@ export function ResumoCheckout({
 
   return (
     <>
-      <Cartao className="hidden overflow-hidden p-0 lg:sticky lg:top-28 lg:block">
+      <Cartao className="hidden overflow-hidden p-0 lg:sticky lg:top-28 lg:block" data-motion-checkout-summary>
         <div className="p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 className="text-lg font-extrabold text-graf-950">Resumo</h2>
@@ -229,11 +276,13 @@ export function ResumoCheckout({
         </div>
       </Cartao>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 shadow-raised backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 shadow-raised backdrop-blur lg:hidden" data-motion-checkout-mobile-summary>
         <div className="flex items-center justify-between gap-4 px-4 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
           <div className="min-w-0">
             <p className="micro text-graf-500">Total do pedido</p>
-            <p className="text-xl font-extrabold tabular leading-tight text-graf-950">{formatarPreco(total)}</p>
+            <ValorComContinuidade chave={total} className="text-xl font-extrabold tabular leading-tight text-graf-950">
+              {formatarPreco(total)}
+            </ValorComContinuidade>
           </div>
           <Botao type="button" variante="secundario" onClick={() => setGaveta(true)}>
             <Receipt className="size-4" aria-hidden />
