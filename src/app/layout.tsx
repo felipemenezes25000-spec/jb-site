@@ -14,6 +14,7 @@ import "./globals.css";
 import "./footer-alignment.css";
 import "./cabecalho.css";
 import "./motion.css";
+import "./motion-scenes.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -21,17 +22,6 @@ const manrope = Manrope({
   display: "swap",
 });
 
-/**
- * A fonte dos títulos.
- *
- * Até aqui título e corpo eram a mesma Manrope, e a hierarquia se apoiava só em
- * tamanho e peso. A Bricolage Grotesque dá ao título um desenho próprio — mais
- * estreita e de contraste maior — sem sair da família grotesca do corpo, que é
- * o que mantém a página como uma peça só.
- *
- * Só nos degraus de título. Corpo, rótulo e número continuam em Manrope: fonte
- * de display em texto corrido cansa, e a JB tem ficha técnica para ler.
- */
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-bricolage",
@@ -39,17 +29,6 @@ const display = Bricolage_Grotesque({
   axes: ["opsz"],
 });
 
-/**
- * A manuscrita do hero e do rodapé.
- *
- * Estava declarada como `"Ink Free", "Segoe Script", "Brush Script MT",
- * cursive` — nenhuma delas é webfont, todas dependem do que o visitante tem
- * instalado. No Windows saía Ink Free, no Mac caía em Brush Script e no
- * Android virava a cursiva genérica do sistema: a assinatura da marca mudava
- * de desenho conforme o aparelho de quem abria o site.
- *
- * Carregada como as outras duas, entra igual em todo lugar.
- */
 const manuscrita = Caveat({
   subsets: ["latin"],
   variable: "--font-manuscrita",
@@ -69,30 +48,6 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-/**
- * Metadados raiz.
- *
- * `use cache` porque estes valores são iguais para todo mundo — título,
- * descrição e Open Graph saem das configurações da loja. Sem ele, com Cache
- * Components ligado, a leitura em `generateMetadata` bloqueia o prerender de
- * TODA rota que herda este layout: o Next avisa que "os metadados desta rota
- * estão bloqueados" e a compilação para.
- *
- * A etiqueta é a mesma das configurações públicas, então salvar o painel
- * derruba este cache junto com o do cabeçalho.
- */
-/**
- * Os textos de SEO, vindos das configurações.
- *
- * Só strings. Um objeto `URL` não atravessa a fronteira de um escopo `use
- * cache` — ele não é serializável, e o React avisa em tempo de execução que
- * "only plain objects can be passed to Client Components". Foi exatamente o
- * que aconteceu quando `metadataBase: new URL(...)` ficou dentro do cache: o
- * build passava e o console da home reclamava.
- *
- * Por isso a divisão: o que vem do banco é cacheado aqui, em texto puro, e o
- * objeto `Metadata` é montado fora, com o `URL` construído na hora.
- */
 async function textosDoSite() {
   "use cache";
   cacheTag(ETIQUETA_CONFIGURACOES);
@@ -124,13 +79,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-/**
- * O identificador de medição configurado no painel.
- *
- * Cacheado com a mesma etiqueta das configurações: ele muda quando alguém
- * salva `/admin/configuracoes`, e não a cada requisição. Sem ele, ler as
- * configurações aqui derrubaria o prerender de todas as rotas.
- */
 async function codigoDeMedicao() {
   "use cache";
   cacheTag(ETIQUETA_CONFIGURACOES);
@@ -143,8 +91,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang="pt-BR"
-      /* o CSS define scroll-behavior: smooth; isto avisa o Next de que a
-         escolha é deliberada e não deve ser desligada na troca de rota */
       data-scroll-behavior="smooth"
       className={`${manrope.variable} ${display.variable} ${mono.variable} ${manuscrita.variable}`}
     >
@@ -152,16 +98,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         <MotionSystem />
         <Medicao identificador={await codigoDeMedicao()} />
-        {/* Seis segundos, e com um X.
-
-            O padrão do sonner são quatro, e quatro segundos é menos do que uma
-            pessoa leva para terminar de ler "Autoclave adicionada ao carrinho"
-            e decidir se clica em "Ver carrinho" — o aviso e a ação sumiam
-            juntos, antes da decisão. Seis dá tempo sem virar entulho na tela.
-
-            E `closeButton`, porque quem já leu não deveria esperar o relógio:
-            um aviso que só some sozinho é um aviso que a pessoa não controla,
-            e no celular ele cobre a barra de compra enquanto estiver lá. */}
         <Toaster
           position="bottom-right"
           richColors
