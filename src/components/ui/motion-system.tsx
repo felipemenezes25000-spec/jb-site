@@ -93,6 +93,12 @@ export function MotionSystem() {
       if (elemento.dataset.jbMotion === "true") return;
       if (elemento.closest("[data-motion-ignore]")) return;
 
+      /* Um capítulo é a unidade de coreografia. Se ele já envolve uma section,
+         revelar os dois ao mesmo tempo duplica deslocamento, blur e atraso. */
+      if (!elemento.matches("[data-motion-chapter]") && elemento.closest("[data-motion-chapter]")) {
+        return;
+      }
+
       elemento.dataset.jbMotion = "true";
       elemento.dataset.jbMotionKind = tipoDoElemento(elemento);
 
