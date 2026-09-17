@@ -1,8 +1,8 @@
 /* ============================================================================
-   JB Motion — carrinho e checkout
+   JB Motion — carrinho, checkout e decisão de compra
 
-   Aqui o movimento é funcional: mantém contexto quando preço, quantidade ou
-   etapa mudam. Não usa os efeitos cinematográficos da vitrine.
+   Aqui o movimento é funcional: mantém contexto quando preço, quantidade,
+   etapa ou comparação mudam. Não usa os efeitos cinematográficos da vitrine.
    ============================================================================ */
 
 /* Carrinho ----------------------------------------------------------------- */
@@ -20,7 +20,6 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"]
   transform: scale(1.018);
 }
 
-/* O resumo fica visualmente ancorado enquanto a lista à esquerda muda. */
 html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] {
   animation: jb-commerce-summary-in 420ms var(--jb-motion-ease) 80ms both;
 }
@@ -34,15 +33,11 @@ html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] :where
 
 /* Checkout ----------------------------------------------------------------- */
 
-/* As etapas já continuam montadas por acessibilidade e preservação dos campos.
-   Quando `hidden` sai, o bloco recebe esta entrada curta. */
 html[data-motion-scene="checkout"] main form section:not([hidden]) {
   animation: jb-checkout-step-in 360ms var(--jb-motion-ease-spring) both;
   transform-origin: 0 0;
 }
 
-/* Opções escolhidas (entrega, pagamento, identificação) respondem como uma
-   peça física, mas sem deslocar o restante do formulário. */
 html[data-motion-scene="checkout"] main form label:has(input:checked) {
   transition:
     border-color 220ms ease,
@@ -56,16 +51,13 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"]
   transform: translate3d(0, -1px, 0);
 }
 
-/* O passo ativo recebe um pulso único de leitura. O seletor é defensivo para
-   funcionar tanto com aria-current quanto com data-state caso o componente de
-   passos evolua. */
 html[data-motion-scene="checkout"]
   :where([aria-current="step"], [data-state="current"], [data-state="active"])
   :where(span, svg) {
   animation: jb-checkout-active 420ms var(--jb-motion-ease-spring) both;
 }
 
-/* Comparador --------------------------------------------------------------- */
+/* Comparador flutuante ----------------------------------------------------- */
 
 [data-motion-compare-bar] {
   transform-origin: 50% 100%;
@@ -83,6 +75,76 @@ html[data-motion-scene="checkout"]
   background: radial-gradient(ellipse, rgb(224 20 27 / 0.08), transparent 68%);
   filter: blur(10px);
   opacity: 0.7;
+}
+
+/* Página de comparação ---------------------------------------------------- */
+
+/* As colunas entram como instrumentos colocados lado a lado. A primeira
+   coluna é o nome do atributo e fica parada: ela é a régua da comparação. */
+html[data-motion-scene="comparador"] main table thead th:not(:first-child) {
+  opacity: 0;
+  animation: jb-compare-column 540ms var(--jb-motion-ease-spring) both;
+}
+
+html[data-motion-scene="comparador"] main table thead th:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+html[data-motion-scene="comparador"] main table thead th:nth-child(3) {
+  animation-delay: 115ms;
+}
+
+html[data-motion-scene="comparador"] main table thead th:nth-child(4) {
+  animation-delay: 170ms;
+}
+
+/* Uma diferença não vira uma linha rosa inteira. Só ganha uma pequena marca de
+   leitura na régua, suficiente para o olho localizar onde algo realmente muda. */
+html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child {
+  position: relative;
+  padding-left: 0.75rem;
+}
+
+html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child::before {
+  content: "";
+  position: absolute;
+  top: 1.15rem;
+  left: 0;
+  width: 3px;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: var(--color-jb-500);
+  opacity: 0.72;
+  transform: scaleY(0.25);
+  transform-origin: 50% 0;
+}
+
+@supports (animation-timeline: view()) {
+  html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child::before {
+    animation: jb-compare-marker linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 20%;
+  }
+}
+
+html[data-motion-scene="comparador"] main tbody tr {
+  transition: background-color 180ms ease;
+}
+
+html[data-motion-scene="comparador"][data-motion-pointer="fine"] main tbody tr:hover {
+  background: color-mix(in srgb, var(--color-jb-50) 36%, transparent);
+}
+
+html[data-motion-scene="comparador"] main table [data-palco-imagem-produto] {
+  transition:
+    transform 420ms var(--jb-motion-ease-spring),
+    box-shadow 420ms var(--jb-motion-ease);
+}
+
+html[data-motion-scene="comparador"][data-motion-pointer="fine"]
+  main table th:hover [data-palco-imagem-produto] {
+  transform: translate3d(0, -3px, 0) scale(1.012);
+  box-shadow: 0 18px 40px -30px rgb(26 28 30 / 0.42);
 }
 
 @keyframes jb-commerce-summary-in {
@@ -118,18 +180,42 @@ html[data-motion-scene="checkout"]
   }
 }
 
+@keyframes jb-compare-column {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.988);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes jb-compare-marker {
+  from { opacity: 0.18; transform: scaleY(0.25); }
+  to { opacity: 0.72; transform: scaleY(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"],
   html[data-motion-scene="checkout"] main form section:not([hidden]),
   html[data-motion-scene="checkout"]
     :where([aria-current="step"], [data-state="current"], [data-state="active"])
-    :where(span, svg) {
+    :where(span, svg),
+  html[data-motion-scene="comparador"] main table thead th:not(:first-child) {
     animation: none !important;
     transform: none !important;
+    filter: none !important;
     opacity: 1 !important;
   }
 
   [data-motion-compare-bar]::before {
     display: none;
+  }
+
+  html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child::before {
+    transform: none !important;
   }
 }
