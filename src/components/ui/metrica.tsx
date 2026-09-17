@@ -73,6 +73,7 @@ export function CartaoMetrica({
         {Icone ? (
           <span
             aria-hidden
+            data-motion-metric-icon
             className={cn(
               "flex size-11 shrink-0 items-center justify-center rounded-full shadow-[0_3px_10px_-8px_rgba(18,24,35,0.35)] ring-1 ring-inset",
               cores.selo,
@@ -85,7 +86,7 @@ export function CartaoMetrica({
         <div className="min-w-0 flex-1">
           <p className="text-[0.8rem] font-semibold leading-snug text-graf-600">{rotulo}</p>
           <p className={cn("tabular mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-1", cores.valor)}>
-            <span className="text-[1.72rem] font-extrabold leading-none tracking-[-0.045em]">{valor}</span>
+            <span data-motion-metric-value className="text-[1.72rem] font-extrabold leading-none tracking-[-0.045em]">{valor}</span>
             {unidade ? <span className="text-[0.78rem] font-semibold text-graf-500">{unidade}</span> : null}
           </p>
           {detalhe ? <p className="mt-2 text-[0.78rem] leading-relaxed text-graf-500">{detalhe}</p> : null}
@@ -108,11 +109,12 @@ export function CartaoMetrica({
     className,
   );
 
-  if (!href) return <div className={base}>{conteudo}</div>;
+  if (!href) return <div data-motion-metric className={base}>{conteudo}</div>;
 
   return (
     <Link
       href={href}
+      data-motion-metric
       className={cn(
         base,
         "group transition-[transform,box-shadow,border-color] duration-200",
@@ -127,7 +129,10 @@ export function CartaoMetrica({
 
 export function GradeMetricas({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:gap-3.5", className)}>
+    <div
+      data-motion-metric-grid
+      className={cn("grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:gap-3.5", className)}
+    >
       {children}
     </div>
   );
