@@ -10,6 +10,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Scale, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -193,63 +194,90 @@ export function BotaoComparar({
 export function BarraComparar() {
   const { itens, remover, limpar } = useComparador();
   const pathname = usePathname();
+  const movimentoReduzido = useReducedMotion();
+  const mostrar = itens.length > 0 && !pathname.startsWith("/comparar");
 
-  if (itens.length === 0 || pathname.startsWith("/comparar")) return null;
+  const transicao = movimentoReduzido
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 460, damping: 38, mass: 0.72 };
 
   return (
-    <div
-      className="pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4"
-      style={{ bottom: "calc(1rem + var(--jb-barra-inferior, 0px))" }}
-    >
-      <div className="pointer-events-auto flex w-full max-w-3xl flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-graf-200 bg-white p-2.5 shadow-pop sm:flex-nowrap">
-        <span className="flex shrink-0 items-center gap-2 pl-1.5 text-apoio font-bold uppercase tracking-[0.08em] text-graf-500">
-          <Scale className="size-4 text-jb-600" aria-hidden />
-          Comparar
-        </span>
-
-        <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-          {itens.map((item) => (
-            <li key={item.slug}>
-              <span className="flex max-w-56 items-center gap-1 rounded-full border border-graf-200 bg-graf-50 py-1 pl-3 pr-1 text-apoio font-semibold text-graf-800">
-                <span className="truncate">{item.nome}</span>
-                <button
-                  type="button"
-                  onClick={() => remover(item.slug)}
-                  aria-label={`Tirar ${item.nome} da comparação`}
-                  className="foco-jb flex size-6 shrink-0 items-center justify-center rounded-full text-graf-500 transition-colors hover:bg-graf-200 hover:text-graf-900 pointer-coarse:size-11"
-                >
-                  <X className="size-3.5" aria-hidden />
-                </button>
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="flex shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            onClick={limpar}
-            className="foco-jb hidden min-h-11 items-center rounded-lg px-2.5 text-apoio font-semibold text-graf-500 transition-colors hover:bg-graf-50 hover:text-graf-800 sm:inline-flex"
+    <AnimatePresence initial={false}>
+      {mostrar ? (
+        <motion.div
+          key="barra-comparar"
+          data-motion-compare-bar
+          initial={movimentoReduzido ? false : { opacity: 0, y: 22, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={movimentoReduzido ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.985 }}
+          transition={transicao}
+          className="pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4"
+          style={{ bottom: "calc(1rem + var(--jb-barra-inferior, 0px))" }}
+        >
+          <motion.div
+            layout={!movimentoReduzido}
+            transition={{ layout: transicao }}
+            className="pointer-events-auto flex w-full max-w-3xl flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-graf-200 bg-white p-2.5 shadow-pop sm:flex-nowrap"
           >
-            Limpar
-          </button>
-          <Link
-            href={hrefDaComparacao(itens)}
-            className={cn(
-              "foco-jb inline-flex min-h-11 items-center rounded-lg px-4 text-[0.875rem] font-bold transition-colors duration-150",
-              itens.length < 2
-                ? "bg-graf-100 text-graf-500"
-                : "bg-jb-500 text-white hover:bg-jb-600",
-            )}
-            aria-disabled={itens.length < 2}
-            onClick={(evento) => {
-              if (itens.length < 2) evento.preventDefault();
-            }}
-          >
-            {itens.length < 2 ? "Escolha mais um" : `Comparar ${itens.length}`}
-          </Link>
-        </div>
-      </div>
-    </div>
+            <span className="flex shrink-0 items-center gap-2 pl-1.5 text-apoio font-bold uppercase tracking-[0.08em] text-graf-500">
+              <Scale className="size-4 text-jb-600" aria-hidden />
+              Comparar
+            </span>
+
+            <motion.ul layout={!movimentoReduzido} className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+              <AnimatePresence initial={false} mode="popLayout">
+                {itens.map((item) => (
+                  <motion.li
+                    layout={!movimentoReduzido}
+                    key={item.slug}
+                    initial={movimentoReduzido ? false : { opacity: 0, scale: 0.9, x: -8 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={movimentoReduzido ? { opacity: 0 } : { opacity: 0, scale: 0.88, x: 8 }}
+                    transition={transicao}
+                  >
+                    <span className="flex max-w-56 items-center gap-1 rounded-full border border-graf-200 bg-graf-50 py-1 pl-3 pr-1 text-apoio font-semibold text-graf-800">
+                      <span className="truncate">{item.nome}</span>
+                      <button
+                        type="button"
+                        onClick={() => remover(item.slug)}
+                        aria-label={`Tirar ${item.nome} da comparação`}
+                        className="foco-jb flex size-6 shrink-0 items-center justify-center rounded-full text-graf-500 transition-colors hover:bg-graf-200 hover:text-graf-900 pointer-coarse:size-11"
+                      >
+                        <X className="size-3.5" aria-hidden />
+                      </button>
+                    </span>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </motion.ul>
+
+            <motion.div layout={!movimentoReduzido} transition={{ layout: transicao }} className="flex shrink-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={limpar}
+                className="foco-jb hidden min-h-11 items-center rounded-lg px-2.5 text-apoio font-semibold text-graf-500 transition-colors hover:bg-graf-50 hover:text-graf-800 sm:inline-flex"
+              >
+                Limpar
+              </button>
+              <Link
+                href={hrefDaComparacao(itens)}
+                className={cn(
+                  "foco-jb inline-flex min-h-11 items-center rounded-lg px-4 text-[0.875rem] font-bold transition-colors duration-150",
+                  itens.length < 2
+                    ? "bg-graf-100 text-graf-500"
+                    : "bg-jb-500 text-white hover:bg-jb-600",
+                )}
+                aria-disabled={itens.length < 2}
+                onClick={(evento) => {
+                  if (itens.length < 2) evento.preventDefault();
+                }}
+              >
+                {itens.length < 2 ? "Escolha mais um" : `Comparar ${itens.length}`}
+              </Link>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
