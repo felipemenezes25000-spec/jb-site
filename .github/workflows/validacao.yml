@@ -159,10 +159,14 @@ jobs:
     # que já tinha rodado.
     #
     # Agora roda onde a resposta muda uma decisão: no pull_request, antes de
-    # entrar, e no push para main, depois de entrar. Push em branch de trabalho
-    # continua com lint, tipos, unitários, build e atomicidade — que é o
-    # retorno rápido que se quer enquanto se escreve.
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    # entrar, e no push para main, depois de entrar. Em branch de trabalho ele
+    # também pode ser solicitado explicitamente colocando `[full-ci]` na
+    # mensagem do commit. Assim a exceção é visível e não volta a queimar
+    # minutos em cada ajuste pequeno.
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.ref == 'refs/heads/main' ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[full-ci]'))
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v5
