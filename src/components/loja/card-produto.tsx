@@ -15,7 +15,6 @@ import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
 export type ProdutoCard = {
-  /** Chave do produto — usada por quem precisa agir sobre ele (guardar, etc.). */
   id: string;
   slug: string;
   name: string;
@@ -30,14 +29,11 @@ export type ProdutoCard = {
   brandName: string | null;
   imageUrl: string | null;
   imageAlt: string;
-  /** Só o catálogo traz: dois atributos que decidem, lidos da ficha. */
   destaques?: DestaqueTecnico[];
-  /** Fallback da linha da marca quando o produto não tem marca cadastrada. */
   categoryName?: string | null;
 };
 
 export type { Parcelamento };
-
 export type VarianteDoCartao = "grade" | "trilho";
 
 export const CONDICAO = {
@@ -69,9 +65,7 @@ export function CardProduto({
   variante?: VarianteDoCartao;
   prioridade?: boolean;
   parcelamento?: Parcelamento;
-  /** Já guardado por quem está logado. */
   favoritado?: boolean;
-  /** Endereço desta listagem, para o formulário de favorito voltar para cá. */
   voltar?: string;
   nivelDoTitulo?: "h2" | "h3";
   className?: string;
@@ -196,49 +190,61 @@ export function CardProduto({
             <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", corDoEstado.ponto)} />
             {claims.disponibilidade.texto}
           </p>
-        </div>
 
-        <div className="relative z-10 mt-4 flex items-center gap-2 border-t border-graf-100 pt-3">
-          {podeComprar ? (
-            <form action={adicionarAoCarrinhoDoCartao} className="min-w-0 flex-1">
-              <input type="hidden" name="produtoId" value={produto.id} />
-              <BotaoEnvio
-                pendente="Adicionando..."
-                className="relative z-10 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-jb-500 px-3 text-apoio font-bold text-white transition-colors hover:bg-jb-600"
-              >
-                <ShoppingCart className="size-4" aria-hidden />
-                Comprar
-              </BotaoEnvio>
-            </form>
-          ) : (
-            <Link
-              href={`/loja/${produto.slug}`}
-              className="relative z-10 inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-graf-450 px-3 text-apoio font-bold text-graf-900 hover:border-jb-500 hover:text-jb-700"
-            >
-              Ver detalhes
-              <ArrowRight className="size-4" aria-hidden />
-            </Link>
-          )}
-
-          <BotaoComparar produtoId={produto.id} />
-
-          <form action={alternarFavorito}>
-            <input type="hidden" name="produtoId" value={produto.id} />
-            {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
-            <button
-              type="submit"
-              aria-label={favoritado ? `Remover ${produto.name} dos favoritos` : `Favoritar ${produto.name}`}
-              aria-pressed={favoritado}
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <span
+              aria-hidden
               className={cn(
-                "relative z-10 inline-flex size-11 items-center justify-center rounded-lg border transition-colors",
-                favoritado
-                  ? "border-jb-200 bg-jb-50 text-jb-700"
-                  : "border-graf-450 text-graf-700 hover:border-jb-500 hover:text-jb-700",
+                "inline-flex h-11 min-w-[8.5rem] flex-1 items-center justify-center gap-2 px-3 whitespace-nowrap",
+                "rounded-lg border border-graf-200 text-apoio font-bold text-graf-950",
+                "transition-colors group-hover:border-jb-500 group-hover:text-jb-700",
+                esgotado && "text-graf-500 group-hover:border-graf-200 group-hover:text-graf-500",
               )}
             >
-              <Heart className={cn("size-4", favoritado && "fill-current")} aria-hidden />
-            </button>
-          </form>
+              {claims.chamada}
+              <ArrowRight className="size-3.5 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5 motion-reduce:transform-none" />
+            </span>
+
+            {podeComprar ? (
+              <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
+                <input type="hidden" name="produtoId" value={produto.id} />
+                <input type="hidden" name="quantidade" value="1" />
+                <BotaoEnvio
+                  aria-label={`Adicionar ${produto.name} ao carrinho`}
+                  className="foco-jb grid size-11 shrink-0 place-items-center rounded-lg border border-graf-200 bg-white text-graf-800 transition-colors hover:border-jb-500 hover:text-jb-700 disabled:opacity-70"
+                >
+                  <ShoppingCart className="size-4" aria-hidden />
+                </BotaoEnvio>
+              </form>
+            ) : null}
+
+            <form action={alternarFavorito} className="relative z-10">
+              <input type="hidden" name="produtoId" value={produto.id} />
+              {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
+              <BotaoEnvio
+                aria-pressed={favoritado}
+                aria-label={
+                  favoritado
+                    ? `Remover ${produto.name} dos favoritos`
+                    : `Guardar ${produto.name} nos favoritos`
+                }
+                className={cn(
+                  "foco-jb grid size-11 shrink-0 place-items-center rounded-lg border transition-colors disabled:opacity-70",
+                  favoritado
+                    ? "border-jb-500 bg-jb-50 text-jb-700"
+                    : "border-graf-200 text-graf-700 hover:border-jb-500 hover:text-jb-700",
+                )}
+              >
+                <Heart className={cn("size-4", favoritado && "fill-current")} aria-hidden />
+              </BotaoEnvio>
+            </form>
+
+            <BotaoComparar
+              slug={produto.slug}
+              nome={produto.name}
+              className="relative z-10 size-11 shrink-0 rounded-lg border-graf-200 bg-white"
+            />
+          </div>
         </div>
       </div>
     </article>
