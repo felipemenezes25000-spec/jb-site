@@ -6,12 +6,14 @@ import { cacheLife, cacheTag } from "next/cache";
 
 import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { Medicao } from "@/components/analytics/medicao";
+import { MotionSystem } from "@/components/ui/motion-system";
 import { SITE_URL } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 
 import "./globals.css";
 import "./footer-alignment.css";
 import "./cabecalho.css";
+import "./motion.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -148,6 +150,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <body className="antialiased">
         {children}
+        <MotionSystem />
         <Medicao identificador={await codigoDeMedicao()} />
         {/* Seis segundos, e com um X.
 
