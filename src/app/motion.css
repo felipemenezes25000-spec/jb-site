@@ -1,0 +1,335 @@
+/* ============================================================================
+   JB Motion System
+
+   Movimento aqui tem três papéis:
+   1. orientar — entrada de rota, progresso de leitura e mudança de contexto;
+   2. responder — hover, pressão e profundidade em superfícies interativas;
+   3. assinar — a luz vermelha da JB acompanha a navegação sem competir com o
+      conteúdo.
+
+   O HTML do servidor nunca depende destas regras para ficar visível. Os
+   estados `espera` só são aplicados depois da hidratação pelo MotionSystem.
+   ============================================================================ */
+
+:root {
+  --jb-motion-fast: 160ms;
+  --jb-motion-base: 320ms;
+  --jb-motion-slow: 720ms;
+  --jb-motion-cinematic: 980ms;
+  --jb-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --jb-motion-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* A linha fina é o metrônomo da página. Ela lê a rolagem sem JS nos
+   navegadores que suportam scroll-driven animations; nos demais fica oculta. */
+.jb-motion-progress {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--color-jb-700), var(--color-jb-400), var(--color-jb-700));
+  box-shadow: 0 0 16px rgb(224 20 27 / 0.34);
+  opacity: 0;
+}
+
+@supports (animation-timeline: scroll()) {
+  .jb-motion-progress {
+    opacity: 1;
+    animation: jb-motion-progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+/* Assinatura de troca de rota: um feixe curto atravessa o topo e some. O key
+   no componente faz a animação reiniciar a cada pathname, sem estado extra. */
+.jb-motion-route-beam {
+  position: fixed;
+  z-index: 1001;
+  top: 0;
+  left: 0;
+  width: min(32vw, 30rem);
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--color-jb-400) 34%, #fff 62%, transparent);
+  filter: drop-shadow(0 0 8px rgb(224 20 27 / 0.6));
+  transform: translate3d(-130%, 0, 0);
+  animation: jb-motion-route 760ms var(--jb-motion-ease) both;
+}
+
+/* Aura de ponteiro — só existe na área pública, em ponteiro fino, e é baixa o
+   suficiente para o branco continuar branco. A intenção é dar profundidade ao
+   espaço, não pintar a página de vermelho. */
+.jb-motion-aura {
+  position: fixed;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, rgb(224 20 27 / 0.075) 0%, rgb(224 20 27 / 0.028) 38%, transparent 70%);
+  filter: blur(12px);
+  will-change: transform, opacity;
+  transition: opacity 420ms ease;
+}
+
+html[data-motion-zone="publico"][data-motion-pointer="fine"] .jb-motion-aura[data-visible="true"] {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Revelação por contexto
+   -------------------------------------------------------------------------- */
+
+html[data-motion-enhanced="true"] [data-jb-motion="true"] {
+  --jb-motion-x: 0px;
+  --jb-motion-y: 18px;
+  --jb-motion-scale: 0.992;
+  --jb-motion-rotate: 0deg;
+  transition:
+    opacity var(--jb-motion-slow) var(--jb-motion-ease) var(--jb-motion-delay, 0ms),
+    transform var(--jb-motion-cinematic) var(--jb-motion-ease-spring) var(--jb-motion-delay, 0ms),
+    filter var(--jb-motion-slow) var(--jb-motion-ease) var(--jb-motion-delay, 0ms),
+    clip-path var(--jb-motion-cinematic) var(--jb-motion-ease) var(--jb-motion-delay, 0ms);
+}
+
+html[data-motion-enhanced="true"] [data-jb-motion-state="espera"] {
+  opacity: 0;
+  transform:
+    translate3d(var(--jb-motion-x), var(--jb-motion-y), 0)
+    scale(var(--jb-motion-scale))
+    rotate(var(--jb-motion-rotate));
+  filter: blur(5px);
+  clip-path: inset(0 0 7% 0 round 18px);
+}
+
+html[data-motion-enhanced="true"] [data-jb-motion-state="visivel"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  filter: blur(0);
+  clip-path: inset(0 0 0 0 round 0);
+}
+
+/* Seções alternam levemente a direção. O efeito só é perceptível no começo da
+   entrada e elimina a sensação de template em que tudo simplesmente sobe. */
+html[data-motion-zone="publico"] [data-jb-motion-kind="secao"]:nth-of-type(3n + 1) {
+  --jb-motion-x: -10px;
+  --jb-motion-y: 24px;
+  --jb-motion-rotate: -0.18deg;
+}
+
+html[data-motion-zone="publico"] [data-jb-motion-kind="secao"]:nth-of-type(3n + 2) {
+  --jb-motion-x: 10px;
+  --jb-motion-y: 24px;
+  --jb-motion-rotate: 0.18deg;
+}
+
+html[data-motion-zone="publico"] [data-jb-motion-kind="produto"] {
+  --jb-motion-y: 24px;
+  --jb-motion-scale: 0.975;
+}
+
+/* Checkout e áreas operacionais continuam com linguagem JB, mas sem cinema no
+   meio de uma tarefa. */
+html:is([data-motion-zone="checkout"], [data-motion-zone="clinica"], [data-motion-zone="admin"], [data-motion-zone="acesso"])
+  [data-jb-motion="true"] {
+  --jb-motion-y: 8px;
+  --jb-motion-scale: 0.996;
+  transition-duration: 220ms, 360ms, 220ms, 360ms;
+}
+
+html:is([data-motion-zone="checkout"], [data-motion-zone="clinica"], [data-motion-zone="admin"], [data-motion-zone="acesso"])
+  [data-jb-motion-state="espera"] {
+  filter: none;
+  clip-path: none;
+}
+
+/* --------------------------------------------------------------------------
+   Cartão de produto — profundidade direcional
+   -------------------------------------------------------------------------- */
+
+html[data-motion-zone="publico"][data-motion-pointer="fine"] [data-cartao-produto] {
+  --jb-pointer-x: 50%;
+  --jb-pointer-y: 50%;
+  --jb-tilt-x: 0deg;
+  --jb-tilt-y: 0deg;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* O brilho é preso ao cartão e segue o ponteiro. Ele usa a cor da marca com
+   opacidade baixa, então continua funcionando sobre foto branca e sobre texto. */
+html[data-motion-zone="publico"][data-motion-pointer="fine"] [data-cartao-produto]::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  background:
+    radial-gradient(
+      28rem circle at var(--jb-pointer-x) var(--jb-pointer-y),
+      rgb(224 20 27 / 0.11),
+      rgb(224 20 27 / 0.035) 28%,
+      transparent 58%
+    );
+  transition: opacity 340ms ease;
+}
+
+html[data-motion-zone="publico"][data-motion-pointer="fine"]
+  [data-cartao-produto][data-jb-tilt="true"] {
+  transform:
+    perspective(1100px)
+    translate3d(0, -5px, 0)
+    rotateX(var(--jb-tilt-x))
+    rotateY(var(--jb-tilt-y));
+  border-color: color-mix(in srgb, var(--color-jb-500) 24%, var(--color-graf-200));
+  box-shadow:
+    0 18px 44px -28px rgb(26 28 30 / 0.48),
+    0 8px 30px -24px rgb(224 20 27 / 0.26);
+  transition:
+    transform 140ms ease-out,
+    border-color 320ms ease,
+    box-shadow 420ms var(--jb-motion-ease);
+}
+
+html[data-motion-zone="publico"][data-motion-pointer="fine"]
+  [data-cartao-produto][data-jb-tilt="true"]::before {
+  opacity: 1;
+}
+
+/* A imagem avança um plano quando o cartão inclina. Parece profundidade real,
+   mas continua transform-only e não força layout. */
+html[data-motion-zone="publico"][data-motion-pointer="fine"]
+  [data-cartao-produto][data-jb-tilt="true"] [data-imagem-produto] {
+  transform: translateZ(18px) scale(1.045);
+}
+
+/* --------------------------------------------------------------------------
+   Controles — resposta física sem trocar a personalidade visual
+   -------------------------------------------------------------------------- */
+
+html[data-motion-enhanced="true"]
+  :where(button, a)
+  :where(svg) {
+  transition: transform var(--jb-motion-base) var(--jb-motion-ease);
+}
+
+html[data-motion-zone="publico"]
+  :where(button, a):not([aria-disabled="true"]):active {
+  transition-duration: 90ms;
+}
+
+html[data-motion-zone="publico"]
+  :where(button, a[class*="bg-jb-"], .botao-jb, .botao-osso):not([aria-disabled="true"]):active {
+  transform: scale(0.985);
+}
+
+html[data-motion-zone="publico"]
+  :where(a, button):hover > svg:last-child {
+  transform: translate3d(2px, 0, 0);
+}
+
+/* O foco continua sendo o foco do design system; motion não o substitui. */
+html[data-motion-enhanced="true"] :where(button, a, input, select, textarea) {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: var(--jb-motion-fast);
+  transition-timing-function: ease-out;
+}
+
+/* Dialogs e drawers entram com pequena sensação de massa, útil tanto no site
+   público quanto no painel. */
+html[data-motion-enhanced="true"] [data-jb-motion-kind="dialogo"][data-jb-motion-state="visivel"] {
+  animation: jb-motion-dialogo 420ms var(--jb-motion-ease-spring) both;
+}
+
+/* --------------------------------------------------------------------------
+   Keyframes
+   -------------------------------------------------------------------------- */
+
+@keyframes jb-motion-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes jb-motion-route {
+  0% {
+    opacity: 0;
+    transform: translate3d(-130%, 0, 0) scaleX(0.7);
+  }
+  16% { opacity: 1; }
+  72% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate3d(430%, 0, 0) scaleX(1.15);
+  }
+}
+
+@keyframes jb-motion-dialogo {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.985);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Acessibilidade, impressão e dispositivos sem hover
+   -------------------------------------------------------------------------- */
+
+@media (hover: none), (pointer: coarse) {
+  .jb-motion-aura {
+    display: none;
+  }
+
+  html[data-motion-enhanced="true"] [data-cartao-produto] {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-motion-progress,
+  .jb-motion-route-beam,
+  .jb-motion-aura {
+    display: none !important;
+  }
+
+  html[data-motion-enhanced="true"] [data-jb-motion="true"],
+  html[data-motion-enhanced="true"] [data-cartao-produto],
+  html[data-motion-enhanced="true"] [data-imagem-produto] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+    opacity: 1 !important;
+  }
+}
+
+@media print {
+  .jb-motion-progress,
+  .jb-motion-route-beam,
+  .jb-motion-aura {
+    display: none !important;
+  }
+
+  [data-jb-motion="true"] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+  }
+}
