@@ -14,45 +14,7 @@ import { formatarPreco, semQuebraNaUnidade } from "@/lib/format";
 import { imagemProdutoSemFundo } from "@/lib/imagem-produto";
 import { cn } from "@/lib/utils";
 
-/* ============================================================================
-   O cartão de produto da loja — um só
-
-   Havia três: `CardProduto` (favoritos e "você viu recentemente"),
-   `CardVitrine` (home e carrinho) e `CardProdutoMarketplace` (catálogo). 828
-   linhas para desenhar o mesmo produto, a partir das mesmas colunas.
-
-   Não eram três desenhos: eram três cópias com divergências que ninguém
-   decidiu. Medidas, na mesma seladora, no mesmo minuto:
-
-     · a parcela saía "12x R$ 123,33", "12x de R$ 123,33 sem juros" e
-       "12× de R$ 123,33 sem juros";
-     · sob orçamento virava "A equipe responde com prazo" num e "Preço e prazo
-       com a equipe JB" nos outros dois;
-     · a tarja "Vendido" sobre a foto existia na home e na conta — e não no
-       catálogo, que é justamente a lista onde mais se varre foto;
-     · o favorito existia no catálogo e na conta, e não na home;
-     · o nome do produto era `h2` no catálogo e `h3` nos outros dois, na mesma
-       página em que o título da seção também é `h2`;
-     · e a moldura era escrita de três jeitos — `.placa`, `.card` do módulo do
-       marketplace e um punhado de classes soltas — para chegar no mesmo
-       branco com borda `graf-200` e canto de 12px.
-
-   As FRASES foram para `@/domain/catalogo/cartao`, com a disponibilidade que
-   já morava no domínio. Aqui ficou o desenho, e ele tem duas variantes que são
-   diferença de verdade:
-
-     · **`grade`** — foto quadrada com folga, em grade de 2 a 4 colunas. É o
-       catálogo e a conta, onde o cartão é item de lista.
-     · **`trilho`** — foto 3:2 no celular e 4:3 do `sm` para cima, ocupando a
-       largura toda da moldura. É a home e o carrinho, onde abaixo de `sm` os
-       cartões andam num trilho horizontal e a foto é o que convida a arrastar.
-
-   O resto — etiqueta de condição, selo de desconto, preço, pagamento, estado
-   do estoque, linha de ações — é igual, porque sempre deveria ter sido.
-   ============================================================================ */
-
 export type ProdutoCard = {
-  /** Chave do produto — usada por quem precisa agir sobre ele (guardar, etc.). */
   id: string;
   slug: string;
   name: string;
@@ -67,9 +29,7 @@ export type ProdutoCard = {
   brandName: string | null;
   imageUrl: string | null;
   imageAlt: string;
-  /** Só o catálogo traz: dois atributos que decidem, lidos da ficha. */
   destaques?: DestaqueTecnico[];
-  /** Fallback da linha da marca quando o produto não tem marca cadastrada. */
   categoryName?: string | null;
 };
 
@@ -84,7 +44,6 @@ export const CONDICAO = {
   recondicionado: { rotulo: "Recondicionado JB", tom: "alerta" as const },
 };
 
-/* O tom vem do domínio; a cor é decisão deste cartão. */
 const COR_DA_DISPONIBILIDADE: Record<TomDaDisponibilidade, { texto: string; ponto: string }> = {
   esgotado: { texto: "text-graf-500", ponto: "bg-graf-400" },
   unico: { texto: "text-jb-700", ponto: "bg-jb-500" },
@@ -107,17 +66,8 @@ export function CardProduto({
   variante?: VarianteDoCartao;
   prioridade?: boolean;
   parcelamento?: Parcelamento;
-  /** Já guardado por quem está logado. */
   favoritado?: boolean;
-  /** Endereço desta listagem, para o formulário de favorito voltar para cá. */
   voltar?: string;
-  /**
-   * O degrau do nome do produto na página que hospeda o cartão.
-   *
-   * `h3` é o padrão porque o cartão quase sempre mora dentro de uma seção que
-   * já tem `h2`. O catálogo usava `h2` e ficava irmão do título da própria
-   * lista — quem navega por cabeçalho via 24 itens no mesmo nível da seção.
-   */
   nivelDoTitulo?: "h2" | "h3";
   className?: string;
 }) {
@@ -132,14 +82,8 @@ export function CardProduto({
 
   return (
     <article
-      /* O gancho de quem mede a loja por fora — testes e auditorias — para
-         achar "um cartão de produto" sem depender de classe de layout.
-         Chamava-se `data-marketplace-card` e ficava só no cartão do catálogo;
-         agora existe um cartão só, e o nome dele não é mais "marketplace". */
       data-cartao-produto
-      /* `placa` é a superfície do design system — branca, borda `graf-200`,
-         canto de 12px. Era o que as três molduras tentavam ser, cada uma com
-         a própria escrita. */
+      data-motion-product-card
       className={cn(
         "placa group relative isolate flex flex-col overflow-hidden",
         "transition-[border-color,box-shadow,transform] duration-200 ease-out-quint",
@@ -151,14 +95,11 @@ export function CardProduto({
     >
       <div
         data-palco-imagem-produto
-        /* Branco chapado nas duas variantes. O degradê rosado que existia aqui
-           aparecia por baixo de recortes que já são transparentes. */
         className={cn(
           "relative overflow-hidden bg-surface",
           noTrilho ? "aspect-3/2 max-h-72 sm:aspect-4/3" : "p-4",
         )}
       >
-        {/* A foto apresenta a condição; a oferta fica junto do preço. */}
         <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
           <Etiqueta tom={condicao.tom}>{condicao.rotulo}</Etiqueta>
         </div>
@@ -192,9 +133,6 @@ export function CardProduto({
           </div>
         )}
 
-        {/* A tarja faltava no catálogo — a lista onde mais se varre foto era a
-            única que não avisava sobre a foto. `aria-hidden` porque a linha de
-            estado logo abaixo já diz a mesma coisa para quem não vê a tarja. */}
         {claims.faixaDeEsgotado ? (
           <p
             aria-hidden
@@ -221,9 +159,6 @@ export function CardProduto({
           </Link>
         </Titulo>
 
-        {/* Dois atributos que decidem, quando a lista os carrega; o modelo
-            quando não. As duas coisas ocupam a mesma faixa do cartão, então a
-            grade não muda de altura de uma lista para a outra. */}
         {destaques.length > 0 ? (
           <dl className="mt-3 grid gap-1.5 border-t border-graf-100 pt-3">
             {destaques.map((item) => (
@@ -250,86 +185,55 @@ export function CardProduto({
           </div>
 
           <p className="numero text-[1.45rem] leading-8 text-graf-950">{claims.preco}</p>
-
           <p className="micro tabular min-h-5 truncate text-graf-500">{claims.pagamento}</p>
 
           <p className={cn("micro mt-2.5 flex items-center gap-1.5", corDoEstado.texto)}>
             <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", corDoEstado.ponto)} />
             {claims.disponibilidade.texto}
           </p>
+        </div>
 
-          {/* Linha de ações.
-
-              O destino continua sendo o cartão inteiro: o `after:inset-0` do
-              título cobre tudo. Por isso o convite é decorativo — repetir o
-              mesmo endereço como âncora duplicaria o item na lista de links de
-              quem navega por teclado. Os controles que fazem OUTRA coisa
-              (carrinho, favorito, comparar) sobem para `z-10`, senão o clique
-              neles cairia na camada do cartão e abriria a ficha.
-
-              Explorar o produto é a ação principal da grade. Os controles
-              auxiliares ficam neutros e mantêm seus alvos de 44px.
-
-              `flex-wrap` + `shrink-0`: a 320px o cartão do trilho mede 250px,
-              e três controles numa linha só espremiam o de comparar de 44 para
-              18px — abaixo do alvo mínimo da WCAG 2.5.8, que o portão
-              `responsivo` pega. */}
-          <div className="mt-3.5 flex flex-wrap items-center gap-2">
-            <span
-              aria-hidden
-              className={cn(
-                "inline-flex h-11 min-w-[8.5rem] flex-1 items-center justify-center gap-2 px-3 whitespace-nowrap",
-                "rounded-lg border border-graf-200 text-apoio font-bold text-graf-950",
-                "transition-colors group-hover:border-jb-500 group-hover:text-jb-700",
-                esgotado && "text-graf-500 group-hover:border-graf-200 group-hover:text-graf-500",
-              )}
-            >
-              {claims.chamada}
-              <ArrowRight className="size-3.5 transition-transform duration-200 ease-out-quint group-hover:translate-x-0.5 motion-reduce:transform-none" />
-            </span>
-
-            {podeComprar ? (
-              <form action={adicionarAoCarrinhoDoCartao} className="relative z-10">
-                <input type="hidden" name="produtoId" value={produto.id} />
-                <input type="hidden" name="quantidade" value="1" />
-                <BotaoEnvio
-                  aria-label={`Adicionar ${produto.name} ao carrinho`}
-                  className="foco-jb grid size-11 shrink-0 place-items-center rounded-lg border border-graf-200 bg-white text-graf-800 transition-colors hover:border-jb-500 hover:text-jb-700 disabled:opacity-70"
-                >
-                  <ShoppingCart className="size-4" aria-hidden />
-                </BotaoEnvio>
-              </form>
-            ) : null}
-
-            {/* Guardar existia no catálogo e na conta, e não na home — o mesmo
-                produto, dois cartões, e só um deixava guardar. */}
-            <form action={alternarFavorito} className="relative z-10">
+        <div className="relative z-10 mt-4 flex items-center gap-2 border-t border-graf-100 pt-3">
+          {podeComprar ? (
+            <form action={adicionarAoCarrinhoDoCartao} className="min-w-0 flex-1">
               <input type="hidden" name="produtoId" value={produto.id} />
-              {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
               <BotaoEnvio
-                aria-pressed={favoritado}
-                aria-label={
-                  favoritado
-                    ? `Remover ${produto.name} dos favoritos`
-                    : `Guardar ${produto.name} nos favoritos`
-                }
-                className={cn(
-                  "foco-jb grid size-11 shrink-0 place-items-center rounded-lg border transition-colors disabled:opacity-70",
-                  favoritado
-                    ? "border-jb-500 bg-jb-50 text-jb-700"
-                    : "border-graf-200 text-graf-700 hover:border-jb-500 hover:text-jb-700",
-                )}
+                pendente="Adicionando..."
+                className="relative z-10 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-jb-500 px-3 text-apoio font-bold text-white transition-colors hover:bg-jb-600"
               >
-                <Heart className={cn("size-4", favoritado && "fill-current")} aria-hidden />
+                <ShoppingCart className="size-4" aria-hidden />
+                Comprar
               </BotaoEnvio>
             </form>
+          ) : (
+            <Link
+              href={`/loja/${produto.slug}`}
+              className="relative z-10 inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-graf-450 px-3 text-apoio font-bold text-graf-900 hover:border-jb-500 hover:text-jb-700"
+            >
+              Ver detalhes
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          )}
 
-            <BotaoComparar
-              slug={produto.slug}
-              nome={produto.name}
-              className="relative z-10 size-11 shrink-0 rounded-lg border-graf-200 bg-white"
-            />
-          </div>
+          <BotaoComparar produtoId={produto.id} />
+
+          <form action={alternarFavorito}>
+            <input type="hidden" name="produtoId" value={produto.id} />
+            {voltar ? <input type="hidden" name="voltar" value={voltar} /> : null}
+            <button
+              type="submit"
+              aria-label={favoritado ? `Remover ${produto.name} dos favoritos` : `Favoritar ${produto.name}`}
+              aria-pressed={favoritado}
+              className={cn(
+                "relative z-10 inline-flex size-11 items-center justify-center rounded-lg border transition-colors",
+                favoritado
+                  ? "border-jb-200 bg-jb-50 text-jb-700"
+                  : "border-graf-450 text-graf-700 hover:border-jb-500 hover:text-jb-700",
+              )}
+            >
+              <Heart className={cn("size-4", favoritado && "fill-current")} aria-hidden />
+            </button>
+          </form>
         </div>
       </div>
     </article>
