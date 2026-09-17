@@ -74,6 +74,14 @@ html[data-motion-scene="catalogo"] [data-convite-orcamento]::after {
   }
 }
 
+/* Touch recebe a mesma hierarquia, sem pagar blur/escala forte em dezenas de
+   cartões ao mesmo tempo. */
+html[data-motion-scene="catalogo"][data-motion-pointer="coarse"] [data-grade-marketplace] > li {
+  filter: none;
+  transform: translate3d(0, 10px, 0) scale(0.994);
+  animation-duration: 440ms;
+}
+
 /* --------------------------------------------------------------------------
    PDP — quatro planos: galeria, identidade, compra e especificação
    -------------------------------------------------------------------------- */
@@ -151,6 +159,34 @@ html[data-motion-scene="produto"][data-motion-pointer="fine"] [data-pdp-gallery]
 
 html[data-motion-scene="produto"][data-motion-pointer="fine"] [data-pdp-gallery]:hover [data-imagem-produto] {
   transform: scale(1.025);
+}
+
+html[data-motion-scene="produto"] [data-motion-pdp-thumbnails] {
+  perspective: 700px;
+}
+
+html[data-motion-scene="produto"] [data-motion-pdp-thumbnails] > li {
+  transform-origin: 50% 100%;
+}
+
+/* Em toque a PDP continua entrando em planos, mas sem blur, perspectiva ou
+   deslocamento lateral — mais barato e mais natural para uma tela estreita. */
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-marketplace] {
+  perspective: none;
+}
+
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-gallery],
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-summary],
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-buybox],
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-details] {
+  --jb-pdp-x: 0px;
+  --jb-pdp-y: 9px;
+  animation-duration: 480ms;
+  filter: none;
+}
+
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-gallery]::after {
+  display: none;
 }
 
 /* As grandes seções da ficha ganham uma linha de leitura que nasce junto do
@@ -242,6 +278,53 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-metri
   transform: translate3d(0, -3px, 0);
 }
 
+/* Histórico: o trilho não se move; marcador e conteúdo chegam até ele. Isso
+   preserva leitura cronológica e evita o dashboard inteiro parecer flutuante. */
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item] {
+  --jb-history-delay: 0ms;
+}
+
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(2) {
+  --jb-history-delay: 55ms;
+}
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(3) {
+  --jb-history-delay: 110ms;
+}
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(4) {
+  --jb-history-delay: 165ms;
+}
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(5) {
+  --jb-history-delay: 220ms;
+}
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(n + 6) {
+  --jb-history-delay: 255ms;
+}
+
+html[data-motion-scene="clinica"] [data-motion-history-card] {
+  opacity: 0;
+  transform: translate3d(10px, 0, 0) scale(0.994);
+  animation: jb-clinic-history-card 460ms var(--jb-motion-ease-spring) var(--jb-history-delay) both;
+}
+
+html[data-motion-scene="clinica"] [data-motion-history-marker] {
+  opacity: 0;
+  transform: scale(0.72);
+  animation: jb-clinic-history-marker 520ms var(--jb-motion-ease-spring) calc(var(--jb-history-delay) + 40ms) both;
+}
+
+html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-history-card] {
+  transition:
+    border-color 180ms ease,
+    transform 280ms var(--jb-motion-ease-spring),
+    box-shadow 280ms var(--jb-motion-ease);
+}
+
+html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-history-card]:hover {
+  border-color: var(--color-graf-300);
+  transform: translate3d(2px, 0, 0);
+  box-shadow: 0 12px 34px -28px rgb(26 28 30 / 0.34);
+}
+
 /* --------------------------------------------------------------------------
    Keyframes
    -------------------------------------------------------------------------- */
@@ -310,6 +393,17 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-metri
   100% { opacity: 0; transform: scale(1.45); }
 }
 
+@keyframes jb-clinic-history-card {
+  from { opacity: 0; transform: translate3d(10px, 0, 0) scale(0.994); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes jb-clinic-history-marker {
+  0% { opacity: 0; transform: scale(0.72); }
+  62% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-motion-scene="catalogo"] [data-grade-marketplace] > li,
   html[data-motion-scene="produto"] [data-pdp-gallery],
@@ -317,7 +411,9 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-metri
   html[data-motion-scene="produto"] [data-pdp-buybox],
   html[data-motion-scene="produto"] [data-pdp-details],
   html[data-motion-scene="clinica"] [data-motion-metric-grid] > [data-motion-metric],
-  html[data-motion-scene="clinica"] [data-motion-metric-value] {
+  html[data-motion-scene="clinica"] [data-motion-metric-value],
+  html[data-motion-scene="clinica"] [data-motion-history-card],
+  html[data-motion-scene="clinica"] [data-motion-history-marker] {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
