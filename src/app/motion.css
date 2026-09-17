@@ -109,11 +109,6 @@ html[data-motion-zone="publico"] [data-jb-motion-kind="secao"]:nth-of-type(3n + 
   --jb-motion-rotate: 0.18deg;
 }
 
-html[data-motion-zone="publico"] [data-jb-motion-kind="produto"] {
-  --jb-motion-y: 24px;
-  --jb-motion-scale: 0.975;
-}
-
 html[data-motion-scene="home"] [data-motion-chapter] {
   position: relative;
   isolation: isolate;
@@ -182,29 +177,18 @@ html[data-motion-scene="home"] [data-motion-chapter][data-jb-motion-state="visiv
   opacity: 0.55;
 }
 
+/* O catálogo não esconde cards via JS. Cada cartão chega pela própria animação
+   apenas quando a grade já está renderizada; o delay é curto e limitado para
+   não atrasar leitura nem interação. */
 html[data-motion-scene="catalogo"] [data-cartao-produto] {
   transform-origin: 50% 70%;
+  animation: jb-motion-card-in 620ms var(--jb-motion-ease-spring) both;
 }
 
-html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-of-type(4n + 1) {
-  --jb-motion-x: -16px;
-  --jb-motion-rotate: -0.35deg;
-}
-
-html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-of-type(4n + 2) {
-  --jb-motion-x: -5px;
-  --jb-motion-rotate: -0.12deg;
-}
-
-html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-of-type(4n + 3) {
-  --jb-motion-x: 5px;
-  --jb-motion-rotate: 0.12deg;
-}
-
-html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-of-type(4n + 4) {
-  --jb-motion-x: 16px;
-  --jb-motion-rotate: 0.35deg;
-}
+html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-child(4n + 1) { animation-delay: 0ms; }
+html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-child(4n + 2) { animation-delay: 55ms; }
+html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-child(4n + 3) { animation-delay: 110ms; }
+html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-child(4n + 4) { animation-delay: 165ms; }
 
 html[data-motion-scene="produto"] main [data-palco-imagem-produto] {
   transform-origin: 50% 55%;
@@ -364,6 +348,19 @@ html[data-motion-enhanced="true"] [data-jb-motion-kind="dialogo"][data-jb-motion
     opacity: 1;
     transform: none;
     filter: none;
+  }
+}
+
+@keyframes jb-motion-card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.975);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
   }
 }
 
