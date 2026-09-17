@@ -1,0 +1,135 @@
+/* ============================================================================
+   JB Motion — carrinho e checkout
+
+   Aqui o movimento é funcional: mantém contexto quando preço, quantidade ou
+   etapa mudam. Não usa os efeitos cinematográficos da vitrine.
+   ============================================================================ */
+
+/* Carrinho ----------------------------------------------------------------- */
+
+html[data-motion-scene="checkout"] [data-motion-cart-list] {
+  transform-origin: 50% 0;
+}
+
+html[data-motion-scene="checkout"] [data-motion-cart-item] [data-palco-imagem-produto] {
+  transition: transform 360ms var(--jb-motion-ease-spring);
+}
+
+html[data-motion-scene="checkout"][data-motion-pointer="fine"]
+  [data-motion-cart-item]:hover [data-palco-imagem-produto] {
+  transform: scale(1.018);
+}
+
+/* O resumo fica visualmente ancorado enquanto a lista à esquerda muda. */
+html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] {
+  animation: jb-commerce-summary-in 420ms var(--jb-motion-ease) 80ms both;
+}
+
+html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] :where(dd, .tabular) {
+  transition:
+    color 180ms ease,
+    transform 260ms var(--jb-motion-ease-spring),
+    opacity 180ms ease;
+}
+
+/* Checkout ----------------------------------------------------------------- */
+
+/* As etapas já continuam montadas por acessibilidade e preservação dos campos.
+   Quando `hidden` sai, o bloco recebe esta entrada curta. */
+html[data-motion-scene="checkout"] main form section:not([hidden]) {
+  animation: jb-checkout-step-in 360ms var(--jb-motion-ease-spring) both;
+  transform-origin: 0 0;
+}
+
+/* Opções escolhidas (entrega, pagamento, identificação) respondem como uma
+   peça física, mas sem deslocar o restante do formulário. */
+html[data-motion-scene="checkout"] main form label:has(input:checked) {
+  transition:
+    border-color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 280ms var(--jb-motion-ease),
+    transform 280ms var(--jb-motion-ease-spring);
+}
+
+html[data-motion-scene="checkout"][data-motion-pointer="fine"]
+  main form label:has(input:checked) {
+  transform: translate3d(0, -1px, 0);
+}
+
+/* O passo ativo recebe um pulso único de leitura. O seletor é defensivo para
+   funcionar tanto com aria-current quanto com data-state caso o componente de
+   passos evolua. */
+html[data-motion-scene="checkout"]
+  :where([aria-current="step"], [data-state="current"], [data-state="active"])
+  :where(span, svg) {
+  animation: jb-checkout-active 420ms var(--jb-motion-ease-spring) both;
+}
+
+/* Comparador --------------------------------------------------------------- */
+
+[data-motion-compare-bar] {
+  transform-origin: 50% 100%;
+}
+
+[data-motion-compare-bar]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: min(38rem, 72vw);
+  height: 26px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgb(224 20 27 / 0.08), transparent 68%);
+  filter: blur(10px);
+  opacity: 0.7;
+}
+
+@keyframes jb-commerce-summary-in {
+  from {
+    opacity: 0;
+    transform: translate3d(8px, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes jb-checkout-step-in {
+  from {
+    opacity: 0;
+    transform: translate3d(9px, 5px, 0) scale(0.997);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes jb-checkout-active {
+  from {
+    opacity: 0.58;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"],
+  html[data-motion-scene="checkout"] main form section:not([hidden]),
+  html[data-motion-scene="checkout"]
+    :where([aria-current="step"], [data-state="current"], [data-state="active"])
+    :where(span, svg) {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  [data-motion-compare-bar]::before {
+    display: none;
+  }
+}
