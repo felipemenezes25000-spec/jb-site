@@ -7,7 +7,6 @@ type ZonaDeMotion = "publico" | "checkout" | "clinica" | "admin" | "acesso";
 
 const SELETOR_REVELAVEL = [
   "main section",
-  "main [data-cartao-produto]",
   "main [data-motion-reveal]",
   "main [data-motion-chapter]",
   "main > article",
@@ -42,7 +41,6 @@ function cenaDaRota(pathname: string) {
 }
 
 function tipoDoElemento(elemento: HTMLElement) {
-  if (elemento.matches("[data-cartao-produto]")) return "produto";
   if (elemento.matches("[data-motion-chapter]")) return "capitulo";
   if (elemento.matches('[role="dialog"]')) return "dialogo";
   if (elemento.matches("section")) return "secao";
