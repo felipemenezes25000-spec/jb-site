@@ -15,6 +15,7 @@ import "./footer-alignment.css";
 import "./cabecalho.css";
 import "./motion.css";
 import "./motion-scenes.css";
+import "./motion-commerce.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
