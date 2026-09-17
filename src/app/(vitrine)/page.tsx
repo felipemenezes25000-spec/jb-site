@@ -76,7 +76,7 @@ export default async function HomePage() {
   ].filter((slug): slug is string => Boolean(slug));
 
   return (
-    <div data-jb-home="true" data-motion-scene="home" className="relative">
+    <div data-jb-home="true" data-motion-scene="home" className="relative isolate">
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
       <div className="jb-home-stage" aria-hidden="true">
         <span className="jb-home-orbit jb-home-orbit-a" />
