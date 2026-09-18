@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import type { Prisma, ServiceRequestStatus, Urgency } from "@prisma/client";
-import { LifeBuoy, Plus } from "lucide-react";
+import { AlertTriangle, Clock3, LifeBuoy, Plus, Wrench } from "lucide-react";
 
 import {
   Filtros,
@@ -11,7 +11,7 @@ import {
 } from "@/components/conta/mj-filtros";
 import { Topo } from "@/components/conta/mj-topo";
 import { LinkBotao } from "@/components/ui/button";
-import { Esqueleto, Etiqueta } from "@/components/ui/data";
+import { Cartao, Esqueleto, Etiqueta } from "@/components/ui/data";
 import { Paginacao } from "@/components/ui/paginacao";
 import { Tabela, type Coluna } from "@/components/ui/tabela";
 import {
@@ -87,7 +87,7 @@ export default async function AssistenciaPage({ searchParams }: { searchParams: 
     ...(numero ? { number: { contains: numero, mode: "insensitive" } } : {}),
   };
 
-  const [total, chamados, porStatus, porUrgencia] = await Promise.all([
+  const [total, chamados, porStatus, porUrgencia, paradosAbertos] = await Promise.all([
     prisma.serviceRequest.count({ where: filtro }),
     prisma.serviceRequest.findMany({
       where: filtro,
@@ -115,6 +115,13 @@ export default async function AssistenciaPage({ searchParams }: { searchParams: 
       where: { customerId: cliente.id },
       _count: { _all: true },
     }),
+    prisma.serviceRequest.count({
+      where: {
+        customerId: cliente.id,
+        status: { in: STATUS_CHAMADO_ABERTOS },
+        urgency: "parado",
+      },
+    }),
   ]);
 
   const contagemStatus = new Map(porStatus.map((linha) => [linha.status, linha._count._all]));
@@ -122,6 +129,13 @@ export default async function AssistenciaPage({ searchParams }: { searchParams: 
     porUrgencia.map((linha) => [linha.urgency, linha._count._all]),
   );
   const totalGeral = porStatus.reduce((soma, linha) => soma + linha._count._all, 0);
+  const emAndamento = STATUS_CHAMADO_ABERTOS.reduce(
+    (soma, status) => soma + (contagemStatus.get(status) ?? 0),
+    0,
+  );
+  const aguardandoVoce =
+    (contagemStatus.get("aguardando_cliente") ?? 0) +
+    (contagemStatus.get("aguardando_aprovacao") ?? 0);
 
   const grupos: GrupoFiltro[] = [
     {
@@ -183,7 +197,9 @@ export default async function AssistenciaPage({ searchParams }: { searchParams: 
       rotulo: "Urgência",
       largura: "10rem",
       renderizar: (linha) => (
-        <Etiqueta tom={linha.urgency === "parado" || linha.urgency === "alta" ? "alerta" : "neutro"}>
+        <Etiqueta
+          tom={linha.urgency === "parado" || linha.urgency === "alta" ? "alerta" : "neutro"}
+        >
           {ROTULO_URGENCIA[linha.urgency]}
         </Etiqueta>
       ),
@@ -203,7 +219,7 @@ export default async function AssistenciaPage({ searchParams }: { searchParams: 
     <div>
       <Topo
         titulo="Assistência técnica"
-        descricao="Cada chamado com a etapa em que está, a urgência declarada e todo o histórico de mensagens com a equipe."
+        descricao="A central dos equipamentos que precisam da JB: veja o que está andando, o que espera sua resposta e o histórico de cada chamado."
         acoes={
           <LinkBotao href="/minha-jb/assistencia/novo" tamanho="sm">
             <Plus className="size-4" aria-hidden />
@@ -211,6 +227,80 @@ export default async function AssistenciaPage({ searchParams }: { searchParams: 
           </LinkBotao>
         }
       />
+
+      <section aria-label="Resumo da assistência" className="mb-6 grid gap-3 sm:grid-cols-3">
+        <Cartao data-motion-clinic-kpi className="relative overflow-hidden p-5">
+          <div className="absolute inset-y-0 left-0 w-1 bg-info-500" aria-hidden />
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="label-mono uppercase text-graf-500">Em andamento</p>
+              <p className="tabular mt-2 text-3xl font-extrabold tracking-tight text-graf-950">
+                {emAndamento}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-graf-500">
+                {emAndamento === 1 ? "chamado ainda aberto" : "chamados ainda abertos"}
+              </p>
+            </div>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-info-50 text-info-700">
+              <Clock3 className="size-4.5" aria-hidden />
+            </span>
+          </div>
+        </Cartao>
+
+        <Cartao data-motion-clinic-kpi className="relative overflow-hidden p-5">
+          <div
+            className={aguardandoVoce > 0 ? "absolute inset-y-0 left-0 w-1 bg-warn-500" : "absolute inset-y-0 left-0 w-1 bg-graf-200"}
+            aria-hidden
+          />
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="label-mono uppercase text-graf-500">Aguardando você</p>
+              <p className="tabular mt-2 text-3xl font-extrabold tracking-tight text-graf-950">
+                {aguardandoVoce}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-graf-500">
+                {aguardandoVoce > 0 ? "resposta ou aprovação pendente" : "nenhuma ação pendente"}
+              </p>
+            </div>
+            <span
+              className={
+                aguardandoVoce > 0
+                  ? "flex size-10 shrink-0 items-center justify-center rounded-xl bg-warn-50 text-warn-700"
+                  : "flex size-10 shrink-0 items-center justify-center rounded-xl bg-graf-100 text-graf-500"
+              }
+            >
+              <AlertTriangle className="size-4.5" aria-hidden />
+            </span>
+          </div>
+        </Cartao>
+
+        <Cartao data-motion-clinic-kpi className="relative overflow-hidden p-5">
+          <div
+            className={paradosAbertos > 0 ? "absolute inset-y-0 left-0 w-1 bg-jb-600" : "absolute inset-y-0 left-0 w-1 bg-graf-200"}
+            aria-hidden
+          />
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="label-mono uppercase text-graf-500">Equipamento parado</p>
+              <p className="tabular mt-2 text-3xl font-extrabold tracking-tight text-graf-950">
+                {paradosAbertos}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-graf-500">
+                {paradosAbertos === 1 ? "chamado crítico em aberto" : "chamados críticos em aberto"}
+              </p>
+            </div>
+            <span
+              className={
+                paradosAbertos > 0
+                  ? "flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-700"
+                  : "flex size-10 shrink-0 items-center justify-center rounded-xl bg-graf-100 text-graf-500"
+              }
+            >
+              <Wrench className="size-4.5" aria-hidden />
+            </span>
+          </div>
+        </Cartao>
+      </section>
 
       <Filtros
         base="/minha-jb/assistencia"
