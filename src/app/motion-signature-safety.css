@@ -14,6 +14,7 @@ html[data-motion-scene="home"]
   [data-palco-imagem-produto]
   > svg {
   z-index: 3;
+  pointer-events: none;
 }
 
 html[data-motion-scene="home"]
@@ -21,6 +22,7 @@ html[data-motion-scene="home"]
   [data-palco-imagem-produto]
   > span {
   z-index: 1;
+  pointer-events: none;
 }
 
 html[data-motion-scene="home"]
