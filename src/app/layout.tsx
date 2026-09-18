@@ -19,6 +19,7 @@ import "./motion-scenes.css";
 import "./motion-commerce.css";
 import "./motion-feedback.css";
 import "./motion-signature.css";
+import "./motion-signature-safety.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
