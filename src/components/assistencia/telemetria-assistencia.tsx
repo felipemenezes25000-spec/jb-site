@@ -33,8 +33,9 @@ export function TelemetriaAssistencia() {
 
     medir("assistance_start", { etapa: 0 });
 
-    const formulario = document.querySelector<HTMLFormElement>("form");
-    if (!formulario) return;
+    const encontrado = document.querySelector<HTMLFormElement>("form");
+    if (!encontrado) return;
+    const formulario: HTMLFormElement = encontrado;
 
     const vistos = new Set<number>();
     let midiasConfirmadas = 0;
@@ -58,10 +59,10 @@ export function TelemetriaAssistencia() {
       const regioes = formulario.querySelectorAll<HTMLElement>('p.sr-only[aria-live="polite"]');
       for (const regiao of regioes) {
         const texto = regiao.textContent ?? "";
-        const encontrado = texto.match(/(\d+)\s+arquivo(?:s)?\s+pronto/i);
-        if (!encontrado) continue;
+        const resultado = texto.match(/(\d+)\s+arquivo(?:s)?\s+pronto/i);
+        if (!resultado) continue;
 
-        const quantidade = Number(encontrado[1]);
+        const quantidade = Number(resultado[1]);
         if (!Number.isFinite(quantidade) || quantidade <= midiasConfirmadas) continue;
         midiasConfirmadas = quantidade;
         medir("assistance_media_added", { quantidade });
