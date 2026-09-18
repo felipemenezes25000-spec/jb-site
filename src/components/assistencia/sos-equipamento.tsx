@@ -17,7 +17,10 @@ function prepararChamadoUrgente() {
       CHAVE_RASCUNHO,
       JSON.stringify({
         ...atual,
-        urgencia: "alta",
+        /* No domínio da assistência, equipamento fora de operação é o estado
+           `parado`. Manter os dois campos coerentes evita um instante em que a
+           interface diz uma coisa e a prioridade persistida diz outra. */
+        urgencia: "parado",
         aindaOpera: "nao",
       }),
     );
