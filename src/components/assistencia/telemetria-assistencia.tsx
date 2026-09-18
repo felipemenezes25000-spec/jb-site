@@ -33,6 +33,9 @@ export function TelemetriaAssistencia() {
 
     medir("assistance_start", { etapa: 0 });
 
+    const formulario = document.querySelector<HTMLFormElement>("form");
+    if (!formulario) return;
+
     const vistos = new Set<number>();
     let midiasConfirmadas = 0;
 
@@ -66,10 +69,6 @@ export function TelemetriaAssistencia() {
     }
 
     registrarEtapa();
-
-    const formulario = document.querySelector<HTMLFormElement>("form");
-    if (!formulario) return;
-
     registrarMidia();
 
     function marcarSubmit() {
