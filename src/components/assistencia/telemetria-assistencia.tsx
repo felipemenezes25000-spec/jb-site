@@ -14,13 +14,15 @@ const ETAPAS = [
   "etapa-revisao",
 ] as const;
 
+export const CHAVE_SUBMIT_ASSISTENCIA = "jb:assistencia:submit-em-andamento";
+
 /**
- * Instrumenta o funil sem acoplar analytics ao formulário de domínio.
+ * Instrumenta o funil sem tocar no conteúdo digitado.
  *
- * O assistente mantém todas as etapas montadas para não perder estado e muda
- * apenas o atributo `hidden`. Isso permite observar qual etapa ficou visível
- * sem ler nenhum valor digitado pelo cliente. O payload leva somente o número
- * lógico da etapa, que já está na lista de permissão da taxonomia.
+ * As etapas continuam montadas e alternam apenas `hidden`, então basta observar
+ * qual seção ficou visível. O submit não é contado aqui como conversão: este
+ * componente grava apenas um marcador efêmero na aba. O evento de negócio só
+ * sai quando a navegação realmente chega à página do protocolo.
  */
 export function TelemetriaAssistencia() {
   const pathname = usePathname();
@@ -49,8 +51,20 @@ export function TelemetriaAssistencia() {
 
     registrarEtapa();
 
-    const formulario = document.querySelector("form");
+    const formulario = document.querySelector<HTMLFormElement>("form");
     if (!formulario) return;
+
+    function marcarSubmit() {
+      const botao = formulario.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (!botao) return;
+      try {
+        sessionStorage.setItem(CHAVE_SUBMIT_ASSISTENCIA, String(Date.now()));
+      } catch {
+        // Analytics nunca bloqueia o fluxo principal.
+      }
+    }
+
+    formulario.addEventListener("submit", marcarSubmit);
 
     const observador = new MutationObserver((mutacoes) => {
       if (mutacoes.some((mutacao) => mutacao.attributeName === "hidden")) {
@@ -64,7 +78,10 @@ export function TelemetriaAssistencia() {
       attributeFilter: ["hidden"],
     });
 
-    return () => observador.disconnect();
+    return () => {
+      observador.disconnect();
+      formulario.removeEventListener("submit", marcarSubmit);
+    };
   }, [pathname]);
 
   return null;
