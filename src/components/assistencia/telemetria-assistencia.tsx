@@ -15,6 +15,17 @@ const ETAPAS = [
 ] as const;
 
 export const CHAVE_SUBMIT_ASSISTENCIA = "jb:assistencia:submit-em-andamento";
+const CHAVE_ORIGEM_ASSISTENCIA = "jb:assistencia:origem";
+
+function consumirOrigem(): string | undefined {
+  try {
+    const valor = sessionStorage.getItem(CHAVE_ORIGEM_ASSISTENCIA);
+    sessionStorage.removeItem(CHAVE_ORIGEM_ASSISTENCIA);
+    return valor === "sos" ? valor : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Instrumenta o funil sem tocar no conteúdo digitado.
@@ -24,6 +35,10 @@ export const CHAVE_SUBMIT_ASSISTENCIA = "jb:assistencia:submit-em-andamento";
  * arquivos chegaram inteiros; lemos apenas esse contador, nunca nome, conteúdo
  * ou id do arquivo. O submit vira conversão somente depois do redirect para o
  * protocolo, em `ConfirmarConversaoAssistencia`.
+ *
+ * Quando a entrada veio do SOS, carregamos somente `metodo: "sos"` pelos
+ * eventos. Isso permite comparar o funil urgente com o normal sem identificar
+ * clínica, pessoa, equipamento ou conteúdo do chamado.
  */
 export function TelemetriaAssistencia() {
   const pathname = usePathname();
@@ -31,7 +46,9 @@ export function TelemetriaAssistencia() {
   useEffect(() => {
     if (pathname !== "/assistencia-tecnica/solicitar") return;
 
-    medir("assistance_start", { etapa: 0 });
+    const metodo = consumirOrigem();
+    const contexto = metodo ? { metodo } : {};
+    medir("assistance_start", { etapa: 0, ...contexto });
 
     const encontrado = document.querySelector<HTMLFormElement>("form");
     if (!encontrado) return;
@@ -50,7 +67,7 @@ export function TelemetriaAssistencia() {
         if (vistos.has(etapa)) return;
         vistos.add(etapa);
 
-        medir(`assistance_step_${etapa}` as NomeDeEvento, { etapa });
+        medir(`assistance_step_${etapa}` as NomeDeEvento, { etapa, ...contexto });
         return;
       }
     }
@@ -65,7 +82,7 @@ export function TelemetriaAssistencia() {
         const quantidade = Number(resultado[1]);
         if (!Number.isFinite(quantidade) || quantidade <= midiasConfirmadas) continue;
         midiasConfirmadas = quantidade;
-        medir("assistance_media_added", { quantidade });
+        medir("assistance_media_added", { quantidade, ...contexto });
       }
     }
 
@@ -76,7 +93,10 @@ export function TelemetriaAssistencia() {
       const botao = formulario.querySelector<HTMLButtonElement>('button[type="submit"]');
       if (!botao) return;
       try {
-        sessionStorage.setItem(CHAVE_SUBMIT_ASSISTENCIA, String(Date.now()));
+        sessionStorage.setItem(
+          CHAVE_SUBMIT_ASSISTENCIA,
+          JSON.stringify({ quando: Date.now(), metodo }),
+        );
       } catch {
         // Analytics nunca bloqueia o fluxo principal.
       }
