@@ -51,6 +51,11 @@ export const CONDICOES = [
 
 export const MENU_ASSISTENCIA: ItemMenu[] = [
   {
+    rotulo: "SOS Equipamento",
+    href: "/sos-equipamento",
+    descricao: "Entrada rápida quando o equipamento parou",
+  },
+  {
     rotulo: "Solicitar assistência",
     href: "/assistencia-tecnica/solicitar",
     descricao: "Abra um chamado em poucos passos",
@@ -98,6 +103,7 @@ export const RODAPE_LOJA: ItemMenu[] = [
 
 export const RODAPE_ASSISTENCIA: ItemMenu[] = [
   { rotulo: "Assistência técnica", href: "/assistencia-tecnica" },
+  { rotulo: "SOS Equipamento", href: "/sos-equipamento" },
   { rotulo: "Solicitar assistência", href: "/assistencia-tecnica/solicitar" },
   { rotulo: "Manutenção preventiva", href: "/manutencao-preventiva" },
   { rotulo: "Planos de manutenção", href: "/planos-de-manutencao" },
