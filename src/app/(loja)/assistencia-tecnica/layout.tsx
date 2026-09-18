@@ -6,9 +6,9 @@ import "./assistencia.css";
 
 export default function AssistenciaTecnicaLayout({ children }: { children: ReactNode }) {
   return (
-    <>
+    <div data-assistencia-shell>
       {children}
       <DockConversaoAssistencia />
-    </>
+    </div>
   );
 }
