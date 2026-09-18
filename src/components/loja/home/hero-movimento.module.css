@@ -1,12 +1,98 @@
-.imagem[data-carregada="true"] {
-  animation: apresentar-produto 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.palco {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  aspect-ratio: 6 / 5;
+  border-radius: 1rem;
+  background: radial-gradient(ellipse at 50% 42%, white 25%, var(--color-graf-50) 100%);
+}
+
+.imagem {
+  object-fit: contain;
+  padding: 7% 10% 9%;
+}
+
+.linhaTecnica {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.traco {
+  stroke: var(--color-jb-500);
+  stroke-width: 1.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+.guia {
+  stroke: var(--color-graf-200);
+  stroke-width: 1;
+}
+
+.sombra {
+  position: absolute;
+  right: 23%;
+  bottom: 10%;
+  left: 23%;
+  height: 7%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(26 28 30 / 12%), transparent 70%);
+  pointer-events: none;
+}
+
+/* A entrada conserva texto e preço legíveis do primeiro ao último quadro. */
+@media (prefers-reduced-motion: no-preference) {
+  .manchete, .palavra, .legenda {
+    animation: apresentar-texto 440ms var(--ease-out-quint);
+  }
+
+  .imagem[data-carregada="true"] {
+    animation: apresentar-produto 620ms var(--ease-out-quint);
+  }
+
+  .traco {
+    animation: desenhar-guia 720ms var(--ease-out-quint);
+  }
+
+  .sombra {
+    animation: assentar-sombra 620ms var(--ease-out-quint);
+  }
+
+  .preco {
+    animation: apresentar-preco 440ms var(--ease-out-quint);
+  }
+}
+
+@keyframes apresentar-texto {
+  from { transform: translateY(8px); }
+  to { transform: translateY(0); }
 }
 
 @keyframes apresentar-produto {
-  from { opacity: 0; transform: translateX(16px) scale(0.98); }
-  to { opacity: 1; transform: translateX(0) scale(1); }
+  from { transform: translateY(-16px); }
+  to { transform: translateY(0); }
+}
+
+@keyframes apresentar-preco {
+  from { transform: translateY(4px); }
+  to { transform: translateY(0); }
+}
+
+@keyframes desenhar-guia {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes assentar-sombra {
+  from { opacity: 0.45; transform: scaleX(0.9); }
+  to { opacity: 1; transform: scaleX(1); }
 }
 
 @media (prefers-reduced-motion: reduce), print {
-  .imagem[data-carregada="true"] { animation: none; }
+  .manchete, .palavra, .legenda, .preco, .imagem[data-carregada="true"], .traco, .sombra {
+    animation: none;
+  }
 }

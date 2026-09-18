@@ -21,7 +21,7 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"]
 }
 
 html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] {
-  animation: jb-commerce-summary-in 420ms var(--jb-motion-ease) 80ms both;
+  animation: jb-commerce-summary-in 420ms var(--jb-motion-ease) 80ms backwards;
 }
 
 html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] :where(dd, .tabular) {
@@ -34,7 +34,7 @@ html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] :where
 /* Checkout ----------------------------------------------------------------- */
 
 html[data-motion-scene="checkout"] main form section:not([hidden]) {
-  animation: jb-checkout-step-in 360ms var(--jb-motion-ease-spring) both;
+  animation: jb-checkout-step-in 360ms var(--jb-motion-ease-spring) backwards;
   transform-origin: 0 0;
 }
 
@@ -43,18 +43,18 @@ html[data-motion-scene="checkout"] main form label:has(input:checked) {
     border-color 220ms ease,
     background-color 220ms ease,
     box-shadow 280ms var(--jb-motion-ease),
-    transform 280ms var(--jb-motion-ease-spring);
+    translate 280ms var(--jb-motion-ease-spring);
 }
 
 html[data-motion-scene="checkout"][data-motion-pointer="fine"]
   main form label:has(input:checked) {
-  transform: translate3d(0, -1px, 0);
+  translate: 0 -1px;
 }
 
 html[data-motion-scene="checkout"]
   :where([aria-current="step"], [data-state="current"], [data-state="active"])
   :where(span, svg) {
-  animation: jb-checkout-active 420ms var(--jb-motion-ease-spring) both;
+  animation: jb-checkout-active 420ms var(--jb-motion-ease-spring) backwards;
 }
 
 /* Comparador flutuante ----------------------------------------------------- */
@@ -81,9 +81,9 @@ html[data-motion-scene="checkout"]
 
 /* As colunas entram como instrumentos colocados lado a lado. A primeira
    coluna é o nome do atributo e fica parada: ela é a régua da comparação. */
+/* Sem `opacity: 0` fora do keyframe: se a animação não rodar, a coluna aparece. */
 html[data-motion-scene="comparador"] main table thead th:not(:first-child) {
-  opacity: 0;
-  animation: jb-compare-column 540ms var(--jb-motion-ease-spring) both;
+  animation: jb-compare-column 540ms var(--jb-motion-ease-spring) backwards;
 }
 
 html[data-motion-scene="comparador"] main table thead th:nth-child(2) {
@@ -147,25 +147,19 @@ html[data-motion-scene="comparador"][data-motion-pointer="fine"]
   box-shadow: 0 18px 40px -30px rgb(26 28 30 / 0.42);
 }
 
+/* Resumo e etapa entram na vertical: vindos da direita, somavam largura à
+   página enquanto entravam, e a borda direita é onde o celular não tem folga. */
 @keyframes jb-commerce-summary-in {
   from {
     opacity: 0;
-    transform: translate3d(8px, 6px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+    transform: translate3d(0, 6px, 0);
   }
 }
 
 @keyframes jb-checkout-step-in {
   from {
     opacity: 0;
-    transform: translate3d(9px, 5px, 0) scale(0.997);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+    transform: translate3d(0, 6px, 0);
   }
 }
 
@@ -183,13 +177,7 @@ html[data-motion-scene="comparador"][data-motion-pointer="fine"]
 @keyframes jb-compare-column {
   from {
     opacity: 0;
-    transform: translate3d(0, 10px, 0) scale(0.988);
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
+    transform: translate3d(0, 10px, 0);
   }
 }
 
@@ -217,5 +205,18 @@ html[data-motion-scene="comparador"][data-motion-pointer="fine"]
 
   html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child::before {
     transform: none !important;
+  }
+}
+
+/* O atraso segura o quadro inicial: impressos no meio da entrada, resumo, etapa
+   e colunas sairiam transparentes. */
+@media print {
+  html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"],
+  html[data-motion-scene="checkout"] main form section:not([hidden]),
+  html[data-motion-scene="checkout"]
+    :where([aria-current="step"], [data-state="current"], [data-state="active"])
+    :where(span, svg),
+  html[data-motion-scene="comparador"] main table thead th:not(:first-child) {
+    animation: none !important;
   }
 }

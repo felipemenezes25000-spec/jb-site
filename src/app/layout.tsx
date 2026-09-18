@@ -6,6 +6,7 @@ import { cacheLife, cacheTag } from "next/cache";
 
 import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
 import { Medicao } from "@/components/analytics/medicao";
+import { SCRIPT_DA_CENA } from "@/components/ui/motion-cena";
 import { MotionSystem } from "@/components/ui/motion-system";
 import { SITE_URL } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
@@ -91,11 +92,18 @@ async function codigoDeMedicao() {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    /* `suppressHydrationWarning` vale só para os atributos do próprio `<html>`:
+       o script abaixo grava a cena do Motion System antes da primeira pintura,
+       e o React não pode tratar isso como divergência do servidor. */
     <html
       lang="pt-BR"
       data-scroll-behavior="smooth"
       className={`${manrope.variable} ${display.variable} ${mono.variable} ${manuscrita.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_DA_CENA }} />
+      </head>
       <body className="antialiased">
         {children}
         <MotionSystem />

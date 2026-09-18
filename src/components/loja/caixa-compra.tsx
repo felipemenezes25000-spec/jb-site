@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 
 import { adicionarAoCarrinho, type EstadoCarrinho } from "@/app/acoes/carrinho";
+import { BotaoComparar } from "@/components/loja/comparador-cliente";
 import { EntregaPorCep } from "@/components/loja/produto/entrega-por-cep";
 import { Botao, LinkBotao } from "@/components/ui/button";
 import { Aviso } from "@/components/ui/aviso";
@@ -43,6 +44,7 @@ export function CaixaCompra({
   hrefOrcamento,
   maxParcelas,
   minParcelaCents,
+  comparar,
 }: {
   produtoId: string;
   precoCents: number;
@@ -57,6 +59,8 @@ export function CaixaCompra({
   maxParcelas: number;
   minParcelaCents: number;
   garantia?: { meses: number; daUnidade: boolean } | null;
+  /** Entrada da ficha na barra de comparação; sem ela, só os cartões levam à barra. */
+  comparar?: { slug: string; nome: string };
 }) {
   const router = useRouter();
   const [quantidade, setQuantidade] = useState(1);
@@ -142,7 +146,7 @@ export function CaixaCompra({
     );
   }
 
-  const temOpcoes = baseCompravel && (!unico || addons.length > 0);
+  const temOpcoes = baseCompravel && (!unico || addons.length > 0 || Boolean(comparar));
 
   return (
     <div className="overflow-hidden rounded-xl border border-graf-200 bg-white">
@@ -431,6 +435,16 @@ export function CaixaCompra({
                     )
                   }
                 />
+              </div>
+            ) : null}
+
+            {/* Comparar mora aqui, recolhido: a ficha simplificada tirou as
+                ações do topo, mas quem chega pela busca direto no equipamento
+                precisa de uma porta para a barra de comparação — sem ela, só
+                quem passou pelos cartões consegue comparar. */}
+            {comparar ? (
+              <div className={!unico || addons.length > 0 ? "border-t border-graf-200 pt-4" : undefined}>
+                <BotaoComparar slug={comparar.slug} nome={comparar.nome} forma="linha" />
               </div>
             ) : null}
           </div>

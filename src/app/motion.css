@@ -58,9 +58,10 @@
   border-radius: 9999px;
   pointer-events: none;
   opacity: 0;
+  /* Sem `filter: blur`: o gradiente radial já termina em transparente, e o
+     desfoque de uma camada de 26rem custava composição a cada quadro. */
   background: radial-gradient(circle, rgb(224 20 27 / 0.075) 0%, rgb(224 20 27 / 0.028) 38%, transparent 70%);
-  filter: blur(12px);
-  will-change: transform, opacity;
+  will-change: transform;
   transition: opacity 420ms ease;
 }
 
@@ -113,91 +114,14 @@ html[data-motion-zone="publico"][data-motion-pointer="fine"] .jb-motion-aura[dat
   animation: jb-orbit-c 30s ease-in-out infinite alternate;
 }
 
-html[data-motion-enhanced="true"] [data-jb-motion="true"] {
-  --jb-motion-x: 0px;
-  --jb-motion-y: 18px;
-  --jb-motion-scale: 0.992;
-  --jb-motion-rotate: 0deg;
-  transition:
-    opacity var(--jb-motion-slow) var(--jb-motion-ease) var(--jb-motion-delay, 0ms),
-    transform var(--jb-motion-cinematic) var(--jb-motion-ease-spring) var(--jb-motion-delay, 0ms),
-    filter var(--jb-motion-slow) var(--jb-motion-ease) var(--jb-motion-delay, 0ms),
-    clip-path var(--jb-motion-cinematic) var(--jb-motion-ease) var(--jb-motion-delay, 0ms);
-}
-
-html[data-motion-enhanced="true"] [data-jb-motion-state="espera"] {
-  opacity: 0;
-  transform:
-    translate3d(var(--jb-motion-x), var(--jb-motion-y), 0)
-    scale(var(--jb-motion-scale))
-    rotate(var(--jb-motion-rotate));
-  filter: blur(5px);
-  clip-path: inset(0 0 7% 0 round 18px);
-}
-
-html[data-motion-enhanced="true"] [data-jb-motion-state="visivel"] {
-  opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
-  filter: blur(0);
-  clip-path: inset(0 0 0 0 round 0);
-}
-
-html[data-motion-zone="publico"] [data-jb-motion-kind="secao"]:nth-of-type(3n + 1) {
-  --jb-motion-x: -10px;
-  --jb-motion-y: 24px;
-  --jb-motion-rotate: -0.18deg;
-}
-
-html[data-motion-zone="publico"] [data-jb-motion-kind="secao"]:nth-of-type(3n + 2) {
-  --jb-motion-x: 10px;
-  --jb-motion-y: 24px;
-  --jb-motion-rotate: 0.18deg;
-}
+/* O reveal de seções é Web Animations em `motion-system.tsx`: opacidade e
+   `translate` vertical, só enquanto a animação roda. Não existe estado de
+   espera em CSS — um bloco fora da tela está no layout final, medível e
+   focável, e ninguém o encontra deslocado, girado ou encolhido. */
 
 html[data-motion-scene="home"] [data-motion-chapter] {
   position: relative;
   isolation: isolate;
-}
-
-html[data-motion-scene="home"] [data-motion-chapter="hero"] {
-  --jb-motion-y: 8px;
-  --jb-motion-scale: 1;
-}
-
-html[data-motion-scene="home"] [data-motion-chapter="categorias"],
-html[data-motion-scene="home"] [data-motion-chapter="seminovos"],
-html[data-motion-scene="home"] [data-motion-chapter="marcas"] {
-  --jb-motion-x: -18px;
-  --jb-motion-y: 28px;
-  --jb-motion-rotate: -0.22deg;
-}
-
-html[data-motion-scene="home"] [data-motion-chapter="ofertas"],
-html[data-motion-scene="home"] [data-motion-chapter="procurados"],
-html[data-motion-scene="home"] [data-motion-chapter="assistencia"] {
-  --jb-motion-x: 18px;
-  --jb-motion-y: 28px;
-  --jb-motion-rotate: 0.22deg;
-}
-
-html[data-motion-scene="home"] [data-motion-chapter="manifesto"] {
-  --jb-motion-y: 0px;
-  --jb-motion-scale: 1.015;
-}
-
-html[data-motion-scene="home"] [data-motion-chapter="bancada"] {
-  --jb-motion-y: 38px;
-  --jb-motion-scale: 0.985;
-}
-
-html[data-motion-scene="home"] [data-motion-chapter="comparador"] {
-  --jb-motion-y: 16px;
-  --jb-motion-scale: 0.965;
-}
-
-html[data-motion-scene="home"] [data-motion-chapter="fechamento"] {
-  --jb-motion-y: 44px;
-  --jb-motion-scale: 0.98;
 }
 
 html[data-motion-scene="home"] [data-motion-chapter="bancada"]::after,
@@ -210,27 +134,12 @@ html[data-motion-scene="home"] [data-motion-chapter="fechamento"]::after {
   right: 8%;
   bottom: -1px;
   height: 1px;
-  opacity: 0.38;
-  transform: scaleX(0.16);
+  /* Repouso = traço inteiro. O motor anima de 16% até aqui quando o capítulo
+     entra; sem motor, o traço simplesmente existe. */
+  opacity: 0.55;
   transform-origin: 50% 50%;
   background: linear-gradient(90deg, transparent, rgb(224 20 27 / 0.6), transparent);
-  transition: transform 1100ms var(--jb-motion-ease), opacity 700ms ease;
 }
-
-html[data-motion-scene="home"] [data-motion-chapter][data-jb-motion-state="visivel"]::after {
-  transform: scaleX(1);
-  opacity: 0.55;
-}
-
-html[data-motion-scene="catalogo"] [data-cartao-produto] {
-  transform-origin: 50% 70%;
-  animation: jb-motion-card-in 620ms var(--jb-motion-ease-spring) both;
-}
-
-html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-child(4n + 1) { animation-delay: 0ms; }
-html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-child(4n + 2) { animation-delay: 55ms; }
-html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-child(4n + 3) { animation-delay: 110ms; }
-html[data-motion-scene="catalogo"] [data-cartao-produto]:nth-child(4n + 4) { animation-delay: 165ms; }
 
 html[data-motion-scene="produto"] main [data-palco-imagem-produto] {
   transform-origin: 50% 55%;
@@ -241,125 +150,125 @@ html[data-motion-scene="produto"][data-motion-pointer="fine"] main [data-palco-i
   transform: perspective(1200px) translateZ(0) scale(1.012);
 }
 
-html[data-motion-scene="produto"] main :where([data-motion-buybox], [data-caixa-compra]) {
-  transition: transform 520ms var(--jb-motion-ease-spring), box-shadow 520ms var(--jb-motion-ease);
-}
-
-html[data-motion-scene="produto"][data-motion-pointer="fine"] main :where([data-motion-buybox], [data-caixa-compra]):hover {
-  transform: translate3d(0, -3px, 0);
-  box-shadow: var(--shadow-pop);
-}
-
-html[data-motion-scene="clinica"] [data-jb-motion-kind="capitulo"],
-html[data-motion-scene="clinica"] [data-jb-motion-kind="secao"] {
-  --jb-motion-y: 10px;
-  --jb-motion-scale: 0.998;
-}
+/* A caixa de compra não levanta no hover. Ela é onde a decisão acontece
+   (design: "buybox estável"), e um bloco que sobe 3px sob o cursor foge do
+   ponteiro que está na borda inferior — o hover liga e desliga em ciclo. */
 
 html[data-motion-scene="clinica"] :where([data-status], [data-timeline], [data-motion-status]) {
   transition:
-    transform 360ms var(--jb-motion-ease),
+    translate 360ms var(--jb-motion-ease),
     box-shadow 360ms var(--jb-motion-ease),
     background-color 240ms ease,
     border-color 240ms ease;
 }
 
 html[data-motion-scene="clinica"][data-motion-pointer="fine"] :where([data-status], [data-timeline], [data-motion-status]):hover {
-  transform: translate3d(0, -2px, 0);
+  translate: 0 -2px;
 }
 
-html:is([data-motion-zone="checkout"], [data-motion-zone="clinica"], [data-motion-zone="admin"], [data-motion-zone="acesso"])
-  [data-jb-motion="true"] {
-  --jb-motion-y: 8px;
-  --jb-motion-scale: 0.996;
-  transition-duration: 220ms, 360ms, 220ms, 360ms;
+/* Giro do cartão. O motor mantém `--jb-tilt-*` numa regra
+   `[data-cartao-produto]:hover` e `--jb-pointer-*` numa regra do `::before`,
+   ambas de folha própria; aqui só se desenha. Como tudo pende do `:hover`, sair
+   do cartão desfaz o giro sem depender de evento.
+
+   `--jb-tilt-*` são registradas e NÃO herdam. Só o próprio cartão lê o giro;
+   herdável, cada quadro do ponteiro recalculava o estilo da subárvore inteira
+   do cartão. Medido com CPU 4x mais lenta, 300 movimentos na grade: 2523ms de
+   recálculo com a variável herdável, 2009ms com ela inline no cartão (o motor
+   antigo) e 1620ms assim.
+
+   Sem `transform-style: preserve-3d`, `will-change` nem `translateZ`: o cartão
+   e a moldura da foto têm `overflow: hidden`, que achata o 3D — a profundidade
+   nunca apareceu, e os vinte cartões da grade ficavam promovidos a camada o
+   tempo todo. */
+@property --jb-tilt-x {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
 }
 
-html:is([data-motion-zone="checkout"], [data-motion-zone="clinica"], [data-motion-zone="admin"], [data-motion-zone="acesso"])
-  [data-jb-motion-state="espera"] {
-  filter: none;
-  clip-path: none;
+@property --jb-tilt-y {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
 }
 
-html[data-motion-zone="publico"][data-motion-pointer="fine"] [data-cartao-produto] {
-  --jb-pointer-x: 50%;
-  --jb-pointer-y: 50%;
-  --jb-tilt-x: 0deg;
-  --jb-tilt-y: 0deg;
-  transform-style: preserve-3d;
-  will-change: transform;
+@media (hover: hover) and (pointer: fine) {
+  html[data-motion-zone="publico"]:not([data-motion-reduced]) [data-cartao-produto]::before {
+    content: "";
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    background:
+      radial-gradient(
+        28rem circle at var(--jb-pointer-x, 50%) var(--jb-pointer-y, 50%),
+        rgb(224 20 27 / 0.11),
+        rgb(224 20 27 / 0.035) 28%,
+        transparent 58%
+      );
+    transition: opacity 340ms ease;
+  }
+
+  html[data-motion-zone="publico"]:not([data-motion-reduced]) [data-cartao-produto]:hover {
+    transform:
+      perspective(1100px)
+      translate3d(0, -5px, 0)
+      rotateX(var(--jb-tilt-x, 0deg))
+      rotateY(var(--jb-tilt-y, 0deg));
+    border-color: color-mix(in srgb, var(--color-jb-500) 24%, var(--color-graf-200));
+    box-shadow:
+      0 18px 44px -28px rgb(26 28 30 / 0.48),
+      0 8px 30px -24px rgb(224 20 27 / 0.26);
+    transition:
+      transform 140ms ease-out,
+      border-color 320ms ease,
+      box-shadow 420ms var(--jb-motion-ease);
+  }
+
+  html[data-motion-zone="publico"]:not([data-motion-reduced]) [data-cartao-produto]:hover::before {
+    opacity: 1;
+  }
+
+  html[data-motion-zone="publico"]:not([data-motion-reduced]) [data-cartao-produto]:hover [data-imagem-produto] {
+    transform: scale(1.045);
+  }
 }
 
-html[data-motion-zone="publico"][data-motion-pointer="fine"] [data-cartao-produto]::before {
-  content: "";
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  opacity: 0;
-  background:
-    radial-gradient(
-      28rem circle at var(--jb-pointer-x) var(--jb-pointer-y),
-      rgb(224 20 27 / 0.11),
-      rgb(224 20 27 / 0.035) 28%,
-      transparent 58%
-    );
-  transition: opacity 340ms ease;
-}
+/* Microinterações de controle. Ficam em `@layer base` de propósito: esta folha
+   é importada sem camada, e sem camada ela vencia TODA utility do Tailwind —
+   o `duration-300` de um drawer, o `transition-none` de quem pediu nenhuma, o
+   `transition-transform` do chevron do acordeão. Na base, são o padrão de quem
+   não declarou nada. Escala e deslocamento usam as propriedades individuais
+   (`scale`, `translate`), que se somam ao `transform` do componente em vez de
+   apagá-lo. */
+@layer base {
+  html[data-motion-enhanced="true"] :where(button, a, input, select, textarea) {
+    transition-property: color, background-color, border-color, box-shadow, opacity, scale;
+    transition-duration: var(--jb-motion-fast);
+    transition-timing-function: ease-out;
+  }
 
-html[data-motion-zone="publico"][data-motion-pointer="fine"]
-  [data-cartao-produto][data-jb-tilt="true"] {
-  transform:
-    perspective(1100px)
-    translate3d(0, -5px, 0)
-    rotateX(var(--jb-tilt-x))
-    rotateY(var(--jb-tilt-y)) !important;
-  border-color: color-mix(in srgb, var(--color-jb-500) 24%, var(--color-graf-200));
-  box-shadow:
-    0 18px 44px -28px rgb(26 28 30 / 0.48),
-    0 8px 30px -24px rgb(224 20 27 / 0.26);
-  transition:
-    transform 140ms ease-out,
-    border-color 320ms ease,
-    box-shadow 420ms var(--jb-motion-ease);
-}
+  html[data-motion-enhanced="true"] :where(button, a) :where(svg) {
+    transition: translate var(--jb-motion-base) var(--jb-motion-ease);
+  }
 
-html[data-motion-zone="publico"][data-motion-pointer="fine"]
-  [data-cartao-produto][data-jb-tilt="true"]::before {
-  opacity: 1;
-}
+  html[data-motion-zone="publico"] :where(button, a):not([aria-disabled="true"]):active {
+    transition-duration: 90ms;
+  }
 
-html[data-motion-zone="publico"][data-motion-pointer="fine"]
-  [data-cartao-produto][data-jb-tilt="true"] [data-imagem-produto] {
-  transform: translateZ(18px) scale(1.045);
-}
+  html[data-motion-zone="publico"]
+    :where(button, a[class*="bg-jb-"], .botao-jb, .botao-osso):not([aria-disabled="true"]):active {
+    scale: 0.985;
+  }
 
-html[data-motion-enhanced="true"] :where(button, a) :where(svg) {
-  transition: transform var(--jb-motion-base) var(--jb-motion-ease);
-}
-
-html[data-motion-zone="publico"] :where(button, a):not([aria-disabled="true"]):active {
-  transition-duration: 90ms;
-}
-
-html[data-motion-zone="publico"]
-  :where(button, a[class*="bg-jb-"], .botao-jb, .botao-osso):not([aria-disabled="true"]):active {
-  transform: scale(0.985);
-}
-
-html[data-motion-zone="publico"] :where(a, button):hover > svg:last-child {
-  transform: translate3d(2px, 0, 0);
-}
-
-html[data-motion-enhanced="true"] :where(button, a, input, select, textarea) {
-  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
-  transition-duration: var(--jb-motion-fast);
-  transition-timing-function: ease-out;
-}
-
-html[data-motion-enhanced="true"] [data-jb-motion-kind="dialogo"][data-jb-motion-state="visivel"] {
-  animation: jb-motion-dialogo 420ms var(--jb-motion-ease-spring) both;
+  /* Só a seta que acompanha um texto anda. Ícone sozinho (fechar, favoritar)
+     não foge do cursor. */
+  html[data-motion-zone="publico"] :where(a, button):hover > svg:last-child:not(:only-child) {
+    translate: 2px 0;
+  }
 }
 
 @keyframes jb-motion-progress {
@@ -380,32 +289,6 @@ html[data-motion-enhanced="true"] [data-jb-motion-kind="dialogo"][data-jb-motion
   }
 }
 
-@keyframes jb-motion-dialogo {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 12px, 0) scale(0.985);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-}
-
-@keyframes jb-motion-card-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 18px, 0) scale(0.975);
-    filter: blur(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-}
-
 @keyframes jb-orbit-a {
   from { transform: translate3d(0, 0, 0) scale(1); }
   to { transform: translate3d(-44px, 30px, 0) scale(1.06); }
@@ -423,7 +306,6 @@ html[data-motion-enhanced="true"] [data-jb-motion-kind="dialogo"][data-jb-motion
 
 @media (hover: none), (pointer: coarse) {
   .jb-motion-aura { display: none; }
-  html[data-motion-enhanced="true"] [data-cartao-produto] { transform: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -434,14 +316,19 @@ html[data-motion-enhanced="true"] [data-jb-motion-kind="dialogo"][data-jb-motion
     display: none !important;
   }
 
-  html[data-motion-enhanced="true"] [data-jb-motion="true"],
-  html[data-motion-enhanced="true"] [data-cartao-produto],
-  html[data-motion-enhanced="true"] [data-imagem-produto] {
-    animation: none !important;
+  html[data-motion-enhanced="true"] :where([data-imagem-produto], [data-palco-imagem-produto]) {
     transition: none !important;
     transform: none !important;
-    filter: none !important;
-    clip-path: none !important;
-    opacity: 1 !important;
+  }
+}
+
+/* `both` segura o quadro inicial: impresso, um feixe no meio do caminho ou o
+   palco da home sairiam no papel. */
+@media print {
+  .jb-motion-progress,
+  .jb-motion-route-beam,
+  .jb-motion-aura,
+  .jb-home-stage {
+    display: none !important;
   }
 }

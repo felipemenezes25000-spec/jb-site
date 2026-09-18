@@ -47,27 +47,34 @@
   border-radius: 0.5rem;
   font-weight: 750;
   transition:
-    transform 180ms var(--jb-motion-ease-spring),
+    translate 180ms var(--jb-motion-ease-spring),
+    scale 180ms var(--jb-motion-ease-spring),
     filter 160ms ease;
 }
 
 [data-sonner-toaster] [data-sonner-toast] [data-button]:hover {
   filter: brightness(0.96);
-  transform: translate3d(0, -1px, 0);
+  translate: 0 -1px;
 }
 
 [data-sonner-toaster] [data-sonner-toast] [data-button]:active {
-  transform: scale(0.98);
+  scale: 0.98;
 }
 
+/* `rotate` e `scale` individuais: o Sonner posiciona o botão de fechar com
+   `transform: var(--toast-close-button-transform)` (translate de -35%). Um
+   `transform` no hover apagava esse deslocamento, o botão pulava ~7px para
+   longe do cursor e o hover caía — liga, desliga, liga. */
 [data-sonner-toaster] [data-sonner-toast] [data-close-button] {
   transition:
-    transform 180ms var(--jb-motion-ease-spring),
+    rotate 180ms var(--jb-motion-ease-spring),
+    scale 180ms var(--jb-motion-ease-spring),
     border-color 160ms ease;
 }
 
 [data-sonner-toaster] [data-sonner-toast] [data-close-button]:hover {
-  transform: rotate(4deg) scale(1.04);
+  rotate: 4deg;
+  scale: 1.04;
   border-color: var(--color-graf-400);
 }
 
@@ -95,6 +102,8 @@
 
   [data-sonner-toaster] [data-sonner-toast] :where([data-button], [data-close-button]) {
     transition: none !important;
-    transform: none !important;
+    translate: none !important;
+    rotate: none !important;
+    scale: none !important;
   }
 }

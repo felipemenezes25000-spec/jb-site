@@ -120,11 +120,16 @@ function medir() {
    * — sem que a página rolasse um pixel. Quatorze achados falsos vieram daí.
    *
    * Tentar rolar e ver se andou é o que o dedo do usuário faria.
+   *
+   * `behavior: "instant"` é obrigatório. O `<html>` tem `scroll-behavior:
+   * smooth`, e um `scrollTo` sem comportamento herda a rolagem suave: ela
+   * começa no próximo quadro, `scrollX` lido logo em seguida vale 0 e toda
+   * rolagem de verdade parece não existir.
    */
   const rolagemAnterior = window.scrollX;
-  window.scrollTo(9999, window.scrollY);
+  window.scrollTo({ left: 9999, top: window.scrollY, behavior: "instant" });
   const rolouDeFato = Math.round(window.scrollX);
-  window.scrollTo(rolagemAnterior, window.scrollY);
+  window.scrollTo({ left: rolagemAnterior, top: window.scrollY, behavior: "instant" });
 
   if (rolouDeFato > 1) {
     // acha o culpado AGORA, no mesmo estado de layout que produziu a rolagem —
@@ -630,10 +635,14 @@ async function percorrer(grupo, rotas, login) {
           try {
             await conferencia.goto(BASE + rota, { waitUntil: "load", timeout: 45000 });
             await assentar(conferencia);
+            /* Este contexto não emula movimento reduzido: sem `instant`, a
+               rolagem suave do `<html>` fazia `scrollX` ler 0 aqui e TODA
+               suspeita real era descartada como alarme falso. Foi assim que
+               144–278px de rolagem lateral no admin passaram como "ok". */
             const rolouMesmo = await conferencia.evaluate(() => {
-              window.scrollTo(9999, 0);
+              window.scrollTo({ left: 9999, top: 0, behavior: "instant" });
               const x = Math.round(window.scrollX);
-              window.scrollTo(0, 0);
+              window.scrollTo({ left: 0, top: 0, behavior: "instant" });
               return x;
             });
             if (rolouMesmo <= 1) achados.splice(suspeita, 1);

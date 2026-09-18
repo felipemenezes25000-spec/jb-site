@@ -3,7 +3,9 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 
 import { CaixaCompra, type AddonProduto } from "@/components/loja/caixa-compra";
-import { GaleriaProduto, type FotoProduto } from "@/components/loja/galeria-produto";
+import type { FotoProduto } from "@/components/loja/galeria-produto";
+import { ExploracaoProduto } from "@/components/loja/produto/exploracao-produto";
+import { exploracaoDoProduto } from "@/lib/comercio/exploracao-produto";
 import { AjudaDaEquipe } from "@/components/loja/produto/ajuda-da-equipe";
 import {
   AntesDeComprar,
@@ -405,7 +407,7 @@ export default async function ProdutoPage({ params }: Props) {
 
       <TopoMarketplace
         trilha={<Trilha itens={trilha} />}
-        galeria={<GaleriaProduto fotos={fotos} nome={produto.name} />}
+        galeria={<ExploracaoProduto fotos={fotos} nome={produto.name} dados={exploracaoDoProduto(ficha)} />}
         resumo={
           <ResumoTecnicoProduto
             nome={produto.name}
@@ -457,6 +459,7 @@ export default async function ProdutoPage({ params }: Props) {
                 hrefOrcamento={hrefOrcamento}
                 maxParcelas={maxParcelas}
                 minParcelaCents={minParcelaCents}
+                comparar={{ slug: produto.slug, nome: produto.name }}
                 garantia={
                   garantiaMeses && garantiaMeses > 0
                     ? { meses: garantiaMeses, daUnidade: Boolean(unidade?.warrantyMonths) }

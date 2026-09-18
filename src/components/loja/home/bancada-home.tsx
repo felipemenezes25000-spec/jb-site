@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { Secao } from "@/components/ui/secao";
 import Link from "next/link";
 import { BadgeCheck, GitCompareArrows } from "lucide-react";
+import { BancadaProcesso } from "./bancada-processo";
 
 /* ============================================================================
    A bancada e o comparador
@@ -20,62 +20,23 @@ import { BadgeCheck, GitCompareArrows } from "lucide-react";
    Nenhuma promessa nova foi inventada para encher a seção.
    ============================================================================ */
 
-const ETAPAS = [
-  {
-    numero: "01",
-    titulo: "A clínica descreve a rotina",
-    texto:
-      "Quantos consultórios, quantos ciclos por dia, o que já existe na sala. A recomendação nasce daí, não de uma lista de mais vendidos.",
-  },
-  {
-    numero: "02",
-    titulo: "O equipamento passa pela bancada",
-    texto:
-      "Todo seminovo é aberto, testado e fotografado. O que foi trocado aparece no laudo daquela unidade, com nome de peça e resultado item por item.",
-  },
-  {
-    numero: "03",
-    titulo: "A JB continua depois da entrega",
-    texto:
-      "Instalação acompanhada, chamado técnico com a mesma equipe que vendeu, e o equipamento registrado na Área da Clínica com garantia e histórico.",
-  },
-];
-
 export function BancadaJB() {
   return (
-    <Secao largura="loja" espaco="md" separador className="filete mt-8" classNameInterno="grid gap-12 lg:grid-cols-2">
-      {/* A coluna da esquerda gruda: as três etapas rolam ao lado dela, e a
-          foto continua à vista enquanto se lê o processo que ela mostra. */}
-      <div className="min-w-0 lg:sticky lg:top-32 lg:h-fit">
-        <p className="etiqueta">a bancada jb</p>
-        <h2 className="fonte-display mt-3 text-[clamp(2rem,4.4vw,3.25rem)] text-graf-950">
-          O equipamento é aberto antes de ser vendido.
-        </h2>
-        <p className="mt-5 max-w-lg text-base leading-7 text-graf-700">
+    <Secao largura="loja" espaco="md" separador className="filete mt-8" rotuladoPor="bancada-jb-titulo">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-end lg:gap-16">
+        <div>
+          <p className="etiqueta">a bancada jb</p>
+          <h2 id="bancada-jb-titulo" className="mt-3 max-w-2xl text-section">
+            O equipamento é aberto antes de ser vendido.
+          </h2>
+        </div>
+        <p className="max-w-lg text-base leading-7 text-graf-950">
           Cada seminovo passa por teste de ciclo, troca de peça de desgaste e registro
           fotográfico. O laudo que você lê na ficha é da unidade que sai daqui — não é descrição
           de modelo.
         </p>
-        <div className="mt-8 overflow-hidden rounded-2xl border border-graf-200">
-          <Image
-            src="/lumina/bancada.jpg"
-            alt="Bancada técnica da JB com equipamento odontológico em teste"
-            width={1024}
-            height={640}
-            className="h-72 w-full object-cover"
-          />
-        </div>
       </div>
-
-      <ol className="min-w-0 space-y-4">
-        {ETAPAS.map((etapa) => (
-          <li key={etapa.numero} className="papel levanta acorda p-7">
-            <span className="fonte-display tabular text-5xl text-graf-200">{etapa.numero}</span>
-            <h3 className="fonte-display mt-3 text-2xl text-graf-950">{etapa.titulo}</h3>
-            <p className="mt-2 text-corpo leading-6 text-graf-700">{etapa.texto}</p>
-          </li>
-        ))}
-      </ol>
+      <BancadaProcesso />
     </Secao>
   );
 }
