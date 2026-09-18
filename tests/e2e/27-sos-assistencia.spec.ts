@@ -34,7 +34,10 @@ test.describe("SOS Equipamento", () => {
     expect(rascunho.aindaOpera).toBe("nao");
     expect(rascunho.urgencia).toBe("parado");
 
-    await page.getByLabel("Marca").fill("Equipamento SOS de teste");
+    /* Papel e nome exatos. A home foi aberta antes, e o Next guarda a rota
+       anterior oculta no DOM: `getByLabel("Marca")` casava por trecho com a
+       seção "Marcas no catálogo" da home e o modo estrito reprovava. */
+    await page.getByRole("textbox", { name: "Marca", exact: true }).fill("Equipamento SOS de teste");
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page.getByRole("heading", { name: "O que está acontecendo?" })).toBeVisible();

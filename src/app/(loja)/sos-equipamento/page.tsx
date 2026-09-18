@@ -21,7 +21,11 @@ import {
   servicoJsonLd,
   trilhaJsonLd,
 } from "@/lib/seo";
-import { getSettings } from "@/lib/settings";
+/* Configuração pública em cache (etiqueta `configuracoes`, derrubada quando o
+   painel salva). `getSettings()` cru é leitura sem cache fora de <Suspense>:
+   com Cache Components o Next acusava "uncached data during prerendering or a
+   navigation" ao chegar aqui pelo atalho da home. */
+import { configuracoesPublicas } from "@/lib/loja-publica";
 
 import "./sos.css";
 
@@ -34,7 +38,7 @@ const TRILHA = [
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
-  const s = await getSettings();
+  const s = await configuracoesPublicas();
   return metadataDePagina({
     titulo: "SOS Equipamento odontológico",
     descricao: `Seu equipamento odontológico parou? Inicie a triagem técnica da JB em ${s.endereco_cidade}, envie evidências e abra um chamado com protocolo.`,
@@ -61,7 +65,7 @@ const PASSOS = [
 ];
 
 export default async function SosEquipamentoPage() {
-  const s = await getSettings();
+  const s = await configuracoesPublicas();
   const whatsapp = whatsappHref(
     s.whatsapp,
     "Olá! Meu equipamento odontológico parou e preciso de assistência técnica da JB.",
