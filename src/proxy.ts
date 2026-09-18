@@ -8,6 +8,14 @@ import { NextResponse, type NextRequest } from "next/server";
  * segmento não é aceito aqui. Referência lida antes de escrever:
  * node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md
  *
+ * MORA EM `src/`. A documentação manda o arquivo ficar no mesmo nível de
+ * `app`, e o app daqui é `src/app`. Até 18/09/2026 ele estava na raiz do
+ * repositório e nunca foi carregado: o preview saía sem `X-Robots-Tag`, as
+ * áreas privadas com `Cache-Control: public` e a visita anônima a `/admin`
+ * recebia 200 com a moldura do painel antes do redirecionamento. O que rodava
+ * era um `src/middleware.ts` (convenção depreciada) que só fazia o item 5
+ * abaixo — agora ele mora aqui.
+ *
  * A mesma documentação avisa que o proxy é pensado para rodar separado do
  * código de renderização, podendo até ser empurrado para a borda, e que não se
  * deve depender de módulos compartilhados. Por isso este arquivo é autossuficiente:
@@ -21,7 +29,11 @@ import { NextResponse, type NextRequest } from "next/server";
  *  2. barra visita anônima a `/admin` e `/minha-jb` olhando apenas a PRESENÇA do
  *     cookie de sessão, sem tocar no banco;
  *  3. marca as áreas privadas como não-cacheáveis e não-indexáveis;
- *  4. em preview e desenvolvimento, manda `X-Robots-Tag: noindex` no site todo.
+ *  4. em preview e desenvolvimento, manda `X-Robots-Tag: noindex` no site todo;
+ *  5. leva o caminho pedido de `/minha-jb` até a renderização, no cabeçalho
+ *     `x-caminho-pedido`: o layout da área não recebe a URL, e é com ela que
+ *     `exigirCliente` monta o "voltar" do login quando a sessão existe mas é
+ *     recusada (cookie vencido ou adulterado).
  *
  * O que ele NÃO faz, de propósito:
  *
@@ -41,6 +53,12 @@ import { NextResponse, type NextRequest } from "next/server";
 const COOKIE_STAFF = "jb_staff";
 /** Espelha a constante privada de `@/lib/auth-cliente`. */
 const COOKIE_CLIENTE = "jb_cliente";
+
+/**
+ * Cabeçalho com o caminho pedido, lido por `exigirCliente` (`@/lib/auth-cliente`).
+ * Exportado daqui porque é o proxy que o escreve.
+ */
+export const CABECALHO_CAMINHO = "x-caminho-pedido";
 
 /* -------------------------------------------------------------------- rotas */
 
@@ -150,7 +168,14 @@ export function proxy(request: NextRequest) {
 
   /* ------------------------------------------------------------ cabeçalhos */
 
-  const resposta = NextResponse.next();
+  let resposta: NextResponse;
+  if (naAreaCliente) {
+    const cabecalhos = new Headers(request.headers);
+    cabecalhos.set(CABECALHO_CAMINHO, pathname + request.nextUrl.search);
+    resposta = NextResponse.next({ request: { headers: cabecalhos } });
+  } else {
+    resposta = NextResponse.next();
+  }
 
   const ehPrivada = PRIVADAS.some((base) => dentroDe(pathname, base));
   const ehProducao = process.env.VERCEL_ENV === "production";

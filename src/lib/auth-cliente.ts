@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { CABECALHO_CAMINHO } from "@/middleware";
+import { CABECALHO_CAMINHO } from "@/proxy";
 import { connection } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
