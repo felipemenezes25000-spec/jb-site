@@ -1,4 +1,4 @@
-[data-assistencia-premium] {
+[data-assistencia-shell] {
   --assist-vermelho: var(--color-jb-600, #e0141b);
   --assist-grafite: var(--color-graf-950, #171717);
 }
@@ -39,6 +39,36 @@
   pointer-events: none;
   background: radial-gradient(circle, rgb(224 20 27 / 0.18), transparent 67%);
   filter: blur(24px);
+}
+
+/* O assistente é uma tarefa, não uma landing. A etapa ativa entra uma única
+   vez, com pouca distância, e o movimento some em reduced motion. */
+[data-assistencia-shell] form section:not([hidden]) {
+  animation: assistencia-etapa-form 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+[data-assistencia-shell] form section:not([hidden]) > div:first-child {
+  position: relative;
+}
+
+[data-assistencia-shell] form section:not([hidden]) > div:first-child::before {
+  position: absolute;
+  top: 0.2rem;
+  left: -1rem;
+  width: 2px;
+  height: 2.6rem;
+  content: "";
+  border-radius: 999px;
+  background: linear-gradient(to bottom, var(--assist-vermelho), transparent);
+  opacity: 0.65;
+}
+
+[data-assistencia-shell] form :is(input, textarea, select):focus-visible {
+  box-shadow: 0 0 0 4px rgb(224 20 27 / 0.08);
+}
+
+[data-assistencia-shell] form button:not(:disabled):active {
+  transform: translateY(1px) scale(0.992);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -170,6 +200,19 @@
   animation: assistencia-dock-entra 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes assistencia-etapa-form {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
 @keyframes assistencia-orbita {
   from {
     transform: rotate(0deg) scale(1);
@@ -216,6 +259,10 @@
   [data-assistencia-fechamento]::after {
     display: none;
   }
+
+  [data-assistencia-shell] form section:not([hidden]) > div:first-child::before {
+    display: none;
+  }
 }
 
 @media (pointer: coarse) {
@@ -231,7 +278,9 @@
 @media (prefers-reduced-motion: reduce) {
   [data-assistencia-orbita],
   [data-assistencia-scan],
-  [data-assistencia-dock] {
+  [data-assistencia-dock],
+  [data-assistencia-shell] form section:not([hidden]),
+  [data-assistencia-premium] .animate-ping {
     animation: none !important;
   }
 
@@ -242,7 +291,8 @@
   [data-assistencia-command] > div:first-child,
   [data-assistencia-proof],
   [data-assistencia-categoria],
-  [data-assistencia-categoria]::after {
+  [data-assistencia-categoria]::after,
+  [data-assistencia-shell] form button {
     transition: none !important;
     transform: none !important;
   }
