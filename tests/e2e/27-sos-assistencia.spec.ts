@@ -58,3 +58,21 @@ test.describe("SOS Equipamento", () => {
     ).toHaveCount(0);
   });
 });
+
+test.describe("Continuidade da assistência", () => {
+  test("leva a família escolhida na landing para o formulário sem redigitação", async ({ page }) => {
+    await page.goto("/assistencia-tecnica");
+
+    const cartao = page.locator("[data-assistencia-categoria]").first();
+    await expect(cartao).toBeVisible();
+    const nome = (await cartao.locator("p").first().innerText()).trim();
+    expect(nome.length).toBeGreaterThan(0);
+
+    await cartao.click();
+    await expect(page).toHaveURL(/\/assistencia-tecnica\/solicitar$/);
+
+    const tipo = page.getByLabel("Tipo de equipamento");
+    await expect(tipo).toBeVisible();
+    await expect(tipo.locator("option:checked")).toHaveText(nome);
+  });
+});
