@@ -1,0 +1,31 @@
+/* Segurança geométrica da camada de assinatura.
+   A assinatura usa seletores mais específicos que o CSS Module do hero;
+   estes quatro elementos precisam continuar absolutamente posicionados para
+   o palco técnico manter exatamente a mesma geometria e não ganhar altura. */
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]
+  > :where(svg, img, span, div) {
+  position: absolute;
+}
+
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]
+  > svg {
+  z-index: 3;
+}
+
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]
+  > span {
+  z-index: 1;
+}
+
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]
+  > :where(img, div) {
+  z-index: 2;
+}
