@@ -7,6 +7,7 @@ import { ArrowRight, Siren } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CHAVE_RASCUNHO = "jb:chamado:rascunho";
+const CHAVE_ORIGEM = "jb:assistencia:origem";
 
 function prepararChamadoUrgente() {
   try {
@@ -24,6 +25,11 @@ function prepararChamadoUrgente() {
         aindaOpera: "nao",
       }),
     );
+
+    /* Só a origem agregável. Nenhum relato, equipamento, contato ou serial
+       acompanha este marcador. A telemetria consome a chave ao entrar no
+       formulário e a carrega até o protocolo confirmado. */
+    window.sessionStorage.setItem(CHAVE_ORIGEM, "sos");
   } catch {
     // O SOS continua funcionando mesmo quando o armazenamento da aba é bloqueado.
   }
