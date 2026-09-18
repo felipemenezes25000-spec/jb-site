@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { SosEquipamentoFlutuante } from "@/components/assistencia/sos-equipamento";
 import { BarraDeCategorias } from "@/components/loja/barra-categorias";
 import { Cabecalho } from "@/components/loja/cabecalho";
 import {
@@ -82,6 +83,7 @@ export async function CascaPublica({ children }: { children: React.ReactNode }) 
             quem o cabeçalho já cumprimentava pelo nome. */}
         <Rodape />
         <BarraComparar />
+        <SosEquipamentoFlutuante />
       </div>
     </ComparadorProvider>
   );
