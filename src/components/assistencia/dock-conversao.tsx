@@ -23,12 +23,18 @@ export function DockConversaoAssistencia() {
     } catch {
       // Armazenamento bloqueado não impede o CTA de funcionar.
     }
-    setFechado(foiFechado);
 
     const atualizar = () => setVisivel(window.scrollY > 520);
-    atualizar();
+    const quadro = requestAnimationFrame(() => {
+      setFechado(foiFechado);
+      atualizar();
+    });
+
     window.addEventListener("scroll", atualizar, { passive: true });
-    return () => window.removeEventListener("scroll", atualizar);
+    return () => {
+      cancelAnimationFrame(quadro);
+      window.removeEventListener("scroll", atualizar);
+    };
   }, [naLanding]);
 
   if (!naLanding || fechado || !visivel) return null;
