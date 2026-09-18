@@ -249,33 +249,34 @@ export function MotionSystem() {
     const usaPonteiro = publico && ponteiroFino;
     const aura = usaPonteiro ? document.querySelector<HTMLElement>("[data-jb-motion-aura]") : null;
 
-    /* O giro do cartão é uma regra `:hover` numa folha própria. Enquanto o
-       ponteiro anda, o motor só atualiza as variáveis dessa regra — não toca no
-       cartão. Quando o ponteiro sai, o `:hover` acaba e o giro vai junto: não
-       sobra cartão torto por `pointerout` perdido. */
-    let regraDoGiro: CSSStyleRule | null = null;
-    let regraDoBrilho: CSSStyleRule | null = null;
-    let folhaDoGiro: CSSStyleSheet | null = null;
-    if (usaPonteiro && "adoptedStyleSheets" in document && "replaceSync" in CSSStyleSheet.prototype) {
-      folhaDoGiro = new CSSStyleSheet();
-      /* Giro e brilho em regras separadas: `--jb-tilt-*` não herdam (ver
-         `motion.css`), então o `::before` recebe a posição do ponteiro na
-         própria regra em vez de herdá-la do cartão. */
-      folhaDoGiro.replaceSync(
-        'html[data-motion-zone="publico"] [data-cartao-produto]:hover {}' +
-          'html[data-motion-zone="publico"] [data-cartao-produto]:hover::before {}',
-      );
-      regraDoGiro = folhaDoGiro.cssRules[0] as CSSStyleRule;
-      regraDoBrilho = folhaDoGiro.cssRules[1] as CSSStyleRule;
-      document.adoptedStyleSheets = [...document.adoptedStyleSheets, folhaDoGiro];
-    }
+    /* O giro do cartão é uma animação das variáveis `--jb-tilt-*` (no cartão)
+       e `--jb-pointer-*` (no `::before`), registradas e não herdáveis em
+       `motion.css`. Quem decide se o giro aparece é a regra `:hover`: quando o
+       ponteiro sai, o `:hover` acaba e o giro vai junto, mesmo que algum
+       `pointerout` se perca.
+
+       Antes as variáveis viviam numa regra de folha adotada, alterada a cada
+       quadro. Cada mutação faz o navegador reprocessar a folha: medido com CPU
+       4x mais lenta, 300 movimentos na grade davam 2845ms de recálculo de
+       estilo e 46 tarefas longas; sem a folha, 1004ms e 4. Animação não é
+       mutação de folha nem atributo no nó do React — e cada animação nova
+       substitui a anterior, que o navegador descarta sozinho. */
+    const ID_DO_GIRO = "jb-giro-do-cartao";
+    const animaVariaveis = usaPonteiro && "animate" in Element.prototype;
 
     let quadro = 0;
     let ponteiroX = 0;
     let ponteiroY = 0;
     let alvo: EventTarget | null = null;
-    let cartaoMedido: Element | null = null;
+    let cartaoGirando: Element | null = null;
     let caixaDoCartao: DOMRect | null = null;
+
+    const soltarCartao = (cartao: Element | null) => {
+      if (!cartao) return;
+      for (const animacao of cartao.getAnimations({ subtree: true })) {
+        if (animacao.id === ID_DO_GIRO) animacao.cancel();
+      }
+    };
 
     const desenhar = () => {
       quadro = 0;
@@ -283,24 +284,32 @@ export function MotionSystem() {
         aura.style.transform = `translate3d(${ponteiroX}px, ${ponteiroY}px, 0) translate(-50%, -50%)`;
         aura.dataset.visible = "true";
       }
-      if (!regraDoGiro || !regraDoBrilho) return;
+      if (!animaVariaveis) return;
 
       const cartao = alvo instanceof Element ? alvo.closest("[data-cartao-produto]") : null;
+      if (cartao !== cartaoGirando) {
+        soltarCartao(cartaoGirando);
+        cartaoGirando = cartao;
+        caixaDoCartao = null;
+      }
       if (!cartao) return;
       /* Uma leitura de layout por cartão, não por evento. */
-      if (cartao !== cartaoMedido || !caixaDoCartao) {
-        cartaoMedido = cartao;
-        caixaDoCartao = cartao.getBoundingClientRect();
-      }
+      caixaDoCartao ??= cartao.getBoundingClientRect();
       const { left, top, width, height } = caixaDoCartao;
       if (width === 0 || height === 0) return;
 
       const x = Math.min(1, Math.max(0, (ponteiroX - left) / width));
       const y = Math.min(1, Math.max(0, (ponteiroY - top) / height));
-      regraDoBrilho.style.setProperty("--jb-pointer-x", `${(x * 100).toFixed(1)}%`);
-      regraDoBrilho.style.setProperty("--jb-pointer-y", `${(y * 100).toFixed(1)}%`);
-      regraDoGiro.style.setProperty("--jb-tilt-x", `${((0.5 - y) * 3.2).toFixed(2)}deg`);
-      regraDoGiro.style.setProperty("--jb-tilt-y", `${((x - 0.5) * 4.2).toFixed(2)}deg`);
+      const giro = cartao.animate(
+        [{ "--jb-tilt-x": `${((0.5 - y) * 3.2).toFixed(2)}deg`, "--jb-tilt-y": `${((x - 0.5) * 4.2).toFixed(2)}deg` }],
+        { duration: 140, easing: "ease-out", fill: "forwards" },
+      );
+      giro.id = ID_DO_GIRO;
+      const brilho = cartao.animate(
+        [{ "--jb-pointer-x": `${(x * 100).toFixed(1)}%`, "--jb-pointer-y": `${(y * 100).toFixed(1)}%` }],
+        { duration: 0, fill: "forwards", pseudoElement: "::before" },
+      );
+      brilho.id = ID_DO_GIRO;
     };
 
     const esconderAura = () => {
@@ -322,13 +331,27 @@ export function MotionSystem() {
     /* Rolar move o cartão debaixo do ponteiro parado: a medida guardada vale
        até a próxima rolagem. */
     const aoRolar = () => {
-      cartaoMedido = null;
       caixaDoCartao = null;
     };
 
     const aoMudarVisibilidade = () => {
       if (document.hidden) esconderAura();
     };
+
+    /* Os loops decorativos da home (`motion-signature.css`) pausam enquanto a
+       pessoa rola e voltam 180ms depois. Parados, o compositor dá conta deles;
+       rolando, somavam de 23% a 39% do tempo da thread principal com CPU 4x
+       mais lenta. Os ciclos são de 4 a 18s: a pausa não se vê. O atributo é
+       gravado duas vezes por gesto de rolagem, não a cada evento. */
+    let fimDaRolagem = 0;
+    const aoRolarAHome = () => {
+      if (raiz.dataset.motionRolando !== "true") raiz.dataset.motionRolando = "true";
+      window.clearTimeout(fimDaRolagem);
+      fimDaRolagem = window.setTimeout(() => {
+        delete raiz.dataset.motionRolando;
+      }, 180);
+    };
+    if (cenaHome) window.addEventListener("scroll", aoRolarAHome, { passive: true });
 
     if (usaPonteiro) {
       document.addEventListener("pointermove", aoMoverPonteiro, { passive: true });
@@ -353,11 +376,11 @@ export function MotionSystem() {
         document.removeEventListener("visibilitychange", aoMudarVisibilidade);
       }
       if (quadro) window.cancelAnimationFrame(quadro);
+      if (cenaHome) window.removeEventListener("scroll", aoRolarAHome);
+      window.clearTimeout(fimDaRolagem);
+      delete raiz.dataset.motionRolando;
       esconderAura();
-      if (folhaDoGiro) {
-        const folha = folhaDoGiro;
-        document.adoptedStyleSheets = document.adoptedStyleSheets.filter((item) => item !== folha);
-      }
+      soltarCartao(cartaoGirando);
     };
   }, [pathname, reduzido]);
 

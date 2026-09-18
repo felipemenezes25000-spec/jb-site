@@ -115,9 +115,15 @@ header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) 
   border-color: var(--color-graf-450);
 }
 
+/* O foco é o contorno do `foco-jb`: 2px da cor da marca, afastado 2px. O anel
+   que existia (3px a 9% de opacidade) mais a borda que ia de cinza a
+   vermelho-claro mediam 1,83:1 entre o estado com e sem foco — abaixo dos 3:1
+   que a WCAG pede para o indicador. Vermelho sobre o branco da página dá
+   4,9:1. `overflow: hidden` aqui não corta: contorno não é conteúdo. */
 header[data-jb-premium-header="true"] form[role="search"]:has(#busca-cabecalho) > div:focus-within {
   border-color: var(--color-jb-400);
-  box-shadow: 0 0 0 3px rgb(224 20 27 / 0.09);
+  outline: 2px solid var(--color-jb-500);
+  outline-offset: 2px;
 }
 
 header[data-jb-premium-header="true"] #busca-cabecalho {

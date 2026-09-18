@@ -86,6 +86,13 @@ test.describe("Ficha técnica", () => {
   test("o número prometido no topo é o número que a ficha entrega", async ({ page }) => {
     await page.goto(`/loja/${fixtures().produto.slug}`);
 
+    /* `count()` não espera. No `load` o conteúdo da ficha pode já estar no DOM
+       mas ainda oculto — o React segura a revelação da fronteira de Suspense
+       por algumas centenas de ms —, e `getByRole` ignora o que está oculto: o
+       teste concluía "produto sem atributos decisivos" e se pulava no CI com
+       um produto que tem. O título mora no mesmo bloco do atalho; visível ele,
+       o atalho já teve a chance de existir. */
+    await expect(page.locator("#titulo-produto")).toBeVisible();
     const atalho = page.getByRole("link", { name: /Ver as \d+ especificações/ });
     if ((await atalho.count()) === 0) test.skip(true, "produto sem atributos decisivos");
 

@@ -166,16 +166,16 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] :where([data-statu
   translate: 0 -2px;
 }
 
-/* Giro do cartão. O motor mantém `--jb-tilt-*` numa regra
-   `[data-cartao-produto]:hover` e `--jb-pointer-*` numa regra do `::before`,
-   ambas de folha própria; aqui só se desenha. Como tudo pende do `:hover`, sair
-   do cartão desfaz o giro sem depender de evento.
+/* Giro do cartão. O motor anima `--jb-tilt-*` no cartão e `--jb-pointer-*`
+   no `::before` (Web Animations); aqui só se desenha. Como tudo pende do
+   `:hover`, sair do cartão desfaz o giro sem depender de evento.
 
-   `--jb-tilt-*` são registradas e NÃO herdam. Só o próprio cartão lê o giro;
-   herdável, cada quadro do ponteiro recalculava o estilo da subárvore inteira
-   do cartão. Medido com CPU 4x mais lenta, 300 movimentos na grade: 2523ms de
-   recálculo com a variável herdável, 2009ms com ela inline no cartão (o motor
-   antigo) e 1620ms assim.
+   As quatro são registradas e NÃO herdam: só o próprio cartão lê o giro e só
+   o `::before` lê a posição do brilho. Herdável, cada quadro do ponteiro
+   recalculava o estilo da subárvore inteira do cartão. E animadas, não
+   escritas numa folha: alterar uma regra de folha a cada quadro fazia o
+   navegador reprocessar a folha — com CPU 4x mais lenta, 300 movimentos na
+   grade davam 46 tarefas longas.
 
    Sem `transform-style: preserve-3d`, `will-change` nem `translateZ`: o cartão
    e a moldura da foto têm `overflow: hidden`, que achata o 3D — a profundidade
@@ -191,6 +191,18 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] :where([data-statu
   syntax: "<angle>";
   inherits: false;
   initial-value: 0deg;
+}
+
+@property --jb-pointer-x {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --jb-pointer-y {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
 }
 
 @media (hover: hover) and (pointer: fine) {

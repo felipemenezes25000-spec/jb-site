@@ -83,7 +83,7 @@ export function HeroVitrine({
             action="/busca"
             method="get"
             role="search"
-            className="mt-7 flex max-w-xl items-center gap-2 rounded-full border border-graf-450 bg-surface py-1.5 pr-1.5 pl-5 transition-colors focus-within:border-jb-500"
+            className="mt-7 flex max-w-xl items-center gap-2 rounded-full border border-graf-450 bg-surface py-1.5 pr-1.5 pl-5 transition-colors focus-within:border-jb-500 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-jb-500"
           >
             <Search className="size-4 shrink-0 text-graf-500" aria-hidden />
             <label htmlFor="busca-home" className="sr-only">Buscar na loja JB</label>

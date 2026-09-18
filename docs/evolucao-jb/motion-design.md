@@ -54,7 +54,7 @@ Não criar durações/easings ad hoc se um token já atende.
 7. Movimento de status deve preservar texto e semântica; cor nunca é a única informação.
 8. Alterações de preço/frete devem manter números tabulares para evitar dança horizontal.
 9. Não introduzir shared-element experimental enquanto a versão de React do projeto não oferecer API estável.
-10. O motor não escreve atributo nem estilo em nó que o React renderizou. Seção em streaming chega antes de hidratar; atributo gravado nela reprova a hidratação. Reveal é `element.animate()`, giro é uma regra `:hover` numa folha adotada.
+10. O motor não escreve atributo nem estilo em nó que o React renderizou. Seção em streaming chega antes de hidratar; atributo gravado nela reprova a hidratação. Reveal é `element.animate()`; o giro do cartão anima variáveis registradas (`--jb-tilt-*`, `--jb-pointer-*`) com `element.animate()`, e a regra `:hover` decide se ele aparece. Nunca alterar uma regra de folha a cada quadro: cada mutação reprocessa a folha (46 tarefas longas em 300 movimentos com CPU 4x).
 11. O repouso é o layout final. Não existe estado de espera com `transform`, `filter` ou `clip-path`: bloco fora da tela deslocado ou encolhido alarga a página e faz botão de 44px medir 43.
 12. Entrada em um eixo só (vertical), só `opacity` e `translate`/`transform` de deslocamento. Sem escala, giro ou blur em bloco que contém controle.
 13. Entrada de cena usa `fill: backwards` e keyframe sem `to`. `both` deixa a animação em efeito para sempre; em `<main>` ou em ancestral de `position: fixed`, prende um bloco de contenção e arrasta a barra fixa para fora da tela. Pelo mesmo motivo, nada de `perspective`, `filter` ou `transform` persistentes nesses ancestrais.
@@ -62,6 +62,8 @@ Não criar durações/easings ad hoc se um token já atende.
 15. Revelar só o que ainda está fora da tela quando o observador avisa (margem inferior de 20%). O que já foi pintado não some para voltar.
 16. Hover que desloca usa as propriedades individuais `translate`/`scale`/`rotate`, que somam ao `transform` do componente (o botão de fechar do Sonner é posicionado por `transform`). A caixa de compra não se move no hover.
 17. Microinterações globais de controle ficam em `@layer base`: sem camada, venceriam toda utility do Tailwind (`duration-*`, `transition-none`).
+18. Loop decorativo infinito pausa durante a rolagem (`html[data-motion-rolando]`, gravado pelo motor): parado ele é barato, rolando somava 17–39% da thread principal na home.
+19. Indicador de foco é o do `foco-jb`: contorno de 2px `#e0141b` afastado 2px (4,9:1 sobre branco). Anel translúcido ou só troca de cor de borda não atinge 3:1 entre focado e não focado.
 
 ## Mobile e performance
 

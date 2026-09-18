@@ -177,6 +177,11 @@ test.describe("Marketplace — página do produto", () => {
    */
   test("a tira de histórico respeita a largura do resto da ficha", async ({ page }) => {
     await page.goto("/loja");
+    /* A grade chega por streaming e pode estar oculta no `load`; ler o `<main>`
+       nesse instante devolvia menos de três links e o teste se pulava sem
+       medir nada. A contagem de resultados vive no mesmo bloco da grade e
+       aparece até com catálogo vazio. */
+    await expect(page.locator("#resultados-do-catalogo")).toBeVisible();
     const slugs = await page
       .locator('main a[href^="/loja/"]')
       .evaluateAll((links) => [

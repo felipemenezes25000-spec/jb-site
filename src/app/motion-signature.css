@@ -485,6 +485,20 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"] [data-motion-cart
       animation-range: entry 0% cover 36%;
     }
   }
+
+  /* Durante a rolagem os loops param no quadro em que estão (o motor grava
+     `data-motion-rolando` no <html>). Medido com CPU 4x mais lenta: 23% a 39%
+     menos thread principal na rolagem da home. Ciclos de 4 a 18s — a pausa
+     não aparece. A luz dos capítulos fica de fora: ela É a rolagem. */
+  html[data-motion-rolando="true"][data-motion-scene="home"] .jb-home-stage::before,
+  html[data-motion-rolando="true"][data-motion-scene="home"] .jb-home-stage::after,
+  html[data-motion-rolando="true"][data-motion-scene="home"] [data-motion-chapter="hero"] > section::before,
+  html[data-motion-rolando="true"][data-motion-scene="home"] [data-motion-chapter="hero"] > section::after,
+  html[data-motion-rolando="true"][data-motion-scene="home"] [data-motion-chapter="hero"] [role="group"][aria-label="Equipamentos em destaque"]::before,
+  html[data-motion-rolando="true"][data-motion-scene="home"] [data-motion-chapter="hero"] [data-palco-imagem-produto]::before,
+  html[data-motion-rolando="true"][data-motion-scene="home"] [data-motion-chapter="hero"] [data-palco-imagem-produto]::after {
+    animation-play-state: paused;
+  }
 }
 
 /* Reforça as entradas existentes sem voltar a escalar o contêiner. */
