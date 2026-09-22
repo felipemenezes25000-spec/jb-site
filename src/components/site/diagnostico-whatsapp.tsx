@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CheckCheck, ChevronLeft, RotateCcw, Siren } from "lucide-react";
 
@@ -16,7 +17,7 @@ import {
   type IdSituacao,
 } from "@/lib/diagnostico";
 import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
-import { ICONE_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
+import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
 import { cn } from "@/lib/utils";
 
@@ -190,6 +191,7 @@ export function DiagnosticoWhatsapp({ numero }: { numero: string }) {
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {EQUIPAMENTOS.map((item) => {
                     const Icone = ICONE_DO_EQUIPAMENTO[item.id];
+                    const imagem = IMAGEM_DO_EQUIPAMENTO[item.id];
                     const escolhido = item.id === equipamentoId;
                     return (
                       <button
@@ -204,13 +206,27 @@ export function DiagnosticoWhatsapp({ numero }: { numero: string }) {
                             : "border-graf-200 bg-white hover:-translate-y-0.5 hover:border-jb-300 hover:shadow-card",
                         )}
                       >
-                        <Icone
-                          className={cn(
-                            "size-5 transition-colors",
-                            escolhido ? "text-jb-600" : "text-graf-500 group-hover:text-jb-600",
-                          )}
-                          aria-hidden
-                        />
+                        {imagem ? (
+                          <span className="relative block size-11">
+                            <Image
+                              src={imagem}
+                              alt=""
+                              fill
+                              sizes="44px"
+                              className="object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-110"
+                            />
+                          </span>
+                        ) : (
+                          <span className="flex size-11 items-center justify-center">
+                            <Icone
+                              className={cn(
+                                "size-6 transition-colors",
+                                escolhido ? "text-jb-600" : "text-graf-500 group-hover:text-jb-600",
+                              )}
+                              aria-hidden
+                            />
+                          </span>
+                        )}
                         <span className="text-[0.8125rem] font-bold leading-tight text-graf-900">
                           {item.nome}
                           {item.evoxx ? (

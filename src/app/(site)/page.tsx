@@ -3,10 +3,12 @@ import { ArrowUpRight, BadgeCheck, CalendarCheck2, FileCheck2, MapPin, Phone } f
 
 import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { ChamadaFinal } from "@/components/site/chamada-final";
+import { ClinicaOuBancada } from "@/components/site/clinica-ou-bancada";
 import { ComoFunciona } from "@/components/site/como-funciona";
 import { DiagnosticoWhatsapp } from "@/components/site/diagnostico-whatsapp";
 import { Duvidas } from "@/components/site/duvidas";
 import { FaixaEquipamentos } from "@/components/site/faixa-equipamentos";
+import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
 import { PalavraGiratoria } from "@/components/site/palavra-giratoria";
 import { PorQueJb } from "@/components/site/por-que-jb";
@@ -46,7 +48,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const s = await configuracoesPublicas();
   const anos = await anosDesde(s.empresa_desde);
-  const ligar = telHref(s.telefone);
+  /* Só o celular: é o mesmo número do WhatsApp, e o fixo saiu do site. */
+  const ligar = telHref(s.whatsapp);
 
   const provas = [
     {
@@ -120,6 +123,10 @@ export default async function HomePage() {
                   Ligar agora
                 </a>
               ) : null}
+            </div>
+
+            <div className="entrada [animation-delay:260ms]">
+              <FotoAbertura />
             </div>
           </div>
 
@@ -201,11 +208,12 @@ export default async function HomePage() {
       </section>
 
       <ComoFunciona whatsapp={s.whatsapp} />
+      <ClinicaOuBancada cidade={s.endereco_cidade} />
       <PorQueJb anos={anos} desde={s.empresa_desde} cidade={s.endereco_cidade} />
       <Duvidas cidade={s.endereco_cidade} horario={s.horario} />
       <ChamadaFinal
         whatsapp={s.whatsapp}
-        telefone={s.telefone}
+        telefone={s.whatsapp}
         horario={s.horario}
         cidade={s.endereco_cidade}
       />

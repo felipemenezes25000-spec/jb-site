@@ -46,7 +46,7 @@ export function Duvidas({ cidade, horario }: { cidade: string; horario: string }
   ];
 
   return (
-    <section id="duvidas" aria-labelledby="duvidas-titulo" className="scroll-mt-20 bg-white py-16 md:py-24">
+    <section id="duvidas" aria-labelledby="duvidas-titulo" className="scroll-mt-20 bg-surface-muted py-16 md:py-24">
       <JsonLd dados={faqJsonLd(perguntas)} />
       <div className="container-estreito">
         <h2 id="duvidas-titulo" className="text-section texto-forte jb-revela">

@@ -1,5 +1,6 @@
 import { BarraWhatsappMovel } from "@/components/site/barra-whatsapp-movel";
 import { CabecalhoSite, type AtalhoDoCabecalho } from "@/components/site/cabecalho-site";
+import { FaixaTopo } from "@/components/site/faixa-topo";
 import { RodapeSite } from "@/components/site/rodape-site";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
@@ -32,12 +33,13 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       >
         Pular para o conteúdo
       </a>
-      <CabecalhoSite whatsapp={s.whatsapp} telefone={s.telefone} atalhos={ATALHOS} />
+      <FaixaTopo whatsapp={s.whatsapp} desde={s.empresa_desde} cidade={s.endereco_cidade} />
+      <CabecalhoSite whatsapp={s.whatsapp} telefone={s.whatsapp} atalhos={ATALHOS} />
       <main id="conteudo" className="flex-1 scroll-mt-20">
         {children}
       </main>
       <RodapeSite s={s} />
-      <BarraWhatsappMovel whatsapp={s.whatsapp} telefone={s.telefone} />
+      <BarraWhatsappMovel whatsapp={s.whatsapp} telefone={s.whatsapp} />
     </div>
   );
 }

@@ -1,7 +1,8 @@
+import Image from "next/image";
 import { ArrowUpRight, BadgeCheck } from "lucide-react";
 
 import { LinkWhatsapp } from "@/components/site/botao-whatsapp";
-import { ICONE_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
+import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
 import { EQUIPAMENTOS, montarMensagem, type Equipamento } from "@/lib/diagnostico";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ function Cartao({
   indice: number;
 }) {
   const Icone = ICONE_DO_EQUIPAMENTO[equipamento.id];
+  const imagem = IMAGEM_DO_EQUIPAMENTO[equipamento.id];
   const outro = equipamento.id === "outro";
 
   return (
@@ -67,25 +69,50 @@ function Cartao({
         ) : null}
 
         <span className="relative flex items-start justify-between gap-3">
-          <span
-            className={cn(
-              "flex items-center justify-center rounded-xl transition-colors",
-              destaque
-                ? "size-14 bg-jb-500 text-white shadow-card"
-                : "size-11 bg-graf-100 text-graf-700 group-hover:bg-jb-50 group-hover:text-jb-600",
-            )}
-          >
-            <Icone className={cn("jb-icone-balanca", destaque ? "size-7" : "size-5")} aria-hidden />
-          </span>
+          {imagem ? null : (
+            <span
+              className={cn(
+                "flex items-center justify-center rounded-xl transition-colors",
+                destaque
+                  ? "size-14 bg-jb-500 text-white shadow-card"
+                  : "size-11 bg-graf-100 text-graf-700 group-hover:bg-jb-50 group-hover:text-jb-600",
+              )}
+            >
+              <Icone className={cn("jb-icone-balanca", destaque ? "size-7" : "size-5")} aria-hidden />
+            </span>
+          )}
           {equipamento.evoxx ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-jb-200 bg-white px-2.5 py-1 text-[0.6875rem] font-bold text-jb-700">
+            <span className="relative z-10 ml-auto inline-flex items-center gap-1 rounded-full border border-jb-200 bg-white px-2.5 py-1 text-[0.6875rem] font-bold text-jb-700 shadow-xs">
               <BadgeCheck className="size-3.5" aria-hidden />
               {destaque ? "Autorizada EVOXX" : "EVOXX"}
             </span>
           ) : null}
         </span>
 
-        <span className="relative mt-auto block pt-6">
+        {imagem ? (
+          <span
+            className={cn(
+              "relative -mt-4 block",
+              destaque ? "h-52 sm:h-64 lg:h-[24rem]" : "h-28 sm:h-32",
+            )}
+          >
+            <Image
+              src={imagem}
+              alt=""
+              fill
+              sizes={destaque ? "(min-width: 1024px) 40vw, 90vw" : "(min-width: 1024px) 20vw, 45vw"}
+              className="object-contain mix-blend-multiply transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.06]"
+            />
+            {/* Sombra de chão: funciona com foto de fundo branco, onde a
+                sombra projetada desenharia um retângulo. */}
+            <span
+              aria-hidden
+              className="absolute inset-x-[22%] bottom-0 h-3 rounded-[100%] bg-graf-950/15 blur-md transition-transform duration-500 group-hover:scale-x-90"
+            />
+          </span>
+        ) : null}
+
+        <span className={cn("relative mt-auto block", imagem ? "pt-3" : "pt-6")}>
           <span
             className={cn(
               "block font-extrabold tracking-tight text-graf-950",

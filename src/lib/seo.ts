@@ -218,7 +218,7 @@ export function organizacaoJsonLd(s: SettingsMap): DadosJsonLd {
     logo: urlAbsoluta("/icon.png"),
     description: limpo(s.empresa_resumo),
     email: limpo(s.email),
-    telephone: telefoneInternacional(s.telefone),
+    telephone: telefoneInternacional(s.whatsapp),
     foundingDate: /^\d{4}$/.test(s.empresa_desde.trim()) ? s.empresa_desde.trim() : undefined,
     address: enderecoPostal(s),
     sameAs: redes(s),
@@ -235,7 +235,7 @@ export function localNegocioJsonLd(s: SettingsMap): DadosJsonLd {
     image: urlAbsoluta("/icon.png"),
     description: limpo(s.empresa_resumo),
     email: limpo(s.email),
-    telephone: telefoneInternacional(s.telefone),
+    telephone: telefoneInternacional(s.whatsapp),
     address: enderecoPostal(s),
     openingHours: horarioSchema(s.horario),
     /* A área de atendimento vem das configurações quando a JB a declarou; só

@@ -178,10 +178,10 @@ export default function ErroGlobal({
             <li>
               Telefone:{" "}
               <a
-                href={telHref(CONTATO_DE_EMERGENCIA.telefone)}
+                href={telHref(CONTATO_DE_EMERGENCIA.whatsapp)}
                 style={{ color: VERMELHO, fontWeight: 600 }}
               >
-                {CONTATO_DE_EMERGENCIA.telefone}
+                {CONTATO_DE_EMERGENCIA.whatsapp}
               </a>
             </li>
             {linkWhatsapp ? (

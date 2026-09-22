@@ -142,7 +142,7 @@ function paraHtml(assunto: string, texto: string, s: SettingsMap) {
     `<h1 style="margin:0 0 20px;font-size:18px;line-height:1.4;color:#0f172a">${escapar(assunto)}</h1>`,
     paragrafos,
     `<p style="margin:24px 0 0;padding-top:16px;border-top:1px solid #e2e8f0;font-size:12px;line-height:1.6;color:#64748b">${escapar(
-      `${s.empresa_nome} · ${s.telefone} · ${s.email}`,
+      `${s.empresa_nome} · ${s.whatsapp} · ${s.email}`,
     )}</p>`,
     "</div>",
     "</div>",
@@ -151,7 +151,7 @@ function paraHtml(assunto: string, texto: string, s: SettingsMap) {
 
 /** Rodapé de texto puro, igual em toda mensagem que sai para o cliente. */
 function assinatura(s: SettingsMap) {
-  return `${s.empresa_nome}\n${s.telefone} · ${s.email}\n${urlAbsoluta("/")}`;
+  return `${s.empresa_nome}\n${s.whatsapp} · ${s.email}\n${urlAbsoluta("/")}`;
 }
 
 function juntar(linhas: (string | null | undefined | false)[]) {

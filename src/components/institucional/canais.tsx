@@ -1,4 +1,4 @@
-import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, MessageCircle } from "lucide-react";
 
 import { Cartao } from "@/components/ui/data";
 import { LinkBotao, classesBotao } from "@/components/ui/button";
@@ -81,24 +81,6 @@ export function CanaisDeContato({
 
   return (
     <ul className={cn("space-y-1", className)}>
-      {s.telefone ? (
-        <Linha
-          icone={Phone}
-          rotulo="Telefone"
-          valor={formatarTelefone(s.telefone)}
-          href={telHref(s.telefone)}
-        />
-      ) : null}
-
-      {s.telefone_alternativo ? (
-        <Linha
-          icone={Phone}
-          rotulo="Telefone alternativo"
-          valor={formatarTelefone(s.telefone_alternativo)}
-          href={telHref(s.telefone_alternativo)}
-        />
-      ) : null}
-
       {whatsapp ? (
         <Linha
           icone={MessageCircle}
@@ -203,7 +185,6 @@ export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: s
             sumiam, e a auditoria registrou os dois de contato como invisíveis
             na página 404. As variantes de fundo claro são estas. */}
         <div className="flex flex-wrap gap-3">
-          <LinkBotao href="/contato">Enviar mensagem</LinkBotao>
           {whatsapp ? (
             <a
               href={whatsapp}
@@ -214,9 +195,9 @@ export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: s
               WhatsApp
             </a>
           ) : null}
-          {s.telefone ? (
-            <a href={telHref(s.telefone)} className={classesBotao("secundario", "md")}>
-              {formatarTelefone(s.telefone)}
+          {s.whatsapp ? (
+            <a href={telHref(s.whatsapp)} className={classesBotao("secundario", "md")}>
+              Ligar {formatarTelefone(s.whatsapp)}
             </a>
           ) : null}
         </div>

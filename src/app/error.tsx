@@ -41,7 +41,7 @@ export default function ErroDoSite({
     CONTATO_DE_EMERGENCIA.whatsapp,
     "Olá, JB! Vim pelo site e preciso de assistência técnica para um equipamento odontológico.",
   );
-  const ligar = telHref(CONTATO_DE_EMERGENCIA.telefone);
+  const ligar = telHref(CONTATO_DE_EMERGENCIA.whatsapp);
 
   return (
     <div className="flex min-h-dvh flex-col bg-gradient-to-b from-graf-50 to-white">
@@ -92,7 +92,7 @@ export default function ErroDoSite({
           {ligar ? (
             <a href={ligar} className={classesBotao("texto", "lg", "w-full whitespace-nowrap sm:w-auto")}>
               <Phone className="size-4" aria-hidden />
-              {formatarTelefone(CONTATO_DE_EMERGENCIA.telefone)}
+              {formatarTelefone(CONTATO_DE_EMERGENCIA.whatsapp)}
             </a>
           ) : null}
         </div>

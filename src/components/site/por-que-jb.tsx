@@ -17,7 +17,7 @@ import { Contador } from "@/components/site/contador";
 
 export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: string; cidade: string }) {
   return (
-    <section aria-labelledby="por-que-titulo" className="bg-surface-muted py-16 md:py-24">
+    <section aria-labelledby="por-que-titulo" className="bg-white py-16 md:py-24">
       <div className="container-jb">
         <h2 id="por-que-titulo" className="text-section texto-forte jb-revela max-w-2xl">
           Por que clínicas chamam a JB

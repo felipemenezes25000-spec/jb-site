@@ -20,7 +20,7 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
    ============================================================================ */
 
 export function RodapeSite({ s }: { s: SettingsMap }) {
-  const ligar = telHref(s.telefone);
+  const ligar = telHref(s.whatsapp);
   const whatsapp = whatsappHref(s.whatsapp, MENSAGEM_PADRAO);
 
   return (
@@ -66,7 +66,7 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                   className="foco-jb inline-flex items-center gap-2.5 rounded font-semibold text-graf-700 hover:text-jb-700"
                 >
                   <Phone className="size-4 text-jb-600" aria-hidden />
-                  <span className="tabular">{formatarTelefone(s.telefone)}</span>
+                  <span>Ligar para o mesmo número</span>
                 </a>
               </li>
             ) : null}

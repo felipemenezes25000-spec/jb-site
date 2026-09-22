@@ -14,7 +14,6 @@
  */
 export const CONTATO_DE_EMERGENCIA = {
   empresa: "JB Soluções Odontológicas",
-  telefone: "(11) 3715-6362",
   whatsapp: "(11) 96341-7994",
   email: "comercial@jbsolucoesodontologicas.com.br",
 } as const;

@@ -266,3 +266,60 @@
   outline: 2px solid var(--color-jb-500);
   outline-offset: 3px;
 }
+
+/* ------------------------------------------------------------ faixa do topo */
+
+.jb-ticker-trilho {
+  width: max-content;
+  animation: jb-marquise 34s linear infinite;
+}
+
+.jb-ticker:hover .jb-ticker-trilho,
+.jb-ticker:focus-visible .jb-ticker-trilho {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------- foto que respira */
+
+/* Zoom lento, de um lado para o outro, na foto da abertura: a imagem parece
+   viva sem nada piscar. Só transform, e parado com movimento reduzido. */
+@keyframes jb-respira-foto {
+  from {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(-2%, -2%, 0);
+  }
+}
+
+.jb-foto-viva {
+  animation: jb-respira-foto 16s ease-in-out infinite alternate;
+}
+
+/* Selos que boiam sobre a foto, cada um no seu ritmo. */
+@keyframes jb-boia {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+.jb-boia {
+  animation: jb-boia 4.8s ease-in-out infinite;
+}
+
+.jb-boia-2 {
+  animation: jb-boia 5.6s ease-in-out 0.8s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-ticker-trilho,
+  .jb-foto-viva,
+  .jb-boia,
+  .jb-boia-2 {
+    animation: none;
+  }
+}
