@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Caveat, JetBrains_Mono, Manrope } from "next/font/google";
+import { Bricolage_Grotesque, JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { configuracoesPublicas } from "@/lib/site-publico";
@@ -30,13 +30,6 @@ const display = Bricolage_Grotesque({
   variable: "--font-bricolage",
   display: "swap",
   axes: ["opsz"],
-});
-
-const manuscrita = Caveat({
-  subsets: ["latin"],
-  variable: "--font-manuscrita",
-  display: "swap",
-  weight: ["400", "600"],
 });
 
 const mono = JetBrains_Mono({
@@ -94,7 +87,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang="pt-BR"
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${display.variable} ${mono.variable} ${manuscrita.variable}`}
+      className={`${manrope.variable} ${display.variable} ${mono.variable}`}
       suppressHydrationWarning
     >
       <head>
