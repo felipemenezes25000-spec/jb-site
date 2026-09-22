@@ -1,0 +1,268 @@
+/* ============================================================================
+   Movimento do site de assistência
+
+   Tudo aqui é CSS, e de propósito: quem chega de anúncio está no celular, às
+   vezes com sinal ruim, e a página não pode esperar JavaScript para aparecer.
+
+   · Revelação por rolagem usa `animation-timeline: view()`. Navegador que não
+     suporta simplesmente mostra o conteúdo parado, e ninguém fica olhando para
+     um espaço vazio esperando um script que falhou.
+   · Movimento reduzido desliga tudo: nada gira, nada corre, nada flutua.
+   · Só `transform` e `opacity` animam. Nada de largura, altura ou posição.
+   ============================================================================ */
+
+/* ------------------------------------------------------------ borda viva */
+
+@property --jb-angulo {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Um brilho vermelho que percorre a borda do diagnóstico. Chama o olho para
+   a peça que resolve o problema da pessoa, sem piscar nem pular. */
+/* O brilho é um anel de 2px desenhado por máscara: o miolo do pseudo-elemento
+   é recortado, e o conteúdo do cartão nunca fica tingido. */
+.jb-borda-viva::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  border-radius: calc(var(--radius-2xl) + 2px);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  background: conic-gradient(
+    from var(--jb-angulo),
+    transparent 0% 58%,
+    rgb(224 20 27 / 0.85) 72%,
+    rgb(249 91 96 / 0.5) 82%,
+    transparent 94%
+  );
+  animation: jb-borda-gira 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes jb-borda-gira {
+  to {
+    --jb-angulo: 360deg;
+  }
+}
+
+/* ---------------------------------------------------------- faixa que corre */
+
+.jb-faixa {
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+
+.jb-faixa-trilho {
+  display: flex;
+  width: max-content;
+  animation: jb-marquise 42s linear infinite;
+}
+
+.jb-faixa:hover .jb-faixa-trilho {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------ revelar na rolagem */
+
+@keyframes jb-revela {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes jb-enche {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes jb-acende {
+  from {
+    background-color: var(--color-white);
+    color: var(--color-graf-400);
+    border-color: var(--color-graf-200);
+  }
+  to {
+    background-color: var(--color-jb-500);
+    color: var(--color-white);
+    border-color: var(--color-jb-500);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .jb-revela {
+      animation: jb-revela linear both;
+      animation-timeline: view();
+      /* `--i` escalona irmãos: cada um começa um pouco depois do anterior. */
+      animation-range: entry calc(4% + var(--i, 0) * 5%) cover calc(26% + var(--i, 0) * 5%);
+    }
+
+    .jb-linha-enche {
+      transform-origin: top;
+      animation: jb-enche linear both;
+      animation-timeline: --jb-como-funciona;
+      animation-range: entry 40% exit 60%;
+    }
+
+    .jb-ponto-acende {
+      animation: jb-acende linear both;
+      animation-timeline: view();
+      animation-range: cover 30% cover 45%;
+    }
+  }
+}
+
+.jb-timeline-como-funciona {
+  view-timeline-name: --jb-como-funciona;
+}
+
+/* ---------------------------------------------------------------- flutuar */
+
+@keyframes jb-flutua {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -6%, 0) scale(1.08);
+  }
+}
+
+.jb-flutua {
+  animation: jb-flutua 14s ease-in-out infinite;
+}
+
+.jb-flutua-lento {
+  animation: jb-flutua 19s ease-in-out infinite reverse;
+}
+
+/* -------------------------------------------------------- balançar o ícone */
+
+@keyframes jb-balanca {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(8deg);
+  }
+}
+
+.jb-cartao-equipamento:hover .jb-icone-balanca,
+.jb-cartao-equipamento:focus-visible .jb-icone-balanca {
+  animation: jb-balanca 520ms ease-in-out;
+}
+
+/* ------------------------------------------------ barra do celular, entrar */
+
+.jb-barra-movel {
+  transition:
+    transform 320ms var(--ease-out-quint),
+    opacity 320ms var(--ease-out-quint);
+}
+
+.jb-barra-movel[data-visivel="false"] {
+  transform: translate3d(0, 120%, 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------- movimento reduzido */
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-borda-viva::before {
+    animation: none;
+    background: rgb(224 20 27 / 0.22);
+  }
+
+  .jb-faixa-trilho,
+  .jb-flutua,
+  .jb-flutua-lento {
+    animation: none;
+  }
+
+  .jb-barra-movel {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------ controle deslizante */
+
+/* Trilho grosso e botão de 28px: o polegar acerta de primeira no celular. O
+   trecho já percorrido fica vermelho, lido de `--preenchido`. */
+.jb-deslizante:focus-visible {
+  outline: none;
+}
+
+.jb-deslizante::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--color-jb-500) var(--preenchido, 50%),
+    var(--color-graf-200) var(--preenchido, 50%)
+  );
+}
+
+.jb-deslizante::-webkit-slider-thumb {
+  appearance: none;
+  margin-top: -10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #fff;
+  border: 3px solid var(--color-jb-500);
+  box-shadow: 0 2px 10px rgb(26 28 30 / 0.2);
+  transition: transform 150ms var(--ease-out-quint);
+}
+
+.jb-deslizante:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.jb-deslizante:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--color-jb-500);
+  outline-offset: 3px;
+}
+
+.jb-deslizante::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-graf-200);
+}
+
+.jb-deslizante::-moz-range-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-jb-500);
+}
+
+.jb-deslizante::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #fff;
+  border: 3px solid var(--color-jb-500);
+  box-shadow: 0 2px 10px rgb(26 28 30 / 0.2);
+}
+
+.jb-deslizante:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--color-jb-500);
+  outline-offset: 3px;
+}

@@ -2,14 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Caveat, JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 
-import { cacheLife, cacheTag } from "next/cache";
-
-import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
+import { configuracoesPublicas } from "@/lib/site-publico";
 import { Medicao } from "@/components/analytics/medicao";
 import { SCRIPT_DA_CENA } from "@/components/ui/motion-cena";
 import { MotionSystem } from "@/components/ui/motion-system";
 import { SITE_URL } from "@/lib/seo";
-import { getSettings } from "@/lib/settings";
 
 import "./globals.css";
 import "./footer-alignment.css";
@@ -53,12 +50,12 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
+/* As duas leituras abaixo passam por `configuracoesPublicas`, que já é
+   cacheada, etiquetada e volta aos padrões da JB quando o banco não responde.
+   Antes cada uma consultava o banco por conta própria e, sem ele, derrubava o
+   site inteiro, inclusive o botão do WhatsApp. */
 async function textosDoSite() {
-  "use cache";
-  cacheTag(ETIQUETA_CONFIGURACOES);
-  cacheLife("hours");
-
-  const s = await getSettings();
+  const s = await configuracoesPublicas();
   return {
     titulo: s.seo_titulo,
     descricao: s.seo_descricao,
@@ -85,10 +82,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function codigoDeMedicao() {
-  "use cache";
-  cacheTag(ETIQUETA_CONFIGURACOES);
-  cacheLife("hours");
-  const s = await getSettings();
+  const s = await configuracoesPublicas();
   return s.codigo_analytics ?? "";
 }
 
