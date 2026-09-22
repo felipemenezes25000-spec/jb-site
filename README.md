@@ -129,7 +129,6 @@ Para remover só o que os seeds de demonstração criaram, sem tocar em dado rea
 | `pnpm test` | os dois acima, em sequência |
 | `pnpm responsivo` | mede o layout em 7 larguras × 42 rotas num navegador de verdade |
 | `pnpm a11y` | roda o axe-core (WCAG 2.1 A e AA) em 47 rotas, mais 3 medições próprias |
-| `pnpm prova:atomicidade` | prova, com concorrência real contra o Postgres, que pagamento, estoque e cupom não duplicam |
 | `pnpm tour` | percorre todas as rotas num navegador e fotografa (ver "Testes") |
 
 ---
@@ -530,7 +529,6 @@ substitui a outra.
 |---|---|---|
 | `pnpm test:unit` | a regra de negócio está certa? | **621** testes, em memória, sem banco |
 | `pnpm e2e` | o fluxo funciona de ponta a ponta? | **99** cenários, navegador real, banco real |
-| `pnpm prova:atomicidade` | duas pessoas ao mesmo tempo quebram? | concorrência real contra o Postgres |
 | `pnpm responsivo` | o layout aguenta a tela do cliente? | 7 larguras × 42 rotas, medido no navegador |
 | `pnpm a11y` | dá para usar sem enxergar, sem mouse? | axe-core WCAG 2.1 A/AA em 47 rotas |
 
