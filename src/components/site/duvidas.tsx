@@ -13,8 +13,18 @@ import { JsonLd, faqJsonLd } from "@/lib/seo";
    mostrar as respostas direto no resultado de busca.
    ============================================================================ */
 
-export function Duvidas({ cidade, horario }: { cidade: string; horario: string }) {
+export function Duvidas({
+  cidade,
+  horario,
+  extras = [],
+}: {
+  cidade: string;
+  horario: string;
+  /** Perguntas de um equipamento, que vêm antes das gerais. */
+  extras?: readonly { pergunta: string; resposta: string }[];
+}) {
   const perguntas = [
+    ...extras,
     {
       pergunta: "Vocês atendem na minha clínica?",
       resposta: `Sim, em ${cidade} e região. Quando o conserto pede bancada, o equipamento vai para a JB e volta testado. A forma de atendimento é combinada na triagem pelo WhatsApp.`,

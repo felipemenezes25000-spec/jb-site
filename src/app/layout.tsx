@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 
 import { configuracoesPublicas } from "@/lib/site-publico";
 import { Medicao } from "@/components/analytics/medicao";
+import { destinosDeMedicao } from "@/lib/analytics/destinos";
 import { SCRIPT_DA_CENA } from "@/components/ui/motion-cena";
 import { MotionSystem } from "@/components/ui/motion-system";
 import { SITE_URL } from "@/lib/seo";
@@ -81,9 +82,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-async function codigoDeMedicao() {
-  const s = await configuracoesPublicas();
-  return s.codigo_analytics ?? "";
+async function destinosDaMedicao() {
+  return destinosDeMedicao(await configuracoesPublicas());
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -103,7 +103,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="antialiased">
         {children}
         <MotionSystem />
-        <Medicao identificador={await codigoDeMedicao()} />
+        <Medicao destinos={await destinosDaMedicao()} />
         <Toaster
           position="bottom-right"
           richColors

@@ -69,6 +69,7 @@ export default function ErroDoSite({
           {whatsapp ? (
             <a
               href={whatsapp}
+              data-whatsapp="erro"
               target="_blank"
               rel="noopener noreferrer"
               className={classesBotao("primario", "lg", "w-full whitespace-nowrap sm:w-auto")}

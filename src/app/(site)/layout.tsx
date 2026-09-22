@@ -1,4 +1,3 @@
-import { BarraWhatsappMovel } from "@/components/site/barra-whatsapp-movel";
 import { CabecalhoSite, type AtalhoDoCabecalho } from "@/components/site/cabecalho-site";
 import { FaixaTopo } from "@/components/site/faixa-topo";
 import { RodapeSite } from "@/components/site/rodape-site";
@@ -39,7 +38,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         {children}
       </main>
       <RodapeSite s={s} />
-      <BarraWhatsappMovel whatsapp={s.whatsapp} telefone={s.whatsapp} />
     </div>
   );
 }

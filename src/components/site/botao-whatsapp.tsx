@@ -1,6 +1,5 @@
 "use client";
 
-import { medir } from "@/lib/analytics/cliente";
 import { whatsappHref } from "@/lib/format";
 import { classesBotao, type Tamanho, type Variante } from "@/components/ui/button";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
@@ -9,10 +8,11 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    O botão que abre o WhatsApp
 
-   É um link comum para `wa.me`, com a mensagem pronta na URL. O clique mede
-   `whatsapp_click` com a posição do botão, e a medição nunca é condição: sem
-   consentimento, com bloqueador ou com o analytics fora do ar, o link abre do
-   mesmo jeito. `medir` não lança e não espera nada.
+   É um link comum para `wa.me`, com a mensagem pronta na URL. A posição do
+   botão e o equipamento vão em `data-whatsapp` e `data-equipamento`, e quem
+   mede o clique é `ouvirCliquesNoWhatsapp` (`@/lib/analytics/anuncios`), que
+   escuta a página inteira. A medição nunca é condição: sem consentimento,
+   com bloqueador ou com o analytics fora do ar, o link abre do mesmo jeito.
 
    Clique não é conversa: a pessoa ainda pode desistir dentro do WhatsApp. O
    evento conta intenção, e só isso.
@@ -25,6 +25,7 @@ export type PosicaoWhatsapp =
   | "cabecalho"
   | "abertura"
   | "diagnostico"
+  | "defeito"
   | "secao"
   | "fechamento"
   | "rodape"
@@ -70,12 +71,7 @@ export function LinkWhatsapp({
       rel="noopener noreferrer"
       aria-label={rotulo}
       data-whatsapp={posicao}
-      onClick={() =>
-        medir("whatsapp_click", {
-          etapa: posicao,
-          ...(equipamento ? { categoria: equipamento } : {}),
-        })
-      }
+      data-equipamento={equipamento}
       className={className}
     >
       {children}

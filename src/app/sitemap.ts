@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { PAGINAS_DE_EQUIPAMENTO } from "@/lib/paginas-equipamento";
 import { prisma } from "@/lib/prisma";
 import { urlAbsoluta } from "@/lib/seo";
 
@@ -7,8 +8,8 @@ import { urlAbsoluta } from "@/lib/seo";
  * Mapa do site.
  *
  * Desde que a JB virou só assistência técnica (22/09/2026), o site público é
- * pequeno: a home, as páginas legais e o conteúdo que a equipe publica (cases
- * e artigos da Central Técnica). Produto, categoria e marca saíram com a loja;
+ * pequeno: a home, uma página por equipamento, as páginas legais e o conteúdo
+ * que a equipe publica (cases e artigos da Central Técnica). Produto, categoria e marca saíram com a loja;
  * as URLs antigas respondem 410 no `src/proxy.ts` e não entram aqui.
  *
  * Cases e Central Técnica só entram quando têm publicação: anunciar listagem
@@ -29,6 +30,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   };
 
   registrar("/", { lastModified: agora, changeFrequency: "weekly", priority: 1 });
+  /* Uma página por equipamento: é por elas que chega quem busca "conserto de
+     autoclave" ou "compressor odontológico". */
+  for (const pagina of PAGINAS_DE_EQUIPAMENTO) {
+    registrar(`/${pagina.slug}`, { lastModified: agora, changeFrequency: "monthly", priority: 0.9 });
+  }
   registrar("/privacidade", { lastModified: agora, changeFrequency: "yearly", priority: 0.2 });
   registrar("/termos", { lastModified: agora, changeFrequency: "yearly", priority: 0.2 });
 

@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { BadgeCheck, FileCheck2 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 /* ============================================================================
    Foto da abertura
 
@@ -13,13 +15,16 @@ import { BadgeCheck, FileCheck2 } from "lucide-react";
    que ela mostra, sem afirmar que é a equipe da JB. Quando houver foto real
    da bancada, é só trocar `public/site/bancada.webp`.
 
-   É a maior imagem acima da dobra, então carrega com prioridade.
+   É a maior imagem acima da dobra, então carrega com prioridade. No celular
+   ela vem antes do título, mais baixa (2:1), para o título e o botão do
+   WhatsApp ainda caberem na primeira tela; no computador fica sob os botões,
+   ao lado do diagnóstico. A ordem é de CSS, e a imagem existe uma vez só.
    ============================================================================ */
 
-export function FotoAbertura() {
+export function FotoAbertura({ className }: { className?: string }) {
   return (
-    <div className="relative mt-9 lg:mt-10">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-graf-100 shadow-raised ring-1 ring-graf-950/5 lg:aspect-[16/9]">
+    <div className={cn("relative", className)}>
+      <div className="relative aspect-[2/1] overflow-hidden rounded-2xl bg-graf-100 shadow-raised ring-1 ring-graf-950/5 sm:aspect-[16/10] lg:aspect-[16/9]">
         <Image
           src="/site/bancada.webp"
           alt="Técnico consertando uma autoclave odontológica na bancada"

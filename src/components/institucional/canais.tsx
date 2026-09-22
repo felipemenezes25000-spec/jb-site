@@ -87,6 +87,7 @@ export function CanaisDeContato({
           rotulo="WhatsApp"
           valor={formatarTelefone(s.whatsapp)}
           href={whatsapp}
+          data-whatsapp="institucional"
           externo
         />
       ) : null}
@@ -132,6 +133,7 @@ export function CaixaDeAjuda({
         {whatsapp ? (
           <a
             href={whatsapp}
+            data-whatsapp="institucional"
             target="_blank"
             rel="noopener noreferrer"
             className={classesBotao("secundario", "sm", "w-full")}
@@ -188,6 +190,7 @@ export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: s
           {whatsapp ? (
             <a
               href={whatsapp}
+              data-whatsapp="institucional"
               target="_blank"
               rel="noopener noreferrer"
               className={classesBotao("secundario", "md")}

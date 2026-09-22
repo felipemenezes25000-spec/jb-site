@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowUpRight, BadgeCheck, CalendarCheck2, FileCheck2, MapPin, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 
 import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { ChamadaFinal } from "@/components/site/chamada-final";
@@ -7,12 +7,12 @@ import { ClinicaOuBancada } from "@/components/site/clinica-ou-bancada";
 import { ComoFunciona } from "@/components/site/como-funciona";
 import { DiagnosticoWhatsapp } from "@/components/site/diagnostico-whatsapp";
 import { Duvidas } from "@/components/site/duvidas";
+import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { FaixaEquipamentos } from "@/components/site/faixa-equipamentos";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
 import { PalavraGiratoria } from "@/components/site/palavra-giratoria";
 import { PorQueJb } from "@/components/site/por-que-jb";
-import { LISTA_EVOXX } from "@/components/site/rodape-site";
 import { SimuladorParada } from "@/components/site/simulador-parada";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
 import { classesBotao } from "@/components/ui/button";
@@ -51,24 +51,6 @@ export default async function HomePage() {
   /* Só o celular: é o mesmo número do WhatsApp, e o fixo saiu do site. */
   const ligar = telHref(s.whatsapp);
 
-  const provas = [
-    {
-      icone: CalendarCheck2,
-      titulo: `Na bancada desde ${s.empresa_desde}`,
-      texto: "Anos consertando equipamento de clínica odontológica.",
-    },
-    {
-      icone: FileCheck2,
-      titulo: "Orçamento antes da troca",
-      texto: "Nenhuma peça é trocada sem a sua aprovação.",
-    },
-    {
-      icone: MapPin,
-      titulo: "Na clínica ou na bancada",
-      texto: `Atendimento em ${s.endereco_cidade} e região.`,
-    },
-  ];
-
   return (
     <>
       <JsonLd dados={[organizacaoJsonLd(s), localNegocioJsonLd(s)]} />
@@ -88,11 +70,13 @@ export default async function HomePage() {
         />
 
         <div className="container-jb relative grid gap-10 pb-12 pt-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,35rem)] lg:items-center lg:gap-14 lg:pb-16 lg:pt-12">
-          <div>
+          {/* No celular a foto sobe para antes do título (`order-first`): quem
+              chega do anúncio vê primeiro alguém consertando uma autoclave. */}
+          <div className="flex flex-col">
             <StatusAtendimento
               horario={s.horario}
               neutro={`Assistência técnica odontológica em ${s.endereco_cidade}`}
-              className="entrada"
+              className="entrada self-start"
             />
 
             <h1 id="abertura-titulo" className="text-hero texto-forte entrada mt-5 [animation-delay:70ms]">
@@ -125,7 +109,7 @@ export default async function HomePage() {
               ) : null}
             </div>
 
-            <div className="entrada [animation-delay:260ms]">
+            <div className="entrada order-first mb-6 sm:mb-8 lg:order-none lg:mb-0 lg:mt-10 lg:[animation-delay:260ms]">
               <FotoAbertura />
             </div>
           </div>
@@ -138,51 +122,7 @@ export default async function HomePage() {
 
       <FaixaEquipamentos />
 
-      {/* ---------------------------------------------- autorizada EVOXX */}
-      <section
-        id="autorizada"
-        aria-labelledby="autorizada-titulo"
-        className="scroll-mt-20 border-b border-graf-200 bg-surface-muted"
-      >
-        <div className="container-jb grid gap-10 py-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2fr)] lg:items-center lg:gap-14 lg:py-14">
-          <div className="jb-revela flex gap-4">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-jb-500 text-white shadow-card">
-              <BadgeCheck className="size-6" aria-hidden />
-            </span>
-            <div>
-              <h2 id="autorizada-titulo" className="text-title texto-forte">
-                Assistência técnica autorizada EVOXX
-              </h2>
-              <p className="mt-2 text-corpo leading-relaxed text-graf-600">
-                A JB está na lista oficial do fabricante. Não é só dizer: dá para conferir.
-              </p>
-              <a
-                href={LISTA_EVOXX}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="foco-jb mt-3 inline-flex min-h-11 items-center gap-1 rounded text-sm font-bold text-jb-700 underline-offset-4 hover:underline"
-              >
-                Conferir no site da EVOXX
-                <ArrowUpRight className="size-4" aria-hidden />
-              </a>
-            </div>
-          </div>
-
-          <ul className="grid gap-6 sm:grid-cols-3 sm:gap-8">
-            {provas.map((prova, indice) => (
-              <li
-                key={prova.titulo}
-                className="jb-revela border-t-2 border-jb-500 pt-4"
-                style={{ "--i": indice + 1 } as React.CSSProperties}
-              >
-                <prova.icone className="size-5 text-jb-600" aria-hidden />
-                <p className="mt-3 text-corpo font-extrabold text-graf-950">{prova.titulo}</p>
-                <p className="mt-1 text-sm leading-relaxed text-graf-600">{prova.texto}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      <FaixaAutorizada desde={s.empresa_desde} cidade={s.endereco_cidade} />
 
       <GradeEquipamentos whatsapp={s.whatsapp} />
 

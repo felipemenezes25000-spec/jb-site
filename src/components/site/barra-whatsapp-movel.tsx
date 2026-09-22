@@ -17,12 +17,26 @@ import { telHref } from "@/lib/format";
    Observa por IntersectionObserver, nunca por evento de rolagem. Fica abaixo
    do aviso de cookies (z-90), que precisa ser respondido primeiro, e respeita
    a área segura do iPhone.
+
+   A mensagem é a do botão da abertura: na página da autoclave, a barra também
+   chama sobre a autoclave. É lida do próprio link (`?text=` do wa.me), para a
+   barra não precisar saber em que página está. Monta por página, pelo
+   `template.tsx` do grupo, e não no layout, que não remonta entre páginas.
    ============================================================================ */
 
 const OBSERVADOS = ['[data-whatsapp="abertura"]', '[data-whatsapp="diagnostico"]', '[data-whatsapp="fechamento"]', '[data-whatsapp="rodape"]'];
 
+/** A mensagem e o equipamento do botão da abertura, lidos do próprio link. */
+function lerAbertura(): { mensagem: string; equipamento?: string } | null {
+  const abertura = document.querySelector<HTMLAnchorElement>('a[data-whatsapp="abertura"]');
+  const mensagem = abertura ? new URL(abertura.href).searchParams.get("text") : null;
+  if (!abertura || !mensagem) return null;
+  return { mensagem, equipamento: abertura.dataset.equipamento || undefined };
+}
+
 export function BarraWhatsappMovel({ whatsapp, telefone }: { whatsapp: string; telefone: string }) {
   const [visivel, setVisivel] = useState(false);
+  const [daAbertura, setDaAbertura] = useState<{ mensagem: string; equipamento?: string } | null>(null);
   const ligar = telHref(telefone);
 
   useEffect(() => {
@@ -37,6 +51,10 @@ export function BarraWhatsappMovel({ whatsapp, telefone }: { whatsapp: string; t
           else naTela.delete(entrada.target);
         }
         setVisivel(naTela.size === 0);
+        /* A primeira leitura do observador chega logo depois da montagem, e
+           é nela que a mensagem da abertura é copiada: o servidor não sabe
+           qual botão a página desenhou. */
+        setDaAbertura((atual) => atual ?? lerAbertura());
       },
       { threshold: 0 },
     );
@@ -54,7 +72,8 @@ export function BarraWhatsappMovel({ whatsapp, telefone }: { whatsapp: string; t
       <div className="flex items-center gap-2">
         <BotaoWhatsapp
           numero={whatsapp}
-          mensagem={MENSAGEM_PADRAO}
+          mensagem={daAbertura?.mensagem ?? MENSAGEM_PADRAO}
+          equipamento={daAbertura?.equipamento}
           posicao="barra-movel"
           tamanho="lg"
           larguraTotal

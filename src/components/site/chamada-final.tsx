@@ -20,11 +20,18 @@ export function ChamadaFinal({
   telefone,
   horario,
   cidade,
+  mensagem = MENSAGEM_PADRAO,
+  equipamento,
+  titulo = "Não deixe a agenda parar por causa de um equipamento.",
 }: {
   whatsapp: string;
   telefone: string;
   horario: string;
   cidade: string;
+  /** Nas páginas de equipamento, a mensagem e o título já dizem qual é. */
+  mensagem?: string;
+  equipamento?: string;
+  titulo?: string;
 }) {
   const ligar = telHref(telefone);
 
@@ -50,7 +57,7 @@ export function ChamadaFinal({
           className="text-display texto-forte jb-revela mx-auto mt-6 max-w-2xl"
           style={{ "--i": 1 } as React.CSSProperties}
         >
-          Não deixe a agenda parar por causa de um equipamento.
+          {titulo}
         </h2>
         <p
           className="texto-guia jb-revela mx-auto mt-5 max-w-xl text-graf-700"
@@ -72,7 +79,8 @@ export function ChamadaFinal({
             />
             <BotaoWhatsapp
               numero={whatsapp}
-              mensagem={MENSAGEM_PADRAO}
+              mensagem={mensagem}
+              equipamento={equipamento}
               posicao="fechamento"
               tamanho="lg"
               larguraTotal

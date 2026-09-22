@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { BadgeCheck, Clock3, Mail, MapPin, Phone } from "lucide-react";
 
+import { RevisarMedicao } from "@/components/analytics/revisar-medicao";
 import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
 import { Logo } from "@/components/ui/logo";
+import { algumDestino, destinosDeMedicao } from "@/lib/analytics/destinos";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
+import { PAGINAS_DE_EQUIPAMENTO } from "@/lib/paginas-equipamento";
 import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import { enderecoCompleto, type SettingsMap } from "@/lib/settings";
 
@@ -25,7 +28,7 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
 
   return (
     <footer id="contato" className="scroll-mt-20 border-t border-graf-200 bg-surface-muted">
-      <div className="container-jb grid gap-10 py-14 md:grid-cols-[1.2fr_1fr_1fr] md:py-16">
+      <div className="container-jb grid gap-10 py-14 sm:grid-cols-2 md:py-16 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div>
           <Logo altura={38} />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-graf-600">
@@ -50,6 +53,7 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
               <li>
                 <a
                   href={whatsapp}
+                  data-whatsapp="rodape-numero"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="foco-jb inline-flex items-center gap-2.5 rounded font-bold text-graf-900 hover:text-jb-700"
@@ -90,6 +94,24 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
           />
         </div>
 
+        <nav aria-labelledby="rodape-equipamentos">
+          <h2 id="rodape-equipamentos" className="text-sm font-extrabold text-graf-950">
+            Conserto de equipamentos
+          </h2>
+          <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm sm:grid-cols-1">
+            {PAGINAS_DE_EQUIPAMENTO.map((pagina) => (
+              <li key={pagina.slug}>
+                <Link
+                  href={`/${pagina.slug}`}
+                  className="foco-jb rounded font-semibold text-graf-700 hover:text-jb-700"
+                >
+                  {pagina.nomeCurto}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         <div>
           <h2 className="text-sm font-extrabold text-graf-950">Onde e quando</h2>
           <ul className="mt-4 space-y-3 text-sm text-graf-700">
@@ -121,6 +143,11 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                 Termos de uso
               </Link>
             </li>
+            {algumDestino(destinosDeMedicao(s)) ? (
+              <li>
+                <RevisarMedicao className="foco-jb rounded hover:text-jb-700" />
+              </li>
+            ) : null}
           </ul>
         </div>
       </div>

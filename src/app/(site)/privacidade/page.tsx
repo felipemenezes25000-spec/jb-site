@@ -51,8 +51,9 @@ export const instant = false;
      · o nome e o contato do encarregado pelo tratamento de dados (DPO);
      · os prazos de retenção por finalidade;
      · a lista de operadores/terceiros com quem os dados são compartilhados;
-     · a política de cookies e de medição de anúncios, se a JB ligar pixel de
-       campanha (Meta, Google Ads).
+     · a política de cookies e de medição de anúncios: o site já sabe carregar
+       o Google Ads e o pixel da Meta (só com aceite), e o texto abaixo passa a
+       valer assim que um deles for configurado no painel.
 
    Depois de revisado, o texto deve ser gravado na página "privacidade" do
    CMS: havendo registro com corpo preenchido, ele substitui estas seções.
@@ -132,9 +133,11 @@ export default async function PrivacidadePage() {
               laudos, registrados pela equipe no painel interno.
             </li>
             <li>
-              <strong>Medição de visitas:</strong> só se você aceitar no aviso de cookies.
-              São contagens de páginas vistas e de cliques em botões, sem nome, telefone ou
-              texto que você digitou.
+              <strong>Medição de visitas e de anúncios:</strong> só se você aceitar no aviso
+              de cookies. São contagens de páginas vistas e de cliques em botões e, quando
+              você chega por um anúncio da JB no Google, no Facebook ou no Instagram, o
+              registro de que o clique no WhatsApp veio daquele anúncio. Nada de nome,
+              telefone ou texto que você digitou.
             </li>
             <li>
               <strong>Acessos da equipe:</strong> registros de login e de auditoria das
@@ -170,13 +173,14 @@ export default async function PrivacidadePage() {
               mais contatos.
             </li>
             <li>
-              <strong>Consentimento:</strong> medição de visitas e cliques, quando você
-              aceita no aviso de cookies. Recusar não muda nada no uso do site.
+              <strong>Consentimento:</strong> medição de visitas, de cliques e do resultado
+              dos anúncios da JB, quando você aceita no aviso de cookies. Recusar não muda
+              nada no uso do site.
             </li>
           </ul>
           <p>
-            Os dados não são vendidos, alugados nem cedidos para uso publicitário de
-            terceiros.
+            Os dados não são vendidos nem alugados. Com o seu aceite, o Google e a Meta
+            recebem o registro de visitas e cliques para medir os anúncios da própria JB.
           </p>
         </>
       ),
@@ -196,7 +200,9 @@ export default async function PrivacidadePage() {
               não aparecer de novo;
             </li>
             <li>
-              os cookies da ferramenta de medição, apenas se você aceitar;
+              os cookies do Google Analytics, do Google Ads e do pixel da Meta, apenas se
+              você aceitar. A escolha pode ser revista a qualquer momento em
+              &ldquo;Cookies e medição&rdquo;, no rodapé do site;
             </li>
             <li>
               <code className={CLASSE_COOKIE}>jb_staff</code>, a sessão da equipe da JB no
@@ -221,6 +227,10 @@ export default async function PrivacidadePage() {
           </p>
           <ul>
             <li>WhatsApp (Meta), por onde a conversa acontece quando você escolhe esse canal;</li>
+            <li>
+              Google e Meta, só com o seu aceite no aviso de cookies, para medir visitas e
+              anúncios;
+            </li>
             <li>
               técnicos responsáveis pelo atendimento, que acessam o chamado e o endereço da
               visita;

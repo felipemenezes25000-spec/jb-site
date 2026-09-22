@@ -113,6 +113,10 @@ export const CAMPOS_PERMITIDOS = [
   "resultados",
   "dispositivo",
   "release",
+  // origem da visita, lida da UTM do anúncio (`@/lib/analytics/origem`)
+  "fonte",
+  "meio",
+  "campanha",
 ] as const;
 
 export type CampoPermitido = (typeof CAMPOS_PERMITIDOS)[number];

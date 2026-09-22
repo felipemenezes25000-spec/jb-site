@@ -38,7 +38,16 @@ const PASSOS = [
   },
 ] as const;
 
-export function ComoFunciona({ whatsapp }: { whatsapp: string }) {
+export function ComoFunciona({
+  whatsapp,
+  mensagem = MENSAGEM_PADRAO,
+  equipamento,
+}: {
+  whatsapp: string;
+  /** Nas páginas de equipamento, a mensagem já diz qual é. */
+  mensagem?: string;
+  equipamento?: string;
+}) {
   return (
     <section
       id="como-funciona"
@@ -54,7 +63,13 @@ export function ComoFunciona({ whatsapp }: { whatsapp: string }) {
             Sem formulário comprido, sem cadastro e sem espera para saber o que vai acontecer.
           </p>
           <div className="jb-revela mt-8" style={{ "--i": 2 } as React.CSSProperties}>
-            <BotaoWhatsapp numero={whatsapp} mensagem={MENSAGEM_PADRAO} posicao="secao" tamanho="lg" />
+            <BotaoWhatsapp
+              numero={whatsapp}
+              mensagem={mensagem}
+              equipamento={equipamento}
+              posicao="secao"
+              tamanho="lg"
+            />
           </div>
         </div>
 

@@ -32,7 +32,7 @@ const PONTOS = [
   },
 ] as const;
 
-export function ClinicaOuBancada({ cidade }: { cidade: string }) {
+export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensagem?: string }) {
   return (
     <section aria-labelledby="clinica-bancada-titulo" className="overflow-hidden bg-surface-muted py-16 md:py-24">
       <div className="container-jb grid items-center gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-16">
@@ -93,7 +93,7 @@ export function ClinicaOuBancada({ cidade }: { cidade: string }) {
           </ul>
 
           <div className="jb-revela mt-8" style={{ "--i": 3 } as React.CSSProperties}>
-            <ChamarWhatsapp tamanho="lg" />
+            <ChamarWhatsapp tamanho="lg" mensagem={mensagem} />
           </div>
         </div>
       </div>

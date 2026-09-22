@@ -1,7 +1,7 @@
 /* ============================================================================
    Consentimento de medição
 
-   A loja funciona inteira sem analytics. Isso não é uma frase de política — é
+   O site funciona inteiro sem analytics. Isso não é uma frase de política — é
    a arquitetura: nenhum fluxo depende de um evento ter saído, e a recusa não
    degrada nada. Por isso o padrão é NÃO medir até alguém dizer que sim.
 
@@ -64,4 +64,20 @@ export function ouvirConsentimento(aoMudar: (estado: EstadoDeConsentimento) => v
     window.removeEventListener(EVENTO_DE_MUDANCA, local);
     window.removeEventListener("storage", outraAba);
   };
+}
+
+/**
+ * Apaga a escolha e faz a pergunta voltar.
+ *
+ * É o "rever minha escolha" do rodapé: quem aceitou precisa conseguir
+ * desaceitar com o mesmo esforço com que aceitou. Até responder de novo, vale
+ * o padrão, que é não medir.
+ */
+export function esquecerConsentimento() {
+  try {
+    window.localStorage.removeItem(CHAVE);
+  } catch {
+    /* Sem armazenamento, não havia escolha guardada para apagar. */
+  }
+  window.dispatchEvent(new CustomEvent(EVENTO_DE_MUDANCA, { detail: "nao-decidido" }));
 }
