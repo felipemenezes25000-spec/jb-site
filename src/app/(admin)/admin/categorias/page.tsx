@@ -9,7 +9,7 @@ import { AtalhosCatalogo } from "@/components/admin/catalogo/atalhos-catalogo";
 import { LinkBotao } from "@/components/ui/button";
 import { Trilha } from "@/components/ui/data";
 import { plural } from "@/lib/format";
-import { exigirArea, podeEditar, podeVer } from "@/lib/permissoes";
+import { exigirArea, podeEditar } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 
 /*
@@ -37,9 +37,8 @@ export const metadata: Metadata = {
  * nova entra.
  */
 export default async function PaginaCategorias() {
-  const usuario = await exigirArea("produtos");
-  const podeMexer = podeEditar(usuario, "produtos");
-  const verEstoque = podeVer(usuario, "estoque");
+  const usuario = await exigirArea("cadastros");
+  const podeMexer = podeEditar(usuario, "cadastros");
 
   const linhas = await prisma.category.findMany({
     orderBy: [{ order: "asc" }, { name: "asc" }],
@@ -51,7 +50,7 @@ export default async function PaginaCategorias() {
       published: true,
       featured: true,
       parentId: true,
-      _count: { select: { products: true } },
+      _count: { select: { equipments: true } },
     },
   });
 
@@ -64,12 +63,12 @@ export default async function PaginaCategorias() {
       published: linha.published,
       featured: linha.featured,
       parentId: linha.parentId,
-      produtos: linha._count.products,
+      produtos: linha._count.equipments,
     })),
   );
 
   const publicadas = linhas.filter((linha) => linha.published).length;
-  const semProduto = linhas.filter((linha) => linha._count.products === 0).length;
+  const semProduto = linhas.filter((linha) => linha._count.equipments === 0).length;
 
   return (
     <div className="space-y-6">
@@ -85,8 +84,8 @@ export default async function PaginaCategorias() {
           <h1 className="text-2xl font-bold leading-tight text-graf-950">Categorias</h1>
           <p className="mt-1 text-sm text-graf-500">
             {linhas.length === 0
-              ? "A estrutura do menu e dos filtros da loja."
-              : `${plural(linhas.length, "categoria", "categorias")} · ${plural(publicadas, "publicada", "publicadas")}${semProduto > 0 ? ` · ${semProduto} sem produto` : ""}`}
+              ? "Os tipos de equipamento que a JB atende, usados no cadastro de equipamento e no chamado."
+              : `${plural(linhas.length, "categoria", "categorias")} · ${plural(publicadas, "publicada", "publicadas")}${semProduto > 0 ? ` · ${semProduto} sem equipamento cadastrado` : ""}`}
           </p>
         </div>
         {podeMexer ? (
@@ -98,7 +97,7 @@ export default async function PaginaCategorias() {
         )}
       </header>
 
-      <AtalhosCatalogo atual="categorias" mostrarEstoque={verEstoque} />
+      <AtalhosCatalogo atual="categorias" />
 
       {arvore.length === 0 ? (
         <ArvoreVazia

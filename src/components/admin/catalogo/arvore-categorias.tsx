@@ -5,7 +5,7 @@ import {
   alternarPublicacaoCategoria,
   excluirCategoria,
   moverCategoria,
-} from "@/app/acoes/admin-catalogo";
+} from "@/app/acoes/admin-cadastros";
 import { BotaoAcao } from "@/components/admin/catalogo/botao-acao";
 import { Etiqueta } from "@/components/ui/data";
 import { IconeCategoria } from "@/components/ui/icone";
@@ -134,8 +134,8 @@ export function ArvoreCategorias({
               <span className="block truncate text-apoio text-graf-500">
                 /categoria/{no.slug} ·{" "}
                 {no.produtos === 0
-                  ? "sem produtos"
-                  : `${no.produtos} ${plural(no.produtos, "produto", "produtos")}`}
+                  ? "sem equipamentos"
+                  : plural(no.produtos, "equipamento", "equipamentos")}
               </span>
             </span>
 
@@ -202,9 +202,9 @@ export function ArvoreCategorias({
                   confirmar={{
                     pergunta: `Excluir a categoria "${no.name}"?`,
                     detalhe:
-                      no.produtos > 0 || no.filhos.length > 0
-                        ? "Categoria com produtos ou subcategorias não pode ser apagada — o sistema vai recusar e explicar o motivo."
-                        : "A categoria some do menu e da loja. Esta ação não pode ser desfeita.",
+                      no.filhos.length > 0
+                        ? "Categoria com subcategorias não pode ser apagada: o sistema vai recusar e explicar o motivo."
+                        : "Equipamentos e chamados desta categoria ficam sem classificação. Esta ação não pode ser desfeita.",
                     rotuloConfirmar: "Excluir categoria",
                   }}
                 />

@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 
-import { salvarServico, type EstadoAcao } from "@/app/acoes/admin-catalogo";
+import { salvarServico, type EstadoAcao } from "@/app/acoes/admin-cadastros";
 import { CampoNomeESlug } from "@/components/admin/catalogo/campo-slug";
 import { BarraSalvar, Bloco, Grade, RegiaoEstado } from "@/components/admin/catalogo/moldura-form";
 import { Botao, LinkBotao } from "@/components/ui/button";
@@ -74,7 +74,7 @@ export function FormularioServico({
   return (
     <Bloco
       titulo={servico ? "Editar serviço" : "Novo serviço"}
-      descricao="Serviços podem ser vendidos sozinhos ou como adicional de um produto."
+      descricao="O serviço entra como linha do orçamento de reparo."
     >
       <form action={enviar} className="space-y-8">
         {servico ? <input type="hidden" name="id" value={servico.id} /> : null}
@@ -125,7 +125,7 @@ export function FormularioServico({
                 valorCents={preco}
                 aoMudar={setPreco}
                 erro={estado.campo === "priceCents" ? estado.erro : undefined}
-                ajuda="Pode ser substituído produto a produto na aba Adicionais."
+                ajuda="Valor de referência. No orçamento, cada linha continua editável."
               />
             )}
             <Marcador

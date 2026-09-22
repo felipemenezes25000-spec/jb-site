@@ -72,16 +72,8 @@ async function tratar(request: Request) {
       console.error("[fila] limpeza de anexos órfãos falhou", falha);
     }
 
-    let logistica = { processados: 0, ok: 0, falhas: 0 };
-    try {
-      const { processarPendenciasMelhorEnvio } = await import("@/lib/melhor-envio");
-      logistica = await processarPendenciasMelhorEnvio(Math.min(40, Math.max(5, limite)));
-    } catch (falha) {
-      console.error("[fila] processamento da logística falhou", falha);
-    }
-
     return Response.json(
-      { ok: true, ...resumo, anexos, logistica },
+      { ok: true, ...resumo, anexos },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (erro) {

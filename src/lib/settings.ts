@@ -11,7 +11,7 @@ export const SETTING_DEFAULTS = {
   empresa_nome: "JB Soluções Odontológicas",
   empresa_desde: "2011",
   empresa_resumo:
-    "Assistência técnica e equipamentos para consultórios odontológicos em São Paulo.",
+    "Assistência técnica autorizada EVOXX para equipamentos odontológicos em São Paulo.",
 
   // contato
   telefone: "(11) 3715-6362",
@@ -56,9 +56,9 @@ export const SETTING_DEFAULTS = {
 
   // seo
   area_atendimento: "",
-  seo_titulo: "JB Soluções Odontológicas — equipamentos e assistência técnica",
+  seo_titulo: "JB Soluções Odontológicas: assistência técnica odontológica",
   seo_descricao:
-    "Equipamentos odontológicos novos e seminovos revisados, com instalação, manutenção preventiva e assistência técnica especializada em São Paulo.",
+    "Assistência técnica autorizada EVOXX para autoclave, compressor, cadeira e outros equipamentos odontológicos em São Paulo. Chame no WhatsApp.",
 
   // integrações
   codigo_analytics: "",

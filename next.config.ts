@@ -345,8 +345,51 @@ const nextConfig: NextConfig = {
    * 308 preserva o método e diz ao buscador que a mudança é definitiva.
    */
   async redirects() {
-    return [{ source: "/empresa", destination: "/sobre", permanent: true }];
+    return REDIRECIONAMENTOS.map(([source, destination]) => ({
+      source,
+      destination,
+      permanent: true,
+    }));
   },
 };
+
+/**
+ * Para onde vão os endereços que saíram quando a JB virou só assistência.
+ *
+ * Só entra aqui o que tem um equivalente real na home nova: a página de
+ * assistência, o SOS, contato, dúvidas, a área do cliente (que deixou de
+ * existir; o acompanhamento agora é pelo WhatsApp). 308 preserva o método e
+ * diz ao buscador que a mudança é definitiva.
+ *
+ * As URLs da loja NÃO estão aqui. Mandar "/loja/autoclave-12l" para a home
+ * seria redirecionamento indiscriminado, que o Google trata como página
+ * inexistente disfarçada. Elas respondem 410 no `src/proxy.ts`.
+ *
+ * `/empresa` é o endereço herdado do site em PHP; ia para `/sobre`, que agora
+ * também virou seção da home.
+ */
+const REDIRECIONAMENTOS: [string, string][] = [
+  ["/assistencia-tecnica", "/"],
+  ["/assistencia-tecnica/:caminho*", "/"],
+  ["/sos-equipamento", "/"],
+  ["/orcamento", "/"],
+  ["/servicos", "/#equipamentos"],
+  ["/servicos/:slug", "/#equipamentos"],
+  ["/manutencao-preventiva", "/#equipamentos"],
+  ["/planos-de-manutencao", "/#equipamentos"],
+  ["/contato", "/#contato"],
+  ["/faq", "/#duvidas"],
+  ["/sobre", "/#autorizada"],
+  ["/estrutura", "/#autorizada"],
+  ["/empresa", "/#autorizada"],
+  ["/depoimentos", "/"],
+  ["/entrar", "/"],
+  ["/cadastro", "/"],
+  ["/recuperar-senha", "/"],
+  ["/redefinir-senha", "/"],
+  ["/minha-jb", "/"],
+  ["/minha-jb/:caminho*", "/"],
+  ["/chamado/:numero", "/"],
+];
 
 export default nextConfig;

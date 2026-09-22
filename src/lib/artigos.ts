@@ -94,25 +94,6 @@ export async function artigoPublicado(slug: string) {
       author: { select: { id: true, name: true, role: true } },
       reviewer: { select: { id: true, name: true, role: true } },
       sources: { orderBy: { order: "asc" }, select: { title: true, url: true, note: true } },
-      products: {
-        orderBy: { order: "asc" },
-        take: 3,
-        select: {
-          product: {
-            select: {
-              slug: true,
-              name: true,
-              priceCents: true,
-              status: true,
-              media: {
-                orderBy: { order: "asc" },
-                take: 1,
-                select: { media: { select: { url: true, alt: true } } },
-              },
-            },
-          },
-        },
-      },
     },
   });
 }

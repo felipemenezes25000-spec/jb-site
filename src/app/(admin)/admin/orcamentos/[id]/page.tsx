@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { History, Printer, ShoppingCart, Stethoscope, User } from "lucide-react";
+import { History, Printer, Stethoscope, User } from "lucide-react";
 
 import { AcoesOrcamento } from "@/components/admin/vendas/acoes-orcamento";
 import {
@@ -100,21 +100,13 @@ export default async function OrcamentoPage({ params }: Props) {
     orcamento.status === "aprovado" ||
     orcamento.status === "recusado";
 
-  const [clientes, produtos, autores] = await Promise.all([
+  const [clientes, autores] = await Promise.all([
     podeMexer && !travado
       ? prisma.customer.findMany({
           where: { active: true },
           orderBy: { name: "asc" },
           take: 500,
           select: { id: true, name: true, companyName: true, email: true },
-        })
-      : Promise.resolve([]),
-    podeMexer && !travado
-      ? prisma.product.findMany({
-          where: { status: "active" },
-          orderBy: { name: "asc" },
-          take: 500,
-          select: { id: true, name: true, sku: true, priceCents: true },
         })
       : Promise.resolve([]),
     prisma.user.findMany({
@@ -199,15 +191,9 @@ export default async function OrcamentoPage({ params }: Props) {
       ) : null}
 
       {orcamento.order ? (
-        <Aviso tom="sucesso" titulo={`Pedido ${orcamento.order.number} gerado`}>
-          A aprovação desta proposta virou uma venda com os valores negociados.{" "}
-          <Link
-            href={`/admin/pedidos/${orcamento.order.id}`}
-            className="font-semibold underline underline-offset-2"
-          >
-            Abrir o pedido
-          </Link>
-          .
+        <Aviso tom="info" titulo={`Virou o pedido ${orcamento.order.number}`}>
+          Este orçamento é de quando a JB ainda vendia pelo site: a aprovação gerou um pedido de
+          venda. Ele fica aqui como registro histórico.
         </Aviso>
       ) : null}
 
@@ -221,13 +207,7 @@ export default async function OrcamentoPage({ params }: Props) {
                 id: item.id,
                 rotulo: `${item.companyName || item.name} — ${item.email}`,
               }))}
-              produtos={produtos.map((produto) => ({
-                id: produto.id,
-                rotulo: produto.sku ? `${produto.name} (${produto.sku})` : produto.name,
-                precoCents: produto.priceCents,
-              }))}
               inicial={{
-                kind: orcamento.kind,
                 customerId: orcamento.customerId ?? "",
                 contatoNome: orcamento.contactName,
                 contatoEmail: orcamento.contactEmail,
@@ -237,13 +217,11 @@ export default async function OrcamentoPage({ params }: Props) {
                 notaInterna: orcamento.internalNote,
                 validoAte: paraInputDate(orcamento.validUntil),
                 desconto: paraCampo(orcamento.discountCents),
-                frete: paraCampo(orcamento.shippingCents),
                 itens: orcamento.items.map((item) => ({
                   chave: item.id,
                   descricao: item.description,
                   quantidade: String(item.quantity),
                   valor: paraCampo(item.unitPriceCents),
-                  productId: item.productId ?? "",
                 })),
               }}
             />
@@ -296,7 +274,6 @@ export default async function OrcamentoPage({ params }: Props) {
                 modo="editar"
                 quoteId={orcamento.id}
                 clientes={[]}
-                produtos={[]}
                 somenteLeitura
                 motivoBloqueio={
                   travado
@@ -304,7 +281,6 @@ export default async function OrcamentoPage({ params }: Props) {
                     : "Seu acesso a orçamentos é apenas de consulta."
                 }
                 inicial={{
-                  kind: orcamento.kind,
                   customerId: orcamento.customerId ?? "",
                   contatoNome: orcamento.contactName,
                   contatoEmail: orcamento.contactEmail,
@@ -314,13 +290,11 @@ export default async function OrcamentoPage({ params }: Props) {
                   notaInterna: orcamento.internalNote,
                   validoAte: paraInputDate(orcamento.validUntil),
                   desconto: paraCampo(orcamento.discountCents),
-                  frete: paraCampo(orcamento.shippingCents),
                   itens: orcamento.items.map((item) => ({
                     chave: item.id,
                     descricao: item.description,
                     quantidade: String(item.quantity),
                     valor: paraCampo(item.unitPriceCents),
-                    productId: item.productId ?? "",
                   })),
                 }}
               />
@@ -409,7 +383,6 @@ export default async function OrcamentoPage({ params }: Props) {
                 numero: orcamento.number,
                 status: orcamento.status,
                 jaEnviada: orcamento.sentAt !== null,
-                comercial: orcamento.kind === "comercial",
                 totalFormatado: formatarPreco(orcamento.totalCents),
                 temItens: orcamento.items.length > 0,
                 emailDoContato: orcamento.contactEmail,
@@ -428,24 +401,6 @@ export default async function OrcamentoPage({ params }: Props) {
             </Cartao>
           )}
 
-          {orcamento.order ? (
-            <Cartao>
-              <CabecalhoCartao titulo="Pedido gerado" />
-              <div className="flex flex-wrap items-center justify-between gap-3 p-5">
-                <p className="flex items-center gap-2 text-sm text-graf-700">
-                  <ShoppingCart className="size-4 text-graf-500" aria-hidden />
-                  <span className="tabular font-semibold">{orcamento.order.number}</span>
-                </p>
-                <LinkBotao
-                  href={`/admin/pedidos/${orcamento.order.id}`}
-                  variante="secundario"
-                  tamanho="sm"
-                >
-                  Abrir pedido
-                </LinkBotao>
-              </div>
-            </Cartao>
-          ) : null}
         </aside>
       </div>
     </div>

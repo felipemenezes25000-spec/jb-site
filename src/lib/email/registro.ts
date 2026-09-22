@@ -6,7 +6,6 @@ import { ROTULO_CHAMADO, ROTULO_URGENCIA } from "@/lib/assistencia";
 import type { MensagemDeEmail, ProvedorDeEmail, ResultadoEnvio } from "@/lib/email/tipos";
 import { formatarDataHora, formatarPreco, formatarTelefone } from "@/lib/format";
 import { TIPOS_NOTIFICACAO, type TipoNotificacao } from "@/lib/notificacoes";
-import { ROTULO_STATUS } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
 import { urlAbsoluta } from "@/lib/seo";
 import { getSettings, type SettingsMap } from "@/lib/settings";
@@ -161,115 +160,13 @@ function juntar(linhas: (string | null | undefined | false)[]) {
 
 /* ---------------------------------------------------------------- modelos */
 
-/**
- * Link de redefinição de senha.
- *
- * O token só existe em claro no instante em que é gerado — o banco guarda o
- * hash (`PasswordResetToken.tokenHash`). Quando a `dedupeKey` traz o token
- * inteiro no `refId`, o link é remontado do jeito certo. Quando não traz (o
- * fluxo atual de `@/app/acoes/conta.ts` grava só um prefixo de 24 caracteres),
- * não há como reconstruir: a mensagem falha com um motivo claro em vez de sair
- * com um link quebrado.
- */
-const MODELO_SENHA: Modelo = {
-  rotulo: "Recuperação de senha",
-  async montar({ linha, referencia, s }) {
-    const token = referencia.refId.trim();
-    if (!token || token.length < 32) {
-      throw new ErroDeModelo(
-        "Token de redefinição não recuperável a partir da fila. Peça um link novo em /recuperar-senha.",
-      );
-    }
-
-    const link = urlAbsoluta(`/redefinir-senha?token=${encodeURIComponent(token)}`);
-    const cliente = await prisma.customer.findUnique({
-      where: { email: linha.to },
-      select: { name: true },
-    });
-
-    return {
-      assunto: `Redefinição de senha — ${s.empresa_nome}`,
-      texto: juntar([
-        cliente?.name ? `Olá, ${cliente.name}.` : "Olá.",
-        "",
-        "Recebemos um pedido para redefinir a senha da sua conta na JB.",
-        "",
-        `Abra este link para escolher uma senha nova: ${link}`,
-        "",
-        "O link vale por 1 hora e só pode ser usado uma vez. Se não foi você que pediu, ignore esta mensagem: a senha atual continua valendo.",
-        "",
-        assinatura(s),
-      ]),
-    };
-  },
-};
-
-async function pedidoDaReferencia(refId: string) {
-  const pedido = await prisma.order.findUnique({
-    where: { id: idBase(refId) },
-    select: {
-      number: true,
-      status: true,
-      buyerName: true,
-      totalCents: true,
-      placedAt: true,
-      paidAt: true,
-      shippingKind: true,
-    },
-  });
-  if (!pedido) throw new ErroDeModelo(`Pedido ${refId} não existe mais.`);
-  return pedido;
+/** Como a pessoa fala com a equipe: WhatsApp quando configurado, e-mail sempre. */
+function comoResponder(s: SettingsMap) {
+  const whatsapp = s.whatsapp.trim();
+  return whatsapp
+    ? `Qualquer dúvida, responda este e-mail ou chame a equipe no WhatsApp ${whatsapp}.`
+    : "Qualquer dúvida, é só responder este e-mail.";
 }
-
-const MODELO_PEDIDO_RECEBIDO: Modelo = {
-  rotulo: "Pedido recebido",
-  async montar({ referencia, s }) {
-    const pedido = await pedidoDaReferencia(referencia.refId);
-    const link = urlAbsoluta(`/pedido/${pedido.number}`);
-
-    return {
-      assunto: `Recebemos seu pedido ${pedido.number}`,
-      texto: juntar([
-        `Olá, ${pedido.buyerName}.`,
-        "",
-        `Seu pedido ${pedido.number} foi registrado em ${formatarDataHora(pedido.placedAt)}, no valor de ${formatarPreco(pedido.totalCents)}.`,
-        `Situação agora: ${ROTULO_STATUS[pedido.status]}.`,
-        "",
-        `Acompanhe por aqui: ${link}`,
-        "",
-        assinatura(s),
-      ]),
-    };
-  },
-};
-
-const MODELO_PAGAMENTO_APROVADO: Modelo = {
-  rotulo: "Pagamento aprovado",
-  async montar({ referencia, s }) {
-    const pedido = await pedidoDaReferencia(referencia.refId);
-    const link = urlAbsoluta(`/pedido/${pedido.number}`);
-    const entrega =
-      pedido.shippingKind === "retirada"
-        ? "Assim que estiver separado, avisamos para você retirar no endereço da JB."
-        : "O próximo passo é a separação e o envio. Avisamos quando sair para entrega.";
-
-    return {
-      assunto: `Pagamento aprovado — pedido ${pedido.number}`,
-      texto: juntar([
-        `Olá, ${pedido.buyerName}.`,
-        "",
-        `O pagamento do pedido ${pedido.number}, de ${formatarPreco(pedido.totalCents)}, foi aprovado${
-          pedido.paidAt ? ` em ${formatarDataHora(pedido.paidAt)}` : ""
-        }.`,
-        entrega,
-        "",
-        `Detalhes do pedido: ${link}`,
-        "",
-        assinatura(s),
-      ]),
-    };
-  },
-};
 
 const MODELO_ORCAMENTO_ENVIADO: Modelo = {
   rotulo: "Orçamento enviado",
@@ -288,11 +185,6 @@ const MODELO_ORCAMENTO_ENVIADO: Modelo = {
     });
     if (!orcamento) throw new ErroDeModelo(`Orçamento ${referencia.refId} não existe mais.`);
 
-    // Cliente com conta abre pela área dele; sem conta, pela página pública.
-    const link = orcamento.customerId
-      ? urlAbsoluta(`/minha-jb/orcamentos/${orcamento.number}`)
-      : urlAbsoluta("/orcamento");
-
     return {
       assunto: `Orçamento ${orcamento.number} — ${s.empresa_nome}`,
       texto: juntar([
@@ -302,7 +194,8 @@ const MODELO_ORCAMENTO_ENVIADO: Modelo = {
         orcamento.validUntil ? `A proposta vale até ${formatarDataHora(orcamento.validUntil)}.` : "",
         orcamento.message ? `\n${orcamento.message}` : "",
         "",
-        `Para ver os itens e aprovar: ${link}`,
+        "Para aprovar, responda este e-mail ou avise a equipe pelo WhatsApp.",
+        comoResponder(s),
         "",
         assinatura(s),
       ]),
@@ -336,15 +229,13 @@ const MODELO_CHAMADO_CLIENTE: Modelo = {
   rotulo: "Chamado aberto — cliente",
   async montar({ referencia, s }) {
     const chamado = await chamadoDaReferencia(referencia.refId);
-    const link = urlAbsoluta(`/chamado/${chamado.number}`);
-
     return {
       assunto: `Recebemos seu chamado ${chamado.number}`,
       texto: juntar([
         `Olá, ${chamado.contactName}.`,
         "",
         `Registramos seu chamado com o número ${chamado.number}. Situação agora: ${ROTULO_CHAMADO[chamado.status]}.`,
-        `Acompanhe o andamento em ${link}`,
+        comoResponder(s),
         "",
         assinatura(s),
       ]),
@@ -438,7 +329,7 @@ const MODELO_VISITA_AGENDADA: Modelo = {
         visita.contract ? `Contrato: ${visita.contract.number}.` : "",
         visita.notes ? `\nObservação: ${visita.notes}` : "",
         "",
-        `Suas manutenções ficam em ${urlAbsoluta("/minha-jb/manutencoes")}`,
+        comoResponder(s),
         "",
         assinatura(s),
       ]),
@@ -604,9 +495,6 @@ const MODELO_AVALIACAO_CONVITE: Modelo = {
 };
 
 const MODELOS: Record<string, Modelo> = {
-  senha_reset: MODELO_SENHA,
-  pedido_recebido: MODELO_PEDIDO_RECEBIDO,
-  pagamento_aprovado: MODELO_PAGAMENTO_APROVADO,
   orcamento_enviado: MODELO_ORCAMENTO_ENVIADO,
   chamado_aberto_cliente: MODELO_CHAMADO_CLIENTE,
   chamado_aberto_equipe: MODELO_CHAMADO_EQUIPE,

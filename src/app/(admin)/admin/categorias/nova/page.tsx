@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PaginaNovaCategoria() {
-  await exigirEdicao("produtos");
+  await exigirEdicao("cadastros");
 
   const linhas = await prisma.category.findMany({
     orderBy: [{ order: "asc" }, { name: "asc" }],

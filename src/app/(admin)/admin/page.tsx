@@ -1,16 +1,15 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { OrderStatus, Urgency } from "@prisma/client";
+import type { Urgency } from "@prisma/client";
 import {
   ArrowRight,
   CalendarClock,
   ChartColumn,
+  CircleCheck,
   ClipboardList,
-  CreditCard,
   FileText,
   ShieldAlert,
-  ShoppingCart,
   Stethoscope,
   TriangleAlert,
   Wallet,
@@ -27,7 +26,6 @@ import {
   type Tom,
 } from "@/components/ui/data";
 import { LinkBotao } from "@/components/ui/button";
-import type { StaffUser } from "@/lib/auth";
 import {
   distanciaEmDias,
   formatarData,
@@ -35,7 +33,6 @@ import {
   formatarPreco,
   plural,
 } from "@/lib/format";
-import { ROTULO_STATUS } from "@/lib/pedido";
 import { AREAS, exigirStaffAdmin, podeVer, type AreaAdmin } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -63,50 +60,6 @@ function inicioDoMes(deslocamentoMeses = 0) {
 function variacaoPercentual(atual: number, anterior: number) {
   if (anterior <= 0) return null;
   return ((atual - anterior) / anterior) * 100;
-}
-
-const ORDEM_STATUS: OrderStatus[] = [
-  "aguardando_pagamento",
-  "pagamento_em_analise",
-  "pago",
-  "separacao",
-  "revisao_tecnica",
-  "aguardando_frete",
-  "pronto_retirada",
-  "enviado",
-  "instalacao_agendada",
-  "entregue",
-  "concluido",
-  "cancelado",
-  "reembolsado",
-];
-
-const AGUARDANDO_ACAO: OrderStatus[] = [
-  "pagamento_em_analise",
-  "pago",
-  "separacao",
-  "revisao_tecnica",
-  "aguardando_frete",
-  "pronto_retirada",
-  "instalacao_agendada",
-];
-
-function tomDoPedido(status: OrderStatus): Tom {
-  if (status === "cancelado" || status === "reembolsado") return "alerta";
-  if (status === "concluido" || status === "entregue") return "ok";
-  if (status === "aguardando_pagamento" || status === "pagamento_em_analise") {
-    return "aguardando";
-  }
-  return "andamento";
-}
-
-function pontoDoPedido(status: OrderStatus) {
-  if (status === "cancelado" || status === "reembolsado") return "bg-jb-500";
-  if (status === "concluido" || status === "entregue") return "bg-ok-500";
-  if (status === "aguardando_pagamento" || status === "pagamento_em_analise") {
-    return "bg-warn-500";
-  }
-  return "bg-info-500";
 }
 
 const ROTULO_URGENCIA: Record<Urgency, string> = {
@@ -223,22 +176,6 @@ function Linha({
   );
 }
 
-function LinhaStatusPedido({ status, quantidade }: { status: OrderStatus; quantidade: number }) {
-  return (
-    <li>
-      <Link
-        href={`/admin/pedidos?status=${status}`}
-        className="flex min-h-11 items-center gap-2.5 px-4 py-2 text-[0.75rem] transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
-      >
-        <span className={cn("size-2 shrink-0 rounded-full", pontoDoPedido(status))} aria-hidden />
-        <span className="min-w-0 flex-1 truncate font-medium text-graf-700">{ROTULO_STATUS[status]}</span>
-        <Etiqueta tom={tomDoPedido(status)}>{quantidade}</Etiqueta>
-        <ArrowRight className="size-3.5 shrink-0 text-graf-400" aria-hidden />
-      </Link>
-    </li>
-  );
-}
-
 function CorpoVazio({ texto }: { texto: string }) {
   return <Vazio titulo={texto} className="m-4 border-graf-200 bg-transparent py-7" />;
 }
@@ -271,14 +208,12 @@ export default async function PaginaPainel({
   const areaNegada =
     erro === "permissao" && area && area in AREAS ? AREAS[area as AreaAdmin].rotulo : null;
 
-  const verComercial = podeVer(usuario, "pedidos");
   const verOrcamentos = podeVer(usuario, "orcamentos");
   const verAssistencia = podeVer(usuario, "assistencia");
-  const verEstoque = podeVer(usuario, "estoque") || podeVer(usuario, "produtos");
   const verLeads = podeVer(usuario, "leads");
   const verInsights = podeVer(usuario, "insights");
 
-  const semBlocos = !verComercial && !verOrcamentos && !verAssistencia && !verEstoque && !verLeads;
+  const semBlocos = !verOrcamentos && !verAssistencia && !verLeads;
   const primeiroNome = usuario.name.trim().split(/\s+/)[0] || "Equipe";
 
   return (
@@ -306,10 +241,10 @@ export default async function PaginaPainel({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[0.8rem] font-bold text-graf-950">
-                Mais vendas, mais equipamentos em movimento
+                Indicadores do parque atendido
               </span>
               <span className="mt-0.5 block text-xs text-graf-500">
-                Acompanhe seus resultados em tempo real.
+                Chamados por modelo, reincidência e preventivas vencidas.
               </span>
             </span>
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/85 text-graf-600 transition-transform group-hover:translate-x-0.5">
@@ -333,21 +268,21 @@ export default async function PaginaPainel({
         </p>
       ) : null}
 
-      {verComercial ? (
-        <Suspense fallback={<EsqueletoBloco />}>
-          <BlocoComercial usuario={usuario} verInsights={verInsights} />
-        </Suspense>
-      ) : null}
-
       {verAssistencia ? (
         <Suspense fallback={<EsqueletoBloco />}>
           <BlocoAssistencia verInsights={verInsights} />
         </Suspense>
       ) : null}
 
-      {verEstoque || verLeads ? (
+      {verOrcamentos ? (
+        <Suspense fallback={<EsqueletoBloco />}>
+          <BlocoOrcamentos />
+        </Suspense>
+      ) : null}
+
+      {verLeads ? (
         <Suspense fallback={<Esqueleto className="h-64" />}>
-          <BlocoApoio verEstoque={verEstoque} verLeads={verLeads} />
+          <BlocoContatos />
         </Suspense>
       ) : null}
 
@@ -361,261 +296,109 @@ export default async function PaginaPainel({
   );
 }
 
-async function BlocoComercial({
-  usuario,
-  verInsights,
-}: {
-  usuario: StaffUser;
-  verInsights: boolean;
-}) {
+/**
+ * Orçamentos de reparo: o que espera o cliente responder e o que já foi
+ * aprovado no mês. Substitui o antigo bloco "Comercial", que media vendas da
+ * loja; o valor aprovado aqui é serviço técnico, não pedido.
+ */
+async function BlocoOrcamentos() {
   const mesAtual = inicioDoMes();
   const mesAnterior = inicioDoMes(-1);
-  const verOrcamentos = podeVer(usuario, "orcamentos");
 
-  const [faturamento, faturamentoAnterior, porStatus, ultimos, orcamentos, orcamentosLista] =
-    await Promise.all([
-      prisma.order.aggregate({
-        _sum: { totalCents: true },
-        _count: { _all: true },
-        where: {
-          paidAt: { gte: mesAtual },
-          status: { notIn: ["cancelado", "reembolsado"] },
-        },
-      }),
-      prisma.order.aggregate({
-        _sum: { totalCents: true },
-        where: {
-          paidAt: { gte: mesAnterior, lt: mesAtual },
-          status: { notIn: ["cancelado", "reembolsado"] },
-        },
-      }),
-      prisma.order.groupBy({
-        by: ["status"],
-        _count: { _all: true },
-      }),
-      prisma.order.findMany({
-        orderBy: { placedAt: "desc" },
-        take: 6,
-        select: {
-          id: true,
-          number: true,
-          status: true,
-          buyerName: true,
-          totalCents: true,
-          placedAt: true,
-        },
-      }),
-      verOrcamentos
-        ? prisma.quote.count({ where: { status: { in: ["enviado", "em_duvida"] } } })
-        : Promise.resolve(0),
-      verOrcamentos
-        ? prisma.quote.findMany({
-            where: { status: { in: ["enviado", "em_duvida"] } },
-            orderBy: [{ validUntil: "asc" }, { sentAt: "asc" }],
-            take: 5,
-            select: {
-              id: true,
-              number: true,
-              contactName: true,
-              totalCents: true,
-              validUntil: true,
-              customer: { select: { name: true } },
-            },
-          })
-        : Promise.resolve([]),
-    ]);
+  const [semResposta, aprovadosMes, aprovadosAnterior, lista] = await Promise.all([
+    prisma.quote.count({ where: { status: { in: ["enviado", "em_duvida"] } } }),
+    prisma.quote.aggregate({
+      _sum: { totalCents: true },
+      _count: { _all: true },
+      where: { status: "aprovado", decidedAt: { gte: mesAtual } },
+    }),
+    prisma.quote.aggregate({
+      _sum: { totalCents: true },
+      where: { status: "aprovado", decidedAt: { gte: mesAnterior, lt: mesAtual } },
+    }),
+    prisma.quote.findMany({
+      where: { status: { in: ["enviado", "em_duvida"] } },
+      orderBy: [{ validUntil: "asc" }, { sentAt: "asc" }],
+      take: 5,
+      select: {
+        id: true,
+        number: true,
+        contactName: true,
+        totalCents: true,
+        validUntil: true,
+        customer: { select: { name: true } },
+      },
+    }),
+  ]);
 
-  const contagem = new Map(porStatus.map((linha) => [linha.status, linha._count._all] as const));
-  const somar = (status: OrderStatus[]) =>
-    status.reduce((total, chave) => total + (contagem.get(chave) ?? 0), 0);
-
-  const receitaMes = faturamento._sum.totalCents ?? 0;
-  const receitaAnterior = faturamentoAnterior._sum.totalCents ?? 0;
-  const variacao = variacaoPercentual(receitaMes, receitaAnterior);
-  const aguardandoAcao = somar(AGUARDANDO_ACAO);
-  const aguardandoPagamento = contagem.get("aguardando_pagamento") ?? 0;
+  const valorMes = aprovadosMes._sum.totalCents ?? 0;
+  const variacao = variacaoPercentual(valorMes, aprovadosAnterior._sum.totalCents ?? 0);
 
   return (
     <Secao
-      titulo="Comercial"
-      descricao="Vendas da loja, fila de expedição e propostas abertas."
-      icone={ShoppingCart}
-      relatorioHref={verInsights ? "/admin/insights" : undefined}
+      titulo="Orçamentos de reparo"
+      descricao="O que espera a resposta do cliente e o que já foi aprovado no mês."
+      icone={FileText}
     >
-      <Indicadores className={verOrcamentos ? undefined : "xl:grid-cols-3"}>
+      <Indicadores className="xl:grid-cols-3">
         <Indicador
-          rotulo="Faturamento do mês"
-          valor={formatarPreco(receitaMes)}
-          detalhe={`${plural(faturamento._count._all, "pedido pago", "pedidos pagos")} desde ${formatarData(mesAtual)}`}
+          rotulo="Sem resposta do cliente"
+          valor={semResposta}
+          detalhe="Enviados, esperando aprovação. Vale chamar no WhatsApp."
+          icone={FileText}
+          tom={semResposta > 0 ? "marca" : "neutro"}
+          href="/admin/orcamentos?status=enviado"
+        />
+        <Indicador
+          rotulo="Aprovados no mês"
+          valor={aprovadosMes._count._all}
+          detalhe={`Desde ${formatarData(mesAtual)}`}
+          icone={CircleCheck}
+          tom="ok"
+          href="/admin/orcamentos?status=aprovado"
+        />
+        <Indicador
+          rotulo="Valor aprovado no mês"
+          valor={formatarPreco(valorMes)}
+          detalhe="Serviço técnico aprovado, somado pelos itens de cada orçamento."
           icone={ChartColumn}
           tom="ok"
-          href="/admin/pedidos?status=pago"
-          hrefRotulo="Ver pedidos pagos"
           variacao={
-            variacao === null
-              ? undefined
-              : { percentual: variacao, rotulo: "sobre o mês anterior" }
+            variacao === null ? undefined : { percentual: variacao, rotulo: "sobre o mês anterior" }
           }
         />
-        <Indicador
-          rotulo="Aguardando ação da JB"
-          valor={aguardandoAcao}
-          detalhe="Pagos, em separação, revisão técnica ou prontos para sair."
-          icone={ShoppingCart}
-          tom={aguardandoAcao > 0 ? "aviso" : "neutro"}
-          href="/admin/pedidos"
-          hrefRotulo="Abrir fila de pedidos"
-        />
-        <Indicador
-          rotulo="Aguardando pagamento"
-          valor={aguardandoPagamento}
-          detalhe="Pedidos fechados que ainda não foram pagos."
-          icone={CreditCard}
-          tom={aguardandoPagamento > 0 ? "info" : "neutro"}
-          href="/admin/pedidos?status=aguardando_pagamento"
-        />
-        {verOrcamentos ? (
-          <Indicador
-            rotulo="Orçamentos sem resposta"
-            valor={orcamentos}
-            detalhe="Enviados ao cliente, esperando aprovação."
-            icone={FileText}
-            tom={orcamentos > 0 ? "marca" : "neutro"}
-            href="/admin/orcamentos?status=enviado"
-          />
-        ) : null}
       </Indicadores>
 
-      <div
-        className={cn(
-          "grid gap-3",
-          verOrcamentos ? "xl:grid-cols-12" : "lg:grid-cols-2",
+      <Cartao className="flex flex-col">
+        <CabecalhoCartao
+          titulo="Esperando o cliente"
+          descricao="Ordenados pelo que vence primeiro."
+          acao={
+            <LinkBotao href="/admin/orcamentos" variante="secundario" tamanho="sm">
+              Ver todos
+            </LinkBotao>
+          }
+        />
+        {lista.length === 0 ? (
+          <CorpoVazio texto="Nenhum orçamento aguardando resposta" />
+        ) : (
+          <ul className="divide-y divide-graf-100">
+            {lista.map((orcamento) => (
+              <Linha
+                key={orcamento.id}
+                href={`/admin/orcamentos/${orcamento.id}`}
+                titulo={`${orcamento.number} · ${orcamento.customer?.name ?? (orcamento.contactName || "Contato não informado")}`}
+                detalhe={
+                  orcamento.validUntil
+                    ? `Válido até ${formatarData(orcamento.validUntil)} (${distanciaEmDias(orcamento.validUntil)})`
+                    : "Sem prazo de validade"
+                }
+                valor={formatarPreco(orcamento.totalCents)}
+              />
+            ))}
+          </ul>
         )}
-      >
-        <Cartao className={verOrcamentos ? "xl:col-span-4" : undefined}>
-          <CabecalhoCartao
-            titulo="Pedidos por status"
-            descricao="Toda a base, do mais recente ao mais antigo."
-          />
-          {porStatus.length === 0 ? (
-            <CorpoVazio texto="Nenhum pedido registrado ainda" />
-          ) : (
-            <ul className="divide-y divide-graf-100">
-              {ORDEM_STATUS.filter((status) => (contagem.get(status) ?? 0) > 0)
-                .slice(0, 7)
-                .map((status) => (
-                  <LinhaStatusPedido
-                    key={status}
-                    status={status}
-                    quantidade={contagem.get(status) ?? 0}
-                  />
-                ))}
-            </ul>
-          )}
-        </Cartao>
-
-        <Cartao className={verOrcamentos ? "overflow-hidden xl:col-span-5" : "overflow-hidden"}>
-          <CabecalhoCartao
-            titulo="Últimos pedidos"
-            acao={
-              <LinkBotao href="/admin/pedidos" variante="secundario" tamanho="sm">
-                Ver todos
-              </LinkBotao>
-            }
-          />
-          {ultimos.length === 0 ? (
-            <CorpoVazio texto="Nenhum pedido registrado ainda" />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-[34rem]">
-                <thead>
-                  <tr>
-                    <th className="border-b border-graf-200 px-4 py-2 text-left">Pedido</th>
-                    <th className="border-b border-graf-200 px-3 py-2 text-left">Cliente</th>
-                    <th className="border-b border-graf-200 px-3 py-2 text-left">Valor</th>
-                    <th className="border-b border-graf-200 px-3 py-2 text-left">Status</th>
-                    <th className="border-b border-graf-200 px-4 py-2 text-right">Data</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ultimos.slice(0, 5).map((pedido) => (
-                    <tr key={pedido.id} className="border-b border-graf-100 last:border-b-0">
-                      <td className="border-b border-graf-100 px-4 py-2.5">
-                        <Link
-                          href={`/admin/pedidos/${pedido.id}`}
-                          className="font-semibold text-graf-900 hover:text-jb-700"
-                        >
-                          {pedido.number}
-                        </Link>
-                      </td>
-                      <td className="border-b border-graf-100 px-3 py-2.5 text-graf-700">
-                        {pedido.buyerName}
-                      </td>
-                      <td className="tabular border-b border-graf-100 px-3 py-2.5 font-medium text-graf-800">
-                        {formatarPreco(pedido.totalCents)}
-                      </td>
-                      <td className="border-b border-graf-100 px-3 py-2.5">
-                        <Etiqueta tom={tomDoPedido(pedido.status)}>
-                          {ROTULO_STATUS[pedido.status]}
-                        </Etiqueta>
-                      </td>
-                      <td className="tabular border-b border-graf-100 px-4 py-2.5 text-right text-graf-500">
-                        {formatarData(pedido.placedAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Cartao>
-
-        {verOrcamentos ? (
-          <Cartao className="flex min-h-full flex-col xl:col-span-3">
-            <CabecalhoCartao
-              titulo="Orçamentos esperando o cliente"
-              descricao="Ordenados pelo que vence primeiro."
-            />
-            {orcamentosLista.length === 0 ? (
-              <CorpoVazio texto="Nenhum orçamento aguardando resposta" />
-            ) : (
-              <ul className="flex-1 divide-y divide-graf-100">
-                {orcamentosLista.slice(0, 4).map((orcamento) => (
-                  <li key={orcamento.id}>
-                    <Link
-                      href={`/admin/orcamentos/${orcamento.id}`}
-                      className="block px-4 py-3 transition-colors hover:bg-graf-50"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold text-graf-900">
-                            {orcamento.number} · {orcamento.customer?.name ?? (orcamento.contactName || "Contato não informado")}
-                          </p>
-                          <p className="mt-1 text-xs text-graf-500">
-                            {orcamento.validUntil
-                              ? `Válido até ${formatarData(orcamento.validUntil)} (${distanciaEmDias(orcamento.validUntil)})`
-                              : "Sem prazo de validade"}
-                          </p>
-                        </div>
-                        <span className="tabular shrink-0 text-xs font-semibold text-graf-800">
-                          {formatarPreco(orcamento.totalCents)}
-                        </span>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link
-              href="/admin/orcamentos"
-              className="mx-4 mb-3 mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-xs font-semibold text-graf-700 hover:text-jb-700"
-            >
-              Ver todos os orçamentos
-              <ArrowRight className="size-3.5" aria-hidden />
-            </Link>
-          </Cartao>
-        ) : null}
-      </div>
+      </Cartao>
     </Secao>
   );
 }
@@ -821,125 +604,54 @@ async function BlocoAssistencia({ verInsights }: { verInsights: boolean }) {
   );
 }
 
-async function BlocoApoio({
-  verEstoque,
-  verLeads,
-}: {
-  verEstoque: boolean;
-  verLeads: boolean;
-}) {
-  const [estoqueBaixo, estoqueTotal, leadsNovos, leads] = await Promise.all([
-    verEstoque
-      ? prisma.product.findMany({
-          where: {
-            status: "active",
-            trackInventory: true,
-            stock: { lte: prisma.product.fields.lowStockAlert },
-          },
-          orderBy: { stock: "asc" },
-          take: 6,
-          select: { id: true, name: true, sku: true, stock: true, lowStockAlert: true },
-        })
-      : Promise.resolve([]),
-    verEstoque
-      ? prisma.product.count({
-          where: {
-            status: "active",
-            trackInventory: true,
-            stock: { lte: prisma.product.fields.lowStockAlert },
-          },
-        })
-      : Promise.resolve(0),
-    verLeads ? prisma.lead.count({ where: { status: "novo" } }) : Promise.resolve(0),
-    verLeads
-      ? prisma.lead.findMany({
-          where: { status: "novo" },
-          orderBy: { createdAt: "desc" },
-          take: 6,
-          select: { id: true, nome: true, cidade: true, estado: true, email: true, createdAt: true },
-        })
-      : Promise.resolve([]),
+/** Contatos que chegaram pelo formulário do site e ainda não tiveram retorno. */
+async function BlocoContatos() {
+  const [leadsNovos, leads] = await Promise.all([
+    prisma.lead.count({ where: { status: "novo" } }),
+    prisma.lead.findMany({
+      where: { status: "novo" },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: { id: true, nome: true, cidade: true, estado: true, email: true, createdAt: true },
+    }),
   ]);
 
   return (
     <Secao
-      titulo="Catálogo e captação"
-      descricao="O que pode faltar na prateleira e quem chegou pelo site."
+      titulo="Contatos do site"
+      descricao="Quem deixou os dados em vez de chamar no WhatsApp."
       icone={Wallet}
     >
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {verEstoque ? (
-          <Cartao>
-            <CabecalhoCartao
-              titulo="Estoque baixo"
-              descricao={
-                estoqueTotal > 0
-                  ? `${plural(estoqueTotal, "produto ativo", "produtos ativos")} no ou abaixo do alerta.`
-                  : "Comparação com o alerta configurado em cada produto."
-              }
-              acao={
-                <LinkBotao href="/admin/estoque" variante="secundario" tamanho="sm">
-                  Ver estoque
-                </LinkBotao>
-              }
-            />
-            {estoqueBaixo.length === 0 ? (
-              <CorpoVazio texto="Nenhum produto ativo abaixo do alerta" />
-            ) : (
-              <ul className="divide-y divide-graf-100">
-                {estoqueBaixo.map((produto) => (
-                  <Linha
-                    key={produto.id}
-                    href={`/admin/produtos/${produto.id}`}
-                    titulo={produto.name}
-                    detalhe={`SKU ${produto.sku} · alerta em ${produto.lowStockAlert}`}
-                    etiqueta={{
-                      texto:
-                        produto.stock <= 0
-                          ? "Sem estoque"
-                          : plural(produto.stock, "unidade", "unidades"),
-                      tom: produto.stock <= 0 ? "alerta" : "aguardando",
-                    }}
-                  />
-                ))}
-              </ul>
-            )}
-          </Cartao>
-        ) : null}
-
-        {verLeads ? (
-          <Cartao>
-            <CabecalhoCartao
-              titulo="Leads novos"
-              descricao={
-                leadsNovos > 0
-                  ? `${plural(leadsNovos, "contato aguardando", "contatos aguardando")} retorno.`
-                  : "Contatos vindos dos formulários do site."
-              }
-              acao={
-                <LinkBotao href="/admin/leads" variante="secundario" tamanho="sm">
-                  Ver leads
-                </LinkBotao>
-              }
-            />
-            {leads.length === 0 ? (
-              <CorpoVazio texto="Nenhum lead novo no momento" />
-            ) : (
-              <ul className="divide-y divide-graf-100">
-                {leads.map((lead) => (
-                  <Linha
-                    key={lead.id}
-                    href={`/admin/leads/${lead.id}`}
-                    titulo={lead.nome}
-                    detalhe={[lead.cidade, lead.estado].filter(Boolean).join(" · ") || lead.email}
-                    etiqueta={{ texto: distanciaEmDias(lead.createdAt), tom: "andamento" }}
-                  />
-                ))}
-              </ul>
-            )}
-          </Cartao>
-        ) : null}
-      </div>
+      <Cartao>
+        <CabecalhoCartao
+          titulo="Leads novos"
+          descricao={
+            leadsNovos > 0
+              ? `${plural(leadsNovos, "contato aguardando", "contatos aguardando")} retorno.`
+              : "Contatos vindos dos formulários do site."
+          }
+          acao={
+            <LinkBotao href="/admin/leads" variante="secundario" tamanho="sm">
+              Ver leads
+            </LinkBotao>
+          }
+        />
+        {leads.length === 0 ? (
+          <CorpoVazio texto="Nenhum lead novo no momento" />
+        ) : (
+          <ul className="divide-y divide-graf-100">
+            {leads.map((lead) => (
+              <Linha
+                key={lead.id}
+                href={`/admin/leads/${lead.id}`}
+                titulo={lead.nome}
+                detalhe={[lead.cidade, lead.estado].filter(Boolean).join(" · ") || lead.email}
+                etiqueta={{ texto: distanciaEmDias(lead.createdAt), tom: "andamento" }}
+              />
+            ))}
+          </ul>
+        )}
+      </Cartao>
     </Secao>
   );
 }

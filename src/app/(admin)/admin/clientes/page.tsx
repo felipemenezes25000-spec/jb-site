@@ -40,10 +40,9 @@ export const metadata: Metadata = {
 /**
  * Lista de clientes.
  *
- * O "total comprado" não sai de um campo guardado no cadastro — ele é somado na
- * hora, só dos pedidos efetivamente pagos e não cancelados, e apenas para os
- * clientes desta página. Guardar o total no cadastro criaria um número que
- * envelhece sozinho toda vez que um pedido é estornado.
+ * O total de serviços aprovados não sai de um campo guardado no cadastro: ele
+ * é somado na hora, só dos orçamentos aprovados, e apenas para os clientes
+ * desta página. Guardado no cadastro, envelheceria a cada revisão.
  */
 
 type Busca = Promise<{ [chave: string]: string | string[] | undefined }>;
@@ -106,7 +105,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
         companyName: true,
         active: true,
         createdAt: true,
-        _count: { select: { orders: true } },
+        _count: { select: { serviceRequests: true } },
       },
     }),
     prisma.customer.count({ where }),
@@ -115,14 +114,13 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
     prisma.customer.count({ where: { ...where, createdAt: { gte: inicioDoMes } } }),
   ]);
 
-  // total comprado só dos clientes desta página, direto dos pedidos pagos
+  // serviços aprovados só dos clientes desta página, direto dos orçamentos
   const compras = clientes.length
-    ? await prisma.order.groupBy({
+    ? await prisma.quote.groupBy({
         by: ["customerId"],
         where: {
           customerId: { in: clientes.map((cliente) => cliente.id) },
-          paidAt: { not: null },
-          status: { notIn: ["cancelado", "reembolsado"] },
+          status: "aprovado",
         },
         _sum: { totalCents: true },
       })
@@ -185,15 +183,15 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
         ),
     },
     {
-      chave: "pedidos",
-      rotulo: "Pedidos",
+      chave: "chamados",
+      rotulo: "Chamados",
       largura: "5.5rem",
       alinhamento: "centro",
-      renderizar: (linha) => <span className="tabular">{linha._count.orders}</span>,
+      renderizar: (linha) => <span className="tabular">{linha._count.serviceRequests}</span>,
     },
     {
       chave: "comprado",
-      rotulo: "Comprado",
+      rotulo: "Aprovado",
       largura: "9rem",
       alinhamento: "direita",
       renderizar: (linha) => (
@@ -293,11 +291,11 @@ export default async function ClientesPage({ searchParams }: { searchParams: Bus
         hrefDaLinha={(linha) => `/admin/clientes/${linha.id}`}
         ordenacao={{ chave: ordem, direcao }}
         hrefOrdenar={hrefOrdenar}
-        legenda="Clientes com contato, documento e total comprado"
+        legenda="Clientes com contato, documento, chamados e serviços aprovados"
         vazio={{
           icone: Users,
           titulo: "Nenhum cliente com estes filtros",
-          descricao: "Clientes entram no cadastro ao criar conta ou ao fechar o primeiro pedido.",
+          descricao: "Cadastre a clínica pelo botão Novo cliente quando ela chamar pela primeira vez.",
           acao: (
             <LinkBotao href="/admin/clientes" variante="secundario">
               Limpar filtros

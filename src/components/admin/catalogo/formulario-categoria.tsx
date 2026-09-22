@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 
-import { salvarCategoria, type EstadoAcao } from "@/app/acoes/admin-catalogo";
+import { salvarCategoria, type EstadoAcao } from "@/app/acoes/admin-cadastros";
 import { CampoNomeESlug } from "@/components/admin/catalogo/campo-slug";
 import { BarraSalvar, Bloco, Grade, RegiaoEstado } from "@/components/admin/catalogo/moldura-form";
 import { Botao, LinkBotao } from "@/components/ui/button";
@@ -123,7 +123,7 @@ export function FormularioCategoria({
               value="on"
               defaultChecked={categoria?.published ?? true}
               rotulo="Publicada"
-              ajuda="Despublicada, some do menu e da loja — os produtos dela continuam existindo."
+              ajuda="Despublicada, deixa de aparecer como opção nos cadastros. Os equipamentos dela continuam existindo."
             />
             <Marcador
               name="featured"

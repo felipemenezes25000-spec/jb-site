@@ -15,7 +15,7 @@ import { hashSenha } from "@/lib/auth";
 import { formatarDataHora, gerarSlug, somenteDigitos } from "@/lib/format";
 import { notificar } from "@/lib/notificacoes";
 import { exigirEdicao } from "@/lib/permissoes";
-import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
+import { ETIQUETA_CONFIGURACOES } from "@/lib/site-publico";
 import { prisma } from "@/lib/prisma";
 import { SETTING_FIELDS, getSettings } from "@/lib/settings";
 import { removerArquivo } from "@/lib/upload";

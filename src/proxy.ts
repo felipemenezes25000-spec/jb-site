@@ -26,19 +26,17 @@ import { NextResponse, type NextRequest } from "next/server";
  *
  *  1. em produção, leva o visitante para o host canônico quando ele chegou por
  *     outro — `www` contra apex, o domínio `.vercel.app`, um domínio antigo;
- *  2. barra visita anônima a `/admin` e `/minha-jb` olhando apenas a PRESENÇA do
- *     cookie de sessão, sem tocar no banco;
- *  3. marca as áreas privadas como não-cacheáveis e não-indexáveis;
- *  4. em preview e desenvolvimento, manda `X-Robots-Tag: noindex` no site todo;
- *  5. leva o caminho pedido de `/minha-jb` até a renderização, no cabeçalho
- *     `x-caminho-pedido`: o layout da área não recebe a URL, e é com ela que
- *     `exigirCliente` monta o "voltar" do login quando a sessão existe mas é
- *     recusada (cookie vencido ou adulterado).
+ *  2. responde 410 aos endereços da loja, que saiu quando a JB virou só
+ *     assistência técnica (ver `LOJA_REMOVIDA`);
+ *  3. barra visita anônima a `/admin` olhando apenas a PRESENÇA do cookie de
+ *     sessão, sem tocar no banco;
+ *  4. marca o painel como não-cacheável e não-indexável;
+ *  5. em preview e desenvolvimento, manda `X-Robots-Tag: noindex` no site todo.
  *
  * O que ele NÃO faz, de propósito:
  *
  *  - não valida a assinatura do cookie. Um cookie `jb_staff` com lixo dentro
- *    passa por aqui e é recusado na página, por `exigirArea` / `exigirCliente`,
+ *    passa por aqui e é recusado na página, por `exigirArea`,
  *    que são as guardas de verdade. Validar JWT no proxy custaria uma chamada
  *    de cripto em toda navegação para trocar um redirecionamento bonito por
  *    outro igual;
@@ -51,29 +49,57 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /** Espelha a constante privada de `@/lib/auth`. */
 const COOKIE_STAFF = "jb_staff";
-/** Espelha a constante privada de `@/lib/auth-cliente`. */
-const COOKIE_CLIENTE = "jb_cliente";
-
-/**
- * Cabeçalho com o caminho pedido, lido por `exigirCliente` (`@/lib/auth-cliente`).
- * Exportado daqui porque é o proxy que o escreve.
- */
-export const CABECALHO_CAMINHO = "x-caminho-pedido";
 
 /* -------------------------------------------------------------------- rotas */
 
 const AREA_STAFF = "/admin";
 const LOGIN_STAFF = "/admin/entrar";
-const AREA_CLIENTE = "/minha-jb";
-const LOGIN_CLIENTE = "/entrar";
+
+/** Nada aqui pode ser guardado por CDN nem aparecer em buscador. */
+const PRIVADAS = [AREA_STAFF];
+
+/* ------------------------------------------------------- loja que saiu */
 
 /**
- * Nada aqui pode ser guardado por CDN nem aparecer em buscador: são páginas com
- * dado de uma pessoa só. `/carrinho` e `/checkout` entram sem exigir login —
- * explorar e montar o carrinho continua livre; o que exige conta é concluir a
- * compra, e isso é decidido no servidor, não aqui.
+ * Endereços da loja, que deixou de existir quando a JB virou só assistência.
+ *
+ * Respondem 410 (removido de vez) e não 404 nem redirecionamento: 410 diz ao
+ * buscador que a página não volta, e ele a tira do índice mais rápido. Mandar
+ * tudo para a home seria redirecionamento indiscriminado, que o Google trata
+ * como página inexistente disfarçada.
+ *
+ * A página devolvida é HTML puro, escrito aqui: este arquivo não importa
+ * componentes (ver o topo), e uma resposta de 200 bytes não precisa deles.
  */
-const PRIVADAS = [AREA_STAFF, AREA_CLIENTE, "/checkout", "/carrinho"];
+const LOJA_REMOVIDA = [
+  "/loja",
+  "/seminovos",
+  "/novos",
+  "/usados",
+  "/recondicionados",
+  "/pecas-e-acessorios",
+  "/categoria",
+  "/marcas",
+  "/busca",
+  "/carrinho",
+  "/checkout",
+  "/escolher-entrega",
+  "/pedido",
+  "/verificar",
+  "/comparar",
+  "/simulador-de-custo",
+  "/entrega",
+  "/trocas-e-devolucoes",
+];
+
+const PAGINA_REMOVIDA = `<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Página removida · JB Soluções Odontológicas</title>
+<style>body{margin:0;min-height:100dvh;display:grid;place-items:center;font-family:system-ui,sans-serif;background:#f7f8f8;color:#1a1c1e}
+main{max-width:30rem;padding:2rem 1.25rem;text-align:center}h1{font-size:1.6rem;margin:0 0 .75rem}p{color:#51565c;line-height:1.6;margin:0 0 1.75rem}
+a{display:inline-block;background:#e0141b;color:#fff;font-weight:700;text-decoration:none;padding:.9rem 1.5rem;border-radius:.6rem}</style></head>
+<body><main><h1>Esta página saiu do ar</h1><p>A JB agora é dedicada à assistência técnica de equipamentos odontológicos. Conte o que aconteceu com o seu equipamento e fale com a nossa equipe.</p>
+<a href="/">Ir para a assistência técnica</a></main></body></html>`;
 
 /** `/admin` casa com `/admin` e `/admin/pedidos`, mas não com `/administrativo`. */
 function dentroDe(pathname: string, base: string) {
@@ -147,8 +173,20 @@ export function proxy(request: NextRequest) {
   const canonico = paraOHostCanonico(request);
   if (canonico) return NextResponse.redirect(canonico, 308);
 
+  /* ------------------------------------------------------- loja que saiu */
+
+  if (LOJA_REMOVIDA.some((base) => dentroDe(pathname, base))) {
+    return new NextResponse(PAGINA_REMOVIDA, {
+      status: 410,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  }
+
   const naAreaStaff = dentroDe(pathname, AREA_STAFF) && !dentroDe(pathname, LOGIN_STAFF);
-  const naAreaCliente = dentroDe(pathname, AREA_CLIENTE);
 
   /* ------------------------------------------------------------- porteiro */
 
@@ -162,27 +200,16 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(paraLogin(request, LOGIN_STAFF, true));
   }
 
-  if (ehNavegacao && naAreaCliente && !request.cookies.has(COOKIE_CLIENTE)) {
-    return NextResponse.redirect(paraLogin(request, LOGIN_CLIENTE, false));
-  }
-
   /* ------------------------------------------------------------ cabeçalhos */
 
-  let resposta: NextResponse;
-  if (naAreaCliente) {
-    const cabecalhos = new Headers(request.headers);
-    cabecalhos.set(CABECALHO_CAMINHO, pathname + request.nextUrl.search);
-    resposta = NextResponse.next({ request: { headers: cabecalhos } });
-  } else {
-    resposta = NextResponse.next();
-  }
+  const resposta = NextResponse.next();
 
   const ehPrivada = PRIVADAS.some((base) => dentroDe(pathname, base));
   const ehProducao = process.env.VERCEL_ENV === "production";
 
   if (ehPrivada) {
     // Redundante com o que o Next já manda em página dinâmica, e de propósito:
-    // se um dia alguém tornar estática uma página de `/minha-jb` sem perceber,
+    // se um dia alguém tornar estática uma página do painel sem perceber,
     // este cabeçalho impede que um proxy compartilhado sirva o pedido de uma
     // pessoa para outra.
     resposta.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");

@@ -2,7 +2,6 @@ import { z } from "zod";
 
 import { registrarAuditoria } from "@/lib/auditoria";
 import { sessaoStaff } from "@/lib/auth";
-import { sessaoCliente } from "@/lib/auth-cliente";
 import { chaveDeSessao, checarLimite, segundosDeEspera } from "@/lib/limite";
 import { midiaOperacionalEhPrivada, urlExpostaDaMidia } from "@/lib/midia-operacional";
 import { prisma } from "@/lib/prisma";
@@ -10,20 +9,17 @@ import {
   ErroDeUpload,
   LIMITE_ABSOLUTO,
   PASTAS,
-  PASTAS_DO_CLIENTE,
   PASTAS_UPLOAD,
   enviarArquivo,
-  type PastaUpload,
 } from "@/lib/upload";
 import { enviarArquivoOperacionalPrivado } from "@/lib/upload-operacional";
 
 /**
  * Recebe um arquivo e devolve a mídia já registrada no banco.
  *
- * Quem pode enviar depende da pasta: a equipe interna envia em qualquer uma; o
- * cliente final só em `chamados` e `equipamentos`, que são as pastas de coisas
- * que ele mesmo criou. Autorização é conferida aqui no servidor — esconder o
- * botão no formulário não vale como controle.
+ * Só a equipe interna envia. O cliente final enviava pela área dele, que saiu
+ * do site: foto de defeito agora chega pelo WhatsApp. Autorização é conferida
+ * aqui no servidor; esconder o botão no formulário não vale como controle.
  *
  * Mídia operacional nunca devolve a URL real do storage para o navegador. O
  * retorno usa `/api/midia/:id`, e o arquivo só sai depois de nova autorização.
@@ -36,24 +32,14 @@ const esquema = z.object({
 
 const LIMITE_ENVIOS = { limite: 20, janelaMs: 10 * 60_000 } as const;
 
-type Autor =
-  | { tipo: "staff"; id: string; nome: string }
-  | { tipo: "cliente"; id: string; nome: string };
+type Autor = { tipo: "staff"; id: string; nome: string };
 
-async function autorizar(pasta: PastaUpload): Promise<
+async function autorizar(): Promise<
   { ok: true; autor: Autor } | { ok: false; status: number; erro: string }
 > {
   const staff = await sessaoStaff();
   if (staff) return { ok: true, autor: { tipo: "staff", id: staff.id, nome: staff.name } };
-
-  const cliente = await sessaoCliente();
-  if (!cliente) {
-    return { ok: false, status: 401, erro: "Entre na sua conta para enviar arquivos." };
-  }
-  if (!PASTAS_DO_CLIENTE.includes(pasta)) {
-    return { ok: false, status: 403, erro: "Você não pode enviar arquivos nesta pasta." };
-  }
-  return { ok: true, autor: { tipo: "cliente", id: cliente.id, nome: cliente.name } };
+  return { ok: false, status: 401, erro: "Entre no painel para enviar arquivos." };
 }
 
 export async function POST(request: Request) {
@@ -90,7 +76,7 @@ export async function POST(request: Request) {
 
   const { pasta } = dados.data;
 
-  const permissao = await autorizar(pasta);
+  const permissao = await autorizar();
   if (!permissao.ok) {
     return Response.json({ erro: permissao.erro }, { status: permissao.status });
   }
@@ -150,14 +136,11 @@ export async function POST(request: Request) {
     });
 
     await registrarAuditoria({
-      userId: autor.tipo === "staff" ? autor.id : null,
+      userId: autor.id,
       acao: "criar",
       entidade: "midia",
       entidadeId: media.id,
-      resumo:
-        autor.tipo === "staff"
-          ? `${PASTAS[pasta].rotulo}: ${media.filename}`
-          : `${PASTAS[pasta].rotulo}: ${media.filename} (cliente ${autor.id})`,
+      resumo: `${PASTAS[pasta].rotulo}: ${media.filename}`,
     });
 
     return Response.json(

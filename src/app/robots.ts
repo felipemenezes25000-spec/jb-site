@@ -24,22 +24,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // painel, área do cliente, checkout e rotas de dados
-        /* `/verificar` é o comprovante de uma unidade física. Uma página por
-           unidade vendida não é conteúdo — é recibo, e recibo não se indexa. */
+        // painel e rotas de dados
         /* `/avaliar` carrega um token que identifica a transacao de uma
            pessoa. O endereco nao pertence ao indice de ninguem. */
         /* `/e` e a etiqueta colada no equipamento de um cliente. Ela nao e
            conteudo, e cada endereco identifica um bem fisico. */
-        disallow: [
-          "/admin",
-          "/minha-jb",
-          "/checkout",
-          "/api",
-          "/verificar",
-          "/avaliar",
-          "/e",
-        ],
+        disallow: ["/admin", "/api", "/avaliar", "/e"],
       },
     ],
     sitemap: urlAbsoluta("/sitemap.xml"),

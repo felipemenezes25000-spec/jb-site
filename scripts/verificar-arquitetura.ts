@@ -4,32 +4,36 @@ import { join, relative, sep } from "node:path";
 /**
  * Dívida existente vira teto, não licença para continuar crescendo.
  *
- * Estes quatro arquivos já estavam grandes quando a regra entrou. Eles podem
+ * Estes arquivos já estavam grandes quando a regra entrou. Eles podem
  * diminuir, mas não podem aumentar um byte sequer sem antes serem divididos.
+ * `admin-catalogo.ts` e `admin-vendas.ts` saíram da lista em 22/09/2026: foram
+ * apagados com a loja, e o que era de assistência virou módulo próprio.
  */
 const LEGADOS = new Map<string, number>([
   ["admin-servico.ts", 96_946],
-  ["admin-catalogo.ts", 72_455],
-  ["admin-vendas.ts", 70_147],
   ["admin-conteudo.ts", 60_048],
 ]);
 
 /**
- * Consumidores que ainda usavam o nome histórico `marketplace` quando a regra
- * entrou. A lista é deliberadamente nominal: pode diminuir, nunca crescer.
- * Arquivo novo ou consumidor fora desta lista falha a CI imediatamente.
+ * A loja saiu do site em 22/09/2026: a JB passou a ser só assistência técnica.
+ * Estes módulos foram apagados, e voltar a importar qualquer um deles é sinal
+ * de que o comércio está entrando de novo pela porta dos fundos (um carrinho
+ * "só para testar", um cálculo de frete copiado). Se a decisão mudar, ela muda
+ * aqui, junto com o resto do plano, e não num import solto.
  */
-const IMPORTS_MARKETPLACE_LEGADOS = new Set([
-  "src/app/(vitrine)/loja/[slug]/layout.tsx",
-  "src/app/(vitrine)/loja/[slug]/page.tsx",
-  "src/app/acoes/admin-relacionamentos.ts",
-  "src/components/admin/catalogo/formulario-cross-sell-tipado.tsx",
-  "src/components/loja/marketplace/tipos.ts",
-  "src/components/loja/produto/comparacao-rapida.tsx",
-  "src/components/loja/produto/especificacoes.tsx",
-  "src/components/loja/produto/resumo-tecnico.tsx",
-  "src/lib/catalogo.ts",
-]);
+const MODULOS_DA_LOJA = [
+  "@/lib/carrinho",
+  "@/lib/pedido",
+  "@/lib/pagamento",
+  "@/lib/frete",
+  "@/lib/melhor-envio",
+  "@/lib/catalogo",
+  "@/lib/comercio/",
+  "@/lib/marketplace/",
+  "@/components/loja/",
+  "@/app/acoes/carrinho",
+  "@/app/acoes/checkout",
+];
 
 /** Novo Server Action acima disso precisa nascer dividido por caso de uso. */
 const MAX_NOVO_ACTION_BYTES = 50_000;
@@ -75,33 +79,16 @@ for (const caminho of arquivosTs(diretorioAcoes)) {
   }
 }
 
-/**
- * `marketplace` é apenas uma fachada de compatibilidade para imports antigos.
- * Se código novo voltar a depender desse caminho, o nome errado nunca morre.
- * Os próprios wrappers e os consumidores nominalmente congelados são as únicas
- * exceções. Quando um legado for migrado, remova-o da allowlist no mesmo PR.
- */
 for (const caminho of arquivosTs(diretorioSrc)) {
   const relativo = relative(raiz, caminho).split(sep).join("/");
-  if (relativo.startsWith("src/lib/marketplace/")) continue;
-
   const conteudo = readFileSync(caminho, "utf8");
-  if (
-    conteudo.includes("@/lib/marketplace/") &&
-    !IMPORTS_MARKETPLACE_LEGADOS.has(relativo)
-  ) {
-    problemas.push(
-      `${relativo} importa @/lib/marketplace/*. Use @/lib/comercio/*; marketplace é só compatibilidade.`,
-    );
-  }
 
-  // `pedido-base` concentra regras internas, mas não é API pública. A borda
-  // `pedido.ts` acrescenta atomicidade de status e efeitos de logística; pular
-  // essa borda reintroduziria exatamente os bugs que ela existe para impedir.
-  if (conteudo.includes("@/lib/pedido-base") && relativo !== "src/lib/pedido.ts") {
-    problemas.push(
-      `${relativo} importa @/lib/pedido-base diretamente. Use @/lib/pedido para preservar a borda transacional e logística.`,
-    );
+  for (const modulo of MODULOS_DA_LOJA) {
+    if (conteudo.includes(`"${modulo}`)) {
+      problemas.push(
+        `${relativo} importa ${modulo}, que saiu com a loja. O site agora é só assistência técnica.`,
+      );
+    }
   }
 }
 
@@ -111,5 +98,5 @@ if (problemas.length) {
 }
 
 console.log(
-  "[arquitetura] OK — dívida legada está congelada; código novo usa os módulos atuais.",
+  "[arquitetura] OK: dívida legada congelada e nenhum módulo da loja de volta.",
 );

@@ -7,8 +7,8 @@ import { Plus, Save, Trash2 } from "lucide-react";
 import {
   criarOrcamentoAdmin,
   salvarOrcamentoAdmin,
-  type EstadoVendas,
-} from "@/app/acoes/admin-vendas";
+  type EstadoOrcamento,
+} from "@/app/acoes/admin-orcamentos";
 import { LinhaDeTotal } from "@/components/admin/vendas/comuns";
 import { Botao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao } from "@/components/ui/data";
@@ -21,28 +21,25 @@ import { formatarPreco, paraCentavos } from "@/lib/format";
    As linhas de item vivem no estado do cliente só para dar edição confortável —
    somar, remover, ver o total mudando. O que vale é o que o servidor recalcula:
    os campos viajam como listas paralelas (`item_descricao`, `item_quantidade`,
-   `item_valor`, `item_produto`) e `@/lib/orcamento` refaz subtotal e total a
-   partir dos itens gravados. Nenhum total sai daqui para o banco.
+   `item_valor`) e `@/lib/orcamento` refaz subtotal e total a partir dos itens
+   gravados. Nenhum total sai daqui para o banco.
 
-   Escolher um produto do catálogo só preenche descrição e preço sugerido: o
-   preço da proposta é negociado, então continua editável linha a linha.
+   Orçamento aqui é de reparo: peça, mão de obra e deslocamento, cada um numa
+   linha. Não há catálogo de produto nem frete desde que a loja saiu do site.
    ============================================================================ */
 
-const INICIAL: EstadoVendas = {};
+const INICIAL: EstadoOrcamento = {};
 
 export type OpcaoCliente = { id: string; rotulo: string };
-export type OpcaoProduto = { id: string; rotulo: string; precoCents: number };
 
 export type LinhaItem = {
   chave: string;
   descricao: string;
   quantidade: string;
   valor: string;
-  productId: string;
 };
 
 export type OrcamentoInicial = {
-  kind: "comercial" | "assistencia";
   customerId: string;
   contatoNome: string;
   contatoEmail: string;
@@ -52,7 +49,6 @@ export type OrcamentoInicial = {
   notaInterna: string;
   validoAte: string;
   desconto: string;
-  frete: string;
   itens: LinhaItem[];
 };
 
@@ -63,7 +59,7 @@ function novaChave() {
 }
 
 export function linhaVazia(): LinhaItem {
-  return { chave: novaChave(), descricao: "", quantidade: "1", valor: "", productId: "" };
+  return { chave: novaChave(), descricao: "", quantidade: "1", valor: "" };
 }
 
 function Enviar({ rotulo }: { rotulo: string }) {
@@ -81,7 +77,6 @@ export function EditorOrcamento({
   quoteId,
   inicial,
   clientes,
-  produtos,
   somenteLeitura,
   motivoBloqueio,
 }: {
@@ -89,7 +84,6 @@ export function EditorOrcamento({
   quoteId?: string;
   inicial: OrcamentoInicial;
   clientes: OpcaoCliente[];
-  produtos: OpcaoProduto[];
   somenteLeitura?: boolean;
   motivoBloqueio?: string;
 }) {
@@ -103,7 +97,6 @@ export function EditorOrcamento({
     inicial.itens.length > 0 ? inicial.itens : [linhaVazia()],
   );
   const [desconto, setDesconto] = useState(inicial.desconto);
-  const [frete, setFrete] = useState(inicial.frete);
 
   const subtotal = useMemo(
     () =>
@@ -115,8 +108,7 @@ export function EditorOrcamento({
   );
 
   const descontoCents = Math.max(0, paraCentavos(desconto));
-  const freteCents = Math.max(0, paraCentavos(frete));
-  const total = Math.max(0, subtotal - descontoCents) + freteCents;
+  const total = Math.max(0, subtotal - descontoCents);
 
   function atualizar(chave: string, campo: keyof LinhaItem, valor: string) {
     setItens((atual) =>
@@ -129,21 +121,6 @@ export function EditorOrcamento({
       const restante = atual.filter((item) => item.chave !== chave);
       return restante.length > 0 ? restante : [linhaVazia()];
     });
-  }
-
-  function adicionarDoCatalogo(produtoId: string) {
-    const produto = produtos.find((p) => p.id === produtoId);
-    if (!produto) return;
-    setItens((atual) => [
-      ...atual.filter((item) => item.descricao.trim() !== ""),
-      {
-        chave: novaChave(),
-        descricao: produto.rotulo,
-        quantidade: "1",
-        valor: (produto.precoCents / 100).toFixed(2).replace(".", ","),
-        productId: produto.id,
-      },
-    ]);
   }
 
   if (somenteLeitura) {
@@ -170,9 +147,6 @@ export function EditorOrcamento({
                 negativo
               />
             ) : null}
-            {freteCents > 0 ? (
-              <LinhaDeTotal rotulo="Frete" valor={formatarPreco(freteCents)} />
-            ) : null}
             <LinhaDeTotal rotulo="Total" valor={formatarPreco(total)} forte />
           </div>
         </div>
@@ -191,11 +165,6 @@ export function EditorOrcamento({
           descricao="Escolha um cliente cadastrado ou preencha o contato à mão."
         />
         <div className="grid gap-4 p-5 sm:grid-cols-2">
-          <Selecao rotulo="Tipo de proposta" name="kind" defaultValue={inicial.kind}>
-            <option value="comercial">Venda de equipamento</option>
-            <option value="assistencia">Serviço técnico</option>
-          </Selecao>
-
           <Selecao
             rotulo="Cliente cadastrado"
             name="customerId"
@@ -245,32 +214,7 @@ export function EditorOrcamento({
       <Cartao>
         <CabecalhoCartao
           titulo="Itens"
-          descricao="Descrição, quantidade e preço negociado de cada linha."
-          acao={
-            produtos.length > 0 ? (
-              <div className="w-full sm:w-72">
-                <label
-                  htmlFor={`${base}-catalogo`}
-                  className="mb-1 block text-apoio font-semibold text-graf-600"
-                >
-                  Puxar do catálogo
-                </label>
-                <select
-                  id={`${base}-catalogo`}
-                  value=""
-                  onChange={(evento) => adicionarDoCatalogo(evento.target.value)}
-                  className="h-11 w-full rounded-lg border border-graf-450 bg-white px-3 pr-8 text-base sm:text-sm text-graf-900 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
-                >
-                  <option value="">Escolha um produto…</option>
-                  {produtos.map((produto) => (
-                    <option key={produto.id} value={produto.id}>
-                      {produto.rotulo} — {formatarPreco(produto.precoCents)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null
-          }
+          descricao="Peça, mão de obra e deslocamento, uma linha para cada."
         />
 
         <ul className="divide-y divide-graf-200">
@@ -296,10 +240,9 @@ export function EditorOrcamento({
                         atualizar(item.chave, "descricao", evento.target.value)
                       }
                       maxLength={300}
-                      placeholder="Ex.: Cadeira odontológica Gnatus S300, revisada"
+                      placeholder="Ex.: Troca da válvula de segurança da autoclave"
                       className="h-11 w-full rounded-lg border border-graf-450 bg-white px-3.5 text-graf-900 shadow-xs placeholder:text-graf-500 hover:border-graf-500 focus:border-jb-500 focus:outline-none focus:ring-4 focus:ring-jb-500/15"
                     />
-                    <input type="hidden" name="item_produto" value={item.productId} />
                   </div>
 
                   <div>
@@ -391,15 +334,6 @@ export function EditorOrcamento({
               onChange={(evento) => setDesconto(evento.target.value)}
               placeholder="0,00"
             />
-            <Campo
-              rotulo="Frete"
-              name="freteCents"
-              inputMode="decimal"
-              prefixo="R$"
-              value={frete}
-              onChange={(evento) => setFrete(evento.target.value)}
-              placeholder="0,00"
-            />
 
             <div className="pt-2">
               <LinhaDeTotal rotulo="Subtotal" valor={formatarPreco(subtotal)} />
@@ -409,9 +343,6 @@ export function EditorOrcamento({
                   valor={formatarPreco(descontoCents)}
                   negativo
                 />
-              ) : null}
-              {freteCents > 0 ? (
-                <LinhaDeTotal rotulo="Frete" valor={formatarPreco(freteCents)} />
               ) : null}
               <LinhaDeTotal rotulo="Total da proposta" valor={formatarPreco(total)} forte />
               <p className="mt-2 text-xs leading-relaxed text-graf-500">
@@ -436,15 +367,15 @@ export function EditorOrcamento({
             rows={3}
             maxLength={4000}
             defaultValue={inicial.mensagem}
-            placeholder="Ex.: conforme conversamos, segue a proposta do equipamento com instalação inclusa."
+            placeholder="Ex.: conforme conversamos no WhatsApp, segue o orçamento do reparo."
           />
           <Area
-            rotulo="Condições comerciais"
+            rotulo="Condições"
             name="condicoes"
             rows={4}
             maxLength={4000}
             defaultValue={inicial.condicoes}
-            ajuda="Pagamento, prazo de entrega, garantia — o que vale para esta proposta."
+            ajuda="Pagamento, prazo de execução e garantia do serviço."
           />
           <Area
             rotulo="Nota interna"

@@ -27,22 +27,14 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:relatorio": "playwright show-report tests/.relatorio",
-    "prova:atomicidade": "tsx --conditions=react-server scripts/prova-atomicidade.ts",
     "responsivo": "node scripts/responsivo.mjs",
-    "responsivo:pdp": "node scripts/responsivo-pdp.mjs",
     "a11y": "node scripts/acessibilidade.mjs",
     "texto:vertical": "node scripts/texto-vertical.mjs",
     "conteudo:prever": "tsx scripts/migrar-conteudo-institucional.ts",
     "conteudo:migrar": "tsx scripts/migrar-conteudo-institucional.ts --aplicar",
     "pautas:prever": "tsx scripts/carregar-pautas.ts",
     "pautas:carregar": "tsx scripts/carregar-pautas.ts --aplicar",
-    "db:vitrine": "tsx scripts/verificar-ambiente.ts seed-demo && tsx prisma/seed-vitrine.ts",
-    "frete:prever": "tsx scripts/tabela-de-frete.ts",
-    "frete:aplicar": "tsx scripts/verificar-ambiente.ts db-destructive && tsx scripts/tabela-de-frete.ts --aplicar",
-    "catalogo:nomes": "tsx scripts/verificar-ambiente.ts db-destructive && tsx scripts/corrigir-nomes-do-catalogo.ts",
-    "catalogo:descricoes": "tsx scripts/verificar-ambiente.ts db-destructive && tsx scripts/corrigir-descricoes-do-catalogo.ts",
-    "duplicatas:prever": "tsx scripts/unificar-duplicatas.ts",
-    "duplicatas:unificar": "tsx scripts/verificar-ambiente.ts db-destructive && tsx scripts/unificar-duplicatas.ts --aplicar"
+    "db:vitrine": "tsx scripts/verificar-ambiente.ts seed-demo && tsx prisma/seed-vitrine.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

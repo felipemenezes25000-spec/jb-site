@@ -1,47 +1,35 @@
 import { SubNav } from "@/components/admin/pagina";
 
 /* ============================================================================
-   Atalhos do catálogo
+   Atalhos dos cadastros da assistência
 
-   Produtos, Categorias, Marcas, Serviços e Estoque são cinco telas do mesmo
-   assunto, mas só duas delas cabem no menu lateral. Esta faixa é o que liga as
-   cinco — sem ela, Categorias e Marcas só existiriam para quem souber o
-   endereço de cor.
+   Categorias de equipamento e serviços são duas telas do mesmo assunto, e só
+   uma delas cabe no menu lateral. Esta faixa liga as duas. Produtos, marcas e
+   estoque saíram junto com a loja.
 
-   O desenho é o mesmo `SubNav` das abas da assistência: até aqui esta faixa
-   usava pílulas escuras e a de lá, sublinhado — a mesma navegação parecendo
-   dois produtos diferentes. Ele já traz `<nav>` de verdade com `aria-current`
-   na tela aberta: quem navega por teclado ou leitor de tela sabe onde está sem
-   depender do contraste do fundo.
+   O desenho é o mesmo `SubNav` das abas da assistência, com `<nav>` de verdade
+   e `aria-current` na tela aberta.
    ============================================================================ */
 
-export type TelaDoCatalogo = "produtos" | "categorias" | "marcas" | "servicos" | "estoque";
+export type TelaDoCatalogo = "categorias" | "servicos";
 
 const TELAS: { chave: TelaDoCatalogo; rotulo: string; href: string }[] = [
-  { chave: "produtos", rotulo: "Produtos", href: "/admin/produtos" },
-  { chave: "categorias", rotulo: "Categorias", href: "/admin/categorias" },
-  { chave: "marcas", rotulo: "Marcas", href: "/admin/marcas" },
+  { chave: "categorias", rotulo: "Categorias de equipamento", href: "/admin/categorias" },
   { chave: "servicos", rotulo: "Serviços", href: "/admin/servicos" },
-  { chave: "estoque", rotulo: "Estoque", href: "/admin/estoque" },
 ];
 
 export function AtalhosCatalogo({
   atual,
-  /** Some com "Estoque" para quem não abre a área. */
-  mostrarEstoque = true,
   className,
 }: {
   atual: TelaDoCatalogo;
-  mostrarEstoque?: boolean;
   className?: string;
 }) {
-  const telas = mostrarEstoque ? TELAS : TELAS.filter((tela) => tela.chave !== "estoque");
-
   return (
     <SubNav
-      itens={telas.map((tela) => ({ rotulo: tela.rotulo, href: tela.href }))}
+      itens={TELAS.map((tela) => ({ rotulo: tela.rotulo, href: tela.href }))}
       atual={TELAS.find((tela) => tela.chave === atual)?.href ?? ""}
-      rotuloDaNavegacao="Seções do catálogo"
+      rotuloDaNavegacao="Cadastros da assistência"
       className={className}
     />
   );

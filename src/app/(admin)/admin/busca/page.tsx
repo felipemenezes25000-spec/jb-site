@@ -3,9 +3,7 @@ import Link from "next/link";
 import {
   ClipboardList,
   FileText,
-  Package,
   Search,
-  ShoppingCart,
   Stethoscope,
   Users,
 } from "lucide-react";
@@ -18,7 +16,6 @@ import { ROTULO_CHAMADO } from "@/lib/assistencia";
 import { formatarData, formatarDocumento, formatarPreco, plural, somenteDigitos } from "@/lib/format";
 import { ROTULO_ORCAMENTO } from "@/lib/orcamento";
 import { ROTULO_OS } from "@/lib/os";
-import { ROTULO_STATUS } from "@/lib/pedido";
 import { exigirStaffAdmin, podeVer } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -72,30 +69,7 @@ async function buscar(termo: string, usuario: StaffUser): Promise<Grupo[]> {
   const digitos = somenteDigitos(busca);
   const texto = { contains: busca, mode: "insensitive" as const };
 
-  const [pedidos, clientes, produtos, chamados, ordens, orcamentos] = await Promise.all([
-    podeVer(usuario, "pedidos")
-      ? prisma.order.findMany({
-          where: {
-            OR: [
-              { number: texto },
-              { buyerName: texto },
-              { buyerEmail: texto },
-              ...(digitos.length >= 3 ? [{ buyerDocument: { contains: digitos } }] : []),
-            ],
-          },
-          orderBy: { placedAt: "desc" },
-          take: LIMITE_POR_TIPO,
-          select: {
-            id: true,
-            number: true,
-            buyerName: true,
-            status: true,
-            totalCents: true,
-            placedAt: true,
-          },
-        })
-      : Promise.resolve([]),
-
+  const [clientes, chamados, ordens, orcamentos] = await Promise.all([
     podeVer(usuario, "clientes")
       ? prisma.customer.findMany({
           where: {
@@ -117,25 +91,7 @@ async function buscar(termo: string, usuario: StaffUser): Promise<Grupo[]> {
             document: true,
             personType: true,
             active: true,
-            _count: { select: { orders: true } },
-          },
-        })
-      : Promise.resolve([]),
-
-    podeVer(usuario, "produtos")
-      ? prisma.product.findMany({
-          where: {
-            OR: [{ name: texto }, { sku: texto }, { model: texto }, { slug: texto }],
-          },
-          orderBy: { name: "asc" },
-          take: LIMITE_POR_TIPO,
-          select: {
-            id: true,
-            name: true,
-            sku: true,
-            status: true,
-            stock: true,
-            priceCents: true,
+            _count: { select: { serviceRequests: true } },
           },
         })
       : Promise.resolve([]),
@@ -207,20 +163,6 @@ async function buscar(termo: string, usuario: StaffUser): Promise<Grupo[]> {
 
   return [
     {
-      chave: "pedidos",
-      rotulo: "Pedidos",
-      icone: ShoppingCart,
-      hrefTodos: `/admin/pedidos?q=${consulta}`,
-      itens: pedidos.map((pedido) => ({
-        id: pedido.id,
-        titulo: `${pedido.number} · ${pedido.buyerName}`,
-        detalhe: `Feito em ${formatarData(pedido.placedAt)}`,
-        href: `/admin/pedidos/${pedido.id}`,
-        valor: formatarPreco(pedido.totalCents),
-        etiqueta: { texto: ROTULO_STATUS[pedido.status], tom: "andamento" as Tom },
-      })),
-    },
-    {
       chave: "clientes",
       rotulo: "Clientes",
       icone: Users,
@@ -231,7 +173,7 @@ async function buscar(termo: string, usuario: StaffUser): Promise<Grupo[]> {
         detalhe: [
           cliente.email,
           cliente.document ? formatarDocumento(cliente.document) : "",
-          plural(cliente._count.orders, "pedido", "pedidos"),
+          plural(cliente._count.serviceRequests, "chamado", "chamados"),
         ]
           .filter(Boolean)
           .join(" · "),
@@ -239,25 +181,6 @@ async function buscar(termo: string, usuario: StaffUser): Promise<Grupo[]> {
         etiqueta: cliente.active
           ? undefined
           : { texto: "Inativo", tom: "neutro" as Tom },
-      })),
-    },
-    {
-      chave: "produtos",
-      rotulo: "Produtos",
-      icone: Package,
-      hrefTodos: `/admin/produtos?q=${consulta}`,
-      itens: produtos.map((produto) => ({
-        id: produto.id,
-        titulo: produto.name,
-        detalhe: `SKU ${produto.sku} · ${plural(produto.stock, "unidade", "unidades")} em estoque`,
-        href: `/admin/produtos/${produto.id}`,
-        valor: formatarPreco(produto.priceCents),
-        etiqueta:
-          produto.status === "active"
-            ? { texto: "Publicado", tom: "ok" as Tom }
-            : produto.status === "draft"
-              ? { texto: "Rascunho", tom: "aguardando" as Tom }
-              : { texto: "Arquivado", tom: "neutro" as Tom },
       })),
     },
     {
@@ -320,7 +243,7 @@ export default async function PaginaBuscaGlobal({
     <div className="space-y-6">
       <CabecalhoDeSecao
         titulo={termo ? `Resultados para "${termo}"` : "Busca"}
-        descricao="Procura em pedidos, clientes, produtos, chamados, ordens de serviço e orçamentos — somente nas áreas que o seu perfil abre."
+        descricao="Procura em clientes, chamados, ordens de serviço e orçamentos, somente nas áreas que o seu perfil abre."
         etiqueta={
           termo.length >= 2 ? (
             <Etiqueta tom={encontrados > 0 ? "ok" : "neutro"}>
@@ -351,7 +274,7 @@ export default async function PaginaBuscaGlobal({
               type="search"
               defaultValue={termo}
               autoComplete="off"
-              placeholder="Número do pedido, nome do cliente, SKU, número da OS…"
+              placeholder="Nome do cliente, número do chamado, da OS ou do orçamento…"
               className={cn(
                 "h-11 w-full rounded-lg border border-graf-450 bg-white pl-9 pr-3 text-base sm:text-sm text-graf-900",
                 "placeholder:text-graf-500 hover:border-graf-500",
@@ -367,7 +290,7 @@ export default async function PaginaBuscaGlobal({
         <Vazio
           icone={Search}
           titulo="Digite o que você procura"
-          descricao="Vale número de pedido, de chamado, de OS ou de orçamento, nome ou e-mail de cliente, SKU e nome de produto, número de série de equipamento."
+          descricao="Vale número de chamado, de OS ou de orçamento, nome ou e-mail de cliente e número de série de equipamento."
         />
       ) : termo.length < 2 ? (
         <Vazio

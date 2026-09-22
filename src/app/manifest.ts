@@ -58,34 +58,21 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     theme_color: "#e0141b",
     background_color: "#ffffff",
 
-    categories: ["business", "shopping", "medical"],
+    categories: ["business", "medical"],
 
     icons: [
       { src: "/favicon.ico", sizes: "any", type: "image/x-icon" },
       { src: "/marca/jb-icone-512.png", sizes: "512x512", type: "image/png" },
     ],
 
-    // Atalhos que aparecem ao segurar o ícone do aplicativo. Só rotas que
-    // resolvem para todo mundo: a área do cliente pede login e, sem sessão, a
-    // pessoa cai na tela de entrar — que é o comportamento certo.
+    // Atalho que aparece ao segurar o ícone do aplicativo: o diagnóstico em
+    // 3 toques, que termina no WhatsApp.
     shortcuts: [
       {
-        name: "Solicitar assistência",
+        name: "Chamar a assistência",
         short_name: "Assistência",
-        description: "Abrir um chamado para um equipamento parado.",
-        url: "/assistencia-tecnica/solicitar",
-      },
-      {
-        name: "Área da Clínica",
-        short_name: "Área da Clínica",
-        description: "Pedidos, chamados, orçamentos e equipamentos.",
-        url: "/minha-jb",
-      },
-      {
-        name: "Equipamentos",
-        short_name: "Loja",
-        description: "Equipamentos novos, seminovos e peças.",
-        url: "/loja",
+        description: "Montar a mensagem do equipamento parado e chamar no WhatsApp.",
+        url: "/#diagnostico",
       },
     ],
   };

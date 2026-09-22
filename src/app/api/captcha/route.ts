@@ -13,7 +13,7 @@ import { cookies } from "next/headers";
 const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sem I, O, 0 e 1
 const COOKIE = "jb_captcha";
 
-export function assinar(texto: string) {
+function assinar(texto: string) {
   // segredo vazio produz um HMAC que qualquer um reproduz: a assinatura
   // deixaria de significar coisa alguma. Melhor falhar alto na subida.
   const segredo = process.env.AUTH_SECRET;
