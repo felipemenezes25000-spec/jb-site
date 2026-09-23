@@ -8,11 +8,10 @@ import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 /* ============================================================================
    Chamada final
 
-   O último empurrão antes do rodapé: fundo vermelho clarinho da marca (nunca
-   vermelho cheio em área grande), duas manchas de luz que flutuam devagar e
-   a mesma escolha da abertura, Jeferson ou Jackson, com um anel que pulsa em
-   volta do principal. O selo de horário se repete aqui porque é a pergunta
-   que a pessoa faz antes de mandar a mensagem.
+   O último empurrão antes do rodapé repete apenas o que é verificável: horário
+   real, cobertura de marcas, mensagem preparada e escolha entre os dois
+   atendentes. O destaque do botão principal pulsa só duas vezes — chama a
+   atenção sem virar animação permanente.
    ============================================================================ */
 
 export function ChamadaFinal({
@@ -23,11 +22,9 @@ export function ChamadaFinal({
   equipamento,
   titulo = "Não deixe a agenda parar por causa de um equipamento.",
 }: {
-  /** Jeferson e Jackson, de `contatosWhatsapp`. */
   contatos: ContatoWhatsapp[];
   horario: string;
   cidade: string;
-  /** Nas páginas de equipamento, a mensagem e o título já dizem qual é. */
   mensagem?: string;
   equipamento?: string;
   titulo?: string;
@@ -78,8 +75,8 @@ export function ChamadaFinal({
               className="texto-guia jb-revela mx-auto mt-5 max-w-2xl text-graf-700"
               style={{ "--i": 2 } as React.CSSProperties}
             >
-              Mande a mensagem agora. Quanto antes a equipe entende o defeito, antes ele volta a
-              funcionar.
+              Mande a mensagem quando quiser. Com o equipamento e o sintoma já escritos, a equipe
+              começa a triagem com mais contexto.
             </p>
 
             <ul
@@ -103,7 +100,7 @@ export function ChamadaFinal({
               mensagem={mensagem}
               equipamento={equipamento}
               posicao="fechamento"
-              pulso
+              pulso={2}
               className="jb-revela mt-9 sm:justify-center"
               style={{ "--i": 4 } as React.CSSProperties}
             />
