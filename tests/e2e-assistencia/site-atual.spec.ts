@@ -91,15 +91,25 @@ test.describe("JB assistência — jornada pública atual", () => {
     });
   }
 
-  test("mobile mantém conversão disponível depois que a abertura sai da tela", async ({ page }, testInfo) => {
+  test("mobile mantém conversão e o equipamento escolhido depois que a abertura sai da tela", async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith("mobile"), "comportamento específico de tela pequena");
     await page.goto("/");
+
+    await page.getByRole("button", { name: "Autoclave", exact: true }).click();
     await page.locator("#equipamentos").scrollIntoViewIfNeeded();
 
     const barra = page.locator(".jb-barra-movel-premium");
     await expect(barra).toHaveAttribute("data-visivel", "true");
-    await expect(barra.locator('a[data-whatsapp="barra-movel"]')).toBeVisible();
-    await expect(barra.locator('a[data-whatsapp="barra-movel-segundo"]')).toBeVisible();
+    await expect(barra.getByText(/Autoclave: falar com a equipe/i)).toBeVisible();
+
+    const principal = barra.locator('a[data-whatsapp="barra-movel"]');
+    const segundo = barra.locator('a[data-whatsapp="barra-movel-segundo"]');
+    await expect(principal).toBeVisible();
+    await expect(segundo).toBeVisible();
+    await expect(principal).toHaveAttribute("data-equipamento", "autoclave");
+
+    const href = await principal.getAttribute("href");
+    expect(decodeURIComponent(href ?? "")).toContain("Autoclave");
   });
 
   for (const rota of REMOVIDAS) {
