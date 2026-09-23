@@ -62,7 +62,7 @@
   }
 
   [data-jb-site="assistencia"] .jb-cabecalho-whatsapp li > a {
-    min-height: 2.3rem;
+    min-height: 2.75rem;
     min-width: 0;
     padding-inline: 0.48rem;
     border-radius: 0.65rem;
@@ -194,6 +194,25 @@
   [data-jb-site="assistencia"] .text-graf-500,
   [data-jb-site="assistencia"] .text-graf-600 {
     color: #34373b;
+  }
+}
+
+/* Windows High Contrast ignora boa parte dos gradientes. Controles continuam
+   identificáveis pela borda nativa e foco, sem depender só do vermelho JB. */
+@media (forced-colors: active) {
+  [data-jb-site="assistencia"] a,
+  [data-jb-site="assistencia"] button,
+  [data-jb-site="assistencia"] summary,
+  [data-jb-site="assistencia"] input {
+    forced-color-adjust: auto;
+  }
+
+  [data-jb-site="assistencia"] a:focus-visible,
+  [data-jb-site="assistencia"] button:focus-visible,
+  [data-jb-site="assistencia"] summary:focus-visible,
+  [data-jb-site="assistencia"] input:focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 3px;
   }
 }
 
