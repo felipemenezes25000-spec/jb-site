@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wrench } from "lucide-react";
 
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { Logo } from "@/components/ui/logo";
@@ -9,7 +10,9 @@ import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
    Cabeçalho do site de assistência
 
    Uma única imagem da marca escala discretamente no celular, deixando espaço
-   para Jeferson e Jackson sem duplicar downloads por breakpoint.
+   para Jeferson e Jackson sem duplicar downloads por breakpoint. O selo
+   institucional usa ferramenta, não ponto verde: disponibilidade real aparece
+   somente em `StatusAtendimento`, calculada a partir do horário configurado.
    ============================================================================ */
 
 export type AtalhoDoCabecalho = { rotulo: string; href: string };
@@ -33,7 +36,9 @@ export function CabecalhoSite({
             <Logo altura={34} alturaMinima={28} prioridade />
           </Link>
           <span className="hidden items-center gap-2 rounded-full border border-graf-200 bg-white/75 px-3 py-1.5 text-xs font-bold text-graf-700 shadow-card xl:inline-flex">
-            <span className="size-2 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]" aria-hidden />
+            <span className="flex size-6 items-center justify-center rounded-lg bg-jb-50 text-jb-700" aria-hidden>
+              <Wrench className="size-3.5" />
+            </span>
             Assistência técnica odontológica
           </span>
         </div>
