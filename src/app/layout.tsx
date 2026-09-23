@@ -3,8 +3,6 @@ import { Bricolage_Grotesque, JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { configuracoesPublicas } from "@/lib/site-publico";
-import { Medicao } from "@/components/analytics/medicao";
-import { destinosDeMedicao } from "@/lib/analytics/destinos";
 import { SCRIPT_DA_CENA } from "@/components/ui/motion-cena";
 import { SITE_URL } from "@/lib/seo";
 
@@ -47,10 +45,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-/* As duas leituras abaixo passam por `configuracoesPublicas`, que já é
-   cacheada, etiquetada e volta aos padrões da JB quando o banco não responde.
-   Antes cada uma consultava o banco por conta própria e, sem ele, derrubava o
-   site inteiro, inclusive o botão do WhatsApp. */
+/* A leitura passa por `configuracoesPublicas`, que já é cacheada, etiquetada e
+   volta aos padrões da JB quando o banco não responde. */
 async function textosDoSite() {
   const s = await configuracoesPublicas();
   return {
@@ -84,10 +80,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-async function destinosDaMedicao() {
-  return destinosDeMedicao(await configuracoesPublicas());
-}
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -104,7 +96,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="antialiased">
         {children}
-        <Medicao destinos={await destinosDaMedicao()} />
         <Toaster
           position="bottom-right"
           richColors
