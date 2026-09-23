@@ -13,6 +13,7 @@ import "./ad-landing.css";
 import "./mobile-excellence.css";
 import "./institutional-premium.css";
 import "./content-premium.css";
+import "./consent-premium.css";
 
 /* ============================================================================
    Casca do site de assistência
