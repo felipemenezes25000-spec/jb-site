@@ -10,27 +10,33 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Regras adicionais — JB Plataforma
 
-Antes de alterar o projeto, leia `docs/arquitetura-modular.md`, `docs/decisoes.md`,
-`docs/criterios-de-escopo.md` e `design.md`.
+Antes de alterar o projeto, leia:
+
+- `docs/site-publico-assistencia.md` — fonte curta de verdade do frontend público atual;
+- `docs/arquitetura-modular.md`;
+- `docs/decisoes.md`;
+- `docs/criterios-de-escopo.md`;
+- `design.md`.
 
 Regras obrigatórias:
 
-- A JB é **single seller**. Não introduza Seller, comissão, split ou payout.
+- O **site público atual é assistência técnica, e só isso**. Não reintroduza catálogo, carrinho, checkout, comparação, frete ou compra dentro de `src/app/(site)`.
+- As antigas rotas comerciais respondem `410 Gone` por decisão de produto. Não troque por redirecionamento indiscriminado para a home.
+- Modelos/histórico de comércio que ainda existam no banco ou backoffice são legado operacional; a existência deles não autoriza uma nova vitrine pública.
+- Se código legado de comércio continuar necessário internamente, a JB permanece **single seller**. Não introduza Seller, comissão, split ou payout.
 - Preserve Next.js + TypeScript + Prisma/PostgreSQL; não invente nova stack.
 - O monólito é modular: UI/Actions coordenam, domínio contém regras reutilizáveis.
-- Não aumente `admin-servico.ts`, `admin-catalogo.ts`, `admin-vendas.ts` ou
-  `admin-conteudo.ts`; extraia o novo caso de uso.
-- Código novo de decisão de compra usa `@/lib/comercio/*`, não `marketplace`.
-- Capacidade horizontal nova (CRM, ERP, BI, agenda, helpdesk etc.) só entra no
-  core quando passar pelos critérios de `docs/criterios-de-escopo.md`; integrar
-  é preferível a recriar software genérico sem diferencial da JB.
-- Dinheiro é inteiro em centavos. Datas persistidas em UTC e exibidas no fuso de
-  São Paulo.
+- Não aumente `admin-servico.ts` nem `admin-conteudo.ts`; extraia o novo caso de uso. Os antigos `admin-catalogo.ts` e `admin-vendas.ts` já saíram com a loja.
+- Não importe módulos de carrinho, pagamento, frete, catálogo ou marketplace de volta. `scripts/verificar-arquitetura.ts` trata esse retorno como violação arquitetural.
+- Capacidade horizontal nova (CRM, ERP, BI, agenda, helpdesk etc.) só entra no core quando passar pelos critérios de `docs/criterios-de-escopo.md`; integrar é preferível a recriar software genérico sem diferencial da JB.
+- Dinheiro é inteiro em centavos. Datas persistidas em UTC e exibidas no fuso de São Paulo.
 - Autorização é validada no servidor; esconder botão não é controle de acesso.
-- Pagamento só é confirmado por fonte confiável (webhook/reconciliação), nunca
-  pela página de retorno do navegador.
+- Pagamento legado, quando aplicável internamente, só é confirmado por fonte confiável (webhook/reconciliação), nunca pela página de retorno do navegador.
 - Não misture falha logística com aprovação financeira.
 - Preview deve usar banco próprio. Nunca silencie configuração perigosa.
 - Preserve o design system vermelho/branco/grafite e as decisões de `design.md`.
-- Antes de entregar: `pnpm typecheck`, `pnpm test:unit` e
-  `pnpm arquitetura:verificar`.
+- No site público, triagem não é diagnóstico; não invente prazo, preço, garantia, urgência, avaliação, número de clientes ou resultado.
+- Não transforme conteúdo de equipamento em tutorial de reparo. Cuidados públicos ficam limitados a segurança, observação externa e orientação para avaliação técnica.
+- Jeferson e Jackson permanecem opções explícitas de WhatsApp nas superfícies de conversão.
+- Respeite `prefers-reduced-motion`, acessibilidade por teclado, alvos de toque e os breakpoints definidos no contrato do site público.
+- Antes de uma entrega normal: `pnpm arquitetura:verificar`, `pnpm typecheck`, `pnpm test:unit` e a bateria pública de E2E/a11y/responsividade. Se uma rodada tiver instrução explícita para adiar checks, registre isso e não declare a entrega validada antes da execução final.
