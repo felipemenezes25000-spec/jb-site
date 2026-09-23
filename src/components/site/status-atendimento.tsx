@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 
    Calculado no navegador no fuso de São Paulo. Antes da hidratação — e sempre
    que o texto de horário não puder ser interpretado — aparece apenas a frase
-   neutra recebida pela página. Nada de inventar "aberto" a partir de cache.
+   neutra recebida pela página. O ponto verde é estático de propósito: o texto
+   já comunica estado real e não precisa manter uma animação rodando.
    ============================================================================ */
 
 export function StatusAtendimento({
@@ -43,19 +44,15 @@ export function StatusAtendimento({
       data-status-atendimento={estado}
       className={cn(
         "jb-status-atendimento inline-flex max-w-full items-center gap-2 rounded-full border bg-white px-3.5 py-1.5 text-apoio font-semibold shadow-xs",
-        aberto
-          ? "border-ok-500/30 text-graf-800"
-          : situacao
-            ? "border-graf-200 text-graf-700"
-            : "border-graf-200 text-graf-700",
+        aberto ? "border-ok-500/30 text-graf-800" : "border-graf-200 text-graf-700",
         className,
       )}
     >
       {aberto ? (
-        <span className="jb-status-ponto relative flex size-2 shrink-0" aria-hidden>
-          <span className="jb-status-pulso absolute inline-flex size-full rounded-full bg-ok-500 opacity-55 motion-safe:animate-ping" />
-          <span className="relative inline-flex size-2 rounded-full bg-ok-500" />
-        </span>
+        <span
+          className="size-2 shrink-0 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]"
+          aria-hidden
+        />
       ) : situacao ? (
         <Clock3 className="size-3.5 shrink-0 text-graf-500" aria-hidden />
       ) : (
