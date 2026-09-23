@@ -17,9 +17,9 @@ import "./content-premium.css";
 /* ============================================================================
    Casca do site de assistência
 
-   Cabeçalho de uma linha com Jeferson e Jackson sempre à mão, conteúdo e rodapé com
-   todos os canais. Substitui a casca da loja (busca, carrinho, categorias,
-   comparador) nas páginas que sobrevivem à saída do comércio.
+   O site público tem a própria coreografia (`jb-revela` + fallback por
+   IntersectionObserver), então a raiz entra em `data-motion-ignore` para o
+   Motion System global não animar as mesmas seções uma segunda vez.
    ============================================================================ */
 
 const ATALHOS: AtalhoDoCabecalho[] = [
@@ -35,7 +35,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const contatos = contatosWhatsapp(s);
 
   return (
-    <div data-jb-site="assistencia" className="flex min-h-dvh flex-col">
+    <div data-jb-site="assistencia" data-motion-ignore className="flex min-h-dvh flex-col">
       <a
         href="#conteudo"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-graf-900 focus:shadow-pop"
