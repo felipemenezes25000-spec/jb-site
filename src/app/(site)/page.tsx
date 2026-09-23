@@ -17,6 +17,7 @@ import { PorQueJb } from "@/components/site/por-que-jb";
 import { SimuladorParada } from "@/components/site/simulador-parada";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
 import { classesBotao } from "@/components/ui/button";
+import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 import { telHref } from "@/lib/format";
 import { JsonLd, localNegocioJsonLd, metadataDePagina, organizacaoJsonLd } from "@/lib/seo";
@@ -111,7 +112,7 @@ export default async function HomePage() {
             </div>
 
             <NumerosWhatsapp
-              numeros={[s.whatsapp, s.whatsapp_alternativo]}
+              contatos={contatosWhatsapp(s)}
               mensagem={MENSAGEM_PADRAO}
               posicao="abertura-numero"
               className="entrada mt-4 [animation-delay:240ms]"
@@ -161,7 +162,7 @@ export default async function HomePage() {
       <Duvidas cidade={s.endereco_cidade} horario={s.horario} />
       <ChamadaFinal
         whatsapp={s.whatsapp}
-        whatsappAlternativo={s.whatsapp_alternativo}
+        contatos={contatosWhatsapp(s)}
         telefone={s.whatsapp}
         horario={s.horario}
         cidade={s.endereco_cidade}

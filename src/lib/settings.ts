@@ -22,7 +22,9 @@ export const SETTING_DEFAULTS = {
   // contato
   telefone: "(11) 3715-6362",
   whatsapp: "(11) 96341-7994",
-  whatsapp_alternativo: "(11) 95847-7337",
+  whatsapp_nome: "Jeferson",
+  whatsapp_alternativo: "(11) 98603-8421",
+  whatsapp_alternativo_nome: "Jackson",
   email: "comercial@jbsolucoesodontologicas.com.br",
   horario: "Segunda a sexta, das 8h às 18h30",
 
@@ -115,13 +117,27 @@ export const SETTING_FIELDS: {
     hint: "Recebe a mensagem pronta de todos os botões do site. Vazio esconde os botões.",
   },
   {
+    key: "whatsapp_nome",
+    label: "Quem atende no WhatsApp principal",
+    group: "contato",
+    type: "text",
+    hint: "Primeiro nome. Aparece junto do número e na saudação da mensagem. Vazio: só o número.",
+  },
+  {
     key: "whatsapp_alternativo",
     label: "Segundo WhatsApp",
     group: "contato",
     type: "tel",
     hint:
-      "Aparece por escrito ao lado do principal na abertura, na chamada final e no rodapé, " +
+      "Aparece ao lado do principal na abertura, na chamada final e no rodapé, " +
       "para quem preferir chamar nele. Vazio: só o principal aparece.",
+  },
+  {
+    key: "whatsapp_alternativo_nome",
+    label: "Quem atende no segundo WhatsApp",
+    group: "contato",
+    type: "text",
+    hint: "Primeiro nome. Aparece junto do número e na saudação da mensagem. Vazio: só o número.",
   },
   { key: "email", label: "E-mail comercial", group: "contato", type: "email" },
   { key: "horario", label: "Horário de atendimento", group: "contato", type: "text" },

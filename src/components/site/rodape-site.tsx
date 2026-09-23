@@ -4,9 +4,9 @@ import { BadgeCheck, Clock3, Mail, MapPin, Phone } from "lucide-react";
 import { RevisarMedicao } from "@/components/analytics/revisar-medicao";
 import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
-import { whatsappsDistintos } from "@/components/site/numeros-whatsapp";
 import { Logo } from "@/components/ui/logo";
 import { algumDestino, destinosDeMedicao } from "@/lib/analytics/destinos";
+import { contatosWhatsapp, saudarPeloNome } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 import { PAGINAS_DE_EQUIPAMENTO } from "@/lib/paginas-equipamento";
 import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
@@ -26,7 +26,8 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
 export function RodapeSite({ s }: { s: SettingsMap }) {
   const ligar = telHref(s.whatsapp);
   /* O principal primeiro; o segundo só aparece se for outro número. */
-  const numeros = whatsappsDistintos([s.whatsapp, s.whatsapp_alternativo]);
+  const contatos = contatosWhatsapp(s);
+  const primeiro = contatos[0];
 
   return (
     <footer id="contato" className="scroll-mt-20 border-t border-graf-200 bg-surface-muted">
@@ -51,18 +52,21 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
         <div>
           <h2 className="text-sm font-extrabold text-graf-950">Fale com a equipe</h2>
           <ul className="mt-4 space-y-3 text-sm">
-            {numeros.map((numero) => (
+            {contatos.map(({ numero, nome }) => (
               <li key={numero}>
                 <a
-                  href={whatsappHref(numero, MENSAGEM_PADRAO)}
+                  href={whatsappHref(numero, saudarPeloNome(MENSAGEM_PADRAO, nome))}
                   data-whatsapp="rodape-numero"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`Chamar no WhatsApp ${formatarTelefone(numero)}`}
                   className="foco-jb inline-flex items-center gap-2.5 rounded font-bold text-graf-900 hover:text-jb-700"
                 >
                   <MarcaWhatsapp className="size-4 text-jb-600" />
-                  <span className="tabular">{formatarTelefone(numero)}</span>
+                  <span className="sr-only">WhatsApp: </span>
+                  {nome ? <span>{nome}</span> : null}
+                  <span className={nome ? "tabular font-semibold text-graf-700" : "tabular"}>
+                    {formatarTelefone(numero)}
+                  </span>
                 </a>
               </li>
             ))}
@@ -74,7 +78,9 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                 >
                   <Phone className="size-4 text-jb-600" aria-hidden />
                   <span>
-                    {numeros.length > 1 ? "Ligar para o primeiro número" : "Ligar para o mesmo número"}
+                    {contatos.length > 1
+                      ? `Ligar para ${primeiro.nome || "o primeiro número"}`
+                      : "Ligar para o mesmo número"}
                   </span>
                 </a>
               </li>

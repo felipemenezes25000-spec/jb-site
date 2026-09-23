@@ -16,6 +16,7 @@ import { NumerosWhatsapp } from "@/components/site/numeros-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
 import { classesBotao } from "@/components/ui/button";
+import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { montarMensagem, type Equipamento } from "@/lib/diagnostico";
 import { telHref } from "@/lib/format";
 import {
@@ -141,7 +142,7 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
             </div>
 
             <NumerosWhatsapp
-              numeros={[s.whatsapp, s.whatsapp_alternativo]}
+              contatos={contatosWhatsapp(s)}
               mensagem={mensagem}
               equipamento={equipamento.id}
               posicao="abertura-numero"
@@ -174,7 +175,7 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
       <OutrosEquipamentos atual={pagina.slug} />
       <ChamadaFinal
         whatsapp={s.whatsapp}
-        whatsappAlternativo={s.whatsapp_alternativo}
+        contatos={contatosWhatsapp(s)}
         telefone={s.whatsapp}
         horario={s.horario}
         cidade={s.endereco_cidade}

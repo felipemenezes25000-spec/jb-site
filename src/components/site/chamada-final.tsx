@@ -4,6 +4,7 @@ import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { NumerosWhatsapp } from "@/components/site/numeros-whatsapp";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
 import { classesBotao } from "@/components/ui/button";
+import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 import { telHref } from "@/lib/format";
 
@@ -14,12 +15,12 @@ import { telHref } from "@/lib/format";
    vermelho cheio em área grande), duas manchas de luz que flutuam devagar e o
    botão maior da página com um anel que pulsa. O selo de horário se repete
    aqui porque é a pergunta que a pessoa faz antes de mandar a mensagem.
-   Embaixo, os dois WhatsApps por escrito, para quem prefere escolher o número.
+   Embaixo, quem atende em cada WhatsApp, para quem prefere escolher com quem falar.
    ============================================================================ */
 
 export function ChamadaFinal({
   whatsapp,
-  whatsappAlternativo = "",
+  contatos = [],
   telefone,
   horario,
   cidade,
@@ -28,8 +29,8 @@ export function ChamadaFinal({
   titulo = "Não deixe a agenda parar por causa de um equipamento.",
 }: {
   whatsapp: string;
-  /** O segundo WhatsApp das configurações; vazio, só o principal aparece. */
-  whatsappAlternativo?: string;
+  /** Os WhatsApps com nome (`contatosWhatsapp`); vazio, a linha não aparece. */
+  contatos?: ContatoWhatsapp[];
   telefone: string;
   horario: string;
   cidade: string;
@@ -104,7 +105,7 @@ export function ChamadaFinal({
         </div>
 
         <NumerosWhatsapp
-          numeros={[whatsapp, whatsappAlternativo]}
+          contatos={contatos}
           mensagem={mensagem}
           equipamento={equipamento}
           posicao="fechamento-numero"
