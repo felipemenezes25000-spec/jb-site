@@ -1,21 +1,17 @@
 import Link from "next/link";
 
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
-import { Logo } from "@/components/ui/logo";
+import { Logo, Simbolo } from "@/components/ui/logo";
 import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 
 /* ============================================================================
    Cabeçalho do site de assistência
 
-   Uma linha só: marca, atalhos da página e o WhatsApp do Jeferson e do
-   Jackson, que ficam grudados no topo durante toda a rolagem. No celular
-   sobram a marca e os dois botões; o menu vira desnecessário numa página que
-   é uma coisa só.
-
-   Não há busca, carrinho, conta nem barra de categorias. O site deixou de
-   vender, e cada um desses itens era uma porta para fora do caminho que
-   importa: chamar a equipe.
+   Desktop mantém a marca completa, atalhos e os dois atendentes. Em telas
+   realmente estreitas a marca vira o símbolo oficial, liberando espaço para
+   Jeferson e Jackson sem esconder nenhum dos dois nem esmagar os alvos de
+   toque.
    ============================================================================ */
 
 export type AtalhoDoCabecalho = { rotulo: string; href: string };
@@ -29,14 +25,19 @@ export function CabecalhoSite({
 }) {
   return (
     <header className="jb-cabecalho sticky top-0 z-40 border-b border-graf-200/80 bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
-      <div className="container-jb flex h-16 items-center justify-between gap-3 lg:h-[4.5rem] lg:gap-5">
+      <div className="container-jb flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-3 lg:h-[4.5rem] lg:gap-5">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/"
             className="jb-logo-stage foco-jb shrink-0 rounded-lg"
             aria-label="JB Soluções Odontológicas, início"
           >
-            <Logo altura={34} prioridade />
+            <span className="flex sm:hidden">
+              <Simbolo tamanho={30} prioridade />
+            </span>
+            <span className="hidden sm:flex">
+              <Logo altura={34} prioridade />
+            </span>
           </Link>
           <span className="hidden items-center gap-2 rounded-full border border-graf-200 bg-white/75 px-3 py-1.5 text-xs font-bold text-graf-700 shadow-card xl:inline-flex">
             <span className="size-2 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]" aria-hidden />
