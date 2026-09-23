@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { MotionSystem } from "@/components/ui/motion-system";
+
 /*
  * Migração para Cache Components, em etapas.
  *
@@ -11,20 +13,21 @@ import type { Metadata } from "next";
  * Esta área é autenticada e existe para operar dados que mudam a cada
  * segundo: pedido, chamado, estoque, agenda. Prerender parcial aqui não tem o
  * que economizar — a página inteira depende de quem está logado. O ganho de
- * PPR está na loja pública, e é lá que a migração foi feita de verdade.
+ * PPR está no site público, e é lá que a migração foi feita de verdade.
  *
  * Registrado em docs/evolucao-jb/cobertura.md como pendência consciente, não
  * como conclusão.
  */
 export const instant = false;
 
-
 /**
  * Grupo de rotas do backoffice.
  *
- * Não desenha nada: existe para separar o painel da loja e para fixar os
- * metadados de todo o /admin num lugar só. O `noindex` vale para o grupo
- * inteiro — nenhuma tela interna deve aparecer em busca.
+ * O Motion System mora aqui, e não mais no layout raiz: o site público de
+ * assistência tem coreografia própria e não precisa pagar pelo runtime,
+ * observers e interação de ponteiro do painel. O script que marca a cena
+ * antes da primeira pintura continua no layout raiz para o admin nascer no
+ * estado visual correto.
  */
 export const metadata: Metadata = {
   title: { default: "Painel", template: "%s · Painel JB" },
@@ -32,5 +35,10 @@ export const metadata: Metadata = {
 };
 
 export default function LayoutGrupoAdmin({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <MotionSystem />
+    </>
+  );
 }
