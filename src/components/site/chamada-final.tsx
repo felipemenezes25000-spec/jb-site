@@ -36,7 +36,7 @@ export function ChamadaFinal({
   const ligar = telHref(telefone);
 
   return (
-    <section aria-labelledby="chamada-final-titulo" className="relative overflow-hidden bg-jb-50 py-20 md:py-28">
+    <section aria-labelledby="chamada-final-titulo" className="relative overflow-clip bg-jb-50 py-20 md:py-28">
       <span
         aria-hidden
         className="jb-flutua pointer-events-none absolute -left-24 -top-24 size-[26rem] rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.16),transparent)]"

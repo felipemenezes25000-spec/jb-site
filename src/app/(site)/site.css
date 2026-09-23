@@ -103,11 +103,22 @@
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
+    /* A revelação termina logo depois de o bloco entrar na tela, e em pixels,
+       não em porcentagem: com `cover 26%…41%` o texto só ficava inteiro
+       quando subia até o meio da tela, e quem parava de rolar com um botão na
+       metade de baixo via o botão desbotado, com cara de desligado. Em pixels
+       o tempo é o mesmo para um botão baixo e para um acordeão alto.
+
+       ATENÇÃO: `view()` mede contra o contêiner de rolagem mais próximo, e
+       `overflow: hidden` cria um. Bloco com `.jb-revela` dentro de seção com
+       `overflow-hidden` fica congelado para sempre na opacidade em que nasceu
+       (um "Chamar no WhatsApp" ficou em 19% no celular). Seção que precisa
+       recortar enfeite usa `overflow-clip`, que recorta sem virar contêiner. */
     .jb-revela {
       animation: jb-revela linear both;
       animation-timeline: view();
       /* `--i` escalona irmãos: cada um começa um pouco depois do anterior. */
-      animation-range: entry calc(4% + var(--i, 0) * 5%) cover calc(26% + var(--i, 0) * 5%);
+      animation-range: entry calc(var(--i, 0) * 20px) entry calc(120px + var(--i, 0) * 40px);
     }
 
     .jb-linha-enche {
@@ -321,5 +332,133 @@
   .jb-boia,
   .jb-boia-2 {
     animation: none;
+  }
+}
+
+/* ============================================================== celular
+
+   No computador, metade da vida da página está no mouse: o cartão sobe, a
+   foto cresce, o ícone balança. No celular não existe hover, e sem isto a
+   mesma página ficava parada. O que o mouse faz lá, a rolagem faz aqui: o
+   cartão que passa pelo meio da tela recebe o mesmo realce. Só em aparelho
+   sem hover, para o computador não receber os dois efeitos ao mesmo tempo.
+   ======================================================================= */
+
+@keyframes jb-toque-foto {
+  0% {
+    transform: translate3d(0, 10px, 0) scale(0.9);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0) scale(1.07);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes jb-toque-balanca {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  65% {
+    transform: rotate(9deg);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (hover: none) and (prefers-reduced-motion: no-preference) {
+    /* A foto do equipamento cresce e sobe ao cruzar o meio da tela. */
+    .jb-toque-foto {
+      animation: jb-toque-foto linear both;
+      animation-timeline: view();
+      animation-range: cover 10% cover 60%;
+    }
+
+    /* O ícone balança uma vez quando o cartão entra. */
+    .jb-cartao-equipamento .jb-icone-balanca {
+      animation: jb-toque-balanca linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 40%;
+    }
+  }
+}
+
+/* O toque. O navegador do celular pinta um retângulo cinza-azulado em cada
+   toque de link; aqui o flash é da cor da marca, bem leve, e respeita o canto
+   arredondado do botão. `manipulation` tira o atraso de quem espera um
+   segundo toque para dar zoom. */
+[data-jb-site="assistencia"] :where(a, button, summary, [role="button"]) {
+  -webkit-tap-highlight-color: rgb(224 20 27 / 0.12);
+  touch-action: manipulation;
+}
+
+/* Botão que pulsa: um anel da cor da marca que cresce e some atrás do botão,
+   só com `transform` e `opacity`. Vai na barra do celular, que é o botão que
+   a pessoa tem à mão o tempo todo. */
+@keyframes jb-pulso {
+  0% {
+    transform: scale(1, 1);
+    opacity: 0.5;
+  }
+  75%,
+  100% {
+    transform: scale(1.05, 1.4);
+    opacity: 0;
+  }
+}
+
+.jb-pulso {
+  position: relative;
+  isolation: isolate;
+}
+
+.jb-pulso::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgb(224 20 27 / 0.45);
+  pointer-events: none;
+  animation: jb-pulso 2.6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+/* Quando a barra aparece, o ícone do WhatsApp dá duas balançadas. */
+.jb-barra-movel[data-visivel="true"] .jb-pulso svg {
+  animation: jb-balanca 560ms ease-in-out 320ms 2;
+}
+
+/* Navegador sem `animation-timeline` (Safari antes do 26, Firefox): a
+   revelação vira IntersectionObserver (`RevelarNaRolagem`), que marca o
+   `<html>` e cada bloco quando ele entra. Sem JavaScript nada disso liga, e
+   o conteúdo fica visível do jeito que veio do servidor. */
+html[data-revela-js] .jb-revela[data-revela="esperando"] {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0) scale(0.97);
+}
+
+html[data-revela-js] .jb-revela[data-revela="visto"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 600ms var(--ease-out-quint),
+    transform 700ms var(--ease-out-quint);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-pulso::after,
+  .jb-barra-movel[data-visivel="true"] .jb-pulso svg {
+    animation: none;
+  }
+
+  html[data-revela-js] .jb-revela[data-revela] {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

@@ -368,7 +368,7 @@ function OutrosEquipamentos({ atual }: { atual: string }) {
               <li key={pagina.slug} className="jb-revela" style={{ "--i": indice % 3 } as React.CSSProperties}>
                 <Link
                   href={`/${pagina.slug}`}
-                  className="foco-jb group flex h-full flex-col items-center gap-2 rounded-2xl border border-graf-200 bg-white p-4 text-center transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-jb-300 hover:shadow-pop"
+                  className="foco-jb group flex h-full flex-col items-center gap-2 rounded-2xl border border-graf-200 bg-white p-4 text-center transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-jb-300 hover:shadow-pop active:scale-[0.97] active:border-jb-300"
                 >
                   <span className="relative flex size-20 items-center justify-center">
                     {imagem ? (
@@ -377,7 +377,7 @@ function OutrosEquipamentos({ atual }: { atual: string }) {
                         alt=""
                         fill
                         sizes="80px"
-                        className="object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
+                        className="jb-toque-foto object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
                       />
                     ) : (
                       <span className="flex size-14 items-center justify-center rounded-2xl bg-jb-50 text-jb-600">

@@ -1,4 +1,5 @@
 import { BarraWhatsappMovel } from "@/components/site/barra-whatsapp-movel";
+import { RevelarNaRolagem } from "@/components/site/revelar-na-rolagem";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
 /* ============================================================================
@@ -9,6 +10,9 @@ import { configuracoesPublicas } from "@/lib/site-publico";
    montava uma vez só: da home para /autoclave por um link interno, seguia
    olhando para botões que já tinham saído da tela e mandando a mensagem
    genérica. O `template` remonta a cada navegação, e a barra junto.
+
+   Pelo mesmo motivo mora aqui a revelação de reserva (`RevelarNaRolagem`),
+   que precisa achar os blocos da página nova a cada navegação.
    ============================================================================ */
 
 export default async function SiteTemplate({ children }: { children: React.ReactNode }) {
@@ -18,6 +22,7 @@ export default async function SiteTemplate({ children }: { children: React.React
     <>
       {children}
       <BarraWhatsappMovel whatsapp={s.whatsapp} telefone={s.whatsapp} />
+      <RevelarNaRolagem />
     </>
   );
 }

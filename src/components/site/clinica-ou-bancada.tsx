@@ -34,7 +34,7 @@ const PONTOS = [
 
 export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensagem?: string }) {
   return (
-    <section aria-labelledby="clinica-bancada-titulo" className="overflow-hidden bg-surface-muted py-16 md:py-24">
+    <section aria-labelledby="clinica-bancada-titulo" className="overflow-clip bg-surface-muted py-16 md:py-24">
       <div className="container-jb grid items-center gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-16">
         <div className="jb-revela relative mx-auto w-full max-w-md lg:max-w-none">
           <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-graf-100 shadow-pop lg:aspect-[5/6]">

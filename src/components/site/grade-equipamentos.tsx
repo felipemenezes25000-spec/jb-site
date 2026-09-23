@@ -53,7 +53,7 @@ function Cartao({
         equipamento={equipamento.id}
         rotulo={`Chamar no WhatsApp sobre ${equipamento.nome.toLowerCase()}`}
         className={cn(
-          "jb-cartao-equipamento foco-jb group relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.985] sm:p-6",
+          "jb-cartao-equipamento foco-jb group relative flex h-full flex-col overflow-clip rounded-2xl border p-5 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.985] sm:p-6",
           destaque
             ? "min-h-[15rem] border-jb-200 bg-gradient-to-br from-jb-50 via-white to-white lg:min-h-full"
             : outro
@@ -101,7 +101,7 @@ function Cartao({
               alt=""
               fill
               sizes={destaque ? "(min-width: 1024px) 40vw, 90vw" : "(min-width: 1024px) 20vw, 45vw"}
-              className="object-contain mix-blend-multiply transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.06]"
+              className="jb-toque-foto object-contain mix-blend-multiply transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.06]"
             />
             {/* Sombra de chão: funciona com foto de fundo branco, onde a
                 sombra projetada desenharia um retângulo. */}

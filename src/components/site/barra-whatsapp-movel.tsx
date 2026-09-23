@@ -77,7 +77,7 @@ export function BarraWhatsappMovel({ whatsapp, telefone }: { whatsapp: string; t
           posicao="barra-movel"
           tamanho="lg"
           larguraTotal
-          className="flex-1"
+          className="jb-pulso flex-1"
         />
         {ligar ? (
           <a
