@@ -29,9 +29,6 @@ test.describe("JB assistência — jornada pública atual", () => {
     expect(resposta?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("parou?");
 
-    // Escopa as provas ao bloco visível do hero. O cabeçalho desktop tem um
-    // link homônimo ("Todas as marcas") que fica oculto no mobile, então
-    // `getByText(...).first()` selecionava corretamente o texto errado.
     const provas = page.locator(".jb-hero-provas");
     await expect(provas.getByText("Todas as marcas", { exact: true })).toBeVisible();
     await expect(provas.getByText("Orçamento antes da troca", { exact: true })).toBeVisible();
@@ -94,9 +91,6 @@ test.describe("JB assistência — jornada pública atual", () => {
       await expect(page.getByRole("heading", { level: 1 })).toContainText(equipamento);
       await expect(page.getByRole("heading", { level: 1 })).toContainText(/parou\?/i);
 
-      // O cabeçalho é atalho; a conversão real da landing precisa existir na
-      // própria abertura para o clique pago não depender de voltar ao topo nem
-      // de uma barra fixa. Jeferson e Jackson continuam disponíveis nos dois.
       await expect(page.locator('a[data-whatsapp="abertura"]')).toBeVisible();
       await expect(page.locator('a[data-whatsapp="abertura-segundo"]')).toBeVisible();
       await expect(page.locator('a[data-whatsapp="cabecalho"]')).toBeVisible();
@@ -193,7 +187,8 @@ test.describe("JB assistência — jornada pública atual", () => {
     test(`${rota} informa remoção definitiva com HTTP 410`, async ({ page }) => {
       const resposta = await page.goto(rota);
       expect(resposta?.status()).toBe(410);
-      await expect(page.getByRole("heading", { level: 1 })).toContainText("saiu do ar");
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(/A loja saiu/i);
+      await expect(page.getByRole("link", { name: /Ir para a assistência técnica/i })).toBeVisible();
     });
   }
 
