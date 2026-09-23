@@ -21,17 +21,6 @@ import { artigoJsonLd, JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo"
 import { getSettings } from "@/lib/settings";
 import { connection } from "next/server";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- * Ver docs/evolucao-jb/cobertura.md, fase 5.
- */
-/*
- * Renderizada a cada visita (`connection()` logo no começo). Até 22/09/2026
- * esta página vivia na casca da loja, que lia o cookie da conta e tornava tudo
- * dinâmico por tabela. A casca do site de assistência é estática, e sem esta
- * chamada o Next tentaria pré-renderizar a consulta ao banco e recusaria o
- * relógio que o Prisma lê durante a consulta.
- */
 export const instant = false;
 
 type Props = { params: Promise<{ slug: string }> };
@@ -53,13 +42,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-/**
- * Quem assinou e quem conferiu.
- *
- * O bloco não aparece quando não há autor. A alternativa — "por Equipe JB" —
- * seria uma assinatura que ninguém deu, e num texto sobre equipamento de
- * saúde a assinatura é parte do que o leitor está avaliando.
- */
 function Assinatura({
   autor,
   revisor,
@@ -72,23 +54,23 @@ function Assinatura({
   if (!autor && !data) return null;
 
   return (
-    <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3 border-y border-graf-200 py-4 text-sm">
+    <dl className="jb-artigo-assinatura mt-6 flex flex-wrap gap-x-8 gap-y-3 rounded-xl border border-graf-200 bg-white/80 p-4 text-sm">
       {autor ? (
         <div>
           <dt className="text-graf-500">Escrito por</dt>
-          <dd className="font-semibold text-graf-900">{autor.name}</dd>
+          <dd className="font-extrabold text-graf-900">{autor.name}</dd>
         </div>
       ) : null}
       {revisor ? (
         <div>
           <dt className="text-graf-500">Revisão técnica</dt>
-          <dd className="font-semibold text-graf-900">{revisor.name}</dd>
+          <dd className="font-extrabold text-graf-900">{revisor.name}</dd>
         </div>
       ) : null}
       {data ? (
         <div>
           <dt className="text-graf-500">{data.rotulo}</dt>
-          <dd className="tabular font-semibold text-graf-900">{formatarData(data.data)}</dd>
+          <dd className="tabular font-extrabold text-graf-900">{formatarData(data.data)}</dd>
         </div>
       ) : null}
     </dl>
@@ -135,49 +117,41 @@ export default async function ArtigoPage({ params }: Props) {
         ]}
       />
 
-      <Secao espaco="sm" largura="estreita">
+      <Secao espaco="md" largura="estreita" className="jb-artigo-detail">
         <Trilha itens={trilha} className="mb-6" />
 
-        <p className="label-mono text-xs text-jb-700">{ROTULO_TEMA[tema]}</p>
-        <h1 className="mt-2 text-display texto-forte">{artigo.title}</h1>
-        {artigo.lead ? (
-          <p className="mt-4 text-lg leading-relaxed text-graf-600">{artigo.lead}</p>
-        ) : null}
+        <header className="jb-artigo-head">
+          <p className="label-mono inline-flex rounded-full border border-jb-100 bg-jb-50 px-3 py-1.5 text-xs font-bold text-jb-700">
+            {ROTULO_TEMA[tema]}
+          </p>
+          <h1 className="mt-4 text-display texto-forte">{artigo.title}</h1>
+          {artigo.lead ? (
+            <p className="mt-5 text-lg leading-relaxed text-graf-600 sm:text-xl">{artigo.lead}</p>
+          ) : null}
 
-        <Assinatura
-          autor={artigo.author}
-          revisor={artigo.reviewer}
-          data={data}
-        />
+          <Assinatura autor={artigo.author} revisor={artigo.reviewer} data={data} />
+        </header>
 
         {artigo.cover ? (
-          <Image
-            src={artigo.cover.url}
-            alt={artigo.cover.alt}
-            width={artigo.cover.width ?? 1200}
-            height={artigo.cover.height ?? 675}
-            className="mt-8 w-full rounded-xl border border-graf-200 object-cover"
-          />
+          <div className="jb-artigo-capa mt-8 overflow-hidden rounded-[1.5rem] border border-graf-200 bg-graf-100">
+            <Image
+              src={artigo.cover.url}
+              alt={artigo.cover.alt}
+              width={artigo.cover.width ?? 1200}
+              height={artigo.cover.height ?? 675}
+              className="w-full object-cover"
+            />
+          </div>
         ) : null}
 
-        {/* ---------------------------------------------- aplicabilidade ---
-
-            Vem ANTES do texto, não depois. Um limite de aplicação lido no fim
-            chega tarde: quem parou na metade já saiu com a impressão de que
-            aquilo vale para o equipamento dele. */}
-        <p className="mt-8 flex gap-2.5 rounded-lg border border-graf-200 bg-graf-50 p-4 text-[0.875rem] leading-relaxed text-graf-600">
-          <Info className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
+        <p className="jb-artigo-aplicabilidade mt-8 flex gap-3 rounded-xl border border-graf-200 bg-graf-50 p-4 text-[0.875rem] leading-relaxed text-graf-600 sm:p-5">
+          <Info className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
           <span>{fraseDeAplicabilidade(artigo.appliesTo)}</span>
         </p>
 
-        <CorpoCms html={artigo.body} className="mt-8" />
+        <CorpoCms html={artigo.body} className="jb-artigo-corpo mt-8" />
 
-        {/* ------------------------------------------------------ limite ---
-
-            A frase fixa que fecha todo artigo. Não é rodapé jurídico: é o
-            limite real do que um texto pode fazer. Diagnóstico de equipamento
-            pressurizado se faz com o aparelho na frente. */}
-        <p className="mt-10 flex gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-[0.875rem] leading-relaxed text-amber-900">
+        <p className="jb-artigo-limite mt-10 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[0.875rem] leading-relaxed text-amber-900 sm:p-5">
           <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden />
           <span>
             Este texto ajuda a observar e a decidir quando chamar a assistência. Ele não
@@ -188,28 +162,30 @@ export default async function ArtigoPage({ params }: Props) {
         </p>
 
         {artigo.sources.length > 0 ? (
-          <section className="mt-10" aria-labelledby="fontes">
+          <section className="jb-artigo-fontes mt-10 rounded-[1.35rem] border border-graf-200 bg-white p-5 sm:p-6" aria-labelledby="fontes">
             <h2 id="fontes" className="flex items-center gap-2 text-title texto-forte">
-              <BookMarked className="size-5 text-graf-500" aria-hidden />
+              <span className="flex size-10 items-center justify-center rounded-xl bg-graf-50 text-graf-600 ring-1 ring-graf-200">
+                <BookMarked className="size-5" aria-hidden />
+              </span>
               Fontes
             </h2>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-5 space-y-4">
               {artigo.sources.map((fonte) => (
-                <li key={fonte.title} className="text-corpo leading-relaxed text-graf-700">
+                <li key={fonte.title} className="border-t border-graf-100 pt-4 first:border-0 first:pt-0 text-corpo leading-relaxed text-graf-700">
                   {fonte.url ? (
                     <a
                       href={fonte.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-semibold text-jb-700 underline underline-offset-2"
+                      className="font-extrabold text-jb-700 underline underline-offset-2"
                     >
                       {fonte.title}
                     </a>
                   ) : (
-                    <span className="font-semibold text-graf-900">{fonte.title}</span>
+                    <span className="font-extrabold text-graf-900">{fonte.title}</span>
                   )}
                   {fonte.note ? (
-                    <span className="block text-[0.875rem] text-graf-500">{fonte.note}</span>
+                    <span className="mt-1 block text-[0.875rem] text-graf-500">{fonte.note}</span>
                   ) : null}
                 </li>
               ))}
@@ -218,11 +194,11 @@ export default async function ArtigoPage({ params }: Props) {
         ) : null}
       </Secao>
 
-      {/* ----------------------------------------------------------- CTA */}
-      <Secao espaco="sm">
-        <div className="flex flex-wrap items-center justify-between gap-6 rounded-xl border border-graf-200 bg-graf-50 p-6">
+      <Secao espaco="md" className="jb-content-cta">
+        <div className="flex flex-col gap-6 rounded-[1.5rem] border border-graf-200 bg-graf-50 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
-            <h2 className="text-title texto-forte">O sintoma continua?</h2>
+            <p className="sobretitulo">Próximo passo</p>
+            <h2 className="text-title texto-forte mt-2">O sintoma continua?</h2>
             <p className="mt-2 text-corpo leading-relaxed text-graf-600">
               Chame no WhatsApp e mande foto ou vídeo do que está acontecendo. A equipe técnica
               responde e orienta o próximo passo.
@@ -233,29 +209,25 @@ export default async function ArtigoPage({ params }: Props) {
       </Secao>
 
       {relacionados.length > 0 ? (
-        <Secao fundo="clara" espaco="sm">
+        <Secao fundo="clara" espaco="md" className="jb-artigo-relacionados">
           <TituloSecao tamanho="titulo" titulo={`Mais sobre ${ROTULO_TEMA[tema].toLowerCase()}`} />
           <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ul" className="mt-6">
             {relacionados.map((outro) => (
               <li key={outro.slug}>
-                <Cartao className="h-full">
-                <Link
-                  href={`/central-tecnica/${outro.slug}`}
-                  className="flex h-full flex-col gap-2 p-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-                >
-                  <span className="text-corpo font-bold leading-snug text-graf-950">
-                    {outro.title}
-                  </span>
-                  {outro.lead ? (
-                    <span className="text-[0.875rem] leading-relaxed text-graf-600">
-                      {outro.lead}
+                <Cartao className="jb-artigo-card h-full overflow-hidden rounded-[1.25rem]">
+                  <Link
+                    href={`/central-tecnica/${outro.slug}`}
+                    className="flex h-full flex-col gap-2 p-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  >
+                    <span className="text-corpo font-extrabold leading-snug text-graf-950">{outro.title}</span>
+                    {outro.lead ? (
+                      <span className="text-[0.875rem] leading-relaxed text-graf-600">{outro.lead}</span>
+                    ) : null}
+                    <span className="mt-auto inline-flex items-center gap-1.5 border-t border-graf-100 pt-4 text-sm font-extrabold text-jb-700">
+                      Ler
+                      <ArrowRight className="size-4" aria-hidden />
                     </span>
-                  ) : null}
-                  <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-jb-700">
-                    Ler
-                    <ArrowRight className="size-4" aria-hidden />
-                  </span>
-                </Link>
+                  </Link>
                 </Cartao>
               </li>
             ))}
