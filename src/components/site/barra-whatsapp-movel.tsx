@@ -11,8 +11,8 @@ import { telHref } from "@/lib/format";
    Barra do WhatsApp no pé do celular
 
    Aparece quando o botão da abertura sai da tela, e some de novo quando algum
-   outro botão grande de WhatsApp está visível (diagnóstico, chamada final,
-   rodapé): duas chamadas iguais empilhadas na mesma tela é ruído.
+   outro botão grande de WhatsApp está visível (diagnóstico, chamada final):
+   duas chamadas iguais empilhadas na mesma tela é ruído.
 
    Observa por IntersectionObserver, nunca por evento de rolagem. Fica abaixo
    do aviso de cookies (z-90), que precisa ser respondido primeiro, e respeita
@@ -24,7 +24,7 @@ import { telHref } from "@/lib/format";
    `template.tsx` do grupo, e não no layout, que não remonta entre páginas.
    ============================================================================ */
 
-const OBSERVADOS = ['[data-whatsapp="abertura"]', '[data-whatsapp="diagnostico"]', '[data-whatsapp="fechamento"]', '[data-whatsapp="rodape"]'];
+const OBSERVADOS = ['[data-whatsapp="abertura"]', '[data-whatsapp="diagnostico"]', '[data-whatsapp="fechamento"]'];
 
 /** A mensagem e o equipamento do botão da abertura, lidos do próprio link. */
 function lerAbertura(): { mensagem: string; equipamento?: string } | null {

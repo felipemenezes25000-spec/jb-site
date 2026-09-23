@@ -1,37 +1,28 @@
-import { Phone } from "lucide-react";
-
-import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
-import { NumerosWhatsapp } from "@/components/site/numeros-whatsapp";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
-import { classesBotao } from "@/components/ui/button";
 import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
-import { telHref } from "@/lib/format";
 
 /* ============================================================================
    Chamada final
 
    O último empurrão antes do rodapé: fundo vermelho clarinho da marca (nunca
-   vermelho cheio em área grande), duas manchas de luz que flutuam devagar e o
-   botão maior da página com um anel que pulsa. O selo de horário se repete
-   aqui porque é a pergunta que a pessoa faz antes de mandar a mensagem.
-   Embaixo, quem atende em cada WhatsApp, para quem prefere escolher com quem falar.
+   vermelho cheio em área grande), duas manchas de luz que flutuam devagar e
+   a mesma escolha da abertura, Jeferson ou Jackson, com um anel que pulsa em
+   volta do principal. O selo de horário se repete aqui porque é a pergunta
+   que a pessoa faz antes de mandar a mensagem.
    ============================================================================ */
 
 export function ChamadaFinal({
-  whatsapp,
-  contatos = [],
-  telefone,
+  contatos,
   horario,
   cidade,
   mensagem = MENSAGEM_PADRAO,
   equipamento,
   titulo = "Não deixe a agenda parar por causa de um equipamento.",
 }: {
-  whatsapp: string;
-  /** Os WhatsApps com nome (`contatosWhatsapp`); vazio, a linha não aparece. */
-  contatos?: ContatoWhatsapp[];
-  telefone: string;
+  /** Jeferson e Jackson, de `contatosWhatsapp`. */
+  contatos: ContatoWhatsapp[];
   horario: string;
   cidade: string;
   /** Nas páginas de equipamento, a mensagem e o título já dizem qual é. */
@@ -39,8 +30,6 @@ export function ChamadaFinal({
   equipamento?: string;
   titulo?: string;
 }) {
-  const ligar = telHref(telefone);
-
   return (
     <section aria-labelledby="chamada-final-titulo" className="relative overflow-clip bg-jb-50 py-20 md:py-28">
       <span
@@ -73,45 +62,14 @@ export function ChamadaFinal({
           funcionar.
         </p>
 
-        <div
-          className="jb-revela mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-          style={{ "--i": 3 } as React.CSSProperties}
-        >
-          <span className="relative inline-flex w-full sm:w-auto">
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-lg bg-jb-500/35 motion-safe:animate-ping"
-              style={{ animationDuration: "2.4s" }}
-            />
-            <BotaoWhatsapp
-              numero={whatsapp}
-              mensagem={mensagem}
-              equipamento={equipamento}
-              posicao="fechamento"
-              tamanho="lg"
-              larguraTotal
-              className="relative px-9 text-lg shadow-raised sm:w-auto"
-            />
-          </span>
-          {ligar ? (
-            <a
-              href={ligar}
-              className={classesBotao("secundario", "lg", "w-full whitespace-nowrap sm:w-auto")}
-            >
-              <Phone className="size-4" aria-hidden />
-              Ligar agora
-            </a>
-          ) : null}
-        </div>
-
-        <NumerosWhatsapp
+        <OpcoesWhatsapp
           contatos={contatos}
           mensagem={mensagem}
           equipamento={equipamento}
-          posicao="fechamento-numero"
-          centralizado
-          className="jb-revela mt-5"
-          style={{ "--i": 4 } as React.CSSProperties}
+          onde="fechamento"
+          pulso
+          className="jb-revela mt-9 sm:justify-center"
+          style={{ "--i": 3 } as React.CSSProperties}
         />
       </div>
     </section>

@@ -31,8 +31,8 @@ export type PosicaoWhatsapp =
   | "rodape"
   | "barra-movel"
   | "faixa-topo"
-  | "abertura-numero"
-  | "fechamento-numero";
+  | "abertura-segundo"
+  | "fechamento-segundo";
 
 type Props = {
   numero: string;

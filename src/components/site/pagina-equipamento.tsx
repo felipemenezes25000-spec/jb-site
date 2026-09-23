@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BadgeCheck, FileCheck2, Phone, ShieldAlert } from "lucide-react";
+import { ArrowRight, BadgeCheck, FileCheck2, ShieldAlert } from "lucide-react";
 
 import { BotaoWhatsapp, LinkWhatsapp } from "@/components/site/botao-whatsapp";
 import { ChamadaFinal } from "@/components/site/chamada-final";
@@ -12,13 +12,11 @@ import { Duvidas } from "@/components/site/duvidas";
 import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
-import { NumerosWhatsapp } from "@/components/site/numeros-whatsapp";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
-import { classesBotao } from "@/components/ui/button";
 import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { montarMensagem, type Equipamento } from "@/lib/diagnostico";
-import { telHref } from "@/lib/format";
 import {
   PAGINAS_DE_EQUIPAMENTO,
   descricaoDaPagina,
@@ -74,7 +72,6 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
   const equipamento = equipamentoDaPagina(pagina);
   const s = await configuracoesPublicas();
   const anos = await anosDesde(s.empresa_desde);
-  const ligar = telHref(s.whatsapp);
   const mensagem = montarMensagem({ equipamento: equipamento.id });
   const caminho = `/${pagina.slug}`;
 
@@ -122,31 +119,12 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
               {pagina.chamada}
             </p>
 
-            <div className="entrada mt-7 flex flex-col gap-3 sm:flex-row [animation-delay:210ms]">
-              <BotaoWhatsapp
-                numero={s.whatsapp}
-                mensagem={mensagem}
-                equipamento={equipamento.id}
-                posicao="abertura"
-                tamanho="lg"
-                className="w-full sm:w-auto"
-              >
-                Chamar sobre {pagina.naFrase}
-              </BotaoWhatsapp>
-              {ligar ? (
-                <a href={ligar} className={classesBotao("secundario", "lg", "w-full whitespace-nowrap sm:w-auto")}>
-                  <Phone className="size-4" aria-hidden />
-                  Ligar agora
-                </a>
-              ) : null}
-            </div>
-
-            <NumerosWhatsapp
+            <OpcoesWhatsapp
               contatos={contatosWhatsapp(s)}
               mensagem={mensagem}
               equipamento={equipamento.id}
-              posicao="abertura-numero"
-              className="entrada mt-4 [animation-delay:230ms]"
+              onde="abertura"
+              className="entrada mt-7 [animation-delay:210ms]"
             />
 
             <StatusAtendimento
@@ -174,9 +152,7 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
       <Duvidas cidade={s.endereco_cidade} horario={s.horario} extras={pagina.duvidas} />
       <OutrosEquipamentos atual={pagina.slug} />
       <ChamadaFinal
-        whatsapp={s.whatsapp}
         contatos={contatosWhatsapp(s)}
-        telefone={s.whatsapp}
         horario={s.horario}
         cidade={s.endereco_cidade}
         mensagem={mensagem}

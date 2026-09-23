@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { Phone } from "lucide-react";
 
-import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { ChamadaFinal } from "@/components/site/chamada-final";
 import { ClinicaOuBancada } from "@/components/site/clinica-ou-bancada";
 import { ComoFunciona } from "@/components/site/como-funciona";
@@ -11,15 +9,13 @@ import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { FaixaEquipamentos } from "@/components/site/faixa-equipamentos";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
-import { NumerosWhatsapp } from "@/components/site/numeros-whatsapp";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { PalavraGiratoria } from "@/components/site/palavra-giratoria";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { SimuladorParada } from "@/components/site/simulador-parada";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
-import { classesBotao } from "@/components/ui/button";
 import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
-import { telHref } from "@/lib/format";
 import { JsonLd, localNegocioJsonLd, metadataDePagina, organizacaoJsonLd } from "@/lib/seo";
 import { anosDesde, configuracoesPublicas } from "@/lib/site-publico";
 
@@ -27,7 +23,7 @@ import { anosDesde, configuracoesPublicas } from "@/lib/site-publico";
    Home: assistência técnica, e só isso
 
    Feita para quem chega de anúncio, no celular, com um equipamento parado.
-   Tudo leva ao WhatsApp: o botão da abertura, o diagnóstico em 3 toques, os
+   Tudo leva ao WhatsApp: Jeferson ou Jackson na abertura, o diagnóstico, os
    blocos de equipamento, o simulador, a chamada final, o cabeçalho grudado no
    topo e a barra do pé do celular.
 
@@ -50,8 +46,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const s = await configuracoesPublicas();
   const anos = await anosDesde(s.empresa_desde);
-  /* Só o celular: é o mesmo número do WhatsApp, e o fixo saiu do site. */
-  const ligar = telHref(s.whatsapp);
 
   return (
     <>
@@ -95,27 +89,11 @@ export default async function HomePage() {
               equipe técnica no WhatsApp.
             </p>
 
-            <div className="entrada mt-8 flex flex-col gap-3 sm:flex-row [animation-delay:210ms]">
-              <BotaoWhatsapp
-                numero={s.whatsapp}
-                mensagem={MENSAGEM_PADRAO}
-                posicao="abertura"
-                tamanho="lg"
-                className="w-full sm:w-auto"
-              />
-              {ligar ? (
-                <a href={ligar} className={classesBotao("secundario", "lg", "w-full whitespace-nowrap sm:w-auto")}>
-                  <Phone className="size-4" aria-hidden />
-                  Ligar agora
-                </a>
-              ) : null}
-            </div>
-
-            <NumerosWhatsapp
+            <OpcoesWhatsapp
               contatos={contatosWhatsapp(s)}
               mensagem={MENSAGEM_PADRAO}
-              posicao="abertura-numero"
-              className="entrada mt-4 [animation-delay:240ms]"
+              onde="abertura"
+              className="entrada mt-8 [animation-delay:210ms]"
             />
 
             <div className="entrada order-first mb-6 sm:mb-8 lg:order-none lg:mb-0 lg:mt-10 lg:[animation-delay:260ms]">
@@ -161,9 +139,7 @@ export default async function HomePage() {
       <PorQueJb anos={anos} desde={s.empresa_desde} cidade={s.endereco_cidade} />
       <Duvidas cidade={s.endereco_cidade} horario={s.horario} />
       <ChamadaFinal
-        whatsapp={s.whatsapp}
         contatos={contatosWhatsapp(s)}
-        telefone={s.whatsapp}
         horario={s.horario}
         cidade={s.endereco_cidade}
       />

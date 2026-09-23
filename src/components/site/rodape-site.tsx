@@ -2,7 +2,6 @@ import Link from "next/link";
 import { BadgeCheck, Clock3, Mail, MapPin, Phone } from "lucide-react";
 
 import { RevisarMedicao } from "@/components/analytics/revisar-medicao";
-import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
 import { Logo } from "@/components/ui/logo";
 import { algumDestino, destinosDeMedicao } from "@/lib/analytics/destinos";
@@ -18,8 +17,8 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
 /* ============================================================================
    Rodapé do site de assistência
 
-   Tudo o que alguém precisa para chamar a JB sem subir a página: os dois
-   WhatsApps, telefone, e-mail, endereço, horário. E a prova da autorização
+   Tudo o que alguém precisa para chamar a JB sem subir a página: WhatsApp
+   do Jeferson e do Jackson, telefone, e-mail, endereço, horário. E a prova da autorização
    EVOXX com o link para a lista do fabricante, porque selo sem fonte é enfeite.
    ============================================================================ */
 
@@ -63,10 +62,7 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                 >
                   <MarcaWhatsapp className="size-4 text-jb-600" />
                   <span className="sr-only">WhatsApp: </span>
-                  {nome ? <span>{nome}</span> : null}
-                  <span className={nome ? "tabular font-semibold text-graf-700" : "tabular"}>
-                    {formatarTelefone(numero)}
-                  </span>
+                  {nome || <span className="tabular">{formatarTelefone(numero)}</span>}
                 </a>
               </li>
             ))}
@@ -97,12 +93,6 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
               </li>
             ) : null}
           </ul>
-          <BotaoWhatsapp
-            numero={s.whatsapp}
-            mensagem={MENSAGEM_PADRAO}
-            posicao="rodape"
-            className="mt-6"
-          />
         </div>
 
         <nav aria-labelledby="rodape-equipamentos">
