@@ -16,7 +16,7 @@ import { lerExpediente, situacaoDoAtendimento } from "@/lib/horario-atendimento"
    - a mensagem que vai para o WhatsApp só diz o que a pessoa escolheu. Um
      defeito que não pertence ao equipamento (resto de uma escolha anterior)
      não pode aparecer, e a cidade digitada não carrega quebra de linha;
-   - o selo "Atendendo agora" só aparece quando o horário configurado foi
+   - o selo de horário só aparece quando o horário configurado foi
      entendido, e sempre no fuso de São Paulo, qualquer que seja o do aparelho.
    ============================================================================ */
 
@@ -112,23 +112,23 @@ describe("situacaoDoAtendimento", () => {
   it("no horário, diz que está atendendo e até quando", () => {
     expect(situacaoDoAtendimento(HORARIO, quarta10h)).toEqual({
       aberto: true,
-      texto: "Atendendo agora, até 18h30",
+      texto: "Em expediente até 18h30",
     });
   });
 
   it("antes de abrir, avisa que abre hoje", () => {
     expect(situacaoDoAtendimento(HORARIO, quarta7h)).toEqual({
       aberto: false,
-      texto: "Deixe sua mensagem: abrimos hoje às 8h",
+      texto: "Expediente começa hoje às 8h",
     });
   });
 
   it("depois de fechar, aponta o próximo dia útil", () => {
     expect(situacaoDoAtendimento(HORARIO, quarta19h)?.texto).toBe(
-      "Deixe sua mensagem: respondemos amanhã às 8h",
+      "Expediente volta amanhã às 8h",
     );
     expect(situacaoDoAtendimento(HORARIO, sexta20h)?.texto).toBe(
-      "Deixe sua mensagem: respondemos segunda às 8h",
+      "Expediente volta segunda às 8h",
     );
   });
 

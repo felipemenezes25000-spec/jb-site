@@ -47,7 +47,7 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
               alt="Consultório odontológico com a cadeira pronta para atendimento"
               fill
               sizes="(min-width: 1024px) 40vw, 90vw"
-              className="jb-foto-viva object-cover"
+              className="object-cover"
             />
             <span
               aria-hidden
@@ -58,7 +58,7 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
             </p>
           </div>
 
-          <div className="jb-boia-2 absolute -bottom-7 -right-3 w-[47%] overflow-hidden rounded-[1.35rem] border-4 border-white shadow-pop sm:-right-7">
+          <div className="absolute -bottom-7 -right-3 w-[47%] overflow-hidden rounded-[1.35rem] border-4 border-white shadow-pop sm:-right-7">
             <div className="relative aspect-square">
               <Image
                 src="/site/bancada.webp"
@@ -70,7 +70,7 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
             </div>
           </div>
 
-          <p className="jb-boia absolute -left-3 top-6 flex items-center gap-2 rounded-xl border border-white/70 bg-white/95 px-3.5 py-2 text-sm font-extrabold text-graf-900 shadow-pop backdrop-blur sm:-left-6">
+          <p className="absolute -left-3 top-6 flex items-center gap-2 rounded-xl border border-white/70 bg-white/95 px-3.5 py-2 text-sm font-extrabold text-graf-900 shadow-pop sm:-left-6">
             <span className="flex size-7 items-center justify-center rounded-lg bg-jb-50 text-jb-700" aria-hidden>
               <MapPin className="size-3.5" />
             </span>

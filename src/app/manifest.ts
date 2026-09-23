@@ -44,16 +44,27 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     scope: "/",
     display: "standalone",
 
-    // Vermelho da marca (--color-jb-500) na barra do aplicativo instalado,
-    // sobre o fundo branco que a interface usa em todo lugar.
-    theme_color: "#e0141b",
+    // Branco, o mesmo `themeColor` do viewport no layout raiz: a barra do
+    // sistema e a do navegador ficam iguais, e o vermelho da marca aparece
+    // logo abaixo, na faixa operacional — não pintado duas vezes em cima.
+    theme_color: "#ffffff",
     background_color: "#ffffff",
 
     categories: ["business", "medical"],
 
+    // 192 e 512 são os tamanhos que Android e Chrome pedem para instalar. O
+    // `maskable` tem fundo branco e o símbolo dentro da zona segura: sem ele,
+    // o sistema recorta o círculo da marca na máscara redonda do ícone.
     icons: [
       { src: "/favicon.ico", sizes: "any", type: "image/x-icon" },
-      { src: "/marca/jb-icone-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/marca/jb-icone-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/marca/jb-icone-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      {
+        src: "/marca/jb-icone-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
     ],
 
     // Atalhos do ícone instalado. O diagnóstico continua sendo o primeiro;

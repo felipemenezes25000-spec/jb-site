@@ -1,6 +1,5 @@
 import { BadgeCheck, History, Layers3, ShieldCheck } from "lucide-react";
 
-import { Contador } from "@/components/site/contador";
 
 /* ============================================================================
    Por que chamar a JB
@@ -36,24 +35,22 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
         <ul className="jb-autoridade-grid mt-10 grid gap-3 sm:gap-4 lg:grid-cols-3">
           {anos ? (
             <li className="jb-autoridade-destaque jb-revela relative overflow-hidden rounded-[1.6rem] border border-jb-200 p-6 sm:p-8 lg:col-span-2">
-              <span
-                aria-hidden
-                className="jb-flutua-lento pointer-events-none absolute -bottom-24 -right-10 size-72 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.16),transparent)]"
-              />
               <div className="relative flex flex-wrap items-start justify-between gap-5">
                 <div>
                   <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.16em] text-jb-700">
                     Experiência de bancada
                   </p>
                   <p className="mt-5 flex items-end gap-3">
-                    <Contador
-                      valor={anos}
-                      className="tabular font-display text-[5rem] font-extrabold leading-[0.82] tracking-tight text-jb-600 sm:text-[7rem]"
-                    />
+                    {/* Número parado: é um fato, não um efeito. Contar de zero
+                        até ele não acrescentava nada e custava um runtime de
+                        animação na página. */}
+                    <span className="tabular font-display text-[5rem] font-extrabold leading-[0.82] tracking-tight text-jb-600 sm:text-[7rem]">
+                      {anos}
+                    </span>
                     <span className="pb-2 text-2xl font-extrabold text-graf-950 sm:text-3xl">anos</span>
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-jb-200 bg-white/85 px-3 py-2 text-xs font-extrabold text-jb-800 shadow-xs backdrop-blur">
+                <span className="inline-flex items-center gap-2 rounded-full border border-jb-200 bg-white px-3 py-2 text-xs font-extrabold text-jb-800 shadow-xs">
                   <BadgeCheck className="size-4" aria-hidden />
                   Desde {desde}
                 </span>

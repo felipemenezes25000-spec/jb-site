@@ -50,54 +50,6 @@
 
 /* ------------------------------------------------------ faixa equipamentos */
 
-[data-jb-site="assistencia"] .jb-faixa-premium {
-  position: relative;
-  background:
-    radial-gradient(circle at 86% 0%, rgb(224 20 27 / 0.055), transparent 20rem),
-    linear-gradient(180deg, #f7f8f9, #f4f5f6);
-}
-
-[data-jb-site="assistencia"] .jb-faixa-premium::before,
-[data-jb-site="assistencia"] .jb-faixa-premium::after {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  bottom: 0;
-  width: min(8vw, 6rem);
-  pointer-events: none;
-}
-
-[data-jb-site="assistencia"] .jb-faixa-premium::before {
-  left: 0;
-  background: linear-gradient(90deg, #f6f7f8, transparent);
-}
-
-[data-jb-site="assistencia"] .jb-faixa-premium::after {
-  right: 0;
-  background: linear-gradient(270deg, #f5f6f7, transparent);
-}
-
-[data-jb-site="assistencia"] .jb-faixa-premium:focus-within .jb-faixa-trilho {
-  animation-play-state: paused;
-}
-
-[data-jb-site="assistencia"] .jb-faixa-equipamento {
-  border-color: rgb(17 19 21 / 0.06);
-  background: rgb(255 255 255 / 0.52);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8);
-  backdrop-filter: blur(10px);
-}
-
-@media (hover: hover) {
-  [data-jb-site="assistencia"] .jb-faixa-equipamento:hover {
-    transform: translateY(-2px);
-    border-color: rgb(224 20 27 / 0.2);
-    background: rgb(255 255 255 / 0.94);
-    box-shadow: 0 18px 38px -28px rgb(12 14 16 / 0.46);
-  }
-}
-
 /* -------------------------------------------------------------- footer fix */
 
 [data-jb-site="assistencia"] .jb-footer-premium .jb-footer-logo-card {
@@ -133,49 +85,10 @@
   [data-jb-site="assistencia"] .jb-simulador-resultado {
     padding: 1rem;
   }
-
-  [data-jb-site="assistencia"] .jb-faixa-premium {
-    overflow-x: auto !important;
-    padding-inline: 0.65rem;
-    scroll-padding-inline: 0.65rem;
-    scrollbar-width: none;
-    overscroll-behavior-x: contain;
-  }
-
-  [data-jb-site="assistencia"] .jb-faixa-premium::-webkit-scrollbar {
-    display: none;
-  }
-
-  [data-jb-site="assistencia"] .jb-faixa-premium::before,
-  [data-jb-site="assistencia"] .jb-faixa-premium::after {
-    display: none;
-  }
-
-  [data-jb-site="assistencia"] .jb-faixa-premium .jb-faixa-trilho {
-    width: max-content;
-    min-width: 100%;
-    animation: none !important;
-    transform: none !important;
-  }
-
-  [data-jb-site="assistencia"] .jb-faixa-premium .jb-faixa-trilho > ul[aria-hidden="true"] {
-    display: none;
-  }
-
-  [data-jb-site="assistencia"] .jb-faixa-premium .jb-faixa-trilho > ul:first-child {
-    gap: 0.15rem;
-  }
-
-  [data-jb-site="assistencia"] .jb-faixa-equipamento {
-    min-width: 11.5rem;
-    scroll-snap-align: start;
-    background: rgb(255 255 255 / 0.88);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-jb-site="assistencia"] .jb-simulador-controle,
-  [data-jb-site="assistencia"] .jb-faixa-equipamento {
+  [data-jb-site="assistencia"] .jb-simulador-controle {
     transition: none !important;
   }
 }

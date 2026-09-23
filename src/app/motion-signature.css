@@ -50,47 +50,6 @@ html[data-motion-zone="publico"][data-motion-pointer="fine"] :where(.botao-jb, a
    Home — o primeiro impacto precisa vender a sensação de plataforma premium
    -------------------------------------------------------------------------- */
 
-html[data-motion-scene="home"] .jb-home-stage {
-  background:
-    radial-gradient(36rem 26rem at 88% 8%, rgb(224 20 27 / 0.075), transparent 70%),
-    radial-gradient(34rem 28rem at 8% 36%, rgb(26 28 30 / 0.035), transparent 72%),
-    linear-gradient(180deg, rgb(255 255 255 / 0), rgb(255 255 255 / 0));
-}
-
-html[data-motion-scene="home"] .jb-home-stage::before,
-html[data-motion-scene="home"] .jb-home-stage::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  border-radius: 999px;
-}
-
-html[data-motion-scene="home"] .jb-home-stage::before {
-  top: 12rem;
-  right: 4vw;
-  width: 18rem;
-  height: 18rem;
-  border: 1px solid rgb(224 20 27 / 0.13);
-  box-shadow:
-    0 0 0 34px rgb(224 20 27 / 0.018),
-    0 0 0 86px rgb(224 20 27 / 0.012);
-}
-
-html[data-motion-scene="home"] .jb-home-stage::after {
-  top: 70rem;
-  left: 8vw;
-  width: 11rem;
-  height: 11rem;
-  background: radial-gradient(circle, rgb(224 20 27 / 0.055), transparent 68%);
-  box-shadow: 0 0 90px 24px rgb(224 20 27 / 0.025);
-}
-
-html[data-motion-scene="home"] .jb-home-orbit {
-  border-width: 1.5px;
-  opacity: 0.94;
-  box-shadow: inset 0 0 44px rgb(224 20 27 / 0.016);
-}
-
 /* Hero: o conteúdo não muda de lugar depois de pronto; a entrada é em máscara
    e o palco concentra luz, grade e scan no equipamento. */
 html[data-motion-scene="home"] [data-motion-chapter="hero"] > section {
@@ -418,13 +377,6 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"] [data-motion-cart
    -------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: no-preference) {
-  html[data-motion-scene="home"] .jb-home-stage::before {
-    animation: jb-signature-home-ring 12s var(--jb-motion-ease) infinite alternate;
-  }
-
-  html[data-motion-scene="home"] .jb-home-stage::after {
-    animation: jb-signature-home-pulse 9s ease-in-out infinite alternate;
-  }
 
   html[data-motion-scene="home"] [data-motion-chapter="hero"] > section::before {
     animation: jb-signature-grid-drift 16s linear infinite alternate;
@@ -490,8 +442,6 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"] [data-motion-cart
      `data-motion-rolando` no <html>). Medido com CPU 4x mais lenta: 23% a 39%
      menos thread principal na rolagem da home. Ciclos de 4 a 18s — a pausa
      não aparece. A luz dos capítulos fica de fora: ela É a rolagem. */
-  html[data-motion-rolando="true"][data-motion-scene="home"] .jb-home-stage::before,
-  html[data-motion-rolando="true"][data-motion-scene="home"] .jb-home-stage::after,
   html[data-motion-rolando="true"][data-motion-scene="home"] [data-motion-chapter="hero"] > section::before,
   html[data-motion-rolando="true"][data-motion-scene="home"] [data-motion-chapter="hero"] > section::after,
   html[data-motion-rolando="true"][data-motion-scene="home"] [data-motion-chapter="hero"] [role="group"][aria-label="Equipamentos em destaque"]::before,
@@ -502,22 +452,6 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"] [data-motion-cart
 }
 
 /* Reforça as entradas existentes sem voltar a escalar o contêiner. */
-@keyframes jb-catalog-card {
-  from {
-    opacity: 0;
-    transform: translate3d(0, var(--jb-catalogo-y, 30px), 0);
-    clip-path: inset(10% 0 0 0 round 18px);
-    filter: saturate(0.8) contrast(0.96);
-  }
-}
-
-@keyframes jb-pdp-enter {
-  from {
-    opacity: 0;
-    transform: translate3d(0, var(--jb-pdp-y, 24px), 0);
-    clip-path: inset(7% 0 0 0 round 18px);
-  }
-}
 
 @keyframes jb-signature-headline {
   from {
@@ -574,16 +508,6 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"] [data-motion-cart
   to { rotate: 1turn; }
 }
 
-@keyframes jb-signature-home-ring {
-  from { translate: 0 0; scale: 0.96; opacity: 0.58; }
-  to { translate: -30px 24px; scale: 1.08; opacity: 0.9; }
-}
-
-@keyframes jb-signature-home-pulse {
-  from { translate: -18px 0; scale: 0.9; opacity: 0.44; }
-  to { translate: 34px -22px; scale: 1.16; opacity: 0.82; }
-}
-
 @keyframes jb-signature-stage-breathe {
   from { opacity: 0.45; scale: 0.96; }
   to { opacity: 0.9; scale: 1.04; }
@@ -619,8 +543,6 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"] [data-motion-cart
 
 @media (prefers-reduced-motion: reduce) {
   html[data-motion-zone="publico"] .jb-motion-aura,
-  html[data-motion-scene="home"] .jb-home-stage::before,
-  html[data-motion-scene="home"] .jb-home-stage::after,
   html[data-motion-scene="home"] [data-motion-chapter="hero"] > section::before,
   html[data-motion-scene="home"] [data-motion-chapter="hero"] > section::after,
   html[data-motion-scene="home"] [data-motion-chapter="hero"] [role="group"][aria-label="Equipamentos em destaque"]::before,
@@ -657,8 +579,6 @@ html[data-motion-scene="checkout"][data-motion-pointer="fine"] [data-motion-cart
 }
 
 @media print {
-  html[data-motion-scene="home"] .jb-home-stage::before,
-  html[data-motion-scene="home"] .jb-home-stage::after,
   html[data-motion-scene="home"] [data-motion-chapter="hero"] > section::before,
   html[data-motion-scene="home"] [data-motion-chapter="hero"] > section::after,
   html[data-motion-scene="home"] [data-motion-chapter="hero"] [role="group"][aria-label="Equipamentos em destaque"]::before,

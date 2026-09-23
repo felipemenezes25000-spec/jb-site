@@ -38,8 +38,11 @@ export function FaixaAutorizada({ desde, cidade }: { desde: string; cidade: stri
       className="scroll-mt-20 border-b border-graf-200 bg-surface-muted"
     >
       <div className="container-jb py-12 lg:py-16">
-        <div className="grid overflow-hidden rounded-3xl border border-graf-200/90 bg-white shadow-[0_30px_80px_-58px_rgb(17_19_21/0.5)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.7fr)]">
-          <div className="jb-revela relative overflow-hidden border-b border-graf-100 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-9">
+        {/* `overflow-clip`, não `overflow-hidden`: os blocos daqui revelam na
+            rolagem, e `hidden` viraria contêiner de rolagem — a revelação
+            congelava em 64% de opacidade no celular. */}
+        <div className="grid overflow-clip rounded-3xl border border-graf-200/90 bg-white shadow-[0_30px_80px_-58px_rgb(17_19_21/0.5)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.7fr)]">
+          <div className="jb-revela relative overflow-clip border-b border-graf-100 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-9">
             <span
               aria-hidden
               className="pointer-events-none absolute -left-20 -top-24 size-60 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.11),transparent)]"

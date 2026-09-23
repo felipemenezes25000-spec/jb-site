@@ -3,7 +3,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
-import { getSettings, SETTING_DEFAULTS, type SettingsMap } from "@/lib/settings";
+import { getSettings, lerSettingsDoBanco, SETTING_DEFAULTS, type SettingsMap } from "@/lib/settings";
 
 /* ============================================================================
    Dados públicos do site de assistência
@@ -42,13 +42,31 @@ export async function configuracoesPublicas(): Promise<SettingsMap> {
   cacheTag(ETIQUETA_CONFIGURACOES);
 
   try {
-    const configuracoes = await getSettings();
+    const configuracoes = await lerComSegundaChance();
     cacheLife("hours");
     return configuracoes;
   } catch (erro) {
     console.error("[site-publico] configurações indisponíveis; usando os padrões", erro);
     cacheLife("minutes");
     return { ...SETTING_DEFAULTS };
+  }
+}
+
+/**
+ * Uma segunda tentativa antes de cair nos padrões.
+ *
+ * Falha de conexão costuma ser passageira: o Neon acordando a computação, ou
+ * o pico de conexões de um build que prerenderiza com vários workers. Sem a
+ * segunda chance, a página ficava gerada com os padrões por alguns minutos —
+ * sem o telefone editado no painel e sem os destinos de medição. A repetição
+ * vai direto ao banco: o `cache` do React guardaria a mesma rejeição.
+ */
+async function lerComSegundaChance(): Promise<SettingsMap> {
+  try {
+    return await getSettings();
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return lerSettingsDoBanco();
   }
 }
 

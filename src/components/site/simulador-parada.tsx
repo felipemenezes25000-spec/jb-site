@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import { useId, useState } from "react";
 import { CalendarX2, SlidersHorizontal } from "lucide-react";
 
 import { medir } from "@/lib/analytics/cliente";
@@ -14,6 +13,10 @@ import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
    Dois números que só a clínica sabe (pacientes por dia e dias sem o
    equipamento) e uma multiplicação. Nenhum valor em reais e nenhuma projeção
    da JB: o impacto mostrado vem só dos próprios números de quem está usando.
+
+   É cenário, não previsão: o texto diz "potencialmente" e lembra que nem toda
+   consulta depende do mesmo equipamento. O número troca na hora em que o
+   controle anda — sem contagem animada, que só atrasaria a leitura.
    ============================================================================ */
 
 const MENSAGEM =
@@ -63,23 +66,11 @@ function Controle({
 }
 
 export function SimuladorParada({ contatos }: { contatos: ContatoWhatsapp[] }) {
-  const reduzir = useReducedMotion();
   const [pacientes, setPacientes] = useState(12);
   const [dias, setDias] = useState(3);
   const [mexeu, setMexeu] = useState(false);
 
   const total = pacientes * dias;
-  const animado = useMotionValue(total);
-  const exibido = useTransform(animado, (atual) => Math.round(atual).toLocaleString("pt-BR"));
-
-  useEffect(() => {
-    if (reduzir) {
-      animado.set(total);
-      return;
-    }
-    const controle = animate(animado, total, { duration: 0.6, ease: [0.16, 1, 0.3, 1] });
-    return () => controle.stop();
-  }, [total, reduzir, animado]);
 
   function mudar(setter: (valor: number) => void) {
     return (valor: number) => {
@@ -134,13 +125,13 @@ export function SimuladorParada({ contatos }: { contatos: ContatoWhatsapp[] }) {
             className="pointer-events-none absolute -right-12 -top-16 size-56 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.36),transparent)]"
           />
           <div className="relative flex items-center gap-4">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/10 backdrop-blur">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/10">
               <CalendarX2 className="size-6" aria-hidden />
             </span>
             <p className="min-w-0 leading-tight">
-              <motion.span className="tabular block font-display text-[3.2rem] font-extrabold leading-none tracking-tight text-white sm:text-6xl">
-                {exibido}
-              </motion.span>
+              <span className="tabular block font-display text-[3.2rem] font-extrabold leading-none tracking-tight text-white sm:text-6xl">
+                {total.toLocaleString("pt-BR")}
+              </span>
               <span className="mt-2 block text-sm font-bold text-white/80">
                 consultas potencialmente afetadas
               </span>

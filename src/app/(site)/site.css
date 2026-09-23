@@ -9,62 +9,11 @@
      um espaço vazio esperando um script que falhou.
    · Movimento reduzido desliga tudo: nada gira, nada corre, nada flutua.
    · Só `transform` e `opacity` animam. Nada de largura, altura ou posição.
+   · Nada roda em laço infinito. Borda que gira, blobs que flutuam, foto que
+     "respira", selos que boiam e marquises saíram em 23/09/2026: enfeite
+     contínuo custa compositor e atenção, e movimento automático de mais de
+     cinco segundos sem pausa é o que a WCAG 2.2.2 pede para evitar.
    ============================================================================ */
-
-/* ------------------------------------------------------------ borda viva */
-
-@property --jb-angulo {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
-/* Um brilho vermelho que percorre a borda do diagnóstico. Chama o olho para
-   a peça que resolve o problema da pessoa, sem piscar nem pular. */
-/* O brilho é um anel de 2px desenhado por máscara: o miolo do pseudo-elemento
-   é recortado, e o conteúdo do cartão nunca fica tingido. */
-.jb-borda-viva::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  padding: 2px;
-  border-radius: calc(var(--radius-2xl) + 2px);
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  background: conic-gradient(
-    from var(--jb-angulo),
-    transparent 0% 58%,
-    rgb(224 20 27 / 0.85) 72%,
-    rgb(249 91 96 / 0.5) 82%,
-    transparent 94%
-  );
-  animation: jb-borda-gira 5.5s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes jb-borda-gira {
-  to {
-    --jb-angulo: 360deg;
-  }
-}
-
-/* ---------------------------------------------------------- faixa que corre */
-
-.jb-faixa {
-  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-}
-
-.jb-faixa-trilho {
-  display: flex;
-  width: max-content;
-  animation: jb-marquise 42s linear infinite;
-}
-
-.jb-faixa:hover .jb-faixa-trilho {
-  animation-play-state: paused;
-}
 
 /* ------------------------------------------------------ revelar na rolagem */
 
@@ -76,15 +25,6 @@
   to {
     opacity: 1;
     transform: none;
-  }
-}
-
-@keyframes jb-enche {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
   }
 }
 
@@ -121,43 +61,12 @@
       animation-range: entry calc(var(--i, 0) * 20px) entry calc(120px + var(--i, 0) * 40px);
     }
 
-    .jb-linha-enche {
-      transform-origin: top;
-      animation: jb-enche linear both;
-      animation-timeline: --jb-como-funciona;
-      animation-range: entry 40% exit 60%;
-    }
-
     .jb-ponto-acende {
       animation: jb-acende linear both;
       animation-timeline: view();
       animation-range: cover 30% cover 45%;
     }
   }
-}
-
-.jb-timeline-como-funciona {
-  view-timeline-name: --jb-como-funciona;
-}
-
-/* ---------------------------------------------------------------- flutuar */
-
-@keyframes jb-flutua {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(4%, -6%, 0) scale(1.08);
-  }
-}
-
-.jb-flutua {
-  animation: jb-flutua 14s ease-in-out infinite;
-}
-
-.jb-flutua-lento {
-  animation: jb-flutua 19s ease-in-out infinite reverse;
 }
 
 /* -------------------------------------------------------- balançar o ícone */
@@ -197,17 +106,6 @@
 /* ---------------------------------------------------- movimento reduzido */
 
 @media (prefers-reduced-motion: reduce) {
-  .jb-borda-viva::before {
-    animation: none;
-    background: rgb(224 20 27 / 0.22);
-  }
-
-  .jb-faixa-trilho,
-  .jb-flutua,
-  .jb-flutua-lento {
-    animation: none;
-  }
-
   .jb-barra-movel {
     transition: none;
   }
@@ -278,60 +176,40 @@
   outline-offset: 3px;
 }
 
-/* ------------------------------------------------------------ faixa do topo */
+/* ------------------------------------------------ troca de passo da triagem */
 
-.jb-ticker-trilho {
-  width: max-content;
-  animation: jb-marquise 34s linear infinite;
-}
-
-.jb-ticker:hover .jb-ticker-trilho,
-.jb-ticker:focus-visible .jb-ticker-trilho {
-  animation-play-state: paused;
-}
-
-/* ------------------------------------------------------- foto que respira */
-
-/* Zoom lento, de um lado para o outro, na foto da abertura: a imagem parece
-   viva sem nada piscar. Só transform, e parado com movimento reduzido. */
-@keyframes jb-respira-foto {
+/* O passo novo do diagnóstico entra deslizando pouco, e a linha nova do balão
+   sobe 4px. A chave do React remonta só o que mudou, então cada animação roda
+   uma vez, na montagem — sem biblioteca de animação no cliente. */
+@keyframes jb-passo-entra {
   from {
-    transform: scale(1.02) translate3d(0, 0, 0);
+    opacity: 0;
+    transform: translate3d(14px, 0, 0);
   }
   to {
-    transform: scale(1.12) translate3d(-2%, -2%, 0);
+    opacity: 1;
+    transform: none;
   }
 }
 
-.jb-foto-viva {
-  animation: jb-respira-foto 16s ease-in-out infinite alternate;
-}
-
-/* Selos que boiam sobre a foto, cada um no seu ritmo. */
-@keyframes jb-boia {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
+@keyframes jb-linha-entra {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
   }
-  50% {
-    transform: translate3d(0, -8px, 0);
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-.jb-boia {
-  animation: jb-boia 4.8s ease-in-out infinite;
-}
+@media (prefers-reduced-motion: no-preference) {
+  .jb-passo-entra {
+    animation: jb-passo-entra 320ms var(--ease-out-quint) both;
+  }
 
-.jb-boia-2 {
-  animation: jb-boia 5.6s ease-in-out 0.8s infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .jb-ticker-trilho,
-  .jb-foto-viva,
-  .jb-boia,
-  .jb-boia-2 {
-    animation: none;
+  .jb-linha-entra {
+    animation: jb-linha-entra 320ms var(--ease-out-quint) both;
   }
 }
 
@@ -424,7 +302,9 @@
   border-radius: inherit;
   background: rgb(224 20 27 / 0.45);
   pointer-events: none;
-  animation: jb-pulso 2.6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  /* Duas vezes quando a barra aparece, e para: um anel pulsando sem fim ao
+     lado do polegar vira ruído em poucos segundos. */
+  animation: jb-pulso 2.6s cubic-bezier(0.2, 0.6, 0.3, 1) 2;
 }
 
 /* Quando a barra aparece, o ícone do WhatsApp dá duas balançadas. */

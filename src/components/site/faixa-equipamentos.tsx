@@ -6,69 +6,56 @@ import { EQUIPAMENTOS } from "@/lib/diagnostico";
 import { PAGINAS_DE_EQUIPAMENTO } from "@/lib/paginas-equipamento";
 
 /* ============================================================================
-   Faixa dos equipamentos atendidos
+   Conserto por equipamento
 
-   Continua funcionando como assinatura visual, mas agora também navega para
-   as landings específicas. O trilho aparece duplicado no desktop para fechar
-   o loop da marquise; por isso os links não fazem prefetch automático — não
-   vale baixar sete páginas em segundo plano só porque os cartões passaram pela
-   viewport. No toque, a faixa vira uma navegação horizontal estática.
+   Logo abaixo da abertura, um atalho para a página de cada equipamento: quem
+   chegou pela home com uma autoclave parada vai direto para a triagem da
+   autoclave, e o buscador encontra as sete páginas a partir da home.
+
+   Era uma marquise infinita com o trilho duplicado. Link que anda não se
+   clica, e movimento automático sem pausa não entra num site que quer
+   parecer organizado. Agora é navegação parada: sete colunas no desktop e uma
+   fileira que rola de lado no celular, onde o item cortado na borda é a pista
+   de que há mais. Sem prefetch automático: sete páginas baixadas em segundo
+   plano disputariam rede com a conversa no WhatsApp.
    ============================================================================ */
 
-const ITENS = EQUIPAMENTOS.filter((equipamento) => equipamento.id !== "outro");
-
-function Trilho({ oculto }: { oculto?: boolean }) {
-  return (
-    <ul aria-hidden={oculto} className="flex shrink-0 items-center">
-      {ITENS.map((equipamento) => {
-        const Icone = ICONE_DO_EQUIPAMENTO[equipamento.id];
-        const imagem = IMAGEM_DO_EQUIPAMENTO[equipamento.id];
-        const pagina = PAGINAS_DE_EQUIPAMENTO.find((item) => item.equipamento === equipamento.id);
-
-        const conteudo = (
-          <>
-            <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-card ring-1 ring-graf-200 sm:size-14">
-              {imagem ? (
-                <Image src={imagem} alt="" fill sizes="56px" className="object-contain p-1.5" />
-              ) : (
-                <Icone className="size-5 text-jb-500 sm:size-6" aria-hidden />
-              )}
-            </span>
-            <span>{equipamento.nome}</span>
-          </>
-        );
-
-        return (
-          <li key={equipamento.id} className="px-2 sm:px-3">
-            {pagina ? (
-              <Link
-                href={`/${pagina.slug}`}
-                prefetch={false}
-                tabIndex={oculto ? -1 : undefined}
-                className="jb-faixa-equipamento foco-jb flex min-h-16 items-center gap-3 rounded-2xl border border-transparent px-3 text-base font-extrabold tracking-tight text-graf-900 transition-[background-color,border-color,transform,box-shadow] sm:min-h-20 sm:px-4 sm:text-xl"
-              >
-                {conteudo}
-              </Link>
-            ) : (
-              <span className="flex min-h-16 items-center gap-3 px-3 text-base font-extrabold tracking-tight text-graf-900 sm:min-h-20 sm:px-4 sm:text-xl">
-                {conteudo}
-              </span>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
+const ITENS = EQUIPAMENTOS.flatMap((equipamento) => {
+  const pagina = PAGINAS_DE_EQUIPAMENTO.find((item) => item.equipamento === equipamento.id);
+  return pagina ? [{ equipamento, pagina }] : [];
+});
 
 export function FaixaEquipamentos() {
   return (
-    <div className="jb-faixa jb-faixa-premium overflow-hidden border-b border-graf-200 bg-surface-muted py-3 sm:py-4">
-      <p className="sr-only">Equipamentos atendidos:</p>
-      <div className="jb-faixa-trilho">
-        <Trilho />
-        <Trilho oculto />
+    <nav aria-label="Conserto por equipamento" className="border-b border-graf-200 bg-surface-muted">
+      <div className="container-jb">
+        <ul
+          data-rolagem-horizontal
+          className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 py-3 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-7 lg:gap-3 lg:overflow-visible lg:px-0 lg:py-4 [&::-webkit-scrollbar]:hidden">
+          {ITENS.map(({ equipamento, pagina }) => {
+            const Icone = ICONE_DO_EQUIPAMENTO[equipamento.id];
+            const imagem = IMAGEM_DO_EQUIPAMENTO[equipamento.id];
+            return (
+              <li key={pagina.slug} className="shrink-0 snap-start lg:min-w-0">
+                <Link
+                  href={`/${pagina.slug}`}
+                  prefetch={false}
+                  className="foco-jb group flex min-h-14 items-center gap-3 rounded-xl border border-graf-200/80 bg-white py-2 pl-2 pr-4 text-sm font-extrabold leading-tight tracking-tight text-graf-900 transition-[border-color,box-shadow,color] duration-200 hover:border-jb-300 hover:text-jb-700 hover:shadow-card lg:h-full lg:pr-3"
+                >
+                  <span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted">
+                    {imagem ? (
+                      <Image src={imagem} alt="" fill sizes="40px" className="object-contain p-1 mix-blend-multiply" />
+                    ) : (
+                      <Icone className="size-5 text-jb-600" aria-hidden />
+                    )}
+                  </span>
+                  <span className="min-w-0">{equipamento.nome}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </div>
-    </div>
+    </nav>
   );
 }

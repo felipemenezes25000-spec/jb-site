@@ -88,7 +88,7 @@ function Cartao({
         {destaque ? (
           <span
             aria-hidden
-            className="jb-flutua pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.14),transparent)]"
+            className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.14),transparent)]"
           />
         ) : null}
 

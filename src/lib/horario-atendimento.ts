@@ -108,19 +108,19 @@ export function situacaoDoAtendimento(
 
   const atendeHoje = expediente.dias.includes(dia);
   if (atendeHoje && minuto >= expediente.abre && minuto < expediente.fecha) {
-    return { aberto: true, texto: `Atendendo agora, até ${formatarHora(expediente.fecha)}` };
+    return { aberto: true, texto: `Em expediente até ${formatarHora(expediente.fecha)}` };
   }
 
   const abre = formatarHora(expediente.abre);
   if (atendeHoje && minuto < expediente.abre) {
-    return { aberto: false, texto: `Deixe sua mensagem: abrimos hoje às ${abre}` };
+    return { aberto: false, texto: `Expediente começa hoje às ${abre}` };
   }
 
   for (let passo = 1; passo <= 7; passo++) {
     const proximo = (dia + passo) % 7;
     if (!expediente.dias.includes(proximo)) continue;
     const quando = passo === 1 ? "amanhã" : NOME_DO_DIA[proximo];
-    return { aberto: false, texto: `Deixe sua mensagem: respondemos ${quando} às ${abre}` };
+    return { aberto: false, texto: `Expediente volta ${quando} às ${abre}` };
   }
 
   return null;

@@ -18,9 +18,9 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
    Rodapé do site de assistência
 
    Fecha a experiência com contraste alto e todos os canais úteis. Continua
-   sendo operacional: WhatsApp dos dois atendentes com nome e número, telefone,
-   e-mail, endereço, horário, páginas de equipamento e a fonte oficial da
-   autorização EVOXX.
+   sendo operacional: WhatsApp dos dois atendentes com nome e número, o
+   telefone fixo da JB, e-mail, endereço, horário, páginas de equipamento e a
+   fonte oficial da autorização EVOXX.
    ============================================================================ */
 
 export function RodapeSite({ s }: { s: SettingsMap }) {
@@ -69,20 +69,19 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                 </a>
               </li>
             ))}
-            {contatos.length > 0 ? (
-              <li className="flex items-start gap-2.5 font-semibold text-graf-700">
-                <Phone className="mt-0.5 size-4 shrink-0 text-jb-500" aria-hidden />
-                <span>
-                  Ligar para{" "}
-                  {contatos.map(({ numero, nome }, i) => (
-                    <span key={numero}>
-                      {i > 0 ? " ou " : null}
-                      <a href={telHref(numero)} className="jb-footer-link foco-jb rounded font-bold text-graf-900">
-                        {nome ? `${nome} (${formatarTelefone(numero)})` : formatarTelefone(numero)}
-                      </a>
-                    </span>
-                  ))}
-                </span>
+            {telHref(s.telefone) ? (
+              <li>
+                <a
+                  href={telHref(s.telefone)}
+                  data-telefone="rodape"
+                  className="jb-footer-link foco-jb gap-2.5 rounded font-bold text-graf-900"
+                >
+                  <Phone className="size-4 shrink-0 text-jb-500" aria-hidden />
+                  <span>
+                    <span className="sr-only">Telefone: </span>
+                    <span className="tabular">{s.telefone}</span>
+                  </span>
+                </a>
               </li>
             ) : null}
             {s.email ? (

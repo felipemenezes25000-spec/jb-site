@@ -11,7 +11,6 @@ import { FaixaEquipamentos } from "@/components/site/faixa-equipamentos";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
-import { PalavraGiratoria } from "@/components/site/palavra-giratoria";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { SimuladorParada } from "@/components/site/simulador-parada";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
@@ -31,9 +30,6 @@ import { anosDesde, configuracoesPublicas } from "@/lib/site-publico";
    Nada aqui consulta produto, preço ou estoque. Os dados são configurações
    públicas, cacheadas e derrubadas pela etiqueta quando alguém salva o painel.
    ============================================================================ */
-
-/** O que gira no título. "Equipamento" fecha o ciclo para quem tem outra máquina. */
-const GIRO = ["Autoclave", "Compressor", "Cadeira", "Seladora", "Destilador", "Equipamento"] as const;
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await configuracoesPublicas();
@@ -59,14 +55,6 @@ export default async function HomePage() {
         className="jb-hero-premium relative isolate overflow-clip border-b border-graf-200 bg-white"
       >
         <span aria-hidden className="jb-hero-malha pointer-events-none absolute inset-0" />
-        <span
-          aria-hidden
-          className="jb-flutua pointer-events-none absolute -right-40 -top-40 size-[38rem] rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.13),transparent)]"
-        />
-        <span
-          aria-hidden
-          className="jb-flutua-lento pointer-events-none absolute -bottom-56 -left-40 size-[34rem] rounded-full bg-[radial-gradient(closest-side,rgb(26_28_30/0.055),transparent)]"
-        />
 
         <div className="container-jb relative grid gap-8 pb-12 pt-7 lg:min-h-[calc(100svh-7rem)] lg:grid-cols-[minmax(0,1.03fr)_minmax(0,34rem)] lg:grid-rows-[auto_auto] lg:items-start lg:gap-x-14 lg:gap-y-8 lg:pb-16 lg:pt-12">
           <div className="flex min-w-0 flex-col lg:pt-6">
@@ -77,16 +65,15 @@ export default async function HomePage() {
             />
 
             <div className="jb-hero-copy">
+              {/* Título fixo, sem palavra girando: quem chega do anúncio lê a
+                  promessa inteira de primeira, e nada se mexe em loop acima da
+                  dobra. Os equipamentos aparecem logo abaixo, na triagem. */}
               <h1
                 id="abertura-titulo"
                 className="jb-hero-title texto-forte entrada mt-5 [animation-delay:70ms]"
               >
-                <span className="sr-only">Equipamento parou? A JB assume daqui.</span>
-                <span aria-hidden className="block">
-                  <PalavraGiratoria palavras={GIRO} />
-                  <span className="block">parou?</span>
-                  <span className="block text-jb-600">A JB assume daqui.</span>
-                </span>
+                <span className="block">Equipamento parou?</span>{" "}
+                <span className="block text-jb-600">A JB assume daqui.</span>
               </h1>
 
               <p className="jb-hero-subtexto texto-guia entrada mt-5 max-w-xl text-graf-600 [animation-delay:140ms]">
@@ -129,7 +116,7 @@ export default async function HomePage() {
           <div className="jb-diagnostico-stage entrada lg:sticky lg:top-28 lg:row-span-2 [animation-delay:160ms]">
             <div className="jb-diagnostico-legenda mb-3 flex items-center justify-between gap-3 px-1">
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-jb-700">Triagem inteligente</p>
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-jb-700">Triagem guiada</p>
                 <p className="mt-1 text-sm font-semibold text-graf-700">Menos digitação. Mais contexto para o técnico.</p>
               </div>
               <span className="hidden rounded-full border border-graf-200 bg-white/85 px-3 py-1 text-xs font-bold text-graf-700 shadow-card sm:inline-flex">
@@ -155,16 +142,17 @@ export default async function HomePage() {
       <section aria-labelledby="parada-titulo" className="jb-secao-parada bg-surface-muted py-16 md:py-24">
         <div className="container-jb grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-center lg:gap-16">
           <div>
-            <p className="sobretitulo jb-revela">O custo invisível da parada</p>
+            <p className="sobretitulo jb-revela">Cenário de impacto</p>
             <h2 id="parada-titulo" className="text-section texto-forte jb-revela mt-3 max-w-xl">
-              Equipamento parado não é só conserto. <span className="text-jb-600">É agenda perdida.</span>
+              Uma parada também pesa <span className="text-jb-600">na agenda.</span>
             </h2>
             <p
               className="texto-guia jb-revela mt-5 max-w-lg text-graf-600"
               style={{ "--i": 1 } as React.CSSProperties}
             >
-              Mexa nos números da sua clínica e estime quantas consultas ficam expostas durante
-              uma parada. O simulador dimensiona impacto; não estima prazo de conserto.
+              Com os números da sua clínica, veja um cenário de consultas potencialmente afetadas.
+              É uma estimativa com os valores que você informa — não uma previsão, nem prazo de
+              conserto.
             </p>
           </div>
           <div className="jb-revela" style={{ "--i": 1 } as React.CSSProperties}>

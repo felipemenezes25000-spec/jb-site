@@ -71,48 +71,6 @@ html[data-motion-zone="publico"][data-motion-pointer="fine"] .jb-motion-aura[dat
 
 /* O palco da home é quase imperceptível parado; em movimento dá profundidade
    sem substituir o branco predominante da marca. */
-.jb-home-stage {
-  position: absolute;
-  inset: 0;
-  overflow: clip;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.jb-home-orbit {
-  position: absolute;
-  display: block;
-  border-radius: 9999px;
-  border: 1px solid rgb(224 20 27 / 0.08);
-  opacity: 0.7;
-  will-change: transform;
-}
-
-.jb-home-orbit-a {
-  top: 7rem;
-  right: -18rem;
-  width: 42rem;
-  height: 42rem;
-  animation: jb-orbit-a 26s ease-in-out infinite alternate;
-}
-
-.jb-home-orbit-b {
-  top: 46rem;
-  left: -22rem;
-  width: 52rem;
-  height: 52rem;
-  border-color: rgb(26 28 30 / 0.055);
-  animation: jb-orbit-b 34s ease-in-out infinite alternate;
-}
-
-.jb-home-orbit-c {
-  top: 118rem;
-  right: -12rem;
-  width: 30rem;
-  height: 30rem;
-  border-color: rgb(224 20 27 / 0.06);
-  animation: jb-orbit-c 30s ease-in-out infinite alternate;
-}
 
 /* O reveal de seções é Web Animations em `motion-system.tsx`: opacidade e
    `translate` vertical, só enquanto a animação roda. Não existe estado de
@@ -301,21 +259,6 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] :where([data-statu
   }
 }
 
-@keyframes jb-orbit-a {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(-44px, 30px, 0) scale(1.06); }
-}
-
-@keyframes jb-orbit-b {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(50px, -26px, 0) scale(0.95); }
-}
-
-@keyframes jb-orbit-c {
-  from { transform: translate3d(0, 0, 0) scale(0.96); }
-  to { transform: translate3d(-30px, 24px, 0) scale(1.08); }
-}
-
 @media (hover: none), (pointer: coarse) {
   .jb-motion-aura { display: none; }
 }
@@ -323,8 +266,7 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] :where([data-statu
 @media (prefers-reduced-motion: reduce) {
   .jb-motion-progress,
   .jb-motion-route-beam,
-  .jb-motion-aura,
-  .jb-home-stage {
+  .jb-motion-aura {
     display: none !important;
   }
 
@@ -339,8 +281,7 @@ html[data-motion-scene="clinica"][data-motion-pointer="fine"] :where([data-statu
 @media print {
   .jb-motion-progress,
   .jb-motion-route-beam,
-  .jb-motion-aura,
-  .jb-home-stage {
+  .jb-motion-aura {
     display: none !important;
   }
 }

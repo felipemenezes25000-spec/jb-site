@@ -6,14 +6,11 @@ import { configuracoesPublicas } from "@/lib/site-publico";
 import { SCRIPT_DA_CENA } from "@/components/ui/motion-cena";
 import { SITE_URL } from "@/lib/seo";
 
+/* Só o design system comum. As folhas do Motion System entram pelo layout do
+   painel (`app/(admin)/layout.tsx`), e as do site público pelo layout dele:
+   uma página pública não baixa o CSS de animação do backoffice. As folhas do
+   cabeçalho e do rodapé da loja saíram junto com ela. */
 import "./globals.css";
-import "./footer-alignment.css";
-import "./cabecalho.css";
-import "./motion.css";
-import "./motion-scenes.css";
-import "./motion-feedback.css";
-import "./motion-signature.css";
-import "./motion-signature-safety.css";
 
 const manrope = Manrope({
   subsets: ["latin"],

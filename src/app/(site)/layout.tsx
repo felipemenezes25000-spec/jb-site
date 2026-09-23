@@ -53,7 +53,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       >
         Pular para o conteúdo
       </a>
-      <FaixaTopo contatos={contatos} desde={s.empresa_desde} cidade={s.endereco_cidade} />
+      <FaixaTopo cidade={s.endereco_cidade} horario={s.horario} telefone={s.telefone} />
       <CabecalhoSite contatos={contatos} atalhos={ATALHOS} />
       <main id="conteudo" className="flex-1 scroll-mt-20">
         {children}

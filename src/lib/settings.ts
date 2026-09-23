@@ -289,7 +289,8 @@ export const SETTING_FIELDS: {
   },
 ];
 
-export const getSettings = cache(async (): Promise<SettingsMap> => {
+/** Lê as configurações do banco, sem memória. Quem precisa repetir a leitura usa esta. */
+export async function lerSettingsDoBanco(): Promise<SettingsMap> {
   const linhas = await prisma.setting.findMany();
   const mapa = { ...SETTING_DEFAULTS } as SettingsMap;
   for (const linha of linhas) {
@@ -298,7 +299,9 @@ export const getSettings = cache(async (): Promise<SettingsMap> => {
     }
   }
   return mapa;
-});
+}
+
+export const getSettings = cache(lerSettingsDoBanco);
 
 export function enderecoCompleto(s: SettingsMap) {
   const cidade = [s.endereco_cidade, s.endereco_uf].filter(Boolean).join("/");

@@ -62,6 +62,12 @@ describe("páginas por equipamento", () => {
     expect(descricaoDaPagina(autoclave, "São Paulo")).toContain("Autoclave parou?");
   });
 
+  it("descrição cabe no trecho que o buscador mostra", () => {
+    for (const pagina of PAGINAS_DE_EQUIPAMENTO) {
+      expect(descricaoDaPagina(pagina, "São Paulo").length, pagina.slug).toBeLessThanOrEqual(160);
+    }
+  });
+
   it("diz todas as marcas e não amarra o equipamento a um fabricante", () => {
     for (const pagina of PAGINAS_DE_EQUIPAMENTO) {
       const textos = [

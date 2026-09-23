@@ -174,8 +174,17 @@ export function telefoneInternacional(valor: string | null | undefined) {
 }
 
 /**
- * Os dois WhatsApps como pontos de contato. O principal continua também em
- * `telephone`; número vazio, curto ou repetido fica de fora.
+ * O telefone principal da empresa no JSON-LD: o fixo das configurações
+ * (`telefone`), que é o número que a JB publica como telefone. Sem ele, o
+ * WhatsApp principal.
+ */
+function telefonePrincipal(s: SettingsMap) {
+  return telefoneInternacional(s.telefone) ?? telefoneInternacional(s.whatsapp);
+}
+
+/**
+ * Os dois WhatsApps como pontos de contato; número vazio, curto ou repetido
+ * fica de fora.
  */
 function pontosDeContato(s: SettingsMap) {
   const numeros = [s.whatsapp, s.whatsapp_alternativo]
@@ -243,10 +252,10 @@ export function organizacaoJsonLd(s: SettingsMap): DadosJsonLd {
     "@id": `${SITE_URL}/#organizacao`,
     name: s.empresa_nome,
     url: SITE_URL,
-    logo: urlAbsoluta("/icon.png"),
+    logo: urlAbsoluta("/marca/jb-logo.png"),
     description: limpo(s.empresa_resumo),
     email: limpo(s.email),
-    telephone: telefoneInternacional(s.whatsapp),
+    telephone: telefonePrincipal(s),
     contactPoint: pontosDeContato(s),
     foundingDate: /^\d{4}$/.test(s.empresa_desde.trim()) ? s.empresa_desde.trim() : undefined,
     address: enderecoPostal(s),
@@ -261,10 +270,10 @@ export function localNegocioJsonLd(s: SettingsMap): DadosJsonLd {
     "@id": `${SITE_URL}/#local`,
     name: s.empresa_nome,
     url: SITE_URL,
-    image: urlAbsoluta("/icon.png"),
+    image: urlAbsoluta("/marca/jb-logo.png"),
     description: limpo(s.empresa_resumo),
     email: limpo(s.email),
-    telephone: telefoneInternacional(s.whatsapp),
+    telephone: telefonePrincipal(s),
     address: enderecoPostal(s),
     openingHours: horarioSchema(s.horario),
     /* A área de atendimento vem das configurações quando a JB a declarou; só

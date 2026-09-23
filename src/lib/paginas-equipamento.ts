@@ -38,7 +38,7 @@ export type PaginaDeEquipamento = {
   palavraChave: string;
   /** Uma ou duas frases sob o título: o que a parada custa para a clínica. */
   chamada: string;
-  /** Primeiros cuidados, de segurança, antes da equipe chegar. */
+  /** Primeiros cuidados, de segurança e observação externa, antes da avaliação. */
   enquantoIsso: readonly string[];
   /** Perguntas do equipamento, antes das gerais da JB. */
   duvidas: readonly Pergunta[];
@@ -74,7 +74,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "a autoclave",
     palavraChave: "autoclave odontológica",
     chamada:
-      "Sem autoclave não tem material esterilizado, e sem material a agenda para. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
+      "Sem a autoclave funcionando, o instrumental não passa pela esterilização e a rotina da clínica sente. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
       "Desligue o equipamento se houver comportamento anormal e aguarde o resfriamento conforme o manual do fabricante.",
       "Não force a porta, não tente liberar pressão e não desative nenhum mecanismo de segurança.",
@@ -97,7 +97,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "o compressor",
     palavraChave: "compressor odontológico",
     chamada:
-      "Sem ar, as canetas e a seringa tríplice param, e o atendimento para junto. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
+      "Sem ar comprimido, canetas e seringa tríplice deixam de funcionar. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
       "Desligue o equipamento se ele liga e desliga repetidamente, apresenta cheiro incomum ou aquece de forma anormal.",
       "Se houver água, óleo ou outra contaminação aparente na linha de ar, interrompa o uso do equipamento até avaliação técnica.",
@@ -146,7 +146,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       "Cadeira que não sobe, pedal que não responde ou refletor apagado pode comprometer o consultório. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
       "Desligue a cadeira no interruptor geral se houver falha elétrica, movimento inesperado ou vazamento.",
-      "Se houver vazamento de água e você souber identificar o registro do equipo com segurança, feche-o; caso contrário, não desmonte nada.",
+      "Em caso de vazamento de água, feche o registro externo da clínica se ele estiver identificado e acessível; não desmonte nem abra o equipo.",
       "Tire uma foto externa da etiqueta com a marca e o modelo, se ela estiver acessível.",
     ],
     duvidas: [
@@ -154,7 +154,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       {
         pergunta: "O conserto é feito no consultório?",
         resposta:
-          "Muitos atendimentos de cadeira acontecem no consultório. Quando alguma peça ou conjunto precisa de bancada, a equipe explica a forma de atendimento antes.",
+          "Por ser um equipamento instalado, a avaliação da cadeira costuma começar no consultório. Quando alguma peça ou conjunto precisa de bancada, a equipe explica a forma de atendimento antes.",
       },
     ],
     visual: { tipo: "recorte", src: "/site/equip/cadeira.webp" },
@@ -235,8 +235,10 @@ export function tituloDaPagina(pagina: PaginaDeEquipamento, cidade: string): str
  * A descrição para o buscador e para a prévia do link.
  *
  * Diz "todas as marcas" e nenhum fabricante: quem busca conserto do próprio
- * aparelho precisa saber que ele entra, qualquer que seja a marca.
+ * aparelho precisa saber que ele entra, qualquer que seja a marca. Cabe em
+ * 160 caracteres para a cidade padrão — acima disso o buscador corta e a
+ * frase termina no meio.
  */
 export function descricaoDaPagina(pagina: PaginaDeEquipamento, cidade: string): string {
-  return `${pagina.nomeCurto} parou? Conserto de ${pagina.palavraChave} de todas as marcas em ${cidade} e região, na clínica ou na bancada. Chame a JB no WhatsApp.`;
+  return `${pagina.nomeCurto} parou? Conserto de ${pagina.palavraChave} de todas as marcas em ${cidade} e região, com orçamento antes da troca de peça.`;
 }

@@ -2,7 +2,6 @@
 
 import { Fragment, useState } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CheckCheck, ChevronLeft, RotateCcw, Siren } from "lucide-react";
 
 import { medir } from "@/lib/analytics/cliente";
@@ -36,6 +35,11 @@ import { cn } from "@/lib/utils";
 
    Cada toque mede o passo do funil (`assistance_step_1..3`) com o
    equipamento escolhido. Nunca a cidade: texto digitado não sai daqui.
+
+   A troca de passo e a linha nova do balão entram por CSS (`.jb-passo-entra`
+   e `.jb-linha-entra`, em `site.css`): a chave do React remonta só o que
+   mudou, e a animação roda uma vez na montagem. Sem biblioteca de animação
+   no primeiro JavaScript da página, e com movimento reduzido nada se mexe.
    ============================================================================ */
 
 type Passo = 0 | 1 | 2 | 3;
@@ -60,7 +64,15 @@ function LinhaDoBalao({ texto }: { texto: string }) {
 
 function Progresso({ toques }: { toques: number }) {
   return (
-    <div className="flex shrink-0 items-center gap-2" aria-label={`${toques} de 3 toques`}>
+    <div
+      role="progressbar"
+      aria-label="Toques dados na triagem"
+      aria-valuemin={0}
+      aria-valuemax={3}
+      aria-valuenow={toques}
+      aria-valuetext={`${toques} de 3 toques`}
+      className="flex shrink-0 items-center gap-2"
+    >
       <span className="tabular text-apoio font-bold text-graf-600" aria-hidden>
         {toques}/3
       </span>
@@ -80,7 +92,6 @@ function Progresso({ toques }: { toques: number }) {
 }
 
 export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] }) {
-  const reduzir = useReducedMotion();
   const [equipamentoId, setEquipamentoId] = useState<IdEquipamento | null>(null);
   const [defeito, setDefeito] = useState<string | null>(null);
   const [situacaoId, setSituacaoId] = useState<IdSituacao | null>(null);
@@ -94,10 +105,6 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
   const mensagem = montarMensagem(escolhas);
   const linhas = mensagem.split("\n");
   const pronto = toques === 3;
-
-  const transicao = reduzir
-    ? { duration: 0 }
-    : { duration: 0.32, ease: [0.16, 1, 0.3, 1] as const };
 
   function escolherEquipamento(id: IdEquipamento) {
     if (id !== equipamentoId) setDefeito(null);
@@ -139,7 +146,7 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
     <section
       id="diagnostico"
       aria-labelledby="diagnostico-titulo"
-      className="jb-borda-viva relative scroll-mt-24 rounded-2xl border border-graf-200 bg-white shadow-pop"
+      className="relative scroll-mt-24 rounded-2xl border border-graf-200 bg-white shadow-pop"
     >
       <header className="flex items-start justify-between gap-4 border-b border-graf-100 px-4 py-4 sm:px-6">
         <div className="min-w-0">
@@ -151,7 +158,7 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
         <Progresso toques={toques} />
       </header>
 
-      <motion.div layout={!reduzir} transition={transicao} className="px-4 py-5 sm:px-6">
+      <div className="px-4 py-5 sm:px-6">
         {trilha.length > 0 ? (
           <div className="mb-4 flex flex-wrap items-center gap-1.5">
             {trilha.map((item) => (
@@ -176,14 +183,7 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
           </div>
         ) : null}
 
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={passo}
-            initial={reduzir ? false : { opacity: 0, x: 14 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={reduzir ? undefined : { opacity: 0, x: -14 }}
-            transition={transicao}
-          >
+        <div key={passo} className="jb-passo-entra">
             {passo === 0 ? (
               <fieldset>
                 <legend className="text-sm font-bold text-graf-900">
@@ -335,9 +335,8 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
                 />
               </div>
             ) : null}
-          </motion.div>
-        </AnimatePresence>
-      </motion.div>
+        </div>
+      </div>
 
       <div className="rounded-b-2xl border-t border-graf-100 bg-graf-50 px-4 pb-4 pt-4 sm:px-6 sm:pb-5">
         <div className="rounded-xl bg-graf-100/80 p-3" aria-label="Prévia da mensagem">
@@ -346,23 +345,15 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
             Para: {contatos.map((contato) => contato.nome).filter(Boolean).join(" ou ") || "equipe técnica JB"}
           </p>
           <div className="ml-auto w-fit max-w-[92%] rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 text-[0.8125rem] leading-snug text-[#111b21] shadow-xs">
-            <AnimatePresence initial={false}>
-              {linhas.map((linha, indice) =>
-                linha === "" ? (
-                  <span key={`vazio-${indice}`} className="block h-2" aria-hidden />
-                ) : (
-                  <motion.span
-                    key={linha}
-                    initial={reduzir ? false : { opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={transicao}
-                    className="block"
-                  >
-                    <LinhaDoBalao texto={linha} />
-                  </motion.span>
-                ),
-              )}
-            </AnimatePresence>
+            {linhas.map((linha, indice) =>
+              linha === "" ? (
+                <span key={`vazio-${indice}`} className="block h-2" aria-hidden />
+              ) : (
+                <span key={linha} className="jb-linha-entra block">
+                  <LinhaDoBalao texto={linha} />
+                </span>
+              ),
+            )}
             <span className="mt-1 flex justify-end text-[#53bdeb]" aria-hidden>
               <CheckCheck className="size-3.5" />
             </span>
@@ -376,7 +367,7 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
           equipamento={equipamentoId ?? undefined}
           tamanho="lg"
           lado
-          pulso={pronto && !reduzir ? 2 : false}
+          pulso={pronto ? 2 : false}
           className="mt-3"
         />
         <p className="mt-2.5 text-center text-xs text-graf-500">

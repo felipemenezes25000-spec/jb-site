@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 
 import { MotionSystem } from "@/components/ui/motion-system";
 
+import "../motion.css";
+import "../motion-scenes.css";
+import "../motion-feedback.css";
+import "../motion-signature.css";
+import "../motion-signature-safety.css";
+
 /*
  * Migração para Cache Components, em etapas.
  *

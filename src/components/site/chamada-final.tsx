@@ -8,10 +8,13 @@ import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 /* ============================================================================
    Chamada final
 
-   O último empurrão antes do rodapé repete apenas o que é verificável: horário
+   O fechamento antes do rodapé repete apenas o que é verificável: horário
    real, cobertura de marcas, mensagem preparada e escolha entre os dois
    atendentes. O destaque do botão principal pulsa só duas vezes — chama a
    atenção sem virar animação permanente.
+
+   O título convida a contar o problema; não promete que a agenda não vai
+   parar nem apressa a decisão. Quem decide o próximo passo é a avaliação.
    ============================================================================ */
 
 export function ChamadaFinal({
@@ -20,7 +23,7 @@ export function ChamadaFinal({
   cidade,
   mensagem = MENSAGEM_PADRAO,
   equipamento,
-  titulo = "Não deixe a agenda parar por causa de um equipamento.",
+  titulo = "Conte o que aconteceu com o equipamento.",
 }: {
   contatos: ContatoWhatsapp[];
   horario: string;
@@ -37,21 +40,11 @@ export function ChamadaFinal({
 
   return (
     <section aria-labelledby="chamada-final-titulo" className="relative overflow-clip bg-jb-50 py-16 md:py-24">
-      <span
-        aria-hidden
-        className="jb-flutua pointer-events-none absolute -left-24 -top-24 size-[26rem] rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.16),transparent)]"
-      />
-      <span
-        aria-hidden
-        className="jb-flutua-lento pointer-events-none absolute -bottom-32 -right-20 size-[30rem] rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.12),transparent)]"
-      />
-
       <div className="container-jb relative">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-white/90 bg-white/80 px-5 py-10 text-center shadow-[0_38px_100px_-58px_rgb(17_19_21/0.55)] backdrop-blur-xl sm:px-8 sm:py-12 md:px-12 md:py-14">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-x-[18%] -top-28 h-52 rounded-full bg-jb-500/10 blur-3xl"
-          />
+        {/* `overflow-clip`, e não `overflow-hidden`: o cartão tem blocos
+            `.jb-revela`, e `hidden` viraria contêiner de rolagem, congelando a
+            revelação na opacidade inicial. */}
+        <div className="relative mx-auto max-w-5xl overflow-clip rounded-[2rem] border border-graf-200/80 bg-white px-5 py-10 text-center shadow-[0_38px_100px_-58px_rgb(17_19_21/0.55)] sm:px-8 sm:py-12 md:px-12 md:py-14">
           <span
             aria-hidden
             className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-jb-400/60 to-transparent"
@@ -75,8 +68,8 @@ export function ChamadaFinal({
               className="texto-guia jb-revela mx-auto mt-5 max-w-2xl text-graf-700"
               style={{ "--i": 2 } as React.CSSProperties}
             >
-              Mande a mensagem quando quiser. Com o equipamento e o sintoma já escritos, a equipe
-              começa a triagem com mais contexto.
+              A mensagem já sai com o equipamento e o sintoma escritos. A equipe técnica organiza a
+              triagem e combina com a clínica o próximo passo.
             </p>
 
             <ul

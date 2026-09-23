@@ -25,12 +25,12 @@ export function Duvidas({
     ...extras,
     {
       pergunta: "Vocês atendem na minha clínica?",
-      resposta: `Sim, em ${cidade} e região. Quando o conserto pede bancada, o equipamento vai para a JB e volta testado. A forma de atendimento é combinada na triagem pelo WhatsApp.`,
+      resposta: `A JB atende clínicas em ${cidade} e região. Conforme o equipamento e a ocorrência, a avaliação acontece no consultório ou na bancada da JB — a forma de atendimento é combinada com a clínica depois da triagem pelo WhatsApp.`,
     },
     {
       pergunta: "Quanto custa o conserto?",
       resposta:
-        "Depende do defeito e da peça. Por isso existe a triagem: você recebe o orçamento e aprova antes de qualquer troca. Sem surpresa na conta.",
+        "Depende do equipamento, do defeito e da peça, e só se sabe depois da avaliação. Quando houver troca de peça, o orçamento vem antes: nenhuma peça é substituída sem a aprovação da clínica.",
     },
     {
       pergunta: "Vocês atendem todas as marcas?",
@@ -76,16 +76,17 @@ export function Duvidas({
             </p>
 
             <div
-              className="jb-revela mt-6 flex gap-3 rounded-xl border border-graf-200 bg-white/80 p-4"
+              className="jb-revela mt-6 flex gap-3 rounded-xl border border-graf-200 bg-white p-4"
               style={{ "--i": 2 } as React.CSSProperties}
             >
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600">
                 <ShieldCheck className="size-5" aria-hidden />
               </span>
               <div>
-                <p className="text-sm font-extrabold text-graf-900">Sem promessa escondida</p>
+                <p className="text-sm font-extrabold text-graf-900">Orçamento antes da troca</p>
                 <p className="mt-1 text-xs font-medium leading-relaxed text-graf-600">
-                  O site não inventa prazo, preço de visita ou garantia fixa para fechar a conversa.
+                  Prazo e valor dependem da avaliação e da peça. Eles são informados antes de
+                  qualquer substituição, para a clínica aprovar.
                 </p>
               </div>
             </div>

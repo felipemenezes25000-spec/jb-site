@@ -96,12 +96,8 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
       {/* ------------------------------------------------------- abertura */}
       <section
         aria-labelledby="abertura-titulo"
-        className="relative overflow-hidden border-b border-graf-200 bg-white"
+        className="jb-landing-hero relative overflow-clip border-b border-graf-200 bg-white"
       >
-        <span
-          aria-hidden
-          className="jb-flutua pointer-events-none absolute -right-40 -top-40 size-[36rem] rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.11),transparent)]"
-        />
 
         <div className="container-jb relative grid gap-7 pb-12 pt-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-center lg:gap-14 lg:pb-16 lg:pt-12">
           <div>
@@ -110,18 +106,22 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
             </p>
 
             <h1 id="abertura-titulo" className="text-hero texto-forte entrada mt-3 [animation-delay:70ms]">
-              <span className="block">{pagina.nomeCurto} parou?</span>
-              <span className="block text-jb-600">A JB conserta.</span>
+              <span className="block">{pagina.nomeCurto} parou?</span>{" "}
+              <span className="block text-jb-600">A JB assume daqui.</span>
             </h1>
 
-            <p className="texto-guia entrada mt-5 max-w-xl text-graf-600 [animation-delay:140ms]">
+            {/* No celular, o título e a escolha do defeito já confirmam o anúncio;
+                o parágrafo de impacto entra a partir do tablet, para os dois
+                atendentes caberem na primeira dobra. */}
+            <p className="texto-guia entrada mt-5 hidden max-w-xl text-graf-600 [animation-delay:140ms] sm:block">
               {pagina.chamada}
             </p>
 
             <EscolhaDoDefeito
               equipamento={equipamento}
+              naFrase={pagina.naFrase}
               contatos={contatos}
-              className="entrada mt-7 [animation-delay:210ms]"
+              className="entrada mt-5 [animation-delay:210ms] sm:mt-7"
             />
 
             <StatusAtendimento
@@ -152,7 +152,7 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
         cidade={s.endereco_cidade}
         mensagem={mensagem}
         equipamento={equipamento.id}
-        titulo={`Não deixe ${pagina.naFrase} parar a sua agenda.`}
+        titulo={`Conte o que ${pagina.naFrase} está fazendo.`}
       />
     </>
   );
@@ -161,7 +161,8 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
 /* ------------------------------------------------------------------ visual */
 
 /**
- * O equipamento em destaque, boiando sobre um brilho da marca.
+ * O equipamento em destaque, sobre um brilho da marca. Parado: a imagem
+ * confirma o anúncio, e nada nela precisa se mexer em laço.
  *
  * Recorte de fundo branco entra com `mix-blend-multiply`, que some com o
  * branco da foto sobre o degradê; sem recorte bom (destilador), entra a foto
@@ -186,7 +187,7 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
               aria-hidden
               className="absolute left-1/2 top-1/2 size-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.16),transparent)]"
             />
-            <div className="jb-boia absolute inset-x-[8%] bottom-[12%] top-[6%]">
+            <div className="absolute inset-x-[8%] bottom-[12%] top-[6%]">
               <Image
                 src={visual.src}
                 alt={pagina.palavraChave.charAt(0).toUpperCase() + pagina.palavraChave.slice(1)}
@@ -206,19 +207,19 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
             alt="Técnico consertando um equipamento odontológico na bancada"
             fill
             sizes="(min-width: 1024px) 30rem, 92vw"
-            className="jb-foto-viva object-cover"
+            className="object-cover"
             style={{ objectPosition: visual.posicao }}
           />
         )}
       </div>
 
-      <p className="jb-boia absolute -left-2 top-4 flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop backdrop-blur sm:-left-4 sm:text-sm">
+      <p className="absolute -left-2 top-4 flex items-center gap-2 rounded-xl border border-graf-950/5 bg-white px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop sm:-left-4 sm:text-sm">
         <span className="flex size-7 items-center justify-center rounded-lg bg-jb-500 text-white">
           <BadgeCheck className="size-4" aria-hidden />
         </span>
         Todas as marcas
       </p>
-      <p className="jb-boia-2 absolute -right-2 bottom-4 flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop backdrop-blur sm:-right-4 sm:text-sm">
+      <p className="absolute -right-2 bottom-4 flex items-center gap-2 rounded-xl border border-graf-950/5 bg-white px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop sm:-right-4 sm:text-sm">
         <span className="flex size-7 items-center justify-center rounded-lg bg-ok-500 text-white">
           <FileCheck2 className="size-4" aria-hidden />
         </span>
@@ -247,14 +248,14 @@ function EnquantoIsso({
         <div>
           <p className="sobretitulo jb-revela flex items-center gap-2">
             <ShieldAlert className="size-4" aria-hidden />
-            Antes da equipe chegar
+            Antes da avaliação técnica
           </p>
           <h2 id="enquanto-titulo" className="text-section texto-forte jb-revela mt-3 max-w-xl">
             Enquanto isso, <span className="text-jb-600">com segurança.</span>
           </h2>
           <p className="texto-guia jb-revela mt-5 max-w-lg text-graf-600" style={{ "--i": 1 } as React.CSSProperties}>
-            Nada de abrir o equipamento ou testar peça por conta própria. Estes cuidados
-            simples já protegem {pagina.naFrase} e ajudam a triagem.
+            Nada de abrir o equipamento ou testar peça por conta própria. Os cuidados abaixo são
+            de segurança e observação externa, e ajudam a equipe a entender o sintoma.
           </p>
           <div className="jb-revela mt-8" style={{ "--i": 2 } as React.CSSProperties}>
             <p className="text-sm font-extrabold text-graf-900">Mande uma foto pelo WhatsApp:</p>

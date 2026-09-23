@@ -101,21 +101,40 @@ const PAGINA_REMOVIDA = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,follow">
-<meta name="theme-color" content="#111315">
-<title>Página removida · JB Soluções Odontológicas</title>
+<meta name="theme-color" content="#ffffff">
+<title>Página encerrada · JB Soluções Odontológicas</title>
 <style>
-*{box-sizing:border-box}html{background:#111315}body{margin:0;min-height:100dvh;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 82% 10%,rgba(224,20,27,.22),transparent 30rem),radial-gradient(circle at 8% 92%,rgba(255,255,255,.06),transparent 24rem),#111315;color:#fff;display:grid;place-items:center;padding:max(1rem,env(safe-area-inset-top)) max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left))}
-main{width:min(100%,46rem);position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:2rem;background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(248,249,250,.98));color:#111315;padding:clamp(1.25rem,4vw,3rem);box-shadow:0 42px 110px -52px rgba(0,0,0,.82)}
-main:before{content:"";position:absolute;right:-8rem;top:-10rem;width:24rem;height:24rem;border-radius:999px;background:radial-gradient(circle,rgba(224,20,27,.16),transparent 66%);pointer-events:none}.topo{position:relative;display:flex;align-items:center;justify-content:space-between;gap:1rem}.marca{display:inline-flex;align-items:center;border:1px solid #e4e6e8;border-radius:1rem;background:#fff;padding:.55rem .8rem;box-shadow:0 14px 32px -28px rgba(17,19,21,.55)}.marca img{display:block;width:auto;height:2.25rem}.status{display:inline-flex;align-items:center;gap:.5rem;border:1px solid #ead1d2;border-radius:999px;background:#fff7f7;padding:.45rem .7rem;color:#a5090c;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.status:before{content:"";width:.45rem;height:.45rem;border-radius:999px;background:#e0141b}.conteudo{position:relative;margin-top:clamp(2.4rem,7vw,4.8rem)}.eyebrow{margin:0;color:#a5090c;font-size:.72rem;font-weight:850;letter-spacing:.14em;text-transform:uppercase}h1{max-width:10ch;margin:.65rem 0 0;font-size:clamp(2.55rem,8vw,5rem);line-height:.94;letter-spacing:-.055em;text-wrap:balance}h1 span{display:block;color:#e0141b}p{max-width:37rem;margin:1.25rem 0 0;color:#555b61;font-size:clamp(.98rem,2vw,1.08rem);line-height:1.65}.provas{display:flex;flex-wrap:wrap;gap:.55rem;margin:1.45rem 0 0;padding:0;list-style:none}.provas li{border:1px solid #e1e3e5;border-radius:.8rem;background:#fff;padding:.58rem .75rem;color:#35393d;font-size:.76rem;font-weight:800}.acoes{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:1.7rem}.acoes a{min-height:3rem;display:inline-flex;align-items:center;justify-content:center;border-radius:.9rem;padding:.8rem 1.05rem;font-size:.88rem;font-weight:850;text-decoration:none;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.principal{background:#e0141b;color:#fff;box-shadow:0 22px 48px -30px rgba(224,20,27,.75)}.secundario{border:1px solid #d9dcdf;background:#fff;color:#22262a}.acoes a:hover{transform:translateY(-1px)}.acoes a:focus-visible{outline:3px solid rgba(224,20,27,.34);outline-offset:3px}.rodape{position:relative;margin-top:2.2rem;padding-top:1.1rem;border-top:1px solid #e4e6e8;color:#777d83;font-size:.72rem;font-weight:700}
-@media(max-width:32rem){main{border-radius:1.35rem;padding:1rem}.topo{align-items:flex-start}.marca img{height:1.9rem}.status{font-size:.62rem;padding:.4rem .55rem}.conteudo{margin-top:2.5rem}h1{font-size:clamp(2.35rem,13.5vw,3.45rem)}.provas{display:grid;grid-template-columns:1fr 1fr}.provas li:last-child{grid-column:1/-1}.acoes{display:grid;grid-template-columns:1fr}.acoes a{width:100%;min-height:3.1rem}.rodape{margin-top:1.6rem}}
-@media(prefers-reduced-motion:reduce){.acoes a{transition:none}}
+*{box-sizing:border-box}
+html{background:#f6f7f8;color-scheme:light}
+body{margin:0;min-height:100dvh;display:grid;place-items:center;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111315;background:radial-gradient(circle at 88% 8%,rgba(224,20,27,.08),transparent 28rem),#f6f7f8;padding:max(1rem,env(safe-area-inset-top)) max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left))}
+main{width:min(100%,44rem);border:1px solid #e1e3e5;border-top:3px solid #e0141b;border-radius:1.25rem;background:#fff;padding:clamp(1.25rem,5vw,3rem);box-shadow:0 30px 80px -56px rgba(17,19,21,.45)}
+.marca{display:block;width:auto;height:3rem}
+.eyebrow{margin:clamp(2rem,6vw,3.25rem) 0 0;color:#a5090c;font-size:.75rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+h1{max-width:12ch;margin:.6rem 0 0;font-size:clamp(2.3rem,7.5vw,4.25rem);line-height:.98;letter-spacing:-.045em;text-wrap:balance}
+h1 span{display:block;color:#e0141b}
+p{max-width:36rem;margin:1.1rem 0 0;color:#4b5057;font-size:clamp(1rem,2vw,1.08rem);line-height:1.65}
+.provas{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.4rem 0 0;padding:0;list-style:none}
+.provas li{border:1px solid #e1e3e5;border-radius:999px;background:#f8f9fa;padding:.45rem .8rem;color:#2c3035;font-size:.8rem;font-weight:700}
+.acoes{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:1.75rem}
+.acoes a{min-height:3rem;display:inline-flex;align-items:center;justify-content:center;border-radius:.8rem;padding:.8rem 1.15rem;font-size:.92rem;font-weight:800;text-decoration:none}
+.principal{background:#e0141b;color:#fff}
+.principal:hover{background:#c20f16}
+.secundario{border:1px solid #d5d8db;background:#fff;color:#111315}
+.secundario:hover{border-color:#e0141b;color:#a5090c}
+.acoes a:focus-visible{outline:3px solid rgba(224,20,27,.45);outline-offset:3px}
+.rodape{margin:2rem 0 0;padding-top:1rem;border-top:1px solid #eceef0;color:#5d636a;font-size:.8rem;font-weight:600}
+@media(max-width:32rem){.acoes{display:grid;grid-template-columns:1fr}.acoes a{width:100%}}
 </style>
 </head>
 <body>
 <main>
-<div class="topo"><span class="marca"><img src="/marca/jb-logo.webp" alt="JB Soluções Odontológicas"></span><span class="status">HTTP 410</span></div>
-<div class="conteudo"><p class="eyebrow">A JB mudou de foco</p><h1>A loja saiu.<span>A assistência ficou.</span></h1><p>Esta página comercial foi encerrada. A JB agora concentra o site público na assistência técnica de equipamentos odontológicos de todas as marcas.</p><ul class="provas"><li>Assistência técnica</li><li>Todas as marcas</li><li>São Paulo e região</li></ul><div class="acoes"><a class="principal" href="/">Ir para a assistência técnica</a><a class="secundario" href="/#equipamentos">Ver equipamentos atendidos</a></div></div>
-<div class="rodape">JB Soluções Odontológicas · A URL antiga continua retornando 410 para indicar que o conteúdo comercial foi removido definitivamente.</div>
+<img class="marca" src="/marca/jb-logo.webp" alt="JB Soluções Odontológicas" width="640" height="355">
+<p class="eyebrow">Página encerrada</p>
+<h1>A loja saiu.<span>A assistência ficou.</span></h1>
+<p>Este endereço era da antiga loja da JB, que foi encerrada. O site agora é dedicado à assistência técnica de equipamentos odontológicos de todas as marcas.</p>
+<ul class="provas"><li>Assistência técnica</li><li>Todas as marcas</li><li>São Paulo e região</li></ul>
+<div class="acoes"><a class="principal" href="/">Ir para a assistência técnica</a><a class="secundario" href="/#equipamentos">Ver equipamentos atendidos</a></div>
+<p class="rodape">JB Soluções Odontológicas · assistência técnica odontológica</p>
 </main>
 </body>
 </html>`;

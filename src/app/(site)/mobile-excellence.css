@@ -25,17 +25,6 @@
 /* Em celular, movimento que só decora não precisa manter a GPU acordada.
    Estado, troca de passo e aparição da barra continuam animados. */
 @media (pointer: coarse) and (max-width: 47.99rem) {
-  [data-jb-site="assistencia"] .jb-scanline {
-    display: none;
-  }
-
-  [data-jb-site="assistencia"] .jb-foto-viva,
-  [data-jb-site="assistencia"] .jb-boia,
-  [data-jb-site="assistencia"] .jb-boia-2,
-  [data-jb-site="assistencia"] .jb-flutua,
-  [data-jb-site="assistencia"] .jb-flutua-lento {
-    animation: none !important;
-  }
 
   [data-jb-site="assistencia"] .jb-pulso::after {
     animation: none !important;
@@ -87,29 +76,23 @@
     line-height: 1.5;
   }
 
-  /* Três provas em uma faixa tocável ocupam uma linha, não três cartões
-     empilhados. O primeiro item e parte do segundo ficam visíveis como pista. */
+  /* As três provas inteiras, em duas colunas com a terceira na linha toda.
+     Até 23/09/2026 viravam uma faixa que rolava de lado com a terceira
+     escondida: prova que ninguém vê não prova nada. */
   [data-jb-site="assistencia"] .jb-hero-provas {
-    display: flex;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.4rem;
-    overflow-x: auto;
     margin-top: 0.9rem;
-    padding-bottom: 0.15rem;
-    scrollbar-width: none;
-    overscroll-behavior-x: contain;
   }
 
-  [data-jb-site="assistencia"] .jb-hero-provas::-webkit-scrollbar {
-    display: none;
-  }
-
-  [data-jb-site="assistencia"] .jb-hero-provas li,
-  [data-jb-site="assistencia"] .jb-hero-provas li:last-child {
-    grid-column: auto;
-    flex: 0 0 8.5rem;
+  [data-jb-site="assistencia"] .jb-hero-provas li {
     min-height: 2.75rem;
-    padding: 0.55rem 0.6rem;
+    padding: 0.5rem 0.6rem;
     font-size: 0.68rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li:last-child {
+    grid-column: 1 / -1;
   }
 
   [data-jb-site="assistencia"] .jb-hero-cta {
@@ -141,11 +124,6 @@
     gap: 0.4rem;
     font-size: 0.61rem;
     letter-spacing: 0.07em;
-  }
-
-  [data-jb-site="assistencia"] .jb-barra-movel-premium > div:first-child > span {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.57rem;
   }
 
   [data-jb-site="assistencia"] .jb-barra-movel-premium a[data-whatsapp] {
