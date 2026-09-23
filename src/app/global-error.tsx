@@ -8,21 +8,17 @@ import { telHref, whatsappHref } from "@/lib/format";
 /**
  * Último anteparo do aplicativo.
  *
- * Só entra em cena quando a falha acontece no layout raiz — e, quando isso
- * ocorre, o layout (com fonte, folha de estilo global e Toaster) não existe
- * mais. Por isso esta tela declara o próprio `<html>` e `<body>` e usa
- * estilo em linha: nada de Tailwind, nada de `next/font`, nada de componente
- * do kit. Qualquer dependência aqui é mais uma coisa que pode faltar
- * exatamente no momento em que ela é necessária.
- *
- * Pelo mesmo motivo os contatos do Jeferson e do Jackson vêm de uma
- * constante local, e não do painel: a tela não consulta o banco.
+ * Quando o layout raiz falha não há Tailwind, next/font ou componentes de
+ * interface confiáveis. Por isso esta tela continua totalmente em estilo
+ * inline e com contatos fixos no código, mas agora preserva a identidade da
+ * experiência pública em vez de parecer uma página genérica do navegador.
  */
 
-const CINZA_ESCURO = "#1a1c1e";
-const CINZA_MEDIO = "#51565c";
+const CINZA_ESCURO = "#111315";
+const CINZA_MEDIO = "#5a6066";
 const VERMELHO = "#e0141b";
-const BORDA = "#dddfe2";
+const VERMELHO_ESCURO = "#b91016";
+const BORDA = "#e4e6e8";
 
 const FONTE =
   'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
@@ -48,7 +44,8 @@ export default function ErroGlobal({
         style={{
           margin: 0,
           minHeight: "100dvh",
-          background: "#ffffff",
+          background:
+            "radial-gradient(circle at 85% 5%, rgba(224,20,27,.13), transparent 28rem), radial-gradient(circle at 5% 95%, rgba(17,19,21,.06), transparent 24rem), #f7f8f9",
           color: CINZA_ESCURO,
           fontFamily: FONTE,
           WebkitFontSmoothing: "antialiased",
@@ -58,158 +55,232 @@ export default function ErroGlobal({
 
         <main
           style={{
-            maxWidth: "40rem",
+            boxSizing: "border-box",
+            width: "min(100% - 2rem, 72rem)",
+            minHeight: "100dvh",
             margin: "0 auto",
-            padding: "3rem 1.25rem 4rem",
+            display: "grid",
+            alignItems: "center",
+            padding: "2rem 0 3rem",
           }}
         >
-          <img
-            src="/marca/jb-logo.webp"
-            alt={CONTATO_DE_EMERGENCIA.empresa}
-            width={126}
-            height={70}
-            style={{ height: 44, width: "auto" }}
-          />
-
-          <p
+          <section
             style={{
-              margin: "2.5rem 0 0",
-              fontSize: "0.75rem",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              fontWeight: 700,
-              color: VERMELHO,
+              position: "relative",
+              overflow: "hidden",
+              display: "grid",
+              gap: "2rem",
+              padding: "clamp(1.25rem, 4vw, 3rem)",
+              border: "1px solid rgba(255,255,255,.92)",
+              borderRadius: "clamp(1.4rem, 3vw, 2rem)",
+              background: "rgba(255,255,255,.9)",
+              boxShadow: "0 40px 110px -64px rgba(17,19,21,.62)",
+              backdropFilter: "blur(18px)",
             }}
           >
-            Erro inesperado
-          </p>
-
-          <h1
-            style={{
-              margin: "0.75rem 0 0",
-              fontSize: "clamp(1.75rem, 5vw, 2.5rem)",
-              lineHeight: 1.15,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            O site não conseguiu carregar.
-          </h1>
-
-          <p
-            style={{
-              margin: "1rem 0 0",
-              fontSize: "1.0625rem",
-              lineHeight: 1.65,
-              color: CINZA_MEDIO,
-            }}
-          >
-            A falha foi registrada. Tente de novo em instantes — e, se for urgente, fale
-            direto com o Jeferson ou o Jackson, pelo WhatsApp ou pelo telefone.
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.75rem",
-              marginTop: "2rem",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                if (tentarDeNovo) tentarDeNovo();
-                else window.location.reload();
-              }}
+            <span
+              aria-hidden
               style={{
-                minHeight: 48,
-                padding: "0 1.5rem",
-                border: "none",
-                borderRadius: 10,
-                background: VERMELHO,
-                color: "#ffffff",
-                fontSize: "1rem",
-                fontWeight: 600,
-                fontFamily: "inherit",
-                cursor: "pointer",
+                position: "absolute",
+                width: 280,
+                height: 280,
+                right: -120,
+                top: -140,
+                borderRadius: "999px",
+                background: "radial-gradient(circle, rgba(224,20,27,.19), transparent 68%)",
+                pointerEvents: "none",
               }}
-            >
-              Tentar de novo
-            </button>
+            />
 
-            {/*
-              Âncora comum, e não `next/link`: global-error substitui a raiz da
-              aplicação quando ela já falhou, e renderiza o próprio <html>. O
-              roteador do cliente é justamente o que pode estar quebrado —
-              recarregar a página inteira é o comportamento desejado aqui.
-            */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a
-              href="/"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                minHeight: 48,
-                padding: "0 1.5rem",
-                borderRadius: 10,
-                border: `1px solid ${BORDA}`,
-                color: CINZA_ESCURO,
-                fontSize: "1rem",
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              Ir para a página inicial
-            </a>
-          </div>
-
-          <ul
-            style={{
-              listStyle: "none",
-              padding: 0,
-              margin: "2.5rem 0 0",
-              borderTop: `1px solid ${BORDA}`,
-              paddingTop: "1.5rem",
-              fontSize: "1rem",
-              lineHeight: 2,
-            }}
-          >
-            {CONTATO_DE_EMERGENCIA.contatos.map(({ numero, nome }) => (
-              <li key={numero}>
-                <strong>{nome}:</strong>{" "}
-                <a
-                  href={whatsappHref(numero, `Olá, ${nome}! Vim pelo site e preciso de assistência técnica.`)}
-                  data-whatsapp="erro"
-                  rel="noopener noreferrer"
-                  style={{ color: VERMELHO, fontWeight: 600 }}
-                >
-                  WhatsApp
-                </a>
-                {" · "}
-                <a href={telHref(numero)} style={{ color: VERMELHO, fontWeight: 600 }}>
-                  Ligar
-                </a>
-              </li>
-            ))}
-            <li>
-              E-mail:{" "}
-              <a
-                href={`mailto:${CONTATO_DE_EMERGENCIA.email}`}
-                style={{ color: VERMELHO, fontWeight: 600 }}
+            <div style={{ position: "relative" }}>
+              <div
+                style={{
+                  display: "inline-flex",
+                  padding: "0.6rem 0.75rem",
+                  borderRadius: 14,
+                  border: `1px solid ${BORDA}`,
+                  background: "#fff",
+                  boxShadow: "0 16px 34px -28px rgba(17,19,21,.55)",
+                }}
               >
-                {CONTATO_DE_EMERGENCIA.email}
-              </a>
-            </li>
-          </ul>
+                <img
+                  src="/marca/jb-logo.webp"
+                  alt={CONTATO_DE_EMERGENCIA.empresa}
+                  width={126}
+                  height={70}
+                  style={{ height: 38, width: "auto" }}
+                />
+              </div>
 
-          {error.digest ? (
-            <p style={{ marginTop: "2rem", fontSize: "0.875rem", color: CINZA_MEDIO }}>
-              Código da ocorrência:{" "}
-              <code style={{ background: "#f4f4f5", padding: "0.15rem 0.4rem", borderRadius: 4 }}>
-                {error.digest}
-              </code>
-            </p>
-          ) : null}
+              <p
+                style={{
+                  margin: "2rem 0 0",
+                  fontSize: "0.72rem",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  fontWeight: 800,
+                  color: VERMELHO,
+                }}
+              >
+                Falha crítica de interface
+              </p>
+
+              <h1
+                style={{
+                  maxWidth: "13ch",
+                  margin: "0.75rem 0 0",
+                  fontSize: "clamp(2.4rem, 8vw, 5.3rem)",
+                  lineHeight: 0.96,
+                  letterSpacing: "-0.055em",
+                  fontWeight: 850,
+                }}
+              >
+                O site falhou. <span style={{ color: VERMELHO }}>O atendimento continua.</span>
+              </h1>
+
+              <p
+                style={{
+                  maxWidth: "38rem",
+                  margin: "1.25rem 0 0",
+                  fontSize: "clamp(1rem, 2vw, 1.125rem)",
+                  lineHeight: 1.65,
+                  color: CINZA_MEDIO,
+                }}
+              >
+                Tente carregar novamente. Se o seu equipamento precisa de assistência, fale
+                diretamente com Jeferson ou Jackson pelo WhatsApp ou telefone.
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "0.75rem",
+                  marginTop: "1.75rem",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (tentarDeNovo) tentarDeNovo();
+                    else window.location.reload();
+                  }}
+                  style={{
+                    minHeight: 50,
+                    padding: "0 1.35rem",
+                    border: "none",
+                    borderRadius: 12,
+                    background: `linear-gradient(135deg, ${VERMELHO}, ${VERMELHO_ESCURO})`,
+                    color: "#ffffff",
+                    fontSize: "0.95rem",
+                    fontWeight: 750,
+                    fontFamily: "inherit",
+                    cursor: "pointer",
+                    boxShadow: "0 22px 52px -30px rgba(224,20,27,.68)",
+                  }}
+                >
+                  Tentar de novo
+                </button>
+
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a
+                  href="/"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    minHeight: 48,
+                    padding: "0 1.35rem",
+                    borderRadius: 12,
+                    border: `1px solid ${BORDA}`,
+                    background: "#fff",
+                    color: CINZA_ESCURO,
+                    fontSize: "0.95rem",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                  }}
+                >
+                  Página inicial
+                </a>
+              </div>
+            </div>
+
+            <div
+              style={{
+                position: "relative",
+                padding: "1.1rem",
+                border: `1px solid ${BORDA}`,
+                borderRadius: 16,
+                background: "#f8f9fa",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: CINZA_MEDIO,
+                }}
+              >
+                Canais diretos
+              </p>
+              <ul
+                style={{
+                  display: "grid",
+                  gap: "0.7rem",
+                  listStyle: "none",
+                  padding: 0,
+                  margin: "0.9rem 0 0",
+                  fontSize: "0.95rem",
+                }}
+              >
+                {CONTATO_DE_EMERGENCIA.contatos.map(({ numero, nome }) => (
+                  <li
+                    key={numero}
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: "0.45rem",
+                    }}
+                  >
+                    <strong>{nome}</strong>
+                    <span aria-hidden style={{ color: "#a1a6ab" }}>·</span>
+                    <a
+                      href={whatsappHref(numero, `Olá, ${nome}! Vim pelo site e preciso de assistência técnica.`)}
+                      data-whatsapp="erro"
+                      rel="noopener noreferrer"
+                      style={{ color: VERMELHO_ESCURO, fontWeight: 750 }}
+                    >
+                      WhatsApp
+                    </a>
+                    <span aria-hidden style={{ color: "#a1a6ab" }}>·</span>
+                    <a href={telHref(numero)} style={{ color: VERMELHO_ESCURO, fontWeight: 750 }}>
+                      Ligar
+                    </a>
+                  </li>
+                ))}
+                <li>
+                  <a
+                    href={`mailto:${CONTATO_DE_EMERGENCIA.email}`}
+                    style={{ color: VERMELHO_ESCURO, fontWeight: 700 }}
+                  >
+                    {CONTATO_DE_EMERGENCIA.email}
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {error.digest ? (
+              <p style={{ margin: 0, fontSize: "0.78rem", color: CINZA_MEDIO }}>
+                Código da ocorrência:{" "}
+                <code style={{ background: "#eef0f2", padding: "0.2rem 0.45rem", borderRadius: 5 }}>
+                  {error.digest}
+                </code>
+              </p>
+            ) : null}
+          </section>
         </main>
       </body>
     </html>
