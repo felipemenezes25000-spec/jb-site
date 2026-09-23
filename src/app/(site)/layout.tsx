@@ -7,6 +7,7 @@ import { configuracoesPublicas } from "@/lib/site-publico";
 import "./site.css";
 import "./premium.css";
 import "./ultra-premium.css";
+import "./sections-premium.css";
 
 /* ============================================================================
    Casca do site de assistência
