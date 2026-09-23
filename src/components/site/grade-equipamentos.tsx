@@ -16,10 +16,14 @@ import { cn } from "@/lib/utils";
 
    Cada bloco é um atalho para o WhatsApp com o equipamento já escrito na
    mensagem: o toque abre, dentro do próprio cartão, a escolha de sempre,
-   Jeferson ou Jackson. Um cartão aberto por vez. A autoclave abre maior: é a que mais para a rotina quando falha.
+   Jeferson ou Jackson. Um cartão aberto por vez. A autoclave recebe mais área
+   visual para criar hierarquia na composição, sem afirmar prioridade clínica
+   ou frequência de falha que os dados do site não medem.
+
    Nenhum cartão leva marca de fabricante: a JB conserta todas, e um selo de
-   marca num aparelho fazia parecer que só aquela era atendida. "Outro equipamento" fecha a grade
-   largo, para ninguém sair achando que a máquina dele não entra.
+   marca num aparelho faria parecer que só aquela é atendida. "Outro
+   equipamento" fecha a grade largo, para ninguém sair achando que a máquina
+   dele não entra.
 
    Grade de 4 colunas: 4 células da autoclave + 6 comuns + 2 do "outro" = 12,
    sem buraco. No celular, 2 colunas com os dois blocos largos ocupando a
@@ -143,7 +147,7 @@ function Cartao({
           </span>
           <span className={cn("mt-1.5 block text-sm leading-relaxed text-graf-600", destaque && "sm:text-corpo")}>
             {outro
-              ? "Atendemos todas as marcas. A triagem confirma o seu modelo."
+              ? "Atendemos todas as marcas. Se souber, informe marca e modelo na triagem."
               : equipamento.defeitos.slice(0, destaque ? 4 : 3).join(", ")}
           </span>
           {aberto ? null : (
@@ -187,7 +191,7 @@ export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] })
           Qual equipamento parou? <span className="text-jb-600">Toque e escolha com quem falar.</span>
         </h2>
         <p className="texto-guia jb-revela mt-4 max-w-2xl text-graf-600" style={{ "--i": 1 } as React.CSSProperties}>
-          Atendemos todas as marcas. Jeferson ou Jackson: o WhatsApp abre com o nome do equipamento na mensagem, é só contar o que aconteceu.
+          Atendemos todas as marcas. Jeferson ou Jackson: o WhatsApp abre com o nome do equipamento na mensagem; você completa com o que aconteceu.
         </p>
 
         <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
