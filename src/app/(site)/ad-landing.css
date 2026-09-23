@@ -6,6 +6,15 @@
    primeira dobra.
    ============================================================================ */
 
+/* Landing de equipamento tem uma tarefa só. No desktop, tirar os atalhos
+   genéricos da home do cabeçalho reduz saída lateral entre anúncio e contato;
+   logo e os dois WhatsApps permanecem sempre visíveis. */
+@media (min-width: 64rem) {
+  [data-jb-site="assistencia"]:has(section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium)) .jb-cabecalho nav {
+    display: none !important;
+  }
+}
+
 [data-jb-site="assistencia"] section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium) {
   overflow: clip;
 }
