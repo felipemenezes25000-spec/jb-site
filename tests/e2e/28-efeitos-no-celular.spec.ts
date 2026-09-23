@@ -11,8 +11,11 @@ import { expect, test, type Page } from "@playwright/test";
    botão desligado. Este teste para cada bloco no meio da tela e exige que ele
    esteja inteiro.
 
-   Também confere o que só existe no celular: a foto do equipamento que cresce
-   ao cruzar a tela (no lugar do hover) e o botão da barra que pulsa.
+   No celular, a foto dos equipamentos ainda ganha movimento ligado à rolagem,
+   porque ele termina quando o elemento passa pela tela. O anel pulsante
+   infinito da barra de WhatsApp foi removido em dispositivos de toque: a barra
+   continua entrando e o ícone pode responder à aparição, mas a GPU não fica
+   redesenhando um pulso decorativo para sempre.
    ============================================================================ */
 
 const PAGINAS = ["/", "/autoclave"];
@@ -58,7 +61,7 @@ test.describe("no celular", () => {
     });
   }
 
-  test("a foto do equipamento anima na rolagem e a barra pulsa", async ({ page }) => {
+  test("a foto responde à rolagem e a barra não mantém pulso infinito", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto("/");
 
@@ -77,7 +80,7 @@ test.describe("no celular", () => {
     expect(efeitos.semHover).toBe(true);
     expect(efeitos.fotos).toBeGreaterThan(0);
     expect(efeitos.fotosAnimadas).toBe(efeitos.fotos);
-    expect(efeitos.pulso).toBe("jb-pulso");
+    expect(efeitos.pulso).toBe("none");
 
     // a barra aparece quando nenhum botão grande de WhatsApp está na tela
     // (a abertura e o diagnóstico ficaram para trás na grade de equipamentos)
