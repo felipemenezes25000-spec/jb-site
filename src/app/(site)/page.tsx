@@ -90,8 +90,8 @@ export default async function HomePage() {
               </h1>
 
               <p className="jb-hero-subtexto texto-guia entrada mt-5 max-w-xl text-graf-600 [animation-delay:140ms]">
-                Diga o equipamento e o problema em 3 toques. A mensagem chega pronta para a nossa
-                equipe técnica no WhatsApp — sem formulário longo e sem enrolação.
+                Diga o equipamento e o problema em 3 toques. A mensagem fica pronta para a equipe
+                técnica no WhatsApp — você revisa antes de enviar.
               </p>
             </div>
 
@@ -163,8 +163,8 @@ export default async function HomePage() {
               className="texto-guia jb-revela mt-5 max-w-lg text-graf-600"
               style={{ "--i": 1 } as React.CSSProperties}
             >
-              Mexa nos números da sua clínica e veja quantas consultas ficam em risco enquanto o
-              equipamento espera. Quanto antes você chama, menor esse número.
+              Mexa nos números da sua clínica e estime quantas consultas ficam expostas durante
+              uma parada. O simulador dimensiona impacto; não estima prazo de conserto.
             </p>
           </div>
           <div className="jb-revela" style={{ "--i": 1 } as React.CSSProperties}>
