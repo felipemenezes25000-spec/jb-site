@@ -6,15 +6,9 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    Jeferson e Jackson, sempre os dois
 
-   Todo lugar do site que abre o WhatsApp oferece a mesma escolha: um botão
-   por pessoa, com o nome de quem atende e nada mais. O principal vem
-   primeiro e em vermelho; o segundo, em branco, ao lado. Nenhum botão
-   genérico, nenhum número por extenso.
-
-   Cada botão abre o WhatsApp daquela pessoa com a mensagem pronta e a
-   saudação no nome dela. O principal mede com a posição dada (`abertura`,
-   `diagnostico`…), que é o que a barra do celular observa; o segundo, com a
-   mesma posição e `-segundo`.
+   No mobile a escolha padrão fica em duas colunas: reduz altura, deixa claro
+   que existem dois atendentes e mantém ambos com o mesmo alcance do polegar.
+   Cartões realmente estreitos ainda podem pedir `coluna` explicitamente.
    ============================================================================ */
 
 export function OpcoesWhatsapp({
@@ -35,7 +29,7 @@ export function OpcoesWhatsapp({
   equipamento?: string;
   posicao: PosicaoBase;
   tamanho?: Tamanho;
-  /** Os dois sempre lado a lado, em colunas iguais: barra do celular, cabeçalho, cartões estreitos. */
+  /** Os dois sempre lado a lado, em colunas iguais. */
   lado?: boolean;
   /** Os dois sempre um embaixo do outro, na largura toda: cartões estreitos. */
   coluna?: boolean;
@@ -44,7 +38,6 @@ export function OpcoesWhatsapp({
   /** Classe só do botão principal (o pulso da barra do celular, por exemplo). */
   classeDoPrincipal?: string;
   className?: string;
-  /** Para o `--i` do `.jb-revela`, que escalona a entrada. */
   style?: React.CSSProperties;
 }) {
   if (contatos.length === 0) return null;
@@ -56,13 +49,16 @@ export function OpcoesWhatsapp({
           ? cn("grid gap-2", contatos.length > 1 ? "grid-cols-2" : "grid-cols-1")
           : coluna
             ? "flex flex-col gap-2"
-            : "flex flex-col gap-3 sm:flex-row",
+            : cn(
+                "grid gap-2 sm:flex sm:gap-3",
+                contatos.length > 1 ? "grid-cols-2" : "grid-cols-1",
+              ),
         className,
       )}
       style={style}
     >
       {contatos.map(({ numero, nome }, i) => (
-        <li key={numero} className="relative">
+        <li key={numero} className="relative min-w-0">
           {pulso && i === 0 ? (
             <span
               aria-hidden
@@ -82,15 +78,15 @@ export function OpcoesWhatsapp({
             tamanho={tamanho}
             larguraTotal
             className={cn(
-              "relative",
-              lado || coluna ? "px-3" : tamanho === "lg" ? "sm:w-auto sm:min-w-44" : "sm:w-auto sm:min-w-32",
+              "relative min-w-0",
+              lado || coluna ? "px-3" : tamanho === "lg" ? "px-3 sm:w-auto sm:min-w-44" : "px-3 sm:w-auto sm:min-w-32",
               i === 0 && classeDoPrincipal,
             )}
           >
             {nome ? (
               <>
                 <span className="sr-only">WhatsApp: </span>
-                {nome}
+                <span className="truncate">{nome}</span>
               </>
             ) : (
               "Chamar no WhatsApp"
