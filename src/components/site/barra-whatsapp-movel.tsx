@@ -13,12 +13,18 @@ import { EQUIPAMENTOS, MENSAGEM_PADRAO, montarMensagem, type IdEquipamento } fro
    Jeferson e Jackson lado a lado nas páginas de assistência e conteúdo
    técnico. Páginas legais e convites privados de avaliação ficam de fora:
    nessas rotas uma barra de conversão fixa atrapalharia a tarefa principal.
+
+   Quando a pessoa escolhe um equipamento no diagnóstico da home, a barra leva
+   essa escolha junto depois que o diagnóstico sai da tela. A seleção nunca é
+   texto livre: só ids presentes em `EQUIPAMENTOS` entram na mensagem.
    ============================================================================ */
 
 const OBSERVADOS = ['[data-whatsapp="abertura"]', '[data-whatsapp="diagnostico"]', '[data-whatsapp="fechamento"]'];
 
 function lerEquipamento(): IdEquipamento | null {
-  const id = document.querySelector<HTMLAnchorElement>('a[data-whatsapp="abertura"]')?.dataset.equipamento;
+  const id =
+    document.querySelector<HTMLAnchorElement>('a[data-whatsapp="diagnostico"][data-equipamento]')?.dataset.equipamento ??
+    document.querySelector<HTMLAnchorElement>('a[data-whatsapp="abertura"][data-equipamento]')?.dataset.equipamento;
   return EQUIPAMENTOS.find((equipamento) => equipamento.id === id)?.id ?? null;
 }
 
@@ -29,12 +35,22 @@ function rotaSemBarra(pathname: string) {
 export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }) {
   const pathname = usePathname();
   const [visivel, setVisivel] = useState(false);
-  const [equipamento, setEquipamento] = useState<IdEquipamento | null | undefined>(undefined);
+  const [equipamento, setEquipamento] = useState<IdEquipamento | null>(null);
 
   useEffect(() => {
     if (rotaSemBarra(pathname)) return;
 
     const alvos = OBSERVADOS.flatMap((seletor) => [...document.querySelectorAll(seletor)]);
+    const diagnostico = document.querySelector("#diagnostico");
+
+    /* O link de diagnóstico muda de `data-equipamento` depois do toque. O
+       clique termina antes do React pintar o novo href/dataset, então a leitura
+       acontece no próximo frame. */
+    const aoEscolherNoDiagnostico = () => {
+      window.requestAnimationFrame(() => setEquipamento(lerEquipamento()));
+    };
+    diagnostico?.addEventListener("click", aoEscolherNoDiagnostico);
+
     if (alvos.length === 0) {
       /* Páginas editoriais não têm CTA de abertura. Nelas a barra pode ajudar,
          mas só depois de a pessoa começar a rolar — o template remonta por
@@ -42,9 +58,13 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
       const aoRolar = () => setVisivel(window.scrollY > Math.min(360, window.innerHeight * 0.45));
       aoRolar();
       window.addEventListener("scroll", aoRolar, { passive: true });
-      return () => window.removeEventListener("scroll", aoRolar);
+      return () => {
+        diagnostico?.removeEventListener("click", aoEscolherNoDiagnostico);
+        window.removeEventListener("scroll", aoRolar);
+      };
     }
 
+    setEquipamento(lerEquipamento());
     const naTela = new Set<Element>();
     const observador = new IntersectionObserver(
       (entradas) => {
@@ -53,13 +73,16 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
           else naTela.delete(entrada.target);
         }
         setVisivel(naTela.size === 0);
-        setEquipamento((atual) => (atual === undefined ? lerEquipamento() : atual));
+        setEquipamento(lerEquipamento());
       },
       { threshold: 0 },
     );
 
     for (const alvo of alvos) observador.observe(alvo);
-    return () => observador.disconnect();
+    return () => {
+      diagnostico?.removeEventListener("click", aoEscolherNoDiagnostico);
+      observador.disconnect();
+    };
   }, [pathname]);
 
   if (rotaSemBarra(pathname)) return null;
