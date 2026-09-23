@@ -46,13 +46,10 @@
 /* ---------------------------------------------------------------- 320 px */
 
 @media (max-width: 22.49rem) {
-  [data-jb-site="assistencia"] .jb-ticker-trilho {
-    height: 1.875rem;
-  }
-
-  [data-jb-site="assistencia"] .jb-ticker-trilho > span > span {
-    padding-inline: 1rem;
-    font-size: 0.69rem;
+  /* Em 320px a prova da hero já comunica o essencial; retirar a marquise
+     devolve 30px valiosos para os dois CTAs ficarem na primeira dobra. */
+  [data-jb-site="assistencia"] .jb-ticker {
+    display: none;
   }
 
   [data-jb-site="assistencia"] .jb-cabecalho .container-jb {
@@ -67,31 +64,60 @@
   [data-jb-site="assistencia"] .jb-cabecalho-whatsapp li > a {
     min-height: 2.3rem;
     min-width: 0;
-    padding-inline: 0.52rem;
+    padding-inline: 0.48rem;
     border-radius: 0.65rem;
-    font-size: 0.69rem;
+    font-size: 0.68rem;
   }
 
   [data-jb-site="assistencia"] .jb-hero-premium .container-jb {
-    width: min(100% - 1.15rem, 88rem);
+    width: min(100% - 1.05rem, 88rem);
+    gap: 1.6rem;
+    padding-top: 0.8rem;
   }
 
   [data-jb-site="assistencia"] .jb-hero-title {
     max-width: 10ch;
-    font-size: clamp(2.5rem, 13.7vw, 3rem);
+    font-size: clamp(2.45rem, 13.4vw, 3rem);
     line-height: 0.96;
   }
 
-  [data-jb-site="assistencia"] .jb-hero-provas {
-    grid-template-columns: 1fr;
+  [data-jb-site="assistencia"] .jb-hero-subtexto {
+    margin-top: 0.9rem;
+    font-size: 0.94rem;
+    line-height: 1.5;
   }
 
+  /* Três provas em uma faixa tocável ocupam uma linha, não três cartões
+     empilhados. O primeiro item e parte do segundo ficam visíveis como pista. */
+  [data-jb-site="assistencia"] .jb-hero-provas {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    margin-top: 0.9rem;
+    padding-bottom: 0.15rem;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li,
   [data-jb-site="assistencia"] .jb-hero-provas li:last-child {
     grid-column: auto;
+    flex: 0 0 8.5rem;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.6rem;
+    font-size: 0.68rem;
   }
 
-  [data-jb-site="assistencia"] .jb-hero-provas li {
-    min-height: 3rem;
+  [data-jb-site="assistencia"] .jb-hero-cta {
+    margin-top: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-cta > p {
+    display: none;
   }
 
   [data-jb-site="assistencia"] .jb-diagnostico-legenda {
@@ -124,8 +150,8 @@
 
   [data-jb-site="assistencia"] .jb-barra-movel-premium a[data-whatsapp] {
     min-height: 2.9rem;
-    padding-inline: 0.45rem;
-    font-size: 0.76rem;
+    padding-inline: 0.4rem;
+    font-size: 0.74rem;
   }
 }
 
