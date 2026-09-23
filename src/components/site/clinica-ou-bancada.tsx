@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ClipboardCheck, Stethoscope, Wrench } from "lucide-react";
+import { ClipboardCheck, MapPin, Stethoscope, Wrench } from "lucide-react";
 
 import { ChamarWhatsapp } from "@/components/site/chamar-whatsapp";
 
@@ -71,7 +71,9 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
           </div>
 
           <p className="jb-boia absolute -left-3 top-6 flex items-center gap-2 rounded-xl border border-white/70 bg-white/95 px-3.5 py-2 text-sm font-extrabold text-graf-900 shadow-pop backdrop-blur sm:-left-6">
-            <span className="size-2 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]" aria-hidden />
+            <span className="flex size-7 items-center justify-center rounded-lg bg-jb-50 text-jb-700" aria-hidden>
+              <MapPin className="size-3.5" />
+            </span>
             {cidade} e região
           </p>
         </div>
