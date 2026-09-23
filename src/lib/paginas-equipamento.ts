@@ -10,10 +10,10 @@ import { equipamentoPorId, type Equipamento, type IdEquipamento } from "@/lib/di
 
    O texto segue a regra do site: nada de prazo, preço, garantia em meses ou
    afirmação técnica que a JB não confirmou. Os defeitos são os mesmos do
-   diagnóstico (`@/lib/diagnostico`), escritos como o dentista vê o problema.
-   Os cuidados de "enquanto isso" são de bom senso e de segurança (desligar,
-   esfriar, não forçar), não roteiro de conserto: ninguém deve abrir o
-   equipamento por causa de uma página da JB.
+   diagnóstico (`@/lib/diagnostico`), escritos como a clínica percebe o
+   problema. Os cuidados de "enquanto isso" ficam limitados a segurança,
+   observação externa e preservação de evidência: esta página nunca ensina a
+   desmontar, testar peça, burlar proteção ou reparar equipamento.
 
    Módulo puro: as páginas, o rodapé, o mapa do site e os testes leem daqui.
    ============================================================================ */
@@ -59,12 +59,12 @@ function todasAsMarcas(nome: string): Pergunta {
   return {
     pergunta: `Vocês consertam ${nome} de qualquer marca?`,
     resposta:
-      "Sim, de todas as marcas. Na triagem pelo WhatsApp a equipe confirma o modelo antes de combinar o atendimento.",
+      "Sim, de todas as marcas. Marca, modelo e sintoma entram na triagem quando a clínica os informa, antes de a equipe definir o próximo passo.",
   };
 }
 
 const FOTO_OU_VIDEO =
-  "Tire uma foto do painel ou grave um vídeo curto do defeito: a equipe entende mais rápido pelo WhatsApp.";
+  "Tire uma foto do painel ou grave um vídeo curto do sintoma: isso ajuda a equipe a entender o contexto pelo WhatsApp.";
 
 export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
   {
@@ -74,10 +74,10 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "a autoclave",
     palavraChave: "autoclave odontológica",
     chamada:
-      "Sem autoclave não tem material esterilizado, e sem material a agenda para. Toque no defeito e a mensagem chega pronta para a equipe técnica da JB.",
+      "Sem autoclave não tem material esterilizado, e sem material a agenda para. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
-      "Desligue da tomada e espere esfriar antes de abrir a porta.",
-      "Nunca force a porta com a câmara quente ou com pressão.",
+      "Desligue o equipamento se houver comportamento anormal e aguarde o resfriamento conforme o manual do fabricante.",
+      "Não force a porta, não tente liberar pressão e não desative nenhum mecanismo de segurança.",
       FOTO_OU_VIDEO,
     ],
     duvidas: [
@@ -85,7 +85,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       {
         pergunta: "Posso usar o material de um ciclo que deu erro?",
         resposta:
-          "Ciclo que não completa não garante esterilização. Na dúvida, não use o material desse ciclo e chame a equipe: a triagem ajuda a entender o que aconteceu.",
+          "Se o ciclo apresentou erro ou não concluiu, não considere o material esterilizado por conta própria. Siga o protocolo da clínica e as orientações do fabricante para reprocessamento, e chame a assistência para avaliar o equipamento.",
       },
     ],
     visual: { tipo: "recorte", src: "/site/equip/autoclave.webp" },
@@ -97,18 +97,18 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "o compressor",
     palavraChave: "compressor odontológico",
     chamada:
-      "Sem ar, as canetas e a seringa tríplice param, e o atendimento para junto. Toque no defeito e a mensagem chega pronta para a equipe técnica da JB.",
+      "Sem ar, as canetas e a seringa tríplice param, e o atendimento para junto. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
-      "Desligue da tomada se ele liga e desliga sem parar ou esquenta demais.",
-      "Se sair água ou óleo pela linha de ar, não use nas canetas até a revisão.",
-      "Grave um vídeo curto do barulho: na triagem, o som diz muito.",
+      "Desligue o equipamento se ele liga e desliga repetidamente, apresenta cheiro incomum ou aquece de forma anormal.",
+      "Se houver água, óleo ou outra contaminação aparente na linha de ar, interrompa o uso do equipamento até avaliação técnica.",
+      "Grave um vídeo curto do ruído sem abrir ou desmontar o compressor.",
     ],
     duvidas: [
       todasAsMarcas("compressor"),
       {
         pergunta: "Dá para revisar o compressor antes que ele pare?",
         resposta:
-          "Dá, e é o melhor momento: revisão marcada não derruba a agenda. Chame no WhatsApp pedindo a revisão preventiva.",
+          "A manutenção preventiva pode ser programada antes de uma falha. Chame no WhatsApp para a equipe orientar a avaliação e combinar a forma de atendimento.",
       },
     ],
     visual: { tipo: "recorte", src: "/site/equip/compressor.webp" },
@@ -120,10 +120,10 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "a bomba de vácuo",
     palavraChave: "bomba de vácuo odontológica",
     chamada:
-      "Sem sucção não dá para atender direito. Toque no defeito e a mensagem chega pronta para a equipe técnica da JB.",
+      "Sem sucção, parte do atendimento fica comprometida. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
-      "Desligue a bomba se ela fizer barulho anormal ou esquentar.",
-      "Confira se o ralo e o filtro da cuspideira não estão entupidos.",
+      "Desligue a bomba se houver ruído, cheiro ou aquecimento fora do normal.",
+      "Sem desmontar nada, registre se a sucção está fraca em um ponto específico ou em toda a clínica.",
       FOTO_OU_VIDEO,
     ],
     duvidas: [
@@ -131,7 +131,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       {
         pergunta: "Sucção fraca é sempre defeito da bomba?",
         resposta:
-          "Nem sempre. A causa pode estar na bomba, no filtro ou na tubulação, e a triagem pelo WhatsApp ajuda a separar uma coisa da outra antes da visita.",
+          "Nem sempre. A causa pode estar em diferentes pontos do sistema. A triagem registra onde o sintoma aparece e a avaliação técnica confirma a origem.",
       },
     ],
     visual: { tipo: "recorte", src: "/site/equip/bomba-vacuo.webp" },
@@ -143,18 +143,18 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "a cadeira",
     palavraChave: "cadeira odontológica e equipo",
     chamada:
-      "Cadeira que não sobe, pedal que não responde, refletor apagado: é o consultório inteiro parado. Toque no defeito e a mensagem chega pronta para a equipe técnica da JB.",
+      "Cadeira que não sobe, pedal que não responde ou refletor apagado pode comprometer o consultório. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
-      "Desligue a cadeira no interruptor geral antes de mexer em qualquer coisa.",
-      "Se estiver vazando água, feche o registro de água do equipo.",
-      "Tire uma foto da etiqueta com a marca e o modelo.",
+      "Desligue a cadeira no interruptor geral se houver falha elétrica, movimento inesperado ou vazamento.",
+      "Se houver vazamento de água e você souber identificar o registro do equipo com segurança, feche-o; caso contrário, não desmonte nada.",
+      "Tire uma foto externa da etiqueta com a marca e o modelo, se ela estiver acessível.",
     ],
     duvidas: [
       todasAsMarcas("cadeira e equipo"),
       {
         pergunta: "O conserto é feito no consultório?",
         resposta:
-          "Cadeira é equipamento grande, então o atendimento costuma ser no consultório. Quando alguma peça precisa de bancada, a equipe explica antes.",
+          "Muitos atendimentos de cadeira acontecem no consultório. Quando alguma peça ou conjunto precisa de bancada, a equipe explica a forma de atendimento antes.",
       },
     ],
     visual: { tipo: "recorte", src: "/site/equip/cadeira.webp" },
@@ -166,10 +166,10 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "a seladora",
     palavraChave: "seladora odontológica",
     chamada:
-      "Seladora que não sela deixa o material esterilizado sem embalagem confiável. Toque no defeito e a mensagem chega pronta para a equipe técnica da JB.",
+      "Selagem inadequada compromete a embalagem do material esterilizado. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
-      "Desligue e espere a barra de selagem esfriar antes de limpar.",
-      "Guarde um pedaço de papel com a selagem ruim: ele mostra o defeito.",
+      "Desligue e aguarde o resfriamento antes de qualquer limpeza externa, seguindo o manual do fabricante.",
+      "Guarde uma amostra da embalagem com a selagem defeituosa para mostrar o sintoma à equipe.",
       FOTO_OU_VIDEO,
     ],
     duvidas: [todasAsMarcas("seladora")],
@@ -182,10 +182,10 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "o destilador",
     palavraChave: "destilador de água odontológico",
     chamada:
-      "É o destilador que abastece a autoclave. Parado, logo depois é a autoclave que para. Toque no defeito e a mensagem chega pronta para a equipe técnica da JB.",
+      "O destilador faz parte da rotina de abastecimento de muitos equipamentos de esterilização. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
-      "Desligue da tomada se ele não desliga sozinho.",
-      "Se estiver vazando, espere esfriar antes de mexer no reservatório.",
+      "Desligue da tomada se houver funcionamento anormal, cheiro incomum ou falha no desligamento automático.",
+      "Se houver vazamento, aguarde o equipamento esfriar e não abra carcaça ou componentes internos.",
       FOTO_OU_VIDEO,
     ],
     duvidas: [todasAsMarcas("destilador")],
@@ -198,10 +198,10 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
     naFrase: "a lavadora ultrassônica",
     palavraChave: "lavadora ultrassônica odontológica",
     chamada:
-      "É ela que limpa o instrumental antes da esterilização. Parada, a central de material trava. Toque no defeito e a mensagem chega pronta para a equipe técnica da JB.",
+      "A lavadora ultrassônica participa da etapa de limpeza do instrumental antes da esterilização. Toque no defeito e a mensagem fica pronta para a equipe técnica da JB.",
     enquantoIsso: [
-      "Desligue e esvazie a cuba antes de mexer no equipamento.",
-      "Não ligue a lavadora com a cuba vazia.",
+      "Desligue o equipamento antes de limpeza externa ou manuseio da cuba, seguindo o manual do fabricante.",
+      "Não ligue a lavadora com a cuba vazia e não abra a carcaça para testar componentes.",
       FOTO_OU_VIDEO,
     ],
     duvidas: [todasAsMarcas("lavadora ultrassônica")],
