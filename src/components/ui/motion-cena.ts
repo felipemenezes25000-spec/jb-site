@@ -7,6 +7,10 @@
  * hidratação gravava a cena e a animação arrancava de `opacity: 0` por cima do
  * que a pessoa já estava lendo.
  *
+ * A assistência pública agora é uma zona própria. Ela já tem coreografia e
+ * reveal específicos dentro de `(site)`, então não precisa da aura/tilt e dos
+ * efeitos herdados da antiga vitrine comercial.
+ *
  * Por isso esta função roda duas vezes com o mesmo corpo: serializada num
  * `<script>` do `<head>` (antes de o navegador pintar o `<body>`) e no cliente,
  * a cada troca de rota, antes da pintura da rota nova. `toString()` leva só o
@@ -19,7 +23,7 @@ export function marcarCenaDoMotion(caminho: string) {
     return caminho === prefixo || caminho.indexOf(prefixo + "/") === 0;
   };
 
-  let zona = "publico";
+  let zona = "assistencia";
   if (comeca("/admin")) zona = "admin";
   else if (comeca("/minha-jb")) zona = "clinica";
   else if (comeca("/checkout") || comeca("/carrinho")) zona = "checkout";
