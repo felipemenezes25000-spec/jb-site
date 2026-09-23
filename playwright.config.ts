@@ -10,8 +10,8 @@ import { defineConfig, devices } from "@playwright/test";
  * transforma uma decisão de produto em falso vermelho.
  *
  * Este gate cobre a jornada que existe hoje: anúncio -> landing do equipamento
- * -> diagnóstico -> Jeferson/Jackson, em desktop e mobile, além das garantias
- * de 410 para a superfície comercial que saiu.
+ * -> diagnóstico -> Jeferson/Jackson, nos extremos de 320 a 1920px, além das
+ * garantias de 410 para a superfície comercial que saiu.
  */
 
 const PORTA = Number(process.env.E2E_PORT ?? 3210);
@@ -42,8 +42,11 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "desktop",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+      name: "mobile-compact",
+      use: {
+        ...devices["Pixel 7"],
+        viewport: { width: 320, height: 760 },
+      },
     },
     {
       name: "mobile",
@@ -51,6 +54,14 @@ export default defineConfig({
         ...devices["Pixel 7"],
         viewport: { width: 390, height: 844 },
       },
+    },
+    {
+      name: "desktop",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      name: "desktop-wide",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } },
     },
   ],
   webServer: process.env.E2E_BASE_URL
