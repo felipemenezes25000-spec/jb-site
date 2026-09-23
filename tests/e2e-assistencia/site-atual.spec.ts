@@ -45,6 +45,11 @@ test.describe("JB assistência — jornada pública atual", () => {
     await expect(jeferson).toHaveAttribute("href", /5511963417994/);
     await expect(jackson).toHaveAttribute("href", /5511986038421/);
 
+    const largura = await page.evaluate(() => ({
+      documento: document.documentElement.scrollWidth,
+      viewport: document.documentElement.clientWidth,
+    }));
+    expect(largura.documento).toBeLessThanOrEqual(largura.viewport + 2);
     expect(erros).toEqual([]);
   });
 
@@ -87,7 +92,7 @@ test.describe("JB assistência — jornada pública atual", () => {
   }
 
   test("mobile mantém conversão disponível depois que a abertura sai da tela", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "comportamento específico de tela pequena");
+    test.skip(!testInfo.project.name.startsWith("mobile"), "comportamento específico de tela pequena");
     await page.goto("/");
     await page.locator("#equipamentos").scrollIntoViewIfNeeded();
 
