@@ -1,0 +1,108 @@
+/* ============================================================================
+   JB Desktop Excellence — composição dedicada para 1440–1920+
+
+   Tiras grandes não devem parecer a versão de 1024px centralizada no meio de
+   um monitor enorme. Esta camada abre a composição sem esticar texto, preserva
+   comprimento de leitura e dá mais presença à triagem/fotografia.
+   ============================================================================ */
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    width: min(calc(100% - 6rem), 96rem);
+    grid-template-columns: minmax(0, 1.08fr) minmax(34rem, 0.92fr);
+    column-gap: clamp(4rem, 5vw, 6.75rem);
+    padding-top: 4rem;
+    padding-bottom: 5rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-title {
+    max-width: 10.5ch;
+    font-size: clamp(5.25rem, 5.35vw, 6.65rem);
+    line-height: 0.91;
+    letter-spacing: -0.055em;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-subtexto {
+    max-width: 39rem;
+    font-size: 1.125rem;
+    line-height: 1.62;
+  }
+
+  [data-jb-site="assistencia"] .jb-diagnostico-stage {
+    width: 100%;
+    max-width: 36rem;
+    justify-self: end;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-foto {
+    max-width: 48rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-foto-premium > div:first-child {
+    border-radius: 2rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-simulador-premium,
+  [data-jb-site="assistencia"] .jb-faq-lista {
+    border-radius: 1.75rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-fluxo-passo,
+  [data-jb-site="assistencia"] .jb-autoridade-card,
+  [data-jb-site="assistencia"] .jb-cartao-equipamento {
+    border-radius: 1.6rem;
+  }
+
+  [data-jb-site="assistencia"] section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium) > .container-jb {
+    width: min(calc(100% - 7rem), 92rem);
+    grid-template-columns: minmax(0, 1.08fr) minmax(31rem, 0.82fr);
+    column-gap: clamp(4.5rem, 6vw, 7.5rem);
+    padding-top: 4.5rem;
+    padding-bottom: 5rem;
+  }
+
+  [data-jb-site="assistencia"] section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium) #abertura-titulo {
+    max-width: 10ch;
+    font-size: clamp(4.8rem, 4.85vw, 6rem);
+    line-height: 0.94;
+    letter-spacing: -0.05em;
+  }
+
+  [data-jb-site="assistencia"] .jb-content-hero,
+  [data-jb-site="assistencia"] .jb-institucional-hero {
+    padding-top: 0.75rem;
+  }
+}
+
+@media (min-width: 120rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    width: min(calc(100% - 10rem), 102rem);
+    grid-template-columns: minmax(0, 1.12fr) minmax(36rem, 0.88fr);
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-title {
+    font-size: 6.8rem;
+  }
+
+  [data-jb-site="assistencia"] section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium) > .container-jb {
+    width: min(calc(100% - 10rem), 98rem);
+  }
+}
+
+/* Monitor amplo costuma vir com ponteiro fino: movimentos só no hover/foco,
+   nunca em loop. */
+@media (min-width: 90rem) and (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover,
+  [data-jb-site="assistencia"] .jb-autoridade-card:hover,
+  [data-jb-site="assistencia"] .jb-fluxo-passo:hover {
+    translate: 0 -3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-jb-site="assistencia"] .jb-cartao-equipamento,
+  [data-jb-site="assistencia"] .jb-autoridade-card,
+  [data-jb-site="assistencia"] .jb-fluxo-passo {
+    translate: none !important;
+  }
+}
