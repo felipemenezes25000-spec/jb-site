@@ -17,7 +17,7 @@ import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
    ============================================================================ */
 
 const MENSAGEM =
-  "Olá, JB! Vim pelo site. Tenho um equipamento com problema e não quero parar a agenda. Podem me ajudar?";
+  "Olá, JB! Vim pelo site. Tenho um equipamento com problema e quero entender o próximo passo da assistência. Podem me ajudar?";
 
 function Controle({
   rotulo,
@@ -100,7 +100,7 @@ export function SimuladorParada({ contatos }: { contatos: ContatoWhatsapp[] }) {
             Seus próprios números
           </p>
           <h3 className="mt-2 text-xl font-extrabold tracking-tight text-graf-950 sm:text-2xl">
-            Quanto uma parada mexe na agenda?
+            Quanto uma parada pode mexer na agenda?
           </h3>
         </div>
         <span className="hidden rounded-full border border-graf-200 bg-graf-50 px-3 py-1 text-xs font-bold text-graf-600 sm:inline-flex">
@@ -142,17 +142,18 @@ export function SimuladorParada({ contatos }: { contatos: ContatoWhatsapp[] }) {
                 {exibido}
               </motion.span>
               <span className="mt-2 block text-sm font-bold text-white/80">
-                consultas em risco de remarcar
+                consultas potencialmente afetadas
               </span>
             </p>
           </div>
-          <p className="relative mt-4 text-xs font-medium leading-relaxed text-white/55">
-            Cálculo simples: pacientes por dia × dias de parada. Não é previsão financeira da JB.
+          <p className="relative mt-4 text-xs font-medium leading-relaxed text-white/60">
+            Cenário simples: pacientes por dia × dias de parada. Nem toda consulta depende do
+            mesmo equipamento; isto não é previsão financeira nem prazo de conserto da JB.
           </p>
         </div>
         <p className="sr-only" aria-live="polite">
-          {total} consultas em risco com {pacientes} pacientes por dia e {dias}{" "}
-          {dias === 1 ? "dia" : "dias"} parado.
+          Cenário de {total} consultas potencialmente afetadas com {pacientes} pacientes por dia e {dias}{" "}
+          {dias === 1 ? "dia" : "dias"} de parada.
         </p>
 
         <OpcoesWhatsapp
