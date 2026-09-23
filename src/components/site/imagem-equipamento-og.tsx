@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 
+import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { paginaPorSlug } from "@/lib/paginas-equipamento";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
@@ -28,8 +29,13 @@ export async function imagemDoEquipamento(slug: string) {
   const empresa = s.empresa_nome || "JB Soluções Odontológicas";
   const desde = s.empresa_desde || "2011";
   const nome = pagina?.nomeCurto ?? "Equipamento";
+  const atendentes = contatosWhatsapp(s)
+    .map((contato) => contato.nome)
+    .filter(Boolean)
+    .slice(0, 2);
+  const canal = atendentes.length > 0 ? `${atendentes.join(" ou ")} no WhatsApp` : "Equipe técnica no WhatsApp";
 
-  const provas = ["Todas as marcas", `Desde ${desde}`, `${cidade} e região`];
+  const provas = ["Todas as marcas", "Orçamento antes da troca", `Desde ${desde}`];
 
   return new ImageResponse(
     (
@@ -98,7 +104,7 @@ export async function imagemDoEquipamento(slug: string) {
               display: "flex",
             }}
           >
-            Conserto de {pagina?.palavraChave ?? "equipamento odontológico"}
+            {cidade} e região
           </div>
         </div>
 
@@ -138,7 +144,7 @@ export async function imagemDoEquipamento(slug: string) {
             }}
           >
             {pagina
-              ? `Conte o defeito e escolha com quem falar. A mensagem chega pronta para a equipe técnica no WhatsApp.`
+              ? `Conte o defeito, escolha com quem falar e revise a mensagem antes de abrir o WhatsApp.`
               : "Assistência técnica odontológica com triagem direta pelo WhatsApp."}
           </div>
         </div>
@@ -174,7 +180,7 @@ export async function imagemDoEquipamento(slug: string) {
               color: "#9fa4aa",
             }}
           >
-            WhatsApp direto com a equipe
+            {canal}
           </div>
         </div>
       </div>
