@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Script from "next/script";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReportWebVitals } from "next/web-vitals";
 
 import {
@@ -23,30 +24,25 @@ import { normalizarRota } from "@/lib/analytics/taxonomia";
 import { Botao } from "@/components/ui/button";
 
 /* ============================================================================
-   Medição: os carregadores, o aviso e as Core Web Vitals
+   Medição: carregadores, consentimento, PageView e Core Web Vitals
 
    Três destinos possíveis: Google Analytics (uso do site), Google Ads e pixel
-   da Meta (qual anúncio trouxe a conversa no WhatsApp). Quatro decisões que
-   valem para os três:
+   da Meta (qual anúncio trouxe a conversa no WhatsApp).
 
-   1. **O script só entra depois do "sim".** Não é carregado escondido nem
-      "sem cookies até aceitar" — ele simplesmente não existe na página de quem
-      não aceitou. É a diferença entre respeitar a recusa e registrá-la.
+   Regras:
 
-   2. **Nada de HTML arbitrário.** O painel guarda só identificadores
-      (`G-…`, `AW-…`, o número do pixel), validados ao salvar e de novo em
-      `destinosDeMedicao`, e este componente monta os scripts. Um campo que
-      aceitasse o "código do pixel" colado seria injeção de script com passo
-      administrativo no meio.
-
-   3. **Sem destino configurado, nada acontece.** Nem o aviso aparece:
-      perguntar sobre medição a quem não tem medição configurada é pedir uma
-      decisão sem consequência.
-
-   4. **A origem da visita é guardada antes da resposta.** A UTM do anúncio só
-      existe na URL de chegada; se a pessoa aceitar dois cliques depois, ela
-      já sumiu. Guardar no `sessionStorage` não envia nada: quem envia é
-      `medir`, e ele pergunta pelo consentimento.
+   1. **O script só entra depois do "sim".** Sem aceite, Google e Meta nem são
+      carregados.
+   2. **Nada de HTML arbitrário.** O painel guarda apenas identificadores
+      validados e este componente monta os scripts.
+   3. **Sem destino configurado, nada acontece.** Nem aviso de consentimento.
+   4. **A origem da visita é guardada antes da resposta.** A UTM pode sumir da
+      URL depois da navegação; guardar em sessionStorage não envia nada.
+   5. **PageView é explícito.** GA4 usa `send_page_view:false`, e o pixel da Meta
+      não deve depender de heurística de histórico. A rota atual é emitida na
+      primeira página depois do consentimento e em cada navegação do App Router.
+      Query string não é enviada no PageView: evita que parâmetro arbitrário da
+      URL vire dado de analytics.
    ============================================================================ */
 
 export function Medicao({ destinos }: { destinos: DestinosDeMedicao }) {
@@ -88,6 +84,7 @@ export function Medicao({ destinos }: { destinos: DestinosDeMedicao }) {
         <>
           {ga4 || googleAds ? <ScriptDoGoogle ga4={ga4} googleAds={googleAds} /> : null}
           {metaPixel ? <PixelDaMeta id={metaPixel} /> : null}
+          {ga4 || metaPixel ? <RastreamentoDePaginas ga4={ga4} metaPixel={metaPixel} /> : null}
           {ga4 ? <RelatorioDeVitals /> : null}
         </>
       ) : null}
@@ -102,13 +99,11 @@ export function Medicao({ destinos }: { destinos: DestinosDeMedicao }) {
  * O `gtag.js`, que serve ao Analytics e ao Ads com um carregador só.
  *
  * O Ads entra num grupo próprio (`anuncios`): evento sem `send_to` vai para o
- * grupo padrão, que é o do Analytics, e assim os eventos do site não viram
- * ruído na conta de anúncio. A conversão do WhatsApp é enviada com `send_to`
- * explícito (`@/lib/analytics/anuncios`) e chega de qualquer jeito.
+ * grupo padrão, que é o do Analytics. A conversão do WhatsApp é enviada com
+ * `send_to` explícito em `@/lib/analytics/anuncios`.
  *
- * `afterInteractive` e não `beforeInteractive`: medir é secundário à página
- * funcionar, e um script de terceiro no caminho crítico é exatamente o que
- * piora o LCP que ele deveria ajudar a medir.
+ * `send_page_view:false` é deliberado: `RastreamentoDePaginas` abaixo mede a
+ * primeira rota e as navegações SPA sem duplicar a chegada.
  */
 function ScriptDoGoogle({ ga4, googleAds }: { ga4: string | null; googleAds: string | null }) {
   const carregador = ga4 ?? googleAds ?? "";
@@ -140,9 +135,11 @@ function ScriptDoGoogle({ ga4, googleAds }: { ga4: string | null; googleAds: str
 }
 
 /**
- * O pixel da Meta, no código-base oficial, com o identificador já validado
- * (só dígitos). O `PageView` da chegada sai daqui; as navegações internas o
- * próprio `fbevents.js` percebe pelo histórico do navegador.
+ * Código-base do pixel da Meta.
+ *
+ * Ele inicializa o destino, mas não dispara `PageView` aqui. A primeira visita
+ * e as navegações internas passam pelo mesmo `RastreamentoDePaginas`, evitando
+ * um PageView inicial duplicado e outro modelo de contagem para SPA.
  */
 function PixelDaMeta({ id }: { id: string }) {
   return (
@@ -154,10 +151,78 @@ function PixelDaMeta({ id }: { id: string }) {
         t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
         document,'script','https://connect.facebook.net/en_US/fbevents.js');
         fbq('init', ${JSON.stringify(id)});
-        fbq('track', 'PageView');
       `}
     </Script>
   );
+}
+
+/* -------------------------------------------------------------- PageView */
+
+/**
+ * PageView da chegada e de cada navegação do App Router.
+ *
+ * Os scripts de terceiro carregam de forma assíncrona. A rota pode mudar antes
+ * de `gtag`/`fbq` existirem, então esta peça tenta por uma janela curta e para
+ * assim que cada destino recebeu aquela rota. `useRef` impede repetição do
+ * mesmo caminho em remontagem de efeito; navegar para outra página e voltar
+ * conta novamente, como uma nova visualização deve contar.
+ */
+function RastreamentoDePaginas({
+  ga4,
+  metaPixel,
+}: {
+  ga4: string | null;
+  metaPixel: string | null;
+}) {
+  const pathname = usePathname();
+  const ultimoGoogle = useRef<string | null>(null);
+  const ultimoMeta = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    let temporizador = 0;
+    let tentativas = 0;
+
+    const rota = normalizarRota(pathname);
+    const localizacao = `${window.location.origin}${pathname}`;
+
+    const emitir = () => {
+      if (cancelado) return;
+
+      if (ga4 && ultimoGoogle.current !== pathname && typeof window.gtag === "function") {
+        window.gtag("event", "page_view", {
+          page_path: rota,
+          page_location: localizacao,
+          page_title: document.title,
+        });
+        ultimoGoogle.current = pathname;
+      }
+
+      if (metaPixel && ultimoMeta.current !== pathname && typeof window.fbq === "function") {
+        window.fbq("track", "PageView");
+        ultimoMeta.current = pathname;
+      }
+
+      const faltaGoogle = Boolean(ga4 && ultimoGoogle.current !== pathname);
+      const faltaMeta = Boolean(metaPixel && ultimoMeta.current !== pathname);
+      if (!faltaGoogle && !faltaMeta) return;
+
+      tentativas += 1;
+      if (tentativas < 30) temporizador = window.setTimeout(emitir, 100);
+    };
+
+    /* Um frame dá ao `<head>` da rota nova tempo para atualizar o título antes
+       de o PageView capturar `document.title`. */
+    const quadro = window.requestAnimationFrame(emitir);
+
+    return () => {
+      cancelado = true;
+      window.cancelAnimationFrame(quadro);
+      window.clearTimeout(temporizador);
+    };
+  }, [pathname, ga4, metaPixel]);
+
+  return null;
 }
 
 /* --------------------------------------------------------- Core Web Vitals */
@@ -172,8 +237,6 @@ function PixelDaMeta({ id }: { id: string }) {
  */
 function RelatorioDeVitals() {
   useReportWebVitals((metrica) => {
-    /* Só as três do escopo. O Next reporta mais (FCP, TTFB); mandar tudo
-       encheria o relatório de métrica que ninguém definiu meta para. */
     if (metrica.name !== "LCP" && metrica.name !== "INP" && metrica.name !== "CLS") return;
 
     medir(
@@ -181,13 +244,9 @@ function RelatorioDeVitals() {
       {
         rota: normalizarRota(window.location.pathname),
         resultado: metrica.name,
-        /* Valor em milésimos: CLS é fracionário e agregador só soma inteiro.
-           Quem lê o relatório divide por mil. */
         quantidade: Math.round(metrica.value * 1000),
         dispositivo: window.matchMedia("(pointer: coarse)").matches ? "toque" : "mouse",
       },
-      /* Uma medição por ocorrência: o `id` da métrica é estável dentro da
-         navegação, então voltar para a página não duplica o número. */
       { referencia: `${metrica.name}:${metrica.id}` },
     );
   });
@@ -197,21 +256,6 @@ function RelatorioDeVitals() {
 
 /* ------------------------------------------------------------------- aviso */
 
-/**
- * O aviso de medição.
- *
- * Duas ações do mesmo peso visual. "Aceitar" não é maior nem colorido, e
- * "recusar" não está escondido num link cinza — a assimetria dos dois botões é
- * a forma mais comum de arrancar um consentimento que não foi dado.
- *
- * Diz quem recebe (Google, Meta) e para quê: saber qual anúncio traz
- * conversa. Consentimento para "melhorar a experiência" não é informado.
- *
- * Não bloqueia a tela: é uma faixa no rodapé, dispensável, que não cobre
- * conteúdo nem prende o foco. Quem ignora continua navegando, e sem medição.
- * No celular o texto é curto, para a faixa não comer meia tela de quem chegou
- * do anúncio querendo chamar no WhatsApp.
- */
 function AvisoDeMedicao({ destinos }: { destinos: string[] }) {
   const quem = destinos.join(" e ");
 
