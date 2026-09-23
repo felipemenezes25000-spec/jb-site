@@ -41,6 +41,11 @@ const mono = JetBrains_Mono({
 export const viewport: Viewport = {
   themeColor: "#ffffff",
   colorScheme: "light",
+  /* Faz `env(safe-area-inset-*)` representar de verdade o recorte do iPhone.
+     Sem `viewport-fit=cover`, a barra fixa já tinha CSS de safe area, mas o
+     navegador podia manter a área útil artificialmente encolhida e o padding
+     não correspondia ao aparelho. */
+  viewportFit: "cover",
 };
 
 /* As duas leituras abaixo passam por `configuracoesPublicas`, que já é
@@ -61,8 +66,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(SITE_URL),
+    applicationName: textos.empresa,
     title: { default: textos.titulo, template: `%s · ${textos.empresa}` },
     description: textos.descricao,
+    appleWebApp: {
+      capable: true,
+      title: textos.empresa,
+      statusBarStyle: "default",
+    },
     openGraph: {
       type: "website",
       locale: "pt_BR",
