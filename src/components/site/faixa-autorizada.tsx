@@ -37,44 +37,59 @@ export function FaixaAutorizada({ desde, cidade }: { desde: string; cidade: stri
       aria-labelledby="autorizada-titulo"
       className="scroll-mt-20 border-b border-graf-200 bg-surface-muted"
     >
-      <div className="container-jb grid gap-10 py-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2fr)] lg:items-center lg:gap-14 lg:py-14">
-        <div className="jb-revela flex gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-jb-500 text-white shadow-card">
-            <BadgeCheck className="size-6" aria-hidden />
-          </span>
-          <div>
-            <h2 id="autorizada-titulo" className="text-title texto-forte">
-              Atendemos todas as marcas
-            </h2>
-            <p className="mt-2 text-corpo leading-relaxed text-graf-600">
-              E a JB é assistência técnica autorizada EVOXX, na lista oficial do fabricante. Não
-              é só dizer: dá para conferir.
-            </p>
-            <a
-              href={LISTA_EVOXX}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="foco-jb mt-3 inline-flex min-h-11 items-center gap-1 rounded text-sm font-bold text-jb-700 underline-offset-4 hover:underline"
-            >
-              Conferir no site da EVOXX
-              <ArrowUpRight className="size-4" aria-hidden />
-            </a>
+      <div className="container-jb py-12 lg:py-16">
+        <div className="grid overflow-hidden rounded-3xl border border-graf-200/90 bg-white shadow-[0_30px_80px_-58px_rgb(17_19_21/0.5)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.7fr)]">
+          <div className="jb-revela relative overflow-hidden border-b border-graf-100 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-9">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -left-20 -top-24 size-60 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.11),transparent)]"
+            />
+            <div className="relative">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-jb-500 text-white shadow-[0_18px_38px_-24px_rgb(224_20_27/0.7)]">
+                <BadgeCheck className="size-6" aria-hidden />
+              </span>
+              <p className="mt-5 text-[0.6875rem] font-extrabold uppercase tracking-[0.15em] text-jb-700">
+                Cobertura + credencial verificável
+              </p>
+              <h2 id="autorizada-titulo" className="text-title texto-forte mt-2 max-w-md">
+                Atendemos todas as marcas
+              </h2>
+              <p className="mt-3 max-w-lg text-corpo leading-relaxed text-graf-600">
+                E a JB é assistência técnica autorizada EVOXX, na lista oficial do fabricante. Não
+                é só dizer: dá para conferir.
+              </p>
+              <a
+                href={LISTA_EVOXX}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="foco-jb mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl border border-jb-200 bg-jb-50 px-4 text-sm font-extrabold text-jb-800 shadow-xs transition-[transform,border-color,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-jb-300 hover:bg-white hover:shadow-card"
+              >
+                Conferir na lista oficial EVOXX
+                <ArrowUpRight className="size-4" aria-hidden />
+              </a>
+            </div>
           </div>
-        </div>
 
-        <ul className="grid gap-6 sm:grid-cols-3 sm:gap-8">
-          {provas.map((prova, indice) => (
-            <li
-              key={prova.titulo}
-              className="jb-revela border-t-2 border-jb-500 pt-4"
-              style={{ "--i": indice + 1 } as React.CSSProperties}
-            >
-              <prova.icone className="size-5 text-jb-600" aria-hidden />
-              <p className="mt-3 text-corpo font-extrabold text-graf-950">{prova.titulo}</p>
-              <p className="mt-1 text-sm leading-relaxed text-graf-600">{prova.texto}</p>
-            </li>
-          ))}
-        </ul>
+          <ul className="grid gap-px bg-graf-100 sm:grid-cols-3">
+            {provas.map((prova, indice) => (
+              <li
+                key={prova.titulo}
+                className="jb-revela group relative min-h-[11rem] bg-white p-6 transition-colors duration-300 hover:bg-graf-50/70 sm:p-7 lg:min-h-full"
+                style={{ "--i": indice + 1 } as React.CSSProperties}
+              >
+                <span className="flex size-10 items-center justify-center rounded-xl border border-graf-200 bg-graf-50 text-jb-600 shadow-xs transition-[transform,background-color,border-color] duration-300 group-hover:-translate-y-0.5 group-hover:border-jb-200 group-hover:bg-jb-50">
+                  <prova.icone className="size-5" aria-hidden />
+                </span>
+                <p className="mt-5 text-corpo font-extrabold leading-tight text-graf-950">{prova.titulo}</p>
+                <p className="mt-2 text-sm leading-relaxed text-graf-600">{prova.texto}</p>
+                <span
+                  aria-hidden
+                  className="absolute inset-x-6 bottom-0 h-0.5 origin-left scale-x-0 bg-gradient-to-r from-jb-500 to-jb-300 transition-transform duration-300 group-hover:scale-x-100"
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );
