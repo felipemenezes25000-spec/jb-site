@@ -79,6 +79,12 @@ test.describe("JB assistência — jornada pública atual", () => {
       expect(resposta?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toContainText(equipamento);
       await expect(page.getByRole("heading", { level: 1 })).toContainText(/parou\?/i);
+
+      // O cabeçalho é atalho; a conversão real da landing precisa existir na
+      // própria abertura para o clique pago não depender de voltar ao topo nem
+      // de uma barra fixa. Jeferson e Jackson continuam disponíveis nos dois.
+      await expect(page.locator('a[data-whatsapp="abertura"]')).toBeVisible();
+      await expect(page.locator('a[data-whatsapp="abertura-segundo"]')).toBeVisible();
       await expect(page.locator('a[data-whatsapp="cabecalho"]')).toBeVisible();
       await expect(page.locator('a[data-whatsapp="cabecalho-segundo"]')).toBeVisible();
 
