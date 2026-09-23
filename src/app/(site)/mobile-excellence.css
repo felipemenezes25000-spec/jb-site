@@ -22,6 +22,27 @@
   }
 }
 
+/* Em celular, movimento que só decora não precisa manter a GPU acordada.
+   Estado, troca de passo e aparição da barra continuam animados. */
+@media (pointer: coarse) and (max-width: 47.99rem) {
+  [data-jb-site="assistencia"] .jb-scanline {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-foto-viva,
+  [data-jb-site="assistencia"] .jb-boia,
+  [data-jb-site="assistencia"] .jb-boia-2,
+  [data-jb-site="assistencia"] .jb-flutua,
+  [data-jb-site="assistencia"] .jb-flutua-lento {
+    animation: none !important;
+  }
+
+  [data-jb-site="assistencia"] .jb-pulso::after {
+    animation: none !important;
+    opacity: 0;
+  }
+}
+
 /* ---------------------------------------------------------------- 320 px */
 
 @media (max-width: 22.49rem) {
