@@ -4,20 +4,12 @@ import { BadgeCheck, FileCheck2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
-   Foto da abertura
+   Foto editorial da assistência
 
-   Gente trabalhando em equipamento é o que segura o olho de quem chega de
-   anúncio: a foto mostra, antes de qualquer texto, que aqui se conserta
-   autoclave. Ela respira (zoom lento) e dois selos boiam por cima, cada um no
-   seu ritmo.
-
-   A imagem é ilustrativa, do protótipo aprovado, e o texto alternativo diz o
-   que ela mostra, sem afirmar que é a equipe da JB. Quando houver foto real
-   da bancada, é só trocar `public/site/bancada.webp`.
-
-   É a maior imagem acima da dobra, então carrega com prioridade. No celular
-   ela fica com mais presença visual; no computador vira uma faixa editorial
-   abaixo da conversão, sem competir com o diagnóstico em 3 toques.
+   Depois da reorganização mobile, a triagem vem antes desta imagem. Por isso
+   ela não é mais pré-carregada: no celular isso evita competir com logo,
+   fontes e interface que aparecem primeiro. O Next continua otimizando e
+   carregando a foto quando ela se aproxima da viewport.
    ============================================================================ */
 
 export function FotoAbertura({ className }: { className?: string }) {
@@ -28,7 +20,6 @@ export function FotoAbertura({ className }: { className?: string }) {
           src="/site/bancada.webp"
           alt="Técnico consertando uma autoclave odontológica na bancada"
           fill
-          priority
           sizes="(min-width: 1024px) 52vw, 92vw"
           className="jb-foto-viva object-cover object-[60%_40%]"
         />
