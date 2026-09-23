@@ -179,6 +179,16 @@ test.describe("JB assistência — jornada pública atual", () => {
     expect(href).toContain("Osasco");
   });
 
+  test("páginas legais não recebem a barra fixa de conversão", async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith("mobile"), "comportamento específico de tela pequena");
+
+    await page.goto("/privacidade");
+    await expect(page.locator(".jb-barra-movel")).toHaveCount(0);
+
+    await page.goto("/termos");
+    await expect(page.locator(".jb-barra-movel")).toHaveCount(0);
+  });
+
   for (const rota of REMOVIDAS) {
     test(`${rota} informa remoção definitiva com HTTP 410`, async ({ page }) => {
       const resposta = await page.goto(rota);
