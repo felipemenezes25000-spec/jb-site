@@ -6,17 +6,9 @@ import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 /* ============================================================================
    Faixa do topo
 
-   Uma tira vermelha fina, acima do cabeçalho, com as frases que vendem a JB
-   correndo sem parar. Não é link: um toque nela abriria o WhatsApp de uma
-   pessoa só, e o site sempre oferece os dois, Jeferson e Jackson, que estão
-   logo abaixo, no cabeçalho.
-
-   Vermelho em faixa estreita é "sinal", não fundo de área grande: é o mesmo
-   uso do botão, esticado. As frases são as mesmas afirmações que a página já
-   sustenta (EVOXX conferível, desde o ano configurado, orçamento antes da
-   troca), nenhuma inventada para a faixa.
-
-   Com movimento reduzido a tira para e mostra a primeira frase.
+   Mantém a assinatura vermelha de confiança, mas fica mais compacta no
+   celular para devolver pixels à primeira dobra. O conteúdo continua sendo
+   composto só por afirmações já sustentadas pelo site e pela operação.
    ============================================================================ */
 
 type Frase = { icone: React.ComponentType<{ className?: string }>; texto: string };
@@ -27,7 +19,7 @@ function Trilho({ frases, oculto }: { frases: Frase[]; oculto?: boolean }) {
       {frases.map((frase) => (
         <span
           key={frase.texto}
-          className="flex items-center gap-2 whitespace-nowrap px-6 text-[0.8125rem] font-bold tracking-tight"
+          className="flex items-center gap-2 whitespace-nowrap px-5 text-[0.75rem] font-bold tracking-tight sm:px-6 sm:text-[0.8125rem]"
         >
           <frase.icone className="size-3.5 shrink-0 text-white/85" />
           {frase.texto}
@@ -62,7 +54,7 @@ export function FaixaTopo({
 
   return (
     <div className="jb-ticker relative z-50 block overflow-hidden bg-jb-600 text-white">
-      <span className="jb-ticker-trilho flex h-9 items-center">
+      <span className="jb-ticker-trilho flex h-8 items-center sm:h-9">
         <Trilho frases={frases} />
         <Trilho frases={frases} oculto />
       </span>
