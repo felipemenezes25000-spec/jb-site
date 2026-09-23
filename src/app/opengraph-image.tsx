@@ -132,7 +132,7 @@ export default async function ImagemDeCompartilhamento() {
               display: "flex",
             }}
           >
-            Autoclave, compressor, cadeira e outros equipamentos. Triagem direto pelo WhatsApp.
+            Autoclave, compressor, cadeira e outros equipamentos. Triagem direta pelo WhatsApp.
           </div>
         </div>
 
