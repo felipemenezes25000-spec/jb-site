@@ -1,0 +1,230 @@
+/* ============================================================================
+   JB Content Premium — Central Técnica, cases e avaliação
+   ============================================================================ */
+
+[data-jb-site="assistencia"] .jb-content-hub,
+[data-jb-site="assistencia"] .jb-case-processo,
+[data-jb-site="assistencia"] .jb-content-cta,
+[data-jb-site="assistencia"] .jb-avaliacao-page {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+
+[data-jb-site="assistencia"] .jb-content-hub {
+  background:
+    radial-gradient(circle at 88% 8%, rgb(224 20 27 / 0.055), transparent 27rem),
+    linear-gradient(180deg, #fff 0%, #fff 68%, #fafbfc 100%);
+}
+
+[data-jb-site="assistencia"] .jb-content-hub::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.16;
+  background-image: radial-gradient(rgb(17 19 21 / 0.16) 0.65px, transparent 0.65px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse at 82% 12%, #000, transparent 54%);
+}
+
+[data-jb-site="assistencia"] .jb-content-hero {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-content-hero::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  top: 0.45rem;
+  width: 3px;
+  height: 4.5rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-jb-500), transparent);
+}
+
+/* ---------------------------------------------------------- central técnica */
+
+[data-jb-site="assistencia"] .jb-filtros-premium {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.35rem;
+  border: 1px solid rgb(17 19 21 / 0.075);
+  border-radius: 1.2rem;
+  background: rgb(255 255 255 / 0.78);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 20px 48px -40px rgb(12 14 16 / 0.45);
+  backdrop-filter: blur(14px);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-card {
+  border-color: rgb(17 19 21 / 0.09);
+  background:
+    radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.035), transparent 12rem),
+    #fff;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 24px 55px -44px rgb(12 14 16 / 0.48);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-sem-capa {
+  background:
+    radial-gradient(circle at 80% 10%, rgb(224 20 27 / 0.08), transparent 10rem),
+    linear-gradient(135deg, #f7f8f9, #fff);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-artigo-card:hover {
+    transform: translateY(-4px);
+    border-color: rgb(224 20 27 / 0.19);
+    box-shadow: 0 34px 72px -45px rgb(12 14 16 / 0.52);
+  }
+}
+
+/* ------------------------------------------------------------------- cases */
+
+[data-jb-site="assistencia"] .jb-case-card,
+[data-jb-site="assistencia"] .jb-case-etapa {
+  border-color: rgb(17 19 21 / 0.09);
+  background:
+    radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.035), transparent 11rem),
+    linear-gradient(180deg, #fff, #fdfdfd);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 22px 50px -42px rgb(12 14 16 / 0.46);
+  transition:
+    transform 320ms var(--ease-out-quint),
+    border-color 240ms ease,
+    box-shadow 320ms var(--ease-out-quint);
+}
+
+[data-jb-site="assistencia"] .jb-case-etapa::after {
+  content: "";
+  position: absolute;
+  right: -2.5rem;
+  bottom: -3rem;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 999px;
+  background: rgb(224 20 27 / 0.055);
+  filter: blur(18px);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-case-card:hover,
+  [data-jb-site="assistencia"] .jb-case-etapa:hover {
+    transform: translateY(-3px);
+    border-color: rgb(224 20 27 / 0.18);
+    box-shadow: 0 32px 66px -43px rgb(12 14 16 / 0.5);
+  }
+}
+
+[data-jb-site="assistencia"] .jb-case-processo {
+  background:
+    radial-gradient(circle at 12% 88%, rgb(224 20 27 / 0.045), transparent 24rem),
+    linear-gradient(180deg, #f6f7f8, #f8f9fa);
+}
+
+/* ---------------------------------------------------------- estados vazios */
+
+[data-jb-site="assistencia"] .jb-content-empty {
+  border-color: rgb(17 19 21 / 0.085);
+  background:
+    radial-gradient(circle at 92% 5%, rgb(224 20 27 / 0.055), transparent 18rem),
+    linear-gradient(180deg, #f8f9fa, #f5f6f7);
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+/* ------------------------------------------------------------- CTA de hub */
+
+[data-jb-site="assistencia"] .jb-content-cta {
+  background:
+    radial-gradient(circle at 88% 18%, rgb(224 20 27 / 0.05), transparent 22rem),
+    #f6f7f8;
+}
+
+/* ------------------------------------------------------------- avaliação */
+
+[data-jb-site="assistencia"] .jb-avaliacao-page {
+  background:
+    radial-gradient(circle at 85% 5%, rgb(224 20 27 / 0.07), transparent 24rem),
+    linear-gradient(180deg, #f7f8f9 0%, #fff 100%);
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-shell {
+  border-color: rgb(17 19 21 / 0.09);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 42px 100px -62px rgb(12 14 16 / 0.62);
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-nota,
+[data-jb-site="assistencia"] .jb-avaliacao-campo,
+[data-jb-site="assistencia"] .jb-avaliacao-consentimento {
+  border-color: rgb(17 19 21 / 0.085);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 18px 42px -36px rgb(12 14 16 / 0.42);
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-consentimento {
+  background:
+    radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.04), transparent 12rem),
+    #f7f8f9;
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-opcao {
+  box-shadow: 0 10px 24px -22px rgb(12 14 16 / 0.46);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-avaliacao-opcao:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px -24px rgb(12 14 16 / 0.44);
+  }
+}
+
+/* ----------------------------------------------------------------- mobile */
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-content-hero::before {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-filtros-premium {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-filtros-premium::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-filtros-premium ul {
+    width: max-content;
+    flex-wrap: nowrap;
+  }
+
+  [data-jb-site="assistencia"] .jb-avaliacao-shell {
+    border-radius: 1.3rem;
+    padding: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-avaliacao-nota,
+  [data-jb-site="assistencia"] .jb-avaliacao-campo,
+  [data-jb-site="assistencia"] .jb-avaliacao-consentimento {
+    border-radius: 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-jb-site="assistencia"] .jb-artigo-card,
+  [data-jb-site="assistencia"] .jb-case-card,
+  [data-jb-site="assistencia"] .jb-case-etapa,
+  [data-jb-site="assistencia"] .jb-avaliacao-opcao {
+    transition: none !important;
+  }
+}
