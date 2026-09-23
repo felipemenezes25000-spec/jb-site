@@ -8,6 +8,7 @@ import "./site.css";
 import "./premium.css";
 import "./ultra-premium.css";
 import "./sections-premium.css";
+import "./conversion-panels.css";
 
 /* ============================================================================
    Casca do site de assistência
