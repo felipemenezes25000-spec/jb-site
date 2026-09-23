@@ -97,11 +97,15 @@ test.describe("JB assistência — jornada pública atual", () => {
     });
   }
 
-  test("mobile mantém conversão e o equipamento escolhido depois que a abertura sai da tela", async ({ page }, testInfo) => {
+  test("mobile preserva a triagem completa quando a abertura sai da tela", async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith("mobile"), "comportamento específico de tela pequena");
     await page.goto("/");
 
     await page.getByRole("button", { name: "Autoclave", exact: true }).click();
+    await page.getByRole("button", { name: "Não pressuriza", exact: true }).click();
+    await page.getByRole("button", { name: "Parado, não consigo atender", exact: true }).click();
+    await page.getByLabel(/Cidade da clínica/i).fill("Osasco");
+
     await page.locator("#equipamentos").scrollIntoViewIfNeeded();
 
     const barra = page.locator(".jb-barra-movel-premium");
@@ -114,8 +118,11 @@ test.describe("JB assistência — jornada pública atual", () => {
     await expect(segundo).toBeVisible();
     await expect(principal).toHaveAttribute("data-equipamento", "autoclave");
 
-    const href = await principal.getAttribute("href");
-    expect(decodeURIComponent(href ?? "")).toContain("Autoclave");
+    const href = decodeURIComponent((await principal.getAttribute("href")) ?? "");
+    expect(href).toContain("Autoclave");
+    expect(href).toContain("Não pressuriza");
+    expect(href).toContain("parado e não consigo atender");
+    expect(href).toContain("Osasco");
   });
 
   for (const rota of REMOVIDAS) {
