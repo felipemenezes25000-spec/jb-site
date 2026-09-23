@@ -14,18 +14,48 @@ import { EQUIPAMENTOS, MENSAGEM_PADRAO, montarMensagem, type IdEquipamento } fro
    técnico. Páginas legais e convites privados de avaliação ficam de fora:
    nessas rotas uma barra de conversão fixa atrapalharia a tarefa principal.
 
-   Quando a pessoa escolhe um equipamento no diagnóstico da home, a barra leva
-   essa escolha junto depois que o diagnóstico sai da tela. A seleção nunca é
-   texto livre: só ids presentes em `EQUIPAMENTOS` entram na mensagem.
+   Na home e nas landings, a barra acompanha o contexto já montado nos CTAs:
+   equipamento e, quando escolhidos, sintoma/situação/cidade. Esse texto só é
+   reaproveitado localmente para montar o próximo link de WhatsApp; não entra
+   em analytics nem é persistido pelo componente.
    ============================================================================ */
 
 const OBSERVADOS = ['[data-whatsapp="abertura"]', '[data-whatsapp="diagnostico"]', '[data-whatsapp="fechamento"]'];
 
-function lerEquipamento(): IdEquipamento | null {
-  const id =
-    document.querySelector<HTMLAnchorElement>('a[data-whatsapp="diagnostico"][data-equipamento]')?.dataset.equipamento ??
-    document.querySelector<HTMLAnchorElement>('a[data-whatsapp="abertura"][data-equipamento]')?.dataset.equipamento;
+type ContextoDaBarra = {
+  equipamento: IdEquipamento | null;
+  mensagem: string | null;
+};
+
+function equipamentoValido(id: string | undefined): IdEquipamento | null {
   return EQUIPAMENTOS.find((equipamento) => equipamento.id === id)?.id ?? null;
+}
+
+function mensagemDoLink(link: HTMLAnchorElement | null): string | null {
+  if (!link) return null;
+  const href = link.getAttribute("href");
+  if (!href) return null;
+  try {
+    const texto = new URL(href, window.location.href).searchParams.get("text")?.trim();
+    return texto ? texto.slice(0, 2000) : null;
+  } catch {
+    return null;
+  }
+}
+
+function lerContexto(): ContextoDaBarra {
+  const candidatos = [
+    document.querySelector<HTMLAnchorElement>('a[data-whatsapp="diagnostico"]'),
+    document.querySelector<HTMLAnchorElement>('a[data-whatsapp="abertura"][data-equipamento]'),
+  ];
+
+  for (const link of candidatos) {
+    const equipamento = equipamentoValido(link?.dataset.equipamento);
+    if (!equipamento) continue;
+    return { equipamento, mensagem: mensagemDoLink(link) };
+  }
+
+  return { equipamento: null, mensagem: null };
 }
 
 function rotaSemBarra(pathname: string) {
@@ -35,21 +65,34 @@ function rotaSemBarra(pathname: string) {
 export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }) {
   const pathname = usePathname();
   const [visivel, setVisivel] = useState(false);
-  const [equipamento, setEquipamento] = useState<IdEquipamento | null>(null);
+  const [contextoAtual, setContextoAtual] = useState<ContextoDaBarra>({
+    equipamento: null,
+    mensagem: null,
+  });
 
   useEffect(() => {
     if (rotaSemBarra(pathname)) return;
 
     const alvos = OBSERVADOS.flatMap((seletor) => [...document.querySelectorAll(seletor)]);
-    const diagnostico = document.querySelector("#diagnostico");
+    const linksDeContexto = [
+      ...document.querySelectorAll<HTMLAnchorElement>('a[data-whatsapp="diagnostico"]'),
+      ...document.querySelectorAll<HTMLAnchorElement>('a[data-whatsapp="abertura"][data-equipamento]'),
+    ];
 
-    /* O link de diagnóstico muda de `data-equipamento` depois do toque. O
-       clique termina antes do React pintar o novo href/dataset, então a leitura
-       acontece no próximo frame. */
-    const aoEscolherNoDiagnostico = () => {
-      window.requestAnimationFrame(() => setEquipamento(lerEquipamento()));
-    };
-    diagnostico?.addEventListener("click", aoEscolherNoDiagnostico);
+    const atualizarContexto = () => setContextoAtual(lerContexto());
+    atualizarContexto();
+
+    /* React atualiza `href` e `data-equipamento` quando a pessoa avança na
+       triagem ou troca um defeito. Observar só esses atributos preserva o texto
+       completo sem ouvir teclado, input ou qualquer dado fora dos links que o
+       próprio site já gerou. */
+    const observadorDoContexto = new MutationObserver(atualizarContexto);
+    for (const link of linksDeContexto) {
+      observadorDoContexto.observe(link, {
+        attributes: true,
+        attributeFilter: ["href", "data-equipamento"],
+      });
+    }
 
     if (alvos.length === 0) {
       /* Páginas editoriais não têm CTA de abertura. Nelas a barra pode ajudar,
@@ -59,12 +102,11 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
       aoRolar();
       window.addEventListener("scroll", aoRolar, { passive: true });
       return () => {
-        diagnostico?.removeEventListener("click", aoEscolherNoDiagnostico);
+        observadorDoContexto.disconnect();
         window.removeEventListener("scroll", aoRolar);
       };
     }
 
-    setEquipamento(lerEquipamento());
     const naTela = new Set<Element>();
     const observador = new IntersectionObserver(
       (entradas) => {
@@ -73,26 +115,30 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
           else naTela.delete(entrada.target);
         }
         setVisivel(naTela.size === 0);
-        setEquipamento(lerEquipamento());
+        atualizarContexto();
       },
       { threshold: 0 },
     );
 
     for (const alvo of alvos) observador.observe(alvo);
     return () => {
-      diagnostico?.removeEventListener("click", aoEscolherNoDiagnostico);
+      observadorDoContexto.disconnect();
       observador.disconnect();
     };
   }, [pathname]);
 
   if (rotaSemBarra(pathname)) return null;
 
+  const equipamento = contextoAtual.equipamento;
   const equipamentoAtual = equipamento
     ? EQUIPAMENTOS.find((item) => item.id === equipamento) ?? null
     : null;
   const contexto = equipamentoAtual
     ? `${equipamentoAtual.nome}: falar com a equipe`
     : "Falar com a equipe técnica";
+  const mensagem =
+    contextoAtual.mensagem ??
+    (equipamento ? montarMensagem({ equipamento }) : MENSAGEM_PADRAO);
 
   return (
     <div
@@ -113,7 +159,7 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
       <div className="mx-auto max-w-md">
         <OpcoesWhatsapp
           contatos={contatos}
-          mensagem={equipamento ? montarMensagem({ equipamento }) : MENSAGEM_PADRAO}
+          mensagem={mensagem}
           equipamento={equipamento ?? undefined}
           posicao="barra-movel"
           tamanho="lg"
