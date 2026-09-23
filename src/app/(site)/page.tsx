@@ -68,8 +68,8 @@ export default async function HomePage() {
           className="jb-flutua-lento pointer-events-none absolute -bottom-56 -left-40 size-[34rem] rounded-full bg-[radial-gradient(closest-side,rgb(26_28_30/0.055),transparent)]"
         />
 
-        <div className="container-jb relative grid gap-10 pb-12 pt-7 lg:min-h-[calc(100svh-7rem)] lg:grid-cols-[minmax(0,1.03fr)_minmax(0,34rem)] lg:items-center lg:gap-14 lg:pb-16 lg:pt-12">
-          <div className="flex min-w-0 flex-col">
+        <div className="container-jb relative grid gap-8 pb-12 pt-7 lg:min-h-[calc(100svh-7rem)] lg:grid-cols-[minmax(0,1.03fr)_minmax(0,34rem)] lg:grid-rows-[auto_auto] lg:items-start lg:gap-x-14 lg:gap-y-8 lg:pb-16 lg:pt-12">
+          <div className="flex min-w-0 flex-col lg:pt-6">
             <StatusAtendimento
               horario={s.horario}
               neutro={`Assistência técnica odontológica em ${s.endereco_cidade}`}
@@ -124,13 +124,9 @@ export default async function HomePage() {
                 Atendimento direto com Jeferson ou Jackson. Você escolhe com quem falar.
               </p>
             </div>
-
-            <div className="jb-hero-foto entrada mt-8 lg:mt-10 lg:[animation-delay:260ms]">
-              <FotoAbertura />
-            </div>
           </div>
 
-          <div className="jb-diagnostico-stage entrada lg:sticky lg:top-28 [animation-delay:160ms]">
+          <div className="jb-diagnostico-stage entrada lg:sticky lg:top-28 lg:row-span-2 [animation-delay:160ms]">
             <div className="jb-diagnostico-legenda mb-3 flex items-center justify-between gap-3 px-1">
               <div>
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-jb-700">Triagem inteligente</p>
@@ -141,6 +137,10 @@ export default async function HomePage() {
               </span>
             </div>
             <DiagnosticoWhatsapp contatos={contatos} />
+          </div>
+
+          <div className="jb-hero-foto entrada lg:col-start-1 lg:row-start-2 [animation-delay:260ms]">
+            <FotoAbertura />
           </div>
         </div>
       </section>
