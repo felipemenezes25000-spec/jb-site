@@ -5,19 +5,26 @@
 [data-jb-site="assistencia"] .jb-content-hub,
 [data-jb-site="assistencia"] .jb-case-processo,
 [data-jb-site="assistencia"] .jb-content-cta,
-[data-jb-site="assistencia"] .jb-avaliacao-page {
+[data-jb-site="assistencia"] .jb-avaliacao-page,
+[data-jb-site="assistencia"] .jb-artigo-detail,
+[data-jb-site="assistencia"] .jb-case-detail,
+[data-jb-site="assistencia"] .jb-artigo-relacionados {
   position: relative;
   isolation: isolate;
   overflow: clip;
 }
 
-[data-jb-site="assistencia"] .jb-content-hub {
+[data-jb-site="assistencia"] .jb-content-hub,
+[data-jb-site="assistencia"] .jb-artigo-detail,
+[data-jb-site="assistencia"] .jb-case-detail {
   background:
     radial-gradient(circle at 88% 8%, rgb(224 20 27 / 0.055), transparent 27rem),
     linear-gradient(180deg, #fff 0%, #fff 68%, #fafbfc 100%);
 }
 
-[data-jb-site="assistencia"] .jb-content-hub::before {
+[data-jb-site="assistencia"] .jb-content-hub::before,
+[data-jb-site="assistencia"] .jb-artigo-detail::before,
+[data-jb-site="assistencia"] .jb-case-detail::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -82,10 +89,89 @@
   }
 }
 
+/* ----------------------------------------------------- artigo individual */
+
+[data-jb-site="assistencia"] .jb-artigo-head,
+[data-jb-site="assistencia"] .jb-case-head {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-head::before,
+[data-jb-site="assistencia"] .jb-case-head::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  top: 3rem;
+  width: 3px;
+  height: 5rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-jb-500), transparent);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-assinatura,
+[data-jb-site="assistencia"] .jb-case-meta {
+  border-color: rgb(17 19 21 / 0.085);
+  background: rgb(255 255 255 / 0.82);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 18px 42px -36px rgb(12 14 16 / 0.42);
+  backdrop-filter: blur(12px);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-capa {
+  border-color: rgb(17 19 21 / 0.09);
+  box-shadow: 0 38px 88px -54px rgb(12 14 16 / 0.58);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-aplicabilidade {
+  border-color: rgb(17 19 21 / 0.09);
+  background:
+    radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.04), transparent 12rem),
+    #f7f8f9;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-corpo {
+  font-size: 1.03rem;
+  line-height: 1.82;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-corpo :is(h2, h3) {
+  scroll-margin-top: 7rem;
+  letter-spacing: -0.025em;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-corpo h2 {
+  margin-top: 2.7em;
+  padding-top: 0.35em;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-corpo a {
+  text-underline-offset: 0.2em;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-limite {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.68);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-fontes {
+  border-color: rgb(17 19 21 / 0.09);
+  background: linear-gradient(180deg, #fff, #fbfbfc);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 24px 54px -46px rgb(12 14 16 / 0.44);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-relacionados {
+  background:
+    radial-gradient(circle at 10% 90%, rgb(224 20 27 / 0.045), transparent 24rem),
+    linear-gradient(180deg, #f6f7f8, #f8f9fa);
+}
+
 /* ------------------------------------------------------------------- cases */
 
 [data-jb-site="assistencia"] .jb-case-card,
-[data-jb-site="assistencia"] .jb-case-etapa {
+[data-jb-site="assistencia"] .jb-case-etapa,
+[data-jb-site="assistencia"] .jb-case-bloco {
   border-color: rgb(17 19 21 / 0.09);
   background:
     radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.035), transparent 11rem),
@@ -113,7 +199,8 @@
 
 @media (hover: hover) {
   [data-jb-site="assistencia"] .jb-case-card:hover,
-  [data-jb-site="assistencia"] .jb-case-etapa:hover {
+  [data-jb-site="assistencia"] .jb-case-etapa:hover,
+  [data-jb-site="assistencia"] .jb-case-bloco:hover {
     transform: translateY(-3px);
     border-color: rgb(224 20 27 / 0.18);
     box-shadow: 0 32px 66px -43px rgb(12 14 16 / 0.5);
@@ -124,6 +211,17 @@
   background:
     radial-gradient(circle at 12% 88%, rgb(224 20 27 / 0.045), transparent 24rem),
     linear-gradient(180deg, #f6f7f8, #f8f9fa);
+}
+
+[data-jb-site="assistencia"] .jb-case-bloco {
+  transition: none;
+}
+
+[data-jb-site="assistencia"] .jb-case-consent {
+  border-color: rgb(17 19 21 / 0.09);
+  background:
+    radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.04), transparent 11rem),
+    #f7f8f9;
 }
 
 /* ---------------------------------------------------------- estados vazios */
@@ -188,7 +286,9 @@
 /* ----------------------------------------------------------------- mobile */
 
 @media (max-width: 39.99rem) {
-  [data-jb-site="assistencia"] .jb-content-hero::before {
+  [data-jb-site="assistencia"] .jb-content-hero::before,
+  [data-jb-site="assistencia"] .jb-artigo-head::before,
+  [data-jb-site="assistencia"] .jb-case-head::before {
     display: none;
   }
 
@@ -217,6 +317,25 @@
   [data-jb-site="assistencia"] .jb-avaliacao-campo,
   [data-jb-site="assistencia"] .jb-avaliacao-consentimento {
     border-radius: 1.1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-artigo-assinatura,
+  [data-jb-site="assistencia"] .jb-case-meta {
+    border-radius: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-artigo-capa {
+    border-radius: 1.15rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-artigo-corpo {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  [data-jb-site="assistencia"] .jb-case-bloco {
+    border-radius: 1.1rem;
+    padding: 1rem;
   }
 }
 
