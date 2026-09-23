@@ -31,11 +31,10 @@ import { cn } from "@/lib/utils";
 /* ============================================================================
    Página de um equipamento
 
-   A página de pouso do anúncio: quem clicou em "conserto de autoclave" cai
-   aqui e vê a autoclave antes de qualquer texto (no celular a foto vem
-   primeiro), o título com o nome dela, e os defeitos como botões. Cada
-   defeito abre o WhatsApp com equipamento e problema já escritos: um toque
-   entre o anúncio e a conversa.
+   A landing confirma imediatamente a intenção do anúncio: nome do equipamento,
+   defeito e WhatsApp aparecem antes da fotografia no mobile. No desktop a foto
+   continua compondo a abertura lado a lado. Assim a imagem reforça a marca sem
+   virar pedágio entre o clique pago e a conversa.
 
    O resto reaproveita a home, com a mensagem do equipamento em todo botão:
    como funciona, clínica ou bancada, por que a JB, dúvidas (as do equipamento
@@ -166,8 +165,8 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
  *
  * Recorte de fundo branco entra com `mix-blend-multiply`, que some com o
  * branco da foto sobre o degradê; sem recorte bom (destilador), entra a foto
- * da bancada, que respira. No celular a altura é contida para o título e o
- * botão ainda caberem na primeira tela.
+ * da bancada. Como no mobile a ação vem antes da imagem, ela não recebe
+ * preload e não compete com tipografia, diagnóstico e WhatsApp na chegada.
  */
 function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
   const { visual } = pagina;
@@ -192,7 +191,6 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
                 src={visual.src}
                 alt={pagina.palavraChave.charAt(0).toUpperCase() + pagina.palavraChave.slice(1)}
                 fill
-                priority
                 sizes="(min-width: 1024px) 30rem, 90vw"
                 className="object-contain mix-blend-multiply"
               />
@@ -207,7 +205,6 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
             src={visual.src}
             alt="Técnico consertando um equipamento odontológico na bancada"
             fill
-            priority
             sizes="(min-width: 1024px) 30rem, 92vw"
             className="jb-foto-viva object-cover"
             style={{ objectPosition: visual.posicao }}
@@ -296,6 +293,8 @@ function EnquantoIsso({
  * Os outros equipamentos, cada um com a sua página. Quem veio pelo anúncio
  * da autoclave e tem também um compressor falhando descobre aqui que a JB
  * atende os dois; e o buscador encontra as páginas umas pelas outras.
+ * Como o bloco fica no fim da landing, o prefetch automático é desligado para
+ * não disputar rede com a conversa no WhatsApp.
  */
 function OutrosEquipamentos({ atual }: { atual: string }) {
   const outros = PAGINAS_DE_EQUIPAMENTO.filter((pagina) => pagina.slug !== atual);
@@ -314,6 +313,7 @@ function OutrosEquipamentos({ atual }: { atual: string }) {
               <li key={pagina.slug} className="jb-revela" style={{ "--i": indice % 3 } as React.CSSProperties}>
                 <Link
                   href={`/${pagina.slug}`}
+                  prefetch={false}
                   className="foco-jb group flex h-full flex-col items-center gap-2 rounded-2xl border border-graf-200 bg-white p-4 text-center transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-jb-300 hover:shadow-pop active:scale-[0.97] active:border-jb-300"
                 >
                   <span className="relative flex size-20 items-center justify-center">
