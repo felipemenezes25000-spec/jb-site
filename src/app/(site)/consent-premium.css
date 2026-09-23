@@ -40,6 +40,18 @@
   box-shadow: 0 10px 24px -22px rgb(12 14 16 / 0.48);
 }
 
+/* Consentimento e barra de conversão são superfícies fixas no rodapé. No
+   primeiro acesso o consentimento tem prioridade: esconder a barra evita dois
+   painéis sobrepostos e, quando a pessoa decide, o `:has()` deixa de casar e a
+   própria transição da barra a traz de volta se `data-visivel=true`. */
+@media (max-width: 47.99rem) {
+  body:has([aria-label="Medição de uso do site"]) .jb-barra-movel {
+    transform: translate3d(0, 140%, 0) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
 @media (max-width: 39.99rem) {
   [aria-label="Medição de uso do site"] {
     bottom: max(0.55rem, env(safe-area-inset-bottom)) !important;
