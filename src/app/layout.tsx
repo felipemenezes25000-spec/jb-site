@@ -14,7 +14,6 @@ import "./footer-alignment.css";
 import "./cabecalho.css";
 import "./motion.css";
 import "./motion-scenes.css";
-import "./motion-commerce.css";
 import "./motion-feedback.css";
 import "./motion-signature.css";
 import "./motion-signature-safety.css";
@@ -81,9 +80,6 @@ async function destinosDaMedicao() {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    /* `suppressHydrationWarning` vale só para os atributos do próprio `<html>`:
-       o script abaixo grava a cena do Motion System antes da primeira pintura,
-       e o React não pode tratar isso como divergência do servidor. */
     <html
       lang="pt-BR"
       data-scroll-behavior="smooth"
