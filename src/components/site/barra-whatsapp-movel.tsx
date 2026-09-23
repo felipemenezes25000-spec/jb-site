@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { MessageCircleMore } from "lucide-react";
 
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
@@ -18,6 +19,10 @@ import { EQUIPAMENTOS, MENSAGEM_PADRAO, montarMensagem, type IdEquipamento } fro
    equipamento e, quando escolhidos, sintoma/situação/cidade. Esse texto só é
    reaproveitado localmente para montar o próximo link de WhatsApp; não entra
    em analytics nem é persistido pelo componente.
+
+   O cabeçalho da barra não usa ponto verde de "online": disponibilidade é
+   mostrada apenas por `StatusAtendimento`, que calcula o horário real. Aqui o
+   ícone significa só conversa, evitando prometer presença imediata.
    ============================================================================ */
 
 const OBSERVADOS = ['[data-whatsapp="abertura"]', '[data-whatsapp="diagnostico"]', '[data-whatsapp="fechamento"]'];
@@ -149,7 +154,12 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
     >
       <div className="mx-auto mb-2 flex max-w-md items-center justify-between gap-3 px-1">
         <p className="flex min-w-0 items-center gap-2 text-[0.7rem] font-extrabold uppercase tracking-[0.1em] text-graf-800">
-          <span className="size-2 shrink-0 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]" aria-hidden />
+          <span
+            className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-jb-50 text-jb-700"
+            aria-hidden
+          >
+            <MessageCircleMore className="size-3.5" />
+          </span>
           <span className="truncate">{contexto}</span>
         </p>
         <span className="shrink-0 rounded-full border border-graf-200 bg-white px-2 py-1 text-[0.65rem] font-extrabold uppercase tracking-[0.08em] text-graf-600 shadow-xs">
