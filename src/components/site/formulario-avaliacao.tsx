@@ -10,18 +10,14 @@ import { Area, Campo, Marcador } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
-   O formulário de avaliação
+   Formulário de avaliação
 
-   A caixa de autorização é a peça central desta tela, e ela vem **desmarcada**.
-   Marcada por padrão seria consentimento por inércia — a pessoa responde a
-   pesquisa e descobre depois que virou depoimento no site.
-
-   O nome só é pedido depois de a caixa ser marcada. Pedir antes daria a
-   entender que ele será usado de qualquer jeito.
+   A autorização para publicar continua desmarcada por padrão. O acabamento
+   visual ganha mais clareza e conforto de toque, mas a regra de consentimento
+   permanece exatamente a mesma.
    ============================================================================ */
 
 const VAZIO: EstadoDaAvaliacao = {};
-
 const NOTAS = [1, 2, 3, 4, 5];
 
 const LEGENDA: Record<number, string> = {
@@ -45,17 +41,19 @@ export function FormularioAvaliacao({
 
   if (estado.ok) {
     return (
-      <Aviso tom="sucesso" titulo="Recebido">
-        {estado.ok}
-        {autoriza
-          ? " Antes de publicar qualquer trecho, alguém da equipe vai conferir o texto."
-          : " A sua resposta fica só com a equipe."}
-      </Aviso>
+      <div className="jb-avaliacao-sucesso">
+        <Aviso tom="sucesso" titulo="Recebido">
+          {estado.ok}
+          {autoriza
+            ? " Antes de publicar qualquer trecho, alguém da equipe vai conferir o texto."
+            : " A sua resposta fica só com a equipe."}
+        </Aviso>
+      </div>
     );
   }
 
   return (
-    <form action={executar} className="space-y-6">
+    <form action={executar} className="jb-avaliacao-form space-y-6">
       {estado.erro ? (
         <Aviso tom="erro" titulo="Não foi possível enviar">
           {estado.erro}
@@ -64,21 +62,22 @@ export function FormularioAvaliacao({
 
       <input type="hidden" name="token" value={token} />
 
-      <fieldset>
-        <legend className="text-base font-bold text-graf-950">
+      <fieldset className="jb-avaliacao-nota rounded-2xl border border-graf-200 bg-white p-4 sm:p-5">
+        <legend className="px-1 text-base font-extrabold text-graf-950">
           {tipo === "compra"
             ? "Como foi a experiência de compra?"
             : "Como foi o atendimento técnico?"}
         </legend>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <p className="mt-1 text-sm leading-relaxed text-graf-500">Escolha a opção que mais combina com a experiência.</p>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {NOTAS.map((valor) => (
             <label
               key={valor}
               className={cn(
-                "flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition-colors",
+                "jb-avaliacao-opcao flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-[border-color,background-color,color,transform,box-shadow] active:scale-[0.98] sm:px-4",
                 nota === valor
-                  ? "border-jb-600 bg-jb-600 text-white"
-                  : "border-graf-300 bg-white text-graf-800 hover:border-graf-400 hover:bg-graf-50",
+                  ? "border-jb-600 bg-jb-600 text-white shadow-[0_16px_32px_-24px_rgb(224_20_27/0.7)]"
+                  : "border-graf-300 bg-white text-graf-800 hover:border-jb-300 hover:bg-jb-50",
               )}
             >
               <input
@@ -90,36 +89,37 @@ export function FormularioAvaliacao({
                 className="sr-only"
                 required
               />
-              <span className="tabular">{valor}</span>
-              <span className="font-normal">{LEGENDA[valor]}</span>
+              <span className="tabular flex size-7 shrink-0 items-center justify-center rounded-lg bg-current/10 font-extrabold">
+                {valor}
+              </span>
+              <span className="font-semibold">{LEGENDA[valor]}</span>
             </label>
           ))}
         </div>
       </fieldset>
 
-      <Campo
-        rotulo="De 0 a 10, o quanto você indicaria a JB? (opcional)"
-        name="nps"
-        type="number"
-        min={0}
-        max={10}
-        inputMode="numeric"
-      />
+      <div className="jb-avaliacao-campo rounded-2xl border border-graf-200 bg-white p-4 sm:p-5">
+        <Campo
+          rotulo="De 0 a 10, o quanto você indicaria a JB? (opcional)"
+          name="nps"
+          type="number"
+          min={0}
+          max={10}
+          inputMode="numeric"
+        />
+      </div>
 
-      <Area
-        rotulo="O que você quer contar?"
-        name="comentario"
-        rows={5}
-        maxLength={2000}
-        ajuda="Pode ser elogio, reclamação ou sugestão. Chega inteiro para a equipe, do jeito que você escrever."
-      />
+      <div className="jb-avaliacao-campo rounded-2xl border border-graf-200 bg-white p-4 sm:p-5">
+        <Area
+          rotulo="O que você quer contar?"
+          name="comentario"
+          rows={5}
+          maxLength={2000}
+          ajuda="Pode ser elogio, reclamação ou sugestão. Chega inteiro para a equipe, do jeito que você escrever."
+        />
+      </div>
 
-      {/* --------------------------------------------- a autorização ---
-
-          Desmarcada. Sempre. Marcada por padrão seria consentimento por
-          inércia — e depoimento publicado sem alguém ter escolhido publicar
-          é exatamente o que este projeto não faz. */}
-      <div className="rounded-lg border border-graf-200 bg-graf-50 p-4">
+      <div className="jb-avaliacao-consentimento rounded-2xl border border-graf-200 bg-graf-50 p-4 sm:p-5">
         <Marcador
           rotulo="Autorizo a JB a publicar este comentário no site"
           name="autoriza"
@@ -130,7 +130,7 @@ export function FormularioAvaliacao({
         />
 
         {autoriza ? (
-          <div className="mt-4">
+          <div className="mt-4 border-t border-graf-200 pt-4">
             <Campo
               rotulo="Como quer ser identificado"
               name="nome"
@@ -142,7 +142,7 @@ export function FormularioAvaliacao({
         ) : null}
       </div>
 
-      <Botao type="submit" carregando={pendente}>
+      <Botao type="submit" carregando={pendente} tamanho="lg" className="w-full sm:w-auto">
         {autoriza ? <Check className="size-4" aria-hidden /> : <Send className="size-4" aria-hidden />}
         Enviar resposta
       </Botao>
