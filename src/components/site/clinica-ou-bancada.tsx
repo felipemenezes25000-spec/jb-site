@@ -53,7 +53,8 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
               aria-hidden
               className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-graf-950/35 to-transparent"
             />
-            <p className="absolute bottom-5 left-5 right-5 text-sm font-bold leading-relaxed text-white drop-shadow-sm sm:text-base">
+            {/* Metade esquerda: a foto da bancada ocupa o canto de baixo à direita. */}
+            <p className="absolute bottom-5 left-5 right-[52%] text-sm font-bold leading-relaxed text-white drop-shadow-sm sm:text-base">
               Atendimento definido conforme o equipamento e o tipo de serviço.
             </p>
           </div>

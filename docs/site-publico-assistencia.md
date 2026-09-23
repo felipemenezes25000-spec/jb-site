@@ -53,7 +53,7 @@ A home deve continuar priorizando:
 4. Jeferson e Jackson;
 5. diagnóstico em 3 toques;
 6. fotografia técnica;
-7. equipamentos atendidos;
+7. equipamentos atendidos — a grade é a única lista de equipamentos da home; o cartão aberto leva também à landing do equipamento;
 8. impacto potencial de parada, apresentado como cenário e não previsão;
 9. processo;
 10. clínica ou bancada;
@@ -62,6 +62,8 @@ A home deve continuar priorizando:
 13. fechamento com WhatsApp.
 
 No mobile, ação e triagem vêm antes da fotografia quando isso reduz fricção.
+
+Uma prova aparece uma vez por trecho da página. Selo sobre foto que repete a faixa logo abaixo ("todas as marcas", "orçamento antes da troca") sai, na home e nas landings.
 
 ## Landings de equipamento
 
@@ -86,7 +88,8 @@ Cada landing precisa:
 - apresentar cuidados apenas de segurança e observação externa;
 - usar metadata/canonical/OG específicos;
 - evitar saídas desnecessárias no cabeçalho;
-- manter links para outros equipamentos como navegação secundária, sem competir com a conversão principal.
+- manter links para outros equipamentos como navegação secundária, sem competir com a conversão principal;
+- não repetir no FAQ a pergunta geral que a pergunta do equipamento já responde: a de marca do equipamento (`tema: "marcas"`) toma o lugar de "Vocês atendem todas as marcas?".
 
 ## Conteúdo e confiança
 

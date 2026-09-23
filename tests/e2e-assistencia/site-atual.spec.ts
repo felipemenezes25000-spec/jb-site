@@ -275,7 +275,14 @@ test.describe("JB assistência — jornada pública atual", () => {
       expect(og).toContain(`${landing.rota}/opengraph-image`);
       await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", landing.chave);
       await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
-      expect(tipos(await jsonLd(page))).toEqual(expect.arrayContaining(["Service", "BreadcrumbList", "FAQPage"]));
+      const dados = await jsonLd(page);
+      expect(tipos(dados)).toEqual(expect.arrayContaining(["Service", "BreadcrumbList", "FAQPage"]));
+      /* A pergunta de marca do equipamento substitui a geral: nada repetido. */
+      const faq = dados.find((dado) => dado["@type"] === "FAQPage") as { mainEntity?: { name: string }[] } | undefined;
+      const perguntas = (faq?.mainEntity ?? []).map((item) => item.name);
+      expect(perguntas.length).toBeGreaterThan(3);
+      expect(new Set(perguntas).size).toBe(perguntas.length);
+      expect(perguntas.filter((pergunta) => /marca/i.test(pergunta))).toHaveLength(1);
 
       const imagem = await page.request.get(noServidorDoTeste(og, baseURL));
       expect(imagem.status()).toBe(200);

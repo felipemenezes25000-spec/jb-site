@@ -150,7 +150,7 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
             </li>
             {algumDestino(destinosDeMedicao(s)) ? (
               <li>
-                <RevisarMedicao className="foco-jb rounded hover:text-jb-300" />
+                <RevisarMedicao className="jb-footer-link foco-jb rounded" />
               </li>
             ) : null}
           </ul>

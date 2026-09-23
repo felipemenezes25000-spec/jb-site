@@ -18,7 +18,11 @@ import { equipamentoPorId, type Equipamento, type IdEquipamento } from "@/lib/di
    Módulo puro: as páginas, o rodapé, o mapa do site e os testes leem daqui.
    ============================================================================ */
 
-export type Pergunta = { pergunta: string; resposta: string };
+/**
+ * Pergunta de um equipamento. Com `tema`, ela ocupa o lugar da pergunta geral
+ * do mesmo tema na lista de dúvidas, em vez de repeti-la com outras palavras.
+ */
+export type Pergunta = { pergunta: string; resposta: string; tema?: "marcas" };
 
 export type VisualDoEquipamento =
   /** Recorte do equipamento em fundo branco (`public/site/equip`). */
@@ -57,6 +61,7 @@ const FOTO_DA_BANCADA: VisualDoEquipamento = {
  */
 function todasAsMarcas(nome: string): Pergunta {
   return {
+    tema: "marcas",
     pergunta: `Vocês consertam ${nome} de qualquer marca?`,
     resposta:
       "Sim, de todas as marcas. Marca, modelo e sintoma entram na triagem quando a clínica os informa, antes de a equipe definir o próximo passo.",

@@ -95,9 +95,19 @@
 /* ------------------------------------------------------ controle deslizante */
 
 /* Trilho grosso e botão de 28px: o polegar acerta de primeira no celular. O
-   trecho já percorrido fica vermelho, lido de `--preenchido`. */
+   trecho já percorrido fica vermelho, lido de `--preenchido`.
+
+   O foco de teclado contorna o controle inteiro, como o `foco-jb` do resto do
+   site. Até 23/09/2026 o contorno ficava só no pseudo-elemento do botão
+   (`::-webkit-slider-thumb`/`::-moz-range-thumb`), que cada navegador desenha
+   do seu jeito e que nenhuma medição de foco consegue ler. */
+.jb-deslizante {
+  border-radius: 0.75rem;
+}
+
 .jb-deslizante:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-jb-500);
+  outline-offset: 2px;
 }
 
 .jb-deslizante::-webkit-slider-runnable-track {
@@ -126,11 +136,6 @@
   transform: scale(1.15);
 }
 
-.jb-deslizante:focus-visible::-webkit-slider-thumb {
-  outline: 2px solid var(--color-jb-500);
-  outline-offset: 3px;
-}
-
 .jb-deslizante::-moz-range-track {
   height: 8px;
   border-radius: 999px;
@@ -150,11 +155,6 @@
   background: #fff;
   border: 3px solid var(--color-jb-500);
   box-shadow: 0 2px 10px rgb(26 28 30 / 0.2);
-}
-
-.jb-deslizante:focus-visible::-moz-range-thumb {
-  outline: 2px solid var(--color-jb-500);
-  outline-offset: 3px;
 }
 
 /* ------------------------------------------------ troca de passo da triagem */

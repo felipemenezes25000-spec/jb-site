@@ -1,6 +1,7 @@
-import { MessageCircleQuestion, ShieldCheck } from "lucide-react";
+import { MessageCircleQuestion } from "lucide-react";
 
 import { Acordeao } from "@/components/ui/acordeao";
+import type { Pergunta } from "@/lib/paginas-equipamento";
 import { JsonLd, faqJsonLd } from "@/lib/seo";
 
 /* ============================================================================
@@ -19,10 +20,9 @@ export function Duvidas({
   cidade: string;
   horario: string;
   /** Perguntas de um equipamento, que vêm antes das gerais. */
-  extras?: readonly { pergunta: string; resposta: string }[];
+  extras?: readonly Pergunta[];
 }) {
-  const perguntas = [
-    ...extras,
+  const gerais: Pergunta[] = [
     {
       pergunta: "Vocês atendem na minha clínica?",
       resposta: `A JB atende clínicas em ${cidade} e região. Conforme o equipamento e a ocorrência, a avaliação acontece no consultório ou na bancada da JB — a forma de atendimento é combinada com a clínica depois da triagem pelo WhatsApp.`,
@@ -33,6 +33,7 @@ export function Duvidas({
         "Depende do equipamento, do defeito e da peça, e só se sabe depois da avaliação. Quando houver troca de peça, o orçamento vem antes: nenhuma peça é substituída sem a aprovação da clínica.",
     },
     {
+      tema: "marcas",
       pergunta: "Vocês atendem todas as marcas?",
       resposta:
         "Sim. A JB conserta equipamentos odontológicos de todas as marcas. Modelo e sintoma entram na triagem quando a clínica os informa. A JB também é assistência técnica autorizada EVOXX, na lista oficial do fabricante.",
@@ -52,6 +53,9 @@ export function Duvidas({
         "Não. É só chamar no WhatsApp. A equipe registra o atendimento do lado de cá, com o histórico do seu equipamento.",
     },
   ];
+  // "De qualquer marca?" do equipamento substitui o "todas as marcas?" geral.
+  const temas = new Set(extras.map((item) => item.tema).filter(Boolean));
+  const perguntas = [...extras, ...gerais.filter((item) => !item.tema || !temas.has(item.tema))];
 
   return (
     <section
@@ -75,21 +79,6 @@ export function Duvidas({
               sem esconder a próxima etapa.
             </p>
 
-            <div
-              className="jb-revela mt-6 flex gap-3 rounded-xl border border-graf-200 bg-white p-4"
-              style={{ "--i": 2 } as React.CSSProperties}
-            >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600">
-                <ShieldCheck className="size-5" aria-hidden />
-              </span>
-              <div>
-                <p className="text-sm font-extrabold text-graf-900">Orçamento antes da troca</p>
-                <p className="mt-1 text-xs font-medium leading-relaxed text-graf-600">
-                  Prazo e valor dependem da avaliação e da peça. Eles são informados antes de
-                  qualquer substituição, para a clínica aprovar.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 

@@ -2,13 +2,15 @@
 
 import { useId, useState } from "react";
 import Image from "next/image";
-import { BadgeCheck, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BadgeCheck, ChevronDown } from "lucide-react";
 
 import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { EQUIPAMENTOS, montarMensagem, type Equipamento, type IdEquipamento } from "@/lib/diagnostico";
+import { caminhoDoEquipamento } from "@/lib/paginas-equipamento";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -28,6 +30,10 @@ import { cn } from "@/lib/utils";
    Grade de 4 colunas: 4 células da autoclave + 6 comuns + 2 do "outro" = 12,
    sem buraco. No celular, 2 colunas com os dois blocos largos ocupando a
    linha inteira.
+
+   Aberto, o cartão também leva à página do equipamento. Até 23/09/2026 a home
+   tinha, além desta grade, uma faixa só com esses links logo abaixo da
+   abertura: três escolhas de equipamento seguidas (triagem, faixa, grade).
    ============================================================================ */
 
 function Cartao({
@@ -51,6 +57,7 @@ function Cartao({
   const imagem = IMAGEM_DO_EQUIPAMENTO[equipamento.id];
   const outro = equipamento.id === "outro";
   const idOpcoes = useId();
+  const pagina = caminhoDoEquipamento(equipamento.id);
 
   return (
     <li
@@ -161,15 +168,28 @@ function Cartao({
 
         <div id={idOpcoes} hidden={!aberto} className="relative z-[2] mt-4">
           {aberto ? (
-            <OpcoesWhatsapp
-              contatos={contatos}
-              mensagem={montarMensagem({ equipamento: equipamento.id })}
-              equipamento={equipamento.id}
-              posicao="secao"
-              tamanho="sm"
-              lado={destaque || largo}
-              coluna={!destaque && !largo}
-            />
+            <>
+              <OpcoesWhatsapp
+                contatos={contatos}
+                mensagem={montarMensagem({ equipamento: equipamento.id })}
+                equipamento={equipamento.id}
+                posicao="secao"
+                tamanho="sm"
+                lado={destaque || largo}
+                coluna={!destaque && !largo}
+              />
+              {pagina ? (
+                <Link
+                  href={pagina}
+                  prefetch={false}
+                  className="foco-jb mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-bold text-graf-700 underline-offset-4 hover:text-jb-700 hover:underline"
+                >
+                  Ver conserto
+                  <span className="sr-only"> de {equipamento.nome.toLowerCase()}</span>
+                  <ArrowRight className="size-4" aria-hidden />
+                </Link>
+              ) : null}
+            </>
           ) : null}
         </div>
       </div>

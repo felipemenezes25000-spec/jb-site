@@ -1115,8 +1115,13 @@
     box-shadow: 0 26px 68px -44px rgb(12 14 16 / 0.5);
   }
 
-  [data-jb-site="assistencia"] .jb-landing-hero > .container-jb > div:last-child p {
-    font-size: 0.7rem;
+  /* Sobretítulo que quebra em duas linhas: linhas equilibradas e canto de
+     cartão, em vez de uma pílula com a cidade sobrando embaixo. */
+  [data-jb-site="assistencia"] .jb-landing-hero .sobretitulo {
+    padding-block: 0.25rem;
+    border-radius: 0.9rem;
+    line-height: 1.25;
+    text-wrap: balance;
   }
 }
 
@@ -1639,7 +1644,10 @@
     0 34px 80px -56px rgb(12 14 16 / 0.52);
 }
 
+/* Pergunta e resposta com respiro dentro do cartão: sem isto o texto encostava
+   na borda no celular. */
 [data-jb-site="assistencia"] .jb-faq-lista details {
+  padding-inline: 1rem;
   border-radius: 1rem;
 }
 

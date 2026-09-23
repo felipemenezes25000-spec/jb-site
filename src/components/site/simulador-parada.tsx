@@ -94,9 +94,6 @@ export function SimuladorParada({ contatos }: { contatos: ContatoWhatsapp[] }) {
             Quanto uma parada pode mexer na agenda?
           </h3>
         </div>
-        <span className="hidden rounded-full border border-graf-200 bg-graf-50 px-3 py-1 text-xs font-bold text-graf-600 sm:inline-flex">
-          sem estimativa em R$
-        </span>
       </div>
 
       <div className="p-5 sm:p-7">

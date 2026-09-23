@@ -1,6 +1,4 @@
 import Image from "next/image";
-import { BadgeCheck, FileCheck2 } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -13,7 +11,8 @@ import { cn } from "@/lib/utils";
 
    A foto fica parada. Zoom lento, reflexo que atravessa e selos boiando
    rodavam em laço infinito — enfeite que custa compositor e atenção sem
-   acrescentar informação.
+   acrescentar informação. Os selos "Todas as marcas" e "Orçamento antes da
+   troca" também saíram daqui: repetiam as provas logo acima da foto.
    ============================================================================ */
 
 export function FotoAbertura({ className }: { className?: string }) {
@@ -42,19 +41,6 @@ export function FotoAbertura({ className }: { className?: string }) {
           </div>
         </div>
       </div>
-
-      <p className="absolute -left-2 top-4 flex items-center gap-2 rounded-xl border border-white/70 bg-white/95 px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop sm:-left-4 sm:text-sm">
-        <span className="flex size-7 items-center justify-center rounded-lg bg-jb-500 text-white shadow-[0_6px_18px_-8px_rgb(224_20_27/0.9)]">
-          <BadgeCheck className="size-4" aria-hidden />
-        </span>
-        Todas as marcas
-      </p>
-      <p className="absolute -right-2 top-16 flex items-center gap-2 rounded-xl border border-white/70 bg-white/95 px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop sm:-right-4 sm:top-auto sm:bottom-5 sm:text-sm">
-        <span className="flex size-7 items-center justify-center rounded-lg bg-ok-500 text-white shadow-[0_6px_18px_-8px_rgb(16_185_129/0.9)]">
-          <FileCheck2 className="size-4" aria-hidden />
-        </span>
-        Orçamento antes da troca
-      </p>
 
       <figcaption className="sr-only">
         Assistência técnica de equipamentos odontológicos com orçamento informado antes da troca de peças.

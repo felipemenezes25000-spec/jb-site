@@ -7,7 +7,6 @@ import { ComoFunciona } from "@/components/site/como-funciona";
 import { DiagnosticoWhatsapp } from "@/components/site/diagnostico-whatsapp";
 import { Duvidas } from "@/components/site/duvidas";
 import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
-import { FaixaEquipamentos } from "@/components/site/faixa-equipamentos";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
@@ -131,8 +130,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      <FaixaEquipamentos />
 
       <FaixaAutorizada desde={s.empresa_desde} cidade={s.endereco_cidade} />
 

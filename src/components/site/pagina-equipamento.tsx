@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BadgeCheck, FileCheck2, ShieldAlert } from "lucide-react";
+import { ArrowRight, ShieldAlert } from "lucide-react";
 
 import { ChamadaFinal } from "@/components/site/chamada-final";
 import { ClinicaOuBancada } from "@/components/site/clinica-ou-bancada";
@@ -162,7 +162,9 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
 
 /**
  * O equipamento em destaque, sobre um brilho da marca. Parado: a imagem
- * confirma o anúncio, e nada nela precisa se mexer em laço.
+ * confirma o anúncio, e nada nela precisa se mexer em laço. Sem selos por
+ * cima: "todas as marcas" e "orçamento antes da troca" já abrem a faixa logo
+ * abaixo, e repetidos aqui só disputavam espaço com a foto.
  *
  * Recorte de fundo branco entra com `mix-blend-multiply`, que some com o
  * branco da foto sobre o degradê; sem recorte bom (destilador), entra a foto
@@ -213,18 +215,6 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
         )}
       </div>
 
-      <p className="absolute -left-2 top-4 flex items-center gap-2 rounded-xl border border-graf-950/5 bg-white px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop sm:-left-4 sm:text-sm">
-        <span className="flex size-7 items-center justify-center rounded-lg bg-jb-500 text-white">
-          <BadgeCheck className="size-4" aria-hidden />
-        </span>
-        Todas as marcas
-      </p>
-      <p className="absolute -right-2 bottom-4 flex items-center gap-2 rounded-xl border border-graf-950/5 bg-white px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop sm:-right-4 sm:text-sm">
-        <span className="flex size-7 items-center justify-center rounded-lg bg-ok-500 text-white">
-          <FileCheck2 className="size-4" aria-hidden />
-        </span>
-        Orçamento antes da troca
-      </p>
     </div>
   );
 }
