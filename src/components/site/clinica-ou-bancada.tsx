@@ -16,20 +16,20 @@ const PONTOS = [
   {
     numero: "01",
     icone: Stethoscope,
-    titulo: "Visita técnica na clínica",
-    texto: "Diagnóstico e reparo no próprio consultório, quando o equipamento permite.",
+    titulo: "Avaliação na clínica",
+    texto: "Quando o equipamento e o tipo de ocorrência permitem, a avaliação e o serviço podem acontecer no próprio consultório.",
   },
   {
     numero: "02",
     icone: Wrench,
     titulo: "Bancada da JB",
-    texto: "O que precisa de oficina vai para a bancada e volta testado.",
+    texto: "Quando o serviço pede bancada, a forma de retirada, avaliação e devolução é combinada com a clínica.",
   },
   {
     numero: "03",
     icone: ClipboardCheck,
-    titulo: "Tudo registrado",
-    texto: "Cada atendimento entra no histórico do equipamento.",
+    titulo: "Serviço registrado",
+    texto: "O atendimento e o que foi executado ficam registrados no histórico do equipamento.",
   },
 ] as const;
 
@@ -54,7 +54,7 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
               className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-graf-950/35 to-transparent"
             />
             <p className="absolute bottom-5 left-5 right-5 text-sm font-bold leading-relaxed text-white drop-shadow-sm sm:text-base">
-              Atendimento definido conforme o equipamento e o tipo de reparo.
+              Atendimento definido conforme o equipamento e o tipo de serviço.
             </p>
           </div>
 
@@ -85,8 +85,8 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
             className="texto-guia jb-revela mt-5 max-w-xl text-graf-600"
             style={{ "--i": 1 } as React.CSSProperties}
           >
-            A triagem pelo WhatsApp define o melhor caminho para o seu equipamento voltar a
-            funcionar sem parar a sua agenda mais do que o necessário.
+            A triagem organiza o contexto inicial. A equipe combina com a clínica onde a avaliação
+            e o serviço fazem mais sentido para aquele equipamento e ocorrência.
           </p>
 
           <ul className="mt-8 grid gap-3">
@@ -111,7 +111,7 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
           <div className="jb-revela mt-8 flex flex-col gap-3 sm:flex-row sm:items-center" style={{ "--i": 3 } as React.CSSProperties}>
             <ChamarWhatsapp tamanho="lg" mensagem={mensagem} />
             <p className="max-w-xs text-xs font-semibold leading-relaxed text-graf-500">
-              A equipe confirma o formato do atendimento na triagem.
+              A forma de atendimento é combinada a partir da triagem e da avaliação necessária.
             </p>
           </div>
         </div>
