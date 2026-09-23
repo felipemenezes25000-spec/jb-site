@@ -18,8 +18,9 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
    Rodapé do site de assistência
 
    Fecha a experiência com contraste alto e todos os canais úteis. Continua
-   sendo operacional: WhatsApp dos dois atendentes, telefone, e-mail, endereço,
-   horário, páginas de equipamento e a fonte oficial da autorização EVOXX.
+   sendo operacional: WhatsApp dos dois atendentes com nome e número, telefone,
+   e-mail, endereço, horário, páginas de equipamento e a fonte oficial da
+   autorização EVOXX.
    ============================================================================ */
 
 export function RodapeSite({ s }: { s: SettingsMap }) {
@@ -50,18 +51,21 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
         <div>
           <h2 className="text-sm font-extrabold text-graf-950">Fale com a equipe</h2>
           <ul className="mt-4 space-y-3 text-sm">
-            {contatos.map(({ numero, nome }) => (
+            {contatos.map(({ numero, nome }, indice) => (
               <li key={numero}>
                 <a
                   href={whatsappHref(numero, saudarPeloNome(MENSAGEM_PADRAO, nome))}
-                  data-whatsapp="rodape-numero"
+                  data-whatsapp={indice === 0 ? "rodape" : "rodape-segundo"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="jb-footer-link foco-jb gap-2.5 rounded font-bold text-graf-900"
                 >
-                  <MarcaWhatsapp className="size-4 text-jb-500" />
-                  <span className="sr-only">WhatsApp: </span>
-                  {nome || <span className="tabular">{formatarTelefone(numero)}</span>}
+                  <MarcaWhatsapp className="size-4 shrink-0 text-jb-500" />
+                  <span>
+                    <span className="sr-only">WhatsApp: </span>
+                    {nome ? `${nome} · ` : null}
+                    <span className="tabular">{formatarTelefone(numero)}</span>
+                  </span>
                 </a>
               </li>
             ))}
@@ -74,7 +78,7 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                     <span key={numero}>
                       {i > 0 ? " ou " : null}
                       <a href={telHref(numero)} className="jb-footer-link foco-jb rounded font-bold text-graf-900">
-                        {nome || formatarTelefone(numero)}
+                        {nome ? `${nome} (${formatarTelefone(numero)})` : formatarTelefone(numero)}
                       </a>
                     </span>
                   ))}
@@ -104,6 +108,7 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
               <li key={pagina.slug}>
                 <Link
                   href={`/${pagina.slug}`}
+                  prefetch={false}
                   className="jb-footer-link foco-jb rounded font-semibold text-graf-700"
                 >
                   {pagina.nomeCurto}
