@@ -8,9 +8,9 @@ import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
    Como funciona
 
    O processo vira uma história visual: quatro cartões numerados, com leitura
-   simples no celular e coluna editorial no desktop. A copy continua
-   operacional e defensável: chamar inicia a triagem, orçamento vem antes de
-   troca de peça e o equipamento termina testado.
+   simples no celular e coluna editorial no desktop. A copy separa triagem de
+   diagnóstico: o WhatsApp organiza contexto, a avaliação técnica confirma a
+   causa, o orçamento vem antes de troca de peça e o serviço termina testado.
    ============================================================================ */
 
 const PASSOS = [
@@ -18,25 +18,25 @@ const PASSOS = [
     etapa: "01",
     icone: MessageCircleMore,
     titulo: "Você chama no WhatsApp",
-    texto: "Diga o equipamento e o que ele está fazendo. Foto ou vídeo do problema ajudam muito.",
+    texto: "Diga o equipamento e o sintoma. Foto ou vídeo ajudam a registrar o contexto antes da avaliação.",
   },
   {
     etapa: "02",
     icone: ClipboardCheck,
-    titulo: "A equipe faz a triagem",
-    texto: "Entendemos o defeito, tiramos dúvidas e combinamos o atendimento na clínica ou na bancada.",
+    titulo: "A equipe organiza a triagem",
+    texto: "Marca, modelo, sintoma e situação da clínica orientam qual é o próximo passo e onde a avaliação pode acontecer.",
   },
   {
     etapa: "03",
     icone: ShieldCheck,
-    titulo: "Orçamento antes de mexer",
-    texto: "Você aprova o valor antes de qualquer troca de peça. Sem surpresa na conta.",
+    titulo: "Avaliação e orçamento",
+    texto: "A causa é confirmada na avaliação técnica. Quando houver troca de peça, o orçamento vem antes da substituição.",
   },
   {
     etapa: "04",
     icone: Wrench,
-    titulo: "Conserto e teste final",
-    texto: "O equipamento volta testado, e o que foi feito fica registrado para o próximo atendimento.",
+    titulo: "Serviço, teste e registro",
+    texto: "Depois da intervenção, o que foi executado e testado fica registrado no histórico do equipamento.",
   },
 ] as const;
 
@@ -61,7 +61,7 @@ export function ComoFunciona({
           <div className="jb-processo-intro">
             <p className="sobretitulo jb-revela">Fluxo do atendimento</p>
             <h2 id="como-funciona-titulo" className="text-section texto-forte jb-revela mt-3">
-              Do primeiro &ldquo;oi&rdquo; ao equipamento <span className="text-jb-600">funcionando</span>.
+              Do primeiro &ldquo;oi&rdquo; ao serviço <span className="text-jb-600">registrado e testado.</span>
             </h2>
             <p
               className="texto-guia jb-revela mt-5 max-w-md text-graf-600"
