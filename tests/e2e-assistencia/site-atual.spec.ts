@@ -28,8 +28,13 @@ test.describe("JB assistência — jornada pública atual", () => {
 
     expect(resposta?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("parou?");
-    await expect(page.getByText("Todas as marcas", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Orçamento antes da troca", { exact: true }).first()).toBeVisible();
+
+    // Escopa as provas ao bloco visível do hero. O cabeçalho desktop tem um
+    // link homônimo ("Todas as marcas") que fica oculto no mobile, então
+    // `getByText(...).first()` selecionava corretamente o texto errado.
+    const provas = page.locator(".jb-hero-provas");
+    await expect(provas.getByText("Todas as marcas", { exact: true })).toBeVisible();
+    await expect(provas.getByText("Orçamento antes da troca", { exact: true })).toBeVisible();
 
     const jeferson = page.locator('a[data-whatsapp="abertura"]');
     const jackson = page.locator('a[data-whatsapp="abertura-segundo"]');
