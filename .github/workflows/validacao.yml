@@ -199,6 +199,21 @@ jobs:
           ADMIN_PASSWORD: ciDeTeste12345
           PERMITIR_DEMO: "1"
 
+      # Identificadores FICTÍCIOS de GA4, Google Ads e Meta, iguais aos da
+      # validação local (`scripts/validacao-final.mjs`). Sem destino, o aviso
+      # de consentimento nem aparece e os testes de medição não têm o que
+      # medir. O E2E intercepta toda requisição a Google e Meta: nada sai.
+      - name: Destinos de medição de teste
+        run: |
+          docker exec jb-pg psql -U jb -d jb -v ON_ERROR_STOP=1 -q -c "
+            UPDATE \"Setting\" SET value = CASE key
+              WHEN 'codigo_analytics' THEN 'G-TESTE12345'
+              WHEN 'google_ads_id' THEN 'AW-123456789'
+              WHEN 'google_ads_rotulo_whatsapp' THEN 'TesteWhats1'
+              WHEN 'meta_pixel_id' THEN '123456789012345'
+            END
+            WHERE key IN ('codigo_analytics', 'google_ads_id', 'google_ads_rotulo_whatsapp', 'meta_pixel_id');"
+
       # Só o Chromium. WebKit e Firefox multiplicariam o tempo por três para
       # cobrir o que a suíte atual não diferencia — e o escopo é explícito em
       # não deixar o resultado parecer teste em iPhone real.
@@ -209,6 +224,7 @@ jobs:
         run: pnpm e2e
         env:
           CI: "true"
+          E2E_EXIGE_MEDICAO: "1"
           DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
           DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
           AUTH_SECRET: ci-secret-de-teste-nao-usar-em-producao-0000000000

@@ -109,10 +109,16 @@ Medição só ocorre depois de consentimento. O clique no WhatsApp pode registra
 
 UTMs e identificadores de campanha podem ser preservados em sessão para atribuição após navegação interna, sem transformar armazenamento em envio de dados antes do consentimento.
 
-Depois do consentimento, GA4 e Meta recebem `PageView` explícito na rota inicial e nas navegações internas do App Router. Query string não entra nesse evento. O clique no WhatsApp continua sendo tratado como **intenção de contato**, não como conversa ou atendimento concluído.
+Depois do consentimento, GA4 e Meta recebem `PageView` explícito na rota inicial e nas navegações internas do App Router. Query string arbitrária não entra nesse evento: o primeiro `PageView` de cada aba leva só a campanha, por lista de permissão (`utm_*` limpas e o `gclid`/`gbraid`/`wbraid` do Google), porque sem ela o GA4 atribui toda visita paga a "direto". As rotas com token pessoal (`/avaliar/*`) não geram `PageView`. O clique no WhatsApp continua sendo tratado como **intenção de contato**, não como conversa ou atendimento concluído: GA4 recebe `whatsapp_click`, o Google Ads recebe `conversion` com `send_to` explícito e a Meta recebe `Contact` com `content_category` = equipamento e `content_name` = `whatsapp:<posição do CTA>`.
+
+O pixel da Meta sobe com `disablePushState` (sem o `PageView` automático a cada `pushState`, que duplicaria a contagem) e `autoConfig` desligado (sem coleta automática de texto de botão e metadado).
+
+**Configuração fora do código (pendência externa):** no GA4, em *Fluxos de dados → Medição otimizada → Visualizações de página*, desmarque "Mudanças de página com base em eventos do histórico do navegador". O site já envia o `page_view` de cada navegação; com a opção ligada, o GA4 somaria um segundo automático. No Events Manager da Meta, a "correspondência avançada automática" deve ficar desligada para o pixel não ler campos de formulário.
 
 ## Performance
 
+- Nada em laço infinito: sem marquise, blob flutuante, borda girando ou foto "respirando". Movimento automático de mais de cinco segundos sem pausa é o que a WCAG 2.2.2 pede para evitar, e custa compositor sem informar nada.
+- O site público não carrega biblioteca de animação: transições da triagem são CSS, e as folhas do Motion System do painel entram só pelo layout do admin.
 - Não pré-carregar imagem que não disputa a primeira dobra no mobile.
 - Não fazer prefetch automático de listas de landings quando isso concorre com a jornada principal.
 - Imagens abaixo da dobra permanecem lazy por padrão.

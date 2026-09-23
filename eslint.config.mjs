@@ -34,6 +34,10 @@ const config = [
       "tests/.saida/**",
       ".shots/**",
       "next-env.d.ts",
+      /* Rascunhos de investigação: `.gitignore` já os tira do repositório
+         (`scripts/_*`). Eles não chegam à CI, então não podem reprovar o
+         portão local só por existirem na máquina de alguém. */
+      "scripts/_*",
     ],
   },
 
