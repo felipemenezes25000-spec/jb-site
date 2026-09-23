@@ -11,29 +11,10 @@ import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 import { connection } from "next/server";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- * Ver docs/evolucao-jb/cobertura.md, fase 5.
- */
-/*
- * Renderizada a cada visita (`connection()` logo no começo). Até 22/09/2026
- * esta página vivia na casca da loja, que lia o cookie da conta e tornava tudo
- * dinâmico por tabela. A casca do site de assistência é estática, e sem esta
- * chamada o Next tentaria pré-renderizar a consulta ao banco e recusaria o
- * relógio que o Prisma lê durante a consulta.
- */
 export const instant = false;
 
 type Props = { params: Promise<{ slug: string }> };
 
-/**
- * A leitura pública de um case.
- *
- * O `select` é a projeção editorial autorizada, e ele é a peça de segurança
- * desta página: `workOrderId`, `consentNote` e `pendingNote` não estão aqui, e
- * não devem passar a estar. O vínculo com a OS serve para a JB comprovar
- * internamente o que publicou — ele não é conteúdo.
- */
 async function casePublicado(slug: string) {
   return prisma.techCase.findFirst({
     where: { slug, status: "publicado" },
@@ -74,11 +55,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <section className="border-t border-graf-200 pt-6">
-      <h2 className="text-apoio font-bold uppercase tracking-wide text-graf-500">
-        {titulo}
-      </h2>
-      <div className="mt-2 text-[1.0625rem] leading-relaxed text-graf-800">{children}</div>
+    <section className="jb-case-bloco rounded-[1.25rem] border border-graf-200 bg-white p-5 sm:p-6">
+      <h2 className="text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-jb-700">{titulo}</h2>
+      <div className="mt-3 text-[1.0625rem] leading-relaxed text-graf-800">{children}</div>
     </section>
   );
 }
@@ -101,60 +80,54 @@ export default async function CasePage({ params }: Props) {
     <>
       <JsonLd dados={trilhaJsonLd(trilha)} />
 
-      <Secao espaco="sm" largura="estreita">
+      <Secao espaco="md" largura="estreita" className="jb-case-detail">
         <Trilha itens={trilha} className="mb-6" />
 
-        <p className="label-mono text-xs text-jb-700">
-          {[caso.equipmentLabel, caso.modelLabel].filter(Boolean).join(" · ")}
-        </p>
-        <h1 className="mt-2 text-display texto-forte">{caso.title}</h1>
+        <header className="jb-case-head">
+          <p className="label-mono inline-flex rounded-full border border-jb-100 bg-jb-50 px-3 py-1.5 text-xs font-bold text-jb-700">
+            {[caso.equipmentLabel, caso.modelLabel].filter(Boolean).join(" · ")}
+          </p>
+          <h1 className="mt-4 text-display texto-forte">{caso.title}</h1>
 
-        <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3 border-y border-graf-200 py-4 text-sm">
-          {caso.technician ? (
-            <div>
-              <dt className="text-graf-500">Executado por</dt>
-              <dd className="font-semibold text-graf-900">{caso.technician.name}</dd>
-            </div>
-          ) : null}
-          {caso.reviewer ? (
-            <div>
-              <dt className="text-graf-500">Revisão técnica</dt>
-              <dd className="font-semibold text-graf-900">{caso.reviewer.name}</dd>
-            </div>
-          ) : null}
-          {/* Duração só aparece quando foi medida. Sem ela, nenhuma frase
-              ocupa o lugar — "resolvido rapidamente" promete um prazo que
-              ninguém se comprometeu a cumprir. */}
-          {duracao ? (
-            <div>
-              <dt className="text-graf-500">Tempo do atendimento</dt>
-              <dd className="tabular font-semibold text-graf-900">{duracao}</dd>
-            </div>
-          ) : null}
-          {caso.publishedAt ? (
-            <div>
-              <dt className="text-graf-500">Publicado em</dt>
-              <dd className="tabular font-semibold text-graf-900">
-                {formatarData(caso.publishedAt)}
-              </dd>
-            </div>
-          ) : null}
-        </dl>
+          <dl className="jb-case-meta mt-6 grid gap-3 rounded-[1.2rem] border border-graf-200 bg-white p-4 text-sm sm:grid-cols-2 sm:p-5">
+            {caso.technician ? (
+              <div>
+                <dt className="text-graf-500">Executado por</dt>
+                <dd className="font-extrabold text-graf-900">{caso.technician.name}</dd>
+              </div>
+            ) : null}
+            {caso.reviewer ? (
+              <div>
+                <dt className="text-graf-500">Revisão técnica</dt>
+                <dd className="font-extrabold text-graf-900">{caso.reviewer.name}</dd>
+              </div>
+            ) : null}
+            {duracao ? (
+              <div>
+                <dt className="text-graf-500">Tempo do atendimento</dt>
+                <dd className="tabular font-extrabold text-graf-900">{duracao}</dd>
+              </div>
+            ) : null}
+            {caso.publishedAt ? (
+              <div>
+                <dt className="text-graf-500">Publicado em</dt>
+                <dd className="tabular font-extrabold text-graf-900">{formatarData(caso.publishedAt)}</dd>
+              </div>
+            ) : null}
+          </dl>
+        </header>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-8 grid gap-3 sm:gap-4">
           <Bloco titulo="O que a clínica relatou">{caso.symptom}</Bloco>
           <Bloco titulo="Diagnóstico confirmado na bancada">{caso.diagnosis}</Bloco>
           <Bloco titulo="O que foi feito">{caso.intervention}</Bloco>
 
           {caso.parts.length > 0 ? (
             <Bloco titulo="Peças substituídas">
-              <ul className="space-y-1.5">
+              <ul className="space-y-2">
                 {caso.parts.map((peca) => (
                   <li key={peca} className="flex gap-2.5">
-                    <span
-                      aria-hidden
-                      className="mt-2.5 size-1 shrink-0 rounded-full bg-graf-400"
-                    />
+                    <span aria-hidden className="mt-2.5 size-1.5 shrink-0 rounded-full bg-jb-500" />
                     <span>{peca}</span>
                   </li>
                 ))}
@@ -166,10 +139,8 @@ export default async function CasePage({ params }: Props) {
           {caso.result ? <Bloco titulo="Resultado">{caso.result}</Bloco> : null}
         </div>
 
-        {/* A autorização é dita ao leitor, e não só guardada no banco. Ela é
-            parte do que faz este case ser prova, e não anedota. */}
-        <p className="mt-10 flex gap-2.5 rounded-lg border border-graf-200 bg-graf-50 p-4 text-[0.875rem] leading-relaxed text-graf-600">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-graf-500" aria-hidden />
+        <p className="jb-case-consent mt-8 flex gap-3 rounded-xl border border-graf-200 bg-graf-50 p-4 text-[0.875rem] leading-relaxed text-graf-600 sm:p-5">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-jb-600" aria-hidden />
           <span>
             Este atendimento foi publicado com autorização da clínica atendida. Nenhum dado do
             cliente, valor ou número de ordem de serviço aparece aqui.
@@ -177,15 +148,16 @@ export default async function CasePage({ params }: Props) {
         </p>
       </Secao>
 
-      <Secao fundo="clara" espaco="sm">
-        <TituloSecao
-          tamanho="titulo"
-          titulo="Sintoma parecido no seu equipamento?"
-          descricao="Sintoma igual não significa causa igual — mas é um bom começo de conversa."
-          acao={
-            <ChamarWhatsapp />
-          }
-        />
+      <Secao fundo="clara" espaco="md" className="jb-content-cta">
+        <div className="rounded-[1.5rem] border border-graf-200 bg-white p-6 shadow-[0_30px_70px_-52px_rgb(17_19_21/0.5)] sm:p-8">
+          <TituloSecao
+            tamanho="titulo"
+            sobretitulo="Triagem técnica"
+            titulo="Sintoma parecido no seu equipamento?"
+            descricao="Sintoma igual não significa causa igual — mas é um bom começo de conversa."
+            acao={<ChamarWhatsapp />}
+          />
+        </div>
       </Secao>
     </>
   );
