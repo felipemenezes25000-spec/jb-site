@@ -1,17 +1,15 @@
 import Link from "next/link";
 
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
-import { Logo, Simbolo } from "@/components/ui/logo";
+import { Logo } from "@/components/ui/logo";
 import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 
 /* ============================================================================
    Cabeçalho do site de assistência
 
-   Desktop mantém a marca completa, atalhos e os dois atendentes. Em telas
-   realmente estreitas a marca vira o símbolo oficial, liberando espaço para
-   Jeferson e Jackson sem esconder nenhum dos dois nem esmagar os alvos de
-   toque.
+   Uma única imagem da marca escala discretamente no celular, deixando espaço
+   para Jeferson e Jackson sem duplicar downloads por breakpoint.
    ============================================================================ */
 
 export type AtalhoDoCabecalho = { rotulo: string; href: string };
@@ -32,12 +30,7 @@ export function CabecalhoSite({
             className="jb-logo-stage foco-jb shrink-0 rounded-lg"
             aria-label="JB Soluções Odontológicas, início"
           >
-            <span className="flex sm:hidden">
-              <Simbolo tamanho={30} prioridade />
-            </span>
-            <span className="hidden sm:flex">
-              <Logo altura={34} prioridade />
-            </span>
+            <Logo altura={34} alturaMinima={28} prioridade />
           </Link>
           <span className="hidden items-center gap-2 rounded-full border border-graf-200 bg-white/75 px-3 py-1.5 text-xs font-bold text-graf-700 shadow-card xl:inline-flex">
             <span className="size-2 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]" aria-hidden />
