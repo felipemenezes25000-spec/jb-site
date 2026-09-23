@@ -17,21 +17,22 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
 /* ============================================================================
    Rodapé do site de assistência
 
-   Tudo o que alguém precisa para chamar a JB sem subir a página: WhatsApp
-   do Jeferson e do Jackson, telefone, e-mail, endereço, horário. E a prova da autorização
-   EVOXX com o link para a lista do fabricante, porque selo sem fonte é enfeite.
+   Fecha a experiência com contraste alto e todos os canais úteis. Continua
+   sendo operacional: WhatsApp dos dois atendentes, telefone, e-mail, endereço,
+   horário, páginas de equipamento e a fonte oficial da autorização EVOXX.
    ============================================================================ */
 
 export function RodapeSite({ s }: { s: SettingsMap }) {
-  /* Jeferson e Jackson, o principal primeiro. */
   const contatos = contatosWhatsapp(s);
 
   return (
-    <footer id="contato" className="scroll-mt-20 border-t border-graf-200 bg-surface-muted">
-      <div className="container-jb grid gap-10 py-14 sm:grid-cols-2 md:py-16 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
+    <footer id="contato" className="jb-footer-premium scroll-mt-20">
+      <div className="container-jb grid gap-10 py-14 sm:grid-cols-2 md:py-16 lg:grid-cols-[1.25fr_1fr_1fr_1fr] lg:gap-12 lg:py-20">
         <div>
-          <Logo altura={38} />
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-graf-600">
+          <div className="jb-footer-logo-card inline-flex bg-white p-3">
+            <Logo altura={40} />
+          </div>
+          <p className="mt-5 max-w-sm text-sm leading-relaxed text-graf-600">
             Assistência técnica para equipamentos odontológicos de todas as marcas, em{" "}
             {s.endereco_cidade} e região, na clínica ou na nossa bancada.
           </p>
@@ -39,9 +40,9 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
             href={LISTA_EVOXX}
             target="_blank"
             rel="noopener noreferrer"
-            className="foco-jb mt-5 inline-flex items-center gap-2 rounded-lg border border-graf-200 bg-white px-3 py-2 text-xs font-bold text-graf-800 transition-colors hover:border-jb-300 hover:text-jb-700"
+            className="jb-footer-badge foco-jb mt-5 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors"
           >
-            <BadgeCheck className="size-4 text-jb-600" aria-hidden />
+            <BadgeCheck className="size-4 text-jb-500" aria-hidden />
             Assistência técnica autorizada EVOXX
           </a>
         </div>
@@ -56,23 +57,23 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                   data-whatsapp="rodape-numero"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="foco-jb inline-flex items-center gap-2.5 rounded font-bold text-graf-900 hover:text-jb-700"
+                  className="jb-footer-link foco-jb gap-2.5 rounded font-bold text-graf-900"
                 >
-                  <MarcaWhatsapp className="size-4 text-jb-600" />
+                  <MarcaWhatsapp className="size-4 text-jb-500" />
                   <span className="sr-only">WhatsApp: </span>
                   {nome || <span className="tabular">{formatarTelefone(numero)}</span>}
                 </a>
               </li>
             ))}
             {contatos.length > 0 ? (
-              <li className="flex items-center gap-2.5 font-semibold text-graf-700">
-                <Phone className="size-4 shrink-0 text-jb-600" aria-hidden />
+              <li className="flex items-start gap-2.5 font-semibold text-graf-700">
+                <Phone className="mt-0.5 size-4 shrink-0 text-jb-500" aria-hidden />
                 <span>
                   Ligar para{" "}
                   {contatos.map(({ numero, nome }, i) => (
                     <span key={numero}>
                       {i > 0 ? " ou " : null}
-                      <a href={telHref(numero)} className="foco-jb rounded font-bold text-graf-900 hover:text-jb-700">
+                      <a href={telHref(numero)} className="jb-footer-link foco-jb rounded font-bold text-graf-900">
                         {nome || formatarTelefone(numero)}
                       </a>
                     </span>
@@ -84,9 +85,9 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
               <li>
                 <a
                   href={`mailto:${s.email}`}
-                  className="foco-jb inline-flex items-center gap-2.5 break-all rounded font-semibold text-graf-700 hover:text-jb-700"
+                  className="jb-footer-link foco-jb gap-2.5 break-all rounded font-semibold text-graf-700"
                 >
-                  <Mail className="size-4 shrink-0 text-jb-600" aria-hidden />
+                  <Mail className="size-4 shrink-0 text-jb-500" aria-hidden />
                   {s.email}
                 </a>
               </li>
@@ -98,12 +99,12 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
           <h2 id="rodape-equipamentos" className="text-sm font-extrabold text-graf-950">
             Conserto de equipamentos
           </h2>
-          <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm sm:grid-cols-1">
+          <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-1">
             {PAGINAS_DE_EQUIPAMENTO.map((pagina) => (
               <li key={pagina.slug}>
                 <Link
                   href={`/${pagina.slug}`}
-                  className="foco-jb rounded font-semibold text-graf-700 hover:text-jb-700"
+                  className="jb-footer-link foco-jb rounded font-semibold text-graf-700"
                 >
                   {pagina.nomeCurto}
                 </Link>
@@ -114,14 +115,14 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
 
         <div>
           <h2 className="text-sm font-extrabold text-graf-950">Onde e quando</h2>
-          <ul className="mt-4 space-y-3 text-sm text-graf-700">
+          <ul className="mt-4 space-y-4 text-sm text-graf-700">
             <li className="flex gap-2.5">
-              <MapPin className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+              <MapPin className="mt-0.5 size-4 shrink-0 text-jb-500" aria-hidden />
               <span className="leading-relaxed">{enderecoCompleto(s)}</span>
             </li>
             {s.horario ? (
               <li className="flex gap-2.5">
-                <Clock3 className="mt-0.5 size-4 shrink-0 text-jb-600" aria-hidden />
+                <Clock3 className="mt-0.5 size-4 shrink-0 text-jb-500" aria-hidden />
                 <span className="leading-relaxed">{s.horario}</span>
               </li>
             ) : null}
@@ -129,23 +130,23 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
         </div>
       </div>
 
-      <div className="border-t border-graf-200">
+      <div className="jb-footer-divisor border-t">
         <div className="container-jb flex flex-col gap-3 pb-28 pt-5 text-xs text-graf-500 sm:flex-row sm:items-center sm:justify-between md:pb-5">
           <p>{s.empresa_nome}</p>
-          <ul className="flex gap-4">
+          <ul className="flex flex-wrap gap-x-4 gap-y-2">
             <li>
-              <Link href="/privacidade" className="foco-jb rounded hover:text-jb-700">
+              <Link href="/privacidade" className="jb-footer-link foco-jb rounded">
                 Privacidade
               </Link>
             </li>
             <li>
-              <Link href="/termos" className="foco-jb rounded hover:text-jb-700">
+              <Link href="/termos" className="jb-footer-link foco-jb rounded">
                 Termos de uso
               </Link>
             </li>
             {algumDestino(destinosDeMedicao(s)) ? (
               <li>
-                <RevisarMedicao className="foco-jb rounded hover:text-jb-700" />
+                <RevisarMedicao className="foco-jb rounded hover:text-jb-300" />
               </li>
             ) : null}
           </ul>
