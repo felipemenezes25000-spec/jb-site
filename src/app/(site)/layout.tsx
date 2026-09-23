@@ -1,6 +1,8 @@
+import { Medicao } from "@/components/analytics/medicao";
 import { CabecalhoSite, type AtalhoDoCabecalho } from "@/components/site/cabecalho-site";
 import { FaixaTopo } from "@/components/site/faixa-topo";
 import { RodapeSite } from "@/components/site/rodape-site";
+import { destinosDeMedicao } from "@/lib/analytics/destinos";
 import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
@@ -21,7 +23,12 @@ import "./consent-premium.css";
 
    O site público tem a própria coreografia (`jb-revela` + fallback por
    IntersectionObserver), então a raiz entra em `data-motion-ignore` para o
-   Motion System global não animar as mesmas seções uma segunda vez.
+   Motion System do admin não tentar animar as mesmas seções.
+
+   Analytics e consentimento também moram aqui: o painel administrativo não é
+   tráfego de campanha e não precisa carregar pixel, GA ou aviso de medição.
+   Como este layout já busca as configurações públicas para contato e empresa,
+   os destinos são derivados da mesma leitura em vez de consultar tudo de novo.
    ============================================================================ */
 
 const ATALHOS: AtalhoDoCabecalho[] = [
@@ -35,6 +42,7 @@ const ATALHOS: AtalhoDoCabecalho[] = [
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const s = await configuracoesPublicas();
   const contatos = contatosWhatsapp(s);
+  const destinos = destinosDeMedicao(s);
 
   return (
     <div data-jb-site="assistencia" data-motion-ignore className="flex min-h-dvh flex-col">
@@ -50,6 +58,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         {children}
       </main>
       <RodapeSite s={s} />
+      <Medicao destinos={destinos} />
     </div>
   );
 }
