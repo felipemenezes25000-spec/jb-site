@@ -6,10 +6,14 @@ import { Esqueleto } from "@/components/ui/data";
  * O backoffice continua usando o fallback raiz. Aqui a geometria lembra a
  * abertura de assistência para reduzir a sensação de troca brusca durante
  * navegações que dependem do servidor.
+ *
+ * O elemento raiz é `div`, e não `main`: este loading é renderizado dentro do
+ * `<main id="conteudo">` do layout público. Dois landmarks `main` aninhados
+ * são semântica inválida mesmo que visualmente pareçam corretos.
  */
 export default function CarregandoSite() {
   return (
-    <main
+    <div
       className="relative isolate min-h-[68svh] overflow-hidden bg-white py-8 sm:py-12 lg:py-16"
       aria-busy="true"
     >
@@ -53,6 +57,6 @@ export default function CarregandoSite() {
           <Esqueleto className="mt-5 h-24 rounded-xl" />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
