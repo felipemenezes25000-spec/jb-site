@@ -35,16 +35,16 @@ export function Duvidas({
     {
       pergunta: "Vocês atendem todas as marcas?",
       resposta:
-        "Sim. A JB conserta equipamentos odontológicos de todas as marcas, e a equipe confirma o modelo na triagem pelo WhatsApp. Também é assistência técnica autorizada EVOXX, na lista oficial do fabricante.",
+        "Sim. A JB conserta equipamentos odontológicos de todas as marcas. Modelo e sintoma entram na triagem quando a clínica os informa. A JB também é assistência técnica autorizada EVOXX, na lista oficial do fabricante.",
     },
     {
       pergunta: "Como explico o problema?",
       resposta:
-        "Pelo WhatsApp mesmo. Diga o equipamento e o que ele está fazendo. Uma foto do painel, do erro ou um vídeo curto do barulho ajudam a equipe a entender mais rápido.",
+        "Pelo WhatsApp mesmo. Diga o equipamento e o que ele está fazendo. Uma foto do painel, do erro ou um vídeo curto do barulho ajudam a equipe a entender o sintoma antes de definir o próximo passo.",
     },
     {
       pergunta: "Qual o horário de atendimento?",
-      resposta: `${horario}. Fora desse horário, deixe sua mensagem no WhatsApp: ela fica na fila e é respondida no próximo expediente.`,
+      resposta: `${horario}. Fora desse horário, você pode deixar a mensagem no WhatsApp para a equipe visualizar no próximo expediente.`,
     },
     {
       pergunta: "Preciso fazer cadastro ou abrir chamado no site?",
