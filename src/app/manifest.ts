@@ -7,7 +7,8 @@ import { SETTING_DEFAULTS, getSettings } from "@/lib/settings";
  *
  * É o que o navegador lê quando alguém escolhe "adicionar à tela inicial": nome
  * do aplicativo, ícone, cor da barra e por onde abrir. Serve principalmente
- * para a equipe da JB e para o cliente que acompanha chamado pelo celular.
+ * para quem volta à assistência pelo celular e quer chegar ao diagnóstico ou
+ * a um equipamento específico sem atravessar a home inteira.
  *
  * O nome e a descrição saem da configuração (`@/lib/settings`), como no resto
  * do site, para a JB poder mudar sem tocar em código. Se o banco estiver fora
@@ -19,16 +20,7 @@ import { SETTING_DEFAULTS, getSettings } from "@/lib/settings";
  * (`/icon?<hash>`), que muda a cada build. URL de ícone de manifesto precisa
  * ser estável, senão o sistema operacional reinstala o ícone a cada visita.
  */
-/*
- * O `export const revalidate` saiu daqui: com `cacheComponents`, a validade
- * de um cache é declarada com `cacheLife` DENTRO do escopo `use cache`, e
- * não como configuração de segmento. A função abaixo passou a declarar o
- * próprio cache; a hora de vida continua sendo uma hora.
- */
-
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  // anotação explícita porque SETTING_DEFAULTS é `as const`: sem ela o tipo
-  // ficaria preso ao texto padrão e o valor vindo do banco não caberia
   let nome: string = SETTING_DEFAULTS.empresa_nome;
   let resumo: string = SETTING_DEFAULTS.empresa_resumo;
 
@@ -51,7 +43,6 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    orientation: "portrait",
 
     // Vermelho da marca (--color-jb-500) na barra do aplicativo instalado,
     // sobre o fundo branco que a interface usa em todo lugar.
@@ -65,14 +56,33 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
       { src: "/marca/jb-icone-512.png", sizes: "512x512", type: "image/png" },
     ],
 
-    // Atalho que aparece ao segurar o ícone do aplicativo: o diagnóstico em
-    // 3 toques, que termina no WhatsApp.
+    // Atalhos do ícone instalado. O diagnóstico continua sendo o primeiro;
+    // os três seguintes cobrem intenções frequentes de anúncio sem inventar
+    // uma navegação paralela à do site.
     shortcuts: [
       {
         name: "Chamar a assistência",
         short_name: "Assistência",
         description: "Montar a mensagem do equipamento parado e chamar no WhatsApp.",
         url: "/#diagnostico",
+      },
+      {
+        name: "Conserto de autoclave",
+        short_name: "Autoclave",
+        description: "Abrir a triagem de autoclave e chamar a equipe da JB.",
+        url: "/autoclave",
+      },
+      {
+        name: "Conserto de compressor",
+        short_name: "Compressor",
+        description: "Abrir a triagem de compressor e chamar a equipe da JB.",
+        url: "/compressor",
+      },
+      {
+        name: "Conserto de cadeira odontológica",
+        short_name: "Cadeira",
+        description: "Abrir a triagem de cadeira odontológica e chamar a equipe da JB.",
+        url: "/cadeira-odontologica",
       },
     ],
   };
