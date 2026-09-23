@@ -7,17 +7,7 @@ import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
 import "./site.css";
-import "./premium.css";
-import "./ultra-premium.css";
-import "./sections-premium.css";
-import "./conversion-panels.css";
-import "./ad-landing.css";
-import "./mobile-excellence.css";
-import "./desktop-excellence.css";
-import "./institutional-premium.css";
-import "./content-premium.css";
-import "./consent-premium.css";
-import "./final-polish.css";
+import "./acabamento.css";
 
 /* ============================================================================
    Casca do site de assistência

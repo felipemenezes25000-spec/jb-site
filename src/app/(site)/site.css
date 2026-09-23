@@ -89,27 +89,8 @@
   animation: jb-balanca 520ms ease-in-out;
 }
 
-/* ------------------------------------------------ barra do celular, entrar */
-
-.jb-barra-movel {
-  transition:
-    transform 320ms var(--ease-out-quint),
-    opacity 320ms var(--ease-out-quint);
-}
-
-.jb-barra-movel[data-visivel="false"] {
-  transform: translate3d(0, 120%, 0);
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ---------------------------------------------------- movimento reduzido */
-
-@media (prefers-reduced-motion: reduce) {
-  .jb-barra-movel {
-    transition: none;
-  }
-}
+/* A entrada e a saída da barra do celular moram em `acabamento.css`, com o
+   resto do desenho dela. */
 
 /* ------------------------------------------------------ controle deslizante */
 

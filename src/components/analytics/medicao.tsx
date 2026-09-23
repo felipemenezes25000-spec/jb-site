@@ -295,14 +295,18 @@ function RelatorioDeVitals() {
 function AvisoDeMedicao({ destinos }: { destinos: string[] }) {
   const quem = destinos.join(" e ");
 
+  /* Cartão flutuante acima da área segura do aparelho, com recusar e aceitar
+     do mesmo tamanho e peso. O desenho mora em `.jb-aviso-medicao`
+     (`app/(site)/acabamento.css`); enquanto ele está aberto, a barra do
+     WhatsApp do celular recolhe — dois painéis fixos no pé da tela não se
+     sobrepõem. */
   return (
     <div
       role="region"
       aria-label="Medição de uso do site"
-      className="fixed inset-x-0 bottom-0 z-90 border-t border-graf-200 bg-white/95 px-4 pt-3 shadow-pop backdrop-blur"
-      style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      className="jb-aviso-medicao fixed z-90"
     >
-      <div className="container-jb flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <p className="min-w-0 text-xs leading-relaxed text-graf-700 sm:text-sm">
           Podemos medir as visitas com {quem} para saber quais anúncios trazem conversa?{" "}
           <span className="hidden sm:inline">
@@ -316,12 +320,22 @@ function AvisoDeMedicao({ destinos }: { destinos: string[] }) {
           </Link>
         </p>
         <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex">
-          <Botao variante="secundario" tamanho="sm" onClick={() => gravarConsentimento("recusado")}>
-            Não medir
-          </Botao>
-          <Botao variante="secundario" tamanho="sm" onClick={() => gravarConsentimento("aceito")}>
-            Pode medir
-          </Botao>
+          {(
+            [
+              ["recusado", "Não medir"],
+              ["aceito", "Pode medir"],
+            ] as const
+          ).map(([escolha, rotulo]) => (
+            <Botao
+              key={escolha}
+              variante="secundario"
+              tamanho="sm"
+              onClick={() => gravarConsentimento(escolha)}
+              className="jb-aviso-medicao-botao"
+            >
+              {rotulo}
+            </Botao>
+          ))}
         </div>
       </div>
     </div>

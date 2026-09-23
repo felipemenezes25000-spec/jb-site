@@ -79,8 +79,9 @@ Cada landing precisa:
 
 - repetir imediatamente a intenção do anúncio/busca;
 - colocar nome do equipamento no H1;
-- permitir selecionar o sintoma sem tornar isso obrigatório;
-- carregar equipamento/sintoma na mensagem do WhatsApp;
+- permitir selecionar o sintoma sem tornar isso obrigatório — e, depois dele, a situação da clínica e a cidade, também opcionais;
+- carregar equipamento, sintoma, situação e cidade na mensagem do WhatsApp (e na barra do celular);
+- ter os dois atendentes na primeira dobra do celular: o parágrafo de impacto só aparece a partir do tablet;
 - manter Jeferson e Jackson;
 - apresentar cuidados apenas de segurança e observação externa;
 - usar metadata/canonical/OG específicos;
@@ -126,9 +127,25 @@ O pixel da Meta sobe com `disablePushState` (sem o `PageView` automático a cada
 - O site de assistência usa sua própria coreografia e não deve receber aura/tilt/reveal da antiga vitrine comercial.
 - Folhas específicas do e-commerce removido não devem voltar ao bundle global.
 
-## Validação final
+## CSS do site público
 
-A bateria foi preparada para ser executada **uma única vez ao final da leva**, não a cada commit.
+Duas folhas, importadas pelo layout do grupo `(site)`:
+
+- `site.css` — movimento: revelação por rolagem, troca de passo da triagem, controle deslizante, pulso da barra e movimento reduzido;
+- `acabamento.css` — desenho, organizado por peça na ordem da página (comum, botões de WhatsApp, faixa do topo, cabeçalho, abertura da home, abertura das landings, seções, rodapé, conteúdo, barra do celular, aviso de medição, preferências do sistema).
+
+Até 23/09/2026 eram onze camadas (`premium`, `ultra-premium`, `mobile-excellence`, `final-polish`…) redefinindo as mesmas peças — o título da home em doze regras de cinco arquivos. A consolidação foi feita medindo estilo computado e geometria de cada elemento em 9 rotas × 9 larguras, antes e depois. Mudanças de propósito, e só elas:
+
+- `backdrop-filter` removido de tudo que tem fundo quase opaco (provas, CTAs, triagem, cartões, barra, aviso); fica só no cabeçalho fixo;
+- `overflow-x: clip` saiu do invólucro do site: peça que não cabe aparece no portão de responsividade em vez de ser recortada;
+- 360px passa a usar as regras de 360–430 (antes, metade das regras de 320 valia também em 360);
+- abaixo de 360px, os botões grandes de WhatsApp da triagem, das seções e do fechamento têm menos respiro, e "Jeferson" deixou de aparecer com reticências;
+- o aviso de medição usa a classe `.jb-aviso-medicao` em vez de seletor por `aria-label` com `!important`;
+- a landing usa `.jb-landing-hero` em vez de `section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium)`.
+
+Regra para a próxima mudança: procure a seção da peça em `acabamento.css` antes de criar regra nova; não crie folha nova para ajuste pontual.
+
+## Validação final
 
 Comando:
 
@@ -136,45 +153,35 @@ Comando:
 pnpm validacao:final
 ```
 
-Pré-requisito: **Docker disponível**. O comando não usa o banco configurado na máquina para migrations/seeds. Ele sobrescreve as variáveis críticas e cria um PostgreSQL 17 descartável em container próprio, por padrão na porta local `55432`.
+Pré-requisito: **Docker com o daemon rodando**. O comando não usa o banco configurado na máquina: sobrescreve as variáveis críticas (inclusive zera `JBPREV_DATABASE_URL`) e cria um PostgreSQL 17 descartável em container próprio, publicado só em `127.0.0.1`, por padrão na porta `55432`. A aplicação sobe por padrão na `3456`. As duas portas precisam estar livres: a validação **não** reaproveita servidor alheio (já aconteceu de a suíte rodar contra o site de outro projeto) e confere que quem responde é a JB.
 
 O orquestrador `scripts/validacao-final.mjs` executa, em sequência:
 
 1. verificação arquitetural;
 2. lint;
 3. TypeScript;
-4. testes unitários;
-5. sobe PostgreSQL efêmero;
-6. aplica migrações e cargas base/demo nesse banco local;
-7. garante o Chromium do Playwright;
-8. build de produção apontado para o banco efêmero;
-9. um único `next start` isolado para a bateria de navegador;
-10. Playwright do produto público atual;
-11. axe/accessibilidade em mobile e desktop;
-12. responsividade de `320` a `1920px`.
+4. testes unitários (2 workers);
+5. PostgreSQL 17 efêmero, pronto por TCP e confirmado duas vezes;
+6. migrações e cargas base, demo e operação nesse banco;
+7. destinos de medição **fictícios** (GA4, Google Ads e Meta) no banco efêmero, para o aviso de consentimento e a medição serem testados de verdade;
+8. Chromium do Playwright;
+9. build de produção apontado para o banco efêmero (`connection_limit=3`, `connect_timeout=30`);
+10. um único `next start`, com a conferência de que nenhuma página foi gerada com as configurações padrão por falha de banco no build;
+11. Playwright do produto público atual (`E2E_EXIGE_MEDICAO=1`: teste de medição não pode se declarar pulado);
+12. axe/acessibilidade em mobile e desktop;
+13. responsividade de `320` a `1920px`.
 
-E2E, acessibilidade e responsividade reutilizam o mesmo servidor de produção, evitando três inicializações desnecessárias. Qualquer etapa que falhar encerra a validação com erro. Servidor e banco efêmero são encerrados no `finally`; `SIGINT`/`SIGTERM` também disparam a limpeza.
-
-Portas podem ser alteradas sem tocar no código:
+Servidor e banco são encerrados no `finally`, também em `SIGINT`/`SIGTERM`, e o container é removido mesmo se não chegar a ficar pronto. O resumo final lista cada etapa com tempo. `VALIDACAO_CONTINUAR=1` roda as três baterias de navegador mesmo que uma falhe (para ver tudo numa rodada); a validação continua reprovada.
 
 ```bash
-VALIDACAO_PORTA=3210 VALIDACAO_DB_PORTA=55432 pnpm validacao:final
+VALIDACAO_PORTA=3457 VALIDACAO_DB_PORTA=55433 pnpm validacao:final
 ```
 
-Cobertura preparada:
+Cobertura:
 
-- Playwright em `320×760`, `390×844`, `1440×900` e `1920×1080`;
-- responsividade em `320`, `360`, `390`, `430`, `768`, `1024`, `1280`, `1440` e `1920px`;
-- detecção de conteúdo cortado mesmo quando `overflow-x: clip` esconde a scrollbar;
-- acessibilidade em mobile e desktop;
-- 7 landings atuais;
-- canonical e Open Graph de home/landing;
-- WhatsApp de Jeferson e Jackson;
-- triagem completa preservada na barra móvel — equipamento, sintoma, situação e cidade quando informada;
-- páginas legais sem barra fixa de conversão;
-- ausência de overflow horizontal;
-- URLs antigas da loja respondendo `410` com saída para a assistência;
-- admin anônimo protegido;
-- origem de campanha sanitizada e `send_to` de Google Ads cobertos por teste unitário.
+- Playwright em `320×760`, `390×844`, `1440×900` e `1920×1080`: jornada da home e das 7 landings; telefone fixo e os dois WhatsApps; primeira dobra do celular com título e os dois atendentes; composição de desktop sem "celular esticado"; triagem completa (equipamento, sintoma, situação e cidade) no WhatsApp e na barra do celular; barra que só aparece longe dos CTAs e respeita a área segura; páginas legais sem barra; metadata, canonical, Open Graph (imagem 200 `image/png`) e JSON-LD das 7 landings; sitemap e robots; `410` com `noindex` para a loja antiga; admin anônimo redirecionado, `noindex` e `no-store`;
+- consentimento e medição: nenhum script de terceiro antes do "sim"; `PageView` na chegada e em cada navegação do App Router, sem duplicar e sem query arbitrária; `conversion` com `send_to` e `Contact` com campos controlados no clique; revogação; aviso com prioridade sobre a barra no celular. Google e Meta são interceptados pelo teste: nada sai da máquina;
+- acessibilidade (axe WCAG 2.2 A/AA) em 390 e 1440: home, 7 landings, Central Técnica, cases, privacidade, termos, 404, 410 e login do painel, mais `h1` e `main` únicos, ordem de títulos, "pular para o conteúdo" como primeira parada do Tab e foco visível nas 30 primeiras paradas. Artigo e case individuais entram automaticamente quando houver publicação;
+- responsividade em `320`, `360`, `390`, `430`, `768`, `1024`, `1280`, `1440` e `1920px`: rolagem lateral real, conteúdo fora da tela mesmo sem barra de rolagem, texto recortado por ancestral com `overflow` escondido, texto com reticências, alvo de 24px em todo controle e 44px nos CTAs de conversão, peças essenciais visíveis, os dois atendentes na primeira dobra do celular e revelação por rolagem que não pode congelar abaixo de 100% (390 e 1440, com movimento ligado).
 
-**Importante:** alterações desta leva foram feitas com `[skip ci]` por decisão operacional. O comando acima também foi apenas preparado, não executado nesta leva. Não considerar a implementação tecnicamente validada até a execução final da bateria.
+Configuração externa que o código não resolve está listada em **Medição** (GA4 e Meta).

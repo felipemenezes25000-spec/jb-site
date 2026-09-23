@@ -1,0 +1,2581 @@
+/* ============================================================================
+   Acabamento do site de assistência
+
+   Uma folha, organizada por peça da página, na ordem em que a página aparece:
+   comportamento comum, botões de WhatsApp, faixa do topo, cabeçalho, abertura
+   da home, abertura das landings, seções, rodapé, conteúdo, barra do celular,
+   aviso de medição e, no fim, as preferências do sistema.
+
+   Até 23/09/2026 isto eram onze camadas empilhadas (`premium`, `ultra-premium`,
+   `final-polish`…), cada uma corrigindo a anterior: o título da home era
+   redefinido doze vezes em cinco arquivos. A consolidação foi medida por
+   estilo computado em 9 rotas × 9 larguras antes e depois; o que mudou de
+   propósito está registrado em `docs/site-publico-assistencia.md`.
+
+   Regras da casa:
+   · um lugar por peça: antes de criar regra nova, procure a seção dela;
+   · do celular para o desktop, com as faixas do contrato do site público;
+   · `!important` só contra estilo em linha, movimento reduzido, cores
+     forçadas e impressão;
+   · nada de `backdrop-filter` sobre fundo quase opaco: custo de GPU sem efeito;
+   · nada de `overflow: hidden` em volta de `.jb-revela` (congela a revelação),
+     nem `overflow-x: clip` no invólucro para esconder peça que não cabe.
+   ============================================================================ */
+
+/* ====================== origem: acabamento-v4.css ====================== */
+/* ====================== origem: acabamento.css ====================== */
+/* ==========================================================================
+   Comportamento comum do site público
+
+   Sem `overflow-x: clip` no invólucro do site: ele escondia qualquer peça que
+   passasse da tela, e a correção certa é a peça caber. O portão de
+   responsividade mede conteúdo fora da tela com ou sem barra de rolagem.
+   ========================================================================== */
+
+[data-jb-site="assistencia"] {
+  --jb-sombra-cta: 0 26px 72px -38px rgb(224 20 27 / 0.58);
+  color: #0c0e10;
+}
+
+[data-jb-site="assistencia"] ::selection {
+  background: rgb(224 20 27 / 0.18);
+  color: #111315;
+}
+
+/* Títulos curtos ficam mais editoriais e evitam órfãs em telas intermediárias. */
+[data-jb-site="assistencia"] :where(.texto-forte, .jb-hero-title, h1, h2) {
+  text-wrap: balance;
+}
+
+[data-jb-site="assistencia"] :where(.texto-guia, .prose-jb p) {
+  text-wrap: pretty;
+}
+
+/* Âncoras internas param abaixo do cabeçalho fixo, e não escondidas atrás dele. */
+[data-jb-site="assistencia"] :where(section[id], div[id], article[id]) {
+  scroll-margin-top: 7.5rem;
+}
+
+[data-jb-site="assistencia"] main > section {
+  scroll-margin-top: 6.5rem;
+}
+
+[data-jb-site="assistencia"] #como-funciona,
+[data-jb-site="assistencia"] #autorizada {
+  position: relative;
+}
+
+/* Foco visível uniforme. `.foco-jb` continua sendo a fonte principal; isto
+   cobre link editorial que não passa pelo helper. */
+[data-jb-site="assistencia"] :where(a, button, summary, input, textarea, select):focus-visible {
+  outline-color: rgb(224 20 27 / 0.68);
+  outline-offset: 3px;
+}
+
+[data-jb-site="assistencia"] button:focus-visible {
+  outline-offset: 3px;
+}
+
+/* Toque: sem atraso de duplo toque, sem retângulo cinza do navegador, e
+   botão com altura de polegar. */
+[data-jb-site="assistencia"] a,
+[data-jb-site="assistencia"] button,
+[data-jb-site="assistencia"] input,
+[data-jb-site="assistencia"] summary {
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  [data-jb-site="assistencia"] a,
+  [data-jb-site="assistencia"] button,
+  [data-jb-site="assistencia"] summary {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-jb-site="assistencia"] button {
+    min-height: 2.75rem;
+  }
+}
+
+/* ==========================================================================
+   Botões de WhatsApp (todas as posições)
+
+   A base de todo CTA de WhatsApp. Cada superfície (cabeçalho, abertura,
+   barra) ajusta tamanho na própria seção, com seletor mais específico.
+   ========================================================================== */
+
+[data-jb-site="assistencia"] a[data-whatsapp] {
+  -webkit-font-smoothing: antialiased;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition:
+    transform 220ms var(--ease-out-quint),
+    box-shadow 260ms var(--ease-out-quint),
+    border-color 220ms ease,
+    background-color 220ms ease,
+    color 220ms ease;
+}
+
+[data-jb-site="assistencia"] a[data-whatsapp]:active {
+  transform: scale(0.975);
+}
+
+[data-jb-site="assistencia"] a[data-whatsapp]:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] a[data-whatsapp]:hover {
+    transform: translateY(-1px);
+  }
+}
+
+@media (pointer: coarse) {
+  [data-jb-site="assistencia"] a[data-whatsapp] {
+    min-height: 2.75rem;
+  }
+}
+
+/* Abaixo de 360px os botões grandes da triagem, das seções e do fechamento
+   não cabiam: ícone de 20px e 12px de respiro deixavam "Jeferson" com
+   reticências. Menos respiro e ícone um pouco menor, e o nome cabe inteiro.
+   Cabeçalho, abertura e barra têm tamanho próprio e ficam de fora. */
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] :is(a[data-whatsapp^="diagnostico"], a[data-whatsapp^="secao"], a[data-whatsapp^="fechamento"]) {
+    padding-inline: 0.5rem;
+  }
+
+  [data-jb-site="assistencia"] :is(a[data-whatsapp^="diagnostico"], a[data-whatsapp^="secao"], a[data-whatsapp^="fechamento"]) svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+/* ==========================================================================
+   Faixa operacional do topo
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-ticker {
+  background: radial-gradient(circle at 18% -120%, rgb(255 255 255 / 0.32), transparent 36%),
+    linear-gradient(105deg, #b90f15 0%, #df151c 48%, #bd1016 100%);
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.08);
+}
+
+[data-jb-site="assistencia"] .jb-ticker::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  pointer-events: none;
+}
+
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-ticker {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Cabeçalho
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-cabecalho {
+  position: sticky;
+  isolation: isolate;
+  border-bottom-color: rgb(17 19 21 / 0.075);
+  background: rgb(255 255 255 / 0.84);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.92) inset,
+    0 18px 55px -48px rgb(12 14 16 / 0.72);
+  /* O único vidro do site: o conteúdo passa por baixo do cabeçalho fixo. */
+  backdrop-filter: blur(22px) saturate(1.22);
+}
+
+[data-jb-site="assistencia"] .jb-cabecalho::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 0%, rgb(224 20 27 / 0.055), transparent 25%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.84));
+}
+
+[data-jb-site="assistencia"] .jb-logo-stage {
+  transition:
+    transform 280ms var(--ease-out-quint),
+    filter 280ms var(--ease-out-quint);
+}
+
+[data-jb-site="assistencia"] .jb-logo-stage:hover {
+  transform: translateY(-1px) scale(1.015);
+  filter: drop-shadow(0 8px 14px rgb(17 19 21 / 0.08));
+}
+
+[data-jb-site="assistencia"] .jb-cabecalho nav > ul {
+  padding: 0.2rem;
+  border: 1px solid rgb(17 19 21 / 0.07);
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 0.68);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.88);
+}
+
+[data-jb-site="assistencia"] .jb-cabecalho nav a {
+  border-radius: 0.68rem;
+}
+
+[data-jb-site="assistencia"] .jb-cabecalho-whatsapp a[data-whatsapp] {
+  box-shadow: 0 10px 24px -18px rgb(12 14 16 / 0.5);
+}
+
+/* Linha de leitura: acompanha a rolagem da página, sem JavaScript. */
+[data-jb-site="assistencia"] .jb-leitura {
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  z-index: 4;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--color-jb-500), var(--color-jb-400), var(--color-jb-700));
+  box-shadow: 0 0 16px rgb(224 20 27 / 0.36);
+  pointer-events: none;
+}
+
+@keyframes jb-leitura-progresso {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  [data-jb-site="assistencia"] .jb-leitura {
+    animation: jb-leitura-progresso linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+/* Landing de equipamento tem uma tarefa só: no desktop, sem os atalhos da
+   home no cabeçalho; logo e os dois WhatsApps continuam. */
+@media (min-width: 64rem) {
+  [data-jb-site="assistencia"]:has(.jb-landing-hero) .jb-cabecalho nav {
+    display: none;
+  }
+}
+
+@media (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-cabecalho .container-jb {
+    min-height: 3.75rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-cabecalho-whatsapp {
+    gap: 0.35rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-cabecalho-whatsapp li > a {
+    min-height: 2.4rem;
+    padding-inline: 0.7rem;
+    border-radius: 0.72rem;
+    font-size: 0.76rem;
+  }
+}
+
+/* Tablet de toque: o alvo de 44px do resto do site vale também aqui. */
+@media (min-width: 40rem) and (max-width: 63.99rem) and (pointer: coarse) {
+  [data-jb-site="assistencia"] .jb-cabecalho-whatsapp li > a {
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-cabecalho .container-jb {
+    height: 3.55rem;
+    min-height: 3.55rem;
+    padding-inline: 0.8rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-logo-stage img,
+  [data-jb-site="assistencia"] .jb-logo-stage svg {
+    width: auto;
+    max-height: 1.9rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-cabecalho-whatsapp {
+    gap: 0.3rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-cabecalho-whatsapp li > a {
+    min-height: 2.35rem;
+    padding-inline: 0.62rem;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-cabecalho .container-jb {
+    min-height: 3.5rem;
+    gap: 0.35rem;
+    padding-inline: 0.55rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-cabecalho-whatsapp {
+    gap: 0.25rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-cabecalho-whatsapp li > a {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding-inline: 0.48rem;
+    border-radius: 0.65rem;
+    font-size: 0.68rem;
+  }
+}
+
+/* ==========================================================================
+   Abertura da home: título, provas, CTAs, foto e triagem
+
+   Um lugar por peça, do celular para o desktop. Faixas usadas: até 359px,
+   360–430 (com 380–430 para o respiro de cima), até 639, 640–1023 (com
+   768–1023), 1024–1279, 1280+, 1440+ e 1920+.
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-hero-premium {
+  min-height: min(58rem, calc(100svh - 2rem));
+  background:
+    radial-gradient(circle at 78% 16%, rgb(224 20 27 / 0.105), transparent 26rem),
+    radial-gradient(circle at 10% 80%, rgb(17 19 21 / 0.05), transparent 28rem),
+    linear-gradient(180deg, #ffffff 0%, #ffffff 56%, #f9fafb 100%);
+}
+
+[data-jb-site="assistencia"] .jb-hero-premium::before {
+  content: "";
+  position: absolute;
+  inset-inline: 8%;
+  top: -16rem;
+  height: 28rem;
+  border-radius: 999px;
+  background: rgb(224 20 27 / 0.06);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+[data-jb-site="assistencia"] .jb-hero-premium::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(76rem, 92vw);
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgb(224 20 27 / 0.26), rgb(26 28 30 / 0.12), transparent);
+  pointer-events: none;
+}
+
+[data-jb-site="assistencia"] .jb-hero-malha {
+  opacity: 0.54;
+  background-image:
+    linear-gradient(to right, rgb(26 28 30 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(26 28 30 / 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 54% 32%, #000 0%, transparent 72%);
+}
+
+/* ------------------------------------------------------------- grade */
+
+[data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+  width: min(100% - 2rem, 88rem);
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium {
+    min-height: auto;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    width: min(100% - 1.35rem, 37rem);
+    gap: 1.8rem;
+    padding-top: 0.95rem;
+    padding-bottom: 3rem;
+  }
+}
+
+@media (min-width: 23.75rem) and (max-width: 26.875rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    padding-top: 1.8rem;
+  }
+}
+
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    width: min(100% - 1.05rem, 88rem);
+    gap: 1.6rem;
+    padding-top: 0.8rem;
+  }
+}
+
+@media (min-width: 40rem) and (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    width: min(100% - 3rem, 52rem);
+    padding-top: 2rem;
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    width: min(100% - 3rem, 88rem);
+    gap: 2.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    padding-top: 3.5rem;
+    padding-bottom: 4.25rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    width: min(100% - 6rem, 96rem);
+    grid-template-columns: minmax(0, 1.08fr) minmax(34rem, 0.92fr);
+    row-gap: 5.5rem;
+    column-gap: clamp(4rem, 5vw, 6.75rem);
+    padding-top: 4rem;
+    padding-bottom: 5rem;
+  }
+}
+
+@media (min-width: 120rem) {
+  [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
+    width: min(100% - 10rem, 102rem);
+    grid-template-columns: minmax(0, 1.12fr) minmax(36rem, 0.88fr);
+  }
+}
+
+/* ------------------------------------------------------------ título */
+
+[data-jb-site="assistencia"] .jb-hero-copy {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-hero-copy::before {
+  content: "";
+  position: absolute;
+  left: -1.15rem;
+  top: 0.52rem;
+  width: 3px;
+  height: min(7rem, 28%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-jb-500), rgb(224 20 27 / 0.08));
+  box-shadow: 0 0 24px rgb(224 20 27 / 0.16);
+}
+
+[data-jb-site="assistencia"] .jb-hero-title {
+  max-width: 10.8ch;
+  line-height: 0.925;
+  letter-spacing: -0.064em;
+  text-wrap: balance;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.9);
+}
+
+[data-jb-site="assistencia"] .jb-hero-title .text-jb-600 {
+  position: relative;
+  filter: drop-shadow(0 14px 30px rgb(224 20 27 / 0.09));
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-copy::before {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-title {
+    max-width: 10.45ch;
+    font-size: clamp(2.7rem, 12.7vw, 3.7rem);
+    line-height: 0.94;
+    letter-spacing: -0.059em;
+  }
+}
+
+@media (min-width: 23.75rem) and (max-width: 26.875rem) {
+  [data-jb-site="assistencia"] .jb-hero-title {
+    max-width: 10.5ch;
+  }
+}
+
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-hero-title {
+    max-width: 10ch;
+    font-size: clamp(2.45rem, 13.4vw, 3rem);
+    line-height: 0.96;
+  }
+}
+
+@media (min-width: 40rem) and (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-title {
+    max-width: 11ch;
+    font-size: clamp(3.8rem, 9vw, 5rem);
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-title {
+    max-width: 10ch;
+  }
+}
+
+/* 1024–1279: a coluna do texto tem ~310px. O título cabe palavra por palavra,
+   sem partir "Equipamento" no meio. */
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-title {
+    font-size: clamp(3rem, 5.4vw, 3.6rem);
+  }
+}
+
+/* 1280+: duas linhas — a pergunta e a resposta —, e não quatro pedaços. */
+@media (min-width: 80rem) {
+  [data-jb-site="assistencia"] .jb-hero-title {
+    max-width: none;
+    font-size: clamp(4.1rem, 5.1vw, 6rem);
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-hero-title {
+    line-height: 0.93;
+    letter-spacing: -0.055em;
+  }
+}
+
+/* ----------------------------------------------------------- subtexto */
+
+[data-jb-site="assistencia"] .jb-hero-subtexto {
+  max-width: 36rem;
+  color: #50545a;
+  font-size: clamp(1rem, 0.95rem + 0.34vw, 1.22rem);
+  line-height: 1.62;
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-subtexto {
+    margin-top: 1rem;
+    font-size: 0.98rem;
+    line-height: 1.54;
+  }
+}
+
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-hero-subtexto {
+    margin-top: 0.9rem;
+    font-size: 0.94rem;
+    line-height: 1.5;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-hero-subtexto {
+    max-width: 39rem;
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 120rem) {
+  [data-jb-site="assistencia"] .jb-hero-subtexto {
+    max-width: 41rem;
+  }
+}
+
+/* ------------------------------------------------------------- provas */
+
+[data-jb-site="assistencia"] .jb-hero-provas {
+  max-width: 39rem;
+}
+
+[data-jb-site="assistencia"] .jb-hero-provas li {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  min-height: 3.45rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid rgb(17 19 21 / 0.09);
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.96), rgb(249 250 251 / 0.76));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.95),
+    0 14px 34px -28px rgb(12 14 16 / 0.5);
+  color: var(--color-graf-800);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+[data-jb-site="assistencia"] .jb-hero-provas li svg {
+  flex: 0 0 auto;
+  color: var(--color-jb-600);
+}
+
+/* Reflexo que atravessa a prova no hover do mouse: uma passada, sem laço. */
+[data-jb-site="assistencia"] .jb-hero-provas li::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 18%, rgb(255 255 255 / 0.9) 48%, transparent 72%);
+  transform: translateX(-135%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-hero-provas li:hover {
+    transform: translateY(-2px);
+    border-color: rgb(224 20 27 / 0.18);
+    box-shadow: 0 18px 42px -29px rgb(12 14 16 / 0.46);
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li:hover::after {
+    transform: translateX(135%);
+    opacity: 0.8;
+    transition:
+      transform 720ms var(--ease-out-quint),
+      opacity 120ms ease;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-hero-provas li {
+    transition:
+      transform 280ms var(--ease-out-quint),
+      border-color 220ms ease,
+      box-shadow 280ms ease;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-provas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-top: 1.1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li {
+    min-height: 3.2rem;
+    padding: 0.62rem 0.68rem;
+    border-radius: 0.8rem;
+    font-size: 0.71rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 26.875rem) {
+  [data-jb-site="assistencia"] .jb-hero-provas li {
+    padding-inline: 0.85rem;
+  }
+}
+
+/* 320: as três provas inteiras, em duas colunas com a terceira na linha
+   toda. Até 23/09/2026 viravam uma faixa que rolava de lado com a terceira
+   escondida — prova que ninguém vê não prova nada. */
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-hero-provas {
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li {
+    min-height: 2.75rem;
+    padding-block: 0.5rem;
+    font-size: 0.68rem;
+  }
+}
+
+/* Três provas em ~310px cortavam o texto dentro do cartão. */
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-provas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-hero-provas {
+    max-width: 44rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li {
+    min-height: 3.2rem;
+  }
+}
+
+/* --------------------------------------------------------------- CTAs */
+
+[data-jb-site="assistencia"] .jb-hero-cta {
+  max-width: 37rem;
+}
+
+[data-jb-site="assistencia"] .jb-hero-cta a[data-whatsapp="abertura"] {
+  min-height: 3.85rem;
+  border-color: rgb(153 12 17 / 0.45);
+  border-radius: 0.95rem;
+  background: linear-gradient(135deg, #ec1c24 0%, #d4131a 62%, #ba1016 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.26),
+    var(--jb-sombra-cta);
+}
+
+[data-jb-site="assistencia"] .jb-hero-cta a[data-whatsapp="abertura-segundo"] {
+  min-height: 3.85rem;
+  border-color: rgb(17 19 21 / 0.12);
+  border-radius: 0.95rem;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 18px 44px -34px rgb(12 14 16 / 0.48);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-hero-cta a[data-whatsapp="abertura"]:hover {
+    transform: translateY(-2px) scale(1.012);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.3),
+      0 30px 74px -38px rgb(224 20 27 / 0.68);
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-cta a[data-whatsapp="abertura-segundo"]:hover {
+    transform: translateY(-2px);
+    border-color: rgb(224 20 27 / 0.2);
+    box-shadow: 0 24px 52px -35px rgb(12 14 16 / 0.5);
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-cta {
+    margin-top: 1.2rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-cta a[data-whatsapp="abertura"],
+  [data-jb-site="assistencia"] .jb-hero-cta a[data-whatsapp="abertura-segundo"] {
+    min-height: 3.35rem;
+    padding-inline: 0.75rem;
+    border-radius: 0.86rem;
+  }
+}
+
+/* Até 430px, rótulos compridos dos dois atendentes não roubam a largura do
+   outro botão: os dois seguem lado a lado, com alvo confortável. */
+@media (max-width: 26.875rem) {
+  [data-jb-site="assistencia"] .jb-hero-cta a[data-whatsapp] {
+    min-width: 0;
+    gap: 0.38rem;
+    padding-inline: 0.62rem;
+    font-size: 0.78rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-cta a[data-whatsapp] svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-hero-cta {
+    margin-top: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-cta > p {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------- foto */
+
+[data-jb-site="assistencia"] .jb-foto-premium {
+  isolation: isolate;
+  transform-origin: 50% 100%;
+  perspective: 1000px;
+}
+
+[data-jb-site="assistencia"] .jb-foto-premium::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 7% 6% -8% 6%;
+  border-radius: 2.4rem;
+  background: linear-gradient(135deg, rgb(224 20 27 / 0.22), rgb(17 19 21 / 0.08));
+  filter: blur(28px);
+  opacity: 0.58;
+}
+
+[data-jb-site="assistencia"] .jb-foto-premium > div {
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: 1.65rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.92),
+    0 34px 88px -48px rgb(12 14 16 / 0.58);
+  transition:
+    transform 520ms var(--ease-out-quint),
+    box-shadow 520ms var(--ease-out-quint);
+}
+
+@media (hover: hover) and (min-width: 64rem) {
+  [data-jb-site="assistencia"] .jb-foto-premium:hover > div {
+    transform: translateY(-4px) rotateX(0.7deg) rotateY(-0.8deg);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.94),
+      0 48px 110px -54px rgb(12 14 16 / 0.64);
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-hero-foto {
+    margin-top: 1.35rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-foto-premium::before {
+    inset: 8% 4% -5%;
+    filter: blur(22px);
+  }
+
+  [data-jb-site="assistencia"] .jb-foto-premium > div {
+    border-radius: 1.2rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-hero-foto {
+    max-width: 48rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-foto-premium > div {
+    border-radius: 2rem;
+  }
+}
+
+@media (min-width: 120rem) {
+  [data-jb-site="assistencia"] .jb-hero-foto {
+    max-width: 50rem;
+  }
+}
+
+/* ------------------------------------------------------------ triagem */
+
+[data-jb-site="assistencia"] .jb-diagnostico-stage {
+  position: relative;
+  isolation: isolate;
+  filter: drop-shadow(0 22px 45px rgb(12 14 16 / 0.035));
+}
+
+[data-jb-site="assistencia"] .jb-diagnostico-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 9% -7% 2%;
+  border-radius: 2rem;
+  background: radial-gradient(circle at 50% 18%, rgb(224 20 27 / 0.18), rgb(26 28 30 / 0.045) 48%, transparent 74%);
+  filter: blur(32px);
+  opacity: 0.8;
+}
+
+[data-jb-site="assistencia"] .jb-diagnostico-legenda {
+  opacity: 0.96;
+}
+
+[data-jb-site="assistencia"] .jb-diagnostico-stage #diagnostico {
+  overflow: clip;
+  border-color: rgb(17 19 21 / 0.1);
+  border-radius: 1.6rem;
+  background:
+    radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.055), transparent 15rem),
+    rgb(255 255 255 / 0.94);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.96),
+    0 36px 90px -50px rgb(12 14 16 / 0.62);
+}
+
+[data-jb-site="assistencia"] .jb-diagnostico-stage #diagnostico::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset-inline: 1.6rem;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-jb-500), rgb(224 20 27 / 0.24), transparent);
+  pointer-events: none;
+}
+
+[data-jb-site="assistencia"] #diagnostico header {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(250 250 251 / 0.74));
+}
+
+[data-jb-site="assistencia"] #diagnostico button {
+  box-shadow: 0 8px 22px -22px rgb(12 14 16 / 0.52);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] #diagnostico button:hover {
+    box-shadow: 0 15px 32px -24px rgb(12 14 16 / 0.42);
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-diagnostico-stage::before {
+    inset: 8% -2% 0;
+  }
+
+  [data-jb-site="assistencia"] .jb-diagnostico-legenda {
+    padding-inline: 0.15rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-diagnostico-stage #diagnostico {
+    border-radius: 1.15rem;
+    box-shadow: 0 28px 70px -44px rgb(12 14 16 / 0.55);
+  }
+}
+
+@media (max-width: 26.875rem) {
+  [data-jb-site="assistencia"] .jb-diagnostico-stage {
+    min-width: 0;
+  }
+
+  [data-jb-site="assistencia"] .jb-diagnostico-legenda {
+    padding-inline: 0;
+  }
+
+  [data-jb-site="assistencia"] .jb-diagnostico-legenda > div > p:last-child {
+    max-width: 19rem;
+    line-height: 1.35;
+  }
+
+  [data-jb-site="assistencia"] #diagnostico > header {
+    padding-inline: 0.9rem;
+  }
+}
+
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-diagnostico-legenda {
+    align-items: flex-start;
+  }
+
+  [data-jb-site="assistencia"] .jb-diagnostico-stage #diagnostico {
+    border-radius: 1.1rem;
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-diagnostico-stage {
+    max-width: 46rem;
+  }
+}
+
+/* A partir do desktop a triagem começa na altura do título, e não no meio das
+   duas linhas da grade (título e foto): centralizada, ela deixava o alto da
+   coluna direita vazio e metade do painel abaixo da dobra em 1440×900. */
+@media (min-width: 64rem) {
+  [data-jb-site="assistencia"] .jb-diagnostico-stage {
+    align-self: start;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-diagnostico-stage {
+    width: 100%;
+    max-width: 36rem;
+    justify-self: end;
+  }
+}
+
+@media (min-width: 120rem) {
+  [data-jb-site="assistencia"] .jb-diagnostico-stage {
+    max-width: 37rem;
+  }
+}
+
+/* ==========================================================================
+   Abertura das landings de equipamento
+
+   `.jb-landing-hero` substitui o antigo `section[aria-labelledby=
+   "abertura-titulo"]:not(.jb-hero-premium)`: o seletor dependia de um id de
+   título e da ausência de uma classe da home, e quebraria em silêncio se
+   alguém renomeasse qualquer um dos dois.
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-landing-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  min-height: min(52rem, calc(100svh - 3rem));
+  background:
+    radial-gradient(circle at 84% 12%, rgb(224 20 27 / 0.105), transparent 28rem),
+    radial-gradient(circle at 8% 88%, rgb(17 19 21 / 0.045), transparent 24rem),
+    linear-gradient(180deg, #fff 0%, #fff 62%, #fafafb 100%);
+}
+
+[data-jb-site="assistencia"] .jb-landing-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.38;
+  background-image:
+    linear-gradient(to right, rgb(26 28 30 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(26 28 30 / 0.035) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(ellipse at 55% 34%, #000, transparent 72%);
+}
+
+[data-jb-site="assistencia"] .jb-landing-hero > .container-jb {
+  width: min(100% - 2rem, 86rem);
+}
+
+[data-jb-site="assistencia"] .jb-landing-hero .sobretitulo {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 2rem;
+  align-items: center;
+  padding-inline: 0.75rem;
+  border: 1px solid rgb(224 20 27 / 0.13);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: 0 12px 30px -26px rgb(12 14 16 / 0.5);
+}
+
+[data-jb-site="assistencia"] .jb-landing-hero #abertura-titulo {
+  max-width: 10.5ch;
+  font-size: clamp(3rem, 6vw, 5.4rem);
+  line-height: 0.93;
+  letter-spacing: -0.061em;
+}
+
+/* O quadro da foto do equipamento. */
+[data-jb-site="assistencia"] .jb-landing-hero .order-first > .relative > div:first-child {
+  border: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: 1.75rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.92),
+    0 42px 105px -56px rgb(12 14 16 / 0.62);
+}
+
+[data-jb-site="assistencia"] .jb-landing-hero a[data-whatsapp="abertura"] {
+  min-height: 3.7rem;
+  box-shadow: 0 25px 60px -34px rgb(224 20 27 / 0.58);
+}
+
+[data-jb-site="assistencia"] .jb-landing-hero a[data-whatsapp="abertura-segundo"] {
+  min-height: 3.7rem;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 20px 48px -36px rgb(12 14 16 / 0.46);
+}
+
+/* Celular e tablet: texto e triagem antes da foto. */
+@media (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-landing-hero > .container-jb {
+    gap: 1.35rem;
+    padding-top: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-landing-hero > .container-jb > div:last-child {
+    order: 0;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-landing-hero {
+    min-height: 0;
+  }
+
+  [data-jb-site="assistencia"] .jb-landing-hero > .container-jb {
+    width: min(100% - 1.25rem, 86rem);
+    padding-bottom: 2.5rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-landing-hero #abertura-titulo {
+    max-width: 10.8ch;
+    margin-top: 0.65rem;
+    font-size: clamp(2.55rem, 12vw, 3.35rem);
+    line-height: 0.96;
+    letter-spacing: -0.056em;
+  }
+
+  [data-jb-site="assistencia"] .jb-landing-hero > .container-jb > div:last-child > div > div:first-child {
+    height: 12rem;
+    border-radius: 1.35rem;
+    box-shadow: 0 26px 68px -44px rgb(12 14 16 / 0.5);
+  }
+
+  [data-jb-site="assistencia"] .jb-landing-hero > .container-jb > div:last-child p {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 26.875rem) {
+  [data-jb-site="assistencia"] .jb-landing-hero a[data-whatsapp="abertura"],
+  [data-jb-site="assistencia"] .jb-landing-hero a[data-whatsapp="abertura-segundo"] {
+    min-width: 0;
+    gap: 0.38rem;
+    padding-inline: 0.62rem;
+    font-size: 0.78rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-landing-hero a[data-whatsapp] svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  [data-jb-site="assistencia"] .jb-landing-hero #abertura-titulo {
+    font-size: clamp(3rem, 5.2vw, 3.7rem);
+  }
+}
+
+@media (min-width: 80rem) {
+  [data-jb-site="assistencia"] .jb-landing-hero #abertura-titulo {
+    max-width: none;
+    font-size: clamp(4.1rem, 5.1vw, 6rem);
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-landing-hero > .container-jb {
+    width: min(100% - 7rem, 92rem);
+    grid-template-columns: minmax(0, 1.08fr) minmax(31rem, 0.82fr);
+    column-gap: clamp(4.5rem, 6vw, 7.5rem);
+    padding-top: 4.5rem;
+    padding-bottom: 5rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-landing-hero #abertura-titulo {
+    line-height: 0.94;
+    letter-spacing: -0.05em;
+  }
+}
+
+@media (min-width: 120rem) {
+  [data-jb-site="assistencia"] .jb-landing-hero > .container-jb {
+    width: min(100% - 10rem, 98rem);
+  }
+}
+
+/* ==========================================================================
+   Grade de equipamentos
+   ========================================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover {
+    transform: translateY(-7px);
+    border-color: rgb(224 20 27 / 0.28);
+    box-shadow: 0 28px 62px -36px rgb(17 19 21 / 0.46);
+  }
+}
+
+[data-jb-site="assistencia"] #equipamentos {
+  position: relative;
+  overflow: clip;
+  background: radial-gradient(circle at 92% 8%, rgb(224 20 27 / 0.045), transparent 26rem),
+    linear-gradient(180deg, #fff 0%, #fff 65%, #fbfbfc 100%);
+}
+
+[data-jb-site="assistencia"] #equipamentos::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  background-image: radial-gradient(rgb(17 19 21 / 0.16) 0.65px, transparent 0.65px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 72%, transparent);
+}
+
+[data-jb-site="assistencia"] #equipamentos > .container-jb {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-cartao-equipamento {
+  transition: transform 360ms var(--ease-out-quint),
+    box-shadow 360ms var(--ease-out-quint),
+    border-color 260ms ease;
+  isolation: isolate;
+  border-radius: 1.35rem;
+  border-color: rgb(17 19 21 / 0.095);
+  background: radial-gradient(circle at 90% 8%, rgb(224 20 27 / 0.035), transparent 10rem),
+    linear-gradient(180deg, #fff, #fcfcfd);
+  box-shadow: inset 0 1px 0 #fff,
+    0 22px 54px -42px rgb(12 14 16 / 0.5);
+}
+
+[data-jb-site="assistencia"] .jb-cartao-equipamento::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: auto 10% -18% 10%;
+  height: 34%;
+  border-radius: 999px;
+  background: rgb(224 20 27 / 0.09);
+  filter: blur(30px);
+  opacity: 0;
+  transition: opacity 360ms ease;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover {
+    transform: translateY(-5px);
+    border-color: rgb(224 20 27 / 0.22);
+    box-shadow: inset 0 1px 0 #fff,
+        0 34px 72px -42px rgb(12 14 16 / 0.48);
+  }
+
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover::after {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] #equipamentos {
+    padding-block: 3.75rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-cartao-equipamento {
+    border-radius: 1.05rem;
+    padding: 0.95rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-cartao-equipamento {
+    border-radius: 1.6rem;
+  }
+}
+
+@media (min-width: 90rem) and (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover {
+    translate: 0 -3px;
+  }
+}
+
+/* ==========================================================================
+   Cenário de impacto (simulador)
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-secao-parada::before {
+  content: "";
+  position: absolute;
+  width: 16rem;
+  height: 16rem;
+  right: -7rem;
+  top: -8rem;
+  border-radius: 999px;
+  border: 1px solid rgb(224 20 27 / 0.09);
+  box-shadow: 0 0 0 2.2rem rgb(224 20 27 / 0.025),
+    0 0 0 5.2rem rgb(224 20 27 / 0.015);
+  pointer-events: none;
+}
+
+[data-jb-site="assistencia"] .jb-secao-parada {
+  overflow: clip;
+  position: relative;
+  background: radial-gradient(circle at 84% 15%, rgb(224 20 27 / 0.065), transparent 24rem),
+    linear-gradient(180deg, #f7f8f9 0%, #f4f5f6 100%);
+}
+
+[data-jb-site="assistencia"] .jb-simulador-premium {
+  border-color: rgb(17 19 21 / 0.09);
+  background: radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.055), transparent 17rem),
+    #fff;
+  box-shadow: inset 0 1px 0 #fff,
+    0 42px 96px -58px rgb(12 14 16 / 0.62);
+}
+
+[data-jb-site="assistencia"] .jb-simulador-premium > div:first-child {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.96), rgb(249 250 251 / 0.76));
+}
+
+[data-jb-site="assistencia"] .jb-simulador-controle {
+  border-color: rgb(17 19 21 / 0.085);
+  background: linear-gradient(180deg, #fff, #fdfdfd);
+  box-shadow: inset 0 1px 0 #fff,
+    0 16px 34px -30px rgb(12 14 16 / 0.42);
+  transition: transform 260ms var(--ease-out-quint),
+    border-color 220ms ease,
+    box-shadow 260ms var(--ease-out-quint);
+}
+
+[data-jb-site="assistencia"] .jb-simulador-controle:focus-within {
+  transform: translateY(-1px);
+  border-color: rgb(224 20 27 / 0.28);
+  box-shadow: inset 0 1px 0 #fff,
+    0 22px 44px -30px rgb(224 20 27 / 0.2);
+}
+
+[data-jb-site="assistencia"] .jb-simulador-resultado {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 28px 58px -38px rgb(12 14 16 / 0.62);
+}
+
+[data-jb-site="assistencia"] .jb-simulador-premium a[data-whatsapp] {
+  min-height: 3.45rem;
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-simulador-premium {
+    border-radius: 1.3rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-simulador-premium > div:first-child,
+  [data-jb-site="assistencia"] .jb-simulador-premium > div:last-child {
+    padding-inline: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-simulador-controle {
+    padding: 0.9rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-simulador-resultado {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-simulador-premium {
+    border-radius: 1.75rem;
+  }
+
+  [data-jb-site="assistencia"] :where(.jb-secao-parada, .jb-case-processo, .jb-content-cta) .texto-guia {
+    max-width: 42rem;
+  }
+}
+
+/* ==========================================================================
+   Fluxo do atendimento
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-processo-premium {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: radial-gradient(circle at 8% 18%, rgb(224 20 27 / 0.05), transparent 24rem),
+    linear-gradient(180deg, #fff 0%, #fff 72%, #fbfbfc 100%);
+}
+
+[data-jb-site="assistencia"] .jb-processo-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.18;
+  background-image: radial-gradient(rgb(17 19 21 / 0.18) 0.65px, transparent 0.65px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to right, #000, transparent 52%);
+}
+
+[data-jb-site="assistencia"] .jb-processo-intro {
+  padding: 1.35rem;
+  border: 1px solid rgb(17 19 21 / 0.08);
+  border-radius: 1.5rem;
+  background: rgb(255 255 255 / 0.76);
+  box-shadow: inset 0 1px 0 #fff,
+    0 28px 70px -54px rgb(12 14 16 / 0.5);
+}
+
+[data-jb-site="assistencia"] .jb-fluxo-passo {
+  position: relative;
+  min-height: 10.5rem;
+  padding: 1.35rem 1.35rem 1.35rem 4.75rem;
+  border: 1px solid rgb(17 19 21 / 0.09);
+  border-radius: 1.45rem;
+  background: radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.045), transparent 13rem),
+    linear-gradient(180deg, #fff, #fdfdfd);
+  box-shadow: inset 0 1px 0 #fff,
+    0 24px 55px -44px rgb(12 14 16 / 0.48);
+  transition: transform 340ms var(--ease-out-quint),
+    border-color 260ms ease,
+    box-shadow 340ms var(--ease-out-quint);
+}
+
+[data-jb-site="assistencia"] .jb-fluxo-passo::after {
+  content: attr(data-etapa);
+  position: absolute;
+  right: 1.2rem;
+  top: 0.85rem;
+  color: rgb(17 19 21 / 0.055);
+  font-family: var(--font-display);
+  font-size: clamp(3.6rem, 7vw, 5.4rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  pointer-events: none;
+}
+
+[data-jb-site="assistencia"] .jb-fluxo-passo .jb-ponto-acende {
+  position: absolute;
+  left: 1.1rem;
+  top: 1.2rem;
+  box-shadow: 0 0 0 5px rgb(224 20 27 / 0.08),
+    0 16px 32px -20px rgb(224 20 27 / 0.48);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-fluxo-passo:hover {
+    transform: translateY(-3px);
+    border-color: rgb(224 20 27 / 0.2);
+    box-shadow: 0 34px 72px -46px rgb(12 14 16 / 0.5);
+  }
+}
+
+@media (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-processo-intro {
+    padding: 1.15rem;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-fluxo-passo {
+    min-height: 9.5rem;
+    padding: 1.15rem 1rem 1.15rem 4.15rem;
+    border-radius: 1.2rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-fluxo-passo::after {
+    right: 0.85rem;
+    top: 0.7rem;
+    font-size: 3.2rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-fluxo-passo .jb-ponto-acende {
+    left: 0.8rem;
+    top: 1rem;
+    width: 2.65rem;
+    height: 2.65rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-fluxo-passo {
+    border-radius: 1.6rem;
+  }
+}
+
+@media (min-width: 90rem) and (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-fluxo-passo:hover {
+    translate: 0 -3px;
+  }
+}
+
+/* ==========================================================================
+   Clínica ou bancada
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-clinica-premium {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: radial-gradient(circle at 82% 16%, rgb(224 20 27 / 0.055), transparent 24rem),
+    linear-gradient(180deg, #f7f8f9 0%, #f4f5f6 100%);
+}
+
+[data-jb-site="assistencia"] .jb-clinica-visual {
+  isolation: isolate;
+}
+
+[data-jb-site="assistencia"] .jb-clinica-visual::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 9% 8% -4% 5%;
+  border-radius: 2.5rem;
+  background: linear-gradient(135deg, rgb(224 20 27 / 0.17), rgb(17 19 21 / 0.09));
+  filter: blur(34px);
+  opacity: 0.62;
+}
+
+[data-jb-site="assistencia"] .jb-clinica-visual > div:first-of-type {
+  border: 1px solid rgb(255 255 255 / 0.88);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 38px 96px -52px rgb(12 14 16 / 0.62);
+}
+
+[data-jb-site="assistencia"] .jb-clinica-ponto {
+  position: relative;
+  overflow: hidden;
+  border-color: rgb(17 19 21 / 0.085);
+  background: rgb(255 255 255 / 0.88);
+  box-shadow: inset 0 1px 0 #fff,
+    0 20px 46px -38px rgb(12 14 16 / 0.42);
+}
+
+[data-jb-site="assistencia"] .jb-clinica-ponto::after {
+  content: attr(data-numero);
+  position: absolute;
+  right: 1rem;
+  top: 0.35rem;
+  color: rgb(17 19 21 / 0.045);
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-clinica-visual {
+    margin-bottom: 1.25rem;
+  }
+}
+
+/* ==========================================================================
+   Por que a JB
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-autoridade-premium {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: radial-gradient(circle at 88% 20%, rgb(224 20 27 / 0.045), transparent 26rem),
+    #fff;
+}
+
+[data-jb-site="assistencia"] .jb-autoridade-grid > li {
+  border-color: rgb(17 19 21 / 0.09);
+  box-shadow: inset 0 1px 0 #fff,
+    0 24px 54px -44px rgb(12 14 16 / 0.48);
+}
+
+[data-jb-site="assistencia"] .jb-autoridade-destaque {
+  background: radial-gradient(circle at 88% 12%, rgb(224 20 27 / 0.16), transparent 18rem),
+    linear-gradient(135deg, #fff4f4 0%, #fff 76%);
+}
+
+[data-jb-site="assistencia"] .jb-autoridade-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fff, #fcfcfd);
+  transition: transform 340ms var(--ease-out-quint),
+    border-color 260ms ease,
+    box-shadow 340ms var(--ease-out-quint);
+}
+
+[data-jb-site="assistencia"] .jb-autoridade-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, transparent, rgb(224 20 27 / 0.72), transparent);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-autoridade-card:hover {
+    transform: translateY(-3px);
+    border-color: rgb(224 20 27 / 0.2);
+    box-shadow: 0 34px 70px -44px rgb(12 14 16 / 0.5);
+  }
+
+  [data-jb-site="assistencia"] .jb-autoridade-card:hover::before {
+    opacity: 1;
+  }
+}
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-autoridade-card {
+    border-radius: 1.6rem;
+  }
+}
+
+@media (min-width: 90rem) and (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-autoridade-card:hover {
+    translate: 0 -3px;
+  }
+}
+
+/* ==========================================================================
+   Dúvidas
+   ========================================================================== */
+
+[data-jb-site="assistencia"] #duvidas {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] #duvidas details {
+  border-color: rgb(17 19 21 / 0.09);
+  box-shadow: 0 14px 38px -34px rgb(12 14 16 / 0.46);
+}
+
+[data-jb-site="assistencia"] .jb-faq-premium {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: radial-gradient(circle at 8% 12%, rgb(224 20 27 / 0.05), transparent 24rem),
+    linear-gradient(180deg, #f6f7f8 0%, #f8f9fa 100%);
+}
+
+[data-jb-site="assistencia"] .jb-faq-intro {
+  padding: 1.25rem;
+  border: 1px solid rgb(17 19 21 / 0.08);
+  border-radius: 1.35rem;
+  background: rgb(255 255 255 / 0.72);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9);
+}
+
+[data-jb-site="assistencia"] .jb-faq-lista {
+  padding: 0.45rem;
+  border: 1px solid rgb(17 19 21 / 0.08);
+  border-radius: 1.5rem;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: inset 0 1px 0 #fff,
+    0 34px 80px -56px rgb(12 14 16 / 0.52);
+}
+
+[data-jb-site="assistencia"] .jb-faq-lista details {
+  border-radius: 1rem;
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-faq-lista {
+    padding: 0.25rem;
+    border-radius: 1.2rem;
+  }
+}
+
+@media (min-width: 90rem) {
+
+  [data-jb-site="assistencia"] .jb-faq-lista {
+    border-radius: 1.75rem;
+    box-shadow: inset 0 1px 0 #fff,
+  
+        0 32px 82px -58px rgb(12 14 16 / 0.5);
+  }
+}
+
+/* ==========================================================================
+   Chamada final
+   ========================================================================== */
+
+[data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] {
+  border-block: 1px solid rgb(224 20 27 / 0.1);
+  background: radial-gradient(circle at 16% 10%, rgb(255 255 255 / 0.9), transparent 18rem),
+    radial-gradient(circle at 85% 78%, rgb(224 20 27 / 0.11), transparent 24rem),
+    linear-gradient(145deg, #fff7f7 0%, #fff 50%, #fff1f2 100%);
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] .container-estreito {
+  padding-block: 0.5rem;
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] h2 {
+  letter-spacing: -0.052em;
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] a[data-whatsapp="fechamento"] {
+  box-shadow: var(--jb-sombra-cta);
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] {
+    padding-block: 4.6rem;
+  }
+
+  [data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] h2 {
+    font-size: clamp(2.35rem, 10vw, 3.25rem);
+    line-height: 0.98;
+  }
+}
+
+/* ==========================================================================
+   Seções das landings (cuidados e outros equipamentos)
+   ========================================================================== */
+
+[data-jb-site="assistencia"] section[aria-labelledby="enquanto-titulo"] {
+  position: relative;
+  overflow: clip;
+  background: radial-gradient(circle at 90% 10%, rgb(224 20 27 / 0.045), transparent 22rem),
+    #fff;
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="enquanto-titulo"] ol > li {
+  border-color: rgb(17 19 21 / 0.085);
+  background: linear-gradient(180deg, #fafbfc, #f6f7f8);
+  box-shadow: inset 0 1px 0 #fff,
+    0 20px 46px -40px rgb(12 14 16 / 0.45);
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="enquanto-titulo"] ol > li > span:first-child {
+  box-shadow: inset 0 1px 0 #fff,
+    0 14px 28px -22px rgb(12 14 16 / 0.4);
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="outros-titulo"] {
+  position: relative;
+  overflow: clip;
+  background: radial-gradient(circle at 10% 100%, rgb(224 20 27 / 0.04), transparent 20rem),
+    linear-gradient(180deg, #fff, #fafbfc);
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="outros-titulo"] li > a {
+  border-color: rgb(17 19 21 / 0.09);
+  background: linear-gradient(180deg, #fff, #fdfdfd);
+  box-shadow: inset 0 1px 0 #fff,
+    0 18px 42px -36px rgb(12 14 16 / 0.42);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] section[aria-labelledby="outros-titulo"] li > a:hover {
+    border-color: rgb(224 20 27 / 0.2);
+    box-shadow: 0 28px 58px -38px rgb(12 14 16 / 0.48);
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] section[aria-labelledby="outros-titulo"] li > a {
+    padding: 0.75rem;
+    border-radius: 1.15rem;
+  }
+
+  [data-jb-site="assistencia"] section[aria-labelledby="outros-titulo"] li > a > span:first-child {
+    width: 4rem;
+    height: 4rem;
+  }
+}
+
+/* ==========================================================================
+   Rodapé
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-footer-premium {
+  position: relative;
+  overflow: clip;
+  border-top: 0;
+  background: radial-gradient(circle at 10% 0%, rgb(224 20 27 / 0.15), transparent 24rem),
+    radial-gradient(circle at 92% 100%, rgb(224 20 27 / 0.075), transparent 28rem),
+    #0f1113;
+  color: #fff;
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: linear-gradient(to right, rgb(255 255 255 / 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 50% 20%, #000, transparent 72%);
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium > * {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium h2,
+[data-jb-site="assistencia"] .jb-footer-premium .text-graf-950,
+[data-jb-site="assistencia"] .jb-footer-premium .text-graf-900,
+[data-jb-site="assistencia"] .jb-footer-premium a.text-graf-900 {
+  color: #fff;
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium .text-graf-700,
+[data-jb-site="assistencia"] .jb-footer-premium .text-graf-600,
+[data-jb-site="assistencia"] .jb-footer-premium .text-graf-500 {
+  color: rgb(255 255 255 / 0.64);
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium a:hover {
+  color: #ff6a6f;
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium .jb-footer-badge {
+  border-color: rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.06);
+  color: rgb(255 255 255 / 0.9);
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium .jb-footer-divisor {
+  border-color: rgb(255 255 255 / 0.09);
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium .jb-footer-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium .jb-footer-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: #ff4b52;
+  transition: transform 220ms ease;
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium .jb-footer-link:hover::after {
+  transform: scaleX(1);
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-footer-premium .container-jb {
+    gap: 2rem;
+  }
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium .jb-footer-logo-card {
+  padding: 1.25rem;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 1.4rem;
+  border-color: rgb(255 255 255 / 0.9);
+  background: #fff;
+  box-shadow: inset 0 1px 0 #fff,
+    0 22px 48px -34px rgb(0 0 0 / 0.6);
+}
+
+[data-jb-site="assistencia"] .jb-footer-premium .jb-footer-badge:hover {
+  border-color: rgb(255 106 111 / 0.38);
+  background: rgb(224 20 27 / 0.1);
+}
+
+/* ==========================================================================
+   Conteúdo: institucional, legal, Central Técnica e cases
+   ========================================================================== */
+
+@media (min-width: 90rem) {
+  [data-jb-site="assistencia"] .jb-content-hero,
+  [data-jb-site="assistencia"] .jb-institucional-hero {
+    padding-top: 0.75rem;
+  }
+}
+
+[data-jb-site="assistencia"] .jb-institucional {
+  background: radial-gradient(circle at 92% 8%, rgb(224 20 27 / 0.035), transparent 26rem),
+    #fff;
+}
+
+[data-jb-site="assistencia"] .jb-institucional-hero {
+  background: radial-gradient(circle at 84% 8%, rgb(224 20 27 / 0.085), transparent 26rem),
+    linear-gradient(180deg, #f7f8f9 0%, #f4f5f6 100%);
+}
+
+[data-jb-site="assistencia"] .jb-institucional-hero::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(72rem, 90vw);
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgb(224 20 27 / 0.24), rgb(17 19 21 / 0.1), transparent);
+  pointer-events: none;
+}
+
+[data-jb-site="assistencia"] .jb-institucional-header-content {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-institucional-header-content::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  top: 3.7rem;
+  width: 3px;
+  height: 4rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-jb-500), transparent);
+}
+
+[data-jb-site="assistencia"] .jb-institucional-content {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-institucional-aside > * {
+  border-color: rgb(17 19 21 / 0.085);
+}
+
+[data-jb-site="assistencia"] .jb-indice-legal {
+  border-color: rgb(17 19 21 / 0.09);
+  border-radius: 1.35rem;
+  background: radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.04), transparent 12rem),
+    rgb(255 255 255 / 0.94);
+  box-shadow: inset 0 1px 0 #fff,
+    0 26px 58px -46px rgb(12 14 16 / 0.48);
+}
+
+[data-jb-site="assistencia"] .jb-indice-legal nav a {
+  position: relative;
+  padding-left: 0.75rem;
+}
+
+[data-jb-site="assistencia"] .jb-indice-legal nav a::before {
+  content: "";
+  width: 0;
+  height: 1.1rem;
+  margin-right: 0;
+  border-radius: 999px;
+  background: var(--color-jb-500);
+  opacity: 0;
+  transition: width 180ms ease,
+    margin-right 180ms ease,
+    opacity 180ms ease;
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-indice-legal nav a:hover::before {
+    width: 3px;
+    margin-right: 0.45rem;
+    opacity: 1;
+  }
+}
+
+[data-jb-site="assistencia"] .jb-corpo-legal {
+  color: var(--color-graf-800);
+}
+
+[data-jb-site="assistencia"] .jb-secao-legal {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-secao-legal > .label-mono {
+  display: inline-flex;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(224 20 27 / 0.12);
+  border-radius: 0.7rem;
+  background: var(--color-jb-50);
+  font-weight: 800;
+}
+
+[data-jb-site="assistencia"] .jb-secao-legal .prose-jb {
+  line-height: 1.78;
+}
+
+[data-jb-site="assistencia"] .jb-secao-legal .prose-jb strong {
+  color: var(--color-graf-950);
+}
+
+[data-jb-site="assistencia"] .jb-indice-mobile {
+  overflow: hidden;
+  border-color: rgb(17 19 21 / 0.09);
+  border-radius: 1.15rem;
+  background: rgb(255 255 255 / 0.94);
+  box-shadow: 0 18px 42px -36px rgb(12 14 16 / 0.42);
+}
+
+[data-jb-site="assistencia"] .jb-nota-revisao {
+  border-color: rgb(17 19 21 / 0.09);
+}
+
+[data-jb-site="assistencia"] .jb-institucional-secao {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-pilha-institucional > section {
+  border-color: rgb(17 19 21 / 0.09);
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-institucional-hero .container-jb {
+    padding-top: 2rem;
+    padding-bottom: 2.25rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-institucional-header-content::before {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-institucional-content {
+    padding-top: 2rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-secao-legal {
+    padding-block: 2rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-secao-legal > .label-mono {
+    min-width: 2rem;
+    min-height: 2rem;
+  }
+}
+
+[data-jb-site="assistencia"] .jb-content-hub,
+[data-jb-site="assistencia"] .jb-case-processo,
+[data-jb-site="assistencia"] .jb-content-cta,
+[data-jb-site="assistencia"] .jb-avaliacao-page,
+[data-jb-site="assistencia"] .jb-artigo-detail,
+[data-jb-site="assistencia"] .jb-case-detail,
+[data-jb-site="assistencia"] .jb-artigo-relacionados {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+
+[data-jb-site="assistencia"] .jb-content-hub,
+[data-jb-site="assistencia"] .jb-artigo-detail,
+[data-jb-site="assistencia"] .jb-case-detail {
+  background: radial-gradient(circle at 88% 8%, rgb(224 20 27 / 0.055), transparent 27rem),
+    linear-gradient(180deg, #fff 0%, #fff 68%, #fafbfc 100%);
+}
+
+[data-jb-site="assistencia"] .jb-content-hub::before,
+[data-jb-site="assistencia"] .jb-artigo-detail::before,
+[data-jb-site="assistencia"] .jb-case-detail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.16;
+  background-image: radial-gradient(rgb(17 19 21 / 0.16) 0.65px, transparent 0.65px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse at 82% 12%, #000, transparent 54%);
+}
+
+[data-jb-site="assistencia"] .jb-content-hero {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-content-hero::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  top: 0.45rem;
+  width: 3px;
+  height: 4.5rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-jb-500), transparent);
+}
+
+[data-jb-site="assistencia"] .jb-filtros-premium {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.35rem;
+  border: 1px solid rgb(17 19 21 / 0.075);
+  border-radius: 1.2rem;
+  background: rgb(255 255 255 / 0.78);
+  box-shadow: inset 0 1px 0 #fff,
+    0 20px 48px -40px rgb(12 14 16 / 0.45);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-card {
+  border-color: rgb(17 19 21 / 0.09);
+  background: radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.035), transparent 12rem),
+    #fff;
+  box-shadow: inset 0 1px 0 #fff,
+    0 24px 55px -44px rgb(12 14 16 / 0.48);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-sem-capa {
+  background: radial-gradient(circle at 80% 10%, rgb(224 20 27 / 0.08), transparent 10rem),
+    linear-gradient(135deg, #f7f8f9, #fff);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-artigo-card:hover {
+    transform: translateY(-4px);
+    border-color: rgb(224 20 27 / 0.19);
+    box-shadow: 0 34px 72px -45px rgb(12 14 16 / 0.52);
+  }
+}
+
+[data-jb-site="assistencia"] .jb-artigo-head,
+[data-jb-site="assistencia"] .jb-case-head {
+  position: relative;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-head::before,
+[data-jb-site="assistencia"] .jb-case-head::before {
+  content: "";
+  position: absolute;
+  left: -1rem;
+  top: 3rem;
+  width: 3px;
+  height: 5rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-jb-500), transparent);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-assinatura,
+[data-jb-site="assistencia"] .jb-case-meta {
+  border-color: rgb(17 19 21 / 0.085);
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: inset 0 1px 0 #fff,
+    0 18px 42px -36px rgb(12 14 16 / 0.42);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-capa {
+  border-color: rgb(17 19 21 / 0.09);
+  box-shadow: 0 38px 88px -54px rgb(12 14 16 / 0.58);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-aplicabilidade {
+  border-color: rgb(17 19 21 / 0.09);
+  background: radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.04), transparent 12rem),
+    #f7f8f9;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-corpo {
+  font-size: 1.03rem;
+  line-height: 1.82;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-corpo :is(h2, h3) {
+  scroll-margin-top: 7rem;
+  letter-spacing: -0.025em;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-corpo h2 {
+  margin-top: 2.7em;
+  padding-top: 0.35em;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-corpo a {
+  text-underline-offset: 0.2em;
+}
+
+[data-jb-site="assistencia"] .jb-artigo-limite {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.68);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-fontes {
+  border-color: rgb(17 19 21 / 0.09);
+  background: linear-gradient(180deg, #fff, #fbfbfc);
+  box-shadow: inset 0 1px 0 #fff,
+    0 24px 54px -46px rgb(12 14 16 / 0.44);
+}
+
+[data-jb-site="assistencia"] .jb-artigo-relacionados {
+  background: radial-gradient(circle at 10% 90%, rgb(224 20 27 / 0.045), transparent 24rem),
+    linear-gradient(180deg, #f6f7f8, #f8f9fa);
+}
+
+[data-jb-site="assistencia"] .jb-case-card,
+[data-jb-site="assistencia"] .jb-case-etapa,
+[data-jb-site="assistencia"] .jb-case-bloco {
+  border-color: rgb(17 19 21 / 0.09);
+  background: radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.035), transparent 11rem),
+    linear-gradient(180deg, #fff, #fdfdfd);
+  box-shadow: inset 0 1px 0 #fff,
+    0 22px 50px -42px rgb(12 14 16 / 0.46);
+  transition: transform 320ms var(--ease-out-quint),
+    border-color 240ms ease,
+    box-shadow 320ms var(--ease-out-quint);
+}
+
+[data-jb-site="assistencia"] .jb-case-etapa::after {
+  content: "";
+  position: absolute;
+  right: -2.5rem;
+  bottom: -3rem;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 999px;
+  background: rgb(224 20 27 / 0.055);
+  filter: blur(18px);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-case-card:hover,
+  [data-jb-site="assistencia"] .jb-case-etapa:hover,
+  [data-jb-site="assistencia"] .jb-case-bloco:hover {
+    transform: translateY(-3px);
+    border-color: rgb(224 20 27 / 0.18);
+    box-shadow: 0 32px 66px -43px rgb(12 14 16 / 0.5);
+  }
+}
+
+[data-jb-site="assistencia"] .jb-case-processo {
+  background: radial-gradient(circle at 12% 88%, rgb(224 20 27 / 0.045), transparent 24rem),
+    linear-gradient(180deg, #f6f7f8, #f8f9fa);
+}
+
+[data-jb-site="assistencia"] .jb-case-bloco {
+  transition: none;
+}
+
+[data-jb-site="assistencia"] .jb-case-consent {
+  border-color: rgb(17 19 21 / 0.09);
+  background: radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.04), transparent 11rem),
+    #f7f8f9;
+}
+
+[data-jb-site="assistencia"] .jb-content-empty {
+  border-color: rgb(17 19 21 / 0.085);
+  background: radial-gradient(circle at 92% 5%, rgb(224 20 27 / 0.055), transparent 18rem),
+    linear-gradient(180deg, #f8f9fa, #f5f6f7);
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+[data-jb-site="assistencia"] .jb-content-cta {
+  background: radial-gradient(circle at 88% 18%, rgb(224 20 27 / 0.05), transparent 22rem),
+    #f6f7f8;
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-page {
+  background: radial-gradient(circle at 85% 5%, rgb(224 20 27 / 0.07), transparent 24rem),
+    linear-gradient(180deg, #f7f8f9 0%, #fff 100%);
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-shell {
+  border-color: rgb(17 19 21 / 0.09);
+  box-shadow: inset 0 1px 0 #fff,
+    0 42px 100px -62px rgb(12 14 16 / 0.62);
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-nota,
+[data-jb-site="assistencia"] .jb-avaliacao-campo,
+[data-jb-site="assistencia"] .jb-avaliacao-consentimento {
+  border-color: rgb(17 19 21 / 0.085);
+  box-shadow: inset 0 1px 0 #fff,
+    0 18px 42px -36px rgb(12 14 16 / 0.42);
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-consentimento {
+  background: radial-gradient(circle at 100% 0%, rgb(224 20 27 / 0.04), transparent 12rem),
+    #f7f8f9;
+}
+
+[data-jb-site="assistencia"] .jb-avaliacao-opcao {
+  box-shadow: 0 10px 24px -22px rgb(12 14 16 / 0.46);
+}
+
+@media (hover: hover) {
+  [data-jb-site="assistencia"] .jb-avaliacao-opcao:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px -24px rgb(12 14 16 / 0.44);
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-content-hero::before,
+  [data-jb-site="assistencia"] .jb-artigo-head::before,
+  [data-jb-site="assistencia"] .jb-case-head::before {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-filtros-premium {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-filtros-premium::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-filtros-premium ul {
+    width: max-content;
+    flex-wrap: nowrap;
+  }
+
+  [data-jb-site="assistencia"] .jb-avaliacao-shell {
+    border-radius: 1.3rem;
+    padding: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-avaliacao-nota,
+  [data-jb-site="assistencia"] .jb-avaliacao-campo,
+  [data-jb-site="assistencia"] .jb-avaliacao-consentimento {
+    border-radius: 1.1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-artigo-assinatura,
+  [data-jb-site="assistencia"] .jb-case-meta {
+    border-radius: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-artigo-capa {
+    border-radius: 1.15rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-artigo-corpo {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  [data-jb-site="assistencia"] .jb-case-bloco {
+    border-radius: 1.1rem;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 26.875rem) {
+  [data-jb-site="assistencia"] :where(.jb-content-hub, .jb-institucional-shell) .container-jb {
+    width: min(100% - 1.25rem, 88rem);
+  }
+}
+
+/* ==========================================================================
+   Barra do WhatsApp no celular
+
+   Entra quando os CTAs grandes saem da tela e recolhe quando voltam. Com o
+   aviso de medição aberto, o aviso tem prioridade: a barra recolhe e volta
+   sozinha quando a pessoa decide (o `:has()` deixa de casar).
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-barra-movel-premium {
+  border-top-color: rgb(17 19 21 / 0.08);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.92), rgb(255 255 255 / 0.98));
+  box-shadow:
+    0 -1px 0 rgb(255 255 255 / 0.9),
+    0 -24px 64px -38px rgb(12 14 16 / 0.62);
+  transition:
+    transform 360ms var(--ease-out-quint),
+    opacity 220ms ease;
+}
+
+[data-jb-site="assistencia"] .jb-barra-movel-premium[data-visivel="false"] {
+  transform: translateY(calc(100% + 1rem));
+  opacity: 0;
+  pointer-events: none;
+}
+
+[data-jb-site="assistencia"] .jb-barra-movel-premium[data-visivel="true"] {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+[data-jb-site="assistencia"] .jb-barra-movel-premium a[data-whatsapp] {
+  min-height: 3.1rem;
+  border-radius: 0.9rem;
+}
+
+[data-jb-site="assistencia"] .jb-barra-movel-premium a[data-whatsapp="barra-movel"] {
+  background: linear-gradient(135deg, #e91b23, #c81118);
+  box-shadow: 0 20px 45px -26px rgb(224 20 27 / 0.7);
+}
+
+@media (max-width: 47.99rem) {
+  /* Respiro lateral que respeita a área segura do aparelho. */
+  [data-jb-site="assistencia"] .jb-barra-movel-premium {
+    padding-left: max(0.6rem, env(safe-area-inset-left));
+    padding-right: max(0.6rem, env(safe-area-inset-right));
+  }
+
+  body:has(.jb-aviso-medicao) .jb-barra-movel {
+    transform: translate3d(0, 140%, 0) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 47.99rem) {
+  [data-jb-site="assistencia"] .jb-pulso::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-barra-movel-premium {
+    border-inline: 1px solid rgb(221 223 226 / 0.82);
+    border-radius: 1.15rem 1.15rem 0 0;
+  }
+}
+
+@media (max-width: 22.49rem) {
+  [data-jb-site="assistencia"] .jb-barra-movel-premium {
+    padding-top: 0.45rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-barra-movel-premium > div:first-child {
+    margin-bottom: 0.4rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-barra-movel-premium > div:first-child p {
+    gap: 0.4rem;
+    font-size: 0.61rem;
+    letter-spacing: 0.07em;
+  }
+
+  [data-jb-site="assistencia"] .jb-barra-movel-premium a[data-whatsapp] {
+    min-height: 2.9rem;
+    padding-inline: 0.4rem;
+    font-size: 0.74rem;
+  }
+}
+
+/* ==========================================================================
+   Aviso de medição
+
+   Cartão flutuante acima da área segura, com "Não medir" e "Pode medir" do
+   mesmo tamanho e peso. A lógica mora em `components/analytics/medicao.tsx`.
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-aviso-medicao {
+  left: 50%;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  width: min(calc(100% - 2rem), 72rem);
+  transform: translateX(-50%);
+  padding: 0.9rem 1rem;
+  border: 1px solid rgb(17 19 21 / 0.11);
+  border-radius: 1.3rem;
+  background:
+    radial-gradient(circle at 0% 100%, rgb(224 20 27 / 0.045), transparent 16rem),
+    rgb(255 255 255 / 0.965);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.92),
+    0 34px 90px -48px rgb(12 14 16 / 0.66);
+}
+
+[data-jb-site="assistencia"] .jb-aviso-medicao p {
+  max-width: 48rem;
+}
+
+[data-jb-site="assistencia"] .jb-aviso-medicao-botao {
+  min-width: 7.5rem;
+  min-height: 2.75rem;
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 10px 24px -22px rgb(12 14 16 / 0.48);
+}
+
+@media (max-width: 39.99rem) {
+  [data-jb-site="assistencia"] .jb-aviso-medicao {
+    bottom: max(0.55rem, env(safe-area-inset-bottom));
+    width: calc(100% - 1rem);
+    padding: 0.75rem;
+    border-radius: 1.1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-aviso-medicao p {
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  [data-jb-site="assistencia"] .jb-aviso-medicao-botao {
+    min-width: 0;
+    padding-inline: 0.7rem;
+    font-size: 0.76rem;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-jb-site="assistencia"] .jb-aviso-medicao {
+    background: #fff;
+  }
+}
+
+/* ==========================================================================
+   Preferências do sistema: movimento reduzido, contraste, cores forçadas e
+   impressão
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html:has([data-jb-site="assistencia"]) {
+    scroll-behavior: auto;
+  }
+
+  [data-jb-site="assistencia"] *,
+  [data-jb-site="assistencia"] *::before,
+  [data-jb-site="assistencia"] *::after {
+    scroll-behavior: auto !important;
+  }
+
+  [data-jb-site="assistencia"] .jb-leitura {
+    display: none;
+    animation: none !important;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-provas li::after {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] .jb-logo-stage,
+  [data-jb-site="assistencia"] a[data-whatsapp],
+  [data-jb-site="assistencia"] .jb-cartao-equipamento,
+  [data-jb-site="assistencia"] .jb-hero-provas li,
+  [data-jb-site="assistencia"] .jb-fluxo-passo,
+  [data-jb-site="assistencia"] .jb-autoridade-card,
+  [data-jb-site="assistencia"] .jb-footer-link::after,
+  [data-jb-site="assistencia"] .jb-simulador-controle,
+  [data-jb-site="assistencia"] .jb-indice-legal nav a::before,
+  [data-jb-site="assistencia"] .jb-artigo-card,
+  [data-jb-site="assistencia"] .jb-case-card,
+  [data-jb-site="assistencia"] .jb-case-etapa,
+  [data-jb-site="assistencia"] .jb-avaliacao-opcao,
+  [data-jb-site="assistencia"] section[aria-labelledby="outros-titulo"] li > a {
+    transition: none !important;
+  }
+
+  [data-jb-site="assistencia"] a[data-whatsapp],
+  [data-jb-site="assistencia"] .jb-cartao-equipamento,
+  [data-jb-site="assistencia"] .jb-foto-premium > div,
+  [data-jb-site="assistencia"] .jb-barra-movel-premium {
+    transition-duration: 0.01ms !important;
+  }
+
+  [data-jb-site="assistencia"] .jb-cartao-equipamento,
+  [data-jb-site="assistencia"] .jb-autoridade-card,
+  [data-jb-site="assistencia"] .jb-fluxo-passo {
+    translate: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  [data-jb-site="assistencia"] .jb-hero-provas li,
+  [data-jb-site="assistencia"] .jb-cartao-equipamento,
+  [data-jb-site="assistencia"] .jb-fluxo-passo,
+  [data-jb-site="assistencia"] .jb-clinica-ponto,
+  [data-jb-site="assistencia"] .jb-autoridade-card,
+  [data-jb-site="assistencia"] .jb-faq-lista,
+  [data-jb-site="assistencia"] .jb-simulador-premium {
+    border-color: rgb(17 19 21 / 0.28);
+  }
+
+  [data-jb-site="assistencia"] .text-graf-500,
+  [data-jb-site="assistencia"] .text-graf-600 {
+    color: #34373b;
+  }
+}
+
+/* Windows High Contrast ignora boa parte dos gradientes. Controles continuam
+   identificáveis pela borda nativa e pelo foco, sem depender do vermelho. */
+@media (forced-colors: active) {
+  [data-jb-site="assistencia"] a,
+  [data-jb-site="assistencia"] button,
+  [data-jb-site="assistencia"] summary,
+  [data-jb-site="assistencia"] input {
+    forced-color-adjust: auto;
+  }
+
+  [data-jb-site="assistencia"] a:focus-visible,
+  [data-jb-site="assistencia"] button:focus-visible,
+  [data-jb-site="assistencia"] summary:focus-visible,
+  [data-jb-site="assistencia"] input:focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 3px;
+  }
+}
+
+@media print {
+  [data-jb-site="assistencia"] .jb-ticker,
+  [data-jb-site="assistencia"] .jb-cabecalho,
+  [data-jb-site="assistencia"] .jb-barra-movel,
+  [data-jb-site="assistencia"] .jb-leitura,
+  [data-jb-site="assistencia"] .jb-aviso-medicao {
+    display: none !important;
+  }
+
+  [data-jb-site="assistencia"] main {
+    display: block;
+  }
+}
+
