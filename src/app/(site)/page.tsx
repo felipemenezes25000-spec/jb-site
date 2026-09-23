@@ -11,6 +11,7 @@ import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { FaixaEquipamentos } from "@/components/site/faixa-equipamentos";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
+import { NumerosWhatsapp } from "@/components/site/numeros-whatsapp";
 import { PalavraGiratoria } from "@/components/site/palavra-giratoria";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { SimuladorParada } from "@/components/site/simulador-parada";
@@ -109,6 +110,13 @@ export default async function HomePage() {
               ) : null}
             </div>
 
+            <NumerosWhatsapp
+              numeros={[s.whatsapp, s.whatsapp_alternativo]}
+              mensagem={MENSAGEM_PADRAO}
+              posicao="abertura-numero"
+              className="entrada mt-4 [animation-delay:240ms]"
+            />
+
             <div className="entrada order-first mb-6 sm:mb-8 lg:order-none lg:mb-0 lg:mt-10 lg:[animation-delay:260ms]">
               <FotoAbertura />
             </div>
@@ -153,6 +161,7 @@ export default async function HomePage() {
       <Duvidas cidade={s.endereco_cidade} horario={s.horario} />
       <ChamadaFinal
         whatsapp={s.whatsapp}
+        whatsappAlternativo={s.whatsapp_alternativo}
         telefone={s.whatsapp}
         horario={s.horario}
         cidade={s.endereco_cidade}

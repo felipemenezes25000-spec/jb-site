@@ -4,6 +4,7 @@ import { BadgeCheck, Clock3, Mail, MapPin, Phone } from "lucide-react";
 import { RevisarMedicao } from "@/components/analytics/revisar-medicao";
 import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
+import { whatsappsDistintos } from "@/components/site/numeros-whatsapp";
 import { Logo } from "@/components/ui/logo";
 import { algumDestino, destinosDeMedicao } from "@/lib/analytics/destinos";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
@@ -17,14 +18,15 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
 /* ============================================================================
    Rodapé do site de assistência
 
-   Tudo o que alguém precisa para chamar a JB sem subir a página: WhatsApp,
-   telefone, e-mail, endereço, horário. E a prova da autorização EVOXX com o
-   link para a lista do fabricante, porque selo sem fonte é enfeite.
+   Tudo o que alguém precisa para chamar a JB sem subir a página: os dois
+   WhatsApps, telefone, e-mail, endereço, horário. E a prova da autorização
+   EVOXX com o link para a lista do fabricante, porque selo sem fonte é enfeite.
    ============================================================================ */
 
 export function RodapeSite({ s }: { s: SettingsMap }) {
   const ligar = telHref(s.whatsapp);
-  const whatsapp = whatsappHref(s.whatsapp, MENSAGEM_PADRAO);
+  /* O principal primeiro; o segundo só aparece se for outro número. */
+  const numeros = whatsappsDistintos([s.whatsapp, s.whatsapp_alternativo]);
 
   return (
     <footer id="contato" className="scroll-mt-20 border-t border-graf-200 bg-surface-muted">
@@ -49,20 +51,21 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
         <div>
           <h2 className="text-sm font-extrabold text-graf-950">Fale com a equipe</h2>
           <ul className="mt-4 space-y-3 text-sm">
-            {whatsapp ? (
-              <li>
+            {numeros.map((numero) => (
+              <li key={numero}>
                 <a
-                  href={whatsapp}
+                  href={whatsappHref(numero, MENSAGEM_PADRAO)}
                   data-whatsapp="rodape-numero"
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`Chamar no WhatsApp ${formatarTelefone(numero)}`}
                   className="foco-jb inline-flex items-center gap-2.5 rounded font-bold text-graf-900 hover:text-jb-700"
                 >
                   <MarcaWhatsapp className="size-4 text-jb-600" />
-                  <span className="tabular">{formatarTelefone(s.whatsapp)}</span>
+                  <span className="tabular">{formatarTelefone(numero)}</span>
                 </a>
               </li>
-            ) : null}
+            ))}
             {ligar ? (
               <li>
                 <a
@@ -70,7 +73,9 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                   className="foco-jb inline-flex items-center gap-2.5 rounded font-semibold text-graf-700 hover:text-jb-700"
                 >
                   <Phone className="size-4 text-jb-600" aria-hidden />
-                  <span>Ligar para o mesmo número</span>
+                  <span>
+                    {numeros.length > 1 ? "Ligar para o primeiro número" : "Ligar para o mesmo número"}
+                  </span>
                 </a>
               </li>
             ) : null}

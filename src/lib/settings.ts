@@ -21,8 +21,8 @@ export const SETTING_DEFAULTS = {
 
   // contato
   telefone: "(11) 3715-6362",
-  telefone_alternativo: "(11) 95847-7337",
   whatsapp: "(11) 96341-7994",
+  whatsapp_alternativo: "(11) 95847-7337",
   email: "comercial@jbsolucoesodontologicas.com.br",
   horario: "Segunda a sexta, das 8h às 18h30",
 
@@ -107,13 +107,21 @@ export const SETTING_FIELDS: {
   },
 
   { key: "telefone", label: "Telefone principal", group: "contato", type: "tel" },
-  { key: "telefone_alternativo", label: "Telefone alternativo", group: "contato", type: "tel" },
   {
     key: "whatsapp",
-    label: "WhatsApp",
+    label: "WhatsApp principal",
     group: "contato",
     type: "tel",
-    hint: "Deixe vazio para esconder o botão de WhatsApp do site.",
+    hint: "Recebe a mensagem pronta de todos os botões do site. Vazio esconde os botões.",
+  },
+  {
+    key: "whatsapp_alternativo",
+    label: "Segundo WhatsApp",
+    group: "contato",
+    type: "tel",
+    hint:
+      "Aparece por escrito ao lado do principal na abertura, na chamada final e no rodapé, " +
+      "para quem preferir chamar nele. Vazio: só o principal aparece.",
   },
   { key: "email", label: "E-mail comercial", group: "contato", type: "email" },
   { key: "horario", label: "Horário de atendimento", group: "contato", type: "text" },

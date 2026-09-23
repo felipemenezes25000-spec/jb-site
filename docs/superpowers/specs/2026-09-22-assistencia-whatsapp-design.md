@@ -116,5 +116,6 @@ Também é necessário inventariar os dados históricos, pedidos/pagamentos pend
 - **Formulário curto fica**, discreto, como alternativa ao WhatsApp (nome, WhatsApp, cidade, problema), caindo no painel.
 - **Painel da equipe continua** com chamados, OS, agenda, técnicos, equipamentos, manutenção, orçamentos de reparo, clientes, categorias de equipamento e serviços.
 - **WhatsApp que recebe:** (11) 96341-7994. Telefone alternativo continua o do site, (11) 95847-7337.
+  *Atualizado em 23/09/2026:* os dois são WhatsApp. O principal (96341-7994) recebe a mensagem pronta de todos os botões; os dois aparecem por escrito, cada um clicável, na abertura da home e das páginas de equipamento, na chamada final e no rodapé. O segundo é a configuração `whatsapp_alternativo` (antes `telefone_alternativo`, que não aparecia no site).
 - **Autoridade:** a JB é assistência técnica autorizada EVOXX (lista oficial em evoxx.com.br/assistencia). A home cita e linka a lista.
 - **URLs antigas:** as da loja respondem 410 no `src/proxy.ts`; as de assistência, contato, dúvidas e área do cliente redirecionam (308) para a home, em `next.config.ts`.

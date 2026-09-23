@@ -1,6 +1,7 @@
 import { Phone } from "lucide-react";
 
 import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
+import { NumerosWhatsapp } from "@/components/site/numeros-whatsapp";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
 import { classesBotao } from "@/components/ui/button";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
@@ -13,10 +14,12 @@ import { telHref } from "@/lib/format";
    vermelho cheio em área grande), duas manchas de luz que flutuam devagar e o
    botão maior da página com um anel que pulsa. O selo de horário se repete
    aqui porque é a pergunta que a pessoa faz antes de mandar a mensagem.
+   Embaixo, os dois WhatsApps por escrito, para quem prefere escolher o número.
    ============================================================================ */
 
 export function ChamadaFinal({
   whatsapp,
+  whatsappAlternativo = "",
   telefone,
   horario,
   cidade,
@@ -25,6 +28,8 @@ export function ChamadaFinal({
   titulo = "Não deixe a agenda parar por causa de um equipamento.",
 }: {
   whatsapp: string;
+  /** O segundo WhatsApp das configurações; vazio, só o principal aparece. */
+  whatsappAlternativo?: string;
   telefone: string;
   horario: string;
   cidade: string;
@@ -97,6 +102,16 @@ export function ChamadaFinal({
             </a>
           ) : null}
         </div>
+
+        <NumerosWhatsapp
+          numeros={[whatsapp, whatsappAlternativo]}
+          mensagem={mensagem}
+          equipamento={equipamento}
+          posicao="fechamento-numero"
+          centralizado
+          className="jb-revela mt-5"
+          style={{ "--i": 4 } as React.CSSProperties}
+        />
       </div>
     </section>
   );

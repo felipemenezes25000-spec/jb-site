@@ -173,6 +173,24 @@ export function telefoneInternacional(valor: string | null | undefined) {
   return `+${digitos.startsWith("55") ? digitos : `55${digitos}`}`;
 }
 
+/**
+ * Os dois WhatsApps como pontos de contato. O principal continua também em
+ * `telephone`; número vazio, curto ou repetido fica de fora.
+ */
+function pontosDeContato(s: SettingsMap) {
+  const numeros = [s.whatsapp, s.whatsapp_alternativo]
+    .map(telefoneInternacional)
+    .filter((numero, i, todos): numero is string => !!numero && todos.indexOf(numero) === i);
+  if (numeros.length === 0) return undefined;
+  return numeros.map((telephone) => ({
+    "@type": "ContactPoint",
+    telephone,
+    contactType: "customer service",
+    areaServed: "BR",
+    availableLanguage: "Portuguese",
+  }));
+}
+
 function redes(s: SettingsMap) {
   const lista = [s.facebook, s.instagram, s.linkedin, s.youtube]
     .map((url) => (url ?? "").trim())
@@ -229,6 +247,7 @@ export function organizacaoJsonLd(s: SettingsMap): DadosJsonLd {
     description: limpo(s.empresa_resumo),
     email: limpo(s.email),
     telephone: telefoneInternacional(s.whatsapp),
+    contactPoint: pontosDeContato(s),
     foundingDate: /^\d{4}$/.test(s.empresa_desde.trim()) ? s.empresa_desde.trim() : undefined,
     address: enderecoPostal(s),
     sameAs: redes(s),

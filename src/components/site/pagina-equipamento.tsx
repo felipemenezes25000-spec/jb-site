@@ -12,6 +12,7 @@ import { Duvidas } from "@/components/site/duvidas";
 import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
+import { NumerosWhatsapp } from "@/components/site/numeros-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
 import { classesBotao } from "@/components/ui/button";
@@ -139,6 +140,14 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
               ) : null}
             </div>
 
+            <NumerosWhatsapp
+              numeros={[s.whatsapp, s.whatsapp_alternativo]}
+              mensagem={mensagem}
+              equipamento={equipamento.id}
+              posicao="abertura-numero"
+              className="entrada mt-4 [animation-delay:230ms]"
+            />
+
             <StatusAtendimento
               horario={s.horario}
               neutro={`Atendimento em ${s.endereco_cidade} e região`}
@@ -165,6 +174,7 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
       <OutrosEquipamentos atual={pagina.slug} />
       <ChamadaFinal
         whatsapp={s.whatsapp}
+        whatsappAlternativo={s.whatsapp_alternativo}
         telefone={s.whatsapp}
         horario={s.horario}
         cidade={s.endereco_cidade}
