@@ -9,9 +9,10 @@ import { PAGINAS_DE_EQUIPAMENTO } from "@/lib/paginas-equipamento";
    Faixa dos equipamentos atendidos
 
    Continua funcionando como assinatura visual, mas agora também navega para
-   as landings específicas. No desktop o trilho corre e pausa ao interagir;
-   no mobile a camada visual transforma a lista em uma faixa horizontal mais
-   confortável para o toque.
+   as landings específicas. O trilho aparece duplicado no desktop para fechar
+   o loop da marquise; por isso os links não fazem prefetch automático — não
+   vale baixar sete páginas em segundo plano só porque os cartões passaram pela
+   viewport. No toque, a faixa vira uma navegação horizontal estática.
    ============================================================================ */
 
 const ITENS = EQUIPAMENTOS.filter((equipamento) => equipamento.id !== "outro");
@@ -42,6 +43,7 @@ function Trilho({ oculto }: { oculto?: boolean }) {
             {pagina ? (
               <Link
                 href={`/${pagina.slug}`}
+                prefetch={false}
                 tabIndex={oculto ? -1 : undefined}
                 className="jb-faixa-equipamento foco-jb flex min-h-16 items-center gap-3 rounded-2xl border border-transparent px-3 text-base font-extrabold tracking-tight text-graf-900 transition-[background-color,border-color,transform,box-shadow] sm:min-h-20 sm:px-4 sm:text-xl"
               >
