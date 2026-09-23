@@ -61,18 +61,28 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
     return () => observador.disconnect();
   }, []);
 
+  const equipamentoAtual = equipamento
+    ? EQUIPAMENTOS.find((item) => item.id === equipamento) ?? null
+    : null;
+  const contexto = equipamentoAtual
+    ? `${equipamentoAtual.nome}: falar com a equipe`
+    : "Falar com a equipe técnica";
+
   return (
     <div
       data-visivel={visivel}
       className="jb-barra-movel jb-barra-movel-premium fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 px-3 pt-2.5 backdrop-blur-xl md:hidden"
       style={{ paddingBottom: "calc(0.7rem + env(safe-area-inset-bottom))" }}
+      aria-label="Atalhos de atendimento pelo WhatsApp"
     >
       <div className="mx-auto mb-2 flex max-w-md items-center justify-between gap-3 px-1">
-        <p className="flex min-w-0 items-center gap-2 text-[0.7rem] font-extrabold uppercase tracking-[0.12em] text-graf-800">
+        <p className="flex min-w-0 items-center gap-2 text-[0.7rem] font-extrabold uppercase tracking-[0.1em] text-graf-800">
           <span className="size-2 shrink-0 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]" aria-hidden />
-          Falar com a equipe técnica
+          <span className="truncate">{contexto}</span>
         </p>
-        <span className="shrink-0 text-[0.7rem] font-bold text-graf-600">WhatsApp</span>
+        <span className="shrink-0 rounded-full border border-graf-200 bg-white px-2 py-1 text-[0.65rem] font-extrabold uppercase tracking-[0.08em] text-graf-600 shadow-xs">
+          WhatsApp
+        </span>
       </div>
       <div className="mx-auto max-w-md">
         <OpcoesWhatsapp
