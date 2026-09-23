@@ -1,24 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Conteudo404 } from "@/components/loja/pagina-404";
+import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
 import { Logo } from "@/components/ui/logo";
-import { cacheLife, cacheTag } from "next/cache";
-
-import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
-import { SETTING_DEFAULTS, getSettings, type SettingsMap } from "@/lib/settings";
+import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
+import { configuracoesPublicas } from "@/lib/site-publico";
 
 /**
- * 404 de fora dos grupos de rota.
+ * Página não encontrada.
  *
- * A loja tem a própria página em `(loja)/not-found.tsx`, que entra dentro do
- * cabeçalho e do rodapé já montados. Esta aqui atende o endereço que não cai
- * em grupo nenhum, então precisa trazer a própria marca e o próprio caminho de
- * volta — é o único lugar em que o logotipo aparece duas vezes se não houver
- * cuidado.
+ * Quem cai aqui quase sempre veio de um link antigo, e a saída que interessa é
+ * a mesma de todo o site: falar com a equipe. As URLs da loja nem chegam a
+ * esta página; elas respondem 410 no `src/proxy.ts`.
  *
- * As configurações são lidas com rede de proteção: se o banco estiver fora,
- * a página de erro não pode cair junto — ela cai nos valores padrão.
+ * `configuracoesPublicas` já é cacheada e volta aos padrões da JB quando o
+ * banco não responde: a página de erro não pode cair junto com ele.
  */
 
 export const metadata: Metadata = {
@@ -26,45 +22,44 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-/**
- * As configurações desta página, com rede de proteção e cache.
- *
- * `use cache` porque a página 404 é igual para todo mundo: não lê cookie, não
- * sabe quem chegou, e sem ele o Next não consegue prerenderizá-la — a rota
- * `/_not-found` é gerada em build e não tem requisição para esperar.
- *
- * A rede de proteção continua: banco fora do ar não pode derrubar a própria
- * página de erro, então a falha cai nos valores padrão.
- */
-async function configuracoes(): Promise<SettingsMap> {
-  "use cache";
-  cacheTag(ETIQUETA_CONFIGURACOES);
-  cacheLife("hours");
-  try {
-    return await getSettings();
-  } catch (erro) {
-    console.error("404: falha ao ler configurações", erro);
-    return { ...SETTING_DEFAULTS };
-  }
-}
-
 export default async function NaoEncontrado() {
-  const s = await configuracoes();
+  const s = await configuracoesPublicas();
 
   return (
     <div className="flex min-h-dvh flex-col bg-gradient-to-b from-graf-50 to-white">
       <header className="container-jb py-6">
         <Link
           href="/"
-          aria-label={`${s.empresa_nome} — página inicial`}
+          aria-label={`${s.empresa_nome}, página inicial`}
           className="inline-flex rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-jb-500"
         >
           <Logo altura={40} prioridade />
         </Link>
       </header>
 
-      <main className="container-jb flex-1 pb-16 pt-6 lg:pt-10">
-        <Conteudo404 configuracoes={s} />
+      <main className="container-estreito flex flex-1 flex-col justify-center pb-20 pt-6">
+        <p className="label-mono font-bold text-jb-600">Erro 404</p>
+        <h1 className="text-display texto-forte mt-3 max-w-2xl text-balance">
+          Essa página não existe mais.
+        </h1>
+        <p className="texto-guia mt-5 max-w-xl text-graf-600">
+          O link pode estar antigo ou ter sido digitado errado. Se o seu equipamento precisa de
+          assistência, a equipe técnica responde pelo WhatsApp.
+        </p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <BotaoWhatsapp
+            numero={s.whatsapp}
+            mensagem={MENSAGEM_PADRAO}
+            posicao="secao"
+            tamanho="lg"
+          />
+          <Link
+            href="/"
+            className="foco-jb inline-flex min-h-13 items-center justify-center rounded-lg border border-graf-300 bg-white px-7 text-base font-semibold text-graf-800 hover:bg-graf-50"
+          >
+            Ir para a página inicial
+          </Link>
+        </div>
       </main>
     </div>
   );

@@ -199,7 +199,7 @@ export default async function PaginaEquipamentos({
       renderizar: (linha) => (
         <span className="block min-w-0">
           <span className="block truncate font-semibold text-graf-900">{linha.name}</span>
-          <span className="block truncate text-[0.8125rem] text-graf-500">
+          <span className="block truncate text-apoio text-graf-500">
             {linha.customer.name}
           </span>
         </span>
@@ -244,7 +244,7 @@ export default async function PaginaEquipamentos({
         linha.nextMaintenanceAt ? (
           <span className="block">
             <span className="block">{formatarData(linha.nextMaintenanceAt)}</span>
-            <span className="block text-[0.8125rem] text-graf-500">
+            <span className="block text-apoio text-graf-500">
               {distanciaEmDias(linha.nextMaintenanceAt)}
             </span>
           </span>

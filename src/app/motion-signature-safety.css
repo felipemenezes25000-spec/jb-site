@@ -1,0 +1,52 @@
+/* Segurança geométrica da camada de assinatura.
+   A assinatura usa seletores mais específicos que o CSS Module do hero;
+   estes quatro elementos precisam continuar absolutamente posicionados para
+   o palco técnico manter exatamente a mesma geometria e não ganhar altura. */
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]
+  > :where(svg, img, span, div) {
+  position: absolute;
+}
+
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]
+  > svg {
+  z-index: 3;
+  pointer-events: none;
+}
+
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]
+  > span {
+  z-index: 1;
+  pointer-events: none;
+}
+
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]
+  > :where(img, div) {
+  z-index: 2;
+}
+
+/* A grade precisa estar acima do radial branco; no CSS principal ela estava
+   abaixo de uma camada opaca e praticamente sumia. Aqui a ordem fica explícita
+   e o hover desloca só a malha, não a luz do produto. */
+html[data-motion-scene="home"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto] {
+  background:
+    linear-gradient(90deg, rgb(26 28 30 / 0.035) 1px, transparent 1px),
+    linear-gradient(rgb(26 28 30 / 0.028) 1px, transparent 1px),
+    radial-gradient(circle at 54% 42%, #fff 0 22%, rgb(250 250 250 / 0.96) 46%, rgb(245 246 247 / 0.98) 100%);
+  background-size: 28px 28px, 28px 28px, auto;
+}
+
+html[data-motion-scene="home"][data-motion-pointer="fine"]
+  [data-motion-chapter="hero"]
+  [data-palco-imagem-produto]:hover {
+  background-position: 6px 4px, 4px 6px, 0 0;
+}

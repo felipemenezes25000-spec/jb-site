@@ -136,11 +136,11 @@ export default async function PaginaUsuarios() {
                     </div>
 
                     <p className="mt-0.5 break-all text-sm text-graf-600">{pessoa.email}</p>
-                    <p className="mt-1 text-[0.8125rem] text-graf-500">
+                    <p className="mt-1 text-apoio text-graf-500">
                       {DESCRICAO_PAPEL[pessoa.role]}
                       {pessoa.phone ? ` · ${formatarTelefone(pessoa.phone)}` : ""}
                     </p>
-                    <p className="mt-1 text-[0.8125rem] text-graf-500">
+                    <p className="mt-1 text-apoio text-graf-500">
                       {pessoa.lastLoginAt
                         ? `Último acesso em ${formatarDataHora(pessoa.lastLoginAt)}`
                         : "Nunca entrou no painel"}

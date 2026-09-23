@@ -106,7 +106,7 @@ function FormularioDescricao({
         />
 
         {midia.autorizadaEm ? (
-          <p className="text-[0.8125rem] leading-relaxed text-graf-600">
+          <p className="text-apoio leading-relaxed text-graf-600">
             Autorização registrada em {midia.autorizadaEm}
             {midia.autorizadaPor ? `, por ${midia.autorizadaPor}` : ""}.
           </p>
@@ -127,7 +127,7 @@ function FormularioDescricao({
         />
 
         {midia.hasPeople && !midia.autorizadaEm ? (
-          <p className="text-[0.8125rem] font-semibold leading-relaxed text-jb-700">
+          <p className="text-apoio font-semibold leading-relaxed text-jb-700">
             Esta imagem tem pessoa identificável e ainda não pode ser publicada.
           </p>
         ) : null}
@@ -211,7 +211,7 @@ export function BibliotecaDeMidia({
                     entrega o nome inteiro a quem passar o mouse. */}
                 <span
                   title={midia.filename}
-                  className="line-2 mt-2 block break-all text-[0.8125rem] font-semibold text-graf-900"
+                  className="line-2 mt-2 block break-all text-apoio font-semibold text-graf-900"
                 >
                   {midia.filename}
                 </span>
@@ -233,7 +233,7 @@ export function BibliotecaDeMidia({
       )}
 
       {pastas.length > 1 ? (
-        <p className="text-[0.8125rem] text-graf-500">
+        <p className="text-apoio text-graf-500">
           Pastas nesta biblioteca: {pastas.join(", ")}. A pasta é definida por quem envia o
           arquivo e serve para separar as origens.
         </p>

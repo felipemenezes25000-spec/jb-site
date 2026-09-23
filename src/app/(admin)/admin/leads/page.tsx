@@ -110,7 +110,7 @@ export default async function PaginaLeads({
       renderizar: (linha) => (
         <span className="block">
           <span className="block font-semibold text-graf-900">{linha.nome}</span>
-          <span className="mt-0.5 block text-[0.8125rem] text-graf-500">{linha.contato}</span>
+          <span className="mt-0.5 block text-apoio text-graf-500">{linha.contato}</span>
         </span>
       ),
     },
@@ -119,7 +119,7 @@ export default async function PaginaLeads({
       rotulo: "Mensagem",
       esconderNoMobile: true,
       renderizar: (linha) => (
-        <span className="line-2 block max-w-md text-[0.8125rem] leading-relaxed text-graf-600">
+        <span className="line-2 block max-w-md text-apoio leading-relaxed text-graf-600">
           {linha.resumo || <span className="text-graf-500">Enviou o formulário sem mensagem</span>}
         </span>
       ),

@@ -24,15 +24,10 @@ import { sessaoStaff, type StaffUser } from "@/lib/auth";
 
 export type AreaAdmin =
   | "painel"
-  | "pedidos"
-  | "pagamentos"
   | "clientes"
   | "suporte"
   | "orcamentos"
-  | "cupons"
-  | "frete"
-  | "produtos"
-  | "estoque"
+  | "cadastros"
   | "assistencia"
   | "os"
   | "agenda"
@@ -51,12 +46,11 @@ export type AreaAdmin =
   | "auditoria";
 
 /** Agrupamento do menu lateral, na ordem em que aparece. */
-export type GrupoAdmin = "geral" | "comercial" | "catalogo" | "assistencia" | "conteudo" | "sistema";
+export type GrupoAdmin = "geral" | "atendimento" | "assistencia" | "conteudo" | "sistema";
 
 export const ROTULO_GRUPO: Record<GrupoAdmin, string> = {
   geral: "Geral",
-  comercial: "Comercial",
-  catalogo: "Catálogo",
+  atendimento: "Atendimento",
   assistencia: "Assistência",
   conteudo: "Conteúdo",
   sistema: "Sistema",
@@ -64,8 +58,7 @@ export const ROTULO_GRUPO: Record<GrupoAdmin, string> = {
 
 export const ORDEM_GRUPOS: GrupoAdmin[] = [
   "geral",
-  "comercial",
-  "catalogo",
+  "atendimento",
   "assistencia",
   "conteudo",
   "sistema",
@@ -101,32 +94,14 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     descricao: "Números do dia e o que precisa de ação agora",
   },
 
-  pedidos: {
-    rotulo: "Pedidos",
-    href: "/admin/pedidos",
-    icone: "ShoppingCart",
-    papeis: ["admin", "gestor", "comercial"],
-    leitura: [],
-    grupo: "comercial",
-    descricao: "Vendas da loja, pagamento, separação e entrega",
-  },
-  pagamentos: {
-    rotulo: "Pagamentos",
-    href: "/admin/pagamentos",
-    icone: "CreditCard",
-    papeis: ["admin", "gestor", "comercial"],
-    leitura: [],
-    grupo: "comercial",
-    descricao: "Cobranças de cada pedido: Pix, cartão, aprovação e estorno",
-  },
   clientes: {
     rotulo: "Clientes",
     href: "/admin/clientes",
     icone: "Users",
     papeis: ["admin", "gestor", "comercial"],
     leitura: [],
-    grupo: "comercial",
-    descricao: "Cadastro, endereços, histórico de compras e chamados",
+    grupo: "atendimento",
+    descricao: "Cadastro, unidades, equipamentos e chamados de cada clínica",
   },
   suporte: {
     rotulo: "Suporte",
@@ -134,8 +109,8 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     icone: "LifeBuoy",
     papeis: ["admin", "gestor", "comercial"],
     leitura: [],
-    grupo: "comercial",
-    descricao: "Tickets de atendimento abertos pelo cliente e as respostas da equipe",
+    grupo: "atendimento",
+    descricao: "Tickets de atendimento e as respostas da equipe",
   },
   orcamentos: {
     rotulo: "Orçamentos",
@@ -143,48 +118,20 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     icone: "FileText",
     papeis: ["admin", "gestor", "comercial"],
     leitura: [],
-    grupo: "comercial",
-    descricao: "Propostas comerciais e de assistência, com aprovação do cliente",
+    grupo: "atendimento",
+    descricao: "Orçamentos de reparo, com aprovação do cliente",
   },
-  cupons: {
-    rotulo: "Cupons",
-    href: "/admin/cupons",
-    icone: "TicketPercent",
-    papeis: ["admin", "gestor", "comercial"],
-    leitura: [],
-    grupo: "comercial",
-    descricao: "Códigos de desconto do carrinho, validade e limite de uso",
-  },
-  // Frete fica no grupo Comercial, e não em Sistema, porque quem responde pelo
-  // prazo e pelo valor da entrega é quem vende. As chaves de provedor e os
-  // dados fiscais continuam em Configurações, restritos ao administrador.
-  frete: {
-    rotulo: "Frete",
-    href: "/admin/frete",
-    icone: "Truck",
-    papeis: ["admin", "gestor", "comercial"],
-    leitura: [],
-    grupo: "comercial",
-    descricao: "Perfis de entrega, faixas de CEP, prazo e valor",
-  },
-
-  produtos: {
-    rotulo: "Produtos",
-    href: "/admin/produtos",
-    icone: "Package",
-    papeis: ["admin", "gestor"],
-    leitura: ["comercial"],
-    grupo: "catalogo",
-    descricao: "Catálogo, preços, fotos e ficha técnica",
-  },
-  estoque: {
-    rotulo: "Estoque",
-    href: "/admin/estoque",
+  // Categorias de equipamento e serviços. Sobreviveram à saída da loja porque
+  // classificam o equipamento do cliente e entram no orçamento de reparo; o
+  // resto do antigo catálogo (produto, estoque, marca) saiu com a loja.
+  cadastros: {
+    rotulo: "Categorias e serviços",
+    href: "/admin/categorias",
     icone: "Boxes",
     papeis: ["admin", "gestor"],
-    leitura: [],
-    grupo: "catalogo",
-    descricao: "Unidades, entradas, saídas e alerta de estoque baixo",
+    leitura: ["comercial", "tecnico"],
+    grupo: "assistencia",
+    descricao: "Tipos de equipamento atendidos e serviços que entram no orçamento",
   },
 
   assistencia: {
@@ -318,7 +265,7 @@ export const AREAS: Record<AreaAdmin, DefinicaoArea> = {
     papeis: ["admin"],
     leitura: [],
     grupo: "sistema",
-    descricao: "Dados da empresa, contato, frete, pagamento e SEO",
+    descricao: "Dados da empresa, contato, horário e SEO",
   },
   // Fila de saída. Fica em Sistema e não em Conteúdo porque o que se decide
   // aqui é infraestrutura de envio — reprocessar lote, reenviar linha travada
@@ -354,8 +301,7 @@ export const ROTULO_PAPEL: Record<StaffRole, string> = {
 export const DESCRICAO_PAPEL: Record<StaffRole, string> = {
   admin: "Acesso total, incluindo equipe e configurações",
   gestor: "Operação inteira, sem mexer em equipe e configurações",
-  comercial:
-    "Pedidos, pagamentos, clientes, suporte, orçamentos, cupons e frete; catálogo só para consulta",
+  comercial: "Clientes, suporte e orçamentos; categorias e serviços só para consulta",
   tecnico: "Chamados, ordens de serviço, agenda, manutenção e equipamentos",
   editor: "Conteúdo do site e leads",
 };

@@ -60,7 +60,7 @@ export function LinhaAcordeao({
           <Plus className="size-4" />
         </span>
       </summary>
-      <div className="texto-suave pb-6 pr-10 text-[0.9375rem] leading-relaxed sm:text-base">
+      <div className="texto-suave pb-6 pr-10 text-corpo leading-relaxed sm:text-base">
         {resposta}
       </div>
     </details>

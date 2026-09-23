@@ -8,7 +8,6 @@ import {
   MapPin,
   MonitorCog,
   Receipt,
-  ShoppingCart,
   Stethoscope,
   Wallet,
 } from "lucide-react";
@@ -17,7 +16,6 @@ import { Indicador, Indicadores } from "@/components/admin/indicador";
 import {
   CabecalhoPagina,
   Dado,
-  EtiquetaPedido,
   ListaDeDados,
   ROTULO_CONTRATO_CURTO,
   TOM_CONTRATO,
@@ -41,7 +39,6 @@ import {
   plural,
 } from "@/lib/format";
 import { ROTULO_ORCAMENTO } from "@/lib/orcamento";
-import { ROTULO_STATUS } from "@/lib/pedido";
 import { exigirArea } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 
@@ -63,8 +60,8 @@ type Props = { params: Promise<{ id: string }> };
 /**
  * Ficha do cliente.
  *
- * Junta num lugar só o que hoje mora em cinco tabelas diferentes: compras,
- * propostas, parque instalado, chamados, contratos e documentos. É a tela que
+ * Junta num lugar só o que mora em tabelas diferentes: orçamentos, parque
+ * instalado, chamados, contratos e documentos. É a tela que
  * responde "quem é essa pessoa do outro lado da linha" antes de a equipe
  * atender.
  *
@@ -92,18 +89,6 @@ export default async function ClientePage({ params }: Props) {
     where: { id },
     include: {
       addresses: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] },
-      orders: {
-        orderBy: { placedAt: "desc" },
-        take: LIMITE,
-        select: {
-          id: true,
-          number: true,
-          status: true,
-          placedAt: true,
-          totalCents: true,
-          paidAt: true,
-        },
-      },
       quotes: {
         orderBy: { createdAt: "desc" },
         take: LIMITE,
@@ -176,7 +161,6 @@ export default async function ClientePage({ params }: Props) {
       },
       _count: {
         select: {
-          orders: true,
           quotes: true,
           equipments: true,
           serviceRequests: true,
@@ -190,19 +174,8 @@ export default async function ClientePage({ params }: Props) {
 
   if (!cliente) notFound();
 
-  const compras = await prisma.order.aggregate({
-    where: {
-      customerId: cliente.id,
-      paidAt: { not: null },
-      status: { notIn: ["cancelado", "reembolsado"] },
-    },
-    _sum: { totalCents: true },
-    _count: true,
-  });
-
-  // "último contato" é o fato mais recente em qualquer frente, não só a compra
+  // "último contato" é o fato mais recente em qualquer frente
   const marcos = [
-    cliente.orders[0]?.placedAt,
     cliente.quotes[0]?.createdAt,
     cliente.serviceRequests[0]?.createdAt,
     cliente.lastLoginAt,
@@ -212,7 +185,12 @@ export default async function ClientePage({ params }: Props) {
     ? new Date(Math.max(...marcos.map((data) => data.getTime())))
     : null;
 
-  const totalComprado = compras._sum.totalCents ?? 0;
+  const aprovados = await prisma.quote.aggregate({
+    where: { customerId: cliente.id, status: "aprovado" },
+    _sum: { totalCents: true },
+    _count: true,
+  });
+  const totalAprovado = aprovados._sum.totalCents ?? 0;
   const nomeExibido = cliente.companyName || cliente.name;
 
   return (
@@ -249,41 +227,33 @@ export default async function ClientePage({ params }: Props) {
               <Receipt className="size-4" aria-hidden />
               Novo orçamento
             </LinkBotao>
-            <LinkBotao
-              href={`/admin/pedidos?q=${encodeURIComponent(cliente.email)}`}
-              variante="secundario"
-              tamanho="sm"
-            >
-              <ShoppingCart className="size-4" aria-hidden />
-              Pedidos deste cliente
-            </LinkBotao>
           </>
         }
       />
 
       <Indicadores>
         <Indicador
-          rotulo="Total comprado"
-          valor={formatarPreco(totalComprado)}
+          rotulo="Serviços aprovados"
+          valor={formatarPreco(totalAprovado)}
           icone={Wallet}
           tom="marca"
-          detalhe={plural(compras._count, "pedido pago", "pedidos pagos")}
+          detalhe={plural(aprovados._count, "orçamento aprovado", "orçamentos aprovados")}
         />
         <Indicador
-          rotulo="Pedidos"
-          valor={cliente._count.orders}
-          icone={ShoppingCart}
+          rotulo="Chamados"
+          valor={cliente._count.serviceRequests}
+          icone={Stethoscope}
           detalhe={
-            cliente.orders[0]
-              ? `Último em ${formatarData(cliente.orders[0].placedAt)}`
-              : "Nenhum pedido ainda"
+            cliente.serviceRequests[0]
+              ? `Último em ${formatarData(cliente.serviceRequests[0].createdAt)}`
+              : "Nenhum chamado ainda"
           }
         />
         <Indicador
           rotulo="Equipamentos"
           valor={cliente._count.equipments}
           icone={MonitorCog}
-          detalhe={`${plural(cliente._count.serviceRequests, "chamado aberto", "chamados abertos")} desde o cadastro`}
+          detalhe={`${plural(cliente._count.contracts, "contrato de manutenção", "contratos de manutenção")}`}
         />
         <Indicador
           rotulo="Último contato"
@@ -291,8 +261,8 @@ export default async function ClientePage({ params }: Props) {
           icone={CalendarClock}
           detalhe={
             ultimoContato
-              ? "Compra, orçamento, chamado ou acesso à conta"
-              : "Este cliente ainda não comprou nem abriu chamado"
+              ? "Orçamento ou chamado mais recente"
+              : "Este cliente ainda não teve atendimento"
           }
         />
       </Indicadores>
@@ -315,59 +285,11 @@ export default async function ClientePage({ params }: Props) {
             }}
           />
 
-          {/* ------------------------------------------------------ pedidos */}
-          <Cartao>
-            <CabecalhoCartao
-              titulo="Pedidos"
-              descricao={`${plural(cliente._count.orders, "pedido registrado", "pedidos registrados")}.`}
-            />
-            <div className="p-5">
-              {cliente.orders.length === 0 ? (
-                <Vazio
-                  icone={ShoppingCart}
-                  titulo="Nenhuma compra ainda"
-                  descricao="Quando este cliente fechar um pedido, ele aparece aqui com situação e valor."
-                />
-              ) : (
-                <ul className="divide-y divide-graf-200 rounded-lg border border-graf-200">
-                  {cliente.orders.map((pedido) => (
-                    <li
-                      key={pedido.id}
-                      className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-                    >
-                      <div className="min-w-0">
-                        <Link
-                          href={`/admin/pedidos/${pedido.id}`}
-                          className="tabular inline-flex min-h-11 items-center font-semibold text-graf-900 transition-colors hover:text-jb-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-                        >
-                          {pedido.number}
-                        </Link>
-                        <p className="text-[0.8125rem] text-graf-500">
-                          {formatarData(pedido.placedAt)}
-                          {pedido.paidAt ? ` · pago em ${formatarData(pedido.paidAt)}` : ""}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <EtiquetaPedido
-                          status={pedido.status}
-                          rotulo={ROTULO_STATUS[pedido.status]}
-                        />
-                        <span className="tabular font-semibold text-graf-900">
-                          {formatarPreco(pedido.totalCents)}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </Cartao>
-
           {/* ---------------------------------------------------- orçamentos */}
           <Cartao>
             <CabecalhoCartao
               titulo="Orçamentos"
-              descricao={`${plural(cliente._count.quotes, "proposta", "propostas")} para este cliente.`}
+              descricao={`${plural(cliente._count.quotes, "orçamento", "orçamentos")} para este cliente.`}
               acao={
                 <LinkBotao
                   href={`/admin/orcamentos/novo?cliente=${cliente.id}`}
@@ -404,7 +326,7 @@ export default async function ClientePage({ params }: Props) {
                         >
                           {orcamento.number}
                         </Link>
-                        <p className="text-[0.8125rem] text-graf-500">
+                        <p className="text-apoio text-graf-500">
                           {orcamento.kind === "comercial" ? "Venda" : "Serviço técnico"} ·{" "}
                           {formatarData(orcamento.createdAt)}
                           {orcamento.validUntil
@@ -438,7 +360,7 @@ export default async function ClientePage({ params }: Props) {
                 <Vazio
                   icone={MonitorCog}
                   titulo="Nenhum equipamento cadastrado"
-                  descricao="Equipamentos comprados na JB entram sozinhos quando o pedido é pago."
+                  descricao="Cadastre os equipamentos atendidos para manter o histórico de cada um."
                 />
               ) : (
                 <ul className="divide-y divide-graf-200 rounded-lg border border-graf-200">
@@ -463,7 +385,7 @@ export default async function ClientePage({ params }: Props) {
                           {ROTULO_EQUIPAMENTO[equipamento.status]}
                         </Etiqueta>
                       </div>
-                      <p className="text-[0.8125rem] text-graf-500">
+                      <p className="text-apoio text-graf-500">
                         {[
                           equipamento.brandName,
                           equipamento.modelName,
@@ -515,7 +437,7 @@ export default async function ClientePage({ params }: Props) {
                           {ROTULO_CHAMADO[chamado.status]}
                         </Etiqueta>
                       </div>
-                      <p className="line-2 text-[0.8125rem] text-graf-500">
+                      <p className="line-2 text-apoio text-graf-500">
                         {formatarData(chamado.createdAt)} · {chamado.description}
                       </p>
                     </li>
@@ -545,7 +467,7 @@ export default async function ClientePage({ params }: Props) {
                       >
                         {contrato.number}
                       </Link>
-                      <p className="text-[0.8125rem] text-graf-500">
+                      <p className="text-apoio text-graf-500">
                         {[
                           contrato.plan?.name,
                           `${contrato._count.items} equipamento(s)`,
@@ -582,7 +504,7 @@ export default async function ClientePage({ params }: Props) {
                 <Vazio
                   icone={FileText}
                   titulo="Nenhum documento"
-                  descricao="Anexe a nota fiscal na tela do pedido para ela aparecer aqui e na conta do cliente."
+                  descricao="Laudos, ordens de serviço e contratos anexados aparecem aqui."
                 />
               ) : (
                 <ul className="divide-y divide-graf-200 rounded-lg border border-graf-200">
@@ -597,7 +519,7 @@ export default async function ClientePage({ params }: Props) {
                         <FileText className="size-4 shrink-0 text-graf-500" aria-hidden />
                         {documento.title}
                       </a>
-                      <p className="text-[0.8125rem] text-graf-500">
+                      <p className="text-apoio text-graf-500">
                         {formatarData(documento.createdAt)}
                       </p>
                     </li>
@@ -664,7 +586,7 @@ export default async function ClientePage({ params }: Props) {
                       className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-graf-200 p-3"
                     >
                       <span className="text-sm font-semibold text-graf-900">{unidade.name}</span>
-                      <span className="text-[0.8125rem] text-graf-500">
+                      <span className="text-apoio text-graf-500">
                         {unidade.address
                           ? `${[unidade.address.district, `${unidade.address.city}/${unidade.address.state}`]
                               .filter(Boolean)

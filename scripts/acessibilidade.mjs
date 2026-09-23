@@ -293,8 +293,65 @@ async function percorrer(grupo, rotas, login) {
     for (const [ctx, etiqueta] of [[contexto, "1280"], [comDedo, "390 dedo"]]) {
       const pagina = await ctx.newPage();
       try {
-        await pagina.goto(BASE + rota, { waitUntil: "networkidle", timeout: 60000 });
-        await pagina.waitForTimeout(400); // deixa a hidratação assentar
+        /* `domcontentloaded` e não `networkidle`, igual ao portão de
+           responsividade. Com `networkidle` uma única requisição pendurada
+           cega a rota inteira: em /loja o otimizador de imagem do modo dev
+           trava ao converter um PNG específico para webp, e a rota saía como
+           `falha-ao-medir` — um problema de servidor local reportado como se
+           fosse acessibilidade, escondendo o que havia de verdade na página.
+           O axe lê DOM e CSS, que já estão prontos aqui; a espera abaixo é o
+           que dá tempo à hidratação. */
+        await pagina.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 60000 });
+        await pagina.waitForTimeout(800); // deixa a hidratação assentar
+
+        /* Espera a animação de entrada terminar antes de medir.
+
+           Sem isto o axe amostra um quadro do meio do fade e reprova cor que
+           está correta parada: a manchete da home saiu como `#ec6e73` — o
+           vermelho da marca a meio caminho da opacidade — em vez de `#e0141b`.
+           Foram 5 falsos positivos numa rota só, todos de elementos com
+           `surge`.
+
+           Contraste da WCAG se afere no estado assentado; quadro de transição
+           não é o que a pessoa lê. As animações infinitas (selo girando, faixa
+           correndo) nunca terminam, então o filtro pega só as finitas, e o
+           `Promise.race` impede que uma animação longa trave a auditoria. */
+        /* Assenta o que nunca assenta.
+
+           Contraste da WCAG se afere no estado parado. Animação INFINITA — a
+           palavra que gira na manchete, a faixa de recados correndo — não tem
+           estado final, e o axe media o quadro em que calhasse de cair: a
+           manchete reprovou com `#fefafa`, que é o vermelho da marca a 2% de
+           opacidade no começo de um fade.
+
+           Congelar a página inteira com `reducedMotion` no contexto resolveria
+           isso e quebraria outra coisa: sem transição, a régua de foco visível
+           passou a acusar 25 campos "focado, nada mudou visualmente". Então o
+           congelamento é só das infinitas, e da palavra do rodízio em
+           particular — que fica na primeira, visível, igual ao que quem tem
+           movimento reduzido ligado vê. */
+        await pagina.addStyleTag({
+          content: `
+            .marquise, .gira, .pulso::after { animation: none !important; }
+            .rodizio > [data-palavra] { animation: none !important; opacity: 0 !important; }
+            .rodizio > [data-palavra]:first-child { opacity: 1 !important; }
+          `,
+        });
+
+        await Promise.race([
+          pagina.evaluate(() =>
+            Promise.all(
+              document
+                .getAnimations()
+                .filter((a) => {
+                  const t = a.effect?.getComputedTiming();
+                  return t && t.iterations !== Infinity;
+                })
+                .map((a) => a.finished.catch(() => {})),
+            ),
+          ),
+          pagina.waitForTimeout(3000),
+        ]);
 
         // o axe só roda na largura de mesa; no dedo interessa só o alvo de toque
         if (etiqueta === "1280") {
@@ -378,7 +435,45 @@ async function percorrer(grupo, rotas, login) {
   await contexto.close();
 }
 
-await percorrer("publico", ROTAS.publico, null);
+/**
+ * A ficha de um produto de verdade, descoberta no catálogo.
+ *
+ * A PDP é a página mais complexa da loja — galeria, caixa de compra, ficha
+ * técnica, laudo, comparação, avaliações — e era a única grande que este
+ * portão não media, porque o endereço dela depende de um `slug` que não cabe
+ * numa lista fixa. Escrever um slug à mão seria pior: o dia em que aquele
+ * produto saísse do ar, o portão passaria a medir um 404 e continuaria verde.
+ *
+ * Então o slug vem do próprio catálogo. Quando não vem nenhum, isso é dito em
+ * voz alta: portão que não mede nada precisa avisar que não mediu, senão o
+ * verde vira falso negativo.
+ */
+async function rotaDeProduto() {
+  const contexto = await navegador.newContext({ locale: "pt-BR" });
+  const pagina = await contexto.newPage();
+  try {
+    await pagina.goto(BASE + "/loja", { waitUntil: "domcontentloaded", timeout: 60000 });
+    await pagina.waitForTimeout(800);
+    const href = await pagina
+      .locator('a[href^="/loja/"]')
+      .first()
+      .getAttribute("href", { timeout: 5000 });
+    return href ?? null;
+  } catch {
+    return null;
+  } finally {
+    await contexto.close();
+  }
+}
+
+const rotasPublicas = [...ROTAS.publico];
+if (!rotaPedida || rotaPedida.startsWith("/loja/")) {
+  const pdp = rotaPedida?.startsWith("/loja/") ? rotaPedida : await rotaDeProduto();
+  if (pdp) rotasPublicas.push(pdp);
+  else console.log("  aviso: nenhuma ficha de produto no catálogo — a PDP não foi medida");
+}
+
+await percorrer("publico", rotasPublicas, null);
 await percorrer("conta", ROTAS.conta, { rota: "/entrar", ...CLIENTE });
 await percorrer("admin", ROTAS.admin, { rota: "/admin/entrar", ...EQUIPE });
 await navegador.close();

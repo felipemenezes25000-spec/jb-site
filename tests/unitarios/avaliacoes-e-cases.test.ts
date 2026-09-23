@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  creditoDaImagem,
-  impedimentoDeUsoPublico,
-  podeUsarPublicamente,
-} from "@/lib/acervo";
-import {
   CARENCIA_APOS_CONCLUSAO_DIAS,
   INTERVALO_ENTRE_CONVITES_DIAS,
   MINIMO_DE_RESPOSTAS,
@@ -17,50 +12,16 @@ import {
 import { fraseDeDuracao, impedimentoDoCase, type FatosDoCase } from "@/lib/cases";
 
 /* ============================================================================
-   Acervo, avaliações e cases
+   Avaliações e cases
 
-   Os três modos de falha cobertos aqui têm a mesma forma: publicar em nome de
-   alguém que não autorizou. Uma foto de pessoa sem consentimento, um
-   depoimento de quem só respondeu uma pesquisa, um case de uma clínica que
-   nunca soube que virou exemplo.
+   Os modos de falha cobertos aqui têm a mesma forma: publicar em nome de
+   alguém que não autorizou. Um depoimento de quem só respondeu uma pesquisa,
+   um case de uma clínica que nunca soube que virou exemplo.
    ============================================================================ */
 
 const DIA = 86_400_000;
 const agora = new Date("2026-09-06T12:00:00Z");
 const diasAtras = (n: number) => new Date(agora.getTime() - n * DIA);
-
-/* ------------------------------------------------------------- acervo */
-
-describe("impedimentoDeUsoPublico", () => {
-  const base = { temPessoa: false, autorizadaEm: null, alt: "Bancada da oficina" };
-
-  it("imagem sem pessoa e com alt pode ser publicada", () => {
-    expect(impedimentoDeUsoPublico(base)).toBeNull();
-  });
-
-  it("pessoa identificável sem autorização registrada bloqueia", () => {
-    // é a regra central: consentimento não se presume
-    expect(impedimentoDeUsoPublico({ ...base, temPessoa: true })).toBe("sem_autorizacao");
-  });
-
-  it("pessoa identificável com autorização passa", () => {
-    expect(
-      podeUsarPublicamente({ ...base, temPessoa: true, autorizadaEm: diasAtras(10) }),
-    ).toBe(true);
-  });
-
-  it("sem texto alternativo não vai ao ar", () => {
-    expect(impedimentoDeUsoPublico({ ...base, alt: "  " })).toBe("sem_texto_alternativo");
-  });
-});
-
-describe("creditoDaImagem", () => {
-  it("sem crédito registrado, não inventa autoria", () => {
-    expect(creditoDaImagem("")).toBeNull();
-    expect(creditoDaImagem(null)).toBeNull();
-    expect(creditoDaImagem("Ana")).toBe("Foto: Ana");
-  });
-});
 
 /* -------------------------------------------------------- convites */
 

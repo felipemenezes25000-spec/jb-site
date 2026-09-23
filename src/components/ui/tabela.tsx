@@ -162,8 +162,15 @@ export function Tabela<T>({
       {/* `max-w-full` e `min-w-0` garantem que a caixa role em vez de empurrar a
           página: sem eles, a tabela larga esticava o documento e o painel
           inteiro ganhava rolagem horizontal a partir de 1024px, onde a barra
-          lateral fixa entra e o espaço útil encolhe. */}
-      <div className="hidden min-w-0 max-w-full overflow-x-auto rounded-xl border border-graf-200 bg-white shadow-card md:block">
+          lateral fixa entra e o espaço útil encolhe.
+
+          `relative` pelo mesmo motivo, por outro caminho. O rótulo `sr-only`
+          de uma coluna é `position: absolute`, e um rolador sem posição não é
+          o bloco de contenção dele: o rótulo escapava da caixa, ficava no ponto
+          em que a coluna estaria sem rolagem e esticava a página — 144 a 278px
+          de rolagem lateral em pedidos, produtos, assistência e clientes, entre
+          768 e 1024px. */}
+      <div className="relative hidden min-w-0 max-w-full overflow-x-auto rounded-xl border border-graf-200 bg-white shadow-card md:block">
         <table className="w-full border-collapse text-sm">
           {legenda ? <caption className="sr-only">{legenda}</caption> : null}
           <thead>
@@ -186,7 +193,7 @@ export function Tabela<T>({
                         : undefined
                     }
                     className={cn(
-                      "whitespace-nowrap px-4 py-3 text-[0.8125rem] font-bold uppercase tracking-wider text-graf-500",
+                      "whitespace-nowrap px-4 py-3 text-apoio font-bold uppercase tracking-wider text-graf-500",
                       ALINHAR[coluna.alinhamento ?? "esquerda"],
                     )}
                   >
@@ -277,7 +284,7 @@ export function Tabela<T>({
             >
               {primeira ? (
                 <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 text-[0.9375rem] font-semibold leading-snug text-graf-950">
+                  <p className="min-w-0 text-corpo font-semibold leading-snug text-graf-950">
                     {href ? (
                       <Link
                         href={href}

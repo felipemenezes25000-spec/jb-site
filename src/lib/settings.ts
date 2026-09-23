@@ -1,5 +1,11 @@
 import { cache } from "react";
 
+import {
+  GA4_VALIDO,
+  GOOGLE_ADS_VALIDO,
+  META_PIXEL_VALIDO,
+  ROTULO_CONVERSAO_VALIDO,
+} from "@/lib/analytics/destinos";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -11,7 +17,7 @@ export const SETTING_DEFAULTS = {
   empresa_nome: "JB Soluções Odontológicas",
   empresa_desde: "2011",
   empresa_resumo:
-    "Assistência técnica e equipamentos para consultórios odontológicos em São Paulo.",
+    "Assistência técnica autorizada EVOXX para equipamentos odontológicos em São Paulo.",
 
   // contato
   telefone: "(11) 3715-6362",
@@ -56,12 +62,15 @@ export const SETTING_DEFAULTS = {
 
   // seo
   area_atendimento: "",
-  seo_titulo: "JB Soluções Odontológicas — equipamentos e assistência técnica",
+  seo_titulo: "JB Soluções Odontológicas: assistência técnica odontológica",
   seo_descricao:
-    "Equipamentos odontológicos novos e seminovos revisados, com instalação, manutenção preventiva e assistência técnica especializada em São Paulo.",
+    "Assistência técnica autorizada EVOXX para autoclave, compressor, cadeira e outros equipamentos odontológicos em São Paulo. Chame no WhatsApp.",
 
   // integrações
   codigo_analytics: "",
+  google_ads_id: "",
+  google_ads_rotulo_whatsapp: "",
+  meta_pixel_id: "",
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
@@ -84,6 +93,8 @@ export const SETTING_FIELDS: {
   hint?: string;
   /** Só para `select`. A primeira opção é sempre a ausência de escolha. */
   options?: { value: string; label: string }[];
+  /** Formato exigido ao salvar. Valor fora dele é recusado com `erro`. */
+  formato?: { padrao: RegExp; erro: string };
 }[] = [
   { key: "empresa_nome", label: "Nome exibido", group: "identidade", type: "text" },
   { key: "empresa_desde", label: "Em atividade desde", group: "identidade", type: "text" },
@@ -208,6 +219,49 @@ export const SETTING_FIELDS: {
     group: "integracoes",
     type: "text",
     hint: "Ex.: G-XXXXXXXXXX. Vazio desliga o analytics.",
+    formato: {
+      padrao: GA4_VALIDO,
+      erro: "Google Analytics: o identificador tem o formato G-XXXXXXXXXX.",
+    },
+  },
+  {
+    key: "google_ads_id",
+    label: "Google Ads (ID da conta de conversão)",
+    group: "integracoes",
+    type: "text",
+    hint:
+      "Ex.: AW-123456789. Está no Google Ads, em Metas › Conversões › a ação › " +
+      "Configurar a tag. Vazio desliga o Google Ads.",
+    formato: {
+      padrao: GOOGLE_ADS_VALIDO,
+      erro: "Google Ads: o identificador tem o formato AW-123456789.",
+    },
+  },
+  {
+    key: "google_ads_rotulo_whatsapp",
+    label: "Google Ads: rótulo da conversão do WhatsApp",
+    group: "integracoes",
+    type: "text",
+    hint:
+      "A parte depois da barra em AW-123456789/AbC-D_efG12. Cada clique num botão de " +
+      "WhatsApp conta como essa conversão.",
+    formato: {
+      padrao: ROTULO_CONVERSAO_VALIDO,
+      erro: "Rótulo de conversão: use só o que vem depois da barra, sem o AW-.",
+    },
+  },
+  {
+    key: "meta_pixel_id",
+    label: "Pixel da Meta (Facebook e Instagram)",
+    group: "integracoes",
+    type: "text",
+    hint:
+      "Só o número do pixel, 15 ou 16 dígitos, do Gerenciador de Eventos. Cada " +
+      "clique no WhatsApp vira o evento Contact.",
+    formato: {
+      padrao: META_PIXEL_VALIDO,
+      erro: "Pixel da Meta: informe só o número do pixel, sem o código.",
+    },
   },
 ];
 

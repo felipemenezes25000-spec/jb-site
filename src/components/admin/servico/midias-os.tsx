@@ -80,7 +80,7 @@ function Fase({
     <section className="space-y-3">
       <div>
         <h3 className="text-sm font-bold text-graf-900">{titulo}</h3>
-        <p className="text-[0.8125rem] text-graf-500">{descricao}</p>
+        <p className="text-apoio text-graf-500">{descricao}</p>
       </div>
 
       {midias.length === 0 ? (

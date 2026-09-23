@@ -15,7 +15,7 @@ import { hashSenha } from "@/lib/auth";
 import { formatarDataHora, gerarSlug, somenteDigitos } from "@/lib/format";
 import { notificar } from "@/lib/notificacoes";
 import { exigirEdicao } from "@/lib/permissoes";
-import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
+import { ETIQUETA_CONFIGURACOES } from "@/lib/site-publico";
 import { prisma } from "@/lib/prisma";
 import { SETTING_FIELDS, getSettings } from "@/lib/settings";
 import { removerArquivo } from "@/lib/upload";
@@ -1724,9 +1724,7 @@ function validarConfiguracao(
   if (campo.key === "parcela_minima" && !/^\d{1,3}(\.\d{3})*(,\d{2})?$|^\d+(,\d{2})?$/.test(valor)) {
     return "Valor mínimo da parcela: use o formato 50,00.";
   }
-  if (campo.key === "codigo_analytics" && !/^G-[A-Z0-9]{6,14}$/i.test(valor)) {
-    return "Google Analytics: o identificador tem o formato G-XXXXXXXXXX.";
-  }
+  if (campo.formato && !campo.formato.padrao.test(valor)) return campo.formato.erro;
   if (campo.key === "empresa_desde" && !/^(19|20)\d{2}$/.test(valor)) {
     return "Em atividade desde: informe o ano com quatro dígitos.";
   }

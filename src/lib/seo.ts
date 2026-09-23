@@ -59,6 +59,14 @@ export type EntradaMetadata = {
   /** Caminho interno da página, para o canônico. Ex.: "/loja/cadeira-x". */
   caminho?: string;
   imagem?: string | null;
+  /**
+   * A pasta da página tem o seu próprio `opengraph-image.tsx`. Aí a imagem
+   * NÃO pode ser declarada aqui: o Next só usa o arquivo quando
+   * `openGraph.images` está ausente, e dentro de um grupo de rotas o endereço
+   * do arquivo leva um sufixo calculado (`/autoclave/opengraph-image-s72kq5`)
+   * que não convém escrever à mão.
+   */
+  imagemDoArquivo?: boolean;
   noIndex?: boolean;
   tipo?: "website" | "article";
 };
@@ -109,14 +117,16 @@ export function metadataDePagina(entrada: EntradaMetadata): Metadata {
     url: entrada.caminho ? urlAbsoluta(entrada.caminho) : undefined,
     title: titulo,
     description: descricao,
-    images: [{ url: imagemFinal, alt: titulo, width: 1200, height: 630 }],
+    ...(entrada.imagemDoArquivo
+      ? {}
+      : { images: [{ url: imagemFinal, alt: titulo, width: 1200, height: 630 }] }),
   };
 
   const twitter = {
     card: "summary_large_image" as const,
     title: titulo,
     description: descricao,
-    images: [imagemFinal],
+    ...(entrada.imagemDoArquivo ? {} : { images: [imagemFinal] }),
   };
 
   return {
@@ -218,7 +228,7 @@ export function organizacaoJsonLd(s: SettingsMap): DadosJsonLd {
     logo: urlAbsoluta("/icon.png"),
     description: limpo(s.empresa_resumo),
     email: limpo(s.email),
-    telephone: telefoneInternacional(s.telefone),
+    telephone: telefoneInternacional(s.whatsapp),
     foundingDate: /^\d{4}$/.test(s.empresa_desde.trim()) ? s.empresa_desde.trim() : undefined,
     address: enderecoPostal(s),
     sameAs: redes(s),
@@ -235,7 +245,7 @@ export function localNegocioJsonLd(s: SettingsMap): DadosJsonLd {
     image: urlAbsoluta("/icon.png"),
     description: limpo(s.empresa_resumo),
     email: limpo(s.email),
-    telephone: telefoneInternacional(s.telefone),
+    telephone: telefoneInternacional(s.whatsapp),
     address: enderecoPostal(s),
     openingHours: horarioSchema(s.horario),
     /* A área de atendimento vem das configurações quando a JB a declarou; só

@@ -394,6 +394,10 @@ export async function abrirChamado(entrada: EntradaChamado) {
           kind: "assistencia",
           title: `Chamado ${numero} aberto`,
           description: descricao,
+          /* De que chamado este evento fala. A linha do tempo lê o chamado
+             direto da tabela dele; sem esta referência, os dois apareciam como
+             acontecimentos separados no mesmo minuto. */
+          serviceRequestId: chamado.id,
         },
       });
     }

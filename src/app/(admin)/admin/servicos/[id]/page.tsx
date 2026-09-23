@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trash2 } from "lucide-react";
 
-import { excluirServico } from "@/app/acoes/admin-catalogo";
+import { excluirServico } from "@/app/acoes/admin-cadastros";
 import { BotaoAcao } from "@/components/admin/catalogo/botao-acao";
 import { FormularioServico } from "@/components/admin/catalogo/formulario-servico";
 import { Aviso } from "@/components/ui/aviso";
-import { Cartao, CabecalhoCartao, Etiqueta, Trilha, Vazio } from "@/components/ui/data";
+import { Etiqueta, Trilha } from "@/components/ui/data";
 import { formatarPreco, plural } from "@/lib/format";
 import { exigirArea, podeEditar } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
@@ -30,29 +29,18 @@ export const metadata: Metadata = {
 };
 
 export default async function PaginaServico({ params }: { params: Promise<{ id: string }> }) {
-  const usuario = await exigirArea("produtos");
+  const usuario = await exigirArea("cadastros");
   const { id } = await params;
-  const somenteLeitura = !podeEditar(usuario, "produtos");
+  const somenteLeitura = !podeEditar(usuario, "cadastros");
 
   const servico = await prisma.service.findUnique({
     where: { id },
-    include: {
-      addons: {
-        orderBy: { order: "asc" },
-        select: {
-          id: true,
-          priceCents: true,
-          required: true,
-          product: { select: { id: true, name: true, sku: true } },
-        },
-      },
-      _count: { select: { orderItems: true, quoteItems: true } },
-    },
+    include: { _count: { select: { quoteItems: true } } },
   });
 
   if (!servico) notFound();
 
-  const jaVendido = servico._count.orderItems > 0 || servico._count.quoteItems > 0;
+  const jaVendido = servico._count.quoteItems > 0;
 
   return (
     <div className="space-y-6">
@@ -76,7 +64,7 @@ export default async function PaginaServico({ params }: { params: Promise<{ id: 
             {servico.priceCents === null
               ? "Sob orçamento"
               : `Preço base ${formatarPreco(servico.priceCents)}`}{" "}
-            · em {plural(servico.addons.length, "produto", "produtos")}
+            · em {plural(servico._count.quoteItems, "orçamento", "orçamentos")}
           </p>
         </div>
 
@@ -92,7 +80,7 @@ export default async function PaginaServico({ params }: { params: Promise<{ id: 
             confirmar={{
               pergunta: `Excluir o serviço "${servico.name}"?`,
               detalhe:
-                "Ele sai dos produtos que o oferecem. Serviço já vendido ou orçado não pode ser apagado.",
+                "Serviço que já entrou em orçamento não pode ser apagado.",
               rotuloConfirmar: "Excluir serviço",
             }}
           />
@@ -101,8 +89,8 @@ export default async function PaginaServico({ params }: { params: Promise<{ id: 
 
       {jaVendido && !somenteLeitura ? (
         <Aviso tom="info" titulo="Serviço com histórico">
-          Este serviço já foi vendido ou orçado, então não pode ser apagado. Para deixar de
-          oferecê-lo, desmarque &quot;Publicado&quot;.
+          Este serviço já entrou em orçamento, então não pode ser apagado. Para deixar de
+          usá-lo, desmarque &quot;Publicado&quot;.
         </Aviso>
       ) : null}
 
@@ -120,45 +108,6 @@ export default async function PaginaServico({ params }: { params: Promise<{ id: 
         }}
       />
 
-      <Cartao>
-        <CabecalhoCartao
-          titulo="Oferecido nestes produtos"
-          descricao="O vínculo é criado na aba Adicionais de cada produto."
-        />
-        {servico.addons.length === 0 ? (
-          <Vazio
-            titulo="Nenhum produto oferece este serviço"
-            descricao="Abra um produto, vá até a aba Adicionais e escolha este serviço."
-            className="m-4 border-graf-200 bg-transparent py-10"
-          />
-        ) : (
-          <ul className="divide-y divide-graf-200">
-            {servico.addons.map((addon) => (
-              <li key={addon.id}>
-                <Link
-                  href={`/admin/produtos/${addon.product.id}?aba=adicionais`}
-                  className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-graf-900">
-                      {addon.product.name}
-                    </span>
-                    <span className="block truncate text-[0.8125rem] text-graf-500">
-                      {addon.product.sku}
-                    </span>
-                  </span>
-                  {addon.required ? <Etiqueta tom="alerta">Obrigatório</Etiqueta> : null}
-                  <span className="tabular shrink-0 text-sm font-semibold text-graf-800">
-                    {addon.priceCents === null
-                      ? "Preço do serviço"
-                      : formatarPreco(addon.priceCents)}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Cartao>
     </div>
   );
 }

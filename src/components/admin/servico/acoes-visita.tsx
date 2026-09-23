@@ -43,7 +43,7 @@ export function AcoesDaVisita({
   tamanho?: Tamanho;
 }) {
   if (status === "concluida" || status === "cancelada") {
-    return <span className="text-[0.8125rem] text-graf-500">Encerrada</span>;
+    return <span className="text-apoio text-graf-500">Encerrada</span>;
   }
 
   return (

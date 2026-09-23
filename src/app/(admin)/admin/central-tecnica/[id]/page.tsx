@@ -238,7 +238,7 @@ export default async function PaginaEditarArtigo({
           ) : null}
 
           {estado === "em_revisao" && !souORevisor && !artigo.reviewedAt ? (
-            <p className="w-full text-[0.8125rem] leading-relaxed text-graf-500">
+            <p className="w-full text-apoio leading-relaxed text-graf-500">
               A revisão é registrada por quem está indicado como revisor
               {artigo.reviewer ? `: ${artigo.reviewer.name}` : ""}. Ninguém marca por outra
               pessoa.
@@ -285,16 +285,16 @@ export default async function PaginaEditarArtigo({
             {artigo.sources.map((fonte) => (
               <li key={fonte.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
                 <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-semibold text-graf-900">
+                  <span className="block text-corpo font-semibold text-graf-900">
                     {fonte.title}
                   </span>
                   {fonte.url ? (
-                    <span className="label-mono block break-all text-[0.8125rem] text-graf-500">
+                    <span className="label-mono block break-all text-apoio text-graf-500">
                       {fonte.url}
                     </span>
                   ) : null}
                   {fonte.note ? (
-                    <span className="block text-[0.8125rem] text-graf-600">{fonte.note}</span>
+                    <span className="block text-apoio text-graf-600">{fonte.note}</span>
                   ) : null}
                 </span>
                 {podeEscrever ? (

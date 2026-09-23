@@ -74,8 +74,6 @@ const ROTA_DA_ENTIDADE: Record<
   usuario: { area: "usuarios", href: (id) => `/admin/usuarios/${id}` },
   User: { area: "usuarios", href: (id) => `/admin/usuarios/${id}` },
   cliente: { area: "clientes", href: (id) => `/admin/clientes/${id}` },
-  pedido: { area: "pedidos", href: (id) => `/admin/pedidos/${id}` },
-  produto: { area: "produtos", href: (id) => `/admin/produtos/${id}` },
   chamado: { area: "assistencia", href: (id) => `/admin/assistencia/${id}` },
   ordem_servico: { area: "os", href: (id) => `/admin/os/${id}` },
   orcamento: { area: "orcamentos", href: (id) => `/admin/orcamentos/${id}` },
@@ -241,7 +239,7 @@ export default async function PaginaAuditoria({
                       </p>
                     )}
 
-                    <p className="mt-2 text-[0.8125rem] text-graf-500">
+                    <p className="mt-2 text-apoio text-graf-500">
                       {registro.user
                         ? `${registro.user.name} · ${ROTULO_PAPEL[registro.user.role]}`
                         : "Sem usuário identificado"}

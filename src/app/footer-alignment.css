@@ -31,24 +31,17 @@
 }
 
 @media (min-width: 1800px) {
-  /*
-   * Em telas largas, o bloco da esquerda precisa começar mais alto para que:
-   * 1) a marca JB fique claramente acima dos títulos da navegação;
-   * 2) a primeira linha do resumo institucional fique na mesma linha visual
-   *    de "Todos os equipamentos".
-   *
-   * O deslocamento é aplicado à coluna inteira para preservar todos os
-   * espaçamentos internos de telefone, WhatsApp, endereço, horário e redes.
-   * As demais colunas, CTAs, cadeira e barra inferior não são alteradas.
-   */
-  footer section[aria-labelledby="rodape-contato"] {
-    transform: translateY(-3.375rem);
-  }
+  /* O deslocamento de -3,375rem saiu daqui.
 
-  /* Mesma escala tipográfica dos links da navegação principal do rodapé. */
+     Ele subia a coluna da esquerda para que a marca ficasse acima dos títulos
+     da navegação, e estava calibrado para o rodapé quando ele tinha caixa
+     própria de 1840px. Com o rodapé na mesma caixa de 1600px do resto da
+     loja, os mesmos 54px passavam do respiro do topo: a logo encostava na
+     borda superior do rodapé (medido: -1px acima de 1800px, contra 29px em
+     1600). O nudge de -1rem do degrau anterior já dá o alinhamento, e agora
+     ele vale em todas as larguras grandes. */
+
   footer section[aria-labelledby="rodape-contato"] > p:first-of-type {
-    max-width: 20rem !important;
-    font-size: 1.06rem !important;
-    line-height: 1.3 !important;
+    max-width: 20rem;
   }
 }

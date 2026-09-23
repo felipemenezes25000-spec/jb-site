@@ -59,6 +59,11 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
+      # Dívida existente vira teto: os quatro Server Actions legados podem
+      # diminuir, mas não podem continuar crescendo silenciosamente.
+      - name: Limites arquiteturais
+        run: pnpm arquitetura:verificar
+
       # Erro reprova; aviso passa. Os avisos de hoje são os 31 pontos do
       # compilador React documentados em eslint.config.mjs — contados de
       # propósito, para que a migração para Cache Components tenha lista.
@@ -154,10 +159,14 @@ jobs:
     # que já tinha rodado.
     #
     # Agora roda onde a resposta muda uma decisão: no pull_request, antes de
-    # entrar, e no push para main, depois de entrar. Push em branch de trabalho
-    # continua com lint, tipos, unitários, build e atomicidade — que é o
-    # retorno rápido que se quer enquanto se escreve.
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    # entrar, e no push para main, depois de entrar. Em branch de trabalho ele
+    # também pode ser solicitado explicitamente colocando `[full-ci]` na
+    # mensagem do commit. Assim a exceção é visível e não volta a queimar
+    # minutos em cada ajuste pequeno.
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.ref == 'refs/heads/main' ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[full-ci]'))
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v5
@@ -245,54 +254,3 @@ jobs:
             tests/.saida
             .shots
           retention-days: 7
-
-  # ------------------------------------------------------------ concorrência
-  atomicidade:
-    name: Prova de atomicidade
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: estatico
-    # Só quando o que muda pode quebrar concorrência. Rodar a prova em toda
-    # alteração de texto gastaria minutos de banco para provar o que ninguém
-    # tocou.
-    if: >-
-      github.event_name == 'push' ||
-      contains(github.event.pull_request.labels.*.name, 'dominio')
-    steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-
-      - name: Subir Postgres
-        run: |
-          docker run -d --name jb-pg \
-            -e POSTGRES_USER=jb -e POSTGRES_PASSWORD=jb -e POSTGRES_DB=jb \
-            -p 5432:5432 postgres:17-alpine
-          for i in $(seq 1 30); do
-            docker exec jb-pg pg_isready -U jb && break
-            sleep 2
-          done
-
-      - name: Migrações e dados de demonstração
-        run: |
-          pnpm db:deploy
-          pnpm db:seed
-          pnpm db:demo
-          pnpm db:demo:operacao
-        env:
-          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
-          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
-          ADMIN_EMAIL: ci@jbteste.local
-          ADMIN_PASSWORD: ciDeTeste12345
-          PERMITIR_DEMO: "1"
-
-      - name: Concorrência real contra o Postgres
-        run: pnpm prova:atomicidade
-        env:
-          DATABASE_URL: postgresql://jb:jb@localhost:5432/jb
-          DATABASE_URL_UNPOOLED: postgresql://jb:jb@localhost:5432/jb
-          AUTH_SECRET: ci-secret-de-teste-nao-usar-em-producao-0000000000

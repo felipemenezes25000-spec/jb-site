@@ -4,19 +4,22 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsx scripts/verificar-ambiente.ts build && tsx scripts/verificar-arquitetura.ts",
     "build": "next build",
     "start": "next start",
+    "ambiente:verificar": "tsx scripts/verificar-ambiente.ts build",
+    "arquitetura:verificar": "tsx scripts/verificar-arquitetura.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "db:push": "prisma db push",
-    "db:reset": "prisma migrate reset --force",
-    "db:deploy": "prisma migrate deploy",
+    "db:push": "tsx scripts/verificar-ambiente.ts db-destructive && prisma db push",
+    "db:reset": "tsx scripts/verificar-ambiente.ts db-destructive && prisma migrate reset --force",
+    "db:deploy": "tsx scripts/verificar-ambiente.ts db-deploy && prisma migrate deploy",
     "postinstall": "prisma generate",
-    "db:demo": "tsx prisma/seed-demo.ts",
-    "db:demo:limpar": "tsx prisma/seed-demo-limpar.ts",
+    "db:demo": "tsx scripts/verificar-ambiente.ts seed-demo && tsx prisma/seed-demo.ts",
+    "db:demo:limpar": "tsx scripts/verificar-ambiente.ts db-destructive && tsx prisma/seed-demo-limpar.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "db:demo:operacao": "tsx prisma/seed-demo-operacao.ts",
+    "db:demo:operacao": "tsx scripts/verificar-ambiente.ts seed-demo && tsx prisma/seed-demo-operacao.ts",
     "tour": "node scripts/tour.mjs",
     "test": "pnpm test:unit && pnpm e2e",
     "test:unit": "vitest run",
@@ -24,14 +27,14 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:relatorio": "playwright show-report tests/.relatorio",
-    "prova:atomicidade": "tsx --conditions=react-server scripts/prova-atomicidade.ts",
     "responsivo": "node scripts/responsivo.mjs",
     "a11y": "node scripts/acessibilidade.mjs",
+    "texto:vertical": "node scripts/texto-vertical.mjs",
     "conteudo:prever": "tsx scripts/migrar-conteudo-institucional.ts",
     "conteudo:migrar": "tsx scripts/migrar-conteudo-institucional.ts --aplicar",
     "pautas:prever": "tsx scripts/carregar-pautas.ts",
     "pautas:carregar": "tsx scripts/carregar-pautas.ts --aplicar",
-    "db:vitrine": "tsx prisma/seed-vitrine.ts"
+    "db:vitrine": "tsx scripts/verificar-ambiente.ts seed-demo && tsx prisma/seed-vitrine.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -79,8 +82,5 @@
     "typescript": "^5",
     "vitest": "^4.1.11"
   },
-  "packageManager": "pnpm@10.28.2",
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  }
+  "packageManager": "pnpm@10.28.2"
 }

@@ -7,7 +7,7 @@ import { LinkBotao } from "@/components/ui/button";
 import { Etiqueta, Trilha } from "@/components/ui/data";
 import { Tabela, type Coluna } from "@/components/ui/tabela";
 import { formatarPreco, plural } from "@/lib/format";
-import { exigirArea, podeEditar, podeVer } from "@/lib/permissoes";
+import { exigirArea, podeEditar } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 
 /*
@@ -45,19 +45,18 @@ type LinhaServico = {
   priceCents: number | null;
   published: boolean;
   order: number;
-  _count: { addons: number; orderItems: number };
+  _count: { quoteItems: number };
 };
 
 /**
- * Serviços vendáveis.
+ * Serviços que entram no orçamento de reparo.
  *
  * Preço nulo é "sob orçamento", e a coluna diz isso por escrito — R$ 0,00
  * significaria grátis, que é outra coisa.
  */
 export default async function PaginaServicos() {
-  const usuario = await exigirArea("produtos");
-  const podeMexer = podeEditar(usuario, "produtos");
-  const verEstoque = podeVer(usuario, "estoque");
+  const usuario = await exigirArea("cadastros");
+  const podeMexer = podeEditar(usuario, "cadastros");
 
   const servicos = await prisma.service.findMany({
     orderBy: [{ order: "asc" }, { name: "asc" }],
@@ -69,7 +68,7 @@ export default async function PaginaServicos() {
       priceCents: true,
       published: true,
       order: true,
-      _count: { select: { addons: true, orderItems: true } },
+      _count: { select: { quoteItems: true } },
     },
   });
 
@@ -80,7 +79,7 @@ export default async function PaginaServicos() {
       renderizar: (linha) => (
         <span className="block">
           <span className="block truncate font-semibold">{linha.name}</span>
-          <span className="block truncate text-[0.8125rem] font-normal text-graf-500">/{linha.slug}</span>
+          <span className="block truncate text-apoio font-normal text-graf-500">/{linha.slug}</span>
         </span>
       ),
     },
@@ -101,27 +100,15 @@ export default async function PaginaServicos() {
         ),
     },
     {
-      chave: "addons",
-      rotulo: "Em produtos",
+      chave: "quoteItems",
+      rotulo: "Em orçamentos",
       alinhamento: "direita",
       esconderNoMobile: true,
       renderizar: (linha) =>
-        linha._count.addons === 0 ? (
+        linha._count.quoteItems === 0 ? (
           <span className="text-graf-500">Nenhum</span>
         ) : (
-          <span className="tabular">{linha._count.addons}</span>
-        ),
-    },
-    {
-      chave: "orderItems",
-      rotulo: "Vendas",
-      alinhamento: "direita",
-      esconderNoMobile: true,
-      renderizar: (linha) =>
-        linha._count.orderItems === 0 ? (
-          <span className="text-graf-500">Nenhuma</span>
-        ) : (
-          <span className="tabular">{linha._count.orderItems}</span>
+          <span className="tabular">{linha._count.quoteItems}</span>
         ),
     },
     {
@@ -144,32 +131,32 @@ export default async function PaginaServicos() {
           <h1 className="text-2xl font-bold leading-tight text-graf-950">Serviços</h1>
           <p className="mt-1 text-sm text-graf-500">
             {servicos.length === 0
-              ? "O que a JB vende além do equipamento."
+              ? "Visita técnica, manutenção e os demais serviços que entram no orçamento de reparo."
               : `${plural(servicos.length, "serviço cadastrado", "serviços cadastrados")}.`}
           </p>
         </div>
         {podeMexer ? (
           <LinkBotao href="/admin/servicos/novo">Novo serviço</LinkBotao>
         ) : (
-          <p className="rounded-lg bg-graf-100 px-3 py-2 text-[0.8125rem] font-semibold text-graf-600">
+          <p className="rounded-lg bg-graf-100 px-3 py-2 text-apoio font-semibold text-graf-600">
             Somente consulta
           </p>
         )}
       </header>
 
-      <AtalhosCatalogo atual="servicos" mostrarEstoque={verEstoque} />
+      <AtalhosCatalogo atual="servicos" />
 
       <Tabela<LinhaServico>
         colunas={colunas}
         linhas={servicos}
         chaveDaLinha={(linha) => linha.id}
         hrefDaLinha={(linha) => `/admin/servicos/${linha.id}`}
-        legenda="Serviços vendáveis, com tipo, preço base e uso"
+        legenda="Serviços da assistência, com tipo, preço base e uso em orçamentos"
         vazio={{
           icone: Wrench,
           titulo: "Nenhum serviço cadastrado",
           descricao:
-            "Instalação e treinamento cadastrados aqui podem ser oferecidos junto de qualquer produto.",
+            "Visita técnica, manutenção preventiva e corretiva cadastradas aqui entram nos orçamentos de reparo.",
           acao: podeMexer ? <LinkBotao href="/admin/servicos/novo">Criar o primeiro serviço</LinkBotao> : undefined,
         }}
       />

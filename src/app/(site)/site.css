@@ -1,0 +1,464 @@
+/* ============================================================================
+   Movimento do site de assistência
+
+   Tudo aqui é CSS, e de propósito: quem chega de anúncio está no celular, às
+   vezes com sinal ruim, e a página não pode esperar JavaScript para aparecer.
+
+   · Revelação por rolagem usa `animation-timeline: view()`. Navegador que não
+     suporta simplesmente mostra o conteúdo parado, e ninguém fica olhando para
+     um espaço vazio esperando um script que falhou.
+   · Movimento reduzido desliga tudo: nada gira, nada corre, nada flutua.
+   · Só `transform` e `opacity` animam. Nada de largura, altura ou posição.
+   ============================================================================ */
+
+/* ------------------------------------------------------------ borda viva */
+
+@property --jb-angulo {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Um brilho vermelho que percorre a borda do diagnóstico. Chama o olho para
+   a peça que resolve o problema da pessoa, sem piscar nem pular. */
+/* O brilho é um anel de 2px desenhado por máscara: o miolo do pseudo-elemento
+   é recortado, e o conteúdo do cartão nunca fica tingido. */
+.jb-borda-viva::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  border-radius: calc(var(--radius-2xl) + 2px);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  background: conic-gradient(
+    from var(--jb-angulo),
+    transparent 0% 58%,
+    rgb(224 20 27 / 0.85) 72%,
+    rgb(249 91 96 / 0.5) 82%,
+    transparent 94%
+  );
+  animation: jb-borda-gira 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes jb-borda-gira {
+  to {
+    --jb-angulo: 360deg;
+  }
+}
+
+/* ---------------------------------------------------------- faixa que corre */
+
+.jb-faixa {
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+
+.jb-faixa-trilho {
+  display: flex;
+  width: max-content;
+  animation: jb-marquise 42s linear infinite;
+}
+
+.jb-faixa:hover .jb-faixa-trilho {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------ revelar na rolagem */
+
+@keyframes jb-revela {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes jb-enche {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes jb-acende {
+  from {
+    background-color: var(--color-white);
+    color: var(--color-graf-400);
+    border-color: var(--color-graf-200);
+  }
+  to {
+    background-color: var(--color-jb-500);
+    color: var(--color-white);
+    border-color: var(--color-jb-500);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* A revelação termina logo depois de o bloco entrar na tela, e em pixels,
+       não em porcentagem: com `cover 26%…41%` o texto só ficava inteiro
+       quando subia até o meio da tela, e quem parava de rolar com um botão na
+       metade de baixo via o botão desbotado, com cara de desligado. Em pixels
+       o tempo é o mesmo para um botão baixo e para um acordeão alto.
+
+       ATENÇÃO: `view()` mede contra o contêiner de rolagem mais próximo, e
+       `overflow: hidden` cria um. Bloco com `.jb-revela` dentro de seção com
+       `overflow-hidden` fica congelado para sempre na opacidade em que nasceu
+       (um "Chamar no WhatsApp" ficou em 19% no celular). Seção que precisa
+       recortar enfeite usa `overflow-clip`, que recorta sem virar contêiner. */
+    .jb-revela {
+      animation: jb-revela linear both;
+      animation-timeline: view();
+      /* `--i` escalona irmãos: cada um começa um pouco depois do anterior. */
+      animation-range: entry calc(var(--i, 0) * 20px) entry calc(120px + var(--i, 0) * 40px);
+    }
+
+    .jb-linha-enche {
+      transform-origin: top;
+      animation: jb-enche linear both;
+      animation-timeline: --jb-como-funciona;
+      animation-range: entry 40% exit 60%;
+    }
+
+    .jb-ponto-acende {
+      animation: jb-acende linear both;
+      animation-timeline: view();
+      animation-range: cover 30% cover 45%;
+    }
+  }
+}
+
+.jb-timeline-como-funciona {
+  view-timeline-name: --jb-como-funciona;
+}
+
+/* ---------------------------------------------------------------- flutuar */
+
+@keyframes jb-flutua {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -6%, 0) scale(1.08);
+  }
+}
+
+.jb-flutua {
+  animation: jb-flutua 14s ease-in-out infinite;
+}
+
+.jb-flutua-lento {
+  animation: jb-flutua 19s ease-in-out infinite reverse;
+}
+
+/* -------------------------------------------------------- balançar o ícone */
+
+@keyframes jb-balanca {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(8deg);
+  }
+}
+
+.jb-cartao-equipamento:hover .jb-icone-balanca,
+.jb-cartao-equipamento:focus-visible .jb-icone-balanca {
+  animation: jb-balanca 520ms ease-in-out;
+}
+
+/* ------------------------------------------------ barra do celular, entrar */
+
+.jb-barra-movel {
+  transition:
+    transform 320ms var(--ease-out-quint),
+    opacity 320ms var(--ease-out-quint);
+}
+
+.jb-barra-movel[data-visivel="false"] {
+  transform: translate3d(0, 120%, 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------- movimento reduzido */
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-borda-viva::before {
+    animation: none;
+    background: rgb(224 20 27 / 0.22);
+  }
+
+  .jb-faixa-trilho,
+  .jb-flutua,
+  .jb-flutua-lento {
+    animation: none;
+  }
+
+  .jb-barra-movel {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------ controle deslizante */
+
+/* Trilho grosso e botão de 28px: o polegar acerta de primeira no celular. O
+   trecho já percorrido fica vermelho, lido de `--preenchido`. */
+.jb-deslizante:focus-visible {
+  outline: none;
+}
+
+.jb-deslizante::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--color-jb-500) var(--preenchido, 50%),
+    var(--color-graf-200) var(--preenchido, 50%)
+  );
+}
+
+.jb-deslizante::-webkit-slider-thumb {
+  appearance: none;
+  margin-top: -10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #fff;
+  border: 3px solid var(--color-jb-500);
+  box-shadow: 0 2px 10px rgb(26 28 30 / 0.2);
+  transition: transform 150ms var(--ease-out-quint);
+}
+
+.jb-deslizante:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.jb-deslizante:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--color-jb-500);
+  outline-offset: 3px;
+}
+
+.jb-deslizante::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-graf-200);
+}
+
+.jb-deslizante::-moz-range-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-jb-500);
+}
+
+.jb-deslizante::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #fff;
+  border: 3px solid var(--color-jb-500);
+  box-shadow: 0 2px 10px rgb(26 28 30 / 0.2);
+}
+
+.jb-deslizante:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--color-jb-500);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------ faixa do topo */
+
+.jb-ticker-trilho {
+  width: max-content;
+  animation: jb-marquise 34s linear infinite;
+}
+
+.jb-ticker:hover .jb-ticker-trilho,
+.jb-ticker:focus-visible .jb-ticker-trilho {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------- foto que respira */
+
+/* Zoom lento, de um lado para o outro, na foto da abertura: a imagem parece
+   viva sem nada piscar. Só transform, e parado com movimento reduzido. */
+@keyframes jb-respira-foto {
+  from {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(-2%, -2%, 0);
+  }
+}
+
+.jb-foto-viva {
+  animation: jb-respira-foto 16s ease-in-out infinite alternate;
+}
+
+/* Selos que boiam sobre a foto, cada um no seu ritmo. */
+@keyframes jb-boia {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+.jb-boia {
+  animation: jb-boia 4.8s ease-in-out infinite;
+}
+
+.jb-boia-2 {
+  animation: jb-boia 5.6s ease-in-out 0.8s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-ticker-trilho,
+  .jb-foto-viva,
+  .jb-boia,
+  .jb-boia-2 {
+    animation: none;
+  }
+}
+
+/* ============================================================== celular
+
+   No computador, metade da vida da página está no mouse: o cartão sobe, a
+   foto cresce, o ícone balança. No celular não existe hover, e sem isto a
+   mesma página ficava parada. O que o mouse faz lá, a rolagem faz aqui: o
+   cartão que passa pelo meio da tela recebe o mesmo realce. Só em aparelho
+   sem hover, para o computador não receber os dois efeitos ao mesmo tempo.
+   ======================================================================= */
+
+@keyframes jb-toque-foto {
+  0% {
+    transform: translate3d(0, 10px, 0) scale(0.9);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0) scale(1.07);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes jb-toque-balanca {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  65% {
+    transform: rotate(9deg);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (hover: none) and (prefers-reduced-motion: no-preference) {
+    /* A foto do equipamento cresce e sobe ao cruzar o meio da tela. */
+    .jb-toque-foto {
+      animation: jb-toque-foto linear both;
+      animation-timeline: view();
+      animation-range: cover 10% cover 60%;
+    }
+
+    /* O ícone balança uma vez quando o cartão entra. */
+    .jb-cartao-equipamento .jb-icone-balanca {
+      animation: jb-toque-balanca linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 40%;
+    }
+  }
+}
+
+/* O toque. O navegador do celular pinta um retângulo cinza-azulado em cada
+   toque de link; aqui o flash é da cor da marca, bem leve, e respeita o canto
+   arredondado do botão. `manipulation` tira o atraso de quem espera um
+   segundo toque para dar zoom. */
+[data-jb-site="assistencia"] :where(a, button, summary, [role="button"]) {
+  -webkit-tap-highlight-color: rgb(224 20 27 / 0.12);
+  touch-action: manipulation;
+}
+
+/* Botão que pulsa: um anel da cor da marca que cresce e some atrás do botão,
+   só com `transform` e `opacity`. Vai na barra do celular, que é o botão que
+   a pessoa tem à mão o tempo todo. */
+@keyframes jb-pulso {
+  0% {
+    transform: scale(1, 1);
+    opacity: 0.5;
+  }
+  75%,
+  100% {
+    transform: scale(1.05, 1.4);
+    opacity: 0;
+  }
+}
+
+.jb-pulso {
+  position: relative;
+  isolation: isolate;
+}
+
+.jb-pulso::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgb(224 20 27 / 0.45);
+  pointer-events: none;
+  animation: jb-pulso 2.6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+/* Quando a barra aparece, o ícone do WhatsApp dá duas balançadas. */
+.jb-barra-movel[data-visivel="true"] .jb-pulso svg {
+  animation: jb-balanca 560ms ease-in-out 320ms 2;
+}
+
+/* Navegador sem `animation-timeline` (Safari antes do 26, Firefox): a
+   revelação vira IntersectionObserver (`RevelarNaRolagem`), que marca o
+   `<html>` e cada bloco quando ele entra. Sem JavaScript nada disso liga, e
+   o conteúdo fica visível do jeito que veio do servidor. */
+html[data-revela-js] .jb-revela[data-revela="esperando"] {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0) scale(0.97);
+}
+
+html[data-revela-js] .jb-revela[data-revela="visto"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 600ms var(--ease-out-quint),
+    transform 700ms var(--ease-out-quint);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-pulso::after,
+  .jb-barra-movel[data-visivel="true"] .jb-pulso svg {
+    animation: none;
+  }
+
+  html[data-revela-js] .jb-revela[data-revela] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

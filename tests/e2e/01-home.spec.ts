@@ -33,25 +33,102 @@ test.describe("Home", () => {
   /**
    * O menu do cabeçalho tem duas formas, e a largura decide qual.
    *
-   * A barra horizontal com os cinco destinos só aparece a partir de 1536px:
-   * abaixo disso ela espremeria o campo de busca a menos de 100px, e a busca
-   * é o controle mais usado do cabeçalho. Nesta suíte a janela tem 1440px,
-   * então o caminho REAL de quem está aqui é a gaveta — e é ele que o teste
-   * percorre, em vez de exigir uma barra que aquela largura não mostra.
+   * A direção do catálogo tem fileira própria a partir de 1024px. Antes ela só
+   * aparecia em 1700px: em 1440 — a largura desta suíte e a de trabalho mais
+   * comum — o site inteiro caía no botão de menu, e o desktop navegava como
+   * celular. Com um nível só para ela, a busca deixou de disputar a mesma
+   * linha e o caminho real de quem está em 1440 passou a ser o link direto.
    *
-   * "Equipamentos" tem mega menu, então na gaveta é um botão que abre a
-   * seção; o link do catálogo inteiro está dentro dela.
+   * O caminho do celular continua coberto pelo teste seguinte, que estreita a
+   * janela e percorre a gaveta.
    */
   test("o menu do cabeçalho leva ao catálogo", async ({ page }) => {
+    /* A navegação de desktop saiu do `<header>` em 12/09/2026 e virou a faixa
+       vermelha logo abaixo dele, que se chama "Catálogo" e aparece a partir de
+       1280px. O destino é o mesmo e o caminho continua sendo um link direto —
+       só mudou de linha. */
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/");
 
-    await page.getByRole("button", { name: "Abrir o menu" }).click();
+    const direcao = page.getByRole("navigation", { name: "Catálogo" });
+    await expect(direcao).toBeVisible();
+    /* "Todo o catálogo" voltou a ser verdade: /loja deixou de ser a coleção
+       de novos com outro endereço e passou a listar as quatro condições, que
+       é o que o menu, o rodapé e a trilha de toda coleção sempre prometeram.
+       O rótulo tinha virado "Produtos novos" justamente porque o destino não
+       cumpria o nome. */
+    await direcao.getByRole("link", { name: /^Todo o catálogo$/ }).click();
 
+    await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+
+  /**
+   * O mesmo destino pela gaveta, na largura em que ela é o caminho real.
+   *
+   * Cada linha da gaveta é duas coisas: o link do destino e, ao lado, o botão
+   * que abre as opções daquela seção. O caminho para o catálogo inteiro é o
+   * link — o botão só revela as categorias. A busca é feita dentro da
+   * navegação principal da gaveta porque "Equipamentos" também é o nome de um
+   * atalho da Área da Clínica, logo acima.
+   */
+  test("no celular, a gaveta leva ao catálogo", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+
+    const abrir = page.getByRole("button", { name: /^Abrir o menu$/ }).first();
     const gaveta = page.getByRole("dialog", { name: "Menu de navegação" });
-    await expect(gaveta).toBeVisible();
 
-    await gaveta.getByRole("button", { name: /Equipamentos/ }).first().click();
-    await gaveta.getByRole("link", { name: "Ver todos os equipamentos" }).click();
+    /* Abrir e conferir que CONTINUA aberta, em vez de clicar uma vez e seguir.
+
+       Em desenvolvimento o React roda com Strict Mode ligado (padrão do Next),
+       o que monta, desmonta e remonta o cabeçalho. Um toque que chegue no meio
+       disso abre a gaveta e perde o estado no remonte: ela entra deslizando e
+       volta sozinha. Medido, acontecia em 1 de 6 aberturas — e derrubava este
+       teste com "element is not stable" seguido de "detached from the DOM",
+       porque o Playwright tentava clicar num link que estava indo embora.
+
+       Esperar a gaveta ficar aberta, tocando de novo se ela sumir, é também o
+       que uma pessoa faria. E, quando a espera termina, a animação de 0,24s já
+       acabou — o clique seguinte cai em algo parado. */
+    await expect
+      .poll(
+        async () => {
+          if (!(await gaveta.isVisible())) await abrir.click();
+          await page.waitForTimeout(320);
+          return gaveta.isVisible();
+        },
+        { message: "a gaveta precisa abrir e permanecer aberta" },
+      )
+      .toBe(true);
+
+    /* O clique também precisa tolerar o remonte.
+
+       Esperar a gaveta ficar aberta não basta: o remonte do Strict Mode pode
+       cair ENTRE a espera e o clique, e aí o Playwright acerta um link que
+       está sendo descartado — "element is not stable", depois "element was
+       detached from the DOM". Com o servidor de desenvolvimento frio, que é
+       como ele está no começo da suíte, isso deixou de ser raro.
+
+       A saída é a mesma de uma pessoa: se o toque não pegou, tocar de novo.
+       O laço requery o link a cada tentativa, então ele nunca insiste num nó
+       morto. Em produção não há remonte e a primeira tentativa resolve. */
+    const linkDaLoja = () =>
+      gaveta
+        .getByRole("navigation", { name: "Menu principal no celular" })
+        .getByRole("link", { name: /^Loja/ })
+        .first();
+
+    for (let tentativa = 1; tentativa <= 4; tentativa += 1) {
+      try {
+        await linkDaLoja().click({ timeout: 5_000 });
+        break;
+      } catch (erro) {
+        if (tentativa === 4) throw erro;
+        if (!(await gaveta.isVisible())) await abrir.click();
+        await page.waitForTimeout(320);
+      }
+    }
 
     await page.waitForURL(/\/(loja|novos|seminovos|usados|recondicionados)/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -65,19 +142,12 @@ test.describe("Home", () => {
     await expect(rodape.getByRole("link", { name: /Contato/ }).first()).toBeVisible();
   });
 
-  test("a busca do cabeçalho sugere e leva ao resultado", async ({ page }) => {
+  test("a busca principal leva ao resultado", async ({ page }) => {
     await page.goto("/");
 
-    /* `combobox`, e não `searchbox`: o campo passou a abrir uma lista de
-       sugestões enquanto se digita, e o padrão ARIA disso é o combobox
-       com `listbox`. O papel faz parte do contrato — é o que diz ao
-       leitor de tela que existem opções a percorrer com as setas. */
-    const busca = page.getByRole("combobox", { name: "Buscar no catálogo" }).first();
+    // o campo grande do hero da home — o do cabeçalho é outro (`#busca-cabecalho`)
+    const busca = page.locator("#busca-home");
     await busca.fill("autoclave");
-
-    // o painel abre a partir de três letras, com resultado ou sem ele
-    await expect(page.getByRole("listbox", { name: "Sugestões da busca" })).toBeVisible();
-
     await busca.press("Enter");
 
     await page.waitForURL(/\/busca\?/);

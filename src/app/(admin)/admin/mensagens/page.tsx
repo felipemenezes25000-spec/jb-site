@@ -249,7 +249,7 @@ export default async function PaginaMensagens({
                       </p>
                     ) : null}
 
-                    <p className="mt-2 text-[0.8125rem] text-graf-500">
+                    <p className="mt-2 text-apoio text-graf-500">
                       Entrou na fila em {formatarDataHora(linha.createdAt)}
                     </p>
                   </div>

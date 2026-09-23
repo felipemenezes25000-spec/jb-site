@@ -4,6 +4,7 @@ import type { EquipmentOrigin, EquipmentStatus } from "@prisma/client";
 
 import { ROTULO_CHAMADO, STATUS_CHAMADO_ABERTOS } from "@/lib/assistencia";
 import { ROTULO_VISITA } from "@/lib/manutencao";
+import { urlExpostaDaMidia } from "@/lib/midia-operacional";
 import { ROTULO_OS } from "@/lib/os";
 import { prisma } from "@/lib/prisma";
 
@@ -29,6 +30,11 @@ export class ErroDeEquipamento extends Error {
    quebrar quem já os importava daqui. */
 export { ROTULO_DOCUMENTO, ROTULO_EQUIPAMENTO, ROTULO_ORIGEM } from "@/lib/rotulos-equipamento";
 
+import {
+  unificarHistorico,
+  type CandidatoDoHistorico,
+  type ItemHistorico,
+} from "@/domain/equipamento/linha-do-tempo";
 import {
   ROTULO_DOCUMENTO,
   ROTULO_EQUIPAMENTO,
@@ -163,7 +169,9 @@ export async function equipamentosDoCliente(customerId: string) {
       media: {
         take: 1,
         orderBy: { order: "asc" },
-        select: { media: { select: { url: true, alt: true } } },
+        select: {
+          media: { select: { id: true, folder: true, url: true, alt: true } },
+        },
       },
     },
   });
@@ -185,25 +193,18 @@ export async function equipamentosDoCliente(customerId: string) {
 
   return equipamentos.map((equipamento) => ({
     ...equipamento,
-    imagemUrl: equipamento.media[0]?.media.url ?? null,
+    imagemUrl: equipamento.media[0]
+      ? urlExpostaDaMidia(equipamento.media[0].media)
+      : null,
     imagemAlt: equipamento.media[0]?.media.alt || equipamento.name,
     chamadosAbertos: contagem.get(equipamento.id) ?? 0,
   }));
 }
 
-export type TipoHistorico = "evento" | "chamado" | "os" | "visita" | "documento";
-
-export type ItemHistorico = {
-  id: string;
-  tipo: TipoHistorico;
-  titulo: string;
-  descricao: string;
-  quando: Date;
-  /** Rótulo de status, quando o item tem um. */
-  etiqueta?: string;
-  /** Destino na área do cliente. Ausente quando não há página para abrir. */
-  href?: string;
-};
+/* Os tipos e a regra de unificação moram no domínio — a decisão de o que a
+   clínica vê no prontuário não deveria precisar de um banco para ser
+   verificada. Reexportados para quem já os importava daqui. */
+export type { ItemHistorico, TipoHistorico } from "@/domain/equipamento/linha-do-tempo";
 
 /**
  * Linha do tempo completa do equipamento, do mais recente para o mais antigo.
@@ -261,17 +262,36 @@ export async function historicoDoEquipamento(equipmentId: string): Promise<ItemH
     }),
   ]);
 
-  const linha: ItemHistorico[] = [
-    ...eventos.map((evento) => ({
-      id: `evento-${evento.id}`,
-      tipo: "evento" as const,
-      titulo: evento.title,
-      descricao: evento.description,
-      quando: evento.happenedAt,
-    })),
+  /* Cada candidato declara DE QUE coisa ele fala. O evento "Chamado JB-000012
+     aberto" e o próprio chamado JB-000012 declaram a mesma coisa, e por isso
+     viram uma linha só — em vez dos dois cartões idênticos, no mesmo minuto,
+     que a auditoria fotografou. */
+  const candidatos: CandidatoDoHistorico[] = [
+    ...eventos.map((evento) => {
+      const origem = evento.workOrderId
+        ? { tipo: "os" as const, referencia: evento.workOrderId }
+        : evento.serviceRequestId
+          ? { tipo: "chamado" as const, referencia: evento.serviceRequestId }
+          : evento.visitId
+            ? { tipo: "visita" as const, referencia: evento.visitId }
+            : /* Anotação da equipe, mudança de estado, compra: o evento é o
+                 acontecimento em si e não colide com nada. */
+              { tipo: "evento" as const, referencia: evento.id };
+
+      return {
+        id: `evento-${evento.id}`,
+        titulo: evento.title,
+        descricao: evento.description,
+        quando: evento.happenedAt,
+        preferida: false,
+        ...origem,
+      };
+    }),
     ...chamados.map((chamado) => ({
       id: `chamado-${chamado.id}`,
       tipo: "chamado" as const,
+      referencia: chamado.id,
+      preferida: true,
       titulo: `Chamado ${chamado.number}`,
       descricao: chamado.description,
       quando: chamado.createdAt,
@@ -281,6 +301,8 @@ export async function historicoDoEquipamento(equipmentId: string): Promise<ItemH
     ...ordens.map((ordem) => ({
       id: `os-${ordem.id}`,
       tipo: "os" as const,
+      referencia: ordem.id,
+      preferida: true,
       titulo: `Ordem de serviço ${ordem.number}`,
       descricao: ordem.workDone || ordem.reportedIssue,
       quando: ordem.openedAt,
@@ -291,6 +313,8 @@ export async function historicoDoEquipamento(equipmentId: string): Promise<ItemH
     ...visitas.map((visita) => ({
       id: `visita-${visita.id}`,
       tipo: "visita" as const,
+      referencia: visita.id,
+      preferida: true,
       titulo: visita.contract
         ? `Manutenção preventiva — contrato ${visita.contract.number}`
         : "Manutenção preventiva",
@@ -302,6 +326,8 @@ export async function historicoDoEquipamento(equipmentId: string): Promise<ItemH
     ...documentos.map((documento) => ({
       id: `documento-${documento.id}`,
       tipo: "documento" as const,
+      referencia: documento.id,
+      preferida: true,
       titulo: documento.title,
       descricao: ROTULO_DOCUMENTO[documento.kind],
       quando: documento.createdAt,
@@ -309,7 +335,7 @@ export async function historicoDoEquipamento(equipmentId: string): Promise<ItemH
     })),
   ];
 
-  return linha.sort((a, b) => b.quando.getTime() - a.quando.getTime());
+  return unificarHistorico(candidatos);
 }
 
 /** Anota um acontecimento na ficha. É o que sustenta a linha do tempo manual. */

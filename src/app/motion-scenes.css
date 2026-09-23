@@ -1,0 +1,416 @@
+/* ============================================================================
+   JB Motion — coreografias por cena
+
+   Esta folha não define o motor. `motion.css` cuida de zona, reveal e física;
+   aqui cada superfície recebe direção de arte própria usando ganchos que já
+   existem no HTML. Assim a loja pode ousar e a operação continuar sóbria.
+   ============================================================================ */
+
+/* --------------------------------------------------------------------------
+   Catálogo — a grade monta como uma bancada, não como uma lista piscando
+   -------------------------------------------------------------------------- */
+
+html[data-motion-scene="catalogo"] [data-marketplace-shell] {
+  position: relative;
+}
+
+html[data-motion-scene="catalogo"] [data-marketplace-shell]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(18rem, 32vw);
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--color-jb-500), transparent);
+  transform-origin: 0 50%;
+  animation: jb-scene-line 900ms var(--jb-motion-ease) 180ms both;
+}
+
+/* A cena é gravada no `<html>` antes da primeira pintura (script do `<head>`),
+   então a grade já nasce no quadro inicial desta animação — não pisca. Nenhum
+   `opacity: 0` fora do keyframe: se a animação não rodar, o cartão aparece. E
+   nada de escala: um cartão a 98,2% mede 43px num botão de 44. */
+html[data-motion-scene="catalogo"] [data-grade-marketplace] > li {
+  animation: jb-catalog-card 620ms var(--jb-motion-ease-spring) backwards;
+}
+
+html[data-motion-scene="catalogo"] [data-grade-marketplace] > li:nth-child(4n + 1) {
+  animation-delay: 20ms;
+}
+
+html[data-motion-scene="catalogo"] [data-grade-marketplace] > li:nth-child(4n + 2) {
+  animation-delay: 75ms;
+}
+
+html[data-motion-scene="catalogo"] [data-grade-marketplace] > li:nth-child(4n + 3) {
+  animation-delay: 130ms;
+}
+
+html[data-motion-scene="catalogo"] [data-grade-marketplace] > li:nth-child(4n + 4) {
+  animation-delay: 185ms;
+}
+
+html[data-motion-scene="catalogo"] [data-convite-orcamento] {
+  position: relative;
+  overflow: hidden;
+}
+
+html[data-motion-scene="catalogo"] [data-convite-orcamento]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(105deg, transparent 20%, rgb(224 20 27 / 0.055) 46%, transparent 72%);
+  transform: translateX(-80%);
+}
+
+@supports (animation-timeline: view()) {
+  html[data-motion-scene="catalogo"] [data-convite-orcamento]::after {
+    opacity: 1;
+    animation: jb-catalog-sweep linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 44%;
+  }
+}
+
+/* Touch recebe a mesma hierarquia, sem pagar blur/escala forte em dezenas de
+   cartões ao mesmo tempo. */
+html[data-motion-scene="catalogo"][data-motion-pointer="coarse"] [data-grade-marketplace] > li {
+  --jb-catalogo-y: 10px;
+  animation-duration: 440ms;
+}
+
+/* --------------------------------------------------------------------------
+   PDP — quatro planos: galeria, identidade, compra e especificação
+   -------------------------------------------------------------------------- */
+
+/* Sem `perspective` no topo da ficha. Perspectiva cria bloco de contenção para
+   `position: fixed`: qualquer camada fixa dentro da seção passaria a se
+   posicionar pela seção, não pela tela.
+
+   Os planos entram só na vertical. O deslocamento lateral de ±18px desalinhava
+   compra e resumo em 18px no primeiro segundo — exatamente quando a pessoa lê
+   o preço. */
+html[data-motion-scene="produto"] [data-pdp-gallery],
+html[data-motion-scene="produto"] [data-pdp-summary],
+html[data-motion-scene="produto"] [data-pdp-buybox],
+html[data-motion-scene="produto"] [data-pdp-details] {
+  animation: jb-pdp-enter 620ms var(--jb-motion-ease-spring) backwards;
+}
+
+html[data-motion-scene="produto"] [data-pdp-gallery] {
+  --jb-pdp-y: 10px;
+  animation-delay: 40ms;
+  position: relative;
+  isolation: isolate;
+}
+
+html[data-motion-scene="produto"] [data-pdp-summary] {
+  --jb-pdp-y: 14px;
+  animation-delay: 110ms;
+}
+
+html[data-motion-scene="produto"] [data-pdp-buybox] {
+  --jb-pdp-y: 10px;
+  animation-delay: 180ms;
+}
+
+html[data-motion-scene="produto"] [data-pdp-details] {
+  --jb-pdp-y: 16px;
+  animation-delay: 240ms;
+}
+
+/* "Leitura técnica" da fotografia: um scan único e discreto. Não fica
+   repetindo — acontece na chegada e desaparece. */
+html[data-motion-scene="produto"] [data-pdp-gallery]::after {
+  content: "";
+  position: absolute;
+  z-index: 8;
+  top: 4%;
+  right: 6%;
+  left: 6%;
+  height: 1px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgb(224 20 27 / 0.5), #fff, rgb(224 20 27 / 0.32), transparent);
+  box-shadow: 0 0 14px rgb(224 20 27 / 0.2);
+  animation: jb-pdp-scan 1450ms var(--jb-motion-ease) 430ms both;
+}
+
+/* A caixa de compra não levanta no hover: `transform` e `filter` nela criavam
+   bloco de contenção para o que é fixo lá dentro, o `drop-shadow` repintava a
+   caixa inteira a cada entrada do cursor, e um bloco que sobe sob o ponteiro
+   foge de quem está na borda. Design: "buybox estável". */
+
+html[data-motion-scene="produto"][data-motion-pointer="fine"] [data-pdp-gallery] [data-imagem-produto] {
+  transition: transform 720ms var(--jb-motion-ease-spring);
+}
+
+html[data-motion-scene="produto"][data-motion-pointer="fine"] [data-pdp-gallery]:hover [data-imagem-produto] {
+  transform: scale(1.025);
+}
+
+/* Em toque a PDP continua entrando em planos, mais curta e mais perto. */
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-gallery],
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-summary],
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-buybox],
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-details] {
+  --jb-pdp-y: 8px;
+  animation-duration: 440ms;
+}
+
+html[data-motion-scene="produto"][data-motion-pointer="coarse"] [data-pdp-gallery]::after {
+  display: none;
+}
+
+/* As grandes seções da ficha ganham uma linha de leitura que nasce junto do
+   bloco; é orientação visual, não uma nova decoração permanente. */
+html[data-motion-scene="produto"] main :where(#laudo, #ficha-tecnica, #preparo, #entrega-e-garantia, #duvidas) {
+  position: relative;
+}
+
+html[data-motion-scene="produto"] main :where(#laudo, #ficha-tecnica, #preparo, #entrega-e-garantia, #duvidas)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(7rem, 24vw);
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-jb-500), transparent);
+  transform: scaleX(0.12);
+  transform-origin: 0 50%;
+  opacity: 0.28;
+}
+
+@supports (animation-timeline: view()) {
+  html[data-motion-scene="produto"] main :where(#laudo, #ficha-tecnica, #preparo, #entrega-e-garantia, #duvidas)::before {
+    animation: jb-pdp-section-line linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 24%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Área da Clínica — dados acordam, operação permanece estável
+   -------------------------------------------------------------------------- */
+
+html[data-motion-scene="clinica"] [data-clinica-content] {
+  position: relative;
+}
+
+html[data-motion-scene="clinica"] [data-motion-metric-grid] > [data-motion-metric] {
+  animation: jb-clinic-metric 520ms var(--jb-motion-ease-spring) backwards;
+}
+
+html[data-motion-scene="clinica"] [data-motion-metric-grid] > [data-motion-metric]:nth-child(1) {
+  animation-delay: 30ms;
+}
+
+html[data-motion-scene="clinica"] [data-motion-metric-grid] > [data-motion-metric]:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+html[data-motion-scene="clinica"] [data-motion-metric-grid] > [data-motion-metric]:nth-child(3) {
+  animation-delay: 130ms;
+}
+
+html[data-motion-scene="clinica"] [data-motion-metric-grid] > [data-motion-metric]:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+html[data-motion-scene="clinica"] [data-motion-metric-value] {
+  display: inline-block;
+  transform-origin: 0 70%;
+  animation: jb-clinic-value 560ms var(--jb-motion-ease-spring) 160ms backwards;
+}
+
+html[data-motion-scene="clinica"] [data-motion-metric-icon] {
+  position: relative;
+}
+
+html[data-motion-scene="clinica"] [data-motion-metric-icon]::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid currentColor;
+  opacity: 0;
+  animation: jb-clinic-ring 720ms ease-out 260ms both;
+}
+
+/* Hover em `translate`, não em `transform`: soma ao que o cartão já tiver e
+   não disputa a propriedade com a animação de entrada. */
+html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-metric] {
+  transition:
+    translate 360ms var(--jb-motion-ease-spring),
+    box-shadow 360ms var(--jb-motion-ease),
+    border-color 220ms ease;
+}
+
+html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-metric]:hover {
+  translate: 0 -3px;
+}
+
+/* Histórico: o trilho não se move; marcador e conteúdo chegam até ele. Isso
+   preserva leitura cronológica e evita o dashboard inteiro parecer flutuante. */
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item] {
+  --jb-history-delay: 0ms;
+}
+
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(2) {
+  --jb-history-delay: 55ms;
+}
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(3) {
+  --jb-history-delay: 110ms;
+}
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(4) {
+  --jb-history-delay: 165ms;
+}
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(5) {
+  --jb-history-delay: 220ms;
+}
+html[data-motion-scene="clinica"] [data-motion-clinic-history] [data-motion-history-item]:nth-child(n + 6) {
+  --jb-history-delay: 255ms;
+}
+
+/* O cartão chega na vertical. Vindo da direita, a 360px ele passava 10px da
+   borda e a página ganhava rolagem horizontal durante a entrada. */
+html[data-motion-scene="clinica"] [data-motion-history-card] {
+  animation: jb-clinic-history-card 460ms var(--jb-motion-ease-spring) var(--jb-history-delay) backwards;
+}
+
+html[data-motion-scene="clinica"] [data-motion-history-marker] {
+  animation: jb-clinic-history-marker 520ms var(--jb-motion-ease-spring) calc(var(--jb-history-delay) + 40ms) backwards;
+}
+
+html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-history-card] {
+  transition:
+    border-color 180ms ease,
+    translate 280ms var(--jb-motion-ease-spring),
+    box-shadow 280ms var(--jb-motion-ease);
+}
+
+html[data-motion-scene="clinica"][data-motion-pointer="fine"] [data-motion-history-card]:hover {
+  border-color: var(--color-graf-300);
+  translate: 2px 0;
+  box-shadow: 0 12px 34px -28px rgb(26 28 30 / 0.34);
+}
+
+/* --------------------------------------------------------------------------
+   Keyframes
+   -------------------------------------------------------------------------- */
+
+@keyframes jb-scene-line {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 0.75; transform: scaleX(1); }
+}
+
+/* Entradas de cena: `to` sem valor (o quadro final é o próprio estilo do
+   elemento) e `fill: backwards` (segura só o quadro inicial durante o atraso).
+   Com `both` a animação terminada continuava em efeito no elemento para
+   sempre — `getAnimations()` ainda a devolvia minutos depois. */
+@keyframes jb-catalog-card {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--jb-catalogo-y, 18px), 0);
+  }
+}
+
+@keyframes jb-catalog-sweep {
+  from { transform: translateX(-80%); }
+  to { transform: translateX(90%); }
+}
+
+@keyframes jb-pdp-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--jb-pdp-y, 14px), 0);
+  }
+}
+
+@keyframes jb-pdp-scan {
+  0% { opacity: 0; transform: translateY(0); }
+  14% { opacity: 0.42; }
+  74% { opacity: 0.22; }
+  100% { opacity: 0; transform: translateY(min(34vw, 29rem)); }
+}
+
+@keyframes jb-pdp-section-line {
+  from { opacity: 0.2; transform: scaleX(0.12); }
+  to { opacity: 0.85; transform: scaleX(1); }
+}
+
+@keyframes jb-clinic-metric {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+}
+
+@keyframes jb-clinic-value {
+  from { opacity: 0.35; transform: translate3d(0, 4px, 0) scale(0.9); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes jb-clinic-ring {
+  0% { opacity: 0; transform: scale(0.82); }
+  25% { opacity: 0.16; }
+  100% { opacity: 0; transform: scale(1.45); }
+}
+
+@keyframes jb-clinic-history-card {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+}
+
+@keyframes jb-clinic-history-marker {
+  0% { opacity: 0; transform: scale(0.72); }
+  62% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-scene="catalogo"] [data-grade-marketplace] > li,
+  html[data-motion-scene="produto"] [data-pdp-gallery],
+  html[data-motion-scene="produto"] [data-pdp-summary],
+  html[data-motion-scene="produto"] [data-pdp-buybox],
+  html[data-motion-scene="produto"] [data-pdp-details],
+  html[data-motion-scene="clinica"] [data-motion-metric-grid] > [data-motion-metric],
+  html[data-motion-scene="clinica"] [data-motion-metric-value],
+  html[data-motion-scene="clinica"] [data-motion-history-card],
+  html[data-motion-scene="clinica"] [data-motion-history-marker] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  html[data-motion-scene="produto"] [data-pdp-gallery]::after,
+  html[data-motion-scene="clinica"] [data-motion-metric-icon]::after,
+  html[data-motion-scene="catalogo"] [data-marketplace-shell]::before,
+  html[data-motion-scene="catalogo"] [data-convite-orcamento]::after {
+    display: none !important;
+  }
+}
+
+/* O atraso segura o quadro inicial: impressa no meio da entrada, a ficha
+   sairia com os planos ainda transparentes. */
+@media print {
+  html[data-motion-scene] :where(
+    [data-grade-marketplace] > li,
+    [data-pdp-gallery],
+    [data-pdp-summary],
+    [data-pdp-buybox],
+    [data-pdp-details],
+    [data-motion-metric],
+    [data-motion-metric-value],
+    [data-motion-history-card],
+    [data-motion-history-marker]
+  ) {
+    animation: none !important;
+  }
+
+  html[data-motion-scene] :where([data-pdp-gallery], [data-marketplace-shell], [data-convite-orcamento])::before,
+  html[data-motion-scene] :where([data-pdp-gallery], [data-convite-orcamento], [data-motion-metric-icon])::after {
+    display: none !important;
+  }
+}

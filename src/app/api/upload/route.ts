@@ -2,25 +2,27 @@ import { z } from "zod";
 
 import { registrarAuditoria } from "@/lib/auditoria";
 import { sessaoStaff } from "@/lib/auth";
-import { sessaoCliente } from "@/lib/auth-cliente";
+import { chaveDeSessao, checarLimite, segundosDeEspera } from "@/lib/limite";
+import { midiaOperacionalEhPrivada, urlExpostaDaMidia } from "@/lib/midia-operacional";
 import { prisma } from "@/lib/prisma";
 import {
   ErroDeUpload,
   LIMITE_ABSOLUTO,
   PASTAS,
-  PASTAS_DO_CLIENTE,
   PASTAS_UPLOAD,
   enviarArquivo,
-  type PastaUpload,
 } from "@/lib/upload";
+import { enviarArquivoOperacionalPrivado } from "@/lib/upload-operacional";
 
 /**
  * Recebe um arquivo e devolve a mídia já registrada no banco.
  *
- * Quem pode enviar depende da pasta: a equipe interna envia em qualquer uma; o
- * cliente final só em `chamados` e `equipamentos`, que são as pastas de coisas
- * que ele mesmo criou. Autorização é conferida aqui no servidor — esconder o
- * botão no formulário não vale como controle.
+ * Só a equipe interna envia. O cliente final enviava pela área dele, que saiu
+ * do site: foto de defeito agora chega pelo WhatsApp. Autorização é conferida
+ * aqui no servidor; esconder o botão no formulário não vale como controle.
+ *
+ * Mídia operacional nunca devolve a URL real do storage para o navegador. O
+ * retorno usa `/api/midia/:id`, e o arquivo só sai depois de nova autorização.
  */
 
 const esquema = z.object({
@@ -28,58 +30,16 @@ const esquema = z.object({
   alt: z.string().trim().max(180).optional(),
 });
 
-/* --------------------------------------------------------- limite de taxa */
+const LIMITE_ENVIOS = { limite: 20, janelaMs: 10 * 60_000 } as const;
 
-const LIMITE_ENVIOS = 20;
-const JANELA_MS = 10 * 60_000;
+type Autor = { tipo: "staff"; id: string; nome: string };
 
-/**
- * Contagem em memória do processo. Não é uma barreira distribuída — em serverless
- * cada instância tem a sua —, mas segura o caso real: um formulário aberto
- * mandando arquivo em sequência.
- */
-const envios = new Map<string, number[]>();
-
-function excedeuLimite(chave: string) {
-  const agora = Date.now();
-
-  if (envios.size > 500) {
-    for (const [id, marcas] of envios) {
-      if (marcas.every((t) => agora - t >= JANELA_MS)) envios.delete(id);
-    }
-  }
-
-  const recentes = (envios.get(chave) ?? []).filter((t) => agora - t < JANELA_MS);
-  if (recentes.length >= LIMITE_ENVIOS) {
-    envios.set(chave, recentes);
-    return true;
-  }
-
-  recentes.push(agora);
-  envios.set(chave, recentes);
-  return false;
-}
-
-/* -------------------------------------------------------------------- POST */
-
-type Autor =
-  | { tipo: "staff"; id: string; nome: string }
-  | { tipo: "cliente"; id: string; nome: string };
-
-async function autorizar(pasta: PastaUpload): Promise<
+async function autorizar(): Promise<
   { ok: true; autor: Autor } | { ok: false; status: number; erro: string }
 > {
   const staff = await sessaoStaff();
   if (staff) return { ok: true, autor: { tipo: "staff", id: staff.id, nome: staff.name } };
-
-  const cliente = await sessaoCliente();
-  if (!cliente) {
-    return { ok: false, status: 401, erro: "Entre na sua conta para enviar arquivos." };
-  }
-  if (!PASTAS_DO_CLIENTE.includes(pasta)) {
-    return { ok: false, status: 403, erro: "Você não pode enviar arquivos nesta pasta." };
-  }
-  return { ok: true, autor: { tipo: "cliente", id: cliente.id, nome: cliente.name } };
+  return { ok: false, status: 401, erro: "Entre no painel para enviar arquivos." };
 }
 
 export async function POST(request: Request) {
@@ -116,16 +76,25 @@ export async function POST(request: Request) {
 
   const { pasta } = dados.data;
 
-  const permissao = await autorizar(pasta);
+  const permissao = await autorizar();
   if (!permissao.ok) {
     return Response.json({ erro: permissao.erro }, { status: permissao.status });
   }
   const { autor } = permissao;
 
-  if (excedeuLimite(`${autor.tipo}:${autor.id}`)) {
+  const limite = checarLimite(
+    chaveDeSessao(`${autor.tipo}:${autor.id}`, "/api/upload"),
+    LIMITE_ENVIOS,
+  );
+  if (!limite.ok) {
     return Response.json(
-      { erro: "Muitos envios seguidos. Espere alguns minutos e tente de novo." },
-      { status: 429, headers: { "Retry-After": "600" } },
+      {
+        erro: `Muitos envios seguidos. Tente novamente em ${segundosDeEspera(limite.esperaMs)} segundos.`,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(segundosDeEspera(limite.esperaMs)) },
+      },
     );
   }
 
@@ -138,7 +107,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const enviado = await enviarArquivo(arquivo, { pasta });
+    const enviado = midiaOperacionalEhPrivada(pasta)
+      ? await enviarArquivoOperacionalPrivado(arquivo, pasta)
+      : await enviarArquivo(arquivo, { pasta });
 
     const media = await prisma.media.create({
       data: {
@@ -165,19 +136,23 @@ export async function POST(request: Request) {
     });
 
     await registrarAuditoria({
-      // AuditLog aponta para User; envio de cliente fica sem autor e é
-      // identificado no resumo
-      userId: autor.tipo === "staff" ? autor.id : null,
+      userId: autor.id,
       acao: "criar",
       entidade: "midia",
       entidadeId: media.id,
-      resumo:
-        autor.tipo === "staff"
-          ? `${PASTAS[pasta].rotulo}: ${media.filename}`
-          : `${PASTAS[pasta].rotulo}: ${media.filename} (cliente ${autor.id})`,
+      resumo: `${PASTAS[pasta].rotulo}: ${media.filename}`,
     });
 
-    return Response.json({ ok: true, media }, { status: 201 });
+    return Response.json(
+      {
+        ok: true,
+        media: {
+          ...media,
+          url: urlExpostaDaMidia(media),
+        },
+      },
+      { status: 201 },
+    );
   } catch (erro) {
     if (erro instanceof ErroDeUpload) {
       return Response.json({ erro: erro.message, campo: "arquivo" }, { status: erro.status });

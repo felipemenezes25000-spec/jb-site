@@ -164,7 +164,7 @@ export default async function PaginaSuporte({
       renderizar: (linha) => (
         <span className="block text-graf-600">
           {linha.atualizado}
-          <span className="block text-[0.8125rem] text-graf-500">aberto {linha.espera}</span>
+          <span className="block text-apoio text-graf-500">aberto {linha.espera}</span>
         </span>
       ),
     },

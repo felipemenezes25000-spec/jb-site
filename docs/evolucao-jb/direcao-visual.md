@@ -5,6 +5,13 @@ sistema novo: o sistema já existe em `src/app/globals.css` e foi amostrado da
 logo oficial. O que falta é dizer como esse sistema conta a história de
 "comprar é só o começo" em cada fluxo.
 
+> **Onde está o sistema, desde 11/09/2026.** O que antes se lia direto no
+> `globals.css` está escrito e medido em [`../../design.md`](../../design.md):
+> paleta com o contraste de cada degrau e onde ele pode ou não ser usado, escala
+> tipográfica com a armadilha do `tailwind-merge`, containers, grid da ficha,
+> movimento e as regras de acessibilidade que a suíte cobra. Este documento
+> continua sendo a **intenção**; o `design.md` é o **estado**.
+
 ---
 
 ## 1. O que já está decidido no código, e fica
@@ -190,3 +197,52 @@ antes de a linguagem ser propagada:
 3. **Identificação do checkout em mobile** — fase 3.
 
 Situação: fatia 1 em execução; 2 e 3 aguardando as fases correspondentes.
+
+---
+
+## 12. Auditoria de 08/09/2026 — o que ela mudou nesta régua
+
+A auditoria do site publicado está em
+[`../auditoria-visual-2026-09-08/`](../auditoria-visual-2026-09-08/), com 29
+capturas. Ela não propôs um sistema novo: confirmou este e apontou onde o
+código o contrariava. O que virou regra a partir dela:
+
+**`graf-400` não é cor de texto — e agora isso é medido.** A tabela da seção 1
+já dizia. O cartão de vitrine usava mesmo assim, em modelo e preço anterior:
+2,6:1 sobre branco, 66 ocorrências em toda fileira da home e do catálogo. O
+portão de acessibilidade acusa desde então.
+
+**12px é piso, não sugestão.** `scripts/responsivo.mjs` reprova qualquer texto
+abaixo disso em rota pública. Vale inclusive para faixa de apoio e etiqueta em
+caixa alta — `micro`, no design system, é exatamente 12px.
+
+**Vitrine mostra o que a JB escolheu mostrar.** Foto e disponibilidade são
+requisito para encabeçar destaque, faixa e abertura de coleção. O detalhe está
+em `decisoes.md`, seção 21; aqui o que importa é a consequência visual: uma
+moldura vazia ou uma unidade vendida em posição de destaque desmontam a
+promessa de showroom antes de qualquer refinamento de tipografia.
+
+**Movimento expressivo fica na descoberta.** A abertura tem entrada coordenada
+em 620ms com escalonamento de 0 / 140 / 260ms — dentro dos 600–900ms que a
+auditoria pede — feita em CSS, sem biblioteca e sem observador: se o CSS
+falhar, o conteúdo aparece. Revelação por rolagem existe só dentro de
+`@supports (animation-timeline: view())`, para degradar em "sem efeito" e nunca
+em "conteúdo invisível". Compra e assistência respondem na hora.
+
+**Primeira dobra do celular mostra equipamento.** Em 390×844 a home abria com
+título, parágrafo, dois botões e três números — nenhuma fotografia. O painel do
+produto passou a vir logo abaixo do título, deitado, com foto, marca, nome e
+preço acima da linha d'água.
+
+**Tela de tarefa tem abertura curta.** Abrir chamado, pedir orçamento: a
+apresentação encolhe no celular (`compacto`, em
+`src/components/assistencia/apoio.tsx`) para o primeiro campo caber na primeira
+tela. No desktop nada muda, porque lá abertura e formulário convivem.
+
+### O que a auditoria pediu e não foi feito
+
+Fotografia própria de bancada, equipe, testes e estoque, para Sobre, Estrutura
+e a página da assistência. Depende de material que não existe. A mitigação
+possível foi feita: a assistência deixou de abrir com a mesma foto que a home
+usa no destaque — ela prefere um seminovo, que é unidade que passou pela
+revisão da JB.

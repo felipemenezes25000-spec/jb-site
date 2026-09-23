@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, Package, Trash2 } from "lucide-react";
+import { MonitorCog, Trash2 } from "lucide-react";
 
-import { excluirCategoria } from "@/app/acoes/admin-catalogo";
+import { excluirCategoria } from "@/app/acoes/admin-cadastros";
 import {
   achatarCategorias,
   idsDaSubarvore,
@@ -12,9 +12,8 @@ import {
 import { BotaoAcao } from "@/components/admin/catalogo/botao-acao";
 import { FormularioCategoria } from "@/components/admin/catalogo/formulario-categoria";
 import { Aviso } from "@/components/ui/aviso";
-import { LinkBotao } from "@/components/ui/button";
 import { Cartao, CabecalhoCartao, Etiqueta, Trilha, Vazio } from "@/components/ui/data";
-import { formatarPreco, plural } from "@/lib/format";
+import { plural } from "@/lib/format";
 import { exigirArea, podeEditar } from "@/lib/permissoes";
 import { prisma } from "@/lib/prisma";
 
@@ -48,14 +47,14 @@ export default async function PaginaCategoria({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const usuario = await exigirArea("produtos");
+  const usuario = await exigirArea("cadastros");
   const { id } = await params;
-  const somenteLeitura = !podeEditar(usuario, "produtos");
+  const somenteLeitura = !podeEditar(usuario, "cadastros");
 
-  const [categoria, linhas, produtos] = await Promise.all([
+  const [categoria, linhas, equipamentos] = await Promise.all([
     prisma.category.findUnique({
       where: { id },
-      include: { _count: { select: { products: true, children: true } } },
+      include: { _count: { select: { equipments: true, serviceRequests: true, children: true } } },
     }),
     prisma.category.findMany({
       orderBy: [{ order: "asc" }, { name: "asc" }],
@@ -69,11 +68,17 @@ export default async function PaginaCategoria({
         parentId: true,
       },
     }),
-    prisma.product.findMany({
+    prisma.equipment.findMany({
       where: { categoryId: id },
-      orderBy: { name: "asc" },
+      orderBy: { updatedAt: "desc" },
       take: 12,
-      select: { id: true, name: true, sku: true, priceCents: true, status: true },
+      select: {
+        id: true,
+        name: true,
+        brandName: true,
+        modelName: true,
+        customer: { select: { name: true } },
+      },
     }),
   ]);
 
@@ -83,7 +88,9 @@ export default async function PaginaCategoria({
   const proibidos = new Set(idsDaSubarvore(arvore, id));
   const paisPossiveis = achatarCategorias(arvore).filter((item) => !proibidos.has(item.id));
 
-  const bloqueiaExclusao = categoria._count.products > 0 || categoria._count.children > 0;
+  /* Equipamento e chamado apontam para a categoria com `SetNull`: apagar só
+     tira a classificação deles. O que impede é ter subcategoria embaixo. */
+  const bloqueiaExclusao = categoria._count.children > 0;
 
   return (
     <div className="space-y-6">
@@ -104,20 +111,9 @@ export default async function PaginaCategoria({
             </Etiqueta>
           </div>
           <p className="mt-1 text-sm text-graf-500">
-            {plural(categoria._count.products, "produto", "produtos")} ·{" "}
+            {plural(categoria._count.equipments, "equipamento de cliente", "equipamentos de clientes")} ·{" "}
+            {plural(categoria._count.serviceRequests, "chamado", "chamados")} ·{" "}
             {plural(categoria._count.children, "subcategoria", "subcategorias")}
-            {categoria.published ? (
-              <>
-                {" · "}
-                <Link
-                  href={`/categoria/${categoria.slug}`}
-                  className="inline-flex items-center gap-1 font-semibold text-jb-700 underline underline-offset-2 hover:text-jb-500"
-                >
-                  Ver na loja
-                  <ExternalLink className="size-3.5" aria-hidden />
-                </Link>
-              </>
-            ) : null}
           </p>
         </div>
 
@@ -132,7 +128,7 @@ export default async function PaginaCategoria({
             desabilitado={bloqueiaExclusao}
             confirmar={{
               pergunta: `Excluir "${categoria.name}"?`,
-              detalhe: "A categoria some do menu e da loja. Esta ação não pode ser desfeita.",
+              detalhe: "Equipamentos e chamados desta categoria ficam sem classificação. Esta ação não pode ser desfeita.",
               rotuloConfirmar: "Excluir categoria",
             }}
           />
@@ -141,14 +137,9 @@ export default async function PaginaCategoria({
 
       {bloqueiaExclusao && !somenteLeitura ? (
         <Aviso tom="info" titulo="Não dá para apagar agora">
-          {categoria._count.products > 0
-            ? `Há ${plural(categoria._count.products, "produto", "produtos")} nesta categoria. `
-            : ""}
-          {categoria._count.children > 0
-            ? `Há ${plural(categoria._count.children, "subcategoria", "subcategorias")} abaixo dela. `
-            : ""}
-          Mova o que estiver aqui para outra categoria e a exclusão fica liberada. Se a intenção é
-          só tirá-la do site, desmarque &quot;Publicada&quot;.
+          Há {plural(categoria._count.children, "subcategoria", "subcategorias")} abaixo dela.
+          Mova ou apague as subcategorias primeiro. Se a intenção é só deixar de usá-la,
+          desmarque &quot;Publicada&quot;.
         </Aviso>
       ) : null}
 
@@ -172,54 +163,37 @@ export default async function PaginaCategoria({
 
       <Cartao>
         <CabecalhoCartao
-          titulo="Produtos nesta categoria"
+          titulo="Equipamentos de clientes nesta categoria"
           descricao={
-            categoria._count.products > produtos.length
-              ? `Mostrando ${produtos.length} de ${categoria._count.products}.`
+            categoria._count.equipments > equipamentos.length
+              ? `Mostrando os ${equipamentos.length} mais recentes de ${categoria._count.equipments}.`
               : undefined
           }
-          acao={
-            categoria._count.products > 0 ? (
-              <LinkBotao
-                href={`/admin/produtos?categoria=${categoria.id}`}
-                variante="secundario"
-                tamanho="sm"
-              >
-                Ver todos
-              </LinkBotao>
-            ) : undefined
-          }
         />
-        {produtos.length === 0 ? (
+        {equipamentos.length === 0 ? (
           <Vazio
-            icone={Package}
-            titulo="Nenhum produto nesta categoria"
-            descricao="Abra um produto e escolha esta categoria na aba Básico."
+            icone={MonitorCog}
+            titulo="Nenhum equipamento nesta categoria"
+            descricao="Ao cadastrar um equipamento de cliente, escolha esta categoria."
             className="m-4 border-graf-200 bg-transparent py-10"
           />
         ) : (
           <ul className="divide-y divide-graf-200">
-            {produtos.map((produto) => (
-              <li key={produto.id}>
+            {equipamentos.map((equipamento) => (
+              <li key={equipamento.id}>
                 <Link
-                  href={`/admin/produtos/${produto.id}`}
+                  href={`/admin/equipamentos/${equipamento.id}`}
                   className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 transition-colors hover:bg-graf-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jb-500"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-graf-900">
-                      {produto.name}
+                      {equipamento.name}
                     </span>
-                    <span className="block truncate text-[0.8125rem] text-graf-500">
-                      {produto.sku}
+                    <span className="block truncate text-apoio text-graf-500">
+                      {[equipamento.brandName, equipamento.modelName].filter(Boolean).join(" ") || "Marca e modelo não informados"}
                     </span>
                   </span>
-                  <span className="shrink-0 text-sm font-semibold text-graf-800">
-                    {produto.priceCents > 0 ? (
-                      <span className="tabular">{formatarPreco(produto.priceCents)}</span>
-                    ) : (
-                      <span className="font-normal text-graf-500">Sob consulta</span>
-                    )}
-                  </span>
+                  <span className="shrink-0 text-sm text-graf-600">{equipamento.customer.name}</span>
                 </Link>
               </li>
             ))}

@@ -84,7 +84,7 @@ export default async function PaginaCases() {
       renderizar: (linha) => (
         <span className="block">
           <span className="block font-semibold text-graf-900">{linha.title}</span>
-          <span className="mt-0.5 block text-[0.8125rem] text-graf-500">
+          <span className="mt-0.5 block text-apoio text-graf-500">
             {linha.equipamento || "Equipamento não informado"}
           </span>
         </span>
@@ -96,7 +96,7 @@ export default async function PaginaCases() {
       largura: "15rem",
       esconderNoMobile: true,
       renderizar: (linha) => (
-        <span className="block text-[0.8125rem] leading-relaxed">
+        <span className="block text-apoio leading-relaxed">
           <span className="block text-graf-700">
             {linha.tecnico ? `Executou: ${linha.tecnico}` : "Executou: a definir"}
           </span>

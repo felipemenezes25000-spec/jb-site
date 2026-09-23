@@ -8,10 +8,35 @@ serviço e vê a garantia contar. **O vendedor é único: a própria JB.** Isto 
 marketplace — não existe seller, comissão, split de pagamento nem loja de
 terceiro em lugar nenhum do código.
 
-Documentação complementar: [`docs/dominio.md`](docs/dominio.md) (fluxos de
-status e transições válidas), [`docs/decisoes.md`](docs/decisoes.md) (por que o
-código é assim), [`docs/operacao.md`](docs/operacao.md) (deploy, migração, seed,
-webhook).
+Documentação complementar: [`design.md`](design.md) (a linguagem visual —
+paleta com contraste medido, escala tipográfica, layout, movimento e
+acessibilidade), [`docs/dominio.md`](docs/dominio.md) (fluxos de status e
+transições válidas), [`docs/decisoes.md`](docs/decisoes.md) (por que o código é
+assim), [`docs/operacao.md`](docs/operacao.md) (deploy, migração, seed,
+webhook), [`docs/evolucao-jb/`](docs/evolucao-jb/) (plano, cobertura e portões
+de validação) e
+[`docs/auditoria-visual-2026-09-08/`](docs/auditoria-visual-2026-09-08/)
+(auditoria visual do site publicado, com as 29 capturas que a originaram).
+
+---
+
+## A linguagem visual
+
+A paleta nasce da logo, amostrada pixel a pixel — **a marca é vermelha**,
+`#e0141b`; qualquer briefing que peça "verde JB" está errado. Vermelho é sinal
+(CTA, estado ativo, marca), nunca preenchimento de área grande.
+
+O sistema inteiro — paleta com contraste medido degrau a degrau, escala
+tipográfica, containers, grid da ficha de produto, movimento e as regras de
+acessibilidade que a suíte cobra — está em [`design.md`](design.md). Duas coisas
+que economizam uma tarde se lidas antes de escrever CSS:
+
+- **`graf-400` nunca é texto** (2,6:1). O cinza de texto secundário é `graf-500`;
+  a borda de campo é `graf-450`, que existe só para cumprir os 3:1 da WCAG
+  1.4.11.
+- **Degrau tipográfico novo precisa ser registrado em `src/lib/utils.ts`**, ou o
+  `tailwind-merge` o confunde com cor e o descarta em silêncio quando a classe
+  também traz `text-<cor>`.
 
 ---
 
@@ -20,16 +45,16 @@ webhook).
 | Peça | Versão | Por quê |
 |---|---|---|
 | **Next.js** (App Router, Turbopack) | 16.3.4 | Server Components resolvem o problema central desta aplicação: quase toda tela é leitura de banco com autorização por cima. O dado é buscado no servidor, o JavaScript enviado ao navegador fica pequeno e o segredo nunca sai de lá. Server Actions eliminam a camada de rotas CRUD que só existiria para o formulário conversar com o banco. |
-| **React** | 19.2 | `useActionState` liga formulário a Server Action com estado de erro e de pendência sem biblioteca de formulário no meio. |
-| **TypeScript** estrito | 5 | Um domínio com 67 modelos e cerca de 40 estados nomeados só se sustenta com o compilador conferindo cada `Record<Status, …>`. Sem `any`, sem `@ts-ignore`. |
+| **React** | 19.2.8 | `useActionState` liga formulário a Server Action com estado de erro e de pendência sem biblioteca de formulário no meio. |
+| **TypeScript** estrito | 5 | Um domínio com 77 modelos e cerca de 40 estados nomeados só se sustenta com o compilador conferindo cada `Record<Status, …>`. Sem `any`, sem `@ts-ignore`. |
 | **Prisma + PostgreSQL** | 6.19.3 | Transação de verdade (baixa de estoque e criação do pedido no mesmo `$transaction`), `INSERT … ON CONFLICT … RETURNING` atômico para a numeração de documentos, e tipos gerados a partir do schema — os enums do Prisma são a mesma fonte de verdade que as etiquetas da interface. |
 | **Tailwind CSS 4** (CSS-first) | 4 | Os tokens da marca vivem em `src/app/globals.css`, não num arquivo de configuração JS. Uma cor, um lugar. |
-| **zod** | 4 | Toda entrada de Server Action e de rota é validada antes de tocar no banco. |
-| **jose** + **bcryptjs** | 6 / 3 | Sessão em JWT assinado dentro do cookie (sem tabela de sessão para consultar a cada requisição) e senha em bcrypt com custo 12. |
+| **zod** | 4.5 | Toda entrada de Server Action e de rota é validada antes de tocar no banco. |
+| **jose** + **bcryptjs** | 6.2 / 3.0 | Sessão em JWT assinado dentro do cookie (sem tabela de sessão para consultar a cada requisição) e senha em bcrypt com custo 12. |
 | **@vercel/blob** | 2 | Em serverless o disco é efêmero e o upload precisa de armazenamento externo. Sem o token, o mesmo código grava em `public/uploads` e funciona igual num servidor próprio. |
 | **sonner** | 2 | Toaster já montado no layout raiz. |
 | **lucide-react** | 1 | Ícones em SVG, sem fonte de ícone e sem sprite. |
-| **Playwright** | 1.62 | Os scripts de verificação em `scripts/` percorrem o site de verdade, num navegador de verdade. |
+| **Playwright** | 1.62 | A suíte de ponta a ponta e os scripts de verificação em `scripts/` percorrem o site de verdade, num navegador de verdade. Transbordo, contraste e alvo de toque dependem de fonte e imagem carregadas — nada disso dá para saber lendo o JSX. |
 
 ---
 
@@ -37,6 +62,11 @@ webhook).
 
 Pré-requisitos: Node 20+, `pnpm` 10.28 (`corepack enable`) e Docker, para o
 Postgres. Todos os comandos rodam na raiz do repositório.
+
+Se o Docker Desktop não estiver aberto, `docker compose up -d` falha com
+`cannot find the file specified` e o site sobe mostrando 500 em toda página que
+lê banco — a mensagem real (`Can't reach database server at localhost:5433`)
+aparece no terminal do `pnpm dev`, não na tela.
 
 ```bash
 # 1. banco de desenvolvimento (Postgres 17 na porta 5433)
@@ -90,19 +120,34 @@ Para remover só o que os seeds de demonstração criaram, sem tocar em dado rea
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:seed` | carga base |
 | `pnpm db:demo` · `pnpm db:demo:operacao` · `pnpm db:demo:limpar` | dados de demonstração |
-| `pnpm test:unit` | 192 testes unitários (Vitest) |
-| `pnpm e2e` | 48 testes de ponta a ponta (Playwright) |
+| `pnpm db:vitrine` | catálogo de demonstração da vitrine (12 equipamentos com ficha e foto) |
+| `pnpm conteudo:prever` · `pnpm conteudo:migrar` | corrige o texto institucional herdado do site em PHP |
+| `pnpm pautas:prever` · `pnpm pautas:carregar` | carrega as pautas da Central Técnica |
+| `pnpm duplicatas:prever` · `pnpm duplicatas:unificar` | junta categorias e marcas de mesmo nome (ver "Cadastros duplicados") |
+| `pnpm test:unit` | **621** testes unitários (Vitest) |
+| `pnpm e2e` | **99** cenários de ponta a ponta (Playwright) |
 | `pnpm test` | os dois acima, em sequência |
-| `pnpm responsivo` | mede o layout em 6 larguras × 33 rotas num navegador de verdade |
-| `pnpm a11y` | roda o axe-core (WCAG 2.1 A e AA) em 34 rotas, mais 3 medições próprias |
-| `pnpm prova:atomicidade` | prova, com concorrência real contra o Postgres, que pagamento, estoque e cupom não duplicam |
+| `pnpm responsivo` | mede o layout em 7 larguras × 42 rotas num navegador de verdade |
+| `pnpm a11y` | roda o axe-core (WCAG 2.1 A e AA) em 47 rotas, mais 3 medições próprias |
 | `pnpm tour` | percorre todas as rotas num navegador e fotografa (ver "Testes") |
 
 ---
 
 ## Mapa de rotas
 
-### Públicas — grupo `src/app/(loja)`
+São **seis** grupos de rota, e o parêntese nunca entra na URL. Dois deles
+servem a loja pública e dividem a mesma casca:
+
+| Grupo | O que guarda |
+|---|---|
+| `(vitrine)` | as telas de catálogo — `/`, `/loja`, `/loja/[slug]`, `/categoria`, `/busca`, `/seminovos`, `/carrinho` |
+| `(loja)` | o resto do público — institucional, assistência, serviços, políticas, comparador, páginas do CMS |
+| `(checkout)` | `/checkout` e `/escolher-entrega`, em casca própria (ver abaixo) |
+| `(acesso)` | entrar, cadastrar, recuperar senha |
+| `(conta)` | a Área da Clínica, sob `/minha-jb` |
+| `(admin)` | o backoffice, sob `/admin` |
+
+### Públicas — grupos `(vitrine)` e `(loja)`
 
 | Rota | O que é |
 |---|---|
@@ -119,13 +164,27 @@ Para remover só o que os seeds de demonstração criaram, sem tocar em dado rea
 | `/chamado/[numero]` | acompanhamento público do chamado, por link assinado |
 | `/manutencao-preventiva`, `/planos-de-manutencao` | manutenção e planos |
 | `/orcamento` | pedido de orçamento geral (venda, serviço ou plano) |
-| `/carrinho`, `/checkout` | compra |
+| `/carrinho` | carrinho |
 | `/pedido/[numero]` | acompanhamento do pedido e do pagamento, com ou sem conta |
 | `/contato`, `/sobre`, `/estrutura`, `/faq` | institucional |
 | `/entrega`, `/trocas-e-devolucoes`, `/privacidade`, `/termos` | políticas |
 | `/[slug]` | páginas do CMS (modelo `Page`). É a **última** rota a casar na raiz — segmento estático sempre vence o dinâmico. |
 
 Metadados gerados: `/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`.
+
+### Checkout — grupo `src/app/(checkout)`
+
+`/checkout` e `/escolher-entrega` saíram da casca da loja e ganharam a própria:
+topo com a marca, o selo de compra segura e o essencial de contato; rodapé com
+telefone, horário e as três políticas. Sem menu, sem busca, sem carrinho — quem
+está pagando não precisa de mais nada para clicar, e cada saída a mais é uma
+chance de abandonar.
+
+A casca continua declarando `data-jb-publico`, que é o que liga a regra de
+leitura da loja (ver [`design.md`](design.md)). Perder esse atributo na mudança
+de grupo foi um bug silencioso: o checkout voltou a usar cinza claro sem que
+nenhum teste cobrisse, porque a rota exige carrinho cheio e nenhuma varredura
+chega lá.
 
 ### Acesso — grupo `src/app/(acesso)`
 
@@ -244,6 +303,66 @@ mensagens (`src/lib/notificacoes.ts`), leads, tickets de suporte, CMS
 
 Os fluxos de status de cada entidade, com as transições válidas, estão em
 [`docs/dominio.md`](docs/dominio.md).
+
+### Vitrine e inventário não são a mesma lista
+
+O catálogo responde a duas perguntas diferentes, e `src/lib/catalogo.ts`
+separa as duas com filtros nomeados:
+
+| Filtro | Responde | Onde entra |
+|---|---|---|
+| `PUBLICADO` | está no catálogo? | ficha do equipamento, busca, sitemap |
+| `UNIDADE_VENDIDA` | esta unidade já saiu? | exclusão padrão de toda listagem |
+| `DISPONIVEL` | dá para comprar hoje? | filtro "somente em estoque" |
+| `VITRINE` | pode encabeçar uma vitrine? | destaque da home, faixas, coleções |
+
+**Unidade única já vendida sai das listas por padrão.** Seminovo na JB é
+unidade, não modelo: quando aquela autoclave específica sai, não existe uma
+segunda igual esperando reposição, e mantê-la na prateleira é oferecer o que
+não se tem. A página dela continua de pé — histórico, link antigo, busca — e
+`?vendidos=1` traz o conjunto de volta, com opção na barra de filtros e ficha
+removível. Produto de linha sem estoque é outra coisa e **continua listado**:
+ele volta, e o cartão já diz "Indisponível".
+
+**`VITRINE` exige foto e disponibilidade.** É o que separa "está no catálogo"
+de "é o que a JB mostra primeiro". A home chegou a abrir com uma cadeira sem
+foto, por R$ 500, já vendida — e a anunciar esse mesmo valor como "menor preço
+do catálogo". Nenhum dos dois era erro de cálculo: era o código promovendo o
+que o cadastro ainda não tinha terminado.
+
+### Cadastros duplicados
+
+O catálogo nasceu de três cargas — o site em PHP (`prisma/seed.ts`), o
+protótipo aprovado (`prisma/catalogo-demo.json`) e a demonstração de operação
+(`prisma/seed-demo.ts`) — e delas sobraram duas categorias "Biossegurança" e
+duas marcas "Schuster", com slugs diferentes.
+
+Para quem visita não existe "o cadastro certo": existem duas opções com o mesmo
+nome, e escolher uma esconde metade do que ela promete. Por isso a loja pública
+trata cadastros de mesmo nome como **uma opção só** — `src/lib/homonimos.ts`
+junta o rótulo e soma as contagens; `expandirCategorias` e `expandirMarcas`
+abrem o slug da URL em todos os homônimos, para que rótulo, contagem e
+resultado do clique concordem. Vale na barra de filtros, nos atalhos de
+coleção, no mega menu, na parede de marcas e na escolha do tipo de equipamento
+ao abrir chamado.
+
+Isso conserta a tela, não o cadastro. A limpeza do banco é o
+`scripts/unificar-duplicatas.ts`:
+
+```bash
+pnpm duplicatas:prever     # mostra o plano, não altera nada
+pnpm duplicatas:unificar   # aplica
+```
+
+Ele move produtos, chamados e equipamentos de cliente para o cadastro canônico
+— o que tem mais equipamentos publicados — e **despublica** o duplicado, que
+fica vazio. Não apaga linha: apagar levaria junto o histórico de quem apontava
+para ela. Endereço antigo de categoria ou marca despublicada redireciona para a
+homônima que ficou, então link salvo e índice de busca continuam valendo.
+
+O banco do preview foi unificado em 08/09/2026. O banco local de
+desenvolvimento continua com as duas cargas de propósito: é onde os seeds
+rodam, e eles as recriam a cada `pnpm db:seed` + `pnpm db:vitrine`.
 
 ### Dinheiro, datas e numeração
 
@@ -408,11 +527,10 @@ substitui a outra.
 
 | Camada | Pergunta que responde | Como roda |
 |---|---|---|
-| `pnpm test:unit` | a regra de negócio está certa? | 192 testes, em memória, sem banco |
-| `pnpm e2e` | o fluxo funciona de ponta a ponta? | 48 testes, navegador real, banco real |
-| `pnpm prova:atomicidade` | duas pessoas ao mesmo tempo quebram? | concorrência real contra o Postgres |
-| `pnpm responsivo` | o layout aguenta a tela do cliente? | 6 larguras × 33 rotas, medido no navegador |
-| `pnpm a11y` | dá para usar sem enxergar, sem mouse? | axe-core WCAG 2.1 A/AA em 34 rotas |
+| `pnpm test:unit` | a regra de negócio está certa? | **621** testes, em memória, sem banco |
+| `pnpm e2e` | o fluxo funciona de ponta a ponta? | **99** cenários, navegador real, banco real |
+| `pnpm responsivo` | o layout aguenta a tela do cliente? | 7 larguras × 42 rotas, medido no navegador |
+| `pnpm a11y` | dá para usar sem enxergar, sem mouse? | axe-core WCAG 2.1 A/AA em 47 rotas |
 
 As três últimas saem com código 1 quando acham problema, então servem de
 portão. Todas medem no navegador de verdade em vez de inspecionar o código:
@@ -442,6 +560,28 @@ desenvolvimento no mesmo diretório. Se você já tem um rodando, aponte a suít
 para ele com `E2E_BASE_URL` em vez de deixar os dois brigarem — sem isso a
 suíte demora minutos e falha por tempo esgotado, sem dizer o porquê.
 
+Uma diferença que vale saber antes de caçar fantasma: **local roda com
+`retries: 0` e a CI com 1.** Uma falha intermitente aparece aqui e some lá — e a
+inversa também.
+
+### Teste visual mede depois, nunca antes
+
+Quatro testes desta suíte já falharam por medir antes de a página existir:
+conteúdo que chega por streaming, foco no primeiro `Tab`, hidratação, animação
+de gaveta. A guarda certa **espera o resultado**, não um tempo:
+
+```ts
+// errado: mede uma vez, logo depois do goto
+expect((await contar()).length).toBeGreaterThan(0);
+
+// certo: espera a página entregar o que promete
+await expect.poll(async () => (await contar()).length).toBeGreaterThan(0);
+```
+
+E a armadilha oposta, que é pior porque é silenciosa: **amostra vazia não é
+aprovação.** Um seletor que casa zero elementos faz o teste passar dizendo nada.
+Toda medição por varredura precisa de uma guarda de amostra mínima.
+
 O `pnpm a11y` mede três coisas que o axe-core não cobre: se o anel de foco
 realmente aparece (o axe só olha se o `outline` foi zerado, não se algo o
 substituiu), se o alvo de toque tem 44px **contando o rótulo** que comanda o
@@ -464,16 +604,32 @@ seção.
 
 ## Produção
 
-| | |
-|---|---|
-| Site | https://jbsolucoesodontologicas.com.br |
-| Painel | `/admin` |
-| Hospedagem | Vercel, projeto `jb-site` |
-| Banco | Neon Postgres, provisionado pela Vercel |
-| Arquivos | Vercel Blob, store `jb-midia` |
+**Atenção antes de publicar: o domínio oficial ainda serve o site antigo.**
 
-Todo `git push` para `main` publica. Deploy, migração, seed e o que fazer quando
-o webhook falha estão em [`docs/operacao.md`](docs/operacao.md).
+| | Onde vive | Branch |
+|---|---|---|
+| Site oficial — **ainda o legado** | https://jbsolucoesodontologicas.com.br | `main` |
+| **A plataforma** | https://jb-plataforma.vercel.app | `plataforma` |
+| Painel | `/admin` de cada um | — |
+| Hospedagem | Vercel, projeto `jb-site` | — |
+| Banco | Neon Postgres, um por escopo (ver "Ambientes") | — |
+| Arquivos | Vercel Blob, store `jb-midia` | — |
+
+Tudo que este README descreve roda hoje **no preview**, para aprovação. A branch
+`plataforma` está centenas de commits à frente de `main`, e o alias
+`jb-plataforma.vercel.app` é um domínio amarrado a ela — não se move à mão.
+
+Levar a plataforma para o domínio oficial é uma decisão, não um `push`, e tem um
+pré-requisito que não é código: **o banco de produção ainda não recebeu a
+migração de conteúdo institucional** feita no preview em 06/09/2026. Código novo
+contra banco velho mostra texto velho — e o sintoma parece bug de deploy quando é
+de dado.
+
+Uma trava prática: o plano da Vercel é o gratuito, **100 deploys por dia**.
+Estourado o limite, o push simplesmente deixa de virar build, em silêncio.
+
+Deploy, migração, seed e o que fazer quando o webhook falha estão em
+[`docs/operacao.md`](docs/operacao.md).
 
 ---
 
@@ -489,11 +645,6 @@ dado, a tela mostra estado vazio com uma ação útil.
   Em desenvolvimento o link é impresso no terminal para o fluxo ser testável; em
   produção não é impresso nem enviado. Hoje, trocar a senha de um cliente é
   tarefa da equipe, pelo painel.
-- **Frete não é calculado no checkout.** Existem `ShippingProfile` e
-  `ShippingZone` no schema e a tela `/admin/frete` para cadastrá-los, mas
-  `src/app/acoes/checkout.ts` grava toda entrega que não é retirada como
-  `sob_orcamento` com `valorCents: 0` — o frete é combinado depois, fora do
-  sistema. Ligar o cálculo é conectar os perfis já cadastrados ao checkout.
 - **Mercado Pago nunca rodou em produção.** O adapter está escrito e implementa
   a interface inteira, mas a plataforma opera hoje com o provedor de teste.
   Ligar exige `PAYMENT_PROVIDER=mercadopago`, as três variáveis do MP, cadastrar
@@ -521,3 +672,55 @@ dado, a tela mostra estado vazio com uma ação útil.
 - **Não há verificação de e-mail no cadastro.** O campo `emailVerifiedAt` existe
   em `Customer` e aparece no painel, mas nada o preenche — depende do mesmo
   worker de envio que falta.
+- **Falta fotografia própria.** Sobre, Estrutura e a página da assistência se
+  apoiam em texto e em imagem do catálogo. A auditoria de 08/09/2026
+  ([`docs/auditoria-visual-2026-09-08/`](docs/auditoria-visual-2026-09-08/))
+  registra o pedido: bancada, equipe, testes e estoque fotografados. Enquanto
+  não existir, a assistência ao menos deixou de abrir com a MESMA foto da home
+  — ela prefere um seminovo, que é unidade que passou pela revisão.
+- **Central Técnica, cases e depoimentos estão sem publicação.** As três telas
+  mostram estado vazio com próximo passo, e a Central Técnica sai da direção
+  principal do cabeçalho enquanto não tiver texto no ar
+  (`centralTemPublicacao`, em `src/lib/loja-publica.ts`). Voltam sozinhas na
+  primeira publicação.
+- ~~**Os portões de 47 e 42 rotas não foram reconferidos**~~ — **reconferidos
+  em 11/09/2026, e os três fecharam verdes pela primeira vez na mesma rodada**:
+
+  | Portão | Medida |
+  |---|---|
+  | `pnpm e2e` | **99/99**, sem repetição |
+  | `pnpm test:unit` | **621** em 39 arquivos |
+  | `pnpm a11y` | **47 rotas · 94 medições · 0 problemas** |
+  | `pnpm responsivo` | **42 rotas · 294 medições · 0 problemas** |
+  | `pnpm build` | compila |
+  | `eslint`, `tsc` | sem erro |
+
+  O último vermelho era do painel, e de um tipo só: barra de formulário e faixa
+  em destaque sangravam com recuo negativo maior que o respiro da página, e
+  vazavam 4px para fora da tela em toda largura de tablet para cima. A sangria
+  agora espelha o respiro degrau a degrau — ver
+  [`docs/decisoes.md` § 28](docs/decisoes.md).
+
+  Os dois vermelhos públicos que a lista antiga citava saíram na rodada
+  anterior: o texto de 11,52px do hero da vitrine e os chips de 40px do
+  catálogo, mais o botão de favoritar do cartão, que nasceu com 36px.
+
+  `pnpm a11y` e `pnpm responsivo` precisam do Postgres de pé — sem ele, o portão
+  do painel diz "não foi possível entrar" e **passa com zero medição**, que lê
+  como verde e não é. `pnpm responsivo --so=publico` separa loja de painel. Ver
+  [`docs/evolucao-jb/validacao.md`](docs/evolucao-jb/validacao.md).
+- **Quatro folhas de estilo repintam o cabeçalho de fora.** `header-premium.css`,
+  `header-product.css` (11,4 kB), `header-product-mobile.css` e
+  `header-search.css` alcançam o cabeçalho global por
+  `body:has([data-pdp-marketplace]) header[…] { … !important }`. O efeito
+  aparece: a busca do topo mede 300px em todo o site e 563px na ficha. Deveria
+  ser prop do componente, não seletor de fora com `!important`.
+
+- ~~**Três larguras de container convivendo**~~ — **resolvido em 11/09/2026**,
+  e o diagnóstico estava errado. Não eram três larguras arbitrárias: são duas
+  intencionais — 1440px para conteúdo, 1600px para catálogo — mais 1792px só no
+  cabeçalho, que pode ser mais largo que o miolo. O defeito eram duas rotas no
+  balde errado: a faixa de marcas a 1792 no meio de uma home a 1600, e a busca
+  a 1440 mostrando grade de produto. Corrigida a classificação, `/`, `/loja` e
+  `/busca` começam todas em x=160 a 1920px. Ao criar seção nova a pergunta é se
+  aquilo é conteúdo ou catálogo — ver [`design.md`](design.md).

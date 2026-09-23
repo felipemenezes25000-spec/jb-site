@@ -39,18 +39,12 @@ export default async function NovoOrcamentoPage({ searchParams }: { searchParams
   const params = await searchParams;
   const clienteInicial = typeof params.cliente === "string" ? params.cliente : "";
 
-  const [clientes, produtos, cliente] = await Promise.all([
+  const [clientes, cliente] = await Promise.all([
     prisma.customer.findMany({
       where: { active: true },
       orderBy: { name: "asc" },
       take: 500,
       select: { id: true, name: true, companyName: true, email: true },
-    }),
-    prisma.product.findMany({
-      where: { status: "active" },
-      orderBy: { name: "asc" },
-      take: 500,
-      select: { id: true, name: true, sku: true, priceCents: true },
     }),
     clienteInicial
       ? prisma.customer.findUnique({
@@ -70,7 +64,7 @@ export default async function NovoOrcamentoPage({ searchParams }: { searchParams
 
       <CabecalhoPagina
         titulo="Novo orçamento"
-        apoio="A proposta nasce como rascunho. O envio ao cliente é o passo seguinte."
+        apoio="O orçamento nasce como rascunho. O envio ao cliente é o passo seguinte."
       />
 
       <EditorOrcamento
@@ -79,13 +73,7 @@ export default async function NovoOrcamentoPage({ searchParams }: { searchParams
           id: item.id,
           rotulo: `${item.companyName || item.name} — ${item.email}`,
         }))}
-        produtos={produtos.map((produto) => ({
-          id: produto.id,
-          rotulo: produto.sku ? `${produto.name} (${produto.sku})` : produto.name,
-          precoCents: produto.priceCents,
-        }))}
         inicial={{
-          kind: "comercial",
           customerId: cliente?.id ?? "",
           contatoNome: cliente?.name ?? "",
           contatoEmail: cliente?.email ?? "",
@@ -95,7 +83,6 @@ export default async function NovoOrcamentoPage({ searchParams }: { searchParams
           notaInterna: "",
           validoAte: paraInputDate(emSeteDias),
           desconto: "",
-          frete: "",
           /* Lista vazia, e não `[linhaVazia()]`.
            *
            * `linhaVazia` é exportada de um módulo `"use client"`. Passar uma

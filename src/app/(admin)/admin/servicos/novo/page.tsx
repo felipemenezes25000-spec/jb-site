@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PaginaNovoServico() {
-  await exigirEdicao("produtos");
+  await exigirEdicao("cadastros");
   const total = await prisma.service.count();
 
   return (

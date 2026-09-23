@@ -3,7 +3,7 @@
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 
-import type { EstadoAcao } from "@/app/acoes/admin-catalogo";
+import type { EstadoAcao } from "@/app/acoes/admin-cadastros";
 import { Botao, type Tamanho, type Variante } from "@/components/ui/button";
 import { BotaoConfirmar } from "@/components/ui/confirmar";
 

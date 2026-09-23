@@ -121,7 +121,7 @@ export default async function PaginaEditarUsuario({
           />
           <div className="px-5 py-4">
             <BotaoNovaSenha acao={gerarSenhaTemporaria} id={pessoa.id} nome={pessoa.name} />
-            <p className="mt-4 text-[0.8125rem] leading-relaxed text-graf-500">
+            <p className="mt-4 text-apoio leading-relaxed text-graf-500">
               Gerar uma nova senha invalida a anterior na hora. A pessoa entra com a temporária
               e troca a senha em Minha conta. O painel não obriga a troca no primeiro acesso, então
               vale avisar.
@@ -148,9 +148,9 @@ export default async function PaginaEditarUsuario({
                     {linha.user ? ` · por ${linha.user.name}` : ""}
                   </p>
                   {linha.summary ? (
-                    <p className="mt-0.5 text-[0.8125rem] text-graf-500">{linha.summary}</p>
+                    <p className="mt-0.5 text-apoio text-graf-500">{linha.summary}</p>
                   ) : null}
-                  <p className="mt-0.5 text-[0.8125rem] text-graf-500">
+                  <p className="mt-0.5 text-apoio text-graf-500">
                     {formatarDataHora(linha.createdAt)}
                   </p>
                 </li>
@@ -168,7 +168,7 @@ export default async function PaginaEditarUsuario({
         </Cartao>
       </div>
 
-      <p className="text-[0.8125rem] text-graf-500">
+      <p className="text-apoio text-graf-500">
         Acesso criado em {formatarDataHora(pessoa.createdAt)}
         {pessoa.lastLoginAt
           ? ` · último acesso em ${formatarDataHora(pessoa.lastLoginAt)}`

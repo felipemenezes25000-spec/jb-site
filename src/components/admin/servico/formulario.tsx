@@ -146,7 +146,7 @@ export function FormularioAcao({
           </Botao>
           {acoesExtras}
           {desabilitado && motivoDesabilitado ? (
-            <span className="text-[0.8125rem] text-graf-500">{motivoDesabilitado}</span>
+            <span className="text-apoio text-graf-500">{motivoDesabilitado}</span>
           ) : null}
         </div>
       )}

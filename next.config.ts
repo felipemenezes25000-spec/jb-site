@@ -86,6 +86,32 @@ const BLOB = "https://*.public.blob.vercel-storage.com";
 const GA_SCRIPT = "https://www.googletagmanager.com";
 const GA_API = ["https://www.google-analytics.com", "https://analytics.google.com"];
 
+/*
+ * Google Ads e pixel da Meta: a conversão do clique no WhatsApp.
+ *
+ * Mesmo raciocínio do GA4 acima: as origens entram no build, e o que decide
+ * se o script existe na página é o consentimento de cada visitante
+ * (`@/components/analytics/medicao`). As listas seguem a documentação de CSP
+ * de cada um: o Ads carrega por `googleadservices`/`doubleclick` e confirma a
+ * conversão com uma imagem em `google.com` (e no domínio do país, `.com.br`);
+ * a Meta carrega de `connect.facebook.net` e envia para `facebook.com/tr`.
+ */
+const ADS_SCRIPT = [
+  "https://www.googleadservices.com",
+  "https://googleads.g.doubleclick.net",
+  "https://www.google.com",
+];
+const ADS_API = [
+  "https://www.google.com",
+  "https://www.google.com.br",
+  "https://googleads.g.doubleclick.net",
+  "https://www.googleadservices.com",
+  "https://pagead2.googlesyndication.com",
+];
+const ADS_FRAME = "https://td.doubleclick.net";
+const META_SCRIPT = "https://connect.facebook.net";
+const META_API = ["https://www.facebook.com", "https://connect.facebook.net"];
+
 const MP_SCRIPT = "https://sdk.mercadopago.com";
 const MP_API = "https://api.mercadopago.com https://api.mercadolibre.com";
 const MP_FRAME = "https://www.mercadopago.com.br https://www.mercadopago.com";
@@ -131,6 +157,8 @@ const csp = [
     emDesenvolvimento && "'unsafe-eval'",
     usaMercadoPago && MP_SCRIPT,
     GA_SCRIPT,
+    ...ADS_SCRIPT,
+    META_SCRIPT,
     emPreviewVercel && VERCEL_LIVE,
   ),
 
@@ -167,6 +195,9 @@ const csp = [
     /* O GA4 ainda cai em requisição de imagem quando `sendBeacon` não está
        disponível; sem esta origem o evento some sem erro visível. */
     ...GA_API,
+    ...ADS_API,
+    META_API[0],
+    GA_SCRIPT,
     emPreviewVercel && VERCEL_ASSETS,
   ),
 
@@ -191,6 +222,9 @@ const csp = [
     BLOB,
     usaMercadoPago && MP_API,
     ...GA_API,
+    GA_SCRIPT,
+    ...ADS_API,
+    ...META_API,
     emPreviewVercel && VERCEL_LIVE,
     emPreviewVercel && "wss://vercel.live",
     emDesenvolvimento && "ws:",
@@ -212,6 +246,7 @@ const csp = [
     "https://www.google.com",
     "https://maps.google.com",
     usaMercadoPago && MP_FRAME,
+    ADS_FRAME,
     emPreviewVercel && VERCEL_LIVE,
   ),
 
@@ -345,8 +380,55 @@ const nextConfig: NextConfig = {
    * 308 preserva o método e diz ao buscador que a mudança é definitiva.
    */
   async redirects() {
-    return [{ source: "/empresa", destination: "/sobre", permanent: true }];
+    return REDIRECIONAMENTOS.map(([source, destination]) => ({
+      source,
+      destination,
+      permanent: true,
+    }));
   },
 };
+
+/**
+ * Para onde vão os endereços que saíram quando a JB virou só assistência.
+ *
+ * Só entra aqui o que tem um equivalente real na home nova: a página de
+ * assistência, o SOS, contato, dúvidas, a área do cliente (que deixou de
+ * existir; o acompanhamento agora é pelo WhatsApp). 308 preserva o método e
+ * diz ao buscador que a mudança é definitiva.
+ *
+ * As URLs da loja NÃO estão aqui. Mandar "/loja/autoclave-12l" para a home
+ * seria redirecionamento indiscriminado, que o Google trata como página
+ * inexistente disfarçada. Elas respondem 410 no `src/proxy.ts`.
+ *
+ * `/empresa` é o endereço herdado do site em PHP; ia para `/sobre`, que agora
+ * também virou seção da home. `/solucoes` é o outro item do menu desse site
+ * (Home, Empresa, Estrutura, Soluções, Contato): é o que o Google conhece do
+ * domínio oficial, e não pode cair em 404 no dia da troca.
+ */
+const REDIRECIONAMENTOS: [string, string][] = [
+  ["/assistencia-tecnica", "/"],
+  ["/assistencia-tecnica/:caminho*", "/"],
+  ["/sos-equipamento", "/"],
+  ["/orcamento", "/"],
+  ["/servicos", "/#equipamentos"],
+  ["/servicos/:slug", "/#equipamentos"],
+  ["/manutencao-preventiva", "/#equipamentos"],
+  ["/planos-de-manutencao", "/#equipamentos"],
+  ["/contato", "/#contato"],
+  ["/faq", "/#duvidas"],
+  ["/sobre", "/#autorizada"],
+  ["/estrutura", "/#autorizada"],
+  ["/empresa", "/#autorizada"],
+  ["/solucoes", "/#equipamentos"],
+  ["/solucoes/:caminho*", "/#equipamentos"],
+  ["/depoimentos", "/"],
+  ["/entrar", "/"],
+  ["/cadastro", "/"],
+  ["/recuperar-senha", "/"],
+  ["/redefinir-senha", "/"],
+  ["/minha-jb", "/"],
+  ["/minha-jb/:caminho*", "/"],
+  ["/chamado/:numero", "/"],
+];
 
 export default nextConfig;

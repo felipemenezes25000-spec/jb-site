@@ -14,6 +14,16 @@ export type Fixtures = {
     nome: string;
     precoCents: number;
   };
+  /**
+   * Um produto que É equipamento e tem ficha técnica cadastrada.
+   *
+   * Comprar um consumível não abre prontuário: `Equipment` só nasce de item
+   * com `isEquipment`. E sem especificações no cadastro não há o que herdar —
+   * o teste do prontuário passaria por vacuidade, que é o pior jeito de um
+   * teste passar. `null` quando o catálogo semeado não tem nenhum; o teste se
+   * pula sozinho e diz por quê, em vez de falhar por falta de dado.
+   */
+  equipamento: { slug: string; nome: string } | null;
   /** condições de produto que existem publicadas, para o teste de filtro */
   condicoes: string[];
   staff: { email: string; senha: string };

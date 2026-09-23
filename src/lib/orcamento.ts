@@ -7,7 +7,6 @@ import { ROTULO_CHAMADO } from "@/lib/assistencia";
 import { proximoCodigo } from "@/lib/codigos";
 import { formatarData, formatarDataHora, formatarPreco } from "@/lib/format";
 import { type ResultadoMensagem, enfileirar } from "@/lib/notificacoes";
-import { ErroDeEstoque } from "@/lib/pedido";
 import { prisma } from "@/lib/prisma";
 import { urlAbsoluta } from "@/lib/seo";
 
@@ -19,10 +18,9 @@ import { urlAbsoluta } from "@/lib/seo";
  * 1. Os totais são sempre somados a partir dos itens gravados. Nenhum total
  *    chega pronto do formulário.
  *
- * 2. O preço aprovado é o preço do orçamento, não o preço da vitrine. Quando um
- *    orçamento comercial é aprovado ele vira Pedido com os valores que estavam
- *    na proposta — ver `converterEmPedido` para o porquê de não passar pelo
- *    carrinho.
+ * 2. Orçamento é de reparo: peça, mão de obra e deslocamento. Aprovado, ele
+ *    libera o serviço do chamado ligado. Não existe mais conversão em pedido
+ *    de venda; a loja saiu do site.
  *
  * 3. Prazo vencido não vira aprovação silenciosa: `expirarVencidos` fecha o
  *    que passou da validade e registra o evento.
@@ -37,6 +35,7 @@ export class ErroDeOrcamento extends Error {
 
 export const ROTULO_ORCAMENTO: Record<QuoteStatus, string> = {
   rascunho: "Rascunho",
+  solicitado: "Em análise pela equipe",
   enviado: "Enviado",
   em_duvida: "Em negociação",
   aprovado: "Aprovado",
@@ -52,6 +51,24 @@ export const ROTULO_TIPO_ORCAMENTO: Record<QuoteKind, string> = {
 
 /** Status em que a proposta ainda está viva e pode ser decidida pelo cliente. */
 export const STATUS_ORCAMENTO_ABERTOS: QuoteStatus[] = ["enviado", "em_duvida"];
+
+/**
+ * O que o cliente pode ver na Área da Clínica.
+ *
+ * `rascunho` fica de fora porque é documento interno da equipe. `solicitado`
+ * entra porque é o pedido que o próprio cliente fez: ele tem o número, recebeu
+ * o e-mail e foi informado de que a proposta está sendo montada. Esconder o
+ * que a pessoa acabou de criar é o defeito, não a proteção.
+ */
+export const STATUS_ORCAMENTO_VISIVEIS: QuoteStatus[] = [
+  "solicitado",
+  "enviado",
+  "em_duvida",
+  "aprovado",
+  "recusado",
+  "expirado",
+  "convertido",
+];
 
 export type EntradaItemOrcamento = {
   productId?: string | null;
@@ -77,6 +94,16 @@ export type EntradaOrcamento = {
   freteCents?: number;
   itens: EntradaItemOrcamento[];
   userId?: string | null;
+  /**
+   * O pedido partiu do cliente, pelo site.
+   *
+   * Muda o estado inicial de `rascunho` para `solicitado` e deixa o evento de
+   * abertura visível para ele. É a diferença entre um documento que a equipe
+   * está escrevendo e um pedido que a pessoa fez e já recebeu numerado por
+   * e-mail. Sem essa distinção, a proposta nascia invisível na Área da Clínica
+   * enquanto a tela de sucesso prometia que ela entraria na fila.
+   */
+  pedidoDoCliente?: boolean;
 };
 
 function normalizarItens(itens: EntradaItemOrcamento[]) {
@@ -163,8 +190,8 @@ export async function criarOrcamento(entrada: EntradaOrcamento) {
     const orcamento = await tx.quote.create({
       data: {
         number: numero,
-        kind: entrada.kind ?? "comercial",
-        status: "rascunho",
+        kind: entrada.kind ?? "assistencia",
+        status: entrada.pedidoDoCliente ? "solicitado" : "rascunho",
         customerId: entrada.customerId ?? null,
         requestId: entrada.chamadoId ?? null,
         contactName: entrada.contato?.nome ?? cliente?.name ?? "",
@@ -185,9 +212,11 @@ export async function criarOrcamento(entrada: EntradaOrcamento) {
     await tx.quoteEvent.create({
       data: {
         quoteId: orcamento.id,
-        title: "Orçamento criado",
-        message: `Proposta ${numero} montada com ${itens.length} ${itens.length === 1 ? "item" : "itens"}.`,
-        visibleToCustomer: false,
+        title: entrada.pedidoDoCliente ? "Pedido recebido" : "Orçamento criado",
+        message: entrada.pedidoDoCliente
+          ? `Pedido registrado pelo site com ${itens.length} ${itens.length === 1 ? "item" : "itens"}. A equipe comercial vai montar a proposta.`
+          : `Proposta ${numero} montada com ${itens.length} ${itens.length === 1 ? "item" : "itens"}.`,
+        visibleToCustomer: Boolean(entrada.pedidoDoCliente),
         userId: entrada.userId ?? null,
       },
     });
@@ -433,180 +462,11 @@ export async function reenviarOrcamento(
 }
 
 /**
- * Baixa de estoque atômica, idêntica à do checkout.
- *
- * O UPDATE condicional é o que impede que duas propostas aprovadas no mesmo
- * minuto vendam a mesma unidade de seminovo.
- */
-async function baixarEstoque(
-  tx: Prisma.TransactionClient,
-  produtoId: string,
-  quantidade: number,
-  nome: string,
-) {
-  const afetadas = await tx.$executeRaw`
-    UPDATE "Product"
-    SET "stock" = "stock" - ${quantidade}
-    WHERE "id" = ${produtoId}
-      AND ("trackInventory" = false OR "stock" >= ${quantidade})
-  `;
-  if (afetadas === 0) throw new ErroDeEstoque(nome);
-}
-
-/**
- * Transforma o orçamento comercial aprovado em Pedido.
- *
- * Por que não passar por `criarPedido`: aquele caminho parte de um carrinho e
- * recalcula tudo pelo preço de vitrine, que é exatamente o que um orçamento
- * NÃO deve fazer — o preço negociado se perderia. Aqui o Pedido nasce com os
- * valores da proposta, congelados item a item, e a baixa de estoque é a mesma.
- *
- * Endereço: o orçamento não guarda endereço, então usamos o padrão do cliente
- * quando existe. Não havendo, o pedido nasce com frete a combinar em vez de um
- * endereço inventado.
- */
-async function converterEmPedido(
-  tx: Prisma.TransactionClient,
-  quoteId: string,
-  userId?: string | null,
-) {
-  const orcamento = await tx.quote.findUnique({
-    where: { id: quoteId },
-    include: {
-      customer: true,
-      items: { orderBy: { order: "asc" }, include: { product: { include: { brand: true } } } },
-    },
-  });
-  if (!orcamento) throw new ErroDeOrcamento("Orçamento não encontrado.");
-  if (orcamento.orderId) return orcamento.orderId;
-  if (orcamento.items.length === 0) {
-    throw new ErroDeOrcamento("Orçamento sem itens não vira pedido.");
-  }
-
-  const subtotalCents = orcamento.items.reduce((acc, item) => acc + item.totalCents, 0);
-  const totalCents =
-    Math.max(0, subtotalCents - orcamento.discountCents) + orcamento.shippingCents;
-
-  const endereco = orcamento.customerId
-    ? await tx.customerAddress.findFirst({
-        where: { customerId: orcamento.customerId },
-        orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-      })
-    : null;
-
-  const comFrete = orcamento.shippingCents > 0;
-  const numero = await proximoCodigo("pedido", tx);
-
-  const pedido = await tx.order.create({
-    data: {
-      number: numero,
-      status: "aguardando_pagamento",
-      customerId: orcamento.customerId,
-      buyerName: orcamento.customer?.name ?? orcamento.contactName,
-      buyerEmail: orcamento.customer?.email ?? orcamento.contactEmail,
-      buyerPhone: orcamento.customer?.phone ?? orcamento.contactPhone,
-      buyerDocument: orcamento.customer?.document ?? "",
-      personType: orcamento.customer?.personType ?? "fisica",
-      companyName: orcamento.customer?.companyName ?? "",
-      shippingKind: comFrete ? "entrega_local" : "sob_orcamento",
-      shippingLabel: comFrete
-        ? `Entrega conforme orçamento ${orcamento.number}`
-        : "Frete a combinar",
-      shipZip: endereco?.zip ?? "",
-      shipStreet: endereco?.street ?? "",
-      shipNumber: endereco?.number ?? "",
-      shipComplement: endereco?.complement ?? "",
-      shipDistrict: endereco?.district ?? "",
-      shipCity: endereco?.city ?? "",
-      shipState: endereco?.state ?? "",
-      shipReference: endereco?.reference ?? "",
-      subtotalCents,
-      discountCents: orcamento.discountCents,
-      shippingCents: orcamento.shippingCents,
-      totalCents,
-      customerNote: orcamento.message,
-      internalNote: `Gerado a partir do orçamento ${orcamento.number}.`,
-    },
-  });
-
-  for (const item of orcamento.items) {
-    const produto = item.product;
-
-    await tx.orderItem.create({
-      data: {
-        orderId: pedido.id,
-        kind: produto ? "produto" : "servico",
-        productId: produto?.id ?? null,
-        serviceId: item.serviceId,
-        name: item.description,
-        sku: produto?.sku ?? "",
-        brandName: produto?.brand?.name ?? "",
-        modelName: produto?.model ?? "",
-        condition: produto?.condition ?? null,
-        // preço da proposta, não o da vitrine
-        unitPriceCents: item.unitPriceCents,
-        quantity: item.quantity,
-        totalCents: item.totalCents,
-      },
-    });
-
-    if (produto) {
-      await baixarEstoque(tx, produto.id, item.quantity, produto.name);
-      await tx.inventoryMovement.create({
-        data: {
-          productId: produto.id,
-          kind: "saida",
-          quantity: item.quantity,
-          reason: `Orçamento ${orcamento.number} aprovado`,
-          orderId: pedido.id,
-        },
-      });
-    }
-  }
-
-  await tx.orderStatusEvent.create({
-    data: {
-      orderId: pedido.id,
-      status: "aguardando_pagamento",
-      note: `Pedido gerado a partir do orçamento ${orcamento.number}.`,
-    },
-  });
-
-  await tx.quote.update({
-    where: { id: quoteId },
-    data: { status: "convertido", orderId: pedido.id },
-  });
-
-  await tx.quoteEvent.create({
-    data: {
-      quoteId,
-      title: `Pedido ${numero} gerado`,
-      message: "Siga para o pagamento para concluir a compra.",
-      userId: userId ?? null,
-    },
-  });
-
-  if (orcamento.customerId) {
-    await tx.notification.create({
-      data: {
-        customerId: orcamento.customerId,
-        kind: "pedido_criado",
-        title: `Pedido ${numero} criado`,
-        body: `Total de ${formatarPreco(totalCents)}. Falta só o pagamento.`,
-        href: `/minha-jb/pedidos/${pedido.id}`,
-      },
-    });
-  }
-
-  return pedido.id;
-}
-
-/**
  * Registra a aprovação do cliente.
  *
- * Orçamento comercial vira pedido na mesma transação. Orçamento de assistência
- * não vira pedido: ele libera a execução do serviço, então o chamado ligado
- * avança para `aprovado` e a OS segue o fluxo normal.
+ * A aprovação libera a execução do serviço: o chamado ligado avança para
+ * `aprovado` e a OS segue o fluxo normal. Quem registra é a equipe, depois da
+ * conversa com o cliente (WhatsApp, telefone ou e-mail).
  */
 export async function aprovarOrcamento(
   quoteId: string,
@@ -623,12 +483,11 @@ export async function aprovarOrcamento(
           status: true,
           validUntil: true,
           requestId: true,
-          orderId: true,
         },
       });
       if (!orcamento) throw new ErroDeOrcamento("Orçamento não encontrado.");
       if (orcamento.status === "convertido" || orcamento.status === "aprovado") {
-        return { quoteId, pedidoId: orcamento.orderId };
+        return { quoteId };
       }
       if (orcamento.status === "rascunho") {
         throw new ErroDeOrcamento("Este orçamento ainda não foi enviado ao cliente.");
@@ -674,12 +533,7 @@ export async function aprovarOrcamento(
         });
       }
 
-      const pedidoId =
-        orcamento.kind === "comercial"
-          ? await converterEmPedido(tx, quoteId, opcoes.userId)
-          : null;
-
-      return { quoteId, pedidoId };
+      return { quoteId };
     },
     { timeout: 20_000 },
   );
@@ -799,6 +653,7 @@ export function passosDoOrcamento(orcamento: OrcamentoParaLinha): PassoLinha[] {
 
   const alcance: Record<QuoteStatus, number> = {
     rascunho: 0,
+    solicitado: 0,
     enviado: 1,
     em_duvida: 1,
     expirado: 1,
@@ -817,10 +672,14 @@ export function passosDoOrcamento(orcamento: OrcamentoParaLinha): PassoLinha[] {
 
   const passos: PassoLinha[] = [
     {
-      titulo: "Proposta montada",
-      descricao: "Itens, prazos e condições definidos pela equipe.",
+      titulo:
+        orcamento.status === "solicitado" ? "Pedido recebido" : "Proposta montada",
+      descricao:
+        orcamento.status === "solicitado"
+          ? "A equipe comercial está montando a proposta com os itens que você listou."
+          : "Itens, prazos e condições definidos pela equipe.",
       quando: formatarDataHora(orcamento.createdAt),
-      estado: "concluido",
+      estado: orcamento.status === "solicitado" ? "atual" : "concluido",
     },
     {
       titulo: "Enviada ao cliente",

@@ -220,7 +220,7 @@ export default async function PaginaEditarPagina({
                   loading="lazy"
                   className="h-28 w-full rounded-lg object-contain"
                 />
-                <p className="mt-2 truncate text-[0.8125rem] text-graf-600">
+                <p className="mt-2 truncate text-apoio text-graf-600">
                   {item.caption || item.media.filename}
                 </p>
               </li>
@@ -261,7 +261,7 @@ export default async function PaginaEditarPagina({
                   <p className="mt-1.5 text-sm text-graf-600">
                     {revisao.note || `Título na época: ${revisao.title}`}
                   </p>
-                  <p className="mt-1 text-[0.8125rem] text-graf-500">
+                  <p className="mt-1 text-apoio text-graf-500">
                     {revisao.body.length.toLocaleString("pt-BR")} caracteres de texto.
                   </p>
                 </div>

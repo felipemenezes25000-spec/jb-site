@@ -84,7 +84,7 @@ function Indicador({
         </p>
       )}
 
-      <dl className="mt-4 space-y-2 border-t border-graf-200 pt-4 text-[0.8125rem]">
+      <dl className="mt-4 space-y-2 border-t border-graf-200 pt-4 text-apoio">
         <Linha rotulo="Janela" valor={definicao.janela} />
         <Linha rotulo="População" valor={definicao.populacao} />
         {definicao.denominador ? (
@@ -110,7 +110,7 @@ function Indicador({
 
       {/* A ressalva. Ela muda o que o número significa, e por isso tem
           destaque próprio em vez de virar mais uma linha da lista. */}
-      <p className="mt-4 flex gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-[0.8125rem] leading-relaxed text-amber-900">
+      <p className="mt-4 flex gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-apoio leading-relaxed text-amber-900">
         <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-600" aria-hidden />
         <span>{definicao.naoConclui}</span>
       </p>

@@ -1,0 +1,346 @@
+/* ============================================================================
+   JB Motion System
+   ============================================================================ */
+
+:root {
+  --jb-motion-fast: 160ms;
+  --jb-motion-base: 320ms;
+  --jb-motion-slow: 720ms;
+  --jb-motion-cinematic: 980ms;
+  --jb-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --jb-motion-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.jb-motion-progress {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--color-jb-700), var(--color-jb-400), var(--color-jb-700));
+  box-shadow: 0 0 16px rgb(224 20 27 / 0.34);
+  opacity: 0;
+}
+
+@supports (animation-timeline: scroll()) {
+  .jb-motion-progress {
+    opacity: 1;
+    animation: jb-motion-progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+.jb-motion-route-beam {
+  position: fixed;
+  z-index: 1001;
+  top: 0;
+  left: 0;
+  width: min(32vw, 30rem);
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--color-jb-400) 34%, #fff 62%, transparent);
+  filter: drop-shadow(0 0 8px rgb(224 20 27 / 0.6));
+  transform: translate3d(-130%, 0, 0);
+  animation: jb-motion-route 760ms var(--jb-motion-ease) both;
+}
+
+.jb-motion-aura {
+  position: fixed;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  opacity: 0;
+  /* Sem `filter: blur`: o gradiente radial já termina em transparente, e o
+     desfoque de uma camada de 26rem custava composição a cada quadro. */
+  background: radial-gradient(circle, rgb(224 20 27 / 0.075) 0%, rgb(224 20 27 / 0.028) 38%, transparent 70%);
+  will-change: transform;
+  transition: opacity 420ms ease;
+}
+
+html[data-motion-zone="publico"][data-motion-pointer="fine"] .jb-motion-aura[data-visible="true"] {
+  opacity: 1;
+}
+
+/* O palco da home é quase imperceptível parado; em movimento dá profundidade
+   sem substituir o branco predominante da marca. */
+.jb-home-stage {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.jb-home-orbit {
+  position: absolute;
+  display: block;
+  border-radius: 9999px;
+  border: 1px solid rgb(224 20 27 / 0.08);
+  opacity: 0.7;
+  will-change: transform;
+}
+
+.jb-home-orbit-a {
+  top: 7rem;
+  right: -18rem;
+  width: 42rem;
+  height: 42rem;
+  animation: jb-orbit-a 26s ease-in-out infinite alternate;
+}
+
+.jb-home-orbit-b {
+  top: 46rem;
+  left: -22rem;
+  width: 52rem;
+  height: 52rem;
+  border-color: rgb(26 28 30 / 0.055);
+  animation: jb-orbit-b 34s ease-in-out infinite alternate;
+}
+
+.jb-home-orbit-c {
+  top: 118rem;
+  right: -12rem;
+  width: 30rem;
+  height: 30rem;
+  border-color: rgb(224 20 27 / 0.06);
+  animation: jb-orbit-c 30s ease-in-out infinite alternate;
+}
+
+/* O reveal de seções é Web Animations em `motion-system.tsx`: opacidade e
+   `translate` vertical, só enquanto a animação roda. Não existe estado de
+   espera em CSS — um bloco fora da tela está no layout final, medível e
+   focável, e ninguém o encontra deslocado, girado ou encolhido. */
+
+html[data-motion-scene="home"] [data-motion-chapter] {
+  position: relative;
+  isolation: isolate;
+}
+
+html[data-motion-scene="home"] [data-motion-chapter="bancada"]::after,
+html[data-motion-scene="home"] [data-motion-chapter="comparador"]::after,
+html[data-motion-scene="home"] [data-motion-chapter="fechamento"]::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 8%;
+  right: 8%;
+  bottom: -1px;
+  height: 1px;
+  /* Repouso = traço inteiro. O motor anima de 16% até aqui quando o capítulo
+     entra; sem motor, o traço simplesmente existe. */
+  opacity: 0.55;
+  transform-origin: 50% 50%;
+  background: linear-gradient(90deg, transparent, rgb(224 20 27 / 0.6), transparent);
+}
+
+html[data-motion-scene="produto"] main [data-palco-imagem-produto] {
+  transform-origin: 50% 55%;
+  transition: transform 760ms var(--jb-motion-ease-spring), filter 520ms ease;
+}
+
+html[data-motion-scene="produto"][data-motion-pointer="fine"] main [data-palco-imagem-produto]:hover {
+  transform: perspective(1200px) translateZ(0) scale(1.012);
+}
+
+/* A caixa de compra não levanta no hover. Ela é onde a decisão acontece
+   (design: "buybox estável"), e um bloco que sobe 3px sob o cursor foge do
+   ponteiro que está na borda inferior — o hover liga e desliga em ciclo. */
+
+html[data-motion-scene="clinica"] :where([data-status], [data-timeline], [data-motion-status]) {
+  transition:
+    translate 360ms var(--jb-motion-ease),
+    box-shadow 360ms var(--jb-motion-ease),
+    background-color 240ms ease,
+    border-color 240ms ease;
+}
+
+html[data-motion-scene="clinica"][data-motion-pointer="fine"] :where([data-status], [data-timeline], [data-motion-status]):hover {
+  translate: 0 -2px;
+}
+
+/* Giro do cartão. O motor anima `--jb-tilt-*` no cartão e `--jb-pointer-*`
+   no `::before` (Web Animations); aqui só se desenha. Como tudo pende do
+   `:hover`, sair do cartão desfaz o giro sem depender de evento.
+
+   As quatro são registradas e NÃO herdam: só o próprio cartão lê o giro e só
+   o `::before` lê a posição do brilho. Herdável, cada quadro do ponteiro
+   recalculava o estilo da subárvore inteira do cartão. E animadas, não
+   escritas numa folha: alterar uma regra de folha a cada quadro fazia o
+   navegador reprocessar a folha — com CPU 4x mais lenta, 300 movimentos na
+   grade davam 46 tarefas longas.
+
+   Sem `transform-style: preserve-3d`, `will-change` nem `translateZ`: o cartão
+   e a moldura da foto têm `overflow: hidden`, que achata o 3D — a profundidade
+   nunca apareceu, e os vinte cartões da grade ficavam promovidos a camada o
+   tempo todo. */
+@property --jb-tilt-x {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --jb-tilt-y {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --jb-pointer-x {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --jb-pointer-y {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-motion-zone="publico"]:not([data-motion-reduced]) [data-cartao-produto]::before {
+    content: "";
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    background:
+      radial-gradient(
+        28rem circle at var(--jb-pointer-x, 50%) var(--jb-pointer-y, 50%),
+        rgb(224 20 27 / 0.11),
+        rgb(224 20 27 / 0.035) 28%,
+        transparent 58%
+      );
+    transition: opacity 340ms ease;
+  }
+
+  html[data-motion-zone="publico"]:not([data-motion-reduced]) [data-cartao-produto]:hover {
+    transform:
+      perspective(1100px)
+      translate3d(0, -5px, 0)
+      rotateX(var(--jb-tilt-x, 0deg))
+      rotateY(var(--jb-tilt-y, 0deg));
+    border-color: color-mix(in srgb, var(--color-jb-500) 24%, var(--color-graf-200));
+    box-shadow:
+      0 18px 44px -28px rgb(26 28 30 / 0.48),
+      0 8px 30px -24px rgb(224 20 27 / 0.26);
+    transition:
+      transform 140ms ease-out,
+      border-color 320ms ease,
+      box-shadow 420ms var(--jb-motion-ease);
+  }
+
+  html[data-motion-zone="publico"]:not([data-motion-reduced]) [data-cartao-produto]:hover::before {
+    opacity: 1;
+  }
+
+  html[data-motion-zone="publico"]:not([data-motion-reduced]) [data-cartao-produto]:hover [data-imagem-produto] {
+    transform: scale(1.045);
+  }
+}
+
+/* Microinterações de controle. Ficam em `@layer base` de propósito: esta folha
+   é importada sem camada, e sem camada ela vencia TODA utility do Tailwind —
+   o `duration-300` de um drawer, o `transition-none` de quem pediu nenhuma, o
+   `transition-transform` do chevron do acordeão. Na base, são o padrão de quem
+   não declarou nada. Escala e deslocamento usam as propriedades individuais
+   (`scale`, `translate`), que se somam ao `transform` do componente em vez de
+   apagá-lo. */
+@layer base {
+  html[data-motion-enhanced="true"] :where(button, a, input, select, textarea) {
+    transition-property: color, background-color, border-color, box-shadow, opacity, scale;
+    transition-duration: var(--jb-motion-fast);
+    transition-timing-function: ease-out;
+  }
+
+  html[data-motion-enhanced="true"] :where(button, a) :where(svg) {
+    transition: translate var(--jb-motion-base) var(--jb-motion-ease);
+  }
+
+  html[data-motion-zone="publico"] :where(button, a):not([aria-disabled="true"]):active {
+    transition-duration: 90ms;
+  }
+
+  html[data-motion-zone="publico"]
+    :where(button, a[class*="bg-jb-"], .botao-jb, .botao-osso):not([aria-disabled="true"]):active {
+    scale: 0.985;
+  }
+
+  /* Só a seta que acompanha um texto anda. Ícone sozinho (fechar, favoritar)
+     não foge do cursor. */
+  html[data-motion-zone="publico"] :where(a, button):hover > svg:last-child:not(:only-child) {
+    translate: 2px 0;
+  }
+}
+
+@keyframes jb-motion-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes jb-motion-route {
+  0% {
+    opacity: 0;
+    transform: translate3d(-130%, 0, 0) scaleX(0.7);
+  }
+  16% { opacity: 1; }
+  72% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate3d(430%, 0, 0) scaleX(1.15);
+  }
+}
+
+@keyframes jb-orbit-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-44px, 30px, 0) scale(1.06); }
+}
+
+@keyframes jb-orbit-b {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(50px, -26px, 0) scale(0.95); }
+}
+
+@keyframes jb-orbit-c {
+  from { transform: translate3d(0, 0, 0) scale(0.96); }
+  to { transform: translate3d(-30px, 24px, 0) scale(1.08); }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .jb-motion-aura { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-motion-progress,
+  .jb-motion-route-beam,
+  .jb-motion-aura,
+  .jb-home-stage {
+    display: none !important;
+  }
+
+  html[data-motion-enhanced="true"] :where([data-imagem-produto], [data-palco-imagem-produto]) {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* `both` segura o quadro inicial: impresso, um feixe no meio do caminho ou o
+   palco da home sairiam no papel. */
+@media print {
+  .jb-motion-progress,
+  .jb-motion-route-beam,
+  .jb-motion-aura,
+  .jb-home-stage {
+    display: none !important;
+  }
+}

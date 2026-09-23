@@ -35,7 +35,7 @@ function ehGoogleMaps(url: string) {
 /* `py-3` no toque: o link tinha 20px de altura, e sair do site por um alvo de
    20px no celular é errar e abrir o mapa sem querer. */
 const CLASSE_ATALHO =
-  "foco-jb inline-flex items-center rounded-xs text-[0.9375rem] font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500 pointer-coarse:min-h-11 pointer-coarse:py-3";
+  "foco-jb inline-flex items-center rounded-xs text-corpo font-semibold text-jb-700 underline underline-offset-4 hover:text-jb-500 pointer-coarse:min-h-11 pointer-coarse:py-3";
 
 export function MapaDaUnidade({
   src,
@@ -96,7 +96,7 @@ export function MapaDaUnidade({
       </div>
       {endereco ? (
         <figcaption className="flex flex-wrap items-center justify-between gap-x-8 gap-y-1 border-t border-graf-200 px-5 py-4">
-          <div className="flex min-w-0 items-start gap-2.5 text-[0.9375rem] leading-snug text-graf-800">
+          <div className="flex min-w-0 items-start gap-2.5 text-corpo leading-snug text-graf-800">
             <MapPin className="mt-0.5 size-4.5 shrink-0 text-graf-500" aria-hidden />
             <address className="not-italic">{endereco}</address>
           </div>

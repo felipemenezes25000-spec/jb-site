@@ -7,8 +7,8 @@ import { NotebookPen, Save } from "lucide-react";
 import {
   adicionarNotaDoCliente,
   salvarCliente,
-  type EstadoVendas,
-} from "@/app/acoes/admin-vendas";
+  type EstadoFicha,
+} from "@/app/acoes/admin-ficha-cliente";
 import { Botao } from "@/components/ui/button";
 import { CampoDocumento, CampoTelefone } from "@/components/ui/campos-br";
 import { Cartao, CabecalhoCartao, Vazio } from "@/components/ui/data";
@@ -27,7 +27,7 @@ import { Area, Campo, Marcador, Selecao } from "@/components/ui/form";
    de registros.
    ============================================================================ */
 
-const INICIAL: EstadoVendas = {};
+const INICIAL: EstadoFicha = {};
 
 export type ClienteEditavel = {
   id: string;
@@ -43,7 +43,7 @@ export type ClienteEditavel = {
   notas: string;
 };
 
-function Retorno({ estado }: { estado: EstadoVendas }) {
+function Retorno({ estado }: { estado: EstadoFicha }) {
   return (
     <p aria-live="polite" className="min-h-5 text-sm leading-snug">
       {estado.erro ? <span className="font-medium text-jb-700">{estado.erro}</span> : null}

@@ -1,0 +1,222 @@
+/* ============================================================================
+   JB Motion — carrinho, checkout e decisão de compra
+
+   Aqui o movimento é funcional: mantém contexto quando preço, quantidade,
+   etapa ou comparação mudam. Não usa os efeitos cinematográficos da vitrine.
+   ============================================================================ */
+
+/* Carrinho ----------------------------------------------------------------- */
+
+html[data-motion-scene="checkout"] [data-motion-cart-list] {
+  transform-origin: 50% 0;
+}
+
+html[data-motion-scene="checkout"] [data-motion-cart-item] [data-palco-imagem-produto] {
+  transition: transform 360ms var(--jb-motion-ease-spring);
+}
+
+html[data-motion-scene="checkout"][data-motion-pointer="fine"]
+  [data-motion-cart-item]:hover [data-palco-imagem-produto] {
+  transform: scale(1.018);
+}
+
+html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] {
+  animation: jb-commerce-summary-in 420ms var(--jb-motion-ease) 80ms backwards;
+}
+
+html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"] :where(dd, .tabular) {
+  transition:
+    color 180ms ease,
+    transform 260ms var(--jb-motion-ease-spring),
+    opacity 180ms ease;
+}
+
+/* Checkout ----------------------------------------------------------------- */
+
+html[data-motion-scene="checkout"] main form section:not([hidden]) {
+  animation: jb-checkout-step-in 360ms var(--jb-motion-ease-spring) backwards;
+  transform-origin: 0 0;
+}
+
+html[data-motion-scene="checkout"] main form label:has(input:checked) {
+  transition:
+    border-color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 280ms var(--jb-motion-ease),
+    translate 280ms var(--jb-motion-ease-spring);
+}
+
+html[data-motion-scene="checkout"][data-motion-pointer="fine"]
+  main form label:has(input:checked) {
+  translate: 0 -1px;
+}
+
+html[data-motion-scene="checkout"]
+  :where([aria-current="step"], [data-state="current"], [data-state="active"])
+  :where(span, svg) {
+  animation: jb-checkout-active 420ms var(--jb-motion-ease-spring) backwards;
+}
+
+/* Comparador flutuante ----------------------------------------------------- */
+
+[data-motion-compare-bar] {
+  transform-origin: 50% 100%;
+}
+
+[data-motion-compare-bar]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: min(38rem, 72vw);
+  height: 26px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgb(224 20 27 / 0.08), transparent 68%);
+  filter: blur(10px);
+  opacity: 0.7;
+}
+
+/* Página de comparação ---------------------------------------------------- */
+
+/* As colunas entram como instrumentos colocados lado a lado. A primeira
+   coluna é o nome do atributo e fica parada: ela é a régua da comparação. */
+/* Sem `opacity: 0` fora do keyframe: se a animação não rodar, a coluna aparece. */
+html[data-motion-scene="comparador"] main table thead th:not(:first-child) {
+  animation: jb-compare-column 540ms var(--jb-motion-ease-spring) backwards;
+}
+
+html[data-motion-scene="comparador"] main table thead th:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+html[data-motion-scene="comparador"] main table thead th:nth-child(3) {
+  animation-delay: 115ms;
+}
+
+html[data-motion-scene="comparador"] main table thead th:nth-child(4) {
+  animation-delay: 170ms;
+}
+
+/* Uma diferença não vira uma linha rosa inteira. Só ganha uma pequena marca de
+   leitura na régua, suficiente para o olho localizar onde algo realmente muda. */
+html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child {
+  position: relative;
+  padding-left: 0.75rem;
+}
+
+html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child::before {
+  content: "";
+  position: absolute;
+  top: 1.15rem;
+  left: 0;
+  width: 3px;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: var(--color-jb-500);
+  opacity: 0.72;
+  transform: scaleY(0.25);
+  transform-origin: 50% 0;
+}
+
+@supports (animation-timeline: view()) {
+  html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child::before {
+    animation: jb-compare-marker linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 20%;
+  }
+}
+
+html[data-motion-scene="comparador"] main tbody tr {
+  transition: background-color 180ms ease;
+}
+
+html[data-motion-scene="comparador"][data-motion-pointer="fine"] main tbody tr:hover {
+  background: color-mix(in srgb, var(--color-jb-50) 36%, transparent);
+}
+
+html[data-motion-scene="comparador"] main table [data-palco-imagem-produto] {
+  transition:
+    transform 420ms var(--jb-motion-ease-spring),
+    box-shadow 420ms var(--jb-motion-ease);
+}
+
+html[data-motion-scene="comparador"][data-motion-pointer="fine"]
+  main table th:hover [data-palco-imagem-produto] {
+  transform: translate3d(0, -3px, 0) scale(1.012);
+  box-shadow: 0 18px 40px -30px rgb(26 28 30 / 0.42);
+}
+
+/* Resumo e etapa entram na vertical: vindos da direita, somavam largura à
+   página enquanto entravam, e a borda direita é onde o celular não tem folga. */
+@keyframes jb-commerce-summary-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+}
+
+@keyframes jb-checkout-step-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+}
+
+@keyframes jb-checkout-active {
+  from {
+    opacity: 0.58;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes jb-compare-column {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+}
+
+@keyframes jb-compare-marker {
+  from { opacity: 0.18; transform: scaleY(0.25); }
+  to { opacity: 0.72; transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"],
+  html[data-motion-scene="checkout"] main form section:not([hidden]),
+  html[data-motion-scene="checkout"]
+    :where([aria-current="step"], [data-state="current"], [data-state="active"])
+    :where(span, svg),
+  html[data-motion-scene="comparador"] main table thead th:not(:first-child) {
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+  }
+
+  [data-motion-compare-bar]::before {
+    display: none;
+  }
+
+  html[data-motion-scene="comparador"] main tbody tr[data-muda="sim"] > th:first-child::before {
+    transform: none !important;
+  }
+}
+
+/* O atraso segura o quadro inicial: impressos no meio da entrada, resumo, etapa
+   e colunas sairiam transparentes. */
+@media print {
+  html[data-motion-scene="checkout"] aside[aria-labelledby="titulo-resumo"],
+  html[data-motion-scene="checkout"] main form section:not([hidden]),
+  html[data-motion-scene="checkout"]
+    :where([aria-current="step"], [data-state="current"], [data-state="active"])
+    :where(span, svg),
+  html[data-motion-scene="comparador"] main table thead th:not(:first-child) {
+    animation: none !important;
+  }
+}

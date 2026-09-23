@@ -1,17 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, JetBrains_Mono, Manrope } from "next/font/google";
+import { Bricolage_Grotesque, JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 
-import { cacheLife, cacheTag } from "next/cache";
-
-import { ETIQUETA_CONFIGURACOES } from "@/lib/loja-publica";
+import { configuracoesPublicas } from "@/lib/site-publico";
 import { Medicao } from "@/components/analytics/medicao";
+import { destinosDeMedicao } from "@/lib/analytics/destinos";
+import { SCRIPT_DA_CENA } from "@/components/ui/motion-cena";
+import { MotionSystem } from "@/components/ui/motion-system";
 import { SITE_URL } from "@/lib/seo";
-import { getSettings } from "@/lib/settings";
 
 import "./globals.css";
 import "./footer-alignment.css";
-import "./header-search.css";
+import "./cabecalho.css";
+import "./motion.css";
+import "./motion-scenes.css";
+import "./motion-commerce.css";
+import "./motion-feedback.css";
+import "./motion-signature.css";
+import "./motion-signature-safety.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -19,22 +25,11 @@ const manrope = Manrope({
   display: "swap",
 });
 
-/**
- * A manuscrita do hero e do rodapé.
- *
- * Estava declarada como `"Ink Free", "Segoe Script", "Brush Script MT",
- * cursive` — nenhuma delas é webfont, todas dependem do que o visitante tem
- * instalado. No Windows saía Ink Free, no Mac caía em Brush Script e no
- * Android virava a cursiva genérica do sistema: a assinatura da marca mudava
- * de desenho conforme o aparelho de quem abria o site.
- *
- * Carregada como as outras duas, entra igual em todo lugar.
- */
-const manuscrita = Caveat({
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-manuscrita",
+  variable: "--font-bricolage",
   display: "swap",
-  weight: ["400", "600"],
+  axes: ["opsz"],
 });
 
 const mono = JetBrains_Mono({
@@ -49,36 +44,12 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-/**
- * Metadados raiz.
- *
- * `use cache` porque estes valores são iguais para todo mundo — título,
- * descrição e Open Graph saem das configurações da loja. Sem ele, com Cache
- * Components ligado, a leitura em `generateMetadata` bloqueia o prerender de
- * TODA rota que herda este layout: o Next avisa que "os metadados desta rota
- * estão bloqueados" e a compilação para.
- *
- * A etiqueta é a mesma das configurações públicas, então salvar o painel
- * derruba este cache junto com o do cabeçalho.
- */
-/**
- * Os textos de SEO, vindos das configurações.
- *
- * Só strings. Um objeto `URL` não atravessa a fronteira de um escopo `use
- * cache` — ele não é serializável, e o React avisa em tempo de execução que
- * "only plain objects can be passed to Client Components". Foi exatamente o
- * que aconteceu quando `metadataBase: new URL(...)` ficou dentro do cache: o
- * build passava e o console da home reclamava.
- *
- * Por isso a divisão: o que vem do banco é cacheado aqui, em texto puro, e o
- * objeto `Metadata` é montado fora, com o `URL` construído na hora.
- */
+/* As duas leituras abaixo passam por `configuracoesPublicas`, que já é
+   cacheada, etiquetada e volta aos padrões da JB quando o banco não responde.
+   Antes cada uma consultava o banco por conta própria e, sem ele, derrubava o
+   site inteiro, inclusive o botão do WhatsApp. */
 async function textosDoSite() {
-  "use cache";
-  cacheTag(ETIQUETA_CONFIGURACOES);
-  cacheLife("hours");
-
-  const s = await getSettings();
+  const s = await configuracoesPublicas();
   return {
     titulo: s.seo_titulo,
     descricao: s.seo_descricao,
@@ -104,36 +75,33 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-/**
- * O identificador de medição configurado no painel.
- *
- * Cacheado com a mesma etiqueta das configurações: ele muda quando alguém
- * salva `/admin/configuracoes`, e não a cada requisição. Sem ele, ler as
- * configurações aqui derrubaria o prerender de todas as rotas.
- */
-async function codigoDeMedicao() {
-  "use cache";
-  cacheTag(ETIQUETA_CONFIGURACOES);
-  cacheLife("hours");
-  const s = await getSettings();
-  return s.codigo_analytics ?? "";
+async function destinosDaMedicao() {
+  return destinosDeMedicao(await configuracoesPublicas());
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    /* `suppressHydrationWarning` vale só para os atributos do próprio `<html>`:
+       o script abaixo grava a cena do Motion System antes da primeira pintura,
+       e o React não pode tratar isso como divergência do servidor. */
     <html
       lang="pt-BR"
-      /* o CSS define scroll-behavior: smooth; isto avisa o Next de que a
-         escolha é deliberada e não deve ser desligada na troca de rota */
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${mono.variable} ${manuscrita.variable}`}
+      className={`${manrope.variable} ${display.variable} ${mono.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_DA_CENA }} />
+      </head>
       <body className="antialiased">
         {children}
-        <Medicao identificador={await codigoDeMedicao()} />
+        <MotionSystem />
+        <Medicao destinos={await destinosDaMedicao()} />
         <Toaster
           position="bottom-right"
           richColors
+          closeButton
+          duration={6000}
           toastOptions={{ style: { fontFamily: "var(--font-manrope)" } }}
         />
       </body>

@@ -179,17 +179,17 @@ export default async function PaginaAvaliacoes() {
               <Cartao key={convite.id} className="p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[0.9375rem] font-semibold text-graf-950">
+                    <p className="text-corpo font-semibold text-graf-950">
                       {convite.customer.name}
                     </p>
-                    <p className="mt-0.5 text-[0.8125rem] text-graf-500">
+                    <p className="mt-0.5 text-apoio text-graf-500">
                       {convite.kind === "compra" ? "Pedido" : "Atendimento"}{" "}
                       {convite.order?.number ?? convite.workOrder?.number ?? "—"} · criado em{" "}
                       {formatarDataHora(convite.createdAt)}
                       {convite.sentAt ? ` · enviado em ${formatarDataHora(convite.sentAt)}` : ""}
                     </p>
                     {convite.failureReason ? (
-                      <p className="mt-1 text-[0.8125rem] text-jb-700">{convite.failureReason}</p>
+                      <p className="mt-1 text-apoio text-jb-700">{convite.failureReason}</p>
                     ) : null}
                   </div>
 
@@ -229,7 +229,7 @@ export default async function PaginaAvaliacoes() {
         <h2 id="respostas" className="text-title texto-forte">
           Respostas
         </h2>
-        <p className="mt-1 text-[0.9375rem] leading-relaxed text-graf-600">
+        <p className="mt-1 text-corpo leading-relaxed text-graf-600">
           Toda resposta é feedback interno. Só vira depoimento no site quem autorizou — e a nota
           não entra na decisão de publicar: uma crítica autorizada é publicável.
         </p>
@@ -252,11 +252,11 @@ export default async function PaginaAvaliacoes() {
                         {resposta.score}/5
                       </span>
                       {resposta.nps !== null ? (
-                        <span className="text-[0.8125rem] text-graf-500">
+                        <span className="text-apoio text-graf-500">
                           NPS {resposta.nps}
                         </span>
                       ) : null}
-                      <span className="text-[0.8125rem] text-graf-500">
+                      <span className="text-apoio text-graf-500">
                         {resposta.request.customer.name} ·{" "}
                         {resposta.request.order?.number ??
                           resposta.request.workOrder?.number ??
@@ -265,7 +265,7 @@ export default async function PaginaAvaliacoes() {
                     </p>
 
                     {resposta.comment ? (
-                      <p className="mt-2 text-[0.9375rem] leading-relaxed text-graf-700">
+                      <p className="mt-2 text-corpo leading-relaxed text-graf-700">
                         {resposta.comment}
                       </p>
                     ) : (
@@ -274,7 +274,7 @@ export default async function PaginaAvaliacoes() {
                       </p>
                     )}
 
-                    <p className="mt-2 text-[0.8125rem] text-graf-500">
+                    <p className="mt-2 text-apoio text-graf-500">
                       {resposta.publicConsent
                         ? `Autorizou publicar${resposta.displayName ? `, como "${resposta.displayName}"` : ", sem identificação"}.`
                         : "Não autorizou uso público. Fica só aqui."}

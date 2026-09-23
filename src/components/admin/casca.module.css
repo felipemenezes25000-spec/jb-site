@@ -1,24 +1,69 @@
 .shell {
-  --admin-canvas: #f6f7f9;
+  --admin-canvas: #f7f8fa;
   --admin-surface: #ffffff;
-  --admin-border: rgba(221, 223, 226, 0.9);
-  --admin-border-soft: rgba(238, 239, 241, 0.95);
-  --admin-shadow: 0 1px 2px rgba(20, 24, 32, 0.025), 0 12px 32px -28px rgba(20, 24, 32, 0.22);
+  --admin-border: rgba(219, 223, 228, 0.92);
+  --admin-border-strong: rgba(198, 203, 210, 0.98);
+  --admin-border-soft: rgba(235, 237, 240, 0.98);
+  --admin-shadow: 0 1px 2px rgba(20, 24, 32, 0.025), 0 18px 46px -36px rgba(20, 24, 32, 0.34);
+  --admin-shadow-hover: 0 7px 20px rgba(20, 24, 32, 0.045), 0 26px 56px -34px rgba(20, 24, 32, 0.3);
+
+  background:
+    radial-gradient(circle at 66% -3%, rgba(229, 27, 35, 0.045), transparent 36rem),
+    radial-gradient(circle at 98% 42%, rgba(229, 27, 35, 0.022), transparent 29rem),
+    linear-gradient(180deg, #fbfbfc 0, var(--admin-canvas) 34rem, #f8f9fb 100%);
 }
 
-/* Acabamento compartilhado para cartões antigos que ainda usam o primitivo
-   genérico da plataforma. O escopo fica preso ao backoffice. */
-.shell :global(.rounded-xl.border.border-graf-200.bg-white) {
-  border-radius: 1rem;
+/* Ritmo global: todas as páginas partem da mesma largura e eixo visual. */
+.shell :global(#conteudo-admin > div) {
+  width: 100%;
+}
+
+.shell :global(#conteudo-admin > div > header:first-child) {
+  margin-bottom: 1.55rem;
+}
+
+/* Superfícies padrão do backoffice. */
+.shell :global(main .rounded-xl.border.border-graf-200.bg-white),
+.shell :global(main .rounded-2xl.border.border-graf-200.bg-white),
+.shell :global(main .rounded-2xl.border.border-graf-200\/90.bg-white),
+.shell :global(main .rounded-xl.border.border-graf-200\/90.bg-white) {
   border-color: var(--admin-border);
   box-shadow: var(--admin-shadow);
 }
 
-.shell :global(.rounded-xl.border.border-graf-200.bg-white):has(a:hover) {
-  border-color: rgba(194, 198, 203, 0.95);
+.shell :global(main a.rounded-xl.border.bg-white),
+.shell :global(main a.rounded-2xl.border.bg-white),
+.shell :global(main article.rounded-xl.border.bg-white),
+.shell :global(main article.rounded-2xl.border.bg-white) {
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
 }
 
-/* Tabelas do backoffice passam a ter o mesmo ritmo visual do painel inicial. */
+.shell :global(main a.rounded-xl.border.bg-white:hover),
+.shell :global(main a.rounded-2xl.border.bg-white:hover),
+.shell :global(main article.rounded-xl.border.bg-white:hover),
+.shell :global(main article.rounded-2xl.border.bg-white:hover) {
+  transform: translateY(-1px);
+  border-color: var(--admin-border-strong);
+  box-shadow: var(--admin-shadow-hover);
+}
+
+/* Cabeçalho interno de cards: mesma linha, mesma densidade, mesma hierarquia. */
+.shell :global(main .rounded-xl.border.bg-white > .border-b:first-child),
+.shell :global(main .rounded-2xl.border.bg-white > .border-b:first-child) {
+  border-bottom-color: var(--admin-border-soft);
+  background: linear-gradient(180deg, rgba(252, 252, 253, 0.98), rgba(249, 250, 251, 0.82));
+}
+
+.shell :global(main .border-b.border-graf-200),
+.shell :global(main .border-t.border-graf-200) {
+  border-color: var(--admin-border-soft);
+}
+
+/* Tabelas: leitura de ERP sem cara de planilha crua. */
 .shell :global(table) {
   width: 100%;
   border-collapse: separate;
@@ -26,39 +71,121 @@
 }
 
 .shell :global(thead) {
-  background: rgba(247, 248, 248, 0.88);
+  background: rgba(247, 248, 250, 0.96);
 }
 
+/* O piso de 12px vale aqui também.
+
+   `th` estava em 0,7rem — 11,2px — e `td` em 0,79rem, 12,64px. O `th` reprovava
+   o portão de responsividade em toda rota de lista do painel: 155 ocorrências,
+   todas desta linha, multiplicadas por rota e por largura.
+
+   E há um detalhe que esta regra escondia: a marcação já pede `text-apoio` no
+   cabeçalho da tabela, mas um seletor de CSS Module com `:global(th)` vence a
+   classe utilitária. Quem lesse o JSX veria 13px e a tela mostrava 11,2.
+
+   A cor também sai do hex cravado à mão para o token: #66707c dava 4,4:1 sobre
+   o fundo do cabeçalho, abaixo dos 4,5 exigidos. */
 .shell :global(th) {
-  color: #666d76;
+  color: var(--color-graf-500);
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.045em;
-  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.shell :global(td) {
+  color: var(--color-graf-800);
+  font-size: 0.8125rem;
+}
+
+.shell :global(th),
+.shell :global(td) {
+  border-bottom-color: rgba(235, 237, 240, 0.98);
 }
 
 .shell :global(tbody tr) {
-  transition: background-color 150ms ease;
+  transition: background-color 140ms ease;
 }
 
 .shell :global(tbody tr:hover) {
-  background: rgba(247, 248, 248, 0.72);
+  background: rgba(247, 249, 251, 0.92);
 }
 
-/* Campos que não usam FiltrosLista também recebem o mesmo acabamento. */
+.shell :global(tbody tr:last-child td) {
+  border-bottom-color: transparent;
+}
+
+/* Formulários, busca e filtros. */
 .shell :global(input:not([type="checkbox"]):not([type="radio"])),
 .shell :global(select),
 .shell :global(textarea) {
-  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+  border-radius: 0.75rem;
+  border-color: rgba(203, 208, 215, 0.98);
+  background-color: rgba(255, 255, 255, 0.99);
+  box-shadow: inset 0 1px 0 rgba(20, 24, 32, 0.012);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .shell :global(input:not([type="checkbox"]):not([type="radio"]):hover),
 .shell :global(select:hover),
 .shell :global(textarea:hover) {
-  border-color: #9ba1a8;
+  border-color: #a8afb8;
 }
 
-/* Cabeçalhos e blocos de leitura ganham contraste sem virar caixas pesadas. */
+.shell :global(input:not([type="checkbox"]):not([type="radio"]):focus),
+.shell :global(select:focus),
+.shell :global(textarea:focus) {
+  border-color: #e51b23;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(229, 27, 35, 0.085);
+}
+
+.shell :global(main form label) {
+  color: #59616c;
+}
+
+/* Estados vazios e blocos auxiliares passam a parecer parte do mesmo sistema. */
+.shell :global(main .border-dashed) {
+  border-color: rgba(202, 207, 214, 0.92);
+  background: linear-gradient(180deg, rgba(251, 252, 253, 0.98), rgba(247, 249, 251, 0.82));
+}
+
+.shell :global(main .border-dashed > .rounded-full) {
+  box-shadow: 0 8px 22px -17px rgba(20, 24, 32, 0.38);
+}
+
+.shell :global(main .bg-graf-50) {
+  background-color: #f8f9fb;
+}
+
+/* Badges/status: compactos e consistentes em lista, detalhe e dashboard. */
+.shell :global(main [class*="rounded-full"][class*="ring-1"]) {
+  box-shadow: 0 1px 1px rgba(20, 24, 32, 0.02);
+}
+
+/* Botões e links de ação ganham resposta visual sem aumentar ruído. */
+.shell :global(main button),
+.shell :global(main a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shell :global(main button:not(:disabled)) {
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.shell :global(main button:not(:disabled):active) {
+  transform: translateY(1px);
+}
+
+/* Definições e divisores. */
 .shell :global(dl) {
   min-width: 0;
 }
@@ -67,22 +194,48 @@
   border-color: var(--admin-border-soft);
 }
 
-/* Rolagem da navegação lateral mais discreta, mantendo-a acessível. */
+/* Subnavs/tabs e paginação ficam com superfície própria sem pesar. */
+.shell :global(main nav ul.rounded-xl.border) {
+  border-color: rgba(217, 221, 226, 0.94);
+  background: rgba(243, 245, 247, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+/* Rolagem da navegação lateral mais discreta. */
 .shell :global(aside)::-webkit-scrollbar,
 .shell :global(aside *)::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
 }
 
 .shell :global(aside)::-webkit-scrollbar-thumb,
 .shell :global(aside *)::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: rgba(155, 161, 168, 0.45);
+  background: rgba(155, 161, 168, 0.38);
   background-clip: padding-box;
 }
 
+@media (max-width: 1023px) {
+  .shell :global(#conteudo-admin > div > header:first-child) {
+    margin-bottom: 1.35rem;
+  }
+}
+
 @media (max-width: 639px) {
-  .shell :global(.rounded-xl.border.border-graf-200.bg-white) {
+  .shell {
+    background: #f8f9fb;
+  }
+
+  .shell :global(main .rounded-xl.border.border-graf-200.bg-white),
+  .shell :global(main .rounded-2xl.border.border-graf-200.bg-white) {
     border-radius: 0.875rem;
+    box-shadow: 0 1px 2px rgba(20, 24, 32, 0.025);
+  }
+
+  .shell :global(main a.rounded-xl.border.bg-white:hover),
+  .shell :global(main a.rounded-2xl.border.bg-white:hover),
+  .shell :global(main article.rounded-xl.border.bg-white:hover),
+  .shell :global(main article.rounded-2xl.border.bg-white:hover) {
+    transform: none;
   }
 }

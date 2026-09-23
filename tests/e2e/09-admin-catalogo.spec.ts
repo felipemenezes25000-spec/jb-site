@@ -68,6 +68,17 @@ test.describe("Cadastro de produto pelo painel", () => {
     await page.getByRole("button", { name: /Salvar/ }).first().click();
     await expect(page.getByText(/salv/i).first()).toBeVisible({ timeout: 30_000 });
 
+    /* A varredura do console fecha ANTES da última navegação, de propósito.
+
+       O passo seguinte visita a ficha de um produto que acabou de virar
+       rascunho — e a resposta certa para isso é 404. O navegador registra
+       todo 404 como erro de console, então manter a asserção depois dele
+       fazia o teste reprovar exatamente por causa do comportamento que ele
+       veio confirmar. O que se verifica aqui é o percurso do cadastro, que é
+       onde erro de console significaria defeito. */
+    expect(vigia.erros, "erros de console: " + vigia.erros.join(" | ")).toEqual([]);
+    expect(vigia.falhas, "respostas 5xx: " + vigia.falhas.join(" | ")).toEqual([]);
+
     const resposta = await page.goto(`/loja/${slug}`);
     // rascunho não é vendável: ou some, ou aparece sem botão de compra
     const temComprar = await page
@@ -75,8 +86,6 @@ test.describe("Cadastro de produto pelo painel", () => {
       .count();
     expect(temComprar, "produto em rascunho não pode ter botão de compra").toBe(0);
     expect(resposta?.status()).toBeLessThan(500);
-
-    expect(vigia.erros, "erros de console: " + vigia.erros.join(" | ")).toEqual([]);
     expect(vigia.falhas, "respostas 5xx: " + vigia.falhas.join(" | ")).toEqual([]);
   });
 });

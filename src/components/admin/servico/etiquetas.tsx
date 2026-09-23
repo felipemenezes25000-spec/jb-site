@@ -118,6 +118,7 @@ export function EtiquetaEquipamento({ status }: { status: EquipmentStatus }) {
 
 const TOM_ORCAMENTO: Record<QuoteStatus, Tom> = {
   rascunho: "neutro",
+  solicitado: "aguardando",
   enviado: "andamento",
   em_duvida: "aguardando",
   aprovado: "ok",

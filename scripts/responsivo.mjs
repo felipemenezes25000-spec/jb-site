@@ -43,6 +43,11 @@ const LARGURAS = [
   { w: 1024, h: 768, nome: "1024 (tablet paisagem)", toque: false },
   { w: 1280, h: 900, nome: "1280 (notebook)", toque: false },
   { w: 1440, h: 900, nome: "1440 (desktop)", toque: false },
+  /* 1920 é o monitor da recepção da clínica — e a largura em que a loja mais
+     arrisca ficar larga demais: caixa de 1440 numa janela de 1920 deixa 240px
+     de margem de cada lado, e é aí que os degraus entre uma seção e outra
+     aparecem. Sem medir, eles só apareciam em captura de tela de auditoria. */
+  { w: 1920, h: 1080, nome: "1920 (monitor grande)", toque: false },
 ];
 
 const ROTAS = {
@@ -115,11 +120,16 @@ function medir() {
    * — sem que a página rolasse um pixel. Quatorze achados falsos vieram daí.
    *
    * Tentar rolar e ver se andou é o que o dedo do usuário faria.
+   *
+   * `behavior: "instant"` é obrigatório. O `<html>` tem `scroll-behavior:
+   * smooth`, e um `scrollTo` sem comportamento herda a rolagem suave: ela
+   * começa no próximo quadro, `scrollX` lido logo em seguida vale 0 e toda
+   * rolagem de verdade parece não existir.
    */
   const rolagemAnterior = window.scrollX;
-  window.scrollTo(9999, window.scrollY);
+  window.scrollTo({ left: 9999, top: window.scrollY, behavior: "instant" });
   const rolouDeFato = Math.round(window.scrollX);
-  window.scrollTo(rolagemAnterior, window.scrollY);
+  window.scrollTo({ left: rolagemAnterior, top: window.scrollY, behavior: "instant" });
 
   if (rolouDeFato > 1) {
     // acha o culpado AGORA, no mesmo estado de layout que produziu a rolagem —
@@ -625,10 +635,14 @@ async function percorrer(grupo, rotas, login) {
           try {
             await conferencia.goto(BASE + rota, { waitUntil: "load", timeout: 45000 });
             await assentar(conferencia);
+            /* Este contexto não emula movimento reduzido: sem `instant`, a
+               rolagem suave do `<html>` fazia `scrollX` ler 0 aqui e TODA
+               suspeita real era descartada como alarme falso. Foi assim que
+               144–278px de rolagem lateral no admin passaram como "ok". */
             const rolouMesmo = await conferencia.evaluate(() => {
-              window.scrollTo(9999, 0);
+              window.scrollTo({ left: 9999, top: 0, behavior: "instant" });
               const x = Math.round(window.scrollX);
-              window.scrollTo(0, 0);
+              window.scrollTo({ left: 0, top: 0, behavior: "instant" });
               return x;
             });
             if (rolouMesmo <= 1) achados.splice(suspeita, 1);
@@ -680,7 +694,40 @@ async function percorrer(grupo, rotas, login) {
 console.log(`Auditoria de responsividade em ${BASE}`);
 console.log(`larguras: ${larguras.map((l) => l.w).join(", ")}`);
 
-await percorrer("publico", ROTAS.publico, null);
+/**
+ * A ficha de um produto de verdade, descoberta no catálogo.
+ *
+ * Mesma razão do portão de acessibilidade: a PDP é a página mais densa da
+ * loja — galeria, caixa de compra grudada, ficha em grade de três colunas,
+ * comparação em tabela — e era a única grande que este portão não media,
+ * porque o endereço depende de um `slug`. Escrever um à mão faria o portão
+ * medir um 404 no dia em que aquele produto saísse do ar, e continuar verde.
+ */
+async function rotaDeProduto() {
+  const contexto = await navegador.newContext({ locale: "pt-BR" });
+  const pagina = await contexto.newPage();
+  try {
+    await pagina.goto(BASE + "/loja", { waitUntil: "domcontentloaded", timeout: 60000 });
+    await pagina.waitForTimeout(800);
+    return await pagina
+      .locator('a[href^="/loja/"]')
+      .first()
+      .getAttribute("href", { timeout: 5000 });
+  } catch {
+    return null;
+  } finally {
+    await contexto.close();
+  }
+}
+
+const rotasPublicas = [...ROTAS.publico];
+{
+  const pdp = await rotaDeProduto();
+  if (pdp) rotasPublicas.push(pdp);
+  else console.log("  aviso: nenhuma ficha de produto no catálogo — a PDP não foi medida");
+}
+
+await percorrer("publico", rotasPublicas, null);
 await percorrer("conta", ROTAS.conta, { rota: "/entrar", ...CLIENTE });
 await percorrer("admin", ROTAS.admin, { rota: "/admin/entrar", ...EQUIPE });
 

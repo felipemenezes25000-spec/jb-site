@@ -163,7 +163,7 @@ export default async function OrcamentosPage({ searchParams }: { searchParams: B
               linha.contactName ||
               "Contato não informado"}
           </span>
-          <span className="block truncate text-[0.8125rem] text-graf-500">
+          <span className="block truncate text-apoio text-graf-500">
             {linha.contactEmail || "E-mail não informado"}
           </span>
         </span>
@@ -197,7 +197,7 @@ export default async function OrcamentosPage({ searchParams }: { searchParams: B
             }
           >
             {formatarData(linha.validUntil)}
-            <span className="block text-[0.8125rem] text-graf-500">
+            <span className="block text-apoio text-graf-500">
               {distanciaEmDias(linha.validUntil)}
             </span>
           </span>

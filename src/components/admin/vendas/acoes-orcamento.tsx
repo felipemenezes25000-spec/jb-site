@@ -10,8 +10,8 @@ import {
   enviarOrcamentoAdmin,
   excluirOrcamento,
   recusarOrcamentoAdmin,
-  type EstadoVendas,
-} from "@/app/acoes/admin-vendas";
+  type EstadoOrcamento,
+} from "@/app/acoes/admin-orcamentos";
 import { Botao } from "@/components/ui/button";
 import { BotaoConfirmar } from "@/components/ui/confirmar";
 import { Cartao, CabecalhoCartao } from "@/components/ui/data";
@@ -20,27 +20,27 @@ import { Area, Campo, Marcador } from "@/components/ui/form";
 /* ============================================================================
    Ações da proposta
 
-   O que aparece depende de onde a proposta está. Rascunho só tem "enviar";
-   proposta enviada ganha decisão e anotação; convertida em pedido não tem mais
-   ação nenhuma, porque mexer nela mexeria numa venda já registrada.
+   O que aparece depende de onde o orçamento está. Rascunho só tem "enviar";
+   orçamento enviado ganha decisão e anotação. Os raros orçamentos antigos que
+   viraram pedido de venda, antes de a loja sair, ficam travados.
 
    O cartão de envio serve os dois casos e diz qual deles é: em rascunho ele
    publica a proposta; em proposta já enviada ele REENVIA o mesmo e-mail, sem
    mexer em status, validade ou versão. Chamar os dois de "Enviar orçamento"
    escondia de quem atende que o cliente já tinha recebido aquilo uma vez.
 
-   "Aprovar" não é um botão separado de "converter": no orçamento comercial a
-   aprovação já gera o pedido, com os valores negociados e a baixa de estoque,
-   dentro da mesma transação.
+   A decisão é do cliente, dada por WhatsApp, telefone ou e-mail; quem a
+   registra aqui é a equipe. Aprovar libera o serviço do chamado ligado.
    ============================================================================ */
 
-const INICIAL: EstadoVendas = {};
+const INICIAL: EstadoOrcamento = {};
 
 export type SituacaoOrcamento = {
   quoteId: string;
   numero: string;
   status:
     | "rascunho"
+    | "solicitado"
     | "enviado"
     | "em_duvida"
     | "aprovado"
@@ -49,14 +49,13 @@ export type SituacaoOrcamento = {
     | "convertido";
   /** Já saiu para o cliente ao menos uma vez: o botão vira reenvio. */
   jaEnviada: boolean;
-  comercial: boolean;
   totalFormatado: string;
   temItens: boolean;
   emailDoContato: string;
   podeExcluir: boolean;
 };
 
-function Retorno({ estado }: { estado: EstadoVendas }) {
+function Retorno({ estado }: { estado: EstadoOrcamento }) {
   return (
     <p aria-live="polite" className="min-h-5 text-sm leading-snug">
       {estado.erro ? <span className="font-medium text-jb-700">{estado.erro}</span> : null}
@@ -165,11 +164,7 @@ export function AcoesOrcamento({ situacao }: { situacao: SituacaoOrcamento }) {
         <Cartao>
           <CabecalhoCartao
             titulo="Decisão do cliente"
-            descricao={
-              situacao.comercial
-                ? "Aprovar gera o pedido com os valores negociados e reserva o estoque."
-                : "Aprovar libera a execução do serviço orçado."
-            }
+            descricao="Registre o que o cliente respondeu. Aprovar libera a execução do serviço orçado."
           />
           <div className="space-y-5 p-5">
             <form action={aprovar} className="space-y-3">
@@ -182,13 +177,9 @@ export function AcoesOrcamento({ situacao }: { situacao: SituacaoOrcamento }) {
               />
               <Retorno estado={estadoAprovacao} />
               <BotaoConfirmar
-                rotulo={situacao.comercial ? "Aprovar e gerar pedido" : "Registrar aprovação"}
+                rotulo="Registrar aprovação"
                 pergunta={`Aprovar o orçamento ${situacao.numero}?`}
-                detalhe={
-                  situacao.comercial
-                    ? `Um pedido de ${situacao.totalFormatado} é criado na hora e o estoque dos itens é baixado. Cancelar depois exige cancelar o pedido.`
-                    : "O chamado ligado avança e o serviço fica liberado para execução."
-                }
+                detalhe="O chamado ligado avança e o serviço fica liberado para execução."
                 rotuloConfirmar="Aprovar"
                 variante="primario"
                 larguraTotal
@@ -255,7 +246,8 @@ export function AcoesOrcamento({ situacao }: { situacao: SituacaoOrcamento }) {
       ) : null}
 
       {/* ----------------------------------------------------- excluir */}
-      {situacao.status === "rascunho" && situacao.podeExcluir ? (
+      {(situacao.status === "rascunho" || situacao.status === "solicitado") &&
+      situacao.podeExcluir ? (
         <Cartao className="border-jb-200">
           <CabecalhoCartao
             titulo="Descartar rascunho"
@@ -280,13 +272,13 @@ export function AcoesOrcamento({ situacao }: { situacao: SituacaoOrcamento }) {
       {convertida ? (
         <Cartao>
           <CabecalhoCartao
-            titulo="Proposta convertida"
-            descricao="Esta proposta virou pedido."
+            titulo="Orçamento antigo de venda"
+            descricao="Este orçamento virou pedido quando a JB ainda vendia pelo site."
           />
           <div className="p-5">
             <p className="text-sm leading-relaxed text-graf-600">
-              Alterar os valores aqui mudaria uma venda já registrada, então o orçamento fica
-              travado. As mudanças que ainda cabem são feitas na tela do pedido.
+              Ele fica travado como registro histórico. Para um novo atendimento, crie outro
+              orçamento.
             </p>
           </div>
         </Cartao>

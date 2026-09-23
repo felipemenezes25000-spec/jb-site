@@ -235,7 +235,7 @@ export default async function PaginaPreparo({ params }: Props) {
             {conflitos.map((conflito) => (
               <li key={conflito.anterior.numero} className="leading-relaxed">
                 {conflito.texto}
-                <span className="mt-0.5 block text-[0.8125rem] text-graf-600">
+                <span className="mt-0.5 block text-apoio text-graf-600">
                   {conflito.anterior.numero}, {formatarData(conflito.anterior.quando)}:{" "}
                   {conflito.anterior.diagnostico}
                 </span>
@@ -247,7 +247,7 @@ export default async function PaginaPreparo({ params }: Props) {
 
       {/* ------------------------------------------------ onde é --- */}
       <Bloco titulo="Onde é" icone={MapPin}>
-        <dl className="space-y-2 text-[0.9375rem]">
+        <dl className="space-y-2 text-corpo">
           <Par rotulo="Cliente" valor={chamado.customer?.name ?? chamado.contactName} />
           <Par rotulo="Contato" valor={chamado.contactPhone || "não informado"} />
           <Par rotulo="Endereço" valor={endereco || "não informado"} />
@@ -267,7 +267,7 @@ export default async function PaginaPreparo({ params }: Props) {
       {/* ------------------------------------------ o equipamento --- */}
       <Bloco titulo="O equipamento" icone={ClipboardList}>
         {equipamento ? (
-          <dl className="space-y-2 text-[0.9375rem]">
+          <dl className="space-y-2 text-corpo">
             <Par rotulo="Aparelho" valor={equipamento.name} />
             <Par
               rotulo="Marca e modelo"
@@ -299,7 +299,7 @@ export default async function PaginaPreparo({ params }: Props) {
               Este chamado não está vinculado a um equipamento do prontuário. Abaixo, o que o
               cliente informou.
             </p>
-            <dl className="mt-3 space-y-2 text-[0.9375rem]">
+            <dl className="mt-3 space-y-2 text-corpo">
               <Par rotulo="Marca" valor={chamado.brandName || "não informada"} />
               <Par rotulo="Modelo" valor={chamado.modelName || "não informado"} />
               <Par rotulo="Série" valor={chamado.serialNumber || "não informada"} />
@@ -308,7 +308,7 @@ export default async function PaginaPreparo({ params }: Props) {
         )}
 
         {garantiaVigente && equipamento?.warrantyUntil ? (
-          <p className="mt-3 flex items-center gap-2 rounded-lg border border-ok-500/25 bg-ok-50 px-3 py-2 text-[0.8125rem] font-semibold text-ok-700">
+          <p className="mt-3 flex items-center gap-2 rounded-lg border border-ok-500/25 bg-ok-50 px-3 py-2 text-apoio font-semibold text-ok-700">
             <ShieldCheck className="size-4 shrink-0" aria-hidden />
             Garantia vigente até {formatarData(equipamento.warrantyUntil)}
           </p>
@@ -319,11 +319,11 @@ export default async function PaginaPreparo({ params }: Props) {
       <Bloco titulo="O que o cliente relatou" icone={FileText}>
         {/* Texto do cliente é dado, e é exibido como texto. Nada aqui o
             interpreta como instrução nem deixa que ele altere a tela. */}
-        <p className="whitespace-pre-wrap text-[0.9375rem] leading-relaxed text-graf-800">
+        <p className="whitespace-pre-wrap text-corpo leading-relaxed text-graf-800">
           {chamado.description}
         </p>
         {chamado._count.media > 0 ? (
-          <p className="mt-3 flex items-center gap-2 text-[0.8125rem] text-graf-600">
+          <p className="mt-3 flex items-center gap-2 text-apoio text-graf-600">
             <ImagemIcone className="size-4 shrink-0 text-graf-500" aria-hidden />
             {chamado._count.media}{" "}
             {chamado._count.media === 1 ? "arquivo anexado" : "arquivos anexados"} — veja no
@@ -337,10 +337,10 @@ export default async function PaginaPreparo({ params }: Props) {
         <ul className="space-y-3">
           {checklist.map((item) => (
             <li key={item.texto}>
-              <p className="text-[0.9375rem] font-semibold text-graf-900">{item.texto}</p>
+              <p className="text-corpo font-semibold text-graf-900">{item.texto}</p>
               {/* Por que este item está aqui. Uma lista genérica é ignorada
                   na terceira visita; uma que muda com o caso é lida. */}
-              <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-graf-600">
+              <p className="mt-0.5 text-apoio leading-relaxed text-graf-600">
                 {item.porque}
               </p>
             </li>
@@ -354,9 +354,9 @@ export default async function PaginaPreparo({ params }: Props) {
           <ul className="space-y-3">
             {chamado.workOrders.map((ordem) => (
               <li key={ordem.number} className="border-b border-graf-100 pb-3 last:border-0">
-                <p className="text-[0.9375rem] font-semibold text-graf-900">
+                <p className="text-corpo font-semibold text-graf-900">
                   {ordem.number}
-                  <span className="ml-2 text-[0.8125rem] font-normal text-graf-500">
+                  <span className="ml-2 text-apoio font-normal text-graf-500">
                     {ordem.closedAt
                       ? `concluída em ${formatarData(ordem.closedAt)}`
                       : `aberta em ${formatarData(ordem.openedAt)}`}
@@ -370,7 +370,7 @@ export default async function PaginaPreparo({ params }: Props) {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[0.8125rem] text-graf-500">
+          <p className="mt-3 text-apoio text-graf-500">
             O histórico completo está no chamado e no prontuário do equipamento — nada foi
             resumido de forma a esconder o resto.
           </p>
@@ -381,10 +381,10 @@ export default async function PaginaPreparo({ params }: Props) {
       {sugestao.mostrar ? (
         <Aviso tom="info" titulo="Sugestão interna">
           {sugestao.sugestao.texto}
-          <span className="mt-2 block text-[0.8125rem]">{sugestao.aviso}</span>
+          <span className="mt-2 block text-apoio">{sugestao.aviso}</span>
         </Aviso>
       ) : (
-        <p className="flex gap-2 text-[0.8125rem] leading-relaxed text-graf-500">
+        <p className="flex gap-2 text-apoio leading-relaxed text-graf-500">
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-graf-500" aria-hidden />
           <span>
             Este preparo é montado a partir dos registros, sem resumo automático. {sugestao.mostrar ? "" : sugestao.motivo}
