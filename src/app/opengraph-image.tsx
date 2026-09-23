@@ -1,12 +1,13 @@
 import { ImageResponse } from "next/og";
 
+import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { SETTING_DEFAULTS, getSettings } from "@/lib/settings";
 
 /**
  * Imagem de compartilhamento padrão do site.
  *
  * Replica a linguagem da hero pública: problema primeiro, JB como resposta e
- * três provas factuais embaixo. É feita só com formas e texto para continuar
+ * provas factuais embaixo. É feita só com formas e texto para continuar
  * funcionando mesmo quando armazenamento de imagens ou banco estiverem fora.
  */
 export const alt = "JB Soluções Odontológicas: assistência técnica odontológica de todas as marcas";
@@ -23,8 +24,13 @@ export default async function ImagemDeCompartilhamento() {
   const nome = s.empresa_nome || "JB Soluções Odontológicas";
   const cidade = s.endereco_cidade || "São Paulo";
   const desde = s.empresa_desde || "2011";
+  const atendentes = contatosWhatsapp(s)
+    .map((contato) => contato.nome)
+    .filter(Boolean)
+    .slice(0, 2);
+  const canal = atendentes.length > 0 ? `${atendentes.join(" ou ")} no WhatsApp` : "Equipe técnica no WhatsApp";
 
-  const provas = ["Todas as marcas", `Desde ${desde}`, `${cidade} e região`];
+  const provas = ["Todas as marcas", "Orçamento antes da troca", `Desde ${desde}`];
 
   return new ImageResponse(
     (
@@ -93,7 +99,7 @@ export default async function ImagemDeCompartilhamento() {
               display: "flex",
             }}
           >
-            Assistência técnica odontológica
+            {cidade} e região
           </div>
         </div>
 
@@ -136,7 +142,7 @@ export default async function ImagemDeCompartilhamento() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {provas.map((prova) => (
             <div
               key={prova}
@@ -167,7 +173,7 @@ export default async function ImagemDeCompartilhamento() {
               color: "#9fa4aa",
             }}
           >
-            WhatsApp direto com a equipe
+            {canal}
           </div>
         </div>
       </div>
