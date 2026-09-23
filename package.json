@@ -9,6 +9,7 @@
     "start": "next start",
     "ambiente:verificar": "tsx scripts/verificar-ambiente.ts build",
     "arquitetura:verificar": "tsx scripts/verificar-arquitetura.ts",
+    "validacao:final": "node scripts/validacao-final.mjs",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:push": "tsx scripts/verificar-ambiente.ts db-destructive && prisma db push",
