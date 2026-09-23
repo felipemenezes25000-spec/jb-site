@@ -2,39 +2,31 @@ import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 
-/**
- * Marca oficial da JB — sempre o arquivo real, nunca redesenhada em CSS/SVG.
- *
- * `completa` traz símbolo + monograma (header, rodapé, documentos).
- * `simbolo` traz só o emblema circular (favicon, avatar, espaços apertados).
- *
- * A proporção é preservada pelo próprio next/image; o respiro fica por conta
- * de quem posiciona, com a altura definida aqui.
- */
+/** Marca oficial da JB — sempre o arquivo real, nunca redesenhada em CSS/SVG. */
 
-/**
- * Dimensões reais dos arquivos, conferidas com sharp.
- *
- * Estavam codificadas como 900x499 e 481x497 — números que não batiam com os
- * arquivos (640x355 e 256x265). A diferença aparecia no arredondamento: a
- * altura calculada não fechava com a proporção real e o Next avisava, a cada
- * renderização, que só uma das dimensões estava sob controle.
- *
- * O padrão correto é este: os atributos carregam o tamanho intrínseco, e o
- * tamanho de exibição vem do CSS com o outro eixo em `auto`.
- */
 const LOGO = { largura: 640, altura: 355 };
 const SIMBOLO = { largura: 256, altura: 265 };
 
 export function Logo({
   className,
   altura = 40,
+  alturaMinima,
   prioridade,
 }: {
   className?: string;
   altura?: number;
+  /**
+   * Quando informada, a logo escala entre este valor e `altura` conforme a
+   * viewport. Útil no cabeçalho mobile: uma única imagem responsiva evita
+   * manter logo completa e símbolo escondidos ao mesmo tempo.
+   */
+  alturaMinima?: number;
   prioridade?: boolean;
 }) {
+  const alturaCss = alturaMinima
+    ? `clamp(${alturaMinima}px, 4vw, ${altura}px)`
+    : altura;
+
   return (
     <Image
       src="/marca/jb-logo.webp"
@@ -42,12 +34,8 @@ export function Logo({
       width={LOGO.largura}
       height={LOGO.altura}
       priority={prioridade}
-      /* Sem `sizes`, o Next servia o arquivo de 640px para um espaço de 69px
-         de largura no cabeçalho — em toda página do site. A largura de
-         exibição sai da altura pedida vezes a proporção real do arquivo
-         (640÷355 ≈ 1,8), com folga de 2× para tela de alta densidade. */
       sizes={`${Math.ceil((altura * LOGO.largura) / LOGO.altura) * 2}px`}
-      style={{ height: altura, width: "auto" }}
+      style={{ height: alturaCss, width: "auto" }}
       className={cn("select-none", className)}
     />
   );
@@ -70,6 +58,7 @@ export function Simbolo({
       width={SIMBOLO.largura}
       height={SIMBOLO.altura}
       priority={prioridade}
+      sizes={`${tamanho * 2}px`}
       style={{ height: tamanho, width: "auto" }}
       className={cn("select-none", className)}
     />
