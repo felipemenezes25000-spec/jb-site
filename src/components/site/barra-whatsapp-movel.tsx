@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
@@ -9,37 +10,40 @@ import { EQUIPAMENTOS, MENSAGEM_PADRAO, montarMensagem, type IdEquipamento } fro
 /* ============================================================================
    Barra do WhatsApp no pé do celular
 
-   Jeferson e Jackson lado a lado, como em todo o site. Aparece quando os
-   botões da abertura saem da tela, e some de novo quando algum outro par
-   grande de WhatsApp está visível (diagnóstico, chamada final): duas
-   chamadas iguais empilhadas na mesma tela é ruído.
-
-   Observa por IntersectionObserver, nunca por evento de rolagem. Fica abaixo
-   do aviso de cookies (z-90), que precisa ser respondido primeiro, e respeita
-   a área segura do iPhone.
-
-   A mensagem é a da abertura: na página da autoclave, a barra também chama
-   sobre a autoclave. O equipamento é lido do próprio botão da abertura
-   (`data-equipamento`), para a barra não precisar saber em que página está.
-   Monta por página, pelo `template.tsx` do grupo, e não no layout, que não
-   remonta entre páginas.
+   Jeferson e Jackson lado a lado nas páginas de assistência e conteúdo
+   técnico. Páginas legais e convites privados de avaliação ficam de fora:
+   nessas rotas uma barra de conversão fixa atrapalharia a tarefa principal.
    ============================================================================ */
 
 const OBSERVADOS = ['[data-whatsapp="abertura"]', '[data-whatsapp="diagnostico"]', '[data-whatsapp="fechamento"]'];
 
-/** O equipamento do botão da abertura, quando a página tem um. */
 function lerEquipamento(): IdEquipamento | null {
   const id = document.querySelector<HTMLAnchorElement>('a[data-whatsapp="abertura"]')?.dataset.equipamento;
   return EQUIPAMENTOS.find((equipamento) => equipamento.id === id)?.id ?? null;
 }
 
+function rotaSemBarra(pathname: string) {
+  return pathname === "/privacidade" || pathname === "/termos" || pathname.startsWith("/avaliar/");
+}
+
 export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }) {
+  const pathname = usePathname();
   const [visivel, setVisivel] = useState(false);
   const [equipamento, setEquipamento] = useState<IdEquipamento | null | undefined>(undefined);
 
   useEffect(() => {
+    if (rotaSemBarra(pathname)) return;
+
     const alvos = OBSERVADOS.flatMap((seletor) => [...document.querySelectorAll(seletor)]);
-    if (alvos.length === 0) return;
+    if (alvos.length === 0) {
+      /* Páginas editoriais não têm CTA de abertura. Nelas a barra pode ajudar,
+         mas só depois de a pessoa começar a rolar — o template remonta por
+         página, então o estado nasce limpo a cada navegação. */
+      const aoRolar = () => setVisivel(window.scrollY > Math.min(360, window.innerHeight * 0.45));
+      aoRolar();
+      window.addEventListener("scroll", aoRolar, { passive: true });
+      return () => window.removeEventListener("scroll", aoRolar);
+    }
 
     const naTela = new Set<Element>();
     const observador = new IntersectionObserver(
@@ -49,9 +53,6 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
           else naTela.delete(entrada.target);
         }
         setVisivel(naTela.size === 0);
-        /* A primeira leitura do observador chega logo depois da montagem, e
-           é nela que o equipamento da abertura é copiado: o servidor não sabe
-           qual botão a página desenhou. */
         setEquipamento((atual) => (atual === undefined ? lerEquipamento() : atual));
       },
       { threshold: 0 },
@@ -59,7 +60,9 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
 
     for (const alvo of alvos) observador.observe(alvo);
     return () => observador.disconnect();
-  }, []);
+  }, [pathname]);
+
+  if (rotaSemBarra(pathname)) return null;
 
   const equipamentoAtual = equipamento
     ? EQUIPAMENTOS.find((item) => item.id === equipamento) ?? null
