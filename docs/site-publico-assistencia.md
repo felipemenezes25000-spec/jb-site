@@ -120,18 +120,41 @@ UTMs e identificadores de campanha podem ser preservados em sessão para atribui
 
 ## Validação final
 
-A bateria foi preparada para ser executada uma vez ao final da leva, não a cada commit.
+A bateria foi preparada para ser executada **uma única vez ao final da leva**, não a cada commit.
+
+Comando:
+
+```bash
+pnpm validacao:final
+```
+
+O orquestrador `scripts/validacao-final.mjs` executa, em sequência:
+
+1. verificação arquitetural;
+2. lint;
+3. TypeScript;
+4. testes unitários;
+5. build de produção;
+6. um único `next start` isolado para a bateria de navegador;
+7. Playwright do produto público atual;
+8. axe/accessibilidade em mobile e desktop;
+9. responsividade de `320` a `1920px`.
+
+E2E, acessibilidade e responsividade reutilizam o mesmo servidor de produção, evitando três inicializações desnecessárias. Qualquer etapa que falhar encerra a validação com erro e o servidor é encerrado no `finally`.
 
 Cobertura preparada:
 
 - Playwright em `320×760`, `390×844`, `1440×900` e `1920×1080`;
 - responsividade em `320`, `360`, `390`, `430`, `768`, `1024`, `1280`, `1440` e `1920px`;
+- detecção de conteúdo cortado mesmo quando `overflow-x: clip` esconde a scrollbar;
 - acessibilidade em mobile e desktop;
 - 7 landings atuais;
+- canonical e Open Graph de home/landing;
 - WhatsApp de Jeferson e Jackson;
-- contexto do equipamento na barra móvel;
+- triagem completa preservada na barra móvel — equipamento, sintoma, situação e cidade quando informada;
+- páginas legais sem barra fixa de conversão;
 - ausência de overflow horizontal;
-- URLs antigas da loja respondendo `410`;
+- URLs antigas da loja respondendo `410` com saída para a assistência;
 - admin anônimo protegido.
 
-**Importante:** alterações desta leva foram feitas com `[skip ci]` por decisão operacional. Não considerar a leva tecnicamente validada até a execução final de lint, typecheck, testes, build, E2E, acessibilidade e responsividade.
+**Importante:** alterações desta leva foram feitas com `[skip ci]` por decisão operacional. O comando acima também foi apenas preparado, não executado nesta leva. Não considerar a implementação tecnicamente validada até a execução final da bateria.
