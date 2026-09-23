@@ -28,20 +28,30 @@ export function CabecalhoSite({
   atalhos: AtalhoDoCabecalho[];
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-graf-200/80 bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
-      <div className="container-jb flex h-16 items-center justify-between gap-4 lg:h-[4.5rem]">
-        <Link href="/" className="foco-jb shrink-0 rounded-md" aria-label="JB Soluções Odontológicas, início">
-          <Logo altura={34} prioridade />
-        </Link>
+    <header className="jb-cabecalho sticky top-0 z-40 border-b border-graf-200/80 bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80">
+      <div className="container-jb flex h-16 items-center justify-between gap-3 lg:h-[4.5rem] lg:gap-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link
+            href="/"
+            className="jb-logo-stage foco-jb shrink-0 rounded-lg"
+            aria-label="JB Soluções Odontológicas, início"
+          >
+            <Logo altura={34} prioridade />
+          </Link>
+          <span className="hidden items-center gap-2 rounded-full border border-graf-200 bg-white/75 px-3 py-1.5 text-xs font-bold text-graf-700 shadow-card xl:inline-flex">
+            <span className="size-2 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]" aria-hidden />
+            Assistência técnica odontológica
+          </span>
+        </div>
 
         {atalhos.length > 0 ? (
           <nav aria-label="Nesta página" className="hidden lg:block">
-            <ul className="flex items-center gap-1">
+            <ul className="flex items-center gap-0.5">
               {atalhos.map((atalho) => (
                 <li key={atalho.href}>
                   <a
                     href={atalho.href}
-                    className="foco-jb rounded-lg px-3 py-2 text-sm font-semibold text-graf-700 transition-colors hover:bg-graf-50 hover:text-jb-700"
+                    className="foco-jb rounded-lg px-3 py-2 text-sm font-semibold text-graf-700 transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-graf-50 hover:text-jb-700"
                   >
                     {atalho.rotulo}
                   </a>
@@ -57,9 +67,10 @@ export function CabecalhoSite({
           posicao="cabecalho"
           tamanho="sm"
           lado
-          className="shrink-0"
+          className="jb-cabecalho-whatsapp shrink-0"
         />
       </div>
+      <span className="jb-leitura" aria-hidden />
     </header>
   );
 }

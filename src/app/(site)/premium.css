@@ -1,0 +1,479 @@
+/* ============================================================================
+   JB Premium — camada de conversão e acabamento do site de assistência
+
+   Esta camada existe separada do design system global de propósito. Ela deixa
+   a experiência pública mais cinematográfica sem contaminar backoffice, CMS ou
+   componentes operacionais. O princípio é simples: impacto alto, custo baixo.
+
+   - nenhuma informação nova é inventada;
+   - nenhuma animação é requisito para entender ou usar a página;
+   - mobile recebe composição própria, não desktop encolhido;
+   - transform/opacity são os únicos movimentos contínuos;
+   - reduced-motion desliga tudo que não é funcional.
+   ============================================================================ */
+
+[data-jb-site="assistencia"] {
+  --jb-premium-ink: #111315;
+  --jb-premium-shadow: 0 28px 80px -42px rgb(17 19 21 / 0.42);
+  --jb-premium-red-shadow: 0 22px 60px -34px rgb(224 20 27 / 0.48);
+}
+
+/* ---------------------------------------------------------------- cabeçalho */
+
+.jb-cabecalho {
+  position: sticky;
+  isolation: isolate;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.9), 0 12px 36px -34px rgb(17 19 21 / 0.7);
+}
+
+.jb-cabecalho::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 0%, rgb(224 20 27 / 0.055), transparent 25%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.84));
+}
+
+.jb-logo-stage {
+  transition: transform 280ms var(--ease-out-quint), filter 280ms var(--ease-out-quint);
+}
+
+.jb-leitura {
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  z-index: 4;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--color-jb-500), var(--color-jb-400), var(--color-jb-700));
+  box-shadow: 0 0 16px rgb(224 20 27 / 0.36);
+  pointer-events: none;
+}
+
+@keyframes jb-leitura-progresso {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .jb-leitura {
+    animation: jb-leitura-progresso linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+/* -------------------------------------------------------------------- hero */
+
+.jb-hero-premium {
+  background:
+    radial-gradient(circle at 82% 18%, rgb(224 20 27 / 0.085), transparent 30rem),
+    radial-gradient(circle at 8% 84%, rgb(26 28 30 / 0.045), transparent 28rem),
+    linear-gradient(180deg, #fff 0%, #fff 64%, #fbfbfc 100%);
+}
+
+.jb-hero-premium::before {
+  content: "";
+  position: absolute;
+  inset-inline: 8%;
+  top: -16rem;
+  height: 28rem;
+  border-radius: 999px;
+  background: rgb(224 20 27 / 0.06);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.jb-hero-premium::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(76rem, 92vw);
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgb(224 20 27 / 0.26), rgb(26 28 30 / 0.12), transparent);
+  pointer-events: none;
+}
+
+.jb-hero-malha {
+  opacity: 0.54;
+  background-image:
+    linear-gradient(to right, rgb(26 28 30 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(26 28 30 / 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 54% 32%, #000 0%, transparent 72%);
+}
+
+.jb-hero-copy {
+  position: relative;
+}
+
+.jb-hero-title {
+  max-width: 11.5ch;
+  font-size: clamp(3rem, 6.7vw, 5.85rem);
+  line-height: 0.95;
+  letter-spacing: -0.057em;
+  text-wrap: balance;
+}
+
+.jb-hero-title .rodizio {
+  filter: drop-shadow(0 10px 24px rgb(224 20 27 / 0.11));
+}
+
+.jb-hero-subtexto {
+  font-size: clamp(1.03rem, 0.99rem + 0.28vw, 1.22rem);
+  line-height: 1.62;
+}
+
+.jb-hero-provas li {
+  display: flex;
+  min-height: 3.2rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid rgb(221 223 226 / 0.88);
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 0.76);
+  color: var(--color-graf-800);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+  box-shadow: 0 8px 22px -20px rgb(17 19 21 / 0.55);
+  backdrop-filter: blur(12px);
+}
+
+.jb-hero-provas li svg {
+  flex: 0 0 auto;
+  color: var(--color-jb-600);
+}
+
+.jb-hero-cta {
+  max-width: 37rem;
+}
+
+.jb-hero-cta a[data-whatsapp="abertura"] {
+  min-height: 3.6rem;
+  border-radius: 0.95rem;
+  box-shadow: var(--jb-premium-red-shadow);
+}
+
+.jb-hero-cta a[data-whatsapp="abertura-segundo"] {
+  min-height: 3.6rem;
+  border-radius: 0.95rem;
+  background: rgb(255 255 255 / 0.84);
+  box-shadow: 0 18px 42px -32px rgb(17 19 21 / 0.5);
+  backdrop-filter: blur(12px);
+}
+
+/* -------------------------------------------------------------- foto hero */
+
+.jb-foto-premium {
+  isolation: isolate;
+}
+
+.jb-foto-premium::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 7% 6% -8% 6%;
+  border-radius: 2.4rem;
+  background: linear-gradient(135deg, rgb(224 20 27 / 0.22), rgb(17 19 21 / 0.08));
+  filter: blur(28px);
+  opacity: 0.58;
+}
+
+.jb-foto-premium > div {
+  border: 1px solid rgb(255 255 255 / 0.78);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.75) inset,
+    0 24px 70px -42px rgb(17 19 21 / 0.55);
+}
+
+@keyframes jb-scan {
+  0% {
+    opacity: 0;
+    transform: translate3d(-180%, 0, 0) skewX(-12deg);
+  }
+  16% {
+    opacity: 0.24;
+  }
+  44%,
+  100% {
+    opacity: 0;
+    transform: translate3d(760%, 0, 0) skewX(-12deg);
+  }
+}
+
+.jb-scanline {
+  left: -8rem;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.8), rgb(224 20 27 / 0.12), transparent);
+  filter: blur(2px);
+  animation: jb-scan 8.5s ease-in-out 1.4s infinite;
+}
+
+/* ------------------------------------------------------------ diagnóstico */
+
+.jb-diagnostico-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.jb-diagnostico-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 9% -7% 2%;
+  border-radius: 2rem;
+  background: radial-gradient(circle at 50% 18%, rgb(224 20 27 / 0.18), rgb(26 28 30 / 0.045) 48%, transparent 74%);
+  filter: blur(32px);
+  opacity: 0.8;
+}
+
+.jb-diagnostico-stage #diagnostico {
+  border-color: rgb(221 223 226 / 0.92);
+  background: rgb(255 255 255 / 0.92);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.92) inset,
+    0 24px 68px -38px rgb(17 19 21 / 0.5);
+  backdrop-filter: blur(18px);
+}
+
+.jb-diagnostico-legenda {
+  opacity: 0.96;
+}
+
+/* ----------------------------------------------- páginas de equipamento */
+
+[data-jb-site="assistencia"] section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium) {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 88% 12%, rgb(224 20 27 / 0.09), transparent 30rem),
+    radial-gradient(circle at 8% 92%, rgb(26 28 30 / 0.045), transparent 25rem),
+    linear-gradient(180deg, #fff, #fbfbfc);
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.38;
+  background-image:
+    linear-gradient(to right, rgb(26 28 30 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(26 28 30 / 0.035) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(ellipse at 55% 34%, #000, transparent 72%);
+}
+
+[data-jb-site="assistencia"] section[aria-labelledby="abertura-titulo"]:not(.jb-hero-premium) #abertura-titulo {
+  font-size: clamp(2.7rem, 5.7vw, 5.1rem);
+  line-height: 0.98;
+  letter-spacing: -0.052em;
+}
+
+/* ---------------------------------------------------------- blocos gerais */
+
+[data-jb-site="assistencia"] main > section {
+  scroll-margin-top: 6.5rem;
+}
+
+.jb-secao-parada {
+  overflow: clip;
+  background:
+    radial-gradient(circle at 92% 18%, rgb(224 20 27 / 0.055), transparent 22rem),
+    linear-gradient(180deg, #fafafa, #f6f7f8);
+}
+
+.jb-secao-parada::before {
+  content: "";
+  position: absolute;
+  width: 16rem;
+  height: 16rem;
+  right: -7rem;
+  top: -8rem;
+  border-radius: 999px;
+  border: 1px solid rgb(224 20 27 / 0.09);
+  box-shadow:
+    0 0 0 2.2rem rgb(224 20 27 / 0.025),
+    0 0 0 5.2rem rgb(224 20 27 / 0.015);
+  pointer-events: none;
+}
+
+[data-jb-site="assistencia"] .jb-cartao-equipamento {
+  border-color: rgb(221 223 226 / 0.9);
+  background: linear-gradient(180deg, #fff, #fdfdfd);
+  box-shadow: 0 14px 34px -30px rgb(17 19 21 / 0.52);
+  transition:
+    transform 360ms var(--ease-out-quint),
+    box-shadow 360ms var(--ease-out-quint),
+    border-color 260ms ease;
+}
+
+/* ------------------------------------------------------------- conversão */
+
+[data-jb-site="assistencia"] a[data-whatsapp] {
+  -webkit-font-smoothing: antialiased;
+  transition:
+    transform 220ms var(--ease-out-quint),
+    box-shadow 260ms var(--ease-out-quint),
+    border-color 220ms ease,
+    background-color 220ms ease,
+    color 220ms ease;
+}
+
+[data-jb-site="assistencia"] a[data-whatsapp]:active {
+  transform: scale(0.975);
+}
+
+/* --------------------------------------------------------------- mobile */
+
+.jb-barra-movel-premium {
+  box-shadow: 0 -18px 55px -34px rgb(17 19 21 / 0.58);
+}
+
+@media (max-width: 63.99rem) {
+  .jb-cabecalho .container-jb {
+    min-height: 3.75rem;
+  }
+
+  .jb-cabecalho-whatsapp {
+    gap: 0.35rem;
+  }
+
+  .jb-cabecalho-whatsapp li > a {
+    min-height: 2.4rem;
+    padding-inline: 0.7rem;
+    font-size: 0.76rem;
+    border-radius: 0.72rem;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  .jb-hero-premium .container-jb {
+    gap: 2.15rem;
+    padding-top: 1.05rem;
+    padding-bottom: 3.4rem;
+  }
+
+  .jb-hero-title {
+    max-width: 10.8ch;
+    font-size: clamp(2.75rem, 13vw, 3.8rem);
+    line-height: 0.96;
+    letter-spacing: -0.054em;
+  }
+
+  .jb-hero-subtexto {
+    max-width: 34rem;
+    font-size: 1rem;
+    line-height: 1.58;
+  }
+
+  .jb-hero-provas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jb-hero-provas li:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .jb-hero-provas li {
+    min-height: 3.35rem;
+    padding: 0.68rem 0.72rem;
+    font-size: 0.735rem;
+  }
+
+  .jb-hero-cta a[data-whatsapp="abertura"],
+  .jb-hero-cta a[data-whatsapp="abertura-segundo"] {
+    min-height: 3.45rem;
+    padding-inline: 0.75rem;
+  }
+
+  .jb-foto-premium::before {
+    inset: 8% 4% -5%;
+    filter: blur(22px);
+  }
+
+  .jb-foto-premium > div {
+    border-radius: 1.35rem;
+  }
+
+  .jb-diagnostico-stage::before {
+    inset: 8% -2% 0;
+  }
+
+  .jb-diagnostico-stage #diagnostico {
+    border-radius: 1.25rem;
+  }
+
+  .jb-barra-movel-premium {
+    border-radius: 1.15rem 1.15rem 0 0;
+    border-inline: 1px solid rgb(221 223 226 / 0.82);
+  }
+}
+
+@media (min-width: 64rem) {
+  .jb-hero-premium .container-jb {
+    padding-top: 3.5rem;
+    padding-bottom: 4.25rem;
+  }
+
+  .jb-diagnostico-stage {
+    align-self: center;
+  }
+}
+
+/* --------------------------------------------------------------- hover */
+
+@media (hover: hover) and (pointer: fine) {
+  .jb-logo-stage:hover {
+    transform: translateY(-1px) scale(1.015);
+    filter: drop-shadow(0 10px 18px rgb(17 19 21 / 0.08));
+  }
+
+  [data-jb-site="assistencia"] a[data-whatsapp]:hover {
+    transform: translateY(-2px);
+  }
+
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover {
+    transform: translateY(-7px);
+    border-color: rgb(224 20 27 / 0.28);
+    box-shadow: 0 28px 62px -36px rgb(17 19 21 / 0.46);
+  }
+
+  .jb-hero-provas li {
+    transition: transform 280ms var(--ease-out-quint), border-color 220ms ease, box-shadow 280ms ease;
+  }
+
+  .jb-hero-provas li:hover {
+    transform: translateY(-3px);
+    border-color: rgb(224 20 27 / 0.24);
+    box-shadow: 0 18px 38px -30px rgb(17 19 21 / 0.55);
+  }
+}
+
+/* ------------------------------------------------ movimento reduzido */
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-scanline,
+  .jb-leitura {
+    animation: none !important;
+  }
+
+  .jb-leitura {
+    display: none;
+  }
+
+  .jb-logo-stage,
+  [data-jb-site="assistencia"] a[data-whatsapp],
+  [data-jb-site="assistencia"] .jb-cartao-equipamento,
+  .jb-hero-provas li {
+    transition: none !important;
+  }
+}

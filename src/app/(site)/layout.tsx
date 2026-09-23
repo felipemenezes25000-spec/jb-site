@@ -5,6 +5,7 @@ import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
 import "./site.css";
+import "./premium.css";
 
 /* ============================================================================
    Casca do site de assistência

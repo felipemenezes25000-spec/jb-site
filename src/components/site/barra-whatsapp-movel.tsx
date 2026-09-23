@@ -64,18 +64,27 @@ export function BarraWhatsappMovel({ contatos }: { contatos: ContatoWhatsapp[] }
   return (
     <div
       data-visivel={visivel}
-      className="jb-barra-movel fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 px-3 pt-3 backdrop-blur-xl md:hidden"
-      style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      className="jb-barra-movel jb-barra-movel-premium fixed inset-x-0 bottom-0 z-40 border-t border-graf-200 bg-white/95 px-3 pt-2.5 backdrop-blur-xl md:hidden"
+      style={{ paddingBottom: "calc(0.7rem + env(safe-area-inset-bottom))" }}
     >
-      <OpcoesWhatsapp
-        contatos={contatos}
-        mensagem={equipamento ? montarMensagem({ equipamento }) : MENSAGEM_PADRAO}
-        equipamento={equipamento ?? undefined}
-        posicao="barra-movel"
-        tamanho="lg"
-        lado
-        classeDoPrincipal="jb-pulso"
-      />
+      <div className="mx-auto mb-2 flex max-w-md items-center justify-between gap-3 px-1">
+        <p className="flex min-w-0 items-center gap-2 text-[0.7rem] font-extrabold uppercase tracking-[0.12em] text-graf-800">
+          <span className="size-2 shrink-0 rounded-full bg-ok-500 shadow-[0_0_0_4px_rgb(16_185_129/0.12)]" aria-hidden />
+          Falar com a equipe técnica
+        </p>
+        <span className="shrink-0 text-[0.7rem] font-bold text-graf-600">WhatsApp</span>
+      </div>
+      <div className="mx-auto max-w-md">
+        <OpcoesWhatsapp
+          contatos={contatos}
+          mensagem={equipamento ? montarMensagem({ equipamento }) : MENSAGEM_PADRAO}
+          equipamento={equipamento ?? undefined}
+          posicao="barra-movel"
+          tamanho="lg"
+          lado
+          classeDoPrincipal="jb-pulso"
+        />
+      </div>
     </div>
   );
 }
