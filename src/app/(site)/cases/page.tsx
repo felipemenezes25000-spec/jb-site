@@ -12,17 +12,6 @@ import { prisma } from "@/lib/prisma";
 import { JsonLd, metadataDePagina, trilhaJsonLd } from "@/lib/seo";
 import { connection } from "next/server";
 
-/*
- * Migração para Cache Components — esta rota ainda não foi migrada.
- * Ver docs/evolucao-jb/cobertura.md, fase 5.
- */
-/*
- * Renderizada a cada visita (`connection()` logo no começo). Até 22/09/2026
- * esta página vivia na casca da loja, que lia o cookie da conta e tornava tudo
- * dinâmico por tabela. A casca do site de assistência é estática, e sem esta
- * chamada o Next tentaria pré-renderizar a consulta ao banco e recusaria o
- * relógio que o Prisma lê durante a consulta.
- */
 export const instant = false;
 
 const TRILHA = [{ rotulo: "Início", href: "/" }, { rotulo: "Cases técnicos" }];
@@ -42,53 +31,50 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-/**
- * As sete etapas de um atendimento.
- *
- * Este bloco é a prova pública enquanto não houver case autorizado. É o que o
- * escopo pede: sem caso autorizado, use a explicação do processo como prova —
- * e não invente uma "Dra. Maria" com número de ciclos.
- *
- * Ele descreve o que a JB de fato faz, e continua na página depois de haver
- * cases: quem lê um case quer saber como se chega àquele resultado.
- */
 const ETAPAS = [
   {
-    titulo: "1. O relato",
+    numero: "01",
+    titulo: "O relato",
     texto:
       "O que a clínica descreveu, com as próprias palavras. É o ponto de partida e fica registrado como foi dito — não como o técnico interpretou.",
   },
   {
-    titulo: "2. A avaliação",
+    numero: "02",
+    titulo: "A avaliação",
     texto:
       "O equipamento é avaliado desenergizado e despressurizado, na bancada ou no local, com instrumento. Sintoma não é diagnóstico.",
   },
   {
-    titulo: "3. O diagnóstico confirmado",
+    numero: "03",
+    titulo: "O diagnóstico confirmado",
     texto:
       "O que a medição mostrou, não o que se suspeitou. Enquanto não há confirmação, o campo fica vazio — e um case sem diagnóstico confirmado não é publicado.",
   },
   {
-    titulo: "4. O orçamento",
+    numero: "04",
+    titulo: "O orçamento",
     texto:
       "Diagnóstico, peças, mão de obra e prazo, por escrito, antes de qualquer intervenção. A clínica aprova ou recusa.",
   },
   {
-    titulo: "5. A intervenção",
+    numero: "05",
+    titulo: "A intervenção",
     texto:
       "O que foi feito e com que peça. Peça original ou equivalente é informação que vai na ordem de serviço, não uma escolha silenciosa.",
   },
   {
-    titulo: "6. O teste final",
+    numero: "06",
+    titulo: "O teste final",
     texto:
       "O equipamento é testado antes de voltar. O que foi testado fica registrado — é o que sustenta a garantia do serviço.",
   },
   {
-    titulo: "7. O registro",
+    numero: "07",
+    titulo: "O registro",
     texto:
-      "Tudo entra no prontuário do equipamento, na Área da Clínica. Da próxima vez, o histórico já está lá — inclusive para comparar com o orçamento de outra empresa.",
+      "Tudo entra no prontuário do equipamento. Da próxima vez, o histórico já está lá para a equipe começar com contexto.",
   },
-];
+] as const;
 
 export default async function CasesPage() {
   await connection();
@@ -108,65 +94,61 @@ export default async function CasesPage() {
     <>
       <JsonLd dados={trilhaJsonLd(TRILHA)} />
 
-      <Secao espaco="sm">
+      <Secao espaco="md" className="jb-cases-premium jb-content-hub">
         <Trilha itens={TRILHA} className="mb-6" />
-        <TituloSecao
-          como="h1"
-          sobretitulo="Bancada"
-          titulo="Cases técnicos"
-          descricao="Atendimentos reais, publicados com autorização da clínica atendida. Cada um mostra o sintoma relatado, o diagnóstico confirmado na bancada, o que foi feito e como o equipamento foi testado antes de voltar."
-        />
+        <div className="jb-content-hero max-w-4xl">
+          <TituloSecao
+            como="h1"
+            sobretitulo="Bancada"
+            titulo="Cases técnicos"
+            descricao="Atendimentos reais, publicados com autorização da clínica atendida. Cada um mostra o sintoma relatado, o diagnóstico confirmado na bancada, o que foi feito e como o equipamento foi testado antes de voltar."
+          />
+        </div>
 
         {cases.length > 0 ? (
-          <Grade colunas={colunasAte(cases.length, { base: 1, sm: 2, lg: 3 })} como="ul" className="mt-8">
+          <Grade
+            colunas={colunasAte(cases.length, { base: 1, sm: 2, lg: 3 })}
+            como="ul"
+            className="mt-9 gap-4 lg:gap-5"
+          >
             {cases.map((caso) => (
               <li key={caso.slug}>
-                <Cartao className="h-full">
-                <Link
-                  href={`/cases/${caso.slug}`}
-                  className="flex h-full flex-col gap-2 p-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
-                >
-                  <span className="label-mono text-xs text-jb-700">{caso.equipmentLabel}</span>
-                  <span className="text-[1.0625rem] font-bold leading-snug text-graf-950">
-                    {caso.title}
-                  </span>
-                  <span className="text-corpo leading-relaxed text-graf-600">
-                    {caso.symptom}
-                  </span>
-                  <span className="mt-auto flex items-center gap-1.5 pt-2 text-sm font-semibold text-jb-700">
-                    Ver o atendimento
-                    <ArrowRight className="size-4" aria-hidden />
-                  </span>
-                  {caso.publishedAt ? (
-                    <span className="text-apoio text-graf-500">
-                      {formatarData(caso.publishedAt)}
+                <Cartao className="jb-case-card h-full overflow-hidden rounded-[1.35rem]">
+                  <Link
+                    href={`/cases/${caso.slug}`}
+                    className="flex h-full flex-col gap-2 p-5 sm:p-6 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jb-500"
+                  >
+                    <span className="label-mono text-xs text-jb-700">{caso.equipmentLabel}</span>
+                    <span className="text-[1.0625rem] font-extrabold leading-snug tracking-tight text-graf-950 sm:text-lg">
+                      {caso.title}
                     </span>
-                  ) : null}
-                </Link>
+                    <span className="text-corpo leading-relaxed text-graf-600">{caso.symptom}</span>
+                    <span className="mt-auto flex items-center gap-1.5 border-t border-graf-100 pt-4 text-sm font-extrabold text-jb-700">
+                      Ver o atendimento
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </span>
+                    {caso.publishedAt ? (
+                      <span className="text-apoio text-graf-500">{formatarData(caso.publishedAt)}</span>
+                    ) : null}
+                  </Link>
                 </Cartao>
               </li>
             ))}
           </Grade>
         ) : (
-          /* Sem case autorizado, a prova pública é o processo. Não há aqui um
-             "em breve", nem um exemplo ilustrativo com nome inventado: o que
-             a JB pode afirmar hoje é como ela trabalha, e é isso que está
-             escrito. */
-          <div className="mt-8 rounded-xl border border-graf-200 bg-graf-50 p-6 sm:p-8">
+          <div className="jb-content-empty mt-9 rounded-[1.5rem] border border-graf-200 bg-graf-50 p-6 sm:p-8">
             <h2 className="flex items-center gap-2.5 text-title texto-forte">
-              <ClipboardCheck className="size-5 shrink-0 text-graf-500" aria-hidden />
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white text-jb-600 shadow-xs ring-1 ring-graf-200">
+                <ClipboardCheck className="size-5" aria-hidden />
+              </span>
               Ainda não há case publicado
             </h2>
-            <p className="mt-3 max-w-2xl text-corpo leading-relaxed text-graf-600">
+            <p className="mt-4 max-w-2xl text-corpo leading-relaxed text-graf-600">
               Um case só vai ao ar com autorização da clínica atendida, com diagnóstico
               confirmado na bancada e com técnico e revisor identificados. Enquanto nenhum
               atendimento reúne as três coisas, esta página mostra o que a JB pode afirmar sem
               depender de autorização de ninguém: <strong>como o atendimento funciona</strong>.
             </p>
-
-            {/* Página vazia precisa de saída, não só de explicação. As outras
-                duas áreas sem publicação — Central Técnica e depoimentos — já
-                ofereciam o próximo passo; esta terminava no ponto final. */}
             <div className="mt-6 flex flex-wrap gap-3">
               <ChamarWhatsapp tamanho="sm" />
               <LinkBotao href="/#como-funciona" variante="secundario" tamanho="sm">
@@ -177,30 +159,31 @@ export default async function CasesPage() {
         )}
       </Secao>
 
-      <Secao fundo="clara" espaco="sm">
+      <Secao fundo="clara" espaco="md" className="jb-case-processo">
         <TituloSecao
           tamanho="titulo"
+          sobretitulo="Método de atendimento"
           titulo="Como um atendimento acontece"
-          descricao="As sete etapas, na ordem. É o mesmo processo em toda ordem de serviço, e é dele que sai o registro que fica no prontuário do equipamento."
+          descricao="As sete etapas, na ordem. É o mesmo processo em toda ordem de serviço, e é dele que sai o registro que fica no histórico do equipamento."
         />
-        <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ol" className="mt-6">
+        <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ol" className="mt-7">
           {ETAPAS.map((etapa) => (
-            <li key={etapa.titulo}>
-              <Cartao className="h-full p-5">
-              <h3 className="text-corpo font-bold text-graf-950">{etapa.titulo}</h3>
-              <p className="mt-1.5 text-[0.875rem] leading-relaxed text-graf-600">
-                {etapa.texto}
-              </p>
+            <li key={etapa.numero}>
+              <Cartao className="jb-case-etapa relative h-full overflow-hidden rounded-[1.35rem] p-5 sm:p-6">
+                <span className="label-mono text-jb-600">{etapa.numero}</span>
+                <h3 className="mt-3 text-corpo font-extrabold text-graf-950">{etapa.titulo}</h3>
+                <p className="mt-2 text-[0.875rem] leading-relaxed text-graf-600">{etapa.texto}</p>
               </Cartao>
             </li>
           ))}
         </Grade>
       </Secao>
 
-      <Secao espaco="sm">
-        <div className="flex flex-wrap items-center justify-between gap-6 rounded-xl border border-graf-200 bg-graf-50 p-6">
+      <Secao espaco="md" className="jb-content-cta">
+        <div className="flex flex-col gap-6 rounded-[1.5rem] border border-graf-200 bg-graf-50 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
-            <h2 className="text-title texto-forte">Seu equipamento está com algum sintoma?</h2>
+            <p className="sobretitulo">Seu caso começa pela triagem</p>
+            <h2 className="text-title texto-forte mt-2">Seu equipamento está com algum sintoma?</h2>
             <p className="mt-2 text-corpo leading-relaxed text-graf-600">
               Chame no WhatsApp e mande foto ou vídeo do que está acontecendo.
             </p>
