@@ -4,8 +4,9 @@ import { chromium } from "playwright";
  * Auditoria responsiva do site de assistência atual.
  *
  * Mede as larguras em que anúncios e navegação real chegam à JB. O portão
- * procura os dois defeitos que mais destroem conversão no celular: página que
- * rola de lado e CTA principal pequeno demais para o dedo.
+ * procura três defeitos que destroem percepção/conversão: página que rola de
+ * lado, conteúdo útil cortado por `overflow: clip` e CTA principal pequeno
+ * demais para o dedo.
  */
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
@@ -86,6 +87,36 @@ try {
             const r = h1.getBoundingClientRect();
             if (r.left < -2 || r.right > largura + 2) {
               itens.push({ tipo: "h1-fora-da-tela", detalhe: `${Math.round(r.left)}..${Math.round(r.right)}` });
+            }
+          }
+
+          /* `overflow-x: clip` evita scrollbar, mas não transforma um card
+             cortado em layout correto. Procura elementos de conteúdo que
+             ultrapassam a viewport. Faixas horizontais deliberadas são a
+             exceção: nelas o conteúdo fora da tela é justamente a affordance. */
+          const HORIZONTAIS_INTENCIONAIS = ".jb-faixa, .jb-hero-provas, .jb-filtros-premium";
+          const candidatos = document.querySelectorAll(
+            "main :where(h1,h2,h3,p,a,button,input,textarea,select,article,figure,li)",
+          );
+          let relatados = 0;
+          for (const el of candidatos) {
+            if (relatados >= 8) break;
+            if (el.closest(HORIZONTAIS_INTENCIONAIS)) continue;
+
+            const s = getComputedStyle(el);
+            if (s.display === "none" || s.visibility === "hidden") continue;
+            const r = el.getBoundingClientRect();
+            if (r.width === 0 || r.height === 0) continue;
+
+            /* Elemento absoluto decorativo não entra no seletor acima; ainda
+               assim, links/figures podem ter poucos pixels de sombra fora sem
+               conteúdo cortado. A tolerância de 3px cobre arredondamento. */
+            if (r.left < -3 || r.right > largura + 3) {
+              itens.push({
+                tipo: "conteudo-cortado",
+                detalhe: `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}: ${Math.round(r.left)}..${Math.round(r.right)}`,
+              });
+              relatados += 1;
             }
           }
 
