@@ -109,6 +109,8 @@ Medição só ocorre depois de consentimento. O clique no WhatsApp pode registra
 
 UTMs e identificadores de campanha podem ser preservados em sessão para atribuição após navegação interna, sem transformar armazenamento em envio de dados antes do consentimento.
 
+Depois do consentimento, GA4 e Meta recebem `PageView` explícito na rota inicial e nas navegações internas do App Router. Query string não entra nesse evento. O clique no WhatsApp continua sendo tratado como **intenção de contato**, não como conversa ou atendimento concluído.
+
 ## Performance
 
 - Não pré-carregar imagem que não disputa a primeira dobra no mobile.
@@ -128,19 +130,30 @@ Comando:
 pnpm validacao:final
 ```
 
+Pré-requisito: **Docker disponível**. O comando não usa o banco configurado na máquina para migrations/seeds. Ele sobrescreve as variáveis críticas e cria um PostgreSQL 17 descartável em container próprio, por padrão na porta local `55432`.
+
 O orquestrador `scripts/validacao-final.mjs` executa, em sequência:
 
 1. verificação arquitetural;
 2. lint;
 3. TypeScript;
 4. testes unitários;
-5. build de produção;
-6. um único `next start` isolado para a bateria de navegador;
-7. Playwright do produto público atual;
-8. axe/accessibilidade em mobile e desktop;
-9. responsividade de `320` a `1920px`.
+5. sobe PostgreSQL efêmero;
+6. aplica migrações e cargas base/demo nesse banco local;
+7. garante o Chromium do Playwright;
+8. build de produção apontado para o banco efêmero;
+9. um único `next start` isolado para a bateria de navegador;
+10. Playwright do produto público atual;
+11. axe/accessibilidade em mobile e desktop;
+12. responsividade de `320` a `1920px`.
 
-E2E, acessibilidade e responsividade reutilizam o mesmo servidor de produção, evitando três inicializações desnecessárias. Qualquer etapa que falhar encerra a validação com erro e o servidor é encerrado no `finally`.
+E2E, acessibilidade e responsividade reutilizam o mesmo servidor de produção, evitando três inicializações desnecessárias. Qualquer etapa que falhar encerra a validação com erro. Servidor e banco efêmero são encerrados no `finally`; `SIGINT`/`SIGTERM` também disparam a limpeza.
+
+Portas podem ser alteradas sem tocar no código:
+
+```bash
+VALIDACAO_PORTA=3210 VALIDACAO_DB_PORTA=55432 pnpm validacao:final
+```
 
 Cobertura preparada:
 
@@ -155,6 +168,7 @@ Cobertura preparada:
 - páginas legais sem barra fixa de conversão;
 - ausência de overflow horizontal;
 - URLs antigas da loja respondendo `410` com saída para a assistência;
-- admin anônimo protegido.
+- admin anônimo protegido;
+- origem de campanha sanitizada e `send_to` de Google Ads cobertos por teste unitário.
 
 **Importante:** alterações desta leva foram feitas com `[skip ci]` por decisão operacional. O comando acima também foi apenas preparado, não executado nesta leva. Não considerar a implementação tecnicamente validada até a execução final da bateria.
