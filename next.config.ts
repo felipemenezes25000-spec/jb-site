@@ -401,7 +401,9 @@ const nextConfig: NextConfig = {
  * inexistente disfarçada. Elas respondem 410 no `src/proxy.ts`.
  *
  * `/empresa` é o endereço herdado do site em PHP; ia para `/sobre`, que agora
- * também virou seção da home.
+ * também virou seção da home. `/solucoes` é o outro item do menu desse site
+ * (Home, Empresa, Estrutura, Soluções, Contato): é o que o Google conhece do
+ * domínio oficial, e não pode cair em 404 no dia da troca.
  */
 const REDIRECIONAMENTOS: [string, string][] = [
   ["/assistencia-tecnica", "/"],
@@ -417,6 +419,8 @@ const REDIRECIONAMENTOS: [string, string][] = [
   ["/sobre", "/#autorizada"],
   ["/estrutura", "/#autorizada"],
   ["/empresa", "/#autorizada"],
+  ["/solucoes", "/#equipamentos"],
+  ["/solucoes/:caminho*", "/#equipamentos"],
   ["/depoimentos", "/"],
   ["/entrar", "/"],
   ["/cadastro", "/"],
