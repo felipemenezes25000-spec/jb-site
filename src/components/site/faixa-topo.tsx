@@ -6,9 +6,10 @@ import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 /* ============================================================================
    Faixa do topo
 
-   Mantém a assinatura vermelha de confiança, mas fica mais compacta no
-   celular para devolver pixels à primeira dobra. O conteúdo continua sendo
-   composto só por afirmações já sustentadas pelo site e pela operação.
+   No desktop ela funciona como assinatura editorial em movimento. No celular
+   vira uma frase estática: a primeira dobra já tem status, prova e CTA, então
+   manter um marquee infinito acima dela só consome atenção e compositor sem
+   acrescentar informação útil.
    ============================================================================ */
 
 type Frase = { icone: React.ComponentType<{ className?: string }>; texto: string };
@@ -54,7 +55,12 @@ export function FaixaTopo({
 
   return (
     <div className="jb-ticker relative z-50 block overflow-hidden bg-jb-600 text-white">
-      <span className="jb-ticker-trilho flex h-8 items-center sm:h-9">
+      <span className="flex h-8 items-center justify-center gap-2 px-3 text-[0.7rem] font-extrabold uppercase tracking-[0.08em] sm:hidden">
+        <BadgeCheck className="size-3.5 shrink-0 text-white/90" aria-hidden />
+        <span className="truncate">Assistência técnica · todas as marcas</span>
+      </span>
+
+      <span className="jb-ticker-trilho hidden h-9 items-center sm:flex">
         <Trilho frases={frases} />
         <Trilho frases={frases} oculto />
       </span>
