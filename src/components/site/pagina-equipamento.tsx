@@ -40,8 +40,9 @@ import { cn } from "@/lib/utils";
 
    O resto reaproveita a home, com a mensagem do equipamento em todo botão:
    como funciona, clínica ou bancada, por que a JB, dúvidas (as do equipamento
-   primeiro) e a chamada final. A faixa EVOXX só entra em equipamento da
-   linha EVOXX.
+   primeiro) e a chamada final. Nada aqui prende o equipamento a um
+   fabricante: o selo é "todas as marcas", e a autorização EVOXX aparece só
+   como credencial da empresa, na faixa de marcas.
 
    Cada página mora na sua pasta (`app/(site)/autoclave`, …), e não num
    `[equipamento]` na raiz: com Cache Components não existe `dynamicParams`,
@@ -148,14 +149,12 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
           </div>
 
           <div className="entrada order-first lg:order-none [animation-delay:120ms]">
-            <Visual pagina={pagina} equipamento={equipamento} />
+            <Visual pagina={pagina} />
           </div>
         </div>
       </section>
 
-      {equipamento.evoxx ? (
-        <FaixaAutorizada desde={s.empresa_desde} cidade={s.endereco_cidade} />
-      ) : null}
+      <FaixaAutorizada desde={s.empresa_desde} cidade={s.endereco_cidade} />
 
       <EnquantoIsso pagina={pagina} whatsapp={s.whatsapp} mensagem={mensagem} equipamento={equipamento.id} />
 
@@ -187,7 +186,7 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
  * da bancada, que respira. No celular a altura é contida para o título e o
  * botão ainda caberem na primeira tela.
  */
-function Visual({ pagina, equipamento }: { pagina: PaginaDeEquipamento; equipamento: Equipamento }) {
+function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
   const { visual } = pagina;
   const recorte = visual.tipo === "recorte";
 
@@ -233,14 +232,12 @@ function Visual({ pagina, equipamento }: { pagina: PaginaDeEquipamento; equipame
         )}
       </div>
 
-      {equipamento.evoxx ? (
-        <p className="jb-boia absolute -left-2 top-4 flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop backdrop-blur sm:-left-4 sm:text-sm">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-jb-500 text-white">
-            <BadgeCheck className="size-4" aria-hidden />
-          </span>
-          Autorizada EVOXX
-        </p>
-      ) : null}
+      <p className="jb-boia absolute -left-2 top-4 flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop backdrop-blur sm:-left-4 sm:text-sm">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-jb-500 text-white">
+          <BadgeCheck className="size-4" aria-hidden />
+        </span>
+        Todas as marcas
+      </p>
       <p className="jb-boia-2 absolute -right-2 bottom-4 flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop backdrop-blur sm:-right-4 sm:text-sm">
         <span className="flex size-7 items-center justify-center rounded-lg bg-ok-500 text-white">
           <FileCheck2 className="size-4" aria-hidden />

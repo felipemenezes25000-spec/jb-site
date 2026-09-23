@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { equipamentoDaPagina, paginaPorSlug } from "@/lib/paginas-equipamento";
+import { paginaPorSlug } from "@/lib/paginas-equipamento";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
 /* ============================================================================
@@ -26,7 +26,6 @@ export async function imagemDoEquipamento(slug: string) {
   const s = await configuracoesPublicas();
   const cidade = s.endereco_cidade || "São Paulo";
   const nome = pagina?.nomeCurto ?? "Equipamento";
-  const evoxx = pagina ? equipamentoDaPagina(pagina).evoxx : false;
 
   return new ImageResponse(
     (
@@ -97,7 +96,7 @@ export async function imagemDoEquipamento(slug: string) {
           </div>
           <div style={{ fontSize: 34, lineHeight: 1.3, color: "#c3c7cc", display: "flex" }}>
             {pagina
-              ? `Conserto de ${pagina.palavraChave} em ${cidade}.${evoxx ? " Autorizada EVOXX." : ""} Chame no WhatsApp.`
+              ? `Conserto de ${pagina.palavraChave} de todas as marcas, em ${cidade}. Chame no WhatsApp.`
               : "Assistência técnica odontológica. Chame no WhatsApp."}
           </div>
         </div>

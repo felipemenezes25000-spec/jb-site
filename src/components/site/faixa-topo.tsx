@@ -48,11 +48,12 @@ export function FaixaTopo({
   cidade: string;
 }) {
   const frases: Frase[] = [
-    { icone: BadgeCheck, texto: "Assistência técnica autorizada EVOXX" },
+    { icone: BadgeCheck, texto: "Atendemos todas as marcas" },
     { icone: Zap, texto: "Equipamento parou? Chame agora no WhatsApp" },
     { icone: MapPin, texto: `Atendimento em ${cidade} e região, na clínica ou na bancada` },
     { icone: FileCheck2, texto: "Orçamento antes de qualquer troca de peça" },
     { icone: CalendarCheck2, texto: `Na bancada desde ${desde}` },
+    { icone: BadgeCheck, texto: "Assistência técnica autorizada EVOXX" },
     ...(whatsapp.trim()
       ? [{ icone: MarcaWhatsapp, texto: `WhatsApp ${formatarTelefone(whatsapp)}` }]
       : []),

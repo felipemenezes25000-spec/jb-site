@@ -3,12 +3,13 @@ import { ArrowUpRight, BadgeCheck, CalendarCheck2, FileCheck2, MapPin } from "lu
 import { LISTA_EVOXX } from "@/components/site/rodape-site";
 
 /* ============================================================================
-   Autorizada EVOXX, com prova
+   Todas as marcas, e a autorização como credencial
 
-   O selo e o link para a lista oficial do fabricante, onde qualquer um confere,
-   ao lado de três fatos da JB. Vive na home e nas páginas dos equipamentos da
-   linha EVOXX; na da cadeira, que não é da linha, não entra, para o selo não
-   parecer cobrir o que não cobre.
+   Primeiro o que a pessoa precisa saber: a JB conserta equipamento de
+   qualquer marca. Depois a prova de seriedade: é assistência técnica
+   autorizada EVOXX, com link para a lista oficial do fabricante. A ordem
+   importa: com "autorizada EVOXX" no título, o site parecia atender só EVOXX.
+   Vive na home e em toda página de equipamento, ao lado de três fatos da JB.
    ============================================================================ */
 
 export function FaixaAutorizada({ desde, cidade }: { desde: string; cidade: string }) {
@@ -43,10 +44,11 @@ export function FaixaAutorizada({ desde, cidade }: { desde: string; cidade: stri
           </span>
           <div>
             <h2 id="autorizada-titulo" className="text-title texto-forte">
-              Assistência técnica autorizada EVOXX
+              Atendemos todas as marcas
             </h2>
             <p className="mt-2 text-corpo leading-relaxed text-graf-600">
-              A JB está na lista oficial do fabricante. Não é só dizer: dá para conferir.
+              E a JB é assistência técnica autorizada EVOXX, na lista oficial do fabricante. Não
+              é só dizer: dá para conferir.
             </p>
             <a
               href={LISTA_EVOXX}

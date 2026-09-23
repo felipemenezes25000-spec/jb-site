@@ -40,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const s = await configuracoesPublicas();
   return metadataDePagina({
     titulo: `Assistência técnica odontológica em ${s.endereco_cidade}`,
-    descricao: `Autoclave, compressor, cadeira ou outro equipamento parado? Assistência técnica autorizada EVOXX em ${s.endereco_cidade} e região. Chame a equipe técnica da JB no WhatsApp.`,
+    descricao: `Autoclave, compressor, cadeira ou outro equipamento parado? Assistência técnica de todas as marcas em ${s.endereco_cidade} e região. Chame a equipe técnica da JB no WhatsApp.`,
     caminho: "/",
   });
 }

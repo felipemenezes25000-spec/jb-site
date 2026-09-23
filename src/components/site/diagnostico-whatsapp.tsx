@@ -229,11 +229,6 @@ export function DiagnosticoWhatsapp({ numero }: { numero: string }) {
                         )}
                         <span className="text-[0.8125rem] font-bold leading-tight text-graf-900">
                           {item.nome}
-                          {item.evoxx ? (
-                            <span className="mt-0.5 block text-[0.6875rem] font-semibold text-graf-500">
-                              inclui EVOXX
-                            </span>
-                          ) : null}
                         </span>
                       </button>
                     );

@@ -51,12 +51,15 @@ const FOTO_DA_BANCADA: VisualDoEquipamento = {
   posicao: "60% 40%",
 };
 
-/** Resposta de "outras marcas", igual para todo equipamento da linha EVOXX. */
-function outrasMarcas(nome: string): Pergunta {
+/**
+ * "De qualquer marca?", a mesma resposta para todo equipamento: sim. Sem
+ * fabricante na resposta, porque a pergunta é sobre o aparelho da pessoa.
+ */
+function todasAsMarcas(nome: string): Pergunta {
   return {
-    pergunta: `Vocês consertam ${nome} de outras marcas?`,
+    pergunta: `Vocês consertam ${nome} de qualquer marca?`,
     resposta:
-      "Sim. A JB é assistência técnica autorizada EVOXX e também atende outras marcas. Na triagem pelo WhatsApp a equipe confirma o modelo antes de combinar o atendimento.",
+      "Sim, de todas as marcas. Na triagem pelo WhatsApp a equipe confirma o modelo antes de combinar o atendimento.",
   };
 }
 
@@ -78,7 +81,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       FOTO_OU_VIDEO,
     ],
     duvidas: [
-      outrasMarcas("autoclave"),
+      todasAsMarcas("autoclave"),
       {
         pergunta: "Posso usar o material de um ciclo que deu erro?",
         resposta:
@@ -101,7 +104,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       "Grave um vídeo curto do barulho: na triagem, o som diz muito.",
     ],
     duvidas: [
-      outrasMarcas("compressor"),
+      todasAsMarcas("compressor"),
       {
         pergunta: "Dá para revisar o compressor antes que ele pare?",
         resposta:
@@ -124,7 +127,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       FOTO_OU_VIDEO,
     ],
     duvidas: [
-      outrasMarcas("bomba de vácuo"),
+      todasAsMarcas("bomba de vácuo"),
       {
         pergunta: "Sucção fraca é sempre defeito da bomba?",
         resposta:
@@ -147,11 +150,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       "Tire uma foto da etiqueta com a marca e o modelo.",
     ],
     duvidas: [
-      {
-        pergunta: "Vocês atendem cadeira de qualquer marca?",
-        resposta:
-          "A cadeira não faz parte da linha EVOXX, mas a JB atende cadeiras e equipos de várias marcas. Mande a marca e o modelo no WhatsApp para a equipe confirmar.",
-      },
+      todasAsMarcas("cadeira e equipo"),
       {
         pergunta: "O conserto é feito no consultório?",
         resposta:
@@ -173,7 +172,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       "Guarde um pedaço de papel com a selagem ruim: ele mostra o defeito.",
       FOTO_OU_VIDEO,
     ],
-    duvidas: [outrasMarcas("seladora")],
+    duvidas: [todasAsMarcas("seladora")],
     visual: { tipo: "recorte", src: "/site/equip/seladora.webp" },
   },
   {
@@ -189,7 +188,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       "Se estiver vazando, espere esfriar antes de mexer no reservatório.",
       FOTO_OU_VIDEO,
     ],
-    duvidas: [outrasMarcas("destilador")],
+    duvidas: [todasAsMarcas("destilador")],
     visual: FOTO_DA_BANCADA,
   },
   {
@@ -205,7 +204,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       "Não ligue a lavadora com a cuba vazia.",
       FOTO_OU_VIDEO,
     ],
-    duvidas: [outrasMarcas("lavadora ultrassônica")],
+    duvidas: [todasAsMarcas("lavadora ultrassônica")],
     visual: { tipo: "recorte", src: "/site/equip/lavadora.webp" },
   },
 ];
@@ -220,7 +219,7 @@ export function caminhoDoEquipamento(id: IdEquipamento): string | null {
   return pagina ? `/${pagina.slug}` : null;
 }
 
-/** O equipamento do diagnóstico por trás da página: nome, defeitos, EVOXX. */
+/** O equipamento do diagnóstico por trás da página: nome e defeitos. */
 export function equipamentoDaPagina(pagina: PaginaDeEquipamento): Equipamento {
   const equipamento = equipamentoPorId(pagina.equipamento);
   if (!equipamento) throw new Error(`Equipamento desconhecido: ${pagina.equipamento}`);
@@ -235,13 +234,9 @@ export function tituloDaPagina(pagina: PaginaDeEquipamento, cidade: string): str
 /**
  * A descrição para o buscador e para a prévia do link.
  *
- * "Autorizada EVOXX" só aparece em equipamento da linha EVOXX: a cadeira não
- * é, e a frase na página dela faria parecer que a autorização a cobre.
+ * Diz "todas as marcas" e nenhum fabricante: quem busca conserto do próprio
+ * aparelho precisa saber que ele entra, qualquer que seja a marca.
  */
 export function descricaoDaPagina(pagina: PaginaDeEquipamento, cidade: string): string {
-  const equipamento = equipamentoDaPagina(pagina);
-  const selo = equipamento.evoxx
-    ? "Assistência técnica autorizada EVOXX."
-    : "Assistência técnica de várias marcas.";
-  return `${pagina.nomeCurto} parou? Conserto de ${pagina.palavraChave} em ${cidade} e região, na clínica ou na bancada. ${selo} Chame a JB no WhatsApp.`;
+  return `${pagina.nomeCurto} parou? Conserto de ${pagina.palavraChave} de todas as marcas em ${cidade} e região, na clínica ou na bancada. Chame a JB no WhatsApp.`;
 }

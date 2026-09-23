@@ -66,10 +66,10 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
           >
             <div>
               <Layers3 className="size-7 text-jb-600" aria-hidden />
-              <h3 className="mt-5 text-bloco texto-forte">EVOXX e outras marcas</h3>
+              <h3 className="mt-5 text-bloco texto-forte">Todas as marcas</h3>
               <p className="mt-2 max-w-lg text-corpo leading-relaxed text-graf-600">
-                Somos autorizados EVOXX e atendemos outras marcas também. A triagem confirma o seu
-                modelo antes de qualquer deslocamento.
+                Consertamos equipamento de qualquer marca, e somos assistência técnica autorizada
+                EVOXX. A triagem confirma o seu modelo antes de qualquer deslocamento.
               </p>
             </div>
           </li>

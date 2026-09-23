@@ -7,10 +7,11 @@
    Módulo puro de propósito: sem banco, sem `server-only`. É lido pela abertura
    da home (cliente) e pelos testes unitários.
 
-   A lista de equipamentos começa pelas linhas da EVOXX, de quem a JB é
-   assistência técnica autorizada (lista oficial em evoxx.com.br/assistencia),
-   e segue com o que toda clínica tem. Um defeito aqui é o que o dentista vê,
-   não o laudo do técnico: "não pressuriza", e não "falha na válvula".
+   A lista é do que toda clínica tem, e vale para qualquer marca: a JB
+   conserta todas. Nenhum equipamento aqui é marcado por fabricante; a
+   autorização EVOXX é da empresa, não de um aparelho, e mora na seção de
+   credenciais do site. Um defeito aqui é o que o dentista vê, não o laudo do
+   técnico: "não pressuriza", e não "falha na válvula".
    ============================================================================ */
 
 export type IdEquipamento =
@@ -26,8 +27,6 @@ export type IdEquipamento =
 export type Equipamento = {
   id: IdEquipamento;
   nome: string;
-  /** Linha fabricada pela EVOXX, coberta pela autorização da JB. */
-  evoxx: boolean;
   defeitos: readonly string[];
 };
 
@@ -35,7 +34,6 @@ export const EQUIPAMENTOS: readonly Equipamento[] = [
   {
     id: "autoclave",
     nome: "Autoclave",
-    evoxx: true,
     defeitos: [
       "Não pressuriza",
       "Não esquenta",
@@ -48,7 +46,6 @@ export const EQUIPAMENTOS: readonly Equipamento[] = [
   {
     id: "compressor",
     nome: "Compressor",
-    evoxx: true,
     defeitos: [
       "Não liga",
       "Não chega na pressão",
@@ -61,7 +58,6 @@ export const EQUIPAMENTOS: readonly Equipamento[] = [
   {
     id: "bomba-vacuo",
     nome: "Bomba de vácuo",
-    evoxx: true,
     defeitos: [
       "Sem sucção",
       "Sucção fraca",
@@ -73,7 +69,6 @@ export const EQUIPAMENTOS: readonly Equipamento[] = [
   {
     id: "cadeira",
     nome: "Cadeira e equipo",
-    evoxx: false,
     defeitos: [
       "Não sobe ou não desce",
       "Pedal não responde",
@@ -86,25 +81,21 @@ export const EQUIPAMENTOS: readonly Equipamento[] = [
   {
     id: "seladora",
     nome: "Seladora",
-    evoxx: true,
     defeitos: ["Não sela direito", "Não esquenta", "Queima o papel", "Não liga"],
   },
   {
     id: "destilador",
     nome: "Destilador",
-    evoxx: true,
     defeitos: ["Não destila", "Vazamento", "Não desliga sozinho", "Não liga"],
   },
   {
     id: "lavadora",
     nome: "Lavadora ultrassônica",
-    evoxx: true,
     defeitos: ["Não vibra", "Não esquenta", "Vazamento", "Não liga"],
   },
   {
     id: "outro",
     nome: "Outro equipamento",
-    evoxx: false,
     defeitos: [
       "Não liga",
       "Liga e desliga sozinho",

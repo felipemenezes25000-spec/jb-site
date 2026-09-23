@@ -11,8 +11,9 @@ import { cn } from "@/lib/utils";
    O que a JB conserta
 
    Cada bloco é um atalho para o WhatsApp com o equipamento já escrito na
-   mensagem. A autoclave abre maior: é a linha EVOXX mais comum nas clínicas e
-   a que mais para a rotina quando falha. "Outro equipamento" fecha a grade
+   mensagem. A autoclave abre maior: é a que mais para a rotina quando falha.
+   Nenhum cartão leva marca de fabricante: a JB conserta todas, e um selo de
+   marca num aparelho fazia parecer que só aquela era atendida. "Outro equipamento" fecha a grade
    largo, para ninguém sair achando que a máquina dele não entra.
 
    Grade de 4 colunas: 4 células da autoclave + 6 comuns + 2 do "outro" = 12,
@@ -81,10 +82,10 @@ function Cartao({
               <Icone className={cn("jb-icone-balanca", destaque ? "size-7" : "size-5")} aria-hidden />
             </span>
           )}
-          {equipamento.evoxx ? (
+          {destaque ? (
             <span className="relative z-10 ml-auto inline-flex items-center gap-1 rounded-full border border-jb-200 bg-white px-2.5 py-1 text-[0.6875rem] font-bold text-jb-700 shadow-xs">
               <BadgeCheck className="size-3.5" aria-hidden />
-              {destaque ? "Autorizada EVOXX" : "EVOXX"}
+              Todas as marcas
             </span>
           ) : null}
         </span>
@@ -123,7 +124,7 @@ function Cartao({
           </span>
           <span className={cn("mt-1.5 block text-sm leading-relaxed text-graf-600", destaque && "sm:text-corpo")}>
             {outro
-              ? "Chame mesmo assim. A triagem confirma o seu modelo."
+              ? "Atendemos todas as marcas. A triagem confirma o seu modelo."
               : equipamento.defeitos.slice(0, destaque ? 4 : 3).join(", ")}
           </span>
           <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-extrabold text-jb-600">
@@ -152,7 +153,7 @@ export function GradeEquipamentos({ whatsapp }: { whatsapp: string }) {
           Qual equipamento parou? <span className="text-jb-600">Toque e fale com a gente.</span>
         </h2>
         <p className="texto-guia jb-revela mt-4 max-w-2xl text-graf-600" style={{ "--i": 1 } as React.CSSProperties}>
-          O WhatsApp abre com o nome do equipamento na mensagem. É só contar o que aconteceu.
+          Atendemos todas as marcas. O WhatsApp abre com o nome do equipamento na mensagem: é só contar o que aconteceu.
         </p>
 
         <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

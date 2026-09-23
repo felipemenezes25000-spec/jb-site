@@ -32,8 +32,8 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
         <div>
           <Logo altura={38} />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-graf-600">
-            Assistência técnica para equipamentos odontológicos em {s.endereco_cidade} e região,
-            na clínica ou na nossa bancada.
+            Assistência técnica para equipamentos odontológicos de todas as marcas, em{" "}
+            {s.endereco_cidade} e região, na clínica ou na nossa bancada.
           </p>
           <a
             href={LISTA_EVOXX}

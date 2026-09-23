@@ -21,7 +21,9 @@ import {
    - todo equipamento do diagnóstico (menos "outro") tem página, e toda página
      tem a pasta da rota e a imagem de prévia. Um equipamento novo sem página
      seria anúncio caindo em 404;
-   - o selo EVOXX só é dito de equipamento da linha EVOXX;
+   - nenhuma página prende o equipamento a um fabricante: a JB conserta todas
+     as marcas, e um "EVOXX" na página da autoclave fazia parecer que só
+     aquela marca entrava;
    - o texto não promete prazo, preço nem garantia, que dependem da operação
      real e entram só quando a JB confirmar.
    ============================================================================ */
@@ -60,13 +62,22 @@ describe("páginas por equipamento", () => {
     expect(descricaoDaPagina(autoclave, "São Paulo")).toContain("Autoclave parou?");
   });
 
-  it("só fala em EVOXX na página de equipamento da linha EVOXX", () => {
+  it("diz todas as marcas e não amarra o equipamento a um fabricante", () => {
     for (const pagina of PAGINAS_DE_EQUIPAMENTO) {
-      const descricao = descricaoDaPagina(pagina, "São Paulo");
-      const evoxx = equipamentoDaPagina(pagina).evoxx;
-      expect(descricao.includes("EVOXX"), pagina.slug).toBe(evoxx);
+      const textos = [
+        descricaoDaPagina(pagina, "São Paulo"),
+        pagina.chamada,
+        ...pagina.enquantoIsso,
+        ...pagina.duvidas.flatMap((item) => [item.pergunta, item.resposta]),
+      ];
+      for (const texto of textos) expect(texto, `${pagina.slug}: ${texto}`).not.toMatch(/evoxx/i);
+      expect(descricaoDaPagina(pagina, "São Paulo"), pagina.slug).toContain("todas as marcas");
+      expect(
+        pagina.duvidas.some((item) => /qualquer marca/.test(item.pergunta)),
+        `${pagina.slug} responde "de qualquer marca?"`,
+      ).toBe(true);
     }
-    expect(equipamentoDaPagina(paginaPorSlug("cadeira-odontologica")!).evoxx).toBe(false);
+    expect(equipamentoDaPagina(paginaPorSlug("cadeira-odontologica")!)).not.toHaveProperty("evoxx");
   });
 
   it("não promete prazo, preço nem garantia", () => {

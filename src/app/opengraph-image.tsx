@@ -18,7 +18,7 @@ import { SETTING_DEFAULTS, getSettings } from "@/lib/settings";
  * depende de a rede buscar um PNG, e um logotipo raster ficaria borrado em
  * 1200×630.
  */
-export const alt = "JB Soluções Odontológicas: assistência técnica odontológica autorizada EVOXX";
+export const alt = "JB Soluções Odontológicas: assistência técnica odontológica de todas as marcas";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -108,7 +108,7 @@ export default async function ImagemDeCompartilhamento() {
               display: "flex",
             }}
           >
-            Assistência técnica odontológica em São Paulo. Autorizada EVOXX.
+            Assistência técnica odontológica em São Paulo, de todas as marcas.
             Chame no WhatsApp.
           </div>
         </div>

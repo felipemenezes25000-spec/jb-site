@@ -16,7 +16,7 @@ import "./site.css";
 const ATALHOS: AtalhoDoCabecalho[] = [
   { rotulo: "Equipamentos", href: "/#equipamentos" },
   { rotulo: "Como funciona", href: "/#como-funciona" },
-  { rotulo: "Autorizada EVOXX", href: "/#autorizada" },
+  { rotulo: "Todas as marcas", href: "/#autorizada" },
   { rotulo: "Dúvidas", href: "/#duvidas" },
   { rotulo: "Contato", href: "/#contato" },
 ];

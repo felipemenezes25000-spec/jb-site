@@ -43,7 +43,7 @@ export function FotoAbertura({ className }: { className?: string }) {
         <span className="flex size-7 items-center justify-center rounded-lg bg-jb-500 text-white">
           <BadgeCheck className="size-4" aria-hidden />
         </span>
-        Autorizada EVOXX
+        Todas as marcas
       </p>
       <p className="jb-boia-2 absolute -right-2 bottom-4 flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-xs font-extrabold text-graf-900 shadow-pop backdrop-blur sm:-right-4 sm:text-sm">
         <span className="flex size-7 items-center justify-center rounded-lg bg-ok-500 text-white">

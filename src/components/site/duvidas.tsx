@@ -35,9 +35,9 @@ export function Duvidas({
         "Depende do defeito e da peça. Por isso existe a triagem: você recebe o orçamento e aprova antes de qualquer troca. Sem surpresa na conta.",
     },
     {
-      pergunta: "Vocês são assistência autorizada?",
+      pergunta: "Vocês atendem todas as marcas?",
       resposta:
-        "Sim. A JB é assistência técnica autorizada EVOXX e está na lista oficial do fabricante. Também atendemos outras marcas, confirmando o modelo na triagem.",
+        "Sim. A JB conserta equipamentos odontológicos de todas as marcas, e a equipe confirma o modelo na triagem pelo WhatsApp. Também é assistência técnica autorizada EVOXX, na lista oficial do fabricante.",
     },
     {
       pergunta: "Como explico o problema?",
