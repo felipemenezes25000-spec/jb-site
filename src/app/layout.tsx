@@ -6,7 +6,6 @@ import { configuracoesPublicas } from "@/lib/site-publico";
 import { Medicao } from "@/components/analytics/medicao";
 import { destinosDeMedicao } from "@/lib/analytics/destinos";
 import { SCRIPT_DA_CENA } from "@/components/ui/motion-cena";
-import { MotionSystem } from "@/components/ui/motion-system";
 import { SITE_URL } from "@/lib/seo";
 
 import "./globals.css";
@@ -98,11 +97,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <head>
+        {/* A cena continua marcada antes da primeira pintura para o backoffice.
+            O runtime do Motion System, porém, é montado apenas no grupo admin;
+            o site público tem sua própria coreografia mais leve. */}
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_DA_CENA }} />
       </head>
       <body className="antialiased">
         {children}
-        <MotionSystem />
         <Medicao destinos={await destinosDaMedicao()} />
         <Toaster
           position="bottom-right"
