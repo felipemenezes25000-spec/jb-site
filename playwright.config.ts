@@ -1,71 +1,58 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Testes de ponta a ponta contra o Next em modo desenvolvimento.
+ * E2E do produto público atual da JB.
  *
- * O que este arquivo decide:
+ * A plataforma já teve catálogo, carrinho e checkout. Essas rotas foram
+ * removidas de propósito e hoje respondem 410. Os cenários antigos continuam
+ * no repositório como histórico, mas não podem ser o portão de uma aplicação
+ * que não vende mais: esperar 15–45s por elementos de uma loja removida só
+ * transforma uma decisão de produto em falso vermelho.
  *
- *  · o servidor sobe sozinho (`webServer`) e é reaproveitado se já estiver de
- *    pé — rodar a suíte com `pnpm dev` aberto não derruba nada;
- *  · a semeadura acontece uma vez, em `tests/e2e/preparar.ts`, antes de
- *    qualquer teste. Ela garante o produto de teste, o cupom e o usuário da
- *    equipe com senha conhecida — sem isso metade dos fluxos dependeria de o
- *    banco estar num estado específico;
- *  · os testes rodam em série (`workers: 1`). Vários deles compram do mesmo
- *    produto, e estoque é estado global: em paralelo um roubaria a unidade do
- *    outro e a falha não diria nada sobre a aplicação.
- *
- * `HOST_RULES` é herdado do script artesanal que esta suíte substituiu: ele
- * permite apontar um domínio para um IP antes de o DNS propagar.
- *
- *   HOST_RULES="MAP www.exemplo.com.br 76.76.21.241" pnpm e2e
+ * Este gate cobre a jornada que existe hoje: anúncio -> landing do equipamento
+ * -> diagnóstico -> Jeferson/Jackson, em desktop e mobile, além das garantias
+ * de 410 para a superfície comercial que saiu.
  */
 
-// Porta própria de propósito: a 3000 costuma estar ocupada por outro projeto,
-// e `reuseExistingServer` apontaria a suíte para o site errado sem avisar.
 const PORTA = Number(process.env.E2E_PORT ?? 3210);
 const BASE_URL = process.env.E2E_BASE_URL ?? `http://localhost:${PORTA}`;
 const HOST_RULES = process.env.HOST_RULES;
 const NO_CI = !process.env.CI;
 
 export default defineConfig({
-  testDir: "./tests/e2e",
-  globalSetup: "./tests/e2e/preparar.ts",
+  testDir: "./tests/e2e-assistencia",
   outputDir: "./tests/.saida",
-
-  // estoque e sessão são estado compartilhado: paralelismo aqui produz falha
-  // que não corresponde a defeito nenhum
   fullyParallel: false,
-  workers: 1,
-
+  workers: NO_CI ? 2 : 1,
   forbidOnly: !NO_CI,
   retries: NO_CI ? 0 : 1,
-  timeout: 90_000,
-  expect: { timeout: 15_000 },
-
-  // A lista dá o andamento no terminal; o relatório em HTML guarda o traço e a
-  // captura de quem falhou, e é aberto sob demanda com `pnpm e2e:relatorio`.
+  timeout: 45_000,
+  expect: { timeout: 8_000 },
   reporter: [["list"], ["html", { open: "never", outputFolder: "tests/.relatorio" }]],
-
   use: {
     baseURL: BASE_URL,
     locale: "pt-BR",
     timezoneId: "America/Sao_Paulo",
-    actionTimeout: 20_000,
-    navigationTimeout: 45_000,
+    actionTimeout: 10_000,
+    navigationTimeout: 25_000,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "off",
     launchOptions: HOST_RULES ? { args: [`--host-resolver-rules=${HOST_RULES}`] } : undefined,
   },
-
   projects: [
     {
-      name: "chromium",
+      name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
+    {
+      name: "mobile",
+      use: {
+        ...devices["Pixel 7"],
+        viewport: { width: 390, height: 844 },
+      },
+    },
   ],
-
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {

@@ -1,773 +1,136 @@
-/**
- * Auditoria de responsividade — mede, não opina.
- *
- * Percorre as rotas nas larguras que importam e mede no navegador de verdade:
- * transbordo horizontal, elemento que passa da viewport, alvo de toque pequeno
- * demais, texto miúdo e imagem sem dimensão (que causa salto de layout).
- *
- * Sai com código 1 quando encontra problema, então serve de portão.
- *
- *   BASE_URL=http://localhost:3400 node scripts/responsivo.mjs
- *
- * Opções:
- *   --so=publico|conta|admin   percorre só um grupo
- *   --largura=390              mede só uma largura
- *   --fotos                    salva a captura de cada problema
- */
-import fs from "node:fs";
-import path from "node:path";
-
 import { chromium } from "playwright";
 
+/**
+ * Auditoria responsiva do site de assistência atual.
+ *
+ * Mede as larguras em que anúncios e navegação real chegam à JB. O portão
+ * procura os dois defeitos que mais destroem conversão no celular: página que
+ * rola de lado e CTA principal pequeno demais para o dedo.
+ */
+
 const BASE = process.env.BASE_URL || "http://localhost:3000";
-const SAIDA = path.join(process.cwd(), ".shots", "responsivo");
 
-const argumentos = process.argv.slice(2);
-const grupoPedido = argumentos.find((a) => a.startsWith("--so="))?.slice(5);
-const larguraPedida = Number(argumentos.find((a) => a.startsWith("--largura="))?.slice(10) ?? 0);
-const comFotos = argumentos.includes("--fotos");
-
-const CLIENTE = { email: "demo@jbteste.local", senha: "demo12345" };
-const EQUIPE = { email: "demo.admin@jbteste.local", senha: "demo12345" };
-
-/** As larguras onde o layout costuma quebrar, não uma lista redonda qualquer. */
-const LARGURAS = [
-  /* 320 é a largura mínima que a WCAG 2.2 exige suportar sem rolagem
-     horizontal (1.4.10, reflow). Entrou na fase 7 desta evolução: até então a
-     lista começava em 360, e um iPhone SE de primeira geração com fonte
-     ampliada cai abaixo disso. */
-  { w: 320, h: 720, nome: "320 (mínimo da WCAG)", toque: true },
-  { w: 360, h: 780, nome: "360 (celular pequeno)", toque: true },
-  { w: 390, h: 844, nome: "390 (celular comum)", toque: true },
-  { w: 768, h: 1024, nome: "768 (tablet retrato)", toque: true },
-  { w: 1024, h: 768, nome: "1024 (tablet paisagem)", toque: false },
-  { w: 1280, h: 900, nome: "1280 (notebook)", toque: false },
-  { w: 1440, h: 900, nome: "1440 (desktop)", toque: false },
-  /* 1920 é o monitor da recepção da clínica — e a largura em que a loja mais
-     arrisca ficar larga demais: caixa de 1440 numa janela de 1920 deixa 240px
-     de margem de cada lado, e é aí que os degraus entre uma seção e outra
-     aparecem. Sem medir, eles só apareciam em captura de tela de auditoria. */
-  { w: 1920, h: 1080, nome: "1920 (monitor grande)", toque: false },
+const ROTAS = [
+  "/",
+  "/autoclave",
+  "/compressor",
+  "/cadeira-odontologica",
+  "/bomba-de-vacuo",
+  "/seladora",
+  "/destilador",
+  "/lavadora-ultrassonica",
+  "/central-tecnica",
+  "/cases",
+  "/privacidade",
+  "/termos",
 ];
 
-const ROTAS = {
-  publico: [
-    "/",
-    "/loja",
-    "/seminovos",
-    "/marcas",
-    "/busca?q=autoclave",
-    "/busca?q=autoclave nao aquece",
-    "/central-tecnica",
-    "/cases",
-    "/depoimentos",
-    "/comparar",
-    "/simulador-de-custo",
-    "/carrinho",
-    "/checkout",
-    "/assistencia-tecnica",
-    "/assistencia-tecnica/solicitar",
-    "/planos-de-manutencao",
-    "/manutencao-preventiva",
-    "/orcamento",
-    "/sobre",
-    "/estrutura",
-    "/contato",
-    "/faq",
-    "/entrar",
-    "/cadastro",
-  ],
-  conta: [
-    "/minha-jb",
-    "/minha-jb/pedidos",
-    "/minha-jb/equipamentos",
-    "/minha-jb/assistencia",
-    "/minha-jb/manutencoes",
-    "/minha-jb/orcamentos",
-    "/minha-jb/documentos",
-    "/minha-jb/perfil",
-    "/minha-jb/equipamentos/etiquetas",
-  ],
-  admin: [
-    "/admin",
-    "/admin/pedidos",
-    "/admin/produtos",
-    "/admin/estoque",
-    "/admin/clientes",
-    "/admin/assistencia",
-    "/admin/os",
-    "/admin/agenda",
-    "/admin/configuracoes",
-  ],
-};
+const LARGURAS = [
+  { width: 320, height: 720, toque: true },
+  { width: 360, height: 780, toque: true },
+  { width: 390, height: 844, toque: true },
+  { width: 430, height: 932, toque: true },
+  { width: 768, height: 1024, toque: true },
+  { width: 1024, height: 768, toque: false },
+  { width: 1280, height: 900, toque: false },
+  { width: 1440, height: 900, toque: false },
+  { width: 1920, height: 1080, toque: false },
+];
 
-/**
- * Roda dentro da página. Tudo o que é medido aqui é medido no layout real —
- * é a única forma de saber se algo transborda, porque depende de fonte,
- * imagem carregada e quebra de linha.
- */
-function medir() {
-  const viewport = document.documentElement.clientWidth;
-  const achados = [];
+const CONVERSOES = new Set([
+  "abertura", "abertura-segundo",
+  "diagnostico", "diagnostico-segundo",
+  "barra-movel", "barra-movel-segundo",
+  "fechamento", "fechamento-segundo",
+]);
 
-  /* --------------------------------------------------- transbordo da página */
-  /**
-   * Pergunta certa: a página ROLA de lado? E não "qual é o scrollWidth".
-   *
-   * `documentElement.scrollWidth` mente neste layout: ele soma o conteúdo de
-   * roladores internos, então uma tabela larga dentro do seu próprio
-   * `overflow-x: auto` fazia o documento reportar 1046px numa viewport de 768
-   * — sem que a página rolasse um pixel. Quatorze achados falsos vieram daí.
-   *
-   * Tentar rolar e ver se andou é o que o dedo do usuário faria.
-   *
-   * `behavior: "instant"` é obrigatório. O `<html>` tem `scroll-behavior:
-   * smooth`, e um `scrollTo` sem comportamento herda a rolagem suave: ela
-   * começa no próximo quadro, `scrollX` lido logo em seguida vale 0 e toda
-   * rolagem de verdade parece não existir.
-   */
-  const rolagemAnterior = window.scrollX;
-  window.scrollTo({ left: 9999, top: window.scrollY, behavior: "instant" });
-  const rolouDeFato = Math.round(window.scrollX);
-  window.scrollTo({ left: rolagemAnterior, top: window.scrollY, behavior: "instant" });
-
-  if (rolouDeFato > 1) {
-    // acha o culpado AGORA, no mesmo estado de layout que produziu a rolagem —
-    // procurar depois, noutra medição, é procurar noutra página
-    const se = document.scrollingElement;
-    const eb = getComputedStyle(document.body);
-    const eh = getComputedStyle(document.documentElement);
-    let culpado =
-      `[rolador=${se?.tagName} sw=${se?.scrollWidth} cw=${se?.clientWidth} ` +
-      `body.w=${Math.round(document.body.getBoundingClientRect().width)} ` +
-      `body.ovX=${eb.overflowX} html.ovX=${eh.overflowX}] `;
-    let maiorLargura = 0;
-    for (const el of document.body.querySelectorAll("*")) {
-      const c = el.getBoundingClientRect();
-      if (c.right <= viewport + 2) continue;
-      let emRolador = false;
-      let pai = el.parentElement;
-      for (let i = 0; pai && i < 8; i += 1) {
-        const ov = getComputedStyle(pai).overflowX;
-        if (ov === "auto" || ov === "scroll" || ov === "hidden") {
-          emRolador = true;
-          break;
-        }
-        pai = pai.parentElement;
-      }
-      if (!emRolador && c.width > maiorLargura) {
-        maiorLargura = c.width;
-        culpado += `${Math.round(c.width)}px até ${Math.round(c.right)}px — ${el.tagName.toLowerCase()}.${String(el.className).slice(0, 55)} [emRolador=${emRolador}]`;
-      }
-    }
-
-    achados.push({
-      tipo: "rolagem-horizontal",
-      detalhe: `rola ${rolouDeFato}px numa viewport de ${viewport}px · culpado: ${culpado}`,
-      seletor: "documento",
-    });
-  }
-
-  /** Caminho curto e legível até o elemento, para quem for corrigir achar. */
-  const caminho = (el) => {
-    const partes = [];
-    let atual = el;
-    for (let i = 0; atual && i < 4; i += 1) {
-      let parte = atual.tagName.toLowerCase();
-      if (atual.id) parte += `#${atual.id}`;
-      else if (typeof atual.className === "string" && atual.className.trim()) {
-        parte += `.${atual.className.trim().split(/\s+/).slice(0, 2).join(".")}`;
-      }
-      partes.unshift(parte);
-      atual = atual.parentElement;
-    }
-    return partes.join(" > ").slice(0, 160);
-  };
-
-  const visivel = (el, caixa) => {
-    if (caixa.width === 0 || caixa.height === 0) return false;
-    const estilo = getComputedStyle(el);
-    return estilo.visibility !== "hidden" && estilo.display !== "none" && estilo.opacity !== "0";
-  };
-
-  /**
-   * Recortado com `clip-path` ou `clip` é o padrão `sr-only`: existe para
-   * leitor de tela e para o teclado, e só ganha corpo quando recebe foco.
-   * Link de pular para o conteúdo e botão de busca acessível caem aqui. Não é
-   * alvo de toque pequeno — não é alvo de toque nenhum.
-   */
-  const recortado = (estilo) =>
-    (estilo.clipPath && estilo.clipPath !== "none") ||
-    (estilo.clip && estilo.clip !== "auto");
-
-  const elementos = Array.from(document.body.querySelectorAll("*"));
-
-  for (const el of elementos) {
-    const caixa = el.getBoundingClientRect();
-    if (!visivel(el, caixa)) continue;
-
-    /* ------------------------------------------- elemento passando da tela */
-    /**
-     * Duas saídas legítimas antes de acusar:
-     *
-     * `pointer-events: none` posicionado fora da tela é como a isca antirrobô
-     * se esconde — sair da viewport ali é o objetivo, não o defeito.
-     *
-     * E conteúdo dentro de um contêiner que rola na horizontal (abas, faixa de
-     * categorias) passa da viewport POR DESENHO: o usuário arrasta. O defeito
-     * seria a PÁGINA rolar, e isso já é medido em separado, lá em cima.
-     */
-    const emContainerQueCorta = (() => {
-      let pai = el.parentElement;
-      for (let i = 0; pai && i < 6; i += 1) {
-        const estilo = getComputedStyle(pai);
-        const ov = estilo.overflowX;
-        // rolador: passa da viewport por desenho, e quem arrasta é o usuário
-        if (ov === "auto" || ov === "scroll") return true;
-        /**
-         * Cortado por um ancestral também não é "fora da tela".
-         *
-         * `overflow: hidden` recorta o que passa da caixa: o excesso não é
-         * pintado e não rola a página. É como funciona a faixa de recados do
-         * cabeçalho — um trilho do dobro da largura, com máscara, andando por
-         * baixo de um contêiner que corta — e como funcionam os círculos
-         * decorativos ancorados nas quinas dos cartões.
-         *
-         * Sem esta saída, a régua acusava 102 elementos "fora da tela" que
-         * ninguém consegue ver: 72 do mesmo trilho, repetido em toda rota, e
-         * 26 de dois cartões. Alarme falso em auditoria é pior que auditoria
-         * nenhuma — ensina a ignorar o relatório.
-         *
-         * O defeito de verdade continua coberto: se o corte não existir e a
-         * PÁGINA rolar na horizontal, isso é medido em separado, lá em cima.
-         */
-        if (ov === "hidden" || ov === "clip") return true;
-        pai = pai.parentElement;
-      }
-      return false;
-    })();
-
-    const semPonteiro = getComputedStyle(el).pointerEvents === "none";
-
-    // 2px de folga: arredondamento de subpixel não é defeito
-    if ((caixa.right > viewport + 2 || caixa.left < -2) && !emContainerQueCorta && !semPonteiro) {
-      const pai = el.parentElement;
-      const paiTransborda =
-        pai && (pai.getBoundingClientRect().right > viewport + 2 || pai.getBoundingClientRect().left < -2);
-      // só reporta o elemento mais externo que transborda, senão o relatório
-      // vira uma lista de todos os filhos do mesmo problema
-      if (!paiTransborda) {
-        achados.push({
-          tipo: "elemento-fora-da-tela",
-          detalhe: `ocupa de ${Math.round(caixa.left)}px a ${Math.round(caixa.right)}px`,
-          seletor: caminho(el),
-        });
-      }
-    }
-
-    /* --------------------------------------------------- alvo de toque */
-    const estiloEl = getComputedStyle(el);
-    const clicavel =
-      el.matches("a[href], button, input, select, textarea, [role=button], [role=tab], [role=link]") &&
-      !el.hasAttribute("disabled") &&
-      // isca antirrobô e enfeite não recebem toque
-      estiloEl.pointerEvents !== "none" &&
-      !recortado(estiloEl);
-
-    if (clicavel && viewport <= 768) {
-      /**
-       * O que se toca nem sempre é o que se mede.
-       *
-       * Um controle escondido com `sr-only` (1x1px) não é alvo pequeno: ele é
-       * invisível de propósito, e quem recebe o toque é o rótulo em volta —
-       * uma pílula de 44px, um botão estilizado, o link de pular conteúdo que
-       * só aparece no foco. Medir o input ali produzia dezenas de achados
-       * falsos que escondiam os poucos reais.
-       *
-       * Então: se o controle está escondido, medimos o rótulo associado (ou o
-       * ancestral clicável). Se não existe nenhum, aí sim é defeito de verdade
-       * — não há nada para tocar.
-       */
-      const escondido = caixa.width <= 2 && caixa.height <= 2;
-
-      let alvoReal = el;
-      let caixaAlvo = caixa;
-
-      if (escondido || el.type === "checkbox" || el.type === "radio") {
-        const rotulo =
-          el.closest("label") ||
-          (el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null) ||
-          el.closest("a[href], button, [role=button]");
-        if (rotulo) {
-          alvoReal = rotulo;
-          caixaAlvo = rotulo.getBoundingClientRect();
-        }
-      }
-
-      const alvo = Math.min(caixaAlvo.width, caixaAlvo.height);
-
-      // link dentro de texto corrido não é botão: exigir 44px ali seria exigir
-      // que todo link inline virasse bloco. Cabeçalho entra porque o título de
-      // um cartão é texto, não controle.
-      const dentroDeTexto =
-        el.tagName === "A" &&
-        el.parentElement &&
-        /^(P|LI|SPAN|TD|DD|DT|H[1-6])$/.test(el.parentElement.tagName);
-
-      /**
-       * Link esticado: o `::after` absoluto cobre o cartão inteiro, então quem
-       * recebe o toque é o cartão — costuma ter centenas de pixels. Medir o
-       * texto do título ali acusaria defeito onde o alvo é enorme.
-       */
-      const esticado =
-        getComputedStyle(el, "::after").position === "absolute" &&
-        Boolean(el.closest("article, li, .group"));
-
-      // já reportado por outro elemento do mesmo grupo
-      const jaContado = achados.some(
-        (a) => a.tipo === "alvo-de-toque-pequeno" && a.seletor === caminho(alvoReal),
-      );
-
-      if (alvo > 0 && alvo < 44 && !dentroDeTexto && !esticado && !jaContado) {
-        achados.push({
-          tipo: "alvo-de-toque-pequeno",
-          detalhe: `${Math.round(caixaAlvo.width)}x${Math.round(caixaAlvo.height)}px (mínimo 44)`,
-          seletor: caminho(alvoReal),
-        });
-      }
-    }
-
-    /* ------------------------------------------------------- texto miúdo */
-    const temTextoProprio = Array.from(el.childNodes).some(
-      (n) => n.nodeType === 3 && n.textContent.trim().length > 3,
-    );
-    if (temTextoProprio) {
-      const estiloTexto = getComputedStyle(el);
-      const tamanho = parseFloat(estiloTexto.fontSize);
-
-      /**
-       * Rótulo em caixa alta com espaçamento largo é recurso tipográfico, não
-       * corpo espremido. "SEMINOVO REVISADO" em 11px versalete lê melhor do
-       * que em 14px — é o padrão de sobretítulo. O piso menor vale só para
-       * esse caso; texto normal continua cobrado em 12px.
-       */
-      const ehRotulo =
-        estiloTexto.textTransform === "uppercase" && parseFloat(estiloTexto.letterSpacing) > 0.4;
-      const piso = ehRotulo ? 10 : 12;
-
-      if (tamanho && tamanho < piso) {
-        achados.push({
-          tipo: "texto-miudo",
-          detalhe: `${tamanho.toFixed(1)}px (piso ${piso})`,
-          seletor: caminho(el),
-        });
-      }
-    }
-  }
-
-  /* ------------------------------------- imagem sem dimensão declarada */
-  for (const img of Array.from(document.images)) {
-    const caixa = img.getBoundingClientRect();
-    if (caixa.width === 0) continue;
-    const estilo = getComputedStyle(img);
-    const temDimensao =
-      (img.getAttribute("width") && img.getAttribute("height")) ||
-      estilo.aspectRatio !== "auto" ||
-      (estilo.height !== "auto" && estilo.height !== "");
-    if (!temDimensao) {
-      achados.push({
-        tipo: "imagem-sem-dimensao",
-        detalhe: img.currentSrc?.split("/").pop()?.slice(0, 50) ?? "sem src",
-        seletor: caminho(img),
-      });
-    }
-  }
-
-  return achados;
-}
-
-/* ------------------------------------------------------------------ login */
-
-async function entrar(contexto, rota, email, senha) {
-  const pagina = await contexto.newPage();
-  try {
-    await pagina.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 45000 });
-    await pagina.getByLabel(/e-?mail/i).first().fill(email, { timeout: 10000 });
-    await pagina.getByLabel(/^senha/i).first().fill(senha, { timeout: 10000 });
-    await pagina.getByRole("button", { name: /entrar|acessar/i }).first().click({ timeout: 10000 });
-    await pagina.waitForURL((u) => !u.pathname.startsWith(rota), { timeout: 45000 });
-    await pagina.close();
-    return true;
-  } catch {
-    await pagina.close();
-    return false;
-  }
-}
-
-/* ------------------------------------------------------------------ main */
-
-const larguras = larguraPedida ? LARGURAS.filter((l) => l.w === larguraPedida) : LARGURAS;
 const navegador = await chromium.launch();
 const problemas = [];
-let medidas = 0;
 
-async function percorrer(grupo, rotas, login) {
-  if (grupoPedido && grupoPedido !== grupo) return;
+try {
+  for (const viewport of LARGURAS) {
+    const contexto = await navegador.newContext({
+      viewport: { width: viewport.width, height: viewport.height },
+      hasTouch: viewport.toque,
+      isMobile: viewport.width < 768,
+      locale: "pt-BR",
+      timezoneId: "America/Sao_Paulo",
+    });
 
-  console.log(`\n── ${grupo} ${"─".repeat(Math.max(0, 44 - grupo.length))}`);
-  const contexto = await navegador.newContext({ locale: "pt-BR" });
-
-  if (login) {
-    const ok = await entrar(contexto, login.rota, login.email, login.senha);
-    if (!ok) {
-      console.log("  pulando: não foi possível entrar");
-      await contexto.close();
-      return;
-    }
-  }
-
-  /**
-   * Contexto separado para toque.
-   *
-   * `setViewportSize` estreita a janela mas mantém o ponteiro fino — e o CSS
-   * do projeto usa `pointer-coarse` para crescer o botão pequeno até os 44px
-   * no dedo. Medindo com mouse, a regra nunca aplicava e a auditoria acusava
-   * alvo pequeno onde o celular mostra 44px. `hasTouch` corrige a medição.
-   */
-  const contextoToque = await navegador.newContext({
-    locale: "pt-BR",
-    hasTouch: true,
-    isMobile: true,
-    viewport: { width: 390, height: 844 },
-    storageState: await contexto.storageState(),
-  });
-
-  /**
-   * Espera o layout assentar — sem `networkidle`.
-   *
-   * `waitForLoadState("networkidle")` NUNCA dispara contra `next dev`: o HMR
-   * mantém um websocket aberto, a rede nunca fica ociosa, e a chamada queima o
-   * timeout inteiro. Eram duas por rota e por largura, de 8s cada — 16s de
-   * espera pura em cada medição. Com 70 rotas e 5 larguras isso é mais de uma
-   * hora só esperando, e foi o que matou o job de responsividade da CI no teto
-   * de 45 minutos, com E2E e acessibilidade já verdes.
-   *
-   * O que interessa para medir layout não é a rede ociosa: é fonte carregada e
-   * imagem com dimensão. As duas coisas terminam, e rápido.
-   */
-  const assentar = async (alvo) => {
-    await alvo.waitForLoadState("load", { timeout: 20000 }).catch(() => {});
-    await alvo
-      .evaluate(async () => {
-        await document.fonts?.ready;
-        const pendentes = Array.from(document.images).filter((img) => !img.complete);
-        if (pendentes.length === 0) return;
-        await Promise.race([
-          Promise.all(
-            pendentes.map(
-              (img) =>
-                new Promise((pronto) => {
-                  img.addEventListener("load", pronto, { once: true });
-                  img.addEventListener("error", pronto, { once: true });
-                }),
-            ),
-          ),
-          new Promise((pronto) => setTimeout(pronto, 2500)),
-        ]);
-      })
-      .catch(() => {});
-  };
-
-  /**
-   * Espera o endereço parar de mudar.
-   *
-   * `redirect()` num Server Component não chega como 3xx: o servidor responde
-   * a rota pedida e manda o cliente navegar. `goto()` resolve ANTES disso, e a
-   * navegação seguinte estourava em cima — "Navigation is interrupted by
-   * another navigation", "Execution context was destroyed". /checkout com
-   * carrinho vazio manda para /carrinho e caía exatamente aí, nas sete
-   * larguras, registrado como "não abriu" — o que é falso: a página abriu,
-   * só não era a pedida.
-   */
-  const esperarEnderecoParar = async (alvo) => {
-    let anterior = alvo.url();
-    for (let i = 0; i < 12; i += 1) {
-      await alvo.waitForTimeout(120);
-      const agora = alvo.url();
-      if (agora === anterior) return agora;
-      anterior = agora;
-    }
-    return anterior;
-  };
-
-  /** Esconde o indicador do modo de desenvolvimento e para transição e animação. */
-  const congelar = async (alvo) => {
-    await alvo
-      .addStyleTag({
-        content:
-          "nextjs-portal{display:none!important}" +
-          "*,*::before,*::after{transition:none!important;animation:none!important}",
-      })
-      .catch(() => {});
-  };
-
-  /**
-   * Mede — e mede de novo se a navegação atropelar a medição.
-   *
-   * `esperarEnderecoParar` olha o endereço a cada 120ms: redirecionamento que
-   * demora mais que isso para começar passa pela peneira — as duas leituras
-   * batem, a espera termina, e a troca de página cai em cima do `evaluate`,
-   * que morre com "Execution context was destroyed". /checkout com carrinho
-   * vazio caía aí, numa largura só, e virava "não abriu" — falso duas vezes:
-   * a página abriu, e o que quebrou foi a régua, não ela. Perguntar de novo,
-   * já do outro lado do redirecionamento, responde.
-   */
-  const CONTEXTO_MORREU =
-    /execution context was destroyed|most likely because of a navigation|target closed|frame was detached/i;
-
-  const medirAgora = async (alvo) => {
-    for (let tentativa = 0; ; tentativa += 1) {
+    for (const rota of ROTAS) {
+      const pagina = await contexto.newPage();
       try {
-        return await alvo.evaluate(medir);
-      } catch (erro) {
-        if (tentativa >= 2 || !CONTEXTO_MORREU.test(String(erro?.message))) throw erro;
-        await esperarEnderecoParar(alvo);
-        await assentar(alvo);
-        await congelar(alvo);
-        await alvo.waitForTimeout(200);
-      }
-    }
-  };
-
-  const pagina = await contexto.newPage();
-  const paginaToque = await contextoToque.newPage();
-  await pagina.emulateMedia({ reducedMotion: "reduce" });
-  await paginaToque.emulateMedia({ reducedMotion: "reduce" });
-
-  for (const rota of rotas) {
-    const daRota = [];
-
-    for (const tela of larguras) {
-      const alvo = tela.toque ? paginaToque : pagina;
-      await alvo.setViewportSize({ width: tela.w, height: tela.h });
-      try {
-        await alvo.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 45000 });
-        await esperarEnderecoParar(alvo);
-        await assentar(alvo);
-        // o indicador do modo de desenvolvimento não é do produto
-        /**
-         * Congela transição e animação antes de medir.
-         *
-         * O painel anima o recuo lateral (`transition-[padding] duration-200`)
-         * quando a barra fixa entra em telas grandes. Medindo 150ms depois de
-         * trocar a largura, a régua pegava o layout no meio do caminho e
-         * acusava rolagem de 286px onde, parado, não há nenhuma. `reducedMotion`
-         * não resolve: essa transição não está atrás de uma media query.
-         */
-        await congelar(alvo);
-        /**
-         * Reaplica a largura DEPOIS de carregar.
-         *
-         * Trocar a viewport e só então navegar deixava o layout preso a uma
-         * medida intermediária: a auditoria acusava rolagem de 286px que um
-         * carregamento limpo na mesma largura não reproduz. Reaplicar força um
-         * relayout no estado final, que é o que a pessoa vê.
-         */
-        await alvo.setViewportSize({ width: tela.w, height: tela.h });
-        /**
-         * Recarrega já na largura final.
-         *
-         * A aba é reaproveitada entre rotas e larguras, e o layout guardava
-         * medida da largura anterior: a auditoria acusava 286px de rolagem
-         * onde uma carga limpa na mesma largura mostra zero. Recarregar custa
-         * segundos e é a diferença entre medir a página e medir o histórico
-         * da aba.
-         */
-        /**
-         * Recarrega o ENDEREÇO EM QUE A PÁGINA PAROU, não a rota pedida.
-         *
-         * Rota que redireciona — /checkout com carrinho vazio manda para
-         * /carrinho — deixava `reload()` estourar com "Not attached to an
-         * active page": o alvo do navegador tinha trocado no meio do caminho.
-         * A auditoria registrava isso como "não abriu", que é falso: a página
-         * abriu, só não era a que foi pedida.
-         *
-         * Navegar para `alvo.url()` é a mesma recarga e sobrevive ao
-         * redirecionamento. A segunda tentativa cobre a corrida em que o
-         * endereço ainda estava mudando quando foi lido.
-         */
-        const enderecoAtual = await esperarEnderecoParar(alvo);
-        try {
-          await alvo.goto(enderecoAtual, { waitUntil: "domcontentloaded", timeout: 45000 });
-          await esperarEnderecoParar(alvo);
-        } catch {
-          await alvo.goto(await esperarEnderecoParar(alvo), {
-            waitUntil: "domcontentloaded",
-            timeout: 45000,
-          });
+        const resposta = await pagina.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 30_000 });
+        if (!resposta || resposta.status() >= 400) {
+          problemas.push({ rota, largura: viewport.width, tipo: "http", detalhe: resposta?.status() ?? null });
+          continue;
         }
-        await assentar(alvo);
-        await congelar(alvo);
-        await alvo.waitForTimeout(200);
 
-        const achados = await medirAgora(alvo);
-        medidas += 1;
+        const achados = await pagina.evaluate(({ largura, toque, conversoes }) => {
+          const itens = [];
+          const html = document.documentElement;
+          const anterior = window.scrollX;
+          window.scrollTo({ left: 99999, top: window.scrollY, behavior: "instant" });
+          const deslocamento = Math.round(window.scrollX);
+          window.scrollTo({ left: anterior, top: window.scrollY, behavior: "instant" });
 
-        /**
-         * Rolagem horizontal é reconferida em contexto limpo antes de virar
-         * achado.
-         *
-         * A aba reaproveitada acusava rolagem que uma carga isolada na mesma
-         * largura não reproduz — e alarme falso em auditoria é pior que
-         * auditoria nenhuma, porque ensina a ignorar o relatório. Custa uma
-         * aba a mais só quando há suspeita.
-         */
-        const suspeita = achados.findIndex((a) => a.tipo === "rolagem-horizontal");
-        if (suspeita >= 0) {
-          const limpo = await navegador.newContext({
-            locale: "pt-BR",
-            viewport: { width: tela.w, height: tela.h },
-            hasTouch: tela.toque,
-            isMobile: tela.toque,
-            storageState: await alvo.context().storageState(),
-          });
-          const conferencia = await limpo.newPage();
-          try {
-            await conferencia.goto(BASE + rota, { waitUntil: "load", timeout: 45000 });
-            await assentar(conferencia);
-            /* Este contexto não emula movimento reduzido: sem `instant`, a
-               rolagem suave do `<html>` fazia `scrollX` ler 0 aqui e TODA
-               suspeita real era descartada como alarme falso. Foi assim que
-               144–278px de rolagem lateral no admin passaram como "ok". */
-            const rolouMesmo = await conferencia.evaluate(() => {
-              window.scrollTo({ left: 9999, top: 0, behavior: "instant" });
-              const x = Math.round(window.scrollX);
-              window.scrollTo({ left: 0, top: 0, behavior: "instant" });
-              return x;
+          if (deslocamento > 1 || html.scrollWidth > html.clientWidth + 2) {
+            itens.push({
+              tipo: "overflow-horizontal",
+              detalhe: `scrollWidth=${html.scrollWidth}; viewport=${html.clientWidth}; deslocamento=${deslocamento}`,
             });
-            if (rolouMesmo <= 1) achados.splice(suspeita, 1);
-            else achados[suspeita].detalhe += ` · confirmado em contexto limpo: ${rolouMesmo}px`;
-          } catch {
-            /* não deu para conferir: mantém o achado, para não esconder problema */
           }
-          await conferencia.close();
-          await limpo.close();
-        }
 
-        if (achados.length) {
-          daRota.push({ largura: tela.nome, achados });
-          if (comFotos) {
-            const destino = path.join(
-              SAIDA,
-              grupo,
-              `${rota.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}-${tela.w}.png`,
-            );
-            fs.mkdirSync(path.dirname(destino), { recursive: true });
-            await alvo.screenshot({ path: destino, fullPage: true });
+          const h1 = document.querySelector("h1");
+          if (h1) {
+            const r = h1.getBoundingClientRect();
+            if (r.left < -2 || r.right > largura + 2) {
+              itens.push({ tipo: "h1-fora-da-tela", detalhe: `${Math.round(r.left)}..${Math.round(r.right)}` });
+            }
           }
-        }
-      } catch (erro) {
-        daRota.push({
-          largura: tela.nome,
-          achados: [
-            { tipo: "nao-abriu", detalhe: String(erro.message).split("\n")[0].slice(0, 90), seletor: rota },
-          ],
-        });
+
+          if (toque) {
+            for (const el of document.querySelectorAll('a[data-whatsapp]')) {
+              const posicao = el.getAttribute("data-whatsapp") || "";
+              if (!conversoes.includes(posicao)) continue;
+              const r = el.getBoundingClientRect();
+              const s = getComputedStyle(el);
+              if (r.width === 0 || r.height === 0 || s.display === "none" || s.visibility === "hidden") continue;
+              if (r.width < 44 || r.height < 44) {
+                itens.push({
+                  tipo: "cta-pequeno",
+                  detalhe: `${posicao}: ${Math.round(r.width)}x${Math.round(r.height)}px`,
+                });
+              }
+              if (r.left < -2 || r.right > largura + 2) {
+                itens.push({
+                  tipo: "cta-fora-da-tela",
+                  detalhe: `${posicao}: ${Math.round(r.left)}..${Math.round(r.right)}`,
+                });
+              }
+            }
+          }
+
+          return itens;
+        }, { largura: viewport.width, toque: viewport.toque, conversoes: [...CONVERSOES] });
+
+        for (const achado of achados) problemas.push({ rota, largura: viewport.width, ...achado });
+        process.stdout.write(`✓ ${viewport.width}px ${rota}\n`);
+      } finally {
+        await pagina.close();
       }
     }
 
-    if (daRota.length === 0) {
-      console.log(`  ok    ${rota}`);
-    } else {
-      const total = daRota.reduce((s, l) => s + l.achados.length, 0);
-      console.log(`  FALHA ${rota}  (${total} em ${daRota.length} largura(s))`);
-      problemas.push({ grupo, rota, larguras: daRota });
-    }
-  }
-
-  await pagina.close();
-  await paginaToque.close();
-  await contexto.close();
-  await contextoToque.close();
-}
-
-console.log(`Auditoria de responsividade em ${BASE}`);
-console.log(`larguras: ${larguras.map((l) => l.w).join(", ")}`);
-
-/**
- * A ficha de um produto de verdade, descoberta no catálogo.
- *
- * Mesma razão do portão de acessibilidade: a PDP é a página mais densa da
- * loja — galeria, caixa de compra grudada, ficha em grade de três colunas,
- * comparação em tabela — e era a única grande que este portão não media,
- * porque o endereço depende de um `slug`. Escrever um à mão faria o portão
- * medir um 404 no dia em que aquele produto saísse do ar, e continuar verde.
- */
-async function rotaDeProduto() {
-  const contexto = await navegador.newContext({ locale: "pt-BR" });
-  const pagina = await contexto.newPage();
-  try {
-    await pagina.goto(BASE + "/loja", { waitUntil: "domcontentloaded", timeout: 60000 });
-    await pagina.waitForTimeout(800);
-    return await pagina
-      .locator('a[href^="/loja/"]')
-      .first()
-      .getAttribute("href", { timeout: 5000 });
-  } catch {
-    return null;
-  } finally {
     await contexto.close();
   }
+} finally {
+  await navegador.close();
 }
 
-const rotasPublicas = [...ROTAS.publico];
-{
-  const pdp = await rotaDeProduto();
-  if (pdp) rotasPublicas.push(pdp);
-  else console.log("  aviso: nenhuma ficha de produto no catálogo — a PDP não foi medida");
+if (problemas.length) {
+  console.error("\nResponsividade: problemas encontrados\n");
+  for (const problema of problemas) console.error(JSON.stringify(problema));
+  process.exit(1);
 }
 
-await percorrer("publico", rotasPublicas, null);
-await percorrer("conta", ROTAS.conta, { rota: "/entrar", ...CLIENTE });
-await percorrer("admin", ROTAS.admin, { rota: "/admin/entrar", ...EQUIPE });
-
-await navegador.close();
-
-/* ---------------------------------------------------------------- resumo */
-
-const porTipo = {};
-for (const p of problemas) {
-  for (const l of p.larguras) {
-    for (const a of l.achados) porTipo[a.tipo] = (porTipo[a.tipo] ?? 0) + 1;
-  }
-}
-
-console.log(`\n${"═".repeat(56)}`);
-console.log(`${medidas} medições · ${problemas.length} rota(s) com problema`);
-
-if (Object.keys(porTipo).length) {
-  console.log("\npor tipo:");
-  for (const [tipo, n] of Object.entries(porTipo).sort((a, b) => b[1] - a[1])) {
-    console.log(`  ${String(n).padStart(4)}  ${tipo}`);
-  }
-
-  console.log("\ndetalhe:");
-  for (const p of problemas) {
-    console.log(`\n  ${p.rota}`);
-    for (const l of p.larguras) {
-      console.log(`    ${l.largura}`);
-      // no máximo 5 por largura: o resto é quase sempre o mesmo defeito repetido
-      for (const a of l.achados.slice(0, 5)) {
-        console.log(`      · [${a.tipo}] ${a.detalhe}`);
-        console.log(`        ${a.seletor}`);
-      }
-      if (l.achados.length > 5) console.log(`      · … mais ${l.achados.length - 5}`);
-    }
-  }
-} else {
-  console.log("\nnenhum problema de responsividade encontrado.");
-}
-
-if (comFotos) console.log(`\nfotos em .shots/responsivo/`);
-
-process.exit(problemas.length ? 1 : 0);
+console.log(`\nResponsividade: ${ROTAS.length} rotas × ${LARGURAS.length} larguras aprovadas.\n`);

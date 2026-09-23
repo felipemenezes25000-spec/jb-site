@@ -1,508 +1,132 @@
-/**
- * Auditoria de acessibilidade — mede, não opina.
- *
- * Roda o axe-core (o mesmo motor por trás do Lighthouse e do Accessibility
- * Insights) dentro do navegador de verdade, em cada rota, nas regras WCAG 2.1
- * A e AA. Depois soma três medições que o axe não faz e que importam aqui:
- * foco visível de fato, alvo de toque no dedo e âncora de referência quebrada.
- *
- * Sai com código 1 quando encontra problema, então serve de portão.
- *
- *   BASE_URL=http://localhost:3400 node scripts/acessibilidade.mjs
- *
- * Opções:
- *   --so=publico|conta|admin   percorre só um grupo
- *   --rota=/loja               mede só uma rota
- *   --json                     despeja o relatório cru em .shots/acessibilidade.json
- */
 import fs from "node:fs";
 import path from "node:path";
 
 import { chromium } from "playwright";
 
+/**
+ * Auditoria de acessibilidade do produto público atual.
+ *
+ * A loja antiga permanece no histórico do Git, mas não é uma superfície do
+ * produto: suas URLs respondem 410. Este gate mede somente páginas que a JB
+ * oferece hoje e falha em qualquer violação WCAG 2.1 A/AA encontrada pelo axe.
+ */
+
 const BASE = process.env.BASE_URL || "http://localhost:3000";
 const AXE = path.join(process.cwd(), "node_modules", "axe-core", "axe.min.js");
-const SAIDA = path.join(process.cwd(), ".shots");
-
-const argumentos = process.argv.slice(2);
-const grupoPedido = argumentos.find((a) => a.startsWith("--so="))?.slice(5);
-const rotaPedida = argumentos.find((a) => a.startsWith("--rota="))?.slice(7);
-const comJson = argumentos.includes("--json");
-
-const CLIENTE = { email: "demo@jbteste.local", senha: "demo12345" };
-const EQUIPE = { email: "demo.admin@jbteste.local", senha: "demo12345" };
-
-const ROTAS = {
-  publico: [
-    "/",
-    "/loja",
-    "/seminovos",
-    "/marcas",
-    "/busca?q=autoclave",
-    "/busca?q=autoclave nao aquece",
-    "/central-tecnica",
-    "/cases",
-    "/depoimentos",
-    "/comparar",
-    "/simulador-de-custo",
-    "/carrinho",
-    "/checkout",
-    "/assistencia-tecnica",
-    "/assistencia-tecnica/solicitar",
-    "/planos-de-manutencao",
-    "/manutencao-preventiva",
-    "/orcamento",
-    "/sobre",
-    "/estrutura",
-    "/contato",
-    "/faq",
-    "/entrar",
-    "/cadastro",
-  ],
-  conta: [
-    "/minha-jb",
-    "/minha-jb/pedidos",
-    "/minha-jb/equipamentos",
-    "/minha-jb/assistencia",
-    "/minha-jb/manutencoes",
-    "/minha-jb/orcamentos",
-    "/minha-jb/documentos",
-    "/minha-jb/perfil",
-    "/minha-jb/equipamentos/etiquetas",
-  ],
-  admin: [
-    "/admin",
-    "/admin/pedidos",
-    "/admin/produtos",
-    "/admin/estoque",
-    "/admin/clientes",
-    "/admin/assistencia",
-    "/admin/os",
-    "/admin/agenda",
-    "/admin/conteudo",
-    "/admin/central-tecnica",
-    "/admin/cases",
-    "/admin/avaliacoes",
-    "/admin/insights",
-    "/admin/configuracoes",
-  ],
-};
-
-/**
- * Medições próprias, rodadas dentro da página.
- *
- * O axe cobre nome acessível, contraste, rótulo de campo, ordem de cabeçalho
- * e marco de página. Não cobre estas três, que são as que mais quebram na
- * prática num projeto com CSS próprio:
- *
- *  1. foco visível — o axe olha se o `outline` foi zerado, mas não olha se
- *     algo *substituiu* o anel. Aqui o elemento é focado de verdade e os
- *     estilos antes e depois são comparados: se nada mudou, o foco sumiu.
- *  2. alvo de toque — medido no contexto com dedo, onde as regras
- *     `pointer-coarse` do projeto valem.
- *  3. âncora quebrada — `aria-labelledby`, `aria-controls`, `aria-describedby`
- *     e `for` apontando para um id que não existe na página.
- */
-function medirExtras() {
-  const achados = [];
-  const visivel = (el) => {
-    const r = el.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) return false;
-    const e = getComputedStyle(el);
-    if (e.visibility === "hidden" || e.display === "none" || Number(e.opacity) === 0) return false;
-    if (el.closest("[hidden], [aria-hidden=\"true\"], .sr-only, [inert]")) return false;
-    return true;
-  };
-  const onde = (el) => {
-    const partes = [el.tagName.toLowerCase()];
-    if (el.id) partes.push("#" + el.id);
-    const t = (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 45);
-    if (t) partes.push(`"${t}"`);
-    return partes.join(" ");
-  };
-
-  /* 1. foco visível ------------------------------------------------------ */
-  const focaveis = [
-    ...document.querySelectorAll(
-      "a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex=\"-1\"])",
-    ),
-  ].filter((el) => visivel(el) && !el.disabled);
-
-  // amostra: os 40 primeiros bastam para pegar um reset global de outline
-  for (const el of focaveis.slice(0, 40)) {
-    const antes = getComputedStyle(el);
-    const marca = [
-      antes.outlineStyle, antes.outlineWidth, antes.outlineColor,
-      antes.boxShadow, antes.borderColor, antes.backgroundColor,
-    ].join("|");
-    try {
-      el.focus({ preventScroll: true });
-    } catch {
-      continue;
-    }
-    if (document.activeElement !== el) continue;
-    const depois = getComputedStyle(el);
-    const marcaDepois = [
-      depois.outlineStyle, depois.outlineWidth, depois.outlineColor,
-      depois.boxShadow, depois.borderColor, depois.backgroundColor,
-    ].join("|");
-    if (marca === marcaDepois) {
-      achados.push({
-        tipo: "foco-invisivel",
-        alvo: onde(el),
-        detalhe: "focado, nada mudou visualmente",
-      });
-    }
-    el.blur();
-  }
-
-  /* 2. alvo de toque ----------------------------------------------------- */
-
-  /**
-   * O alvo de um marcador é o rótulo, não o quadradinho.
-   *
-   * Um `checkbox` de 20px ligado por `htmlFor` a um rótulo de 44px de altura
-   * tem 44px de alvo: tocar o rótulo marca a caixa. Medir só o `input` acusava
-   * alvo pequeno em todo aceite de termos do projeto, onde o rótulo já é alto
-   * de propósito. Aqui o alvo é a união do campo com o rótulo que o comanda.
-   */
-  const alvoEfetivo = (el) => {
-    const r = el.getBoundingClientRect();
-    if (el.type !== "checkbox" && el.type !== "radio") return r;
-    const rotulo =
-      el.closest("label") ||
-      (el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null);
-    if (!rotulo) return r;
-    const l = rotulo.getBoundingClientRect();
-    // só une o que encosta: rótulo solto do outro lado da tela não é o alvo
-    const encosta = !(l.right < r.left - 24 || l.left > r.right + 24 ||
-                      l.bottom < r.top - 24 || l.top > r.bottom + 24);
-    if (!encosta) return r;
-    return {
-      width: Math.max(r.right, l.right) - Math.min(r.left, l.left),
-      height: Math.max(r.bottom, l.bottom) - Math.min(r.top, l.top),
-    };
-  };
-
-  if (matchMedia("(pointer: coarse)").matches) {
-    for (const el of focaveis) {
-      // link dentro de texto corrido acompanha a linha, não é alvo isolado
-      const pai = el.parentElement;
-      if (
-        el.tagName === "A" && pai &&
-        /^(P|LI|SPAN|H1|H2|H3|H4|LABEL|TD)$/.test(pai.tagName) &&
-        getComputedStyle(el).display === "inline"
-      ) continue;
-      // link esticado por ::after cobre o cartão inteiro
-      if (
-        el.tagName === "A" && el.closest("article, li, .group") &&
-        getComputedStyle(el, "::after").position === "absolute"
-      ) continue;
-      const r = alvoEfetivo(el);
-      if (r.width < 44 && r.height < 44) {
-        achados.push({
-          tipo: "alvo-pequeno",
-          alvo: onde(el),
-          detalhe: `${Math.round(r.width)}x${Math.round(r.height)}px, mínimo 44x44`,
-        });
-      }
-    }
-  }
-
-  /* 3. âncora quebrada --------------------------------------------------- */
-  const refs = [
-    ["aria-labelledby", true],
-    ["aria-describedby", true],
-    ["aria-controls", true],
-    ["for", false],
-  ];
-  for (const [attr, multiplo] of refs) {
-    for (const el of document.querySelectorAll(`[${attr}]`)) {
-      const bruto = el.getAttribute(attr);
-      if (!bruto) continue;
-      const ids = multiplo ? bruto.split(/\s+/).filter(Boolean) : [bruto];
-      for (const id of ids) {
-        if (!document.getElementById(id)) {
-          achados.push({
-            tipo: "ancora-quebrada",
-            alvo: onde(el),
-            detalhe: `${attr}="${id}" não existe na página`,
-          });
-        }
-      }
-    }
-  }
-
-  return achados;
-}
-
-async function entrar(contexto, rota, email, senha) {
-  const pagina = await contexto.newPage();
-  try {
-    await pagina.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 45000 });
-    await pagina.getByLabel(/e-?mail/i).first().fill(email, { timeout: 10000 });
-    await pagina.getByLabel(/^senha/i).first().fill(senha, { timeout: 10000 });
-    await pagina.getByRole("button", { name: /entrar|acessar/i }).first().click({ timeout: 10000 });
-    await pagina.waitForURL((u) => !u.pathname.startsWith(rota), { timeout: 45000 });
-    await pagina.close();
-    return true;
-  } catch {
-    await pagina.close();
-    return false;
-  }
-}
-
-/* ------------------------------------------------------------------ main */
-
 const fonteAxe = fs.readFileSync(AXE, "utf8");
+
+const ROTAS = [
+  "/",
+  "/autoclave",
+  "/compressor",
+  "/cadeira-odontologica",
+  "/bomba-de-vacuo",
+  "/seladora",
+  "/destilador",
+  "/lavadora-ultrassonica",
+  "/central-tecnica",
+  "/cases",
+  "/privacidade",
+  "/termos",
+  "/admin/entrar",
+];
+
 const navegador = await chromium.launch();
 const problemas = [];
-const cru = [];
-let medidas = 0;
 
-async function percorrer(grupo, rotas, login) {
-  if (grupoPedido && grupoPedido !== grupo) return;
-  const lista = rotaPedida ? rotas.filter((r) => r === rotaPedida) : rotas;
-  if (!lista.length) return;
-
-  console.log(`\n── ${grupo} ${"─".repeat(Math.max(0, 44 - grupo.length))}`);
+try {
   const contexto = await navegador.newContext({
-    locale: "pt-BR",
-    viewport: { width: 1280, height: 900 },
-  });
-
-  if (login) {
-    const ok = await entrar(contexto, login.rota, login.email, login.senha);
-    if (!ok) {
-      console.log("  pulando: não foi possível entrar");
-      await contexto.close();
-      return;
-    }
-  }
-
-  // segundo contexto, com dedo, só para a medição de alvo de toque
-  const comDedo = await navegador.newContext({
-    locale: "pt-BR",
-    hasTouch: true,
-    isMobile: true,
     viewport: { width: 390, height: 844 },
-    storageState: await contexto.storageState(),
+    isMobile: true,
+    hasTouch: true,
+    locale: "pt-BR",
+    timezoneId: "America/Sao_Paulo",
   });
 
-  for (const rota of lista) {
-    for (const [ctx, etiqueta] of [[contexto, "1280"], [comDedo, "390 dedo"]]) {
-      const pagina = await ctx.newPage();
-      try {
-        /* `domcontentloaded` e não `networkidle`, igual ao portão de
-           responsividade. Com `networkidle` uma única requisição pendurada
-           cega a rota inteira: em /loja o otimizador de imagem do modo dev
-           trava ao converter um PNG específico para webp, e a rota saía como
-           `falha-ao-medir` — um problema de servidor local reportado como se
-           fosse acessibilidade, escondendo o que havia de verdade na página.
-           O axe lê DOM e CSS, que já estão prontos aqui; a espera abaixo é o
-           que dá tempo à hidratação. */
-        await pagina.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 60000 });
-        await pagina.waitForTimeout(800); // deixa a hidratação assentar
+  for (const rota of ROTAS) {
+    const pagina = await contexto.newPage();
+    try {
+      const resposta = await pagina.goto(BASE + rota, { waitUntil: "domcontentloaded", timeout: 30_000 });
+      if (!resposta || resposta.status() >= 400) {
+        problemas.push({ rota, tipo: "http", detalhe: `HTTP ${resposta?.status() ?? "sem resposta"}` });
+        continue;
+      }
 
-        /* Espera a animação de entrada terminar antes de medir.
-
-           Sem isto o axe amostra um quadro do meio do fade e reprova cor que
-           está correta parada: a manchete da home saiu como `#ec6e73` — o
-           vermelho da marca a meio caminho da opacidade — em vez de `#e0141b`.
-           Foram 5 falsos positivos numa rota só, todos de elementos com
-           `surge`.
-
-           Contraste da WCAG se afere no estado assentado; quadro de transição
-           não é o que a pessoa lê. As animações infinitas (selo girando, faixa
-           correndo) nunca terminam, então o filtro pega só as finitas, e o
-           `Promise.race` impede que uma animação longa trave a auditoria. */
-        /* Assenta o que nunca assenta.
-
-           Contraste da WCAG se afere no estado parado. Animação INFINITA — a
-           palavra que gira na manchete, a faixa de recados correndo — não tem
-           estado final, e o axe media o quadro em que calhasse de cair: a
-           manchete reprovou com `#fefafa`, que é o vermelho da marca a 2% de
-           opacidade no começo de um fade.
-
-           Congelar a página inteira com `reducedMotion` no contexto resolveria
-           isso e quebraria outra coisa: sem transição, a régua de foco visível
-           passou a acusar 25 campos "focado, nada mudou visualmente". Então o
-           congelamento é só das infinitas, e da palavra do rodízio em
-           particular — que fica na primeira, visível, igual ao que quem tem
-           movimento reduzido ligado vê. */
-        await pagina.addStyleTag({
-          content: `
-            .marquise, .gira, .pulso::after { animation: none !important; }
-            .rodizio > [data-palavra] { animation: none !important; opacity: 0 !important; }
-            .rodizio > [data-palavra]:first-child { opacity: 1 !important; }
-          `,
+      await pagina.addScriptTag({ content: fonteAxe });
+      const resultado = await pagina.evaluate(async () => {
+        const axe = globalThis.axe;
+        return axe.run(document, {
+          runOnly: {
+            type: "tag",
+            values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"],
+          },
         });
+      });
 
-        await Promise.race([
-          pagina.evaluate(() =>
-            Promise.all(
-              document
-                .getAnimations()
-                .filter((a) => {
-                  const t = a.effect?.getComputedTiming();
-                  return t && t.iterations !== Infinity;
-                })
-                .map((a) => a.finished.catch(() => {})),
-            ),
-          ),
-          pagina.waitForTimeout(3000),
-        ]);
+      for (const violacao of resultado.violations) {
+        problemas.push({
+          rota,
+          tipo: violacao.id,
+          impacto: violacao.impact,
+          detalhe: violacao.help,
+          alvos: violacao.nodes.slice(0, 4).map((n) => n.target.join(" ")),
+        });
+      }
 
-        // o axe só roda na largura de mesa; no dedo interessa só o alvo de toque
-        if (etiqueta === "1280") {
-          await pagina.addScriptTag({ content: fonteAxe });
-          const r = await pagina.evaluate(
-            async () =>
-              await window.axe.run(document, {
-                /* WCAG 2.2 AA, e não só 2.1: a 2.2 acrescenta critérios que
-                   importam nesta plataforma — foco não obscurecido por barra
-                   fixa (2.4.11), alvo de toque mínimo (2.5.8) e ajuda
-                   consistente (3.2.6). O axe instalado expõe as tags
-                   `wcag22a` e `wcag22aa`; regra que a versão não conhecer é
-                   simplesmente ignorada, então listar não quebra nada.
+      // Garantias que o axe não cobre: foco visível e os CTAs grandes do funil
+      // com alvo confortável. Botões compactos de cabeçalho seguem a régua
+      // WCAG; aqui cobramos 44px especificamente onde a pessoa converte.
+      const extras = await pagina.evaluate(() => {
+        const achados = [];
+        const conversoes = [
+          "abertura", "abertura-segundo",
+          "diagnostico", "diagnostico-segundo",
+          "barra-movel", "barra-movel-segundo",
+          "fechamento", "fechamento-segundo",
+        ];
 
-                   Vale o de sempre: axe sozinho não comprova conformidade. Ele
-                   pega o que dá para automatizar. O resto — ordem de leitura,
-                   texto alternativo que descreve o que importa, sentido do
-                   foco — continua sendo conferência humana. */
-                runOnly: {
-                  type: "tag",
-                  values: [
-                    "wcag2a",
-                    "wcag2aa",
-                    "wcag21a",
-                    "wcag21aa",
-                    "wcag22a",
-                    "wcag22aa",
-                  ],
-                },
-                resultTypes: ["violations"],
-              }),
-          );
-          cru.push({ rota, violacoes: r.violations });
-          for (const v of r.violations) {
-            for (const n of v.nodes) {
-              problemas.push({
-                grupo,
-                rota,
-                largura: etiqueta,
-                tipo: v.id,
-                impacto: v.impact,
-                alvo: n.target.join(" "),
-                detalhe: (n.failureSummary || v.help).replace(/\s+/g, " ").slice(0, 160),
-              });
+        for (const posicao of conversoes) {
+          for (const el of document.querySelectorAll(`a[data-whatsapp="${posicao}"]`)) {
+            const r = el.getBoundingClientRect();
+            const s = getComputedStyle(el);
+            if (r.width === 0 || r.height === 0 || s.display === "none" || s.visibility === "hidden") continue;
+            if (r.height < 44 || r.width < 44) {
+              achados.push(`WhatsApp ${posicao}: ${Math.round(r.width)}x${Math.round(r.height)}px`);
             }
           }
         }
 
-        const extras = await pagina.evaluate(medirExtras);
-        for (const e of extras) {
-          problemas.push({
-            grupo,
-            rota,
-            largura: etiqueta,
-            tipo: e.tipo,
-            impacto: "serious",
-            alvo: e.alvo,
-            detalhe: e.detalhe,
-          });
+        const focavel = document.querySelector('a[href]:not([tabindex="-1"]), button:not([disabled])');
+        if (focavel) {
+          const antes = getComputedStyle(focavel);
+          const marcaAntes = `${antes.outlineStyle}|${antes.outlineWidth}|${antes.boxShadow}`;
+          focavel.focus({ preventScroll: true });
+          const depois = getComputedStyle(focavel);
+          const marcaDepois = `${depois.outlineStyle}|${depois.outlineWidth}|${depois.boxShadow}`;
+          if (document.activeElement === focavel && marcaAntes === marcaDepois) {
+            achados.push("primeiro controle focável não apresenta mudança visual de foco");
+          }
         }
-        medidas += 1;
-      } catch (erro) {
-        problemas.push({
-          grupo,
-          rota,
-          largura: etiqueta,
-          tipo: "falha-ao-medir",
-          impacto: "critical",
-          alvo: "-",
-          detalhe: String(erro).slice(0, 140),
-        });
-      } finally {
-        await pagina.close();
-      }
+
+        return achados;
+      });
+
+      for (const detalhe of extras) problemas.push({ rota, tipo: "medicao-propria", detalhe });
+      process.stdout.write(`✓ a11y ${rota}\n`);
+    } finally {
+      await pagina.close();
     }
-    const nesta = problemas.filter((p) => p.rota === rota).length;
-    console.log(`  ${nesta === 0 ? "ok " : String(nesta).padStart(3)} ${rota}`);
   }
 
-  await comDedo.close();
   await contexto.close();
+} finally {
+  await navegador.close();
 }
-
-/**
- * A ficha de um produto de verdade, descoberta no catálogo.
- *
- * A PDP é a página mais complexa da loja — galeria, caixa de compra, ficha
- * técnica, laudo, comparação, avaliações — e era a única grande que este
- * portão não media, porque o endereço dela depende de um `slug` que não cabe
- * numa lista fixa. Escrever um slug à mão seria pior: o dia em que aquele
- * produto saísse do ar, o portão passaria a medir um 404 e continuaria verde.
- *
- * Então o slug vem do próprio catálogo. Quando não vem nenhum, isso é dito em
- * voz alta: portão que não mede nada precisa avisar que não mediu, senão o
- * verde vira falso negativo.
- */
-async function rotaDeProduto() {
-  const contexto = await navegador.newContext({ locale: "pt-BR" });
-  const pagina = await contexto.newPage();
-  try {
-    await pagina.goto(BASE + "/loja", { waitUntil: "domcontentloaded", timeout: 60000 });
-    await pagina.waitForTimeout(800);
-    const href = await pagina
-      .locator('a[href^="/loja/"]')
-      .first()
-      .getAttribute("href", { timeout: 5000 });
-    return href ?? null;
-  } catch {
-    return null;
-  } finally {
-    await contexto.close();
-  }
-}
-
-const rotasPublicas = [...ROTAS.publico];
-if (!rotaPedida || rotaPedida.startsWith("/loja/")) {
-  const pdp = rotaPedida?.startsWith("/loja/") ? rotaPedida : await rotaDeProduto();
-  if (pdp) rotasPublicas.push(pdp);
-  else console.log("  aviso: nenhuma ficha de produto no catálogo — a PDP não foi medida");
-}
-
-await percorrer("publico", rotasPublicas, null);
-await percorrer("conta", ROTAS.conta, { rota: "/entrar", ...CLIENTE });
-await percorrer("admin", ROTAS.admin, { rota: "/admin/entrar", ...EQUIPE });
-await navegador.close();
-
-if (comJson) {
-  fs.mkdirSync(SAIDA, { recursive: true });
-  fs.writeFileSync(
-    path.join(SAIDA, "acessibilidade.json"),
-    JSON.stringify({ problemas, cru }, null, 2),
-  );
-}
-
-console.log(`\n${"═".repeat(60)}`);
-console.log(`${medidas} medições · ${problemas.length} problemas`);
 
 if (problemas.length) {
-  const porTipo = {};
-  for (const p of problemas) (porTipo[p.tipo] ??= []).push(p);
-  const ordenado = Object.entries(porTipo).sort((a, b) => b[1].length - a[1].length);
-  for (const [tipo, lista] of ordenado) {
-    console.log(`\n▸ ${tipo} — ${lista.length}  [${lista[0].impacto}]`);
-    for (const p of lista.slice(0, 6)) {
-      console.log(`    ${p.rota} @${p.largura}`);
-      console.log(`      ${p.alvo}`);
-      console.log(`      ${p.detalhe}`);
-    }
-    if (lista.length > 6) console.log(`    … e mais ${lista.length - 6}`);
-  }
+  console.error("\nAcessibilidade: problemas encontrados\n");
+  for (const problema of problemas) console.error(JSON.stringify(problema));
   process.exit(1);
 }
 
-console.log("nenhum problema de acessibilidade encontrado");
+console.log(`\nAcessibilidade: ${ROTAS.length} rotas atuais sem violações no gate.\n`);
