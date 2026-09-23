@@ -1,16 +1,14 @@
+import { MessageCircleQuestion, ShieldCheck } from "lucide-react";
+
 import { Acordeao } from "@/components/ui/acordeao";
 import { JsonLd, faqJsonLd } from "@/lib/seo";
 
 /* ============================================================================
    Dúvidas antes de chamar
 
-   Só o que a JB já pratica e já diz em outras partes do site: atendimento na
-   clínica ou na bancada, orçamento antes da troca, outras marcas com triagem,
-   horário. Nada de prazo de chegada, preço de visita ou garantia em meses:
-   isso depende da operação real e entra quando a JB confirmar.
-
-   As perguntas saem também como dados estruturados, que é o que faz o Google
-   mostrar as respostas direto no resultado de busca.
+   Só o que a JB já pratica e já diz em outras partes do site. A composição
+   vira uma área de decisão: contexto à esquerda e respostas à direita no
+   desktop; no mobile, tudo segue numa coluna curta e legível.
    ============================================================================ */
 
 export function Duvidas({
@@ -56,13 +54,49 @@ export function Duvidas({
   ];
 
   return (
-    <section id="duvidas" aria-labelledby="duvidas-titulo" className="scroll-mt-20 bg-surface-muted py-16 md:py-24">
+    <section
+      id="duvidas"
+      aria-labelledby="duvidas-titulo"
+      className="jb-faq-premium scroll-mt-20 py-16 md:py-24 lg:py-28"
+    >
       <JsonLd dados={faqJsonLd(perguntas)} />
-      <div className="container-estreito">
-        <h2 id="duvidas-titulo" className="text-section texto-forte jb-revela">
-          Dúvidas antes de chamar
-        </h2>
-        <div className="jb-revela mt-8" style={{ "--i": 1 } as React.CSSProperties}>
+      <div className="container-jb grid gap-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-14 xl:gap-20">
+        <div className="lg:sticky lg:top-28 lg:h-max">
+          <div className="jb-faq-intro">
+            <p className="sobretitulo jb-revela">Antes de chamar</p>
+            <h2 id="duvidas-titulo" className="text-section texto-forte jb-revela mt-3">
+              Dúvidas que normalmente vêm <span className="text-jb-600">antes do WhatsApp.</span>
+            </h2>
+            <p
+              className="texto-guia jb-revela mt-5 text-graf-600"
+              style={{ "--i": 1 } as React.CSSProperties}
+            >
+              Atendimento, orçamento, marcas, horário e como explicar o defeito — tudo direto,
+              sem esconder a próxima etapa.
+            </p>
+
+            <div
+              className="jb-revela mt-6 flex gap-3 rounded-xl border border-graf-200 bg-white/80 p-4"
+              style={{ "--i": 2 } as React.CSSProperties}
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600">
+                <ShieldCheck className="size-5" aria-hidden />
+              </span>
+              <div>
+                <p className="text-sm font-extrabold text-graf-900">Sem promessa escondida</p>
+                <p className="mt-1 text-xs font-medium leading-relaxed text-graf-600">
+                  O site não inventa prazo, preço de visita ou garantia fixa para fechar a conversa.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="jb-faq-lista jb-revela" style={{ "--i": 1 } as React.CSSProperties}>
+          <div className="mb-1 flex items-center gap-2 px-3 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-graf-500 sm:px-4">
+            <MessageCircleQuestion className="size-4 text-jb-600" aria-hidden />
+            Perguntas frequentes
+          </div>
           <Acordeao
             nome="duvidas"
             itens={perguntas.map((item, indice) => ({
