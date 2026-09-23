@@ -16,7 +16,6 @@ export const contentType = "image/png";
 const JB_500 = "#e0141b";
 const JB_700 = "#a5090c";
 const GRAF_950 = "#111315";
-const GRAF_700 = "#555b61";
 
 export default async function ImagemDeCompartilhamento() {
   const s = await getSettings().catch(() => ({ ...SETTING_DEFAULTS }));
@@ -158,8 +157,17 @@ export default async function ImagemDeCompartilhamento() {
               {prova}
             </div>
           ))}
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", fontSize: 18, color: GRAF_700 }}>
-            jbsolucoesodontologicas.com.br
+          <div
+            style={{
+              marginLeft: "auto",
+              display: "flex",
+              alignItems: "center",
+              fontSize: 18,
+              fontWeight: 700,
+              color: "#9fa4aa",
+            }}
+          >
+            WhatsApp direto com a equipe
           </div>
         </div>
       </div>
