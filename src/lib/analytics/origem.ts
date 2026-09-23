@@ -69,6 +69,76 @@ export function origemDaUrl(busca: string): OrigemDaVisita | null {
   return null;
 }
 
+/**
+ * Parâmetros de URL que podem acompanhar o `page_location` do PageView.
+ *
+ * O GA4 atribui a sessão lendo a campanha do `page_location`: sem as UTMs e o
+ * `gclid`, toda visita paga aparece como "direta" e a conta do Google Ads não
+ * casa com a do Analytics. A URL inteira, porém, é texto que qualquer um
+ * escreve — um `?email=` ou `?telefone=` de um link malfeito iria junto. Por
+ * isso a lista é de permissão: só estas chaves passam, e cada valor é limpo.
+ *
+ * O click-id do Google é opaco e volta para quem o emitiu; os rótulos de UTM
+ * passam pela mesma limpeza da origem guardada. `fbclid` fica fora: o GA4 não
+ * o usa, e a Meta lê o próprio carimbo sem depender deste campo.
+ */
+const CAMPANHA_NA_URL = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+const CLIQUE_DO_GOOGLE = ["gclid", "gbraid", "wbraid"] as const;
+const CLIQUE_VALIDO = /^[A-Za-z0-9_-]{1,256}$/;
+
+export function parametrosDeCampanha(busca: string): URLSearchParams {
+  const entrada = new URLSearchParams(busca);
+  const saida = new URLSearchParams();
+
+  for (const chave of CAMPANHA_NA_URL) {
+    const valor = limparRotulo(entrada.get(chave));
+    if (valor) saida.set(chave, valor);
+  }
+  for (const chave of CLIQUE_DO_GOOGLE) {
+    const valor = entrada.get(chave)?.trim();
+    if (valor && CLIQUE_VALIDO.test(valor)) saida.set(chave, valor);
+  }
+
+  return saida;
+}
+
+/**
+ * O `page_location` do PageView: origem + caminho, sem parâmetro arbitrário.
+ *
+ * A campanha só entra na primeira visualização medida da página — é ela que
+ * abre a sessão no GA4. Vem da URL quando a pessoa aceitou a medição ainda na
+ * página do anúncio; se aceitou depois de navegar, a URL já não tem nada, e os
+ * rótulos guardados em `registrarOrigem` reconstroem a fonte, o meio e a
+ * campanha (nunca o click-id, que não é guardado).
+ */
+export function localizacaoParaMedicao(
+  origemDoSite: string,
+  caminho: string,
+  busca: string,
+  guardada: OrigemDaVisita | null,
+  incluirCampanha: boolean,
+): string {
+  const base = `${origemDoSite}${caminho || "/"}`;
+  if (!incluirCampanha) return base;
+
+  let parametros = parametrosDeCampanha(busca);
+  /* `toString()` e não `.size`: Safari 16 ainda circula e não tem `.size`. */
+  if (parametros.toString() === "" && guardada) {
+    parametros = parametrosDeCampanha(
+      new URLSearchParams(
+        Object.entries({
+          utm_source: guardada.fonte,
+          utm_medium: guardada.meio,
+          utm_campaign: guardada.campanha,
+        }).filter((par): par is [string, string] => Boolean(par[1])),
+      ).toString(),
+    );
+  }
+
+  const consulta = parametros.toString();
+  return consulta ? `${base}?${consulta}` : base;
+}
+
 function semVazios(origem: OrigemDaVisita): OrigemDaVisita {
   return Object.fromEntries(
     Object.entries(origem).filter(([, valor]) => valor !== undefined),

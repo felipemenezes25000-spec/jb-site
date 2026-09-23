@@ -60,6 +60,9 @@ export const EVENTOS = [
   "maintenance_plan_view",
   "maintenance_lead",
 
+  // desempenho real (LCP, INP, CLS de quem visitou)
+  "web_vital",
+
   // plataforma
   "clinic_signup",
   "equipment_registered",

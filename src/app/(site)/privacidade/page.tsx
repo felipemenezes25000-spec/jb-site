@@ -200,6 +200,12 @@ export default async function PrivacidadePage() {
               não aparecer de novo;
             </li>
             <li>
+              a origem da visita — os rótulos de campanha do anúncio que trouxe você, como
+              &ldquo;google&rdquo; e o nome da campanha —, guardada no navegador só enquanto a
+              aba está aberta. Ela só é enviada ao Google e à Meta se você aceitar a medição, e
+              nunca junto com o que você escreve na triagem;
+            </li>
+            <li>
               os cookies do Google Analytics, do Google Ads e do pixel da Meta, apenas se
               você aceitar. A escolha pode ser revista a qualquer momento em
               &ldquo;Cookies e medição&rdquo;, no rodapé do site;

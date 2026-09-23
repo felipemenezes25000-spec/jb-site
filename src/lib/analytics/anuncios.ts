@@ -57,10 +57,13 @@ export function conversaNoWhatsapp(posicao: string, equipamento?: string): void 
       window.gtag("event", "conversion", { send_to: envio });
     }
 
+    /* `content_category` é o equipamento (a categoria do interesse) e
+       `content_name` diz de qual CTA veio o clique. Os dois são ids do próprio
+       código — nunca texto da pessoa. */
     if (destinos.metaPixel && typeof window.fbq === "function") {
       window.fbq("track", "Contact", {
-        content_name: equipamento ? `whatsapp:${equipamento}` : "whatsapp:geral",
-        content_category: posicao,
+        content_name: `whatsapp:${posicao}`,
+        content_category: equipamento ?? "geral",
       });
     }
   } catch (erro) {

@@ -185,7 +185,7 @@ describe("conversão do clique no WhatsApp", () => {
     expect(fbq).toContainEqual([
       "track",
       "Contact",
-      { content_name: "whatsapp", content_category: "autoclave" },
+      { content_name: "whatsapp:defeito", content_category: "autoclave" },
     ]);
   });
 

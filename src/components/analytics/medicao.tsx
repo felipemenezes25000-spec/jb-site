@@ -19,7 +19,7 @@ import {
   ouvirCliquesNoWhatsapp,
 } from "@/lib/analytics/anuncios";
 import { algumDestino, nomesDosDestinos, type DestinosDeMedicao } from "@/lib/analytics/destinos";
-import { registrarOrigem } from "@/lib/analytics/origem";
+import { localizacaoParaMedicao, origemDaVisita, registrarOrigem } from "@/lib/analytics/origem";
 import { normalizarRota } from "@/lib/analytics/taxonomia";
 import { Botao } from "@/components/ui/button";
 
@@ -42,7 +42,9 @@ import { Botao } from "@/components/ui/button";
       não deve depender de heurística de histórico. A rota atual é emitida na
       primeira página depois do consentimento e em cada navegação do App Router.
       Query string não é enviada no PageView: evita que parâmetro arbitrário da
-      URL vire dado de analytics.
+      URL vire dado de analytics. A exceção é a campanha — UTMs limpas e o
+      click-id do Google, por lista de permissão — no primeiro PageView, sem a
+      qual o GA4 atribuiria toda visita paga a "direto".
    ============================================================================ */
 
 export function Medicao({ destinos }: { destinos: DestinosDeMedicao }) {
@@ -140,6 +142,16 @@ function ScriptDoGoogle({ ga4, googleAds }: { ga4: string | null; googleAds: str
  * Ele inicializa o destino, mas não dispara `PageView` aqui. A primeira visita
  * e as navegações internas passam pelo mesmo `RastreamentoDePaginas`, evitando
  * um PageView inicial duplicado e outro modelo de contagem para SPA.
+ *
+ * Duas chaves antes do `init`, e as duas pelo mesmo motivo — o pixel só envia
+ * o que este código manda:
+ *
+ *  - `disablePushState`: sem ela o fbevents escuta o `history.pushState` do
+ *    App Router e dispara um PageView próprio a cada navegação, que somado ao
+ *    explícito contaria cada página duas vezes;
+ *  - `autoConfig` desligado: a configuração automática coleta texto de botão
+ *    e metadado da página por conta própria. O contrato do site é que só sai
+ *    evento com campo controlado — nunca texto que a pessoa vê ou digita.
  */
 function PixelDaMeta({ id }: { id: string }) {
   return (
@@ -150,6 +162,8 @@ function PixelDaMeta({ id }: { id: string }) {
         n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
         t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
         document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        fbq.disablePushState = true;
+        fbq('set', 'autoConfig', false, ${JSON.stringify(id)});
         fbq('init', ${JSON.stringify(id)});
       `}
     </Script>
@@ -157,6 +171,17 @@ function PixelDaMeta({ id }: { id: string }) {
 }
 
 /* -------------------------------------------------------------- PageView */
+
+/**
+ * A campanha acompanha só o primeiro PageView medido neste documento — o que
+ * abre a sessão no GA4. Módulo, e não `useRef`: a regra vale para a vida da
+ * aba, mesmo que o componente remonte (aceitar, recusar e aceitar de novo).
+ */
+let campanhaJaMedida = false;
+
+function rotaPrivadaDaMedicao(pathname: string) {
+  return pathname.startsWith("/avaliar/");
+}
 
 /**
  * PageView da chegada e de cada navegação do App Router.
@@ -179,22 +204,33 @@ function RastreamentoDePaginas({
   const ultimoMeta = useRef<string | null>(null);
 
   useEffect(() => {
+    /* O convite de avaliação carrega um token pessoal no caminho. Não é
+       tráfego de campanha, e o pixel da Meta anexaria a URL inteira ao evento. */
+    if (rotaPrivadaDaMedicao(pathname)) return;
+
     let cancelado = false;
     let temporizador = 0;
     let tentativas = 0;
 
     const rota = normalizarRota(pathname);
-    const localizacao = `${window.location.origin}${pathname}`;
 
     const emitir = () => {
       if (cancelado) return;
 
       if (ga4 && ultimoGoogle.current !== pathname && typeof window.gtag === "function") {
+        const primeira = !campanhaJaMedida;
         window.gtag("event", "page_view", {
           page_path: rota,
-          page_location: localizacao,
+          page_location: localizacaoParaMedicao(
+            window.location.origin,
+            rota,
+            window.location.search,
+            primeira ? origemDaVisita() : null,
+            primeira,
+          ),
           page_title: document.title,
         });
+        campanhaJaMedida = true;
         ultimoGoogle.current = pathname;
       }
 
@@ -240,7 +276,7 @@ function RelatorioDeVitals() {
     if (metrica.name !== "LCP" && metrica.name !== "INP" && metrica.name !== "CLS") return;
 
     medir(
-      "home_view",
+      "web_vital",
       {
         rota: normalizarRota(window.location.pathname),
         resultado: metrica.name,
