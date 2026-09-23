@@ -5,24 +5,24 @@ import type { DestinosDeMedicao } from "@/lib/analytics/destinos";
 import { origemDaVisita } from "@/lib/analytics/origem";
 
 /* ============================================================================
-   Conversão de anúncio: o clique no WhatsApp
+   Conversão de anúncio: intenção de contato pelo WhatsApp
 
-   O site existe para uma coisa, a conversa no WhatsApp, e é ela que o Google
-   Ads e a Meta precisam enxergar para saber qual anúncio funciona. Cada
-   clique vira três avisos, cada um para quem precisa dele:
+   O evento é o **clique que abre o WhatsApp**, não a conversa concluída: a
+   pessoa ainda pode desistir antes de enviar. Essa distinção precisa continuar
+   explícita nos nomes e comentários para ninguém apresentar o número como
+   atendimento efetivo.
 
-     · `whatsapp_click` no GA4, com a posição do botão, o equipamento e a
-       origem da visita (campanha, fonte, meio);
+   Depois do consentimento, o clique pode gerar:
+
+     · `whatsapp_click` no GA4, com posição, equipamento, rota (adicionada pelo
+       emissor) e origem de campanha permitida;
      · `conversion` no Google Ads, no rótulo configurado no painel;
-     · `Contact` no pixel da Meta, o evento padrão de "entrou em contato".
+     · `Contact` no pixel da Meta, com equipamento e posição do CTA como dados
+       de conteúdo controlados pelo próprio código.
 
-   As mesmas regras de `medir`: sem consentimento nada sai, e nada aqui lança
-   nem espera. O link abre do mesmo jeito com bloqueador, sem rede ou com os
-   três destinos desligados.
-
-   Os identificadores chegam do layout pelo `Medicao`, que chama
-   `configurarAnuncios` ao montar. Ficam em memória, e não em `window`, para
-   que nenhum script de fora consiga trocá-los.
+   Nenhum desses eventos recebe mensagem do WhatsApp, cidade digitada, nome,
+   telefone ou outro texto livre. Sem consentimento nada sai, e falha de
+   medição nunca bloqueia a abertura do link.
    ============================================================================ */
 
 declare global {
@@ -59,13 +59,13 @@ export function conversaNoWhatsapp(posicao: string, equipamento?: string): void 
 
     if (destinos.metaPixel && typeof window.fbq === "function") {
       window.fbq("track", "Contact", {
-        content_name: "whatsapp",
-        content_category: equipamento ?? "geral",
+        content_name: equipamento ? `whatsapp:${equipamento}` : "whatsapp:geral",
+        content_category: posicao,
       });
     }
   } catch (erro) {
     if (process.env.NODE_ENV !== "production") {
-      console.warn("[anuncios] a conversão falhou, e o link abre igual:", erro);
+      console.warn("[anuncios] a medição do clique falhou, e o link abre igual:", erro);
     }
   }
 }
@@ -73,14 +73,13 @@ export function conversaNoWhatsapp(posicao: string, equipamento?: string): void 
 /**
  * Mede todo clique em link marcado com `data-whatsapp`, venha de onde vier.
  *
- * Um ouvinte só, na página, em vez de um `onClick` por botão: o link do
- * rodapé, o da página de erro e o das páginas institucionais são HTML do
- * servidor, sem JavaScript próprio, e antes ficavam fora da conta. A marca é
- * obrigatória de propósito: os links de WhatsApp do painel (a equipe chamando
- * um cliente) não têm `data-whatsapp` e não viram conversão de anúncio.
+ * Um ouvinte só, na página, em vez de um `onClick` por botão. Links internos
+ * do painel não carregam `data-whatsapp`, então a equipe chamando um cliente
+ * nunca vira conversão de anúncio.
  *
- * Escuta na captura, antes de qualquer `stopPropagation` do caminho, e
- * `auxclick` cobre o botão do meio, que abre o link em outra aba.
+ * Escuta na captura, antes de qualquer `stopPropagation`, e `auxclick` cobre o
+ * botão do meio. O atributo `data-equipamento` recebe apenas ids controlados do
+ * diagnóstico; a mensagem pronta vive no `href` e não é lida por este módulo.
  */
 export function ouvirCliquesNoWhatsapp(): () => void {
   const aoClicar = (evento: MouseEvent) => {
@@ -102,9 +101,9 @@ export function ouvirCliquesNoWhatsapp(): () => void {
 /**
  * Liga ou desliga os destinos de anúncio já carregados.
  *
- * O script de terceiro não sai da página quando a pessoa recusa depois de
- * ter aceitado: o que o faz parar é o consentimento dele próprio, e é isso
- * que esta função muda. Na próxima visita ele nem é carregado.
+ * O script de terceiro não sai da página quando a pessoa recusa depois de ter
+ * aceitado: o que o faz parar é o consentimento do próprio provedor. Na visita
+ * seguinte ele nem é carregado.
  */
 export function aplicarConsentimentoDosAnuncios(aceito: boolean): void {
   try {
