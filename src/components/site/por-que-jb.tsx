@@ -59,8 +59,8 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
                 </span>
               </div>
               <p className="relative mt-5 max-w-xl text-corpo leading-relaxed text-graf-700 sm:text-lg">
-                Consertando equipamento odontológico em {cidade}. Muito defeito já começa a ser
-                reconhecido pela descrição que chega na triagem.
+                Consertando equipamento odontológico em {cidade}. A descrição da triagem ajuda a
+                equipe a entender o sintoma antes de definir o próximo passo.
               </p>
             </li>
           ) : null}
@@ -87,7 +87,7 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
             </span>
             <h3 className="mt-5 text-bloco texto-forte">Histórico de cada aparelho</h3>
             <p className="mt-2 text-corpo leading-relaxed text-graf-600">
-              O que foi feito fica registrado. O próximo atendimento já começa sabendo.
+              O que foi feito fica registrado e pode ser consultado no próximo atendimento.
             </p>
           </li>
 
@@ -102,11 +102,11 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
               <h3 className="mt-5 text-bloco texto-forte">Todas as marcas</h3>
               <p className="mt-2 max-w-2xl text-corpo leading-relaxed text-graf-600">
                 Consertamos equipamento de qualquer marca, e somos assistência técnica autorizada
-                EVOXX. A triagem confirma o seu modelo antes de qualquer deslocamento.
+                EVOXX. Modelo e sintoma entram na triagem quando a clínica os informa.
               </p>
             </div>
             <span className="shrink-0 rounded-full border border-graf-200 bg-graf-50 px-3 py-2 text-xs font-extrabold text-graf-700">
-              Modelo confirmado na triagem
+              Contexto registrado na triagem
             </span>
           </li>
         </ul>
