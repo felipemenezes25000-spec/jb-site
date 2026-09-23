@@ -4,19 +4,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, BadgeCheck, FileCheck2, ShieldAlert } from "lucide-react";
 
-import { BotaoWhatsapp, LinkWhatsapp } from "@/components/site/botao-whatsapp";
 import { ChamadaFinal } from "@/components/site/chamada-final";
 import { ClinicaOuBancada } from "@/components/site/clinica-ou-bancada";
 import { ComoFunciona } from "@/components/site/como-funciona";
 import { Duvidas } from "@/components/site/duvidas";
 import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
-import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
+import { EscolhaDoDefeito } from "@/components/site/escolha-do-defeito";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
-import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
-import { montarMensagem, type Equipamento } from "@/lib/diagnostico";
+import { contatosWhatsapp, type ContatoWhatsapp } from "@/lib/contatos-whatsapp";
+import { montarMensagem } from "@/lib/diagnostico";
 import {
   PAGINAS_DE_EQUIPAMENTO,
   descricaoDaPagina,
@@ -73,6 +72,7 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
   const s = await configuracoesPublicas();
   const anos = await anosDesde(s.empresa_desde);
   const mensagem = montarMensagem({ equipamento: equipamento.id });
+  const contatos = contatosWhatsapp(s);
   const caminho = `/${pagina.slug}`;
 
   return (
@@ -119,11 +119,9 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
               {pagina.chamada}
             </p>
 
-            <OpcoesWhatsapp
-              contatos={contatosWhatsapp(s)}
-              mensagem={mensagem}
-              equipamento={equipamento.id}
-              onde="abertura"
+            <EscolhaDoDefeito
+              equipamento={equipamento}
+              contatos={contatos}
               className="entrada mt-7 [animation-delay:210ms]"
             />
 
@@ -132,8 +130,6 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
               neutro={`Atendimento em ${s.endereco_cidade} e região`}
               className="entrada mt-4 [animation-delay:240ms]"
             />
-
-            <Defeitos equipamento={equipamento} whatsapp={s.whatsapp} />
           </div>
 
           <div className="entrada order-first lg:order-none [animation-delay:120ms]">
@@ -144,15 +140,15 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
 
       <FaixaAutorizada desde={s.empresa_desde} cidade={s.endereco_cidade} />
 
-      <EnquantoIsso pagina={pagina} whatsapp={s.whatsapp} mensagem={mensagem} equipamento={equipamento.id} />
+      <EnquantoIsso pagina={pagina} contatos={contatos} mensagem={mensagem} equipamento={equipamento.id} />
 
-      <ComoFunciona whatsapp={s.whatsapp} mensagem={mensagem} equipamento={equipamento.id} />
+      <ComoFunciona contatos={contatos} mensagem={mensagem} equipamento={equipamento.id} />
       <ClinicaOuBancada cidade={s.endereco_cidade} mensagem={mensagem} />
       <PorQueJb anos={anos} desde={s.empresa_desde} cidade={s.endereco_cidade} />
       <Duvidas cidade={s.endereco_cidade} horario={s.horario} extras={pagina.duvidas} />
       <OutrosEquipamentos atual={pagina.slug} />
       <ChamadaFinal
-        contatos={contatosWhatsapp(s)}
+        contatos={contatos}
         horario={s.horario}
         cidade={s.endereco_cidade}
         mensagem={mensagem}
@@ -235,49 +231,16 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
   );
 }
 
-/* ---------------------------------------------------------------- defeitos */
-
-/**
- * Os defeitos, cada um um atalho para o WhatsApp com o problema escrito.
- * É o diagnóstico da home reduzido a um toque, porque o equipamento a página
- * já sabe.
- */
-function Defeitos({ equipamento, whatsapp }: { equipamento: Equipamento; whatsapp: string }) {
-  return (
-    <div className="entrada mt-8 [animation-delay:280ms]">
-      <p className="text-sm font-extrabold text-graf-900">
-        Qual é o defeito? Toque e a mensagem já vai com ele:
-      </p>
-      <ul className="mt-3 flex flex-wrap gap-2">
-        {equipamento.defeitos.map((defeito) => (
-          <li key={defeito}>
-            <LinkWhatsapp
-              numero={whatsapp}
-              mensagem={montarMensagem({ equipamento: equipamento.id, defeito })}
-              posicao="defeito"
-              equipamento={equipamento.id}
-              className="foco-jb group inline-flex min-h-11 items-center gap-2 rounded-full border border-graf-200 bg-white px-4 py-2 text-sm font-bold text-graf-800 shadow-xs transition-[border-color,color,transform] duration-200 hover:-translate-y-0.5 hover:border-jb-400 hover:text-jb-700 active:scale-[0.97]"
-            >
-              {defeito}
-              <MarcaWhatsapp className="size-3.5 text-graf-400 transition-colors group-hover:text-jb-600" />
-            </LinkWhatsapp>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 /* ----------------------------------------------------------- enquanto isso */
 
 function EnquantoIsso({
   pagina,
-  whatsapp,
+  contatos,
   mensagem,
   equipamento,
 }: {
   pagina: PaginaDeEquipamento;
-  whatsapp: string;
+  contatos: ContatoWhatsapp[];
   mensagem: string;
   equipamento: string;
 }) {
@@ -297,15 +260,14 @@ function EnquantoIsso({
             simples já protegem {pagina.naFrase} e ajudam a triagem.
           </p>
           <div className="jb-revela mt-8" style={{ "--i": 2 } as React.CSSProperties}>
-            <BotaoWhatsapp
-              numero={whatsapp}
+            <p className="text-sm font-extrabold text-graf-900">Mande uma foto pelo WhatsApp:</p>
+            <OpcoesWhatsapp
+              contatos={contatos}
               mensagem={mensagem}
               equipamento={equipamento}
               posicao="secao"
-              tamanho="lg"
-            >
-              Mandar foto no WhatsApp
-            </BotaoWhatsapp>
+              className="mt-3"
+            />
           </div>
         </div>
 

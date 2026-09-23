@@ -66,7 +66,7 @@ export function ChamadaFinal({
           contatos={contatos}
           mensagem={mensagem}
           equipamento={equipamento}
-          onde="fechamento"
+          posicao="fechamento"
           pulso
           className="jb-revela mt-9 sm:justify-center"
           style={{ "--i": 3 } as React.CSSProperties}

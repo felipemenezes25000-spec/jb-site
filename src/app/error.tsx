@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { Phone, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 
 import { CONTATO_DE_EMERGENCIA } from "@/components/institucional/contato-de-emergencia";
-import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
-import { Botao, classesBotao } from "@/components/ui/button";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
+import { Botao } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
-import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 
 /**
  * Tela de erro do site.
@@ -37,11 +36,6 @@ export default function ErroDoSite({
   }, [error]);
 
   const tentarDeNovo = retry ?? reset;
-  const whatsapp = whatsappHref(
-    CONTATO_DE_EMERGENCIA.whatsapp,
-    "Olá, JB! Vim pelo site e preciso de assistência técnica para um equipamento odontológico.",
-  );
-  const ligar = telHref(CONTATO_DE_EMERGENCIA.whatsapp);
 
   return (
     <div className="flex min-h-dvh flex-col bg-gradient-to-b from-graf-50 to-white">
@@ -65,19 +59,14 @@ export default function ErroDoSite({
           WhatsApp mesmo com o site fora do ar.
         </p>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {whatsapp ? (
-            <a
-              href={whatsapp}
-              data-whatsapp="erro"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={classesBotao("primario", "lg", "w-full whitespace-nowrap sm:w-auto")}
-            >
-              <MarcaWhatsapp className="size-5" />
-              Chamar no WhatsApp
-            </a>
-          ) : null}
+        <OpcoesWhatsapp
+          contatos={[...CONTATO_DE_EMERGENCIA.contatos]}
+          mensagem="Olá, JB! Vim pelo site e preciso de assistência técnica para um equipamento odontológico."
+          posicao="erro"
+          className="mt-8"
+        />
+
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Botao
             variante="secundario"
             tamanho="lg"
@@ -90,12 +79,6 @@ export default function ErroDoSite({
             <RotateCcw className="size-4" aria-hidden />
             Tentar de novo
           </Botao>
-          {ligar ? (
-            <a href={ligar} className={classesBotao("texto", "lg", "w-full whitespace-nowrap sm:w-auto")}>
-              <Phone className="size-4" aria-hidden />
-              {formatarTelefone(CONTATO_DE_EMERGENCIA.whatsapp)}
-            </a>
-          ) : null}
         </div>
 
         {error.digest ? (

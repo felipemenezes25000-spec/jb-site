@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
+import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { Logo } from "@/components/ui/logo";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 import { configuracoesPublicas } from "@/lib/site-publico";
@@ -46,20 +47,18 @@ export default async function NaoEncontrado() {
           O link pode estar antigo ou ter sido digitado errado. Se o seu equipamento precisa de
           assistência, a equipe técnica responde pelo WhatsApp.
         </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <BotaoWhatsapp
-            numero={s.whatsapp}
-            mensagem={MENSAGEM_PADRAO}
-            posicao="secao"
-            tamanho="lg"
-          />
-          <Link
-            href="/"
-            className="foco-jb inline-flex min-h-13 items-center justify-center rounded-lg border border-graf-300 bg-white px-7 text-base font-semibold text-graf-800 hover:bg-graf-50"
-          >
-            Ir para a página inicial
-          </Link>
-        </div>
+        <OpcoesWhatsapp
+          contatos={contatosWhatsapp(s)}
+          mensagem={MENSAGEM_PADRAO}
+          posicao="secao"
+          className="mt-8"
+        />
+        <Link
+          href="/"
+          className="foco-jb mt-5 inline-flex min-h-11 items-center self-start rounded-md text-base font-semibold text-graf-700 underline-offset-4 hover:text-jb-700 hover:underline"
+        >
+          Ir para a página inicial
+        </Link>
       </main>
     </div>
   );

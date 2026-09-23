@@ -1,8 +1,11 @@
 import { Clock, Mail, MapPin, MessageCircle } from "lucide-react";
 
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { Cartao } from "@/components/ui/data";
-import { LinkBotao, classesBotao } from "@/components/ui/button";
-import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
+import { LinkBotao } from "@/components/ui/button";
+import { contatosWhatsapp, saudarPeloNome } from "@/lib/contatos-whatsapp";
+import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
+import { formatarTelefone, whatsappHref } from "@/lib/format";
 import { enderecoCompleto, type SettingsMap } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
@@ -29,12 +32,15 @@ function Linha({
   valor,
   href,
   externo,
+  posicaoWhatsapp,
 }: {
   icone: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
   rotulo: string;
   valor: React.ReactNode;
   href?: string;
   externo?: boolean;
+  /** Marca o link para a medição de conversas no WhatsApp. */
+  posicaoWhatsapp?: string;
 }) {
   const conteudo = (
     <>
@@ -59,6 +65,7 @@ function Linha({
     <li>
       <a
         href={href}
+        data-whatsapp={posicaoWhatsapp}
         {...(externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         className="foco-jb group -mx-2 flex min-h-11 items-start gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-graf-50"
       >
@@ -77,20 +84,19 @@ export function CanaisDeContato({
   className?: string;
   mostrarEndereco?: boolean;
 }) {
-  const whatsapp = whatsappHref(s.whatsapp, `Olá! Vim pelo site da ${s.empresa_nome}.`);
-
   return (
     <ul className={cn("space-y-1", className)}>
-      {whatsapp ? (
+      {contatosWhatsapp(s).map(({ numero, nome }) => (
         <Linha
+          key={numero}
           icone={MessageCircle}
           rotulo="WhatsApp"
-          valor={formatarTelefone(s.whatsapp)}
-          href={whatsapp}
-          data-whatsapp="institucional"
+          valor={nome || formatarTelefone(numero)}
+          href={whatsappHref(numero, saudarPeloNome(MENSAGEM_PADRAO, nome))}
+          posicaoWhatsapp="institucional"
           externo
         />
-      ) : null}
+      ))}
 
       {s.email ? (
         <Linha icone={Mail} rotulo="E-mail" valor={s.email} href={`mailto:${s.email}`} />
@@ -117,8 +123,6 @@ export function CaixaDeAjuda({
   descricao?: string;
   className?: string;
 }) {
-  const whatsapp = whatsappHref(s.whatsapp, `Olá! Vim pelo site da ${s.empresa_nome}.`);
-
   return (
     <Cartao className={cn("p-5", className)}>
       <h2 className="text-base font-bold text-graf-950">{titulo}</h2>
@@ -130,17 +134,6 @@ export function CaixaDeAjuda({
         <LinkBotao href="/contato" tamanho="sm" larguraTotal>
           Enviar mensagem
         </LinkBotao>
-        {whatsapp ? (
-          <a
-            href={whatsapp}
-            data-whatsapp="institucional"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={classesBotao("secundario", "sm", "w-full")}
-          >
-            Chamar no WhatsApp
-          </a>
-        ) : null}
       </div>
     </Cartao>
   );
@@ -155,8 +148,6 @@ export function CaixaDeAjuda({
  * que mantêm o anel de foco visível.
  */
 export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: string }) {
-  const whatsapp = whatsappHref(s.whatsapp, `Olá! Vim pelo site da ${s.empresa_nome}.`);
-
   return (
     <section
       className={cn(
@@ -186,24 +177,12 @@ export function FaixaDeContato({ s, className }: { s: SettingsMap; className?: s
             dos dois sobre fundo claro". Sobre `bg-surface-muted` os três
             sumiam, e a auditoria registrou os dois de contato como invisíveis
             na página 404. As variantes de fundo claro são estas. */}
-        <div className="flex flex-wrap gap-3">
-          {whatsapp ? (
-            <a
-              href={whatsapp}
-              data-whatsapp="institucional"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={classesBotao("secundario", "md")}
-            >
-              WhatsApp
-            </a>
-          ) : null}
-          {s.whatsapp ? (
-            <a href={telHref(s.whatsapp)} className={classesBotao("secundario", "md")}>
-              Ligar {formatarTelefone(s.whatsapp)}
-            </a>
-          ) : null}
-        </div>
+        <OpcoesWhatsapp
+          contatos={contatosWhatsapp(s)}
+          mensagem={MENSAGEM_PADRAO}
+          posicao="institucional"
+          tamanho="md"
+        />
       </div>
     </section>
   );

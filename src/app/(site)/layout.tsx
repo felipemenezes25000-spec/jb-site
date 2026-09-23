@@ -1,6 +1,7 @@
 import { CabecalhoSite, type AtalhoDoCabecalho } from "@/components/site/cabecalho-site";
 import { FaixaTopo } from "@/components/site/faixa-topo";
 import { RodapeSite } from "@/components/site/rodape-site";
+import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
 import "./site.css";
@@ -8,7 +9,7 @@ import "./site.css";
 /* ============================================================================
    Casca do site de assistência
 
-   Cabeçalho de uma linha com o WhatsApp sempre à mão, conteúdo e rodapé com
+   Cabeçalho de uma linha com Jeferson e Jackson sempre à mão, conteúdo e rodapé com
    todos os canais. Substitui a casca da loja (busca, carrinho, categorias,
    comparador) nas páginas que sobrevivem à saída do comércio.
    ============================================================================ */
@@ -23,6 +24,7 @@ const ATALHOS: AtalhoDoCabecalho[] = [
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const s = await configuracoesPublicas();
+  const contatos = contatosWhatsapp(s);
 
   return (
     <div data-jb-site="assistencia" className="flex min-h-dvh flex-col">
@@ -32,8 +34,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       >
         Pular para o conteúdo
       </a>
-      <FaixaTopo whatsapp={s.whatsapp} desde={s.empresa_desde} cidade={s.endereco_cidade} />
-      <CabecalhoSite whatsapp={s.whatsapp} telefone={s.whatsapp} atalhos={ATALHOS} />
+      <FaixaTopo contatos={contatos} desde={s.empresa_desde} cidade={s.endereco_cidade} />
+      <CabecalhoSite contatos={contatos} atalhos={ATALHOS} />
       <main id="conteudo" className="flex-1 scroll-mt-20">
         {children}
       </main>

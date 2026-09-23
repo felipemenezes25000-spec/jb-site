@@ -1,16 +1,15 @@
 import { BadgeCheck, CalendarCheck2, FileCheck2, MapPin, Zap } from "lucide-react";
 
-import { LinkWhatsapp } from "@/components/site/botao-whatsapp";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
-import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
-import { formatarTelefone } from "@/lib/format";
+import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 
 /* ============================================================================
    Faixa do topo
 
    Uma tira vermelha fina, acima do cabeçalho, com as frases que vendem a JB
-   correndo sem parar. A tira inteira é um link para o WhatsApp: em qualquer
-   ponto que a pessoa toque, a conversa abre.
+   correndo sem parar. Não é link: um toque nela abriria o WhatsApp de uma
+   pessoa só, e o site sempre oferece os dois, Jeferson e Jackson, que estão
+   logo abaixo, no cabeçalho.
 
    Vermelho em faixa estreita é "sinal", não fundo de área grande: é o mesmo
    uso do botão, esticado. As frases são as mesmas afirmações que a página já
@@ -39,14 +38,16 @@ function Trilho({ frases, oculto }: { frases: Frase[]; oculto?: boolean }) {
 }
 
 export function FaixaTopo({
-  whatsapp,
+  contatos,
   desde,
   cidade,
 }: {
-  whatsapp: string;
+  contatos: ContatoWhatsapp[];
   desde: string;
   cidade: string;
 }) {
+  const nomes = contatos.map((contato) => contato.nome).filter(Boolean);
+
   const frases: Frase[] = [
     { icone: BadgeCheck, texto: "Atendemos todas as marcas" },
     { icone: Zap, texto: "Equipamento parou? Chame agora no WhatsApp" },
@@ -54,23 +55,17 @@ export function FaixaTopo({
     { icone: FileCheck2, texto: "Orçamento antes de qualquer troca de peça" },
     { icone: CalendarCheck2, texto: `Na bancada desde ${desde}` },
     { icone: BadgeCheck, texto: "Assistência técnica autorizada EVOXX" },
-    ...(whatsapp.trim()
-      ? [{ icone: MarcaWhatsapp, texto: `WhatsApp ${formatarTelefone(whatsapp)}` }]
+    ...(nomes.length > 0
+      ? [{ icone: MarcaWhatsapp, texto: `No WhatsApp: ${nomes.join(" e ")}` }]
       : []),
   ];
 
   return (
-    <LinkWhatsapp
-      numero={whatsapp}
-      mensagem={MENSAGEM_PADRAO}
-      posicao="faixa-topo"
-      rotulo="Chamar a assistência técnica da JB no WhatsApp"
-      className="jb-ticker foco-jb relative z-50 block overflow-hidden bg-jb-600 text-white"
-    >
+    <div className="jb-ticker relative z-50 block overflow-hidden bg-jb-600 text-white">
       <span className="jb-ticker-trilho flex h-9 items-center">
         <Trilho frases={frases} />
         <Trilho frases={frases} oculto />
       </span>
-    </LinkWhatsapp>
+    </div>
   );
 }

@@ -1,12 +1,13 @@
 import { BarraWhatsappMovel } from "@/components/site/barra-whatsapp-movel";
 import { RevelarNaRolagem } from "@/components/site/revelar-na-rolagem";
+import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { configuracoesPublicas } from "@/lib/site-publico";
 
 /* ============================================================================
    Por página, e não no layout
 
    A barra do WhatsApp do celular observa os botões grandes da página (a
-   abertura, o fechamento) e copia a mensagem da abertura. No layout ela
+   abertura, o fechamento) e copia o equipamento da abertura. No layout ela
    montava uma vez só: da home para /autoclave por um link interno, seguia
    olhando para botões que já tinham saído da tela e mandando a mensagem
    genérica. O `template` remonta a cada navegação, e a barra junto.
@@ -21,7 +22,7 @@ export default async function SiteTemplate({ children }: { children: React.React
   return (
     <>
       {children}
-      <BarraWhatsappMovel whatsapp={s.whatsapp} telefone={s.whatsapp} />
+      <BarraWhatsappMovel contatos={contatosWhatsapp(s)} />
       <RevelarNaRolagem />
     </>
   );

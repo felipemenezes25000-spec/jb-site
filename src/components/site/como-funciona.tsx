@@ -1,6 +1,7 @@
 import { ClipboardCheck, MessageCircleMore, ShieldCheck, Wrench } from "lucide-react";
 
-import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
+import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 
 /* ============================================================================
@@ -39,11 +40,11 @@ const PASSOS = [
 ] as const;
 
 export function ComoFunciona({
-  whatsapp,
+  contatos,
   mensagem = MENSAGEM_PADRAO,
   equipamento,
 }: {
-  whatsapp: string;
+  contatos: ContatoWhatsapp[];
   /** Nas páginas de equipamento, a mensagem já diz qual é. */
   mensagem?: string;
   equipamento?: string;
@@ -63,12 +64,11 @@ export function ComoFunciona({
             Sem formulário comprido, sem cadastro e sem espera para saber o que vai acontecer.
           </p>
           <div className="jb-revela mt-8" style={{ "--i": 2 } as React.CSSProperties}>
-            <BotaoWhatsapp
-              numero={whatsapp}
+            <OpcoesWhatsapp
+              contatos={contatos}
               mensagem={mensagem}
               equipamento={equipamento}
               posicao="secao"
-              tamanho="lg"
             />
           </div>
         </div>

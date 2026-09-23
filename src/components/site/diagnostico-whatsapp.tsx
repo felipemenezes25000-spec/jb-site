@@ -16,7 +16,8 @@ import {
   type IdEquipamento,
   type IdSituacao,
 } from "@/lib/diagnostico";
-import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
+import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
 import { cn } from "@/lib/utils";
@@ -78,7 +79,7 @@ function Progresso({ toques }: { toques: number }) {
   );
 }
 
-export function DiagnosticoWhatsapp({ numero }: { numero: string }) {
+export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] }) {
   const reduzir = useReducedMotion();
   const [equipamentoId, setEquipamentoId] = useState<IdEquipamento | null>(null);
   const [defeito, setDefeito] = useState<string | null>(null);
@@ -342,7 +343,7 @@ export function DiagnosticoWhatsapp({ numero }: { numero: string }) {
         <div className="rounded-xl bg-graf-100/80 p-3" aria-label="Prévia da mensagem">
           <p className="mb-2 flex items-center gap-1.5 text-[0.6875rem] font-bold text-graf-500">
             <MarcaWhatsapp className="size-3" />
-            Para: equipe técnica JB
+            Para: {contatos.map((contato) => contato.nome).filter(Boolean).join(" ou ") || "equipe técnica JB"}
           </p>
           <div className="ml-auto w-fit max-w-[92%] rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 text-[0.8125rem] leading-snug text-[#111b21] shadow-xs">
             <AnimatePresence initial={false}>
@@ -368,24 +369,16 @@ export function DiagnosticoWhatsapp({ numero }: { numero: string }) {
           </div>
         </div>
 
-        <div className="relative mt-3">
-          {pronto && !reduzir ? (
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-lg bg-jb-500/40 motion-safe:animate-ping"
-              style={{ animationIterationCount: 2 }}
-            />
-          ) : null}
-          <BotaoWhatsapp
-            numero={numero}
-            mensagem={mensagem}
-            posicao="diagnostico"
-            equipamento={equipamentoId ?? undefined}
-            tamanho="lg"
-            larguraTotal
-            className="relative"
-          />
-        </div>
+        <OpcoesWhatsapp
+          contatos={contatos}
+          mensagem={mensagem}
+          posicao="diagnostico"
+          equipamento={equipamentoId ?? undefined}
+          tamanho="lg"
+          lado
+          pulso={pronto && !reduzir ? 2 : false}
+          className="mt-3"
+        />
         <p className="mt-2.5 text-center text-xs text-graf-500">
           Abre o WhatsApp com o texto pronto. Você revisa antes de enviar.
         </p>

@@ -1,17 +1,22 @@
-import Image from "next/image";
-import { ArrowUpRight, BadgeCheck } from "lucide-react";
+"use client";
 
-import { LinkWhatsapp } from "@/components/site/botao-whatsapp";
+import { useId, useState } from "react";
+import Image from "next/image";
+import { BadgeCheck, ChevronDown } from "lucide-react";
+
 import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
 import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
-import { EQUIPAMENTOS, montarMensagem, type Equipamento } from "@/lib/diagnostico";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
+import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
+import { EQUIPAMENTOS, montarMensagem, type Equipamento, type IdEquipamento } from "@/lib/diagnostico";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
    O que a JB conserta
 
    Cada bloco é um atalho para o WhatsApp com o equipamento já escrito na
-   mensagem. A autoclave abre maior: é a que mais para a rotina quando falha.
+   mensagem: o toque abre, dentro do próprio cartão, a escolha de sempre,
+   Jeferson ou Jackson. Um cartão aberto por vez. A autoclave abre maior: é a que mais para a rotina quando falha.
    Nenhum cartão leva marca de fabricante: a JB conserta todas, e um selo de
    marca num aparelho fazia parecer que só aquela era atendida. "Outro equipamento" fecha a grade
    largo, para ninguém sair achando que a máquina dele não entra.
@@ -23,20 +28,25 @@ import { cn } from "@/lib/utils";
 
 function Cartao({
   equipamento,
-  whatsapp,
+  contatos,
   destaque,
   largo,
   indice,
+  aberto,
+  alternar,
 }: {
   equipamento: Equipamento;
-  whatsapp: string;
+  contatos: ContatoWhatsapp[];
   destaque?: boolean;
   largo?: boolean;
   indice: number;
+  aberto: boolean;
+  alternar: () => void;
 }) {
   const Icone = ICONE_DO_EQUIPAMENTO[equipamento.id];
   const imagem = IMAGEM_DO_EQUIPAMENTO[equipamento.id];
   const outro = equipamento.id === "outro";
+  const idOpcoes = useId();
 
   return (
     <li
@@ -47,21 +57,30 @@ function Cartao({
       )}
       style={{ "--i": indice % 4 } as React.CSSProperties}
     >
-      <LinkWhatsapp
-        numero={whatsapp}
-        mensagem={montarMensagem({ equipamento: equipamento.id })}
-        posicao="secao"
-        equipamento={equipamento.id}
-        rotulo={`Chamar no WhatsApp sobre ${equipamento.nome.toLowerCase()}`}
+      <div
         className={cn(
-          "jb-cartao-equipamento foco-jb group relative flex h-full flex-col overflow-clip rounded-2xl border p-5 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:shadow-pop active:scale-[0.985] sm:p-6",
+          "jb-cartao-equipamento group relative flex h-full flex-col overflow-clip rounded-2xl border p-5 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:shadow-pop sm:p-6",
           destaque
             ? "min-h-[15rem] border-jb-200 bg-gradient-to-br from-jb-50 via-white to-white lg:min-h-full"
             : outro
               ? "min-h-[9rem] border-dashed border-graf-300 bg-white hover:border-jb-400"
               : "min-h-[11rem] border-graf-200 bg-white hover:border-jb-300",
+          aberto && "border-jb-400 shadow-pop",
         )}
       >
+        {/* O cartão inteiro é o botão que abre a escolha; os dois botões de
+            WhatsApp ficam por cima dele quando abertos. */}
+        <button
+          type="button"
+          onClick={alternar}
+          aria-expanded={aberto}
+          aria-controls={idOpcoes}
+          className="foco-jb absolute inset-0 z-[1] rounded-2xl active:bg-graf-950/[0.02]"
+        >
+          <span className="sr-only">
+            {outro ? "Outro equipamento" : equipamento.nome}: falar com Jeferson ou Jackson no WhatsApp
+          </span>
+        </button>
         {destaque ? (
           <span
             aria-hidden
@@ -83,7 +102,7 @@ function Cartao({
             </span>
           )}
           {destaque ? (
-            <span className="relative z-10 ml-auto inline-flex items-center gap-1 rounded-full border border-jb-200 bg-white px-2.5 py-1 text-[0.6875rem] font-bold text-jb-700 shadow-xs">
+            <span className="relative ml-auto inline-flex items-center gap-1 rounded-full border border-jb-200 bg-white px-2.5 py-1 text-[0.6875rem] font-bold text-jb-700 shadow-xs">
               <BadgeCheck className="size-3.5" aria-hidden />
               Todas as marcas
             </span>
@@ -127,21 +146,36 @@ function Cartao({
               ? "Atendemos todas as marcas. A triagem confirma o seu modelo."
               : equipamento.defeitos.slice(0, destaque ? 4 : 3).join(", ")}
           </span>
-          <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-extrabold text-jb-600">
-            <MarcaWhatsapp className="size-4" />
-            {destaque ? "Chamar sobre autoclave" : "Chamar"}
-            <ArrowUpRight
-              className="size-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-              aria-hidden
-            />
-          </span>
+          {aberto ? null : (
+            <span aria-hidden className="mt-4 inline-flex items-center gap-1.5 text-sm font-extrabold text-jb-600">
+              <MarcaWhatsapp className="size-4" />
+              {destaque || outro ? "Jeferson ou Jackson" : "Chamar"}
+              <ChevronDown className="size-4 transition-transform duration-300 group-hover:translate-y-0.5" />
+            </span>
+          )}
         </span>
-      </LinkWhatsapp>
+
+        <div id={idOpcoes} hidden={!aberto} className="relative z-[2] mt-4">
+          {aberto ? (
+            <OpcoesWhatsapp
+              contatos={contatos}
+              mensagem={montarMensagem({ equipamento: equipamento.id })}
+              equipamento={equipamento.id}
+              posicao="secao"
+              tamanho="sm"
+              lado={destaque || largo}
+              coluna={!destaque && !largo}
+            />
+          ) : null}
+        </div>
+      </div>
     </li>
   );
 }
 
-export function GradeEquipamentos({ whatsapp }: { whatsapp: string }) {
+export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] }) {
+  const [aberto, setAberto] = useState<IdEquipamento | null>(null);
+
   return (
     <section
       id="equipamentos"
@@ -150,10 +184,10 @@ export function GradeEquipamentos({ whatsapp }: { whatsapp: string }) {
     >
       <div className="container-jb">
         <h2 id="equipamentos-titulo" className="text-section texto-forte jb-revela max-w-2xl">
-          Qual equipamento parou? <span className="text-jb-600">Toque e fale com a gente.</span>
+          Qual equipamento parou? <span className="text-jb-600">Toque e escolha com quem falar.</span>
         </h2>
         <p className="texto-guia jb-revela mt-4 max-w-2xl text-graf-600" style={{ "--i": 1 } as React.CSSProperties}>
-          Atendemos todas as marcas. O WhatsApp abre com o nome do equipamento na mensagem: é só contar o que aconteceu.
+          Atendemos todas as marcas. Jeferson ou Jackson: o WhatsApp abre com o nome do equipamento na mensagem, é só contar o que aconteceu.
         </p>
 
         <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -161,10 +195,12 @@ export function GradeEquipamentos({ whatsapp }: { whatsapp: string }) {
             <Cartao
               key={equipamento.id}
               equipamento={equipamento}
-              whatsapp={whatsapp}
+              contatos={contatos}
               destaque={equipamento.id === "autoclave"}
               largo={equipamento.id === "outro"}
               indice={indice}
+              aberto={aberto === equipamento.id}
+              alternar={() => setAberto((atual) => (atual === equipamento.id ? null : equipamento.id))}
             />
           ))}
         </ul>

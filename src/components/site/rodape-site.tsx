@@ -23,10 +23,8 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
    ============================================================================ */
 
 export function RodapeSite({ s }: { s: SettingsMap }) {
-  const ligar = telHref(s.whatsapp);
-  /* O principal primeiro; o segundo só aparece se for outro número. */
+  /* Jeferson e Jackson, o principal primeiro. */
   const contatos = contatosWhatsapp(s);
-  const primeiro = contatos[0];
 
   return (
     <footer id="contato" className="scroll-mt-20 border-t border-graf-200 bg-surface-muted">
@@ -66,19 +64,20 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                 </a>
               </li>
             ))}
-            {ligar ? (
-              <li>
-                <a
-                  href={ligar}
-                  className="foco-jb inline-flex items-center gap-2.5 rounded font-semibold text-graf-700 hover:text-jb-700"
-                >
-                  <Phone className="size-4 text-jb-600" aria-hidden />
-                  <span>
-                    {contatos.length > 1
-                      ? `Ligar para ${primeiro.nome || "o primeiro número"}`
-                      : "Ligar para o mesmo número"}
-                  </span>
-                </a>
+            {contatos.length > 0 ? (
+              <li className="flex items-center gap-2.5 font-semibold text-graf-700">
+                <Phone className="size-4 shrink-0 text-jb-600" aria-hidden />
+                <span>
+                  Ligar para{" "}
+                  {contatos.map(({ numero, nome }, i) => (
+                    <span key={numero}>
+                      {i > 0 ? " ou " : null}
+                      <a href={telHref(numero)} className="foco-jb rounded font-bold text-graf-900 hover:text-jb-700">
+                        {nome || formatarTelefone(numero)}
+                      </a>
+                    </span>
+                  ))}
+                </span>
               </li>
             ) : null}
             {s.email ? (

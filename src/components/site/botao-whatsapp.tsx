@@ -21,7 +21,8 @@ import { cn } from "@/lib/utils";
    telefone continua na página.
    ============================================================================ */
 
-export type PosicaoWhatsapp =
+/** Onde o botão está. O do segundo atendente leva o mesmo nome com `-segundo`. */
+export type PosicaoBase =
   | "cabecalho"
   | "abertura"
   | "diagnostico"
@@ -30,9 +31,10 @@ export type PosicaoWhatsapp =
   | "fechamento"
   | "rodape"
   | "barra-movel"
-  | "faixa-topo"
-  | "abertura-segundo"
-  | "fechamento-segundo";
+  | "institucional"
+  | "erro";
+
+export type PosicaoWhatsapp = PosicaoBase | `${PosicaoBase}-segundo`;
 
 type Props = {
   numero: string;

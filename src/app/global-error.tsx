@@ -15,8 +15,8 @@ import { telHref, whatsappHref } from "@/lib/format";
  * do kit. Qualquer dependência aqui é mais uma coisa que pode faltar
  * exatamente no momento em que ela é necessária.
  *
- * Pelo mesmo motivo o telefone vem de uma constante local, e não do painel:
- * a tela não consulta o banco.
+ * Pelo mesmo motivo os contatos do Jeferson e do Jackson vêm de uma
+ * constante local, e não do painel: a tela não consulta o banco.
  */
 
 const CINZA_ESCURO = "#1a1c1e";
@@ -41,7 +41,6 @@ export default function ErroGlobal({
   }, [error]);
 
   const tentarDeNovo = retry ?? reset;
-  const linkWhatsapp = whatsappHref(CONTATO_DE_EMERGENCIA.whatsapp);
 
   return (
     <html lang="pt-BR">
@@ -105,7 +104,7 @@ export default function ErroGlobal({
             }}
           >
             A falha foi registrada. Tente de novo em instantes — e, se for urgente, fale
-            direto com a equipe da JB pelo telefone ou pelo WhatsApp.
+            direto com o Jeferson ou o Jackson, pelo WhatsApp ou pelo telefone.
           </p>
 
           <div
@@ -175,27 +174,23 @@ export default function ErroGlobal({
               lineHeight: 2,
             }}
           >
-            <li>
-              Telefone:{" "}
-              <a
-                href={telHref(CONTATO_DE_EMERGENCIA.whatsapp)}
-                style={{ color: VERMELHO, fontWeight: 600 }}
-              >
-                {CONTATO_DE_EMERGENCIA.whatsapp}
-              </a>
-            </li>
-            {linkWhatsapp ? (
-              <li>
-                WhatsApp:{" "}
+            {CONTATO_DE_EMERGENCIA.contatos.map(({ numero, nome }) => (
+              <li key={numero}>
+                <strong>{nome}:</strong>{" "}
                 <a
-                  href={linkWhatsapp}
+                  href={whatsappHref(numero, `Olá, ${nome}! Vim pelo site e preciso de assistência técnica.`)}
+                  data-whatsapp="erro"
                   rel="noopener noreferrer"
                   style={{ color: VERMELHO, fontWeight: 600 }}
                 >
-                  {CONTATO_DE_EMERGENCIA.whatsapp}
+                  WhatsApp
+                </a>
+                {" · "}
+                <a href={telHref(numero)} style={{ color: VERMELHO, fontWeight: 600 }}>
+                  Ligar
                 </a>
               </li>
-            ) : null}
+            ))}
             <li>
               E-mail:{" "}
               <a

@@ -5,7 +5,8 @@ import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 
 import { CalendarX2 } from "lucide-react";
 
 import { medir } from "@/lib/analytics/cliente";
-import { BotaoWhatsapp } from "@/components/site/botao-whatsapp";
+import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
+import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 
 /* ============================================================================
    Quanto a parada custa na agenda
@@ -64,7 +65,7 @@ function Controle({
   );
 }
 
-export function SimuladorParada({ whatsapp }: { whatsapp: string }) {
+export function SimuladorParada({ contatos }: { contatos: ContatoWhatsapp[] }) {
   const reduzir = useReducedMotion();
   const [pacientes, setPacientes] = useState(12);
   const [dias, setDias] = useState(3);
@@ -132,12 +133,12 @@ export function SimuladorParada({ whatsapp }: { whatsapp: string }) {
         {dias === 1 ? "dia" : "dias"} parado.
       </p>
 
-      <BotaoWhatsapp
-        numero={whatsapp}
+      <OpcoesWhatsapp
+        contatos={contatos}
         mensagem={MENSAGEM}
         posicao="secao"
         tamanho="lg"
-        larguraTotal
+        lado
         className="mt-5"
       />
     </div>

@@ -9,11 +9,16 @@
  *
  * Por isso estes valores são repetidos aqui. São os mesmos de
  * `SETTING_DEFAULTS` em `@/lib/settings` — dados reais da JB, não inventados.
- * Se o telefone da empresa mudar de verdade, os dois lugares precisam ser
- * atualizados juntos; o painel cobre o site inteiro, menos estas duas telas.
+ * Se um WhatsApp ou quem atende nele mudar de verdade, os dois lugares
+ * precisam ser atualizados juntos; o painel cobre o site inteiro, menos estas
+ * duas telas.
  */
 export const CONTATO_DE_EMERGENCIA = {
   empresa: "JB Soluções Odontológicas",
-  whatsapp: "(11) 96341-7994",
+  /** Jeferson e Jackson, como em todo o site; o principal primeiro. */
+  contatos: [
+    { numero: "(11) 96341-7994", nome: "Jeferson" },
+    { numero: "(11) 98603-8421", nome: "Jackson" },
+  ],
   email: "comercial@jbsolucoesodontologicas.com.br",
 } as const;

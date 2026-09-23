@@ -46,6 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const s = await configuracoesPublicas();
   const anos = await anosDesde(s.empresa_desde);
+  const contatos = contatosWhatsapp(s);
 
   return (
     <>
@@ -90,9 +91,9 @@ export default async function HomePage() {
             </p>
 
             <OpcoesWhatsapp
-              contatos={contatosWhatsapp(s)}
+              contatos={contatos}
               mensagem={MENSAGEM_PADRAO}
-              onde="abertura"
+              posicao="abertura"
               className="entrada mt-8 [animation-delay:210ms]"
             />
 
@@ -102,7 +103,7 @@ export default async function HomePage() {
           </div>
 
           <div className="entrada [animation-delay:160ms]">
-            <DiagnosticoWhatsapp numero={s.whatsapp} />
+            <DiagnosticoWhatsapp contatos={contatos} />
           </div>
         </div>
       </section>
@@ -111,7 +112,7 @@ export default async function HomePage() {
 
       <FaixaAutorizada desde={s.empresa_desde} cidade={s.endereco_cidade} />
 
-      <GradeEquipamentos whatsapp={s.whatsapp} />
+      <GradeEquipamentos contatos={contatos} />
 
       {/* ------------------------------------------ quanto custa parar */}
       <section aria-labelledby="parada-titulo" className="bg-surface-muted py-16 md:py-24">
@@ -129,17 +130,17 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="jb-revela" style={{ "--i": 1 } as React.CSSProperties}>
-            <SimuladorParada whatsapp={s.whatsapp} />
+            <SimuladorParada contatos={contatos} />
           </div>
         </div>
       </section>
 
-      <ComoFunciona whatsapp={s.whatsapp} />
+      <ComoFunciona contatos={contatos} />
       <ClinicaOuBancada cidade={s.endereco_cidade} />
       <PorQueJb anos={anos} desde={s.empresa_desde} cidade={s.endereco_cidade} />
       <Duvidas cidade={s.endereco_cidade} horario={s.horario} />
       <ChamadaFinal
-        contatos={contatosWhatsapp(s)}
+        contatos={contatos}
         horario={s.horario}
         cidade={s.endereco_cidade}
       />
