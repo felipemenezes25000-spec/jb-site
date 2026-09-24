@@ -20,7 +20,9 @@ Antes de alterar o projeto, leia:
 
 Regras obrigatórias:
 
-- O **site público atual é assistência técnica, e só isso**. Não reintroduza catálogo, carrinho, checkout, comparação, frete ou compra dentro de `src/app/(site)`.
+- O **site público atual é de assistência técnica e manutenção de equipamentos odontológicos**, com serviços técnicos diretamente ligados à instalação/adequação do consultório. Não reintroduza catálogo, carrinho, checkout, comparação, frete ou compra dentro de `src/app/(site)`.
+- A grade pública de equipamentos é um **portfólio de assistência**, não uma vitrine comercial: cartão de equipamento usa imagem + nome, sem ficha técnica, preço, modelo comercial ou descrição de produto.
+- A JB também pode preparar e executar **infraestrutura hidráulica e de esgoto** necessária para consultórios/equipamentos odontológicos. Esse serviço exige **visita técnica ao local antes do orçamento**; nunca prometa preço remoto ou orçamento fechado sem vistoria.
 - As antigas rotas comerciais respondem `410 Gone` por decisão de produto. Não troque por redirecionamento indiscriminado para a home.
 - Modelos/histórico de comércio que ainda existam no banco ou backoffice são legado operacional; a existência deles não autoriza uma nova vitrine pública.
 - Se código legado de comércio continuar necessário internamente, a JB permanece **single seller**. Não introduza Seller, comissão, split ou payout.
