@@ -89,7 +89,6 @@ export function ComoFunciona({
           {PASSOS.map((passo, indice) => (
             <li
               key={passo.titulo}
-              data-etapa={passo.etapa}
               className="jb-fluxo-passo jb-revela"
               style={{ "--i": indice % 3 } as React.CSSProperties}
             >

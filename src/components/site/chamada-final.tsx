@@ -98,7 +98,7 @@ export function ChamadaFinal({
               style={{ "--i": 4 } as React.CSSProperties}
             />
 
-            <p className="jb-revela mt-4 text-xs font-semibold text-graf-500" style={{ "--i": 5 } as React.CSSProperties}>
+            <p className="jb-revela mt-4 text-xs font-semibold text-graf-700" style={{ "--i": 5 } as React.CSSProperties}>
               Você escolhe com quem falar e revisa a mensagem no WhatsApp antes de enviar.
             </p>
           </div>

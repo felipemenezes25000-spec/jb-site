@@ -7,26 +7,23 @@ import { ChamarWhatsapp } from "@/components/site/chamar-whatsapp";
    Na sua clínica ou na nossa bancada
 
    A seção explica a decisão técnica sem parecer um bloco institucional:
-   fotografia grande, bancada sobreposta e três pontos operacionais numerados.
+   fotografia grande, bancada sobreposta e três pontos operacionais.
    As imagens continuam ilustrativas; o texto não atribui a elas uma origem
    que não esteja documentada.
    ============================================================================ */
 
 const PONTOS = [
   {
-    numero: "01",
     icone: Stethoscope,
     titulo: "Avaliação na clínica",
     texto: "Quando o equipamento e o tipo de ocorrência permitem, a avaliação e o serviço podem acontecer no próprio consultório.",
   },
   {
-    numero: "02",
     icone: Wrench,
     titulo: "Bancada da JB",
     texto: "Quando o serviço pede bancada, a forma de retirada, avaliação e devolução é combinada com a clínica.",
   },
   {
-    numero: "03",
     icone: ClipboardCheck,
     titulo: "Serviço registrado",
     texto: "O atendimento e o que foi executado ficam registrados no histórico do equipamento.",
@@ -51,9 +48,11 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
             />
             <span
               aria-hidden
-              className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-graf-950/35 to-transparent"
+              className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-graf-950/85 via-graf-950/45 to-transparent"
             />
-            {/* Metade esquerda: a foto da bancada ocupa o canto de baixo à direita. */}
+            {/* Metade esquerda: a foto da bancada ocupa o canto de baixo à direita.
+                O véu escuro embaixo é o que deixa o branco legível sobre a
+                sala clara (sem ele, 2,3:1). */}
             <p className="absolute bottom-5 left-5 right-[52%] text-sm font-bold leading-relaxed text-white drop-shadow-sm sm:text-base">
               Atendimento definido conforme o equipamento e o tipo de serviço.
             </p>
@@ -96,14 +95,13 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
             {PONTOS.map((ponto, indice) => (
               <li
                 key={ponto.titulo}
-                data-numero={ponto.numero}
                 className="jb-clinica-ponto jb-revela flex gap-4 rounded-2xl border p-4 sm:p-5"
                 style={{ "--i": indice + 1 } as React.CSSProperties}
               >
                 <span className="relative z-[1] flex size-11 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100">
                   <ponto.icone className="size-5" aria-hidden />
                 </span>
-                <span className="relative z-[1] pr-10">
+                <span className="relative z-[1]">
                   <span className="block text-corpo font-extrabold text-graf-950">{ponto.titulo}</span>
                   <span className="mt-1 block text-sm leading-relaxed text-graf-600">{ponto.texto}</span>
                 </span>
