@@ -69,16 +69,16 @@ const POSICAO = ["0%", "100%"] as const;
 
 function ImagemDoPortfolio({ posicao }: { posicao: PosicaoSprite }) {
   return (
-    <span className="relative block h-32 overflow-hidden sm:h-36" aria-hidden>
+    <span className="relative flex h-32 items-center justify-center overflow-hidden sm:h-36" aria-hidden>
       <span
-        className="absolute inset-0 bg-contain bg-center bg-no-repeat transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.05]"
+        className="relative block size-28 shrink-0 bg-no-repeat transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.05] sm:size-32"
         style={{
           backgroundImage: `url('/site/equip/pdf/portfolio-sprite-${posicao.arquivo}.webp')`,
           backgroundSize: "200% 200%",
           backgroundPosition: `${POSICAO[posicao.x]} ${POSICAO[posicao.y]}`,
         }}
       />
-      <span className="absolute inset-x-[24%] bottom-0 h-3 rounded-[100%] bg-graf-950/10 blur-md transition-transform duration-500 group-hover:scale-x-90" />
+      <span className="absolute inset-x-[28%] bottom-0 h-3 rounded-[100%] bg-graf-950/10 blur-md transition-transform duration-500 group-hover:scale-x-90" />
     </span>
   );
 }
