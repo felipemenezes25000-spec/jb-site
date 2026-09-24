@@ -34,8 +34,8 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
             <Logo altura={40} />
           </div>
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-graf-600">
-            Assistência técnica para equipamentos odontológicos de todas as marcas, em{" "}
-            {s.endereco_cidade} e região, na clínica ou na nossa bancada.
+            Assistência e manutenção de equipamentos odontológicos de todas as marcas, em{" "}
+            {s.endereco_cidade} e região, além de infraestrutura hidráulica e de esgoto sob visita técnica.
           </p>
           <a
             href={LISTA_EVOXX}
@@ -100,7 +100,7 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
 
         <nav aria-labelledby="rodape-equipamentos">
           <h2 id="rodape-equipamentos" className="text-sm font-extrabold text-graf-950">
-            Conserto de equipamentos
+            Assistência e serviços
           </h2>
           <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-1">
             {PAGINAS_DE_EQUIPAMENTO.map((pagina) => (
@@ -114,6 +114,15 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                href="/#infraestrutura"
+                prefetch={false}
+                className="jb-footer-link foco-jb rounded font-semibold text-graf-700"
+              >
+                Infraestrutura hidráulica e esgoto
+              </Link>
+            </li>
           </ul>
         </nav>
 
