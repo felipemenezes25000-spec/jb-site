@@ -279,7 +279,19 @@ async function conferirRevelacao(pagina) {
         /* Bloco que já cruzou a linha do meio da tela: entrou pelo menos meia
            tela, bem além da faixa em que a revelação termina. */
         if (r.height === 0 || r.top > meio || r.bottom < meio) continue;
-        const opacidade = Number(getComputedStyle(el).opacity);
+        let opacidade = Number(getComputedStyle(el).opacity);
+        /* A linha do tempo de rolagem avança no quadro seguinte. Com a
+           máquina carregada, 120ms às vezes não bastam e o bloco aparecia
+           "congelado" em rotas e seções soltas. Antes de acusar, dois quadros
+           e mais um respiro: a revelação presa de verdade (seção com
+           `overflow-hidden`) continua presa depois disso. */
+        if (opacidade < 0.98) {
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          await esperar(400);
+          const agora = el.getBoundingClientRect();
+          if (agora.top > meio || agora.bottom < meio) continue;
+          opacidade = Number(getComputedStyle(el).opacity);
+        }
         vistos.add(el);
         if (opacidade < 0.98) {
           achados.push(`${el.tagName.toLowerCase()} "${(el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 40)}" em ${opacidade.toFixed(2)}`);

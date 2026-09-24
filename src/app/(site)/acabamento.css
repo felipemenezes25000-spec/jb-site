@@ -149,6 +149,14 @@
     width: 1.1rem;
     height: 1.1rem;
   }
+
+  /* A triagem é o par mais apertado (os botões dividem o cartão, que já tem
+     respiro próprio): 71px para "Jeferson". No Windows o nome ocupa 67,5px;
+     no Chromium do Linux do CI, 71,7px, e as reticências voltavam lá. Um
+     pixel a menos na fonte deixa folga nas duas plataformas. */
+  [data-jb-site="assistencia"] a[data-whatsapp^="diagnostico"] {
+    font-size: 0.9375rem;
+  }
 }
 
 /* ==========================================================================
