@@ -15,7 +15,8 @@ import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
    somente em `StatusAtendimento`, calculada a partir do horário configurado.
    ============================================================================ */
 
-export type AtalhoDoCabecalho = { rotulo: string; href: string };
+/** `largo`: só aparece a partir de 1280px, quando os seis atalhos cabem sem quebrar linha. */
+export type AtalhoDoCabecalho = { rotulo: string; href: string; largo?: boolean };
 
 export function CabecalhoSite({
   contatos,
@@ -35,7 +36,7 @@ export function CabecalhoSite({
           >
             <Logo altura={34} alturaMinima={28} prioridade />
           </Link>
-          <span className="hidden items-center gap-2 rounded-full border border-graf-200 bg-white/75 px-3 py-1.5 text-xs font-bold text-graf-700 shadow-card xl:inline-flex">
+          <span className="hidden items-center gap-2 rounded-full border border-graf-200 bg-white/75 px-3 py-1.5 text-xs font-bold text-graf-700 shadow-card min-[90rem]:inline-flex">
             <span className="flex size-6 items-center justify-center rounded-lg bg-jb-50 text-jb-700" aria-hidden>
               <Wrench className="size-3.5" />
             </span>
@@ -47,10 +48,10 @@ export function CabecalhoSite({
           <nav aria-label="Nesta página" className="hidden lg:block">
             <ul className="flex items-center gap-0.5">
               {atalhos.map((atalho) => (
-                <li key={atalho.href}>
+                <li key={atalho.href} className={atalho.largo ? "hidden xl:block" : undefined}>
                   <a
                     href={atalho.href}
-                    className="foco-jb rounded-lg px-3 py-2 text-sm font-semibold text-graf-700 transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-graf-50 hover:text-jb-700"
+                    className="foco-jb block whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold text-graf-700 transition-[background-color,color,transform] duration-200 hover:-translate-y-0.5 hover:bg-graf-50 hover:text-jb-700"
                   >
                     {atalho.rotulo}
                   </a>

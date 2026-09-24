@@ -118,6 +118,15 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
             ))}
             <li>
               <Link
+                href="/#equipamentos"
+                prefetch={false}
+                className="jb-footer-link foco-jb rounded font-semibold text-graf-700"
+              >
+                Todos os equipamentos
+              </Link>
+            </li>
+            <li className="col-span-2 sm:col-span-1">
+              <Link
                 href="/#infraestrutura"
                 prefetch={false}
                 className="jb-footer-link foco-jb rounded font-semibold text-graf-700"

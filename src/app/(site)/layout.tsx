@@ -24,10 +24,11 @@ import "./acabamento.css";
 
 const ATALHOS: AtalhoDoCabecalho[] = [
   { rotulo: "Equipamentos", href: "/#equipamentos" },
+  { rotulo: "Infraestrutura", href: "/#infraestrutura" },
   { rotulo: "Como funciona", href: "/#como-funciona" },
   { rotulo: "Todas as marcas", href: "/#autorizada" },
   { rotulo: "Dúvidas", href: "/#duvidas" },
-  { rotulo: "Contato", href: "/#contato" },
+  { rotulo: "Contato", href: "/#contato", largo: true },
 ];
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {

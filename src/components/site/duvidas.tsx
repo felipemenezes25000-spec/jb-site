@@ -16,11 +16,14 @@ export function Duvidas({
   cidade,
   horario,
   extras = [],
+  complementares = [],
 }: {
   cidade: string;
   horario: string;
   /** Perguntas de um equipamento, que vêm antes das gerais. */
   extras?: readonly Pergunta[];
+  /** Perguntas de outros serviços da página (infraestrutura, na home), depois das gerais. */
+  complementares?: readonly Pergunta[];
 }) {
   const gerais: Pergunta[] = [
     {
@@ -55,7 +58,11 @@ export function Duvidas({
   ];
   // "De qualquer marca?" do equipamento substitui o "todas as marcas?" geral.
   const temas = new Set(extras.map((item) => item.tema).filter(Boolean));
-  const perguntas = [...extras, ...gerais.filter((item) => !item.tema || !temas.has(item.tema))];
+  const perguntas = [
+    ...extras,
+    ...gerais.filter((item) => !item.tema || !temas.has(item.tema)),
+    ...complementares,
+  ];
 
   return (
     <section

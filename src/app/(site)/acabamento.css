@@ -1508,6 +1508,125 @@
 }
 
 /* ==========================================================================
+   Infraestrutura hidráulica e de esgoto
+
+   Papel milimetrado ao fundo, só na metade de cima e bem apagado: lembra
+   projeto técnico sem virar enfeite. As etapas são uma linha do tempo com
+   fio contínuo; a última (orçamento) leva o vermelho, porque é a regra.
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-infra-malha {
+  opacity: 0.5;
+  background-image: linear-gradient(rgb(17 19 21 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(17 19 21 / 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(120% 90% at 0% 0%, #000 0%, transparent 62%);
+}
+
+[data-jb-site="assistencia"] .jb-infra-situacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  padding: 0 0.85rem 0 0.7rem;
+  border: 1px solid rgb(17 19 21 / 0.1);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-graf-800);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+[data-jb-site="assistencia"] .jb-infra-regra {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgb(224 20 27 / 0.2);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #fff 0%, var(--color-jb-50) 140%);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+[data-jb-site="assistencia"] .jb-infra-regra-icone {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.8rem;
+  background: var(--color-jb-500);
+  color: #fff;
+  box-shadow: 0 14px 30px -18px rgb(224 20 27 / 0.8);
+}
+
+[data-jb-site="assistencia"] .jb-infra-cartao {
+  padding: 1.35rem;
+  border: 1px solid rgb(17 19 21 / 0.09);
+  border-radius: 1.5rem;
+  background: #fff;
+  box-shadow: 0 30px 80px -58px rgb(17 19 21 / 0.55);
+}
+
+[data-jb-site="assistencia"] .jb-infra-etapas {
+  display: grid;
+  gap: 1.1rem;
+}
+
+[data-jb-site="assistencia"] .jb-infra-etapa {
+  position: relative;
+  display: flex;
+  gap: 0.9rem;
+}
+
+/* O fio que liga um ícone ao próximo. */
+[data-jb-site="assistencia"] .jb-infra-etapa:not([data-ultima])::before {
+  content: "";
+  position: absolute;
+  top: 2.6rem;
+  bottom: -1.1rem;
+  left: calc(1.25rem - 1px);
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, rgb(17 19 21 / 0.14), rgb(17 19 21 / 0.06));
+}
+
+[data-jb-site="assistencia"] .jb-infra-etapa-icone {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgb(17 19 21 / 0.1);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-graf-800);
+}
+
+[data-jb-site="assistencia"] .jb-infra-etapa[data-ultima] .jb-infra-etapa-icone {
+  border-color: var(--color-jb-500);
+  background: var(--color-jb-500);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgb(224 20 27 / 0.1);
+}
+
+@media (min-width: 40rem) {
+  [data-jb-site="assistencia"] .jb-infra-cartao {
+    padding: 1.75rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  [data-jb-site="assistencia"] .jb-infra-cartao {
+    padding: 2rem;
+    border-radius: 1.75rem;
+  }
+}
+
+/* ==========================================================================
    Cenário de impacto (simulador)
    ========================================================================== */
 

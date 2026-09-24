@@ -9,7 +9,7 @@ import { Duvidas } from "@/components/site/duvidas";
 import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
-import { InfraestruturaClinica } from "@/components/site/infraestrutura-clinica";
+import { InfraestruturaClinica, PERGUNTA_DE_INFRAESTRUTURA } from "@/components/site/infraestrutura-clinica";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { SimuladorParada } from "@/components/site/simulador-parada";
@@ -23,9 +23,10 @@ import { anosDesde, configuracoesPublicas } from "@/lib/site-publico";
    Home: assistência técnica, e só isso
 
    Feita para quem chega de anúncio, no celular, com um equipamento parado.
-   Tudo leva ao WhatsApp: Jeferson ou Jackson na abertura, o diagnóstico, os
-   blocos de equipamento, o simulador, a chamada final, o cabeçalho grudado no
-   topo e a barra do pé do celular.
+   Tudo leva ao WhatsApp: Jeferson ou Jackson na abertura, o diagnóstico, o
+   portfólio de equipamentos, a infraestrutura (com visita antes do
+   orçamento), o simulador, a chamada final, o cabeçalho grudado no topo e a
+   barra do pé do celular.
 
    Nada aqui consulta produto, preço ou estoque. Os dados são configurações
    públicas, cacheadas e derrubadas pela etiqueta quando alguém salva o painel.
@@ -163,7 +164,11 @@ export default async function HomePage() {
       <ComoFunciona contatos={contatos} />
       <ClinicaOuBancada cidade={s.endereco_cidade} />
       <PorQueJb anos={anos} desde={s.empresa_desde} cidade={s.endereco_cidade} />
-      <Duvidas cidade={s.endereco_cidade} horario={s.horario} />
+      <Duvidas
+        cidade={s.endereco_cidade}
+        horario={s.horario}
+        complementares={[PERGUNTA_DE_INFRAESTRUTURA]}
+      />
       <ChamadaFinal
         contatos={contatos}
         horario={s.horario}
