@@ -1,4 +1,5 @@
 import { equipamentoPorId, type Equipamento, type IdEquipamento } from "@/lib/diagnostico";
+import { imagemDoPortfolio } from "@/lib/portfolio-assistencia";
 
 /* ============================================================================
    Uma página por equipamento, para o anúncio cair no lugar certo
@@ -25,7 +26,7 @@ import { equipamentoPorId, type Equipamento, type IdEquipamento } from "@/lib/di
 export type Pergunta = { pergunta: string; resposta: string; tema?: "marcas" };
 
 export type VisualDoEquipamento =
-  /** Recorte do equipamento em fundo branco (`public/site/equip`). */
+  /** Recorte do equipamento em fundo branco, o mesmo do portfólio (`public/site/equip/portfolio`). */
   | { tipo: "recorte"; src: string }
   /** Sem recorte bom: foto de bancada, cortada para o enquadramento. */
   | { tipo: "foto"; src: string; posicao: string };
@@ -47,12 +48,6 @@ export type PaginaDeEquipamento = {
   /** Perguntas do equipamento, antes das gerais da JB. */
   duvidas: readonly Pergunta[];
   visual: VisualDoEquipamento;
-};
-
-const FOTO_DA_BANCADA: VisualDoEquipamento = {
-  tipo: "foto",
-  src: "/site/bancada.webp",
-  posicao: "60% 40%",
 };
 
 /**
@@ -93,7 +88,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
           "Se o ciclo apresentou erro ou não concluiu, não considere o material esterilizado por conta própria. Siga o protocolo da clínica e as orientações do fabricante para reprocessamento, e chame a assistência para avaliar o equipamento.",
       },
     ],
-    visual: { tipo: "recorte", src: "/site/equip/autoclave.webp" },
+    visual: { tipo: "recorte", src: imagemDoPortfolio("autoclave") },
   },
   {
     slug: "compressor",
@@ -116,7 +111,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
           "A manutenção preventiva pode ser programada antes de uma falha. Chame no WhatsApp para a equipe orientar a avaliação e combinar a forma de atendimento.",
       },
     ],
-    visual: { tipo: "recorte", src: "/site/equip/compressor.webp" },
+    visual: { tipo: "recorte", src: imagemDoPortfolio("compressor") },
   },
   {
     slug: "bomba-de-vacuo",
@@ -139,7 +134,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
           "Nem sempre. A causa pode estar em diferentes pontos do sistema. A triagem registra onde o sintoma aparece e a avaliação técnica confirma a origem.",
       },
     ],
-    visual: { tipo: "recorte", src: "/site/equip/bomba-vacuo.webp" },
+    visual: { tipo: "recorte", src: imagemDoPortfolio("bomba-de-vacuo") },
   },
   {
     slug: "cadeira-odontologica",
@@ -162,7 +157,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
           "Por ser um equipamento instalado, a avaliação da cadeira costuma começar no consultório. Quando alguma peça ou conjunto precisa de bancada, a equipe explica a forma de atendimento antes.",
       },
     ],
-    visual: { tipo: "recorte", src: "/site/equip/cadeira.webp" },
+    visual: { tipo: "recorte", src: imagemDoPortfolio("cadeira-odontologica") },
   },
   {
     slug: "seladora",
@@ -178,7 +173,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       FOTO_OU_VIDEO,
     ],
     duvidas: [todasAsMarcas("seladora")],
-    visual: { tipo: "recorte", src: "/site/equip/seladora.webp" },
+    visual: { tipo: "recorte", src: imagemDoPortfolio("seladora") },
   },
   {
     slug: "destilador",
@@ -194,7 +189,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       FOTO_OU_VIDEO,
     ],
     duvidas: [todasAsMarcas("destilador")],
-    visual: FOTO_DA_BANCADA,
+    visual: { tipo: "recorte", src: imagemDoPortfolio("destilador") },
   },
   {
     slug: "lavadora-ultrassonica",
@@ -210,7 +205,7 @@ export const PAGINAS_DE_EQUIPAMENTO: readonly PaginaDeEquipamento[] = [
       FOTO_OU_VIDEO,
     ],
     duvidas: [todasAsMarcas("lavadora ultrassônica")],
-    visual: { tipo: "recorte", src: "/site/equip/lavadora.webp" },
+    visual: { tipo: "recorte", src: imagemDoPortfolio("lavadora-ultrassonica") },
   },
 ];
 

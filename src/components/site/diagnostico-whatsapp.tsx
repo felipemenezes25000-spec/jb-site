@@ -213,8 +213,8 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
                               src={imagem}
                               alt=""
                               fill
-                              sizes="44px"
-                              className="object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-110"
+                              sizes="64px"
+                              className="scale-[1.3] object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-[1.42]"
                             />
                           </span>
                         ) : (

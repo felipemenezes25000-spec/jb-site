@@ -1184,16 +1184,14 @@
 }
 
 /* ==========================================================================
-   Grade de equipamentos
-   ========================================================================== */
+   Grade de equipamentos (portfólio de assistência)
 
-@media (hover: hover) and (pointer: fine) {
-  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover {
-    transform: translateY(-7px);
-    border-color: rgb(224 20 27 / 0.28);
-    box-shadow: 0 28px 62px -36px rgb(17 19 21 / 0.46);
-  }
-}
+   Cartão fechado = foto + nome, e nada mais. A foto vem de fundo branco e
+   some no quadro com `mix-blend-multiply`; o quadro tem luz no centro e a
+   borda um tom mais fria, igual em todo cartão, para a grade ler como uma
+   série só. O nome reserva duas linhas: cartões fechados da mesma fileira
+   ficam da mesma altura, e o aberto cresce sem esticar os vizinhos.
+   ========================================================================== */
 
 [data-jb-site="assistencia"] #equipamentos {
   position: relative;
@@ -1217,44 +1215,223 @@
   position: relative;
 }
 
+/* Filtros por área. No celular, uma faixa que rola de lado e encosta nas
+   bordas da tela (o chip cortado é a pista de que há mais); do tablet em
+   diante, quebram linha. */
+[data-jb-site="assistencia"] .jb-portfolio-filtros {
+  display: flex;
+  gap: 0.5rem;
+  margin-inline: -1rem;
+  padding: 0.25rem 1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 1rem;
+  scrollbar-width: none;
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-filtros::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 25rem) {
+  [data-jb-site="assistencia"] .jb-portfolio-filtros {
+    margin-inline: -1.25rem;
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (min-width: 40rem) {
+  [data-jb-site="assistencia"] .jb-portfolio-filtros {
+    flex-wrap: wrap;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
+  }
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-filtro {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 0.7rem 0 1.05rem;
+  border: 1px solid rgb(17 19 21 / 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-graf-800);
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgb(17 19 21 / 0.04);
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-portfolio-filtro:hover {
+    border-color: rgb(224 20 27 / 0.35);
+    color: var(--color-jb-700);
+  }
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-filtro[aria-pressed="true"] {
+  border-color: var(--color-graf-950);
+  background: var(--color-graf-950);
+  color: #fff;
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-contagem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding-inline: 0.4rem;
+  border-radius: 999px;
+  background: var(--color-graf-100);
+  color: var(--color-graf-700);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-filtro[aria-pressed="true"] .jb-portfolio-contagem {
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+}
+
+/* Cartão */
 [data-jb-site="assistencia"] .jb-cartao-equipamento {
+  isolation: isolate;
+  padding: 0.4rem;
+  border-radius: 1.1rem;
+  border-color: rgb(17 19 21 / 0.09);
+  background: #fff;
+  box-shadow: inset 0 1px 0 #fff,
+    0 22px 54px -42px rgb(12 14 16 / 0.5);
   transition: transform 360ms var(--ease-out-quint),
     box-shadow 360ms var(--ease-out-quint),
     border-color 260ms ease;
-  isolation: isolate;
-  border-radius: 1.35rem;
-  border-color: rgb(17 19 21 / 0.095);
-  background: radial-gradient(circle at 90% 8%, rgb(224 20 27 / 0.035), transparent 10rem),
-    linear-gradient(180deg, #fff, #fcfcfd);
-  box-shadow: inset 0 1px 0 #fff,
-    0 22px 54px -42px rgb(12 14 16 / 0.5);
 }
 
-[data-jb-site="assistencia"] .jb-cartao-equipamento::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: auto 10% -18% 10%;
-  height: 34%;
-  border-radius: 999px;
-  background: rgb(224 20 27 / 0.09);
-  filter: blur(30px);
-  opacity: 0;
-  transition: opacity 360ms ease;
-  pointer-events: none;
+[data-jb-site="assistencia"] .jb-cartao-equipamento[data-portfolio="outro"] {
+  border-style: dashed;
+  border-color: rgb(17 19 21 / 0.22);
 }
 
-@media (hover: hover) {
+[data-jb-site="assistencia"] .jb-cartao-equipamento[data-aberto="true"] {
+  border-color: rgb(224 20 27 / 0.42);
+  box-shadow: 0 0 0 1px rgb(224 20 27 / 0.14),
+    0 30px 64px -40px rgb(12 14 16 / 0.5);
+}
+
+@media (hover: hover) and (pointer: fine) {
   [data-jb-site="assistencia"] .jb-cartao-equipamento:hover {
-    transform: translateY(-5px);
-    border-color: rgb(224 20 27 / 0.22);
+    transform: translateY(-4px);
+    border-color: rgb(224 20 27 / 0.24);
     box-shadow: inset 0 1px 0 #fff,
-        0 34px 72px -42px rgb(12 14 16 / 0.48);
+      0 34px 72px -42px rgb(12 14 16 / 0.48);
   }
 
-  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover::after {
-    opacity: 1;
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover .jb-portfolio-imagem {
+    transform: scale(1.045);
   }
+
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover .jb-portfolio-mais {
+    background: var(--color-jb-500);
+    color: #fff;
+  }
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-alvo:active .jb-portfolio-foto {
+  filter: brightness(0.97);
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-foto {
+  isolation: isolate;
+  border-radius: 0.8rem;
+  background: radial-gradient(90% 78% at 50% 44%, #fff 0%, #fbfbfc 52%, #eff0f2 100%);
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-imagem {
+  transform-origin: 50% 62%;
+  transition: transform 520ms var(--ease-out-quint);
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-mais {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-graf-700);
+  box-shadow: 0 1px 2px rgb(17 19 21 / 0.08), 0 0 0 1px rgb(17 19 21 / 0.06);
+  transition: transform 320ms var(--ease-out-quint), background-color 200ms ease, color 200ms ease;
+}
+
+[data-jb-site="assistencia"] .jb-cartao-equipamento[data-aberto="true"] .jb-portfolio-mais {
+  transform: rotate(45deg);
+  background: var(--color-jb-500);
+  color: #fff;
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-outro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 1.25rem;
+  background: var(--color-jb-50);
+  color: var(--color-jb-600);
+  box-shadow: inset 0 0 0 1px rgb(224 20 27 / 0.14);
+  translate: -50% -50%;
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-nome {
+  min-height: calc(2.44em + 1rem);
+  padding: 0.65rem 0.35rem 0.35rem;
+  color: var(--color-graf-950);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  hyphens: manual;
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-opcoes {
+  padding: 0.15rem 0.35rem 0.35rem;
+}
+
+[data-jb-site="assistencia"] .jb-portfolio-opcoes:not([hidden]) {
+  animation: jb-portfolio-abre 260ms var(--ease-out-quint) both;
+}
+
+@keyframes jb-portfolio-abre {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Celular e tablet, sem filtro, começam recolhidos nos equipamentos com
+   página própria e "Outro"; o resto continua no HTML e aparece no botão. */
+[data-jb-site="assistencia"] .jb-portfolio-ver-todos {
+  display: none;
 }
 
 @media (max-width: 39.99rem) {
@@ -1262,21 +1439,71 @@
     padding-block: 3.75rem;
   }
 
+  [data-jb-site="assistencia"] .jb-portfolio-grade[data-recolhida="true"] > li[data-recolhe] {
+    display: none;
+  }
+}
+
+@media (min-width: 40rem) and (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-portfolio-grade[data-recolhida="true"] > li[data-recolhe="sempre"] {
+    display: none;
+  }
+}
+
+@media (max-width: 63.99rem) {
+  [data-jb-site="assistencia"] .jb-portfolio-ver-todos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 3rem;
+    margin-top: 0.75rem;
+    border: 1px solid rgb(17 19 21 / 0.14);
+    border-radius: 1rem;
+    background: #fff;
+    color: var(--color-graf-900);
+    font-size: 0.9375rem;
+    font-weight: 800;
+    box-shadow: 0 1px 2px rgb(17 19 21 / 0.05);
+  }
+
+  [data-jb-site="assistencia"] .jb-portfolio-ver-todos:active {
+    background: var(--color-graf-50);
+  }
+}
+
+@media (min-width: 40rem) {
   [data-jb-site="assistencia"] .jb-cartao-equipamento {
-    border-radius: 1.05rem;
-    padding: 0.95rem;
+    padding: 0.5rem;
+    border-radius: 1.3rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-portfolio-foto {
+    border-radius: 0.95rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-portfolio-nome {
+    min-height: calc(2.44em + 1.25rem);
+    padding: 0.8rem 0.5rem 0.45rem;
+    font-size: 1rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-portfolio-opcoes {
+    padding: 0.2rem 0.5rem 0.5rem;
+  }
+}
+
+/* Seis colunas: de 1024 a 1279 o cartão tem ~150px e o nome volta a 15px. */
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  [data-jb-site="assistencia"] .jb-portfolio-nome {
+    font-size: 0.9375rem;
   }
 }
 
 @media (min-width: 90rem) {
   [data-jb-site="assistencia"] .jb-cartao-equipamento {
-    border-radius: 1.6rem;
-  }
-}
-
-@media (min-width: 90rem) and (hover: hover) and (pointer: fine) {
-  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover {
-    translate: 0 -3px;
+    border-radius: 1.45rem;
   }
 }
 
@@ -1708,6 +1935,16 @@
     font-size: clamp(2.35rem, 10vw, 3.25rem);
     line-height: 0.98;
   }
+}
+
+/* Quadro do equipamento na abertura da landing: a mesma luz neutra do
+   portfólio da home (centro branco, borda um tom mais fria), com um fio de
+   vermelho só no canto. O produto entra com `multiply`, então nada colorido
+   pode ficar atrás dele. */
+[data-jb-site="assistencia"] .jb-landing-estudio {
+  background:
+    radial-gradient(circle at 0% 0%, rgb(224 20 27 / 0.07), transparent 38%),
+    radial-gradient(85% 75% at 50% 48%, #fff 0%, #fbfbfc 55%, #eceef0 100%);
 }
 
 /* ==========================================================================
@@ -2542,6 +2779,21 @@
   [data-jb-site="assistencia"] .jb-autoridade-card,
   [data-jb-site="assistencia"] .jb-fluxo-passo {
     translate: none !important;
+  }
+
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover,
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover .jb-portfolio-imagem {
+    transform: none !important;
+  }
+
+  [data-jb-site="assistencia"] .jb-portfolio-imagem,
+  [data-jb-site="assistencia"] .jb-portfolio-mais,
+  [data-jb-site="assistencia"] .jb-portfolio-filtro {
+    transition: none !important;
+  }
+
+  [data-jb-site="assistencia"] .jb-portfolio-opcoes:not([hidden]) {
+    animation: none;
   }
 }
 

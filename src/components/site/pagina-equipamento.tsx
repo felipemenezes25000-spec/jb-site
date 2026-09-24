@@ -166,9 +166,9 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
  * cima: "todas as marcas" e "orçamento antes da troca" já abrem a faixa logo
  * abaixo, e repetidos aqui só disputavam espaço com a foto.
  *
- * Recorte de fundo branco entra com `mix-blend-multiply`, que some com o
- * branco da foto sobre o degradê; sem recorte bom (destilador), entra a foto
- * da bancada. Como no mobile a ação vem antes da imagem, ela não recebe
+ * Recorte de fundo branco (o mesmo do portfólio da home) entra com
+ * `mix-blend-multiply`, que some com o branco da foto sobre o degradê; o tipo
+ * "foto" fica para equipamento sem recorte bom, com a foto da bancada. Como no mobile a ação vem antes da imagem, ela não recebe
  * preload e não compete com tipografia, diagnóstico e WhatsApp na chegada.
  */
 function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
@@ -180,16 +180,16 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
       <div
         className={cn(
           "relative h-56 overflow-hidden rounded-3xl ring-1 ring-graf-950/5 sm:h-72 lg:h-[30rem]",
-          recorte ? "bg-gradient-to-br from-jb-50 via-white to-graf-50 shadow-card" : "bg-graf-100 shadow-raised",
+          recorte ? "jb-landing-estudio shadow-card" : "bg-graf-100 shadow-raised",
         )}
       >
         {recorte ? (
           <>
-            <span
-              aria-hidden
-              className="absolute left-1/2 top-1/2 size-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.16),transparent)]"
-            />
-            <div className="absolute inset-x-[8%] bottom-[12%] top-[6%]">
+            {/* Sem brilho vermelho atrás do produto: com `multiply`, o branco
+                de um tanque ou de uma autoclave deixava o rosa passar e o
+                equipamento parecia translúcido. A luz é neutra, a mesma do
+                portfólio da home. */}
+            <div className="absolute inset-[5%]">
               <Image
                 src={visual.src}
                 alt={pagina.palavraChave.charAt(0).toUpperCase() + pagina.palavraChave.slice(1)}
@@ -198,10 +198,8 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
                 className="object-contain mix-blend-multiply"
               />
             </div>
-            <span
-              aria-hidden
-              className="absolute inset-x-[26%] bottom-[9%] h-4 rounded-[100%] bg-graf-950/15 blur-md"
-            />
+            {/* Sem sombra desenhada aqui: a foto do portfólio já traz a
+                própria, colada no pé do equipamento. */}
           </>
         ) : (
           <Image
@@ -313,8 +311,8 @@ function OutrosEquipamentos({ atual }: { atual: string }) {
                         src={imagem}
                         alt=""
                         fill
-                        sizes="80px"
-                        className="jb-toque-foto object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
+                        sizes="96px"
+                        className="jb-toque-foto scale-[1.15] object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-[1.27]"
                       />
                     ) : (
                       <span className="flex size-14 items-center justify-center rounded-2xl bg-jb-50 text-jb-600">

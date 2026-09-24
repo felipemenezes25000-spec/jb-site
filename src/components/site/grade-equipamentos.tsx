@@ -1,119 +1,90 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown, Plus, Wrench } from "lucide-react";
 
-import { ICONE_DO_EQUIPAMENTO } from "@/components/site/icones-equipamento";
-import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
-import { EQUIPAMENTOS, montarMensagem, type Equipamento, type IdEquipamento } from "@/lib/diagnostico";
 import { caminhoDoEquipamento } from "@/lib/paginas-equipamento";
+import {
+  GRUPOS_DO_PORTFOLIO,
+  PORTFOLIO_DE_ASSISTENCIA,
+  idDeMedicao,
+  imagemDoPortfolio,
+  itensDoGrupo,
+  mensagemDoPortfolio,
+  type GrupoDoPortfolio,
+  type ItemDoPortfolio,
+} from "@/lib/portfolio-assistencia";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
    Equipamentos atendidos pela JB
 
-   A grade pública é um portfólio de assistência e manutenção, não um catálogo
-   comercial. Cada item mostra somente imagem + nome do tipo de equipamento.
-   Não há modelo, ficha técnica, preço nem descrição de venda.
+   Portfólio de assistência e manutenção, não vitrine: fechado, o cartão é
+   foto + nome do tipo de equipamento, e nada mais. O toque abre, dentro do
+   próprio cartão, Jeferson e Jackson com a mensagem já dizendo o equipamento
+   — e, quando existe, o caminho para a página daquele equipamento.
 
-   As imagens foram recortadas do portfólio técnico fornecido pela JB e reunidas
-   em sprites para evitar dezenas de downloads pequenos. Elas ilustram o tipo de
-   equipamento; não funcionam como selo de autorização de fabricante.
+   Os filtros por área (esterilização, ar e sucção…) só encurtam a lista: tudo
+   vem no HTML do servidor, e "Outro equipamento" fica sempre no fim, porque a
+   JB atende o que não está na grade. Os dados moram em
+   `@/lib/portfolio-assistencia`.
    ============================================================================ */
 
-const NOME_PUBLICO_DO_EQUIPAMENTO: Record<IdEquipamento, string> = {
-  autoclave: "Autoclave",
-  compressor: "Compressor odontológico",
-  "bomba-vacuo": "Bomba de vácuo",
-  cadeira: "Cadeira odontológica",
-  seladora: "Seladora",
-  destilador: "Destilador de água",
-  lavadora: "Lavadora ultrassônica",
-  outro: "Outro equipamento",
+const DESCRICAO_DO_ALVO = "assistência e manutenção com Jeferson ou Jackson no WhatsApp";
+
+/** Uma coluna de cartão em cada faixa: 2 no celular, 3 no tablet, 6 no desktop. */
+const TAMANHOS = "(min-width: 1440px) 214px, (min-width: 1024px) 15vw, (min-width: 640px) 30vw, 46vw";
+
+type Aberto = string | null;
+const OUTRO = "outro";
+
+/**
+ * Sem filtro, celular e tablet começam pelos equipamentos com página própria,
+ * mais "Outro": 7 + 1 fecham quatro fileiras de 2, e 8 + 1, três fileiras de 3.
+ * O resto continua no HTML e aparece no botão; o desktop mostra tudo.
+ */
+const VISIVEIS_NO_CELULAR = 7;
+const VISIVEIS_NO_TABLET = 8;
+
+/** Palavra longa demais para o cartão de 150px: quebra com hífen, não no meio da letra. */
+const QUEBRA_SUAVE: Record<string, string> = {
+  Fotopolimerizador: "Fotopolime­rizador",
 };
-
-type PosicaoSprite = { arquivo: 1 | 2 | 3 | 4; x: 0 | 1; y: 0 | 1 };
-
-type EquipamentoPortfolio = {
-  slug: string;
-  nome: string;
-  sprite: PosicaoSprite;
-};
-
-const SPRITE_DO_EQUIPAMENTO: Partial<Record<IdEquipamento, PosicaoSprite>> = {
-  autoclave: { arquivo: 1, x: 0, y: 0 },
-  compressor: { arquivo: 1, x: 1, y: 0 },
-  "bomba-vacuo": { arquivo: 1, x: 0, y: 1 },
-  cadeira: { arquivo: 1, x: 1, y: 1 },
-  seladora: { arquivo: 2, x: 0, y: 0 },
-  destilador: { arquivo: 2, x: 1, y: 0 },
-  lavadora: { arquivo: 2, x: 0, y: 1 },
-};
-
-const EQUIPAMENTOS_PORTFOLIO: readonly EquipamentoPortfolio[] = [
-  { slug: "pecas-de-mao", nome: "Peças de mão", sprite: { arquivo: 2, x: 1, y: 1 } },
-  { slug: "raio-x", nome: "Raio-X odontológico", sprite: { arquivo: 3, x: 0, y: 0 } },
-  { slug: "profilaxia", nome: "Ultrassom e profilaxia", sprite: { arquivo: 3, x: 1, y: 0 } },
-  { slug: "fotopolimerizador", nome: "Fotopolimerizador", sprite: { arquivo: 3, x: 0, y: 1 } },
-  { slug: "amalgamador", nome: "Amalgamador", sprite: { arquivo: 3, x: 1, y: 1 } },
-  { slug: "mini-equipo", nome: "Equipo odontológico", sprite: { arquivo: 4, x: 0, y: 0 } },
-  { slug: "refletor", nome: "Refletor odontológico", sprite: { arquivo: 4, x: 1, y: 0 } },
-  { slug: "mocho", nome: "Mocho odontológico", sprite: { arquivo: 4, x: 0, y: 1 } },
-  { slug: "articulador", nome: "Articulador", sprite: { arquivo: 4, x: 1, y: 1 } },
-];
-
-const POSICAO = ["0%", "100%"] as const;
-
-function ImagemDoPortfolio({ posicao }: { posicao: PosicaoSprite }) {
-  return (
-    <span className="relative flex h-32 items-center justify-center overflow-hidden sm:h-36" aria-hidden>
-      <span
-        className="relative block size-28 shrink-0 bg-no-repeat transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.05] sm:size-32"
-        style={{
-          backgroundImage: `url('/site/equip/pdf/portfolio-sprite-${posicao.arquivo}.webp')`,
-          backgroundSize: "200% 200%",
-          backgroundPosition: `${POSICAO[posicao.x]} ${POSICAO[posicao.y]}`,
-        }}
-      />
-      <span className="absolute inset-x-[28%] bottom-0 h-3 rounded-[100%] bg-graf-950/10 blur-md transition-transform duration-500 group-hover:scale-x-90" />
-    </span>
-  );
-}
-
-function mensagemDePortfolio(nome: string) {
-  return `Olá, JB! Vim pelo site e preciso de assistência e manutenção para ${nome.toLowerCase()}.`;
-}
 
 function Cartao({
-  equipamento,
-  contatos,
+  id,
+  nome,
   indice,
+  recolhe,
   aberto,
   alternar,
+  foto,
+  children,
 }: {
-  equipamento: Equipamento;
-  contatos: ContatoWhatsapp[];
+  id: string;
+  nome: string;
   indice: number;
+  /** Some da grade recolhida: no celular, ou no celular e no tablet. */
+  recolhe?: "celular" | "sempre";
   aberto: boolean;
   alternar: () => void;
+  foto: React.ReactNode;
+  children: React.ReactNode;
 }) {
-  const Icone = ICONE_DO_EQUIPAMENTO[equipamento.id];
-  const sprite = SPRITE_DO_EQUIPAMENTO[equipamento.id];
-  const outro = equipamento.id === "outro";
   const idOpcoes = useId();
-  const pagina = caminhoDoEquipamento(equipamento.id);
-  const nomePublico = NOME_PUBLICO_DO_EQUIPAMENTO[equipamento.id];
 
   return (
-    <li className="jb-revela" style={{ "--i": indice % 4 } as React.CSSProperties}>
+    <li className="jb-revela" data-recolhe={recolhe} style={{ "--i": indice % 6 } as React.CSSProperties}>
       <div
+        data-aberto={aberto}
+        data-portfolio={id}
         className={cn(
-          "jb-cartao-equipamento group relative flex h-full min-h-[12rem] flex-col overflow-clip rounded-2xl border bg-white p-5 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:shadow-pop sm:p-6",
-          outro ? "border-dashed border-graf-300 hover:border-jb-400" : "border-graf-200 hover:border-jb-300",
-          aberto && "border-jb-400 shadow-pop",
+          "jb-cartao-equipamento group relative flex h-full flex-col rounded-2xl border bg-white",
+          id === OUTRO ? "border-dashed border-graf-300" : "border-graf-200",
         )}
       >
         <button
@@ -121,132 +92,102 @@ function Cartao({
           onClick={alternar}
           aria-expanded={aberto}
           aria-controls={idOpcoes}
-          className="foco-jb absolute inset-0 z-[1] rounded-2xl active:bg-graf-950/[0.02]"
+          className="jb-portfolio-alvo foco-jb flex w-full flex-1 flex-col rounded-[inherit] text-left"
         >
-          <span className="sr-only">
-            {nomePublico}: assistência e manutenção com Jeferson ou Jackson no WhatsApp
+          <span className="jb-portfolio-foto relative block aspect-square w-full overflow-clip">
+            {foto}
+            <span aria-hidden className="jb-portfolio-mais">
+              <Plus className="size-4" />
+            </span>
+          </span>
+          <span className="jb-portfolio-nome block">
+            {QUEBRA_SUAVE[nome] ?? nome}
+            <span className="sr-only">: {DESCRICAO_DO_ALVO}</span>
           </span>
         </button>
 
-        {sprite ? (
-          <ImagemDoPortfolio posicao={sprite} />
-        ) : (
-          <span className="flex size-12 items-center justify-center rounded-xl bg-graf-100 text-graf-700 transition-colors group-hover:bg-jb-50 group-hover:text-jb-600">
-            <Icone className="jb-icone-balanca size-6" aria-hidden />
-          </span>
-        )}
-
-        <span className={cn("relative mt-auto block", sprite ? "pt-4" : "pt-8")}>
-          <span className="block text-bloco font-extrabold tracking-tight text-graf-950">
-            {nomePublico}
-          </span>
-          {aberto ? null : (
-            <span aria-hidden className="mt-3 inline-flex items-center gap-1.5 text-sm font-extrabold text-jb-600">
-              <MarcaWhatsapp className="size-4" />
-              {outro ? "Consultar assistência" : "Assistência e manutenção"}
-              <ChevronDown className="size-4 transition-transform duration-300 group-hover:translate-y-0.5" />
-            </span>
-          )}
-        </span>
-
-        <div id={idOpcoes} hidden={!aberto} className="relative z-[2] mt-4">
-          {aberto ? (
-            <>
-              <OpcoesWhatsapp
-                contatos={contatos}
-                mensagem={montarMensagem({ equipamento: equipamento.id })}
-                equipamento={equipamento.id}
-                posicao="secao"
-                tamanho="sm"
-                coluna
-              />
-              {pagina ? (
-                <Link
-                  href={pagina}
-                  prefetch={false}
-                  className="foco-jb mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-bold text-graf-700 underline-offset-4 hover:text-jb-700 hover:underline"
-                >
-                  Ver assistência técnica
-                  <span className="sr-only"> de {nomePublico.toLowerCase()}</span>
-                  <ArrowRight className="size-4" aria-hidden />
-                </Link>
-              ) : null}
-            </>
-          ) : null}
+        <div id={idOpcoes} hidden={!aberto} className="jb-portfolio-opcoes">
+          {aberto ? children : null}
         </div>
       </div>
     </li>
   );
 }
 
-function CartaoPortfolio({
-  item,
-  contatos,
-  indice,
-  aberto,
-  alternar,
-}: {
-  item: EquipamentoPortfolio;
-  contatos: ContatoWhatsapp[];
-  indice: number;
-  aberto: boolean;
-  alternar: () => void;
-}) {
-  const idOpcoes = useId();
+function OpcoesDoItem({ item, contatos }: { item: ItemDoPortfolio; contatos: ContatoWhatsapp[] }) {
+  const pagina = item.equipamento ? caminhoDoEquipamento(item.equipamento) : null;
 
   return (
-    <li className="jb-revela" style={{ "--i": indice % 4 } as React.CSSProperties}>
-      <div
-        className={cn(
-          "jb-cartao-equipamento group relative flex h-full min-h-[12rem] flex-col overflow-clip rounded-2xl border border-graf-200 bg-white p-5 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-jb-300 hover:shadow-pop sm:p-6",
-          aberto && "border-jb-400 shadow-pop",
-        )}
-      >
-        <button
-          type="button"
-          onClick={alternar}
-          aria-expanded={aberto}
-          aria-controls={idOpcoes}
-          className="foco-jb absolute inset-0 z-[1] rounded-2xl active:bg-graf-950/[0.02]"
+    <>
+      <OpcoesWhatsapp
+        contatos={contatos}
+        mensagem={mensagemDoPortfolio(item)}
+        equipamento={idDeMedicao(item)}
+        posicao="secao"
+        tamanho="sm"
+        coluna
+      />
+      {pagina ? (
+        <Link
+          href={pagina}
+          prefetch={false}
+          className="foco-jb mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-bold text-graf-700 underline-offset-4 hover:text-jb-700 hover:underline"
         >
-          <span className="sr-only">
-            {item.nome}: assistência e manutenção com Jeferson ou Jackson no WhatsApp
-          </span>
-        </button>
-
-        <ImagemDoPortfolio posicao={item.sprite} />
-
-        <span className="relative mt-auto block pt-4">
-          <span className="block text-bloco font-extrabold tracking-tight text-graf-950">{item.nome}</span>
-          {aberto ? null : (
-            <span aria-hidden className="mt-3 inline-flex items-center gap-1.5 text-sm font-extrabold text-jb-600">
-              <MarcaWhatsapp className="size-4" />
-              Assistência e manutenção
-              <ChevronDown className="size-4 transition-transform duration-300 group-hover:translate-y-0.5" />
-            </span>
-          )}
-        </span>
-
-        <div id={idOpcoes} hidden={!aberto} className="relative z-[2] mt-4">
-          {aberto ? (
-            <OpcoesWhatsapp
-              contatos={contatos}
-              mensagem={mensagemDePortfolio(item.nome)}
-              equipamento={item.slug}
-              posicao="secao"
-              tamanho="sm"
-              coluna
-            />
-          ) : null}
-        </div>
-      </div>
-    </li>
+          Ver página
+          <span className="sr-only"> de assistência para {item.naMensagem}</span>
+          <ArrowRight className="size-4" aria-hidden />
+        </Link>
+      ) : null}
+    </>
   );
 }
 
 export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] }) {
-  const [aberto, setAberto] = useState<IdEquipamento | null>(null);
-  const [abertoPortfolio, setAbertoPortfolio] = useState<string | null>(null);
+  const [grupo, setGrupo] = useState<GrupoDoPortfolio | null>(null);
+  const [aberto, setAberto] = useState<Aberto>(null);
+  const [anuncio, setAnuncio] = useState("");
+  const [listaToda, setListaToda] = useState(false);
+  const grade = useRef<HTMLUListElement>(null);
+
+  const visiveis = itensDoGrupo(grupo);
+  const recolhida = grupo === null && !listaToda;
+
+  function filtrar(proximo: GrupoDoPortfolio | null) {
+    setGrupo(proximo);
+    setAberto(null);
+    const quantos = itensDoGrupo(proximo).length;
+    const rotulo = GRUPOS_DO_PORTFOLIO.find((candidato) => candidato.id === proximo)?.rotulo;
+    setAnuncio(rotulo ? `${quantos} equipamentos em ${rotulo}, mais outro equipamento.` : `Todos os ${quantos} equipamentos.`);
+  }
+
+  function mostrarTudo() {
+    /* O foco segue para o primeiro cartão que apareceu, não volta ao topo. */
+    const primeiroEscondido = [...(grade.current?.querySelectorAll<HTMLElement>("li[data-recolhe]") ?? [])].find(
+      (item) => item.offsetParent === null,
+    );
+    setListaToda(true);
+    setAnuncio(`Todos os ${PORTFOLIO_DE_ASSISTENCIA.length} equipamentos.`);
+    requestAnimationFrame(() => {
+      primeiroEscondido?.querySelector<HTMLButtonElement>(".jb-portfolio-alvo")?.focus();
+    });
+  }
+
+  function alternar(id: string) {
+    setAberto((atual) => (atual === id ? null : id));
+  }
+
+  /* Esc fecha o cartão aberto e devolve o foco ao próprio cartão. */
+  function aoTeclar(evento: React.KeyboardEvent<HTMLUListElement>) {
+    if (evento.key !== "Escape" || !aberto) return;
+    const alvo = grade.current?.querySelector<HTMLButtonElement>(`[data-portfolio="${aberto}"] .jb-portfolio-alvo`);
+    setAberto(null);
+    alvo?.focus();
+  }
+
+  const filtros: { id: GrupoDoPortfolio | null; rotulo: string; quantos: number }[] = [
+    { id: null, rotulo: "Todos", quantos: PORTFOLIO_DE_ASSISTENCIA.length },
+    ...GRUPOS_DO_PORTFOLIO.map((item) => ({ ...item, quantos: itensDoGrupo(item.id).length })),
+  ];
 
   return (
     <section
@@ -255,46 +196,105 @@ export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] })
       className="scroll-mt-20 bg-white py-16 md:py-24"
     >
       <div className="container-jb">
-        <p className="sobretitulo jb-revela">Assistência técnica especializada</p>
+        <p className="sobretitulo jb-revela">Portfólio de assistência</p>
         <h2 id="equipamentos-titulo" className="text-section texto-forte jb-revela mt-3 max-w-3xl">
-          Equipamentos que atendemos. <span className="text-jb-600">Assistência e manutenção.</span>
+          Equipamentos que a JB atende. <span className="text-jb-600">Manutenção e assistência técnica.</span>
         </h2>
         <p
           className="texto-guia jb-revela mt-4 max-w-2xl text-graf-600"
           style={{ "--i": 1 } as React.CSSProperties}
         >
-          Selecione o equipamento para falar com a equipe técnica. O site mostra somente o tipo do equipamento, sem catálogo, modelo ou ficha comercial.
+          Toque no equipamento e fale direto com Jeferson ou Jackson. A mensagem já chega com o nome
+          dele.
         </p>
 
-        <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {EQUIPAMENTOS.map((equipamento, indice) => (
+        <div className="jb-revela mt-7" style={{ "--i": 2 } as React.CSSProperties}>
+          <div
+            role="group"
+            aria-label="Filtrar equipamentos por área"
+            data-rolagem-horizontal
+            className="jb-portfolio-filtros"
+          >
+            {filtros.map((filtro) => (
+              <button
+                key={filtro.id ?? "todos"}
+                type="button"
+                aria-pressed={grupo === filtro.id}
+                onClick={() => filtrar(filtro.id)}
+                className="jb-portfolio-filtro foco-jb"
+              >
+                {filtro.rotulo}
+                <span className="jb-portfolio-contagem" aria-hidden>
+                  {filtro.quantos}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          {anuncio}
+        </p>
+
+        <ul
+          ref={grade}
+          onKeyDown={aoTeclar}
+          data-recolhida={recolhida}
+          className="jb-portfolio-grade mt-6 grid grid-cols-2 items-start gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6 lg:gap-3 xl:gap-4"
+        >
+          {visiveis.map((item, indice) => (
             <Cartao
-              key={equipamento.id}
-              equipamento={equipamento}
-              contatos={contatos}
+              key={item.slug}
+              id={item.slug}
+              nome={item.nome}
               indice={indice}
-              aberto={aberto === equipamento.id}
-              alternar={() => {
-                setAbertoPortfolio(null);
-                setAberto((atual) => (atual === equipamento.id ? null : equipamento.id));
-              }}
-            />
+              recolhe={
+                indice >= VISIVEIS_NO_TABLET ? "sempre" : indice >= VISIVEIS_NO_CELULAR ? "celular" : undefined
+              }
+              aberto={aberto === item.slug}
+              alternar={() => alternar(item.slug)}
+              foto={
+                <Image
+                  src={imagemDoPortfolio(item.slug)}
+                  alt=""
+                  fill
+                  sizes={TAMANHOS}
+                  className="jb-portfolio-imagem jb-toque-foto object-contain mix-blend-multiply"
+                />
+              }
+            >
+              <OpcoesDoItem item={item} contatos={contatos} />
+            </Cartao>
           ))}
 
-          {EQUIPAMENTOS_PORTFOLIO.map((item, indice) => (
-            <CartaoPortfolio
-              key={item.slug}
-              item={item}
+          <Cartao
+            id={OUTRO}
+            nome="Outro equipamento"
+            indice={visiveis.length}
+            aberto={aberto === OUTRO}
+            alternar={() => alternar(OUTRO)}
+            foto={
+              <span className="jb-portfolio-outro" aria-hidden>
+                <Wrench className="size-7" />
+              </span>
+            }
+          >
+            <OpcoesWhatsapp
               contatos={contatos}
-              indice={EQUIPAMENTOS.length + indice}
-              aberto={abertoPortfolio === item.slug}
-              alternar={() => {
-                setAberto(null);
-                setAbertoPortfolio((atual) => (atual === item.slug ? null : item.slug));
-              }}
+              mensagem={mensagemDoPortfolio(null)}
+              equipamento={OUTRO}
+              posicao="secao"
+              tamanho="sm"
+              coluna
             />
-          ))}
+          </Cartao>
         </ul>
+
+        {recolhida ? (
+          <button type="button" onClick={mostrarTudo} className="jb-portfolio-ver-todos foco-jb">
+            Ver todos os {PORTFOLIO_DE_ASSISTENCIA.length} equipamentos
+            <ChevronDown className="size-4" aria-hidden />
+          </button>
+        ) : null}
       </div>
     </section>
   );
