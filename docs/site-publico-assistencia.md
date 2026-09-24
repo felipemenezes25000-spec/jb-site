@@ -1,7 +1,7 @@
 # Site público JB — assistência técnica
 
 > Fonte curta de verdade para o produto público atual.  
-> Atualizado em 23/09/2026.
+> Atualizado em 24/09/2026.
 
 ## Decisão de produto
 
@@ -53,15 +53,38 @@ A home deve continuar priorizando:
 4. Jeferson e Jackson;
 5. diagnóstico em 3 toques;
 6. fotografia técnica;
-7. equipamentos atendidos — a grade é a única lista de equipamentos da home; o cartão aberto leva também à landing do equipamento;
-8. impacto potencial de parada, apresentado como cenário e não previsão;
-9. processo;
-10. clínica ou bancada;
-11. autoridade baseada em fatos;
-12. FAQ;
-13. fechamento com WhatsApp.
+7. portfólio de equipamentos atendidos — a grade é a única lista de equipamentos da home; o cartão aberto leva também à landing do equipamento, quando ela existe;
+8. infraestrutura hidráulica e de esgoto, com visita técnica antes do orçamento;
+9. impacto potencial de parada, apresentado como cenário e não previsão;
+10. processo;
+11. clínica ou bancada;
+12. autoridade baseada em fatos;
+13. FAQ (com a pergunta de infraestrutura no fim);
+14. fechamento com WhatsApp.
 
 No mobile, ação e triagem vêm antes da fotografia quando isso reduz fricção.
+
+O cabeçalho da home leva Equipamentos, Infraestrutura, Como funciona, Todas as marcas, Dúvidas e Contato. Entre 1024 e 1279px, "Contato" sai do menu (continua no rodapé e nos dois WhatsApps do cabeçalho) e o selo "Assistência técnica odontológica" só aparece a partir de 1440px: nenhum atalho quebra linha.
+
+## Portfólio de equipamentos
+
+Dados em `src/lib/portfolio-assistencia.ts`; grade em `src/components/site/grade-equipamentos.tsx`.
+
+- Cartão fechado é **foto + nome do tipo de equipamento**, e nada mais: sem modelo, capacidade, ficha, preço, marca em destaque ou descrição. Um "+" discreto no canto indica que abre.
+- O toque abre, dentro do cartão, Jeferson e Jackson com a mensagem "Olá, JB! Vim pelo site e preciso de assistência e manutenção para {equipamento}." — e "Ver página" quando o equipamento tem landing. Sem landing, não se inventa uma. Esc fecha e devolve o foco; um cartão aberto por vez.
+- 17 tipos, mais "Outro equipamento" sempre no fim. Filtros por área (Esterilização, Ar e sucção, Consultório, Clínico e laboratório) só encurtam a lista; tudo vem no HTML do servidor.
+- Sem filtro, o celular começa com os 7 equipamentos que têm landing + "Outro" (4 fileiras) e o tablet com 8 + "Outro" (3 fileiras); "Ver todos os 17 equipamentos" mostra o resto e leva o foco ao primeiro cartão revelado. O desktop (6 colunas a partir de 1024px) mostra tudo.
+- Fotos em `public/site/equip/portfolio/<slug>.webp`, todas no mesmo quadro: 1000×1000, fundo branco, produto centrado com o mesmo tamanho percebido, 8–35 KB. Elas somem no quadro com `mix-blend-multiply` — por isso **nada colorido pode ficar atrás do produto** (um brilho vermelho deixava o tanque branco do compressor translúcido).
+- Origem: fotos da linha EVOXX enviadas pela JB e recortes do portfólio técnico de 2013. Adesivo de fabricante legível no cartão ou na landing foi apagado da foto (o "EVOXX 40L" do tanque, o adesivo do equipo): a JB conserta todas as marcas, e a foto ilustra o tipo.
+- A triagem da abertura, a grade e as landings usam a mesma foto (`imagemDoEquipamento`).
+
+## Infraestrutura hidráulica e de esgoto
+
+A JB prepara e executa a estrutura hidráulica e de esgoto necessária para instalar ou adequar consultórios e equipamentos. A regra comercial não muda: **contato → visita técnica no local → levantamento → orçamento**. A seção (`#infraestrutura`) mostra essa linha do tempo, o aviso "Orçamento só depois da visita técnica" e Jeferson/Jackson com a mensagem de visita. Nunca publicar preço, valor fechado, prazo ou escopo sem vistoria. A mesma regra está na pergunta das Dúvidas da home e no rodapé.
+
+## Marcas, autorizadas e revendas
+
+`src/lib/credenciais-de-marca.ts` separa três listas que não se misturam: **marca atendida**, **assistência autorizada** e **revenda autorizada**. "Autorizada" só é publicada com `fonte` oficial do fabricante em https (`autorizacoesVerificaveis`); marca atendida nunca vira selo. Hoje: EVOXX como assistência autorizada, com a lista oficial. O levantamento das outras marcas entra ali, na categoria certa, quando chegar com comprovação.
 
 Uma prova aparece uma vez por trecho da página. Selo sobre foto que repete a faixa logo abaixo ("todas as marcas", "orçamento antes da troca") sai, na home e nas landings.
 
