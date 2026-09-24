@@ -9,13 +9,14 @@ import { Duvidas } from "@/components/site/duvidas";
 import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
-import { InfraestruturaClinica, PERGUNTA_DE_INFRAESTRUTURA } from "@/components/site/infraestrutura-clinica";
+import { InfraestruturaClinica } from "@/components/site/infraestrutura-clinica";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { SimuladorParada } from "@/components/site/simulador-parada";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
 import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
+import { PERGUNTA_DE_INFRAESTRUTURA } from "@/lib/infraestrutura";
 import { JsonLd, localNegocioJsonLd, metadataDePagina, organizacaoJsonLd } from "@/lib/seo";
 import { anosDesde, configuracoesPublicas } from "@/lib/site-publico";
 

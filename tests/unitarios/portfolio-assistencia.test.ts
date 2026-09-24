@@ -3,7 +3,6 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { MENSAGEM_VISITA_TECNICA, PERGUNTA_DE_INFRAESTRUTURA } from "@/components/site/infraestrutura-clinica";
 import {
   CREDENCIAIS,
   autorizacoesVerificaveis,
@@ -11,6 +10,11 @@ import {
   type Credencial,
 } from "@/lib/credenciais-de-marca";
 import { EQUIPAMENTOS } from "@/lib/diagnostico";
+import {
+  ETAPAS_DE_INFRAESTRUTURA,
+  MENSAGEM_VISITA_TECNICA,
+  PERGUNTA_DE_INFRAESTRUTURA,
+} from "@/lib/infraestrutura";
 import { PAGINAS_DE_EQUIPAMENTO } from "@/lib/paginas-equipamento";
 import {
   GRUPOS_DO_PORTFOLIO,
@@ -125,6 +129,9 @@ describe("infraestrutura hidráulica e de esgoto", () => {
       expect(texto).not.toMatch(/R\$|a partir de|grátis|gratuit|em até \d|garantia/i);
     }
     expect(MENSAGEM_VISITA_TECNICA).toMatch(/orçamento é preparado após a avaliação no local/i);
+    const etapas = ETAPAS_DE_INFRAESTRUTURA.map((etapa) => etapa.titulo);
+    expect(etapas.indexOf("Visita técnica no local")).toBeLessThan(etapas.length - 1);
+    expect(etapas.at(-1)).toMatch(/^Orçamento/);
   });
 });
 
