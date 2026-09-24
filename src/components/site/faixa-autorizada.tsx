@@ -1,6 +1,6 @@
 import { ArrowUpRight, BadgeCheck, CalendarCheck2, FileCheck2, MapPin } from "lucide-react";
 
-import { LISTA_EVOXX } from "@/components/site/rodape-site";
+import { LISTA_EVOXX } from "@/lib/credenciais-de-marca";
 
 /* ============================================================================
    Todas as marcas, e a autorização como credencial

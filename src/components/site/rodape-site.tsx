@@ -6,13 +6,11 @@ import { MarcaWhatsapp } from "@/components/site/marca-whatsapp";
 import { Logo } from "@/components/ui/logo";
 import { algumDestino, destinosDeMedicao } from "@/lib/analytics/destinos";
 import { contatosWhatsapp, saudarPeloNome } from "@/lib/contatos-whatsapp";
+import { ROTULO_DA_CATEGORIA, autorizacoesVerificaveis } from "@/lib/credenciais-de-marca";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 import { PAGINAS_DE_EQUIPAMENTO } from "@/lib/paginas-equipamento";
 import { formatarTelefone, telHref, whatsappHref } from "@/lib/format";
 import { enderecoCompleto, type SettingsMap } from "@/lib/settings";
-
-/** Lista oficial da EVOXX, onde qualquer um confere a autorização da JB. */
-export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9668";
 
 /* ============================================================================
    Rodapé do site de assistência
@@ -20,7 +18,8 @@ export const LISTA_EVOXX = "https://evoxx.com.br/assistencia/?estado=SP&cidade=9
    Fecha a experiência com contraste alto e todos os canais úteis. Continua
    sendo operacional: WhatsApp dos dois atendentes com nome e número, o
    telefone fixo da JB, e-mail, endereço, horário, páginas de equipamento e a
-   fonte oficial da autorização EVOXX.
+   fonte oficial de cada autorização (`@/lib/credenciais-de-marca`): só entra
+   selo de "autorizada" que tenha página do fabricante para conferir.
    ============================================================================ */
 
 export function RodapeSite({ s }: { s: SettingsMap }) {
@@ -37,15 +36,18 @@ export function RodapeSite({ s }: { s: SettingsMap }) {
             Assistência e manutenção de equipamentos odontológicos de todas as marcas, em{" "}
             {s.endereco_cidade} e região, além de infraestrutura hidráulica e de esgoto sob visita técnica.
           </p>
-          <a
-            href={LISTA_EVOXX}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="jb-footer-badge foco-jb mt-5 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors"
-          >
-            <BadgeCheck className="size-4 text-jb-500" aria-hidden />
-            Assistência técnica autorizada EVOXX
-          </a>
+          {autorizacoesVerificaveis().map((credencial) => (
+            <a
+              key={`${credencial.categoria}-${credencial.marca}`}
+              href={credencial.fonte}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="jb-footer-badge foco-jb mt-5 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors"
+            >
+              <BadgeCheck className="size-4 text-jb-500" aria-hidden />
+              {ROTULO_DA_CATEGORIA[credencial.categoria]} {credencial.marca}
+            </a>
+          ))}
         </div>
 
         <div>
