@@ -167,8 +167,13 @@ export default async function CasesPage() {
           descricao="As sete etapas, na ordem. É o mesmo processo em toda ordem de serviço, e é dele que sai o registro que fica no histórico do equipamento."
         />
         <Grade colunas={{ base: 1, sm: 2, lg: 3 }} espaco="sm" como="ol" className="mt-7">
-          {ETAPAS.map((etapa) => (
-            <li key={etapa.numero}>
+          {ETAPAS.map((etapa, indice) => (
+            /* Sete etapas não fecham grade de 2 nem de 3: a última, o
+               registro, ocupa a fileira toda em vez de sobrar sozinha. */
+            <li
+              key={etapa.numero}
+              className={indice === ETAPAS.length - 1 ? "sm:col-span-2 lg:col-span-3" : undefined}
+            >
               <Cartao className="jb-case-etapa relative h-full overflow-hidden rounded-[1.35rem] p-5 sm:p-6">
                 <span className="label-mono text-jb-600">{etapa.numero}</span>
                 <h3 className="mt-3 text-corpo font-extrabold text-graf-950">{etapa.titulo}</h3>
