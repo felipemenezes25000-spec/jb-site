@@ -9,6 +9,7 @@ import { Duvidas } from "@/components/site/duvidas";
 import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
+import { InfraestruturaClinica } from "@/components/site/infraestrutura-clinica";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { SimuladorParada } from "@/components/site/simulador-parada";
@@ -134,6 +135,7 @@ export default async function HomePage() {
       <FaixaAutorizada desde={s.empresa_desde} cidade={s.endereco_cidade} />
 
       <GradeEquipamentos contatos={contatos} />
+      <InfraestruturaClinica contatos={contatos} />
 
       {/* ------------------------------------------ quanto custa parar */}
       <section aria-labelledby="parada-titulo" className="jb-secao-parada bg-surface-muted py-16 md:py-24">
