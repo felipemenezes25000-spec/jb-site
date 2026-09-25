@@ -4,6 +4,16 @@ Por que o código é assim. Cada item registra a decisão, a alternativa que foi
 descartada e o custo de mudar de ideia depois. Serve para quem chega e pensa
 "isso está errado" — pode estar, mas leia o motivo antes.
 
+**Desde 22/09/2026 o site não vende** (`f420606`). Vitrine, checkout,
+pagamento, frete e a área do cliente saíram; o que ficou é assistência técnica,
+com o WhatsApp na frente e o painel atrás. Os itens que só existiam por causa
+da loja — 5, 6, 7, 11, 12, 21, 22, 24 e 26 — estão marcados como
+**histórico**: o código que eles descrevem saiu, mas o motivo fica, porque é o
+primeiro lugar que alguém vai ler se a venda voltar, e porque várias das lições
+valem para o resto do código. Os que mudaram só em parte ganharam uma nota com o
+que vale hoje. A numeração não muda: outros documentos citam os itens pelo
+número.
+
 ---
 
 ## 1. Vendedor único, não marketplace
@@ -17,6 +27,10 @@ estoque é um só, a numeração de documento é global (não por vendedor), e o
 prontuário do equipamento pode assumir que quem vendeu e quem dá assistência são
 a mesma empresa. Se um dia houver um segundo vendedor, quase tudo em
 `src/lib/pedido.ts` e `src/lib/codigos.ts` precisa ser revisto.
+
+Hoje: `src/lib/pedido.ts` saiu com a loja, e a JB não vende mais pelo site. A
+regra continua de pé — está também no `AGENTS.md` — e vale para o dia em que a
+venda voltar.
 
 ---
 
@@ -74,7 +88,12 @@ usado, com `GREATEST` para nunca andar para trás.
 
 ---
 
-## 5. Snapshot no item do pedido
+## 5. Snapshot no item do pedido — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`).** Não há mais pedido nem checkout;
+`OrderItem` continua no schema, com os snapshots já gravados, até a migração que
+apaga as tabelas da loja. O motivo abaixo vale para qualquer documento de venda
+que voltar a existir.
 
 `OrderItem` copia nome, SKU, marca, modelo, condição, foto e preço unitário no
 momento da compra, em vez de só apontar para `Product`.
@@ -86,7 +105,13 @@ para o prontuário — mas o que se mostra ao cliente é o snapshot.
 
 ---
 
-## 6. Estoque baixado com `UPDATE` condicional, dentro da transação do pedido
+## 6. Estoque baixado com `UPDATE` condicional, dentro da transação do pedido — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`).** Não há mais estoque nem pedido: o
+`UPDATE` abaixo morava em `src/lib/pedido-base.ts`, que saiu
+(`git show f420606^:src/lib/pedido-base.ts`). A lição — comparar e escrever no
+mesmo comando, e deixar o Postgres serializar — vale para qualquer contador que
+duas requisições possam disputar.
 
 ```sql
 UPDATE "Product" SET "stock" = "stock" - $1
@@ -108,7 +133,13 @@ código e um lock explícito para segurar.
 
 ---
 
-## 7. Duas identidades de login, criptograficamente separadas
+## 7. Duas identidades de login, criptograficamente separadas — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`).** Hoje existe **uma** identidade: a
+equipe (`User`, cookie `jb_staff`). A área do cliente saiu,
+`src/lib/auth-cliente.ts` foi apagado e `Customer` ficou como cadastro no
+painel, sem senha em uso. O raciocínio abaixo é o que deve voltar junto se o
+cliente voltar a ter login.
 
 `User` (equipe) e `Customer` (cliente) são tabelas, cookies e chaves de
 assinatura diferentes. A chave do cliente é derivada: `AUTH_SECRET:cliente`.
@@ -135,10 +166,10 @@ serverless, com conexão pooled, isso importa.
 
 Custo assumido: **não dá para revogar uma sessão específica**. Mudar
 `AUTH_SECRET` derruba todo mundo, e é o único botão de pânico que existe. Por
-isso a sessão da equipe dura só 8 horas (a do cliente, 30 dias, porque o risco
-é menor e a fricção de relogar num site de compra é alta). Se um dia for preciso
-revogar sessão individual, entra uma tabela de sessões — e o custo de leitura
-volta junto.
+isso a sessão da equipe dura só 8 horas. (A do cliente durava 30 dias, porque o
+risco era menor e a fricção de relogar num site de compra é alta; saiu com a
+área do cliente, em 22/09/2026.) Se um dia for preciso revogar sessão
+individual, entra uma tabela de sessões — e o custo de leitura volta junto.
 
 ---
 
@@ -146,8 +177,9 @@ volta junto.
 
 O `proxy.ts` (que nesta versão do Next é o antigo `middleware.ts`) olha apenas a
 **presença** do cookie para redirecionar visita anônima. Ele não valida
-assinatura. A guarda de verdade é `exigirArea` / `exigirCliente` /
-`exigirNivel`, na própria página ou ação.
+assinatura. A guarda de verdade é `exigirArea` / `exigirEdicao` /
+`exigirNivel`, na própria página ou ação. (Até 22/09/2026 havia também
+`exigirCliente`, da área do cliente, que saiu.)
 
 Um cookie `jb_staff` com lixo dentro passa pelo proxy e é recusado depois. Isso é
 proposital: validar JWT no proxy custaria uma operação de cripto em toda
@@ -173,13 +205,22 @@ Descartado: uma camada de rotas `POST /api/...` só para o formulário conversar
 com o banco. Seria código de transporte sem regra de negócio, com validação
 duplicada nos dois lados e um `fetch` a mais para errar.
 
-As rotas de API que existem são as que **precisam** existir: webhook (quem chama
-é uma máquina), upload (corpo multipart grande), captcha (resposta binária) e
-download de documento (resposta de arquivo com autorização).
+As rotas de API que existem são as que **precisam** existir: a fila (quem chama
+é o cron), upload (corpo multipart grande), mídia privada e download de
+documento (resposta de arquivo com autorização) e captcha (resposta binária —
+sobrou dos formulários públicos, e hoje nenhuma página o usa). O webhook de
+pagamento, que estava nesta lista porque quem o chamava era uma máquina, saiu
+com a loja em 22/09/2026.
 
 ---
 
-## 11. Um único adapter de pagamento por trás de uma interface
+## 11. Um único adapter de pagamento por trás de uma interface — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`).** `src/lib/pagamento/` (a interface, o
+simulado e o adapter do Mercado Pago, que nunca foi ligado em produção) e
+`/api/pagamento/simular` foram apagados. Sobra `PAYMENT_PROVIDER` no portão de
+ambiente e no CSP, e o portão ainda recusa `mock` em produção. As duas regras
+abaixo são as que um provedor novo teria de seguir.
 
 `ProvedorPagamento` tem quatro métodos e nenhuma menção a adquirente.
 `provedorPagamento()` escolhe a implementação pelo ambiente.
@@ -198,7 +239,13 @@ divergiria do caminho real em três semanas, e o bug apareceria só em produçã
 
 ---
 
-## 12. Só o webhook aprova pagamento
+## 12. Só o webhook aprova pagamento — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`).** `POST /api/pagamento/webhook` foi
+apagado, e o sistema de hoje não cobra nem registra pagamento. A regra continua
+no `AGENTS.md`: pagamento só se confirma por fonte confiável, nunca pela página
+de retorno do navegador. O código antigo está em
+`git show f420606^:src/app/api/pagamento/webhook/route.ts`.
 
 Nem a tela, nem o retorno do navegador depois do banco, nem um botão. O
 navegador pode ser fechado, a rede pode cair, e a URL de retorno pode ser
@@ -247,6 +294,10 @@ resposta das páginas mais visitadas — em troca de fechar `'unsafe-inline'` nu
 site que não injeta HTML de terceiro em lugar nenhum (o HTML vindo do CMS passa
 por sanitização em `@/lib/html`).
 
+A loja saiu em 22/09/2026, e o argumento vale igual para o que ficou: a home, as
+sete páginas de equipamento, os cases e a Central Técnica são conteúdo público,
+o mesmo para quem chega de anúncio e para quem chega de busca.
+
 Decisão relacionada: **uma única fonte de verdade**. O `proxy.ts` não manda CSP.
 Se os dois mandassem políticas diferentes, o navegador aplicaria a **interseção**
 — tudo que uma libera e a outra não, cai — e o site quebraria sem erro visível no
@@ -258,7 +309,9 @@ Hoje é experimental, por isso está desligado.
 
 Armadilha registrada: `headers()` roda em tempo de **build**. `PAYMENT_PROVIDER`
 e `NODE_ENV` precisam existir no ambiente de build, não só no de execução —
-mudar o provedor sem refazer o build não muda o CSP.
+mudar o provedor sem refazer o build não muda o CSP. Com a loja fora,
+`PAYMENT_PROVIDER` é sobra: só decide se o CSP libera os domínios do Mercado
+Pago, e em produção deve ficar sem definir.
 
 ---
 
@@ -279,13 +332,21 @@ vira arquivo executável.
 
 ## 16. Documento privado servido por rota, nunca por URL pública
 
-`/minha-jb/documentos/[id]/baixar` consulta filtrando por `id` **e**
-`customerId` da sessão. Um id adivinhado devolve 404 igual a um id inexistente —
-sem revelar que o documento existe para outra pessoa.
+Hoje só a equipe baixa documento: `/admin/documentos/[id]/baixar` exige a área
+`clientes` (`exigirArea("clientes")`, a mesma guarda da ficha do cliente, de
+onde os links saem) e grava cada download na trilha de auditoria. Não há filtro
+por dono, porque quem tem a área de clientes vê a ficha inteira.
 
-Quando o arquivo está no Blob, a rota redireciona; quando está em disco, o
-caminho é resolvido e conferido contra a raiz de uploads, para nenhuma sequência
-`..` sair da pasta.
+Até 22/09/2026 havia também a rota do cliente,
+`/minha-jb/documentos/[id]/baixar`, que consultava filtrando por `id` **e**
+`customerId` da sessão: um id adivinhado devolvia 404 igual a um id
+inexistente, sem revelar que o documento existia para outra pessoa. Saiu com a
+área do cliente; é o desenho a repetir se o cliente voltar a baixar documento.
+
+A rota não redireciona para o storage: `respostaDeArquivo` (`src/lib/upload.ts`)
+devolve os bytes, de onde quer que o arquivo esteja, e o endereço do Blob nunca
+sai do servidor. Quando está em disco, o caminho é resolvido e conferido contra
+a raiz de uploads, para nenhuma sequência `..` sair da pasta.
 
 ---
 
@@ -297,8 +358,9 @@ vira até 20. Serve para segurar formulário abusado e robô preguiçoso; **não
 segura ataque distribuído, e o arquivo diz isso em voz alta no topo.
 
 Por isso a regra do projeto: **onde já existe registro em banco, o banco ganha**.
-Login de cliente e de equipe contam tentativas na tabela `LoginAttempt`, que é
-compartilhada entre instâncias e sobrevive a um redeploy.
+O login da equipe — o único que sobrou desde 22/09/2026 — conta tentativas na
+tabela `LoginAttempt`, que é compartilhada entre instâncias e sobrevive a um
+redeploy.
 
 A troca por Redis/Upstash já está preparada: basta implementar
 `ArmazenamentoDeLimite` e usar `checarLimiteEm`, que é a mesma decisão com
@@ -306,18 +368,24 @@ contrato assíncrono. Nenhum chamador muda de forma.
 
 ---
 
-## 18. Fila de mensagens que não envia nada (ainda)
+## 18. Fila de mensagens, com o envio separado de quem pede
 
-`enfileirar()` grava `OutboundMessage` com status `pendente` e **não envia**. O
-envio real é trabalho de um worker que ainda não existe.
+`enfileirar()` grava `OutboundMessage` com status `pendente` e **não envia** na
+mesma chamada. Quando este item foi escrito, o envio era trabalho de um worker
+que ainda não existia.
 
-Isso é intencional na forma, não só na falta: quem chama — um checkout, uma
-mudança de status — não pode ficar esperando rede de provedor de e-mail. A fila
-desacopla, dá retentativa e dá deduplicação (`dedupeKey`).
+Isso é intencional na forma, não só na falta: quem chama — um envio de
+orçamento, uma visita agendada — não pode ficar esperando rede de provedor de
+e-mail. A fila desacopla, dá retentativa e dá deduplicação (`dedupeKey`).
 
-O que falta é o consumidor. `mensagensPendentes` e `concluirMensagem` já são a
-interface que ele vai usar. Enquanto ele não existe, o efeito prático está
-listado no README, em "O que ainda não está pronto".
+O consumidor existe desde 05/09/2026: `src/lib/mensageria.ts`, que usa
+`mensagensPendentes` e `concluirMensagem` — a interface que a fila já expunha —
+e reserva cada linha antes de enviar, para duas execuções não mandarem o mesmo
+e-mail. Ele tenta logo depois da resposta (`after`, em `enfileirar`), e o que
+ficar pendente sai no cron diário de `/api/fila` ou no botão de
+`/admin/mensagens`. Só o canal `email` tem provedor (a Resend); sem credencial,
+a mensagem fica `simulado`. Ver `docs/operacao.md`, "O cron diário e as tarefas
+que não têm cron".
 
 Detalhe do schema: `OutboundMessage` guarda canal, destinatário, template, chave
 de deduplicação e status — **não** guarda assunto nem corpo. O corpo é devolvido
@@ -348,7 +416,7 @@ mexe em OS.
 ## 20. Português em tudo, inclusive no código
 
 Nomes de variável, função, componente, tipo e comentário são em português do
-Brasil: `Botao`, `Campo`, `lerCarrinho`, `criarPedido`, `formatarPreco`. As
+Brasil: `Botao`, `Campo`, `abrirChamado`, `concluirOS`, `formatarPreco`. As
 únicas exceções são os nomes vindos do Prisma (`Order`, `WorkOrder`,
 `priceCents`), que são o schema, e as APIs do framework.
 
@@ -359,7 +427,13 @@ serviço" significam coisas específicas nesse negócio, e traduzir para
 
 ---
 
-## 21. Vitrine e inventário são listas diferentes
+## 21. Vitrine e inventário são listas diferentes — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`).** `src/lib/catalogo.ts`, com os filtros
+abaixo, foi apagado, e as rotas de vitrine respondem 410. A lição sobrevive à
+loja: "está publicado" e "vale a pena mostrar primeiro" são perguntas
+diferentes, e responder as duas com o mesmo filtro produz número certo na tela
+errada.
 
 `src/lib/catalogo.ts` guarda quatro filtros nomeados em vez de um só
 `PUBLICADO`: `UNIDADE_VENDIDA`, `DISPONIVEL` e `VITRINE` ao lado dele. A
@@ -390,7 +464,15 @@ publicadas" com 2 cartões na tela deixou de ser possível.
 
 ---
 
-## 22. Cadastro duplicado é problema de banco, corrigido em dois lugares
+## 22. Cadastro duplicado é problema de banco, corrigido em dois lugares — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`),** e as duas camadas abaixo foram
+junto: `src/lib/homonimos.ts` e `scripts/unificar-duplicatas.ts` foram
+apagados, e as rotas de categoria e marca respondem 410. `Category` ficou, como
+tipo de equipamento no painel, e sem a camada de exibição um par publicado
+aparece duas vezes nas escolhas de categoria. O banco do preview já foi
+unificado; o estado de cada banco e o que fazer está em `docs/operacao.md`,
+"Cadastros duplicados de categoria e marca".
 
 O catálogo nasceu de três cargas diferentes e delas sobraram duas categorias
 "Biossegurança" e duas marcas "Schuster". Para quem visita não existe "o
@@ -423,6 +505,14 @@ que a JB tirou do ar.
 
 ## 23. Acabamento se prende a gancho declarado, nunca à estrutura da árvore
 
+**O exemplo é da loja, a regra continua.** O cabeçalho descrito abaixo saiu em
+22/09/2026 (`f420606`), e o do site de hoje é
+`src/components/site/cabecalho-site.tsx`. As folhas citadas também já não
+existem: `header-premium.css` tinha sido fundida em `src/app/cabecalho.css`,
+que continua importada em `src/app/layout.tsx` — mas nenhum componente declara
+mais os ganchos dela (`data-jb-premium-header`, `.jb-logo`, `.jb-busca-topo`…),
+então hoje ela não casa com nada.
+
 O cabeçalho ganhou uma camada de acabamento em CSS separado
 (`header-premium.css`, `cabecalho-home-flagship.module.css`). A primeira versão
 dela selecionava por posição — `> div:first-of-type > div > a:first-child` para
@@ -430,7 +520,7 @@ o logotipo, `div.absolute.inset-x-0.top-full` para o painel do mega menu — e
 isso é a forma de estilo que quebra sem avisar: basta alguém envolver o logo num
 `span` para o acabamento sumir, sem erro em lugar nenhum, sem teste vermelho.
 
-Hoje todo seletor se prende a um gancho declarado no JSX:
+A versão corrigida prendia todo seletor a um gancho declarado no JSX:
 `data-jb-premium-header`, `data-jb-home-header-v2`, `.jb-logo`,
 `.jb-busca-topo`, `.jb-cta-topo`, `.jb-mega-painel`, `.jb-promo-ticker`. O
 gancho é contrato: quem mexe no JSX vê o atributo e sabe que alguém depende
@@ -440,13 +530,19 @@ A mesma regra vale para **medida**: reserva de espaço no cabeçalho não é
 porcentagem da janela. A faixa de menus da home ficou 85px por cima do bloco da
 conta porque estava centrada em `left: 44%` com `width: min(42vw, 46rem)` —
 dois valores que não sabem nada sobre onde as ações começam, ainda mais com a
-largura do bloco variando conforme o nome de quem entrou. Agora o componente
-mede as duas pontas com um `ResizeObserver` e publica `--jb-topo-esq` e
-`--jb-topo-dir`; o CSS reserva o que foi medido.
+largura do bloco variando conforme o nome de quem entrou. O componente passou a
+medir as duas pontas com um `ResizeObserver` e publicar `--jb-topo-esq` e
+`--jb-topo-dir`, e o CSS a reservar o que foi medido.
 
 ---
 
-## 24. Checkout tem casca própria — e o atributo que ela quase perdeu
+## 24. Checkout tem casca própria — e o atributo que ela quase perdeu — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`).** O grupo `(checkout)`, o `(vitrine)` e
+o `(loja)` foram apagados; o site de hoje tem um grupo público só, `(site)`. A
+regra prática do fim vale para qualquer grupo novo. E o atributo do título
+ficou órfão: nenhuma casca declara mais `data-jb-publico`, e as regras de
+`globals.css` que o procuram não casam com nada.
 
 `/checkout` e `/escolher-entrega` saíram de `(vitrine)` para o grupo
 `(checkout)`. A casca é mínima de propósito: marca, selo de compra segura,
@@ -490,7 +586,14 @@ O canto da foto ficou idêntico; o dedo ganhou os 8px que faltavam. O padrão a
 copiar já existia no projeto: o tamanho `sm` do botão usa
 `min-h-10 pointer-coarse:min-h-11` — 40px com mouse, 44px com dedo.
 
-## 26. Repetição previsível vale mais que economia que muda de página
+O cartão de produto saiu com a loja, em 22/09/2026; a regra e o tamanho `sm` do
+botão continuam.
+
+## 26. Repetição previsível vale mais que economia que muda de página — histórico
+
+**A loja saiu em 22/09/2026 (`f420606`),** e a ficha de produto foi junto. A
+frase do fim vale para as sete páginas de equipamento de hoje, que
+compartilham um desenho só (`src/components/site/pagina-equipamento.tsx`).
 
 A ficha de produto mostrava 4 das 5–6 especificações de decisão na dobra e
 repetia a lista inteira 1.100px abaixo, dentro de "Especificações técnicas".

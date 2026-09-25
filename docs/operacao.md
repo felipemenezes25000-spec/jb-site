@@ -66,19 +66,22 @@ comentada em `.env.example`):
 | `AUTH_SECRET` | sim, e diferente da de desenvolvimento |
 | `NEXT_PUBLIC_SITE_URL` | sim |
 | `BLOB_READ_WRITE_TOKEN` | sim, na prática — em serverless o disco é efêmero |
-| `PAYMENT_PROVIDER` | sim, e nunca `mock` |
-| `MERCADO_PAGO_ACCESS_TOKEN` | quando `PAYMENT_PROVIDER=mercadopago` |
-| `MERCADO_PAGO_WEBHOOK_SECRET` | idem, para validar a assinatura |
-| `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` | idem, para o cartão no navegador |
+| `CRON_SECRET` | sim — sem ela, `/api/fila` responde 503 e o cron diário não processa nada |
+| `RESEND_API_KEY` e `EMAIL_FROM` | para o e-mail sair de verdade; sem as duas, cada mensagem fica `simulado` |
+| `PAYMENT_PROVIDER` | **não defina.** Sobra da loja: `mock` reprova o build de produção |
 | `JBPREV_DATABASE_URL` | **não. Nunca defina em produção.** |
+
+`MERCADO_PAGO_ACCESS_TOKEN`, `MERCADO_PAGO_WEBHOOK_SECRET` e
+`NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` saíram com a loja: nenhum código as lê. O
+`.env.example` ainda as traz comentadas.
 
 Duas armadilhas de build, ambas já mordidas:
 
 1. **`next.config.ts` lê `PAYMENT_PROVIDER` em tempo de build**, para montar o
-   CSP (o SDK e os domínios do Mercado Pago só entram na política quando ele é o
-   provedor). Mudar a variável sem refazer o build **não** muda o CSP, e o
-   sintoma é o SDK sendo bloqueado sem erro no servidor — só no console do
-   navegador.
+   CSP: o SDK e os domínios do Mercado Pago só entram na política quando ele
+   vale `mercadopago`. É resto da loja — não há mais SDK nenhum para carregar —,
+   mas enquanto a leitura existir vale a regra: mudar a variável sem refazer o
+   build **não** muda o CSP.
 2. **`postinstall` roda `prisma generate`.** Se o cliente do Prisma parecer
    desatualizado depois de mexer no schema, é isso que precisa rodar de novo.
 
@@ -139,6 +142,13 @@ migração falha com erro que não parece ser sobre isso.
 | `pnpm db:demo:limpar` | remove tudo o que os dois seeds de demonstração criaram | — |
 | `pnpm db:vitrine` | catálogo de demonstração da vitrine: 12 equipamentos com ficha, foto e destaque; arquiva o catálogo demo anterior em vez de apagar | **não** |
 
+`db:demo`, `db:demo:operacao` e `db:vitrine` ainda gravam nas tabelas da loja
+— marcas, produtos, unidades físicas, pedido, pagamento, cupom —, que continuam
+no schema até a migração que as apaga. O site não mostra esse lado, e o painel
+só o toca nos leitores que sobraram (listados em `docs/dominio.md`); o que os
+seeds criam de cliente, equipamento, chamado, OS, orçamento e contrato continua
+enchendo o painel.
+
 Os dois seeds de demonstração se **recusam a rodar** com `NODE_ENV=production`,
 a menos que exista `PERMITIR_DEMO`. Não defina essa variável em produção.
 
@@ -160,62 +170,50 @@ lugar nenhum além do hash.
 
 ## Cadastros duplicados de categoria e marca
 
-Sintoma na tela: duas opções com o mesmo nome na barra de filtros, duas
-pastilhas iguais nos atalhos, duas placas "Schuster" na parede de marcas, duas
-opções idênticas na escolha do tipo de equipamento ao abrir chamado.
+**O script que corrigia isso saiu com a loja.** `scripts/unificar-duplicatas.ts`
+e os comandos `pnpm duplicatas:prever` e `pnpm duplicatas:unificar` foram
+apagados em `f420606`, junto com `src/lib/homonimos.ts`, que juntava homônimos
+na exibição.
 
-Causa: `Category` e `Brand` têm `slug` único, não `name`. O catálogo foi
-carregado três vezes — site em PHP (`prisma/seed.ts`), protótipo aprovado
-(`prisma/catalogo-demo.json`) e demonstração de operação
+Causa, que continua valendo: `Category` e `Brand` têm `slug` único, não `name`.
+O catálogo foi carregado três vezes — site em PHP (`prisma/seed.ts`), protótipo
+aprovado (`prisma/catalogo-demo.json`) e demonstração de operação
 (`prisma/seed-demo.ts`) — e ficou com `bioseguranca` + `biosseguranca` e
 `schuster` + `demo-schuster`.
 
-A loja pública já junta cadastros de mesmo nome ao exibir, então **o site fica
-correto mesmo sem esta limpeza**. O que ela conserta é o cadastro: enquanto
-houver dois registros, o painel continua oferecendo os dois na hora de publicar
-um equipamento, e o problema volta a nascer a cada produto novo.
+Onde isso ainda aparece:
 
-```bash
-pnpm duplicatas:prever     # imprime o plano; não altera nada
-pnpm duplicatas:unificar   # aplica
-```
+- **Categoria** é o tipo de equipamento. Com as duas publicadas, o painel
+  mostra duas "Biossegurança" na escolha de categoria em
+  `/admin/assistencia/novo` e `/admin/equipamentos/novo`, e as duas na lista de
+  `/admin/categorias`. O site público não lista categoria.
+- **Marca** ficou só no banco: a tela de marcas e a parede de marcas saíram, e
+  nenhuma tela lista `Brand`.
 
-O que ele faz: elege como canônico o cadastro com mais equipamentos publicados
-(empate resolve por `order` e depois pelo mais antigo), move produtos, chamados
-e equipamentos de cliente para ele e **despublica** o duplicado.
+Estado dos bancos: o do **preview foi unificado em 08/09/2026**, com o script
+antigo, e o duplicado ficou despublicado. O **banco local** continua duplicado
+de propósito: é onde os seeds rodam, e eles recriam o par a cada
+`pnpm db:seed` + `pnpm db:vitrine`.
 
-O que ele **não** faz: apagar linha. `published: false` mantém o registro no
-painel; apagar levaria junto, por `SetNull`, o histórico de quem apontava para
-ele. Também não junta grafias diferentes — "Biosegurança" com um "s" continua
-sendo outro cadastro, porque corrigir grafia é trabalho de
-`scripts/conteudo-categorias.ts` e juntar por semelhança esconderia o erro em
-vez de mostrá-lo.
+Se o par voltar a incomodar num banco que importa, não há comando pronto. Em
+`/admin/categorias` dá para arquivar a duplicada (o botão alterna `published`),
+o que a tira das escolhas do painel — mas não move os chamados e equipamentos
+que apontam para ela. O script antigo, que movia os vínculos para a canônica,
+está em `git show f420606^:scripts/unificar-duplicatas.ts`; ele importava
+`src/lib/homonimos.ts`, que também saiu, então não roda como está.
 
-**Contra o preview**, puxe as variáveis daquele ambiente antes de rodar e apague
-o arquivo depois — ele traz a credencial do Neon:
-
-```bash
-vercel env pull .env.preview --environment=preview --git-branch=plataforma
-# rode com DATABASE_URL apontando para o DATABASE_URL_UNPOOLED de lá
-rm .env.preview
-```
-
-**Depois de unificar, o preview precisa reconstruir.** As páginas de categoria
-são pré-geradas a partir das publicadas, então `/categoria/<slug-antigo>`
-continua servindo o HTML anterior até a próxima construção. Com a construção
-nova ela sai da lista de rotas pré-geradas, cai no caminho dinâmico e
-redireciona para a homônima que ficou.
-
-O banco do preview foi unificado em 08/09/2026. O banco local de
-desenvolvimento continua duplicado de propósito: é onde os seeds rodam, e eles
-recriam o par a cada `pnpm db:seed` + `pnpm db:vitrine`.
+A regra que ele seguia continua boa para quem refizer: não apagar linha
+(`published: false` mantém o registro; apagar levaria junto, por `SetNull`, o
+histórico de quem apontava para ele) e não juntar grafias diferentes —
+"Biosegurança" com um "s" é outro cadastro, e corrigir grafia é trabalho de
+`scripts/conteudo-categorias.ts`.
 
 ---
 
 ## Numeração fora de sincronia
 
-Sintoma: erro de violação de unicidade em `number` ao criar pedido, OS,
-orçamento, chamado, contrato ou ticket.
+Sintoma: erro de violação de unicidade em `number` ao criar chamado, OS,
+orçamento ou contrato — os quatro prefixos que o sistema ainda emite.
 
 Causa: alguma linha entrou sem passar por `proximoCodigo` — importação,
 restauração de backup parcial, `INSERT` manual — e o contador em
@@ -232,102 +230,35 @@ uma linha por prefixo (`JB`, `OS`, `ORC`, `AT`, `CT`, `SUP`).
 
 ## Quando o webhook de pagamento falha
 
-O webhook é `POST /api/pagamento/webhook`. É o **único** lugar em que um
-pagamento vira "pago". Ele fica fora do matcher do `proxy.ts` de propósito: um
-redirecionamento ou um cabeçalho a mais no caminho pode fazer o provedor marcar
-a notificação como falha e reenviar em laço.
+**Não há mais webhook de pagamento.** `POST /api/pagamento/webhook`,
+`POST /api/pagamento/simular`, `/admin/pagamentos` (com o botão **Consultar**) e
+o bloco de pagamento manual de `/admin/pedidos/[id]` saíram com a loja, em
+22/09/2026 (`f420606`). O sistema de hoje não cobra nem registra pagamento: o
+orçamento de reparo é aprovado na conversa com o cliente e a equipe registra a
+decisão no painel (ver `docs/dominio.md`, "Orçamento").
 
-### 1. Descobrir em que passo parou
+Sobrou, até a migração que apaga as tabelas da loja:
 
-Os códigos de resposta contam a história:
+- `Payment` e `PaymentEvent` no schema, com o que já foi gravado;
+- a exclusão de `api/pagamento/webhook` no `matcher` do `src/proxy.ts`, para
+  uma rota que não existe mais;
+- a leitura de `PAYMENT_PROVIDER` no CSP e no portão de ambiente (ver
+  "Deploy", acima).
 
-| Resposta | Significado |
-|---|---|
-| `400 Notificação inválida` | assinatura não confere ou corpo ilegível. **Nada foi tocado.** Confira `MERCADO_PAGO_WEBHOOK_SECRET` — é a causa mais comum depois de trocar credencial. |
-| `500 Não foi possível ler a notificação` | `lerWebhook` lançou. Veja o log com o prefixo `[webhook]`. |
-| `200 { ignorado: "pagamento desconhecido" }` | o `externalId` não existe neste banco. Normal quando a notificação é de outro ambiente (sandbox apontando para produção, ou vice-versa). Responder 200 encerra a reentrega. |
-| `200 { repetido: true }` | evento já processado. É o caminho de idempotência funcionando. |
-| `500 Falha ao processar o evento` | o efeito falhou depois do registro. O código **apaga a linha do `PaymentEvent`** para que a reentrega do provedor volte a valer. Não é preciso fazer nada além de deixar o provedor reenviar — mas investigue o log. |
-
-### 2. Forçar a reconciliação sem esperar o provedor
-
-Existe, no painel, a consulta manual ao provedor: `/admin/pagamentos/[id]`, botão
-**Consultar** (`reconsultarPagamento`). Ela pergunta o estado ao provedor
-(`consultar(externalId)`), grava a resposta e, se for `aprovado`, chama
-`confirmarPagamento`. O `PaymentEvent` gerado usa chave determinística
-(`consulta:<externalId>:<status>`), então reconsultar dez vezes não polui o
-histórico.
-
-O botão só aparece quando o pagamento tem `externalId`, não é do método
-`manual` e o provedor configurado não é o de teste — não há a quem perguntar nos
-outros casos.
-
-**Essa é a ferramenta certa** quando o cliente pagou e o pedido não avançou. Ela
-consulta o provedor — não confia na tela nem no cliente.
-
-### 3. Recebimento por fora do site
-
-Pagamento em dinheiro, transferência ou maquininha: use o bloco de pagamento
-manual em `/admin/pedidos/[id]`. Ele cria um `Payment` com método `manual`, já
-aprovado, e chama `confirmarPagamento`. Exige nível `gestor` ou acima
-(`PODE.confirmarPagamentoManual`).
-
-### 4. Em desenvolvimento e preview
-
-Sem adquirente contratado não há quem chame o webhook. Use
-`POST /api/pagamento/simular`:
-
-```bash
-curl -X POST http://localhost:3000/api/pagamento/simular \
-  -H 'content-type: application/json' \
-  -d '{"externalId":"mock_xxxxxxxx","status":"aprovado"}'
-```
-
-Status aceitos: `aprovado`, `recusado`, `expirado`, `cancelado`, `estornado`,
-`em_analise`, `pendente`.
-
-A rota responde **404** — comportando-se como se não existisse — se o ambiente
-for produção, se o provedor configurado não for o de teste, ou se o pagamento
-alvo não tiver sido criado pelo provedor de teste. As três travas precisam
-passar.
-
-Na página do pedido (`/pedido/[numero]`) existe um painel de simulação que faz a
-mesma chamada pela interface, visível apenas nas mesmas condições.
-
-### 5. Cenários repetíveis do provedor de teste
-
-O desfecho é decidido pelos centavos do total do pedido:
-
-| Total termina em | Cartão |
-|---|---|
-| `01` | recusado |
-| `02` | em análise |
-| qualquer outro | aprovado |
-
-Pix e boleto sempre nascem pendentes e só fecham pelo webhook simulado.
+Se um provedor de pagamento voltar um dia, o desenho que valia — o webhook como
+único caminho para "pago", evento gravado com chave única antes do efeito,
+reconsulta pelo painel e simulação pelo mesmo handler — está em
+[`decisoes.md`](decisoes.md), itens 11 e 12, e o código, em
+`git show f420606^:src/app/api/pagamento/webhook/route.ts`.
 
 ---
 
 ## Ligar o Mercado Pago
 
-Nunca foi feito em produção. O adapter está pronto; o roteiro é:
-
-1. Definir no ambiente de produção: `PAYMENT_PROVIDER=mercadopago`,
-   `MERCADO_PAGO_ACCESS_TOKEN`, `MERCADO_PAGO_WEBHOOK_SECRET` e
-   `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY`.
-2. **Refazer o build** — o CSP depende de `PAYMENT_PROVIDER` em tempo de build
-   (ver acima).
-3. Cadastrar `https://<domínio>/api/pagamento/webhook` no painel do Mercado
-   Pago, com o mesmo segredo de assinatura.
-4. Testar com um valor baixo, em produção, e conferir que o `PaymentEvent` foi
-   gravado e que o pedido avançou para `pago`.
-5. Conferir no console do navegador que o SDK
-   (`https://sdk.mercadopago.com`) carregou — se estiver bloqueado por CSP, o
-   passo 2 não foi feito.
-
-Enquanto isso não acontece, `provedorPagamento()` **lança** em produção em vez de
-cair no simulado. Isso é intencional: melhor um erro visível que um pedido
-marcado como pago sem cobrança.
+**Não se aplica mais.** O adapter do Mercado Pago saiu com a loja sem nunca ter
+sido ligado em produção. Não defina `PAYMENT_PROVIDER` nem as variáveis
+`MERCADO_PAGO_*`: nenhum código lê as `MERCADO_PAGO_*`, e `PAYMENT_PROVIDER` só
+é lido pelo CSP e pelo portão de ambiente, que reprova `mock` em produção.
 
 ---
 
@@ -346,8 +277,8 @@ BASE_URL="https://<domínio>" ADMIN_PASSWORD="<senha do painel>" \
 
 O otimizador de imagem do Next só aceita buscar de
 `*.public.blob.vercel-storage.com` (`images.remotePatterns` em
-`next.config.ts`). Se as fotos de produto sumirem em produção com 400, é essa
-lista. Ela é curta por segurança: cada domínio nela vira um endereço que qualquer
+`next.config.ts`). Se as imagens vindas do Blob sumirem em produção com 400, é
+essa lista. Ela é curta por segurança: cada domínio nela vira um endereço que qualquer
 pessoa pode mandar o servidor buscar e redimensionar.
 
 ---
@@ -358,11 +289,19 @@ pessoa pode mandar o servidor buscar e redimensionar.
 BASE_URL="https://<domínio>" pnpm tour --sem-fotos
 ```
 
-Percorre todas as rotas — públicas, `/minha-jb` e `/admin` — e reporta status
-HTTP, erro de console, exceção de página, requisição falha e link quebrado. Com
-fotos (sem a flag), grava em `.shots/tour`, no desktop e no celular.
+Percorre as rotas de uma lista fixa e reporta status HTTP, erro de console,
+exceção de página, requisição falha e link quebrado. Com fotos (sem a flag),
+grava em `.shots/tour`, no desktop e no celular.
 
-As rotas de `/minha-jb` e `/admin` exigem os usuários de demonstração
+**A lista ainda é a da loja.** `scripts/tour.mjs` percorre vitrine, carrinho,
+`/minha-jb` e as telas de produto e estoque do painel, que hoje respondem 410,
+redirecionam para a home ou não existem; as páginas de equipamento
+(`/autoclave`, `/compressor`…) não estão nela. Até o script ser reescrito, leia
+o relatório sabendo disso: 410 e redirecionamento nessas rotas é o esperado, e
+o que ele prova de verdade é a home, as políticas e as telas do painel que
+continuam.
+
+As rotas de `/minha-jb` e `/admin` pedem os usuários de demonstração
 (`demo@jbteste.local` e `demo.gestor@jbteste.local`), que **não** existem em
 produção — em produção use `--so=publico`.
 
@@ -376,22 +315,43 @@ BASE_URL="https://www.exemplo.com.br" pnpm tour --so=publico --sem-fotos
 
 ---
 
-## Tarefas que não têm cron (e por isso não acontecem sozinhas)
+## O cron diário e as tarefas que não têm cron
 
-Nenhuma destas roda automaticamente hoje. Estão implementadas e prontas para um
-job agendado:
+`vercel.json` agenda **uma** tarefa: `GET /api/fila`, todo dia às `0 6 * * *`
+— 06:00 UTC, 03:00 em São Paulo. A rota exige `CRON_SECRET` (a Vercel manda
+`Authorization: Bearer <CRON_SECRET>`; fora dela, o cabeçalho `x-cron-secret`
+também vale) e responde 503 se a variável não existir. A cada passada ela:
 
-| Função | Arquivo | O que faz |
+- processa um lote da fila de mensagens (`processarFila`, em
+  `src/lib/mensageria.ts`; 25 por padrão, `?limite=` muda até 100);
+- apaga os anexos temporários vencidos (`limparOrfaosVencidos`, em
+  `src/lib/envio-temporario.ts`) — sobra do envio de fotos pelo visitante, que
+  saiu com o site antigo; hoje nada cria `TempUpload`, e ela só limpa o que
+  ficou.
+
+O cron é a rede de segurança, não o caminho normal do e-mail. `enfileirar()`
+grava a mensagem e tenta entregá-la logo depois da resposta (`after`, em
+`src/lib/notificacoes.ts`); o cron só pega o que ficou `pendente`. Entre uma
+passada e outra, a tela `/admin/mensagens` tem o botão **Processar a fila
+agora**.
+
+O que sai de verdade depende do provedor: com `RESEND_API_KEY` e `EMAIL_FROM`,
+a mensagem é entregue; sem eles, fica `simulado`, com o motivo à vista em
+`/admin/mensagens`. **Não existe envio por WhatsApp**: uma linha de canal
+`whatsapp` falharia com "não tem provedor configurado", e hoje nenhum fluxo
+enfileira uma. O WhatsApp do site é o `wa.me` que a pessoa abre e envia.
+
+O que **não** roda sozinho:
+
+| Função | Arquivo | Situação |
 |---|---|---|
-| `expirarVencidos` | `src/lib/orcamento.ts` | move para `expirado` os orçamentos abertos com validade no passado |
-| `visitasAtrasadas` | `src/lib/manutencao.ts` | lista visitas de manutenção que passaram da data |
-| `lembretesPendentes` | `src/lib/manutencao.ts` | lista os lembretes de visita a disparar |
-| `mensagensPendentes` | `src/lib/notificacoes.ts` | lê a fila de e-mail/WhatsApp que ninguém consome ainda |
+| `expirarVencidos` | `src/lib/orcamento.ts` | **ninguém chama** — nem o cron, nem tela, nem ação. Orçamento vencido fica `enviado` ou `em_duvida`; o que impede aprová-lo é a guarda de validade de `aprovarOrcamento` |
+| `lembretesPendentes` | `src/lib/manutencao.ts` | lida na hora em que alguém abre `/admin/manutencao`; **nada manda lembrete sozinho**. O botão ao lado de cada visita põe um e-mail `visita_lembrete` na fila e sai como qualquer mensagem dela. O lembrete só fica registrado se o e-mail entrou na fila; cliente sem e-mail volta erro, e a equipe avisa pelo WhatsApp |
+| `visitasAtrasadas` | `src/lib/manutencao.ts` | sem chamador; `/admin` conta as vencidas com uma consulta própria, quando alguém abre o painel |
 
-Consequência prática: **nada sai por e-mail nem por WhatsApp**. Inclusive o link
-de redefinição de senha — hoje, trocar a senha de um cliente é tarefa da equipe,
-pelo painel. Em desenvolvimento o link é impresso no terminal para o fluxo ser
-testável; em produção não é impresso nem enviado.
+Não há mais link de redefinição de senha: o cliente não tem conta, e a senha
+da equipe é trocada por um admin em `/admin/usuarios`, que gera uma senha
+temporária mostrada uma única vez.
 
 ---
 
@@ -399,17 +359,16 @@ testável; em produção não é impresso nem enviado.
 
 | Sintoma | Onde olhar |
 |---|---|
-| Cliente pagou, pedido não avançou | `/admin/pagamentos/[id]` → consultar o provedor |
-| Webhook devolvendo 400 | `MERCADO_PAGO_WEBHOOK_SECRET` |
-| SDK do Mercado Pago bloqueado no console | build feito sem `PAYMENT_PROVIDER=mercadopago` |
+| Build de produção reprova por `PAYMENT_PROVIDER` | sobra da loja — apague a variável; `mock` é recusado em produção |
 | Erro de unicidade em `number` | `DocumentSequence` fora de sincronia — `sincronizarSequencia` |
-| Foto de produto com 400 em produção | `images.remotePatterns` em `next.config.ts` |
+| Imagem do Blob com 400 em produção | `images.remotePatterns` em `next.config.ts` |
 | Upload some no deploy seguinte | falta `BLOB_READ_WRITE_TOKEN` |
 | Migração falha com erro estranho de DDL | falta `DATABASE_URL_UNPOOLED` (conexão sem pooler) |
 | Preview escrevendo no banco real | falta `JBPREV_DATABASE_URL` no ambiente de preview |
 | Desenvolvimento escrevendo no banco real | existe um `.env.local` — apague |
 | Todo mundo deslogado de repente | `AUTH_SECRET` mudou |
-| E-mail não chega | é esperado: não há worker de envio |
-| Duas opções com o mesmo nome no filtro ou na parede de marcas | cadastro duplicado — `pnpm duplicatas:prever` |
-| Endereço antigo de categoria servindo página velha depois de unificar | falta reconstruir o preview |
-| Unidade seminova sumiu da lista | é a regra: unidade única vendida sai da vitrine; `?vendidos=1` traz de volta |
+| E-mail não chega | `/admin/mensagens`: `simulado` é falta de `RESEND_API_KEY`/`EMAIL_FROM`; `pendente` parado é entrega imediata que falhou — processe a fila |
+| `/api/fila` respondendo 503 | falta `CRON_SECRET` |
+| Cliente diz que não recebeu o lembrete de visita | `/admin/mensagens`, modelo "Lembrete de visita": `simulado` é falta de provedor, `falhou` com "foi cancelada/concluída" é a visita que mudou antes do envio. Sem linha nenhuma, ninguém clicou no botão — lembrete não sai sozinho |
+| Orçamento vencido continua "Enviado" | é esperado: `expirarVencidos` não é chamado por ninguém |
+| Duas "Biossegurança" na escolha de categoria do painel | cadastro duplicado — ver "Cadastros duplicados de categoria e marca" |
