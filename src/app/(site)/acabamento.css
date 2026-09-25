@@ -2199,10 +2199,12 @@
    Conteúdo: institucional, legal, Central Técnica e cases
    ========================================================================== */
 
-/* A abertura das páginas de conteúdo é tingida (cinza claro com brilho
-   vermelho): ali o cinza secundário (graf-500) caía para 4,1:1 na trilha e no
-   resumo. Sobem um degrau, só aqui. */
-[data-jb-site="assistencia"] .jb-institucional-hero :where(nav[aria-label] ol, .texto-suave) {
+/* As aberturas das páginas de conteúdo são tingidas (cinza claro com brilho
+   vermelho): ali o cinza secundário (graf-500) caía para 4,1–4,46:1 na trilha
+   e no resumo. Sobem um degrau. A trilha vale em todo o site público —
+   institucional, Cases e Central Técnica têm aberturas diferentes. */
+[data-jb-site="assistencia"] .jb-trilha ol,
+[data-jb-site="assistencia"] .jb-institucional-hero .texto-suave {
   color: var(--color-graf-700);
 }
 

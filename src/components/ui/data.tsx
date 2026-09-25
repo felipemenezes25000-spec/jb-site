@@ -177,7 +177,7 @@ export type Migalha = { rotulo: string; href?: string };
 
 export function Trilha({ itens, className }: { itens: Migalha[]; className?: string }) {
   return (
-    <nav aria-label="Você está em" className={className}>
+    <nav aria-label="Você está em" className={cn("jb-trilha", className)}>
       <ol className="flex flex-wrap items-center gap-1 text-sm text-graf-500">
         {itens.map((item, i) => {
           const ultimo = i === itens.length - 1;
