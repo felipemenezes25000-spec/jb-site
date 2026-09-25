@@ -470,8 +470,8 @@ export async function visitasAtrasadas(referencia = new Date()) {
  *
  * Para cada antecedência pedida (por padrão sete dias e um dia), devolve as
  * visitas que caem dentro da janela e que ainda não têm registro daquele
- * lembrete. O registro é gravado por `registrarLembrete` só depois do envio,
- * então uma falha no disparo não perde o aviso.
+ * lembrete. O registro é gravado por `enviarLembreteDaVisita` só depois de o
+ * e-mail entrar na fila, então uma falha no disparo não perde o aviso.
  */
 export async function lembretesPendentes(
   diasAntes: number[] = [7, 1],
@@ -520,4 +520,81 @@ export async function registrarLembrete(visitaId: string, diasAntes: number) {
     skipDuplicates: true,
   });
   return resultado.count > 0;
+}
+
+export type ResultadoLembrete = {
+  visitaId: string;
+  contratoId: string | null;
+  /** Endereço que recebeu o e-mail, já normalizado pela fila. */
+  para: string;
+  /** `false` quando o mesmo lembrete já estava na fila: nenhum e-mail novo. */
+  novo: boolean;
+};
+
+/**
+ * Lembra o cliente da visita por e-mail e só então trava o lembrete.
+ *
+ * Até 22/09/2026 o lembrete gravava só `Notification`, a caixa de avisos da
+ * área do cliente — que saiu do site. O `MaintenanceReminder` era gravado
+ * mesmo assim e a tela respondia "Cliente avisado" sem ninguém ter sido
+ * avisado; pior, o registro tirava a visita da lista e impedia o reenvio. Por
+ * isso a ordem aqui é fixa: primeiro o e-mail entra na fila, depois o registro.
+ * Se a fila recusar, nada é gravado e a visita continua pendente.
+ *
+ * A chave de deduplicação leva a antecedência e a data da visita (`refId` =
+ * `<id>:<dias>d:<instante>`): o lembrete de 7 dias e o de 1 dia são e-mails
+ * diferentes, e remarcar a visita é fato novo que merece lembrete novo. Clicar
+ * de novo no mesmo lembrete cai na chave existente e não manda o segundo.
+ */
+export async function enviarLembreteDaVisita(
+  visitaId: string,
+  diasAntes: number,
+): Promise<ResultadoLembrete> {
+  const visita = await prisma.maintenanceVisit.findUnique({
+    where: { id: visitaId },
+    select: {
+      id: true,
+      status: true,
+      dueAt: true,
+      scheduledAt: true,
+      contractId: true,
+      equipment: { select: { customer: { select: { email: true } } } },
+    },
+  });
+  if (!visita) throw new ErroDeManutencao("Visita não encontrada.");
+  if (!STATUS_VISITA_ABERTOS.includes(visita.status)) {
+    throw new ErroDeManutencao("Esta visita já foi concluída ou cancelada: não há o que lembrar.");
+  }
+
+  const email = visita.equipment.customer.email.trim();
+  if (!email) {
+    throw new ErroDeManutencao(
+      "O cliente não tem e-mail cadastrado. Avise pelo WhatsApp; o lembrete não foi registrado.",
+    );
+  }
+
+  const quando = visita.scheduledAt ?? visita.dueAt;
+  const naFila = await enfileirar({
+    canal: "email",
+    para: email,
+    assunto: `Lembrete da visita de manutenção de ${formatarData(quando)}`,
+    corpo: "",
+    refTipo: "visita",
+    refId: `${visita.id}:${diasAntes}d:${quando.getTime()}`,
+    template: "visita_lembrete",
+  });
+  if (!naFila.ok) {
+    throw new ErroDeManutencao(
+      `O e-mail não entrou na fila (${naFila.motivo}). Avise o cliente pelo WhatsApp; o lembrete não foi registrado.`,
+    );
+  }
+
+  await registrarLembrete(visita.id, diasAntes);
+
+  return {
+    visitaId: visita.id,
+    contratoId: visita.contractId,
+    para: naFila.para,
+    novo: !naFila.jaExistia,
+  };
 }

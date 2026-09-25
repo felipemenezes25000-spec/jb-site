@@ -37,6 +37,7 @@ import {
   agendarVisitaDeManutencao,
   concluirVisita,
   contratarPlano,
+  enviarLembreteDaVisita,
   gerarVisitasDoContrato,
   mudarStatusContrato,
 } from "@/lib/manutencao";
@@ -2219,10 +2220,8 @@ const esquemaLembrete = z.object({
 });
 
 /**
- * Avisa o cliente da visita e trava o lembrete.
- *
- * O aviso é o da área Área da Clínica — que é o canal que existe hoje. O registro em
- * `MaintenanceReminder` é o que impede o mesmo lembrete de sair duas vezes.
+ * Lembra o cliente da visita por e-mail e trava o lembrete. A regra — e-mail
+ * na fila antes do registro — está em `enviarLembreteDaVisita`.
  */
 export async function enviarLembreteDeVisita(
   _anterior: EstadoAcao,
@@ -2233,46 +2232,23 @@ export async function enviarLembreteDeVisita(
   if (!dados.success) return problemaZod(dados.error);
 
   try {
-    const visita = await prisma.maintenanceVisit.findUnique({
-      where: { id: dados.data.visitaId },
-      select: {
-        id: true,
-        dueAt: true,
-        scheduledAt: true,
-        contractId: true,
-        equipment: { select: { name: true, customerId: true } },
-      },
-    });
-    if (!visita) return { erro: "Visita não encontrada." };
-
-    const quando = visita.scheduledAt ?? visita.dueAt;
-
-    const aviso = await notificar({
-      customerId: visita.equipment.customerId,
-      tipo: "manutencao",
-      titulo: `Manutenção preventiva de ${visita.equipment.name}`,
-      corpo: `Prevista para ${formatarData(quando)}. Nossa equipe entra em contato para confirmar o horário.`,
-      href: "/minha-jb/manutencoes",
-    });
-    if (!aviso.ok) return { erro: aviso.motivo };
-
-    const gravou = await prisma.maintenanceReminder
-      .createMany({
-        data: [{ visitId: visita.id, daysBefore: dados.data.diasAntes }],
-        skipDuplicates: true,
-      })
-      .then((resultado) => resultado.count > 0);
+    const lembrete = await enviarLembreteDaVisita(dados.data.visitaId, dados.data.diasAntes);
 
     await registrarAuditoria({
       userId: usuario.id,
       acao: "enviar",
       entidade: "MaintenanceVisit",
-      entidadeId: visita.id,
-      resumo: `Lembrete de ${dados.data.diasAntes} dia(s) ${gravou ? "registrado" : "já existia"}`,
+      entidadeId: lembrete.visitaId,
+      resumo: `Lembrete de ${dados.data.diasAntes} dia(s) por e-mail ${lembrete.novo ? "na fila" : "já estava na fila"}`,
     });
 
-    revalidarVisita(visita.id, visita.contractId);
-    return { ok: true, mensagem: "Cliente avisado e lembrete registrado." };
+    revalidarVisita(lembrete.visitaId, lembrete.contratoId);
+    return {
+      ok: true,
+      mensagem: lembrete.novo
+        ? `E-mail de lembrete na fila para ${lembrete.para}. Lembrete registrado.`
+        : `Este lembrete já estava na fila para ${lembrete.para}; nada foi enviado de novo.`,
+    };
   } catch (erro) {
     return mensagemDeErro(erro, "Não foi possível enviar o lembrete.");
   }

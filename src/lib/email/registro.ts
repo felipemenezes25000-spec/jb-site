@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 
 import { ROTULO_CHAMADO, ROTULO_URGENCIA } from "@/lib/assistencia";
 import type { MensagemDeEmail, ProvedorDeEmail, ResultadoEnvio } from "@/lib/email/tipos";
-import { formatarDataHora, formatarPreco, formatarTelefone } from "@/lib/format";
+import { formatarData, formatarDataHora, formatarPreco, formatarTelefone } from "@/lib/format";
 import { TIPOS_NOTIFICACAO, type TipoNotificacao } from "@/lib/notificacoes";
 import { prisma } from "@/lib/prisma";
 import { urlAbsoluta } from "@/lib/seo";
@@ -337,6 +337,69 @@ const MODELO_VISITA_AGENDADA: Modelo = {
   },
 };
 
+/**
+ * Lembrete da visita, disparado pela equipe no bloco de lembretes do painel.
+ *
+ * A visita é lida na hora do envio, não na do clique: se foi remarcada nesse
+ * meio-tempo, vale a data nova. Se foi concluída ou cancelada, a linha falha
+ * com o motivo — lembrar o cliente de uma visita que não vai acontecer é pior
+ * do que não mandar nada.
+ */
+const MODELO_VISITA_LEMBRETE: Modelo = {
+  rotulo: "Lembrete de visita",
+  async montar({ referencia, s }) {
+    const visita = await prisma.maintenanceVisit.findUnique({
+      where: { id: idBase(referencia.refId) },
+      select: {
+        status: true,
+        dueAt: true,
+        scheduledAt: true,
+        equipment: {
+          select: {
+            name: true,
+            brandName: true,
+            modelName: true,
+            room: true,
+            customer: { select: { name: true } },
+          },
+        },
+        technician: { select: { user: { select: { name: true } } } },
+        contract: { select: { number: true } },
+      },
+    });
+    if (!visita) throw new ErroDeModelo(`Visita ${referencia.refId} não existe mais.`);
+    if (visita.status !== "prevista" && visita.status !== "agendada") {
+      const fim = visita.status === "concluida" ? "concluída" : "cancelada";
+      throw new ErroDeModelo(`A visita foi ${fim} antes do envio: lembrete não enviado.`);
+    }
+
+    const horario = visita.status === "agendada" ? visita.scheduledAt : null;
+    const equipamento = [visita.equipment.name, visita.equipment.brandName, visita.equipment.modelName]
+      .filter(Boolean)
+      .join(" ");
+
+    return {
+      assunto: horario
+        ? `Lembrete: visita de manutenção em ${formatarDataHora(horario)}`
+        : `Lembrete: manutenção preventiva prevista para ${formatarData(visita.dueAt)}`,
+      texto: juntar([
+        `Olá, ${visita.equipment.customer.name}.`,
+        "",
+        horario
+          ? `Passando para lembrar: a visita de manutenção do equipamento ${equipamento} está agendada para ${formatarDataHora(horario)}.`
+          : `Passando para lembrar: a manutenção preventiva do equipamento ${equipamento} está prevista para ${formatarData(visita.dueAt)}. A equipe entra em contato para combinar o dia e o horário da visita.`,
+        visita.equipment.room ? `Local no consultório: ${visita.equipment.room}.` : "",
+        horario && visita.technician ? `Técnico responsável: ${visita.technician.user.name}.` : "",
+        visita.contract ? `Contrato: ${visita.contract.number}.` : "",
+        "",
+        comoResponder(s),
+        "",
+        assinatura(s),
+      ]),
+    };
+  },
+};
+
 const MODELO_CONTATO_SITE: Modelo = {
   rotulo: "Contato pelo site",
   async montar({ referencia }) {
@@ -500,6 +563,7 @@ const MODELOS: Record<string, Modelo> = {
   chamado_aberto_equipe: MODELO_CHAMADO_EQUIPE,
   chamado_resposta_cliente: MODELO_CHAMADO_RESPOSTA,
   visita_agendada: MODELO_VISITA_AGENDADA,
+  visita_lembrete: MODELO_VISITA_LEMBRETE,
   avaliacao_convite: MODELO_AVALIACAO_CONVITE,
   contato_site: MODELO_CONTATO_SITE,
   orcamento_pedido_equipe: modeloDeInteresseInterno(
