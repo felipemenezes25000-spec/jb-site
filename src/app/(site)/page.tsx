@@ -147,8 +147,11 @@ export default async function HomePage() {
       <InfraestruturaClinica contatos={contatos} />
 
       {/* ------------------------------------------ quanto custa parar */}
-      <section aria-labelledby="parada-titulo" className="jb-secao-parada bg-surface-muted py-16 md:py-24">
-        <div className="container-jb grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:items-center lg:gap-16">
+      <section aria-labelledby="parada-titulo" className="jb-secao-parada jb-secao bg-surface-muted">
+        {/* O simulador ganha a coluna larga e deita no computador (controles
+            de um lado, resultado do outro): em pé, ao lado de três linhas de
+            texto, ele deixava meia seção em branco. */}
+        <div className="container-jb grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:gap-14">
           <div>
             <p className="sobretitulo jb-revela">Cenário de impacto</p>
             <h2 id="parada-titulo" className="text-section texto-forte jb-revela mt-3 max-w-xl">

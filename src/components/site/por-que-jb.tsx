@@ -13,7 +13,7 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
   return (
     <section
       aria-labelledby="por-que-titulo"
-      className="jb-autoridade-premium py-16 md:py-24 lg:py-28"
+      className="jb-autoridade-premium jb-secao"
     >
       <div className="container-jb">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-end">
@@ -32,11 +32,11 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
           </p>
         </div>
 
-        <ul className="jb-autoridade-grid mt-10 grid gap-3 sm:gap-4 lg:grid-cols-3" data-luz-grupo>
+        <ul className="jb-autoridade-grid mt-8 grid gap-3 sm:gap-4 lg:grid-cols-3" data-luz-grupo>
           {anos ? (
             <li
               data-luz-item
-              className="jb-autoridade-destaque jb-luz-borda jb-revela relative overflow-hidden rounded-[1.6rem] border border-jb-200 p-6 sm:p-8 lg:col-span-2">
+              className="jb-autoridade-destaque jb-luz-borda jb-revela relative overflow-hidden rounded-[1.6rem] border border-jb-200 p-5 sm:p-8 lg:col-span-2">
               <div className="relative flex flex-wrap items-start justify-between gap-5">
                 <div>
                   <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.16em] text-jb-700">
@@ -66,13 +66,15 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
 
           <li
             data-luz-item
-            className="jb-autoridade-card jb-luz-borda jb-revela rounded-[1.45rem] border p-6 sm:p-7"
+            className="jb-autoridade-card jb-luz-borda jb-revela rounded-[1.45rem] border p-5 sm:p-7"
             style={{ "--i": 1 } as React.CSSProperties}
           >
-            <span className="flex size-12 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100">
-              <ShieldCheck className="size-6" aria-hidden />
-            </span>
-            <h3 className="mt-5 text-bloco texto-forte">Orçamento antes da troca</h3>
+            <div className="flex items-center gap-3 sm:block">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100 sm:size-12">
+                <ShieldCheck className="size-6" aria-hidden />
+              </span>
+              <h3 className="text-bloco texto-forte sm:mt-5">Orçamento antes da troca</h3>
+            </div>
             <p className="mt-2 text-corpo leading-relaxed text-graf-600">
               Nenhuma peça é substituída sem a sua aprovação. Você sabe o valor antes.
             </p>
@@ -80,13 +82,15 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
 
           <li
             data-luz-item
-            className="jb-autoridade-card jb-luz-borda jb-revela rounded-[1.45rem] border p-6 sm:p-7"
+            className="jb-autoridade-card jb-luz-borda jb-revela rounded-[1.45rem] border p-5 sm:p-7"
             style={{ "--i": 2 } as React.CSSProperties}
           >
-            <span className="flex size-12 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100">
-              <History className="size-6" aria-hidden />
-            </span>
-            <h3 className="mt-5 text-bloco texto-forte">Histórico de cada aparelho</h3>
+            <div className="flex items-center gap-3 sm:block">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100 sm:size-12">
+                <History className="size-6" aria-hidden />
+              </span>
+              <h3 className="text-bloco texto-forte sm:mt-5">Histórico de cada aparelho</h3>
+            </div>
             <p className="mt-2 text-corpo leading-relaxed text-graf-600">
               O que foi feito fica registrado e pode ser consultado no próximo atendimento.
             </p>
@@ -94,14 +98,16 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
 
           <li
             data-luz-item
-            className="jb-autoridade-card jb-luz-borda jb-revela flex flex-col justify-between gap-6 rounded-[1.45rem] border p-6 sm:flex-row sm:items-center sm:p-7 lg:col-span-2"
+            className="jb-autoridade-card jb-luz-borda jb-revela flex flex-col justify-between gap-4 rounded-[1.45rem] border p-5 sm:gap-6 sm:flex-row sm:items-center sm:p-7 lg:col-span-2"
             style={{ "--i": 3 } as React.CSSProperties}
           >
             <div>
-              <span className="flex size-12 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100">
-                <Layers3 className="size-6" aria-hidden />
-              </span>
-              <h3 className="mt-5 text-bloco texto-forte">Todas as marcas</h3>
+              <div className="flex items-center gap-3 sm:block">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100 sm:size-12">
+                  <Layers3 className="size-6" aria-hidden />
+                </span>
+                <h3 className="text-bloco texto-forte sm:mt-5">Todas as marcas</h3>
+              </div>
               <p className="mt-2 max-w-2xl text-corpo leading-relaxed text-graf-600">
                 Consertamos equipamento de qualquer marca, e somos assistência técnica autorizada
                 EVOXX. Modelo e sintoma entram na triagem quando a clínica os informa.

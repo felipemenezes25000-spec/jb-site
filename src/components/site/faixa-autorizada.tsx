@@ -37,12 +37,12 @@ export function FaixaAutorizada({ desde, cidade }: { desde: string; cidade: stri
       aria-labelledby="autorizada-titulo"
       className="scroll-mt-20 border-b border-graf-200 bg-surface-muted"
     >
-      <div className="container-jb py-12 lg:py-16">
+      <div className="container-jb py-8 md:py-10 lg:py-12">
         {/* `overflow-clip`, não `overflow-hidden`: os blocos daqui revelam na
             rolagem, e `hidden` viraria contêiner de rolagem — a revelação
             congelava em 64% de opacidade no celular. */}
         <div className="grid overflow-clip rounded-3xl border border-graf-200/90 bg-white shadow-[0_30px_80px_-58px_rgb(17_19_21/0.5)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.7fr)]">
-          <div className="jb-revela relative overflow-clip border-b border-graf-100 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-9">
+          <div className="jb-revela relative overflow-clip border-b border-graf-100 p-5 sm:p-8 lg:border-b-0 lg:border-r lg:p-9">
             <span
               aria-hidden
               className="pointer-events-none absolute -left-20 -top-24 size-60 rounded-full bg-[radial-gradient(closest-side,rgb(224_20_27/0.11),transparent)]"
@@ -51,7 +51,7 @@ export function FaixaAutorizada({ desde, cidade }: { desde: string; cidade: stri
               <span className="flex size-12 items-center justify-center rounded-2xl bg-jb-500 text-white shadow-[0_18px_38px_-24px_rgb(224_20_27/0.7)]">
                 <BadgeCheck className="size-6" aria-hidden />
               </span>
-              <p className="mt-5 text-[0.6875rem] font-extrabold uppercase tracking-[0.15em] text-jb-700">
+              <p className="mt-4 text-[0.6875rem] font-extrabold uppercase tracking-[0.15em] text-jb-700 sm:mt-5">
                 Cobertura + credencial verificável
               </p>
               <h2 id="autorizada-titulo" className="text-title texto-forte mt-2 max-w-md">
@@ -73,18 +73,20 @@ export function FaixaAutorizada({ desde, cidade }: { desde: string; cidade: stri
             </div>
           </div>
 
+          {/* No celular, cada prova é uma linha (ícone ao lado do texto): com
+              o ícone em cima, as três somavam quase uma tela de branco. */}
           <ul className="grid gap-px bg-graf-100 sm:grid-cols-3">
             {provas.map((prova, indice) => (
               <li
                 key={prova.titulo}
-                className="jb-revela group relative min-h-[11rem] bg-white p-6 transition-colors duration-300 hover:bg-graf-50/70 sm:p-7 lg:min-h-full"
+                className="jb-revela group relative grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 bg-white px-5 py-4 transition-colors duration-300 hover:bg-graf-50/70 sm:block sm:min-h-[11rem] sm:p-7 lg:min-h-full"
                 style={{ "--i": indice + 1 } as React.CSSProperties}
               >
-                <span className="flex size-10 items-center justify-center rounded-xl border border-graf-200 bg-graf-50 text-jb-600 shadow-xs transition-[transform,background-color,border-color] duration-300 group-hover:-translate-y-0.5 group-hover:border-jb-200 group-hover:bg-jb-50">
+                <span className="row-span-2 flex size-10 items-center justify-center rounded-xl border border-graf-200 bg-graf-50 text-jb-600 shadow-xs transition-[transform,background-color,border-color] duration-300 group-hover:-translate-y-0.5 group-hover:border-jb-200 group-hover:bg-jb-50">
                   <prova.icone className="size-5" aria-hidden />
                 </span>
-                <p className="mt-5 text-corpo font-extrabold leading-tight text-graf-950">{prova.titulo}</p>
-                <p className="mt-2 text-sm leading-relaxed text-graf-600">{prova.texto}</p>
+                <p className="text-corpo font-extrabold leading-tight text-graf-950 sm:mt-5">{prova.titulo}</p>
+                <p className="mt-1 text-sm leading-relaxed text-graf-600 sm:mt-2">{prova.texto}</p>
                 <span
                   aria-hidden
                   className="absolute inset-x-6 bottom-0 h-0.5 origin-left scale-x-0 bg-gradient-to-r from-jb-500 to-jb-300 transition-transform duration-300 group-hover:scale-x-100"

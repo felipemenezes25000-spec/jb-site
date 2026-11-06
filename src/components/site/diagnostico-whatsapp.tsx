@@ -194,6 +194,9 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
                     const Icone = ICONE_DO_EQUIPAMENTO[item.id];
                     const imagem = IMAGEM_DO_EQUIPAMENTO[item.id];
                     const escolhido = item.id === equipamentoId;
+                    /* Celular de 360 a 639px: ficha deitada (foto ao lado do nome),
+                       metade da altura. Em 320px não cabe "Compressor" ao lado da
+                       foto, então ali ela continua em pé, como no tablet. */
                     return (
                       <button
                         key={item.id}
@@ -201,14 +204,14 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
                         aria-pressed={escolhido}
                         onClick={() => escolherEquipamento(item.id)}
                         className={cn(
-                          "foco-jb group flex min-h-[4.75rem] flex-col items-start justify-between gap-2 rounded-xl border p-3 text-left transition-[border-color,background-color,transform,box-shadow] duration-200 active:scale-[0.98]",
+                          "foco-jb group flex min-h-[4.75rem] flex-col items-start justify-between gap-2 rounded-xl border p-3 text-left transition-[border-color,background-color,transform,box-shadow] duration-200 active:scale-[0.98] min-[22.5rem]:min-h-[3.75rem] min-[22.5rem]:flex-row min-[22.5rem]:items-center min-[22.5rem]:justify-start min-[22.5rem]:gap-2.5 min-[22.5rem]:p-2.5 sm:min-h-[4.75rem] sm:flex-col sm:items-start sm:justify-between sm:gap-2 sm:p-3",
                           escolhido
                             ? "border-jb-500 bg-jb-50 shadow-xs"
                             : "border-graf-200 bg-white hover:-translate-y-0.5 hover:border-jb-300 hover:shadow-card",
                         )}
                       >
                         {imagem ? (
-                          <span className="relative block size-11">
+                          <span className="relative block size-10 shrink-0 sm:size-11">
                             <Image
                               src={imagem}
                               alt=""
@@ -218,7 +221,7 @@ export function DiagnosticoWhatsapp({ contatos }: { contatos: ContatoWhatsapp[] 
                             />
                           </span>
                         ) : (
-                          <span className="flex size-11 items-center justify-center">
+                          <span className="flex size-10 shrink-0 items-center justify-center sm:size-11">
                             <Icone
                               className={cn(
                                 "size-6 transition-colors",

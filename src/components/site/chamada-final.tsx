@@ -39,14 +39,14 @@ export function ChamadaFinal({
   ];
 
   return (
-    <section aria-labelledby="chamada-final-titulo" className="relative overflow-clip bg-jb-50 py-16 md:py-24">
+    <section aria-labelledby="chamada-final-titulo" className="jb-secao relative overflow-clip bg-jb-50">
       {/* Luz vermelha atrás do cartão, que cresce com a rolagem (`site.css`). */}
       <span aria-hidden className="jb-chamada-luz" />
       <div className="container-jb relative">
         {/* `overflow-clip`, e não `overflow-hidden`: o cartão tem blocos
             `.jb-revela`, e `hidden` viraria contêiner de rolagem, congelando a
             revelação na opacidade inicial. */}
-        <div className="relative mx-auto max-w-5xl overflow-clip rounded-[2rem] border border-graf-200/80 bg-white px-5 py-10 text-center shadow-[0_38px_100px_-58px_rgb(17_19_21/0.55)] sm:px-8 sm:py-12 md:px-12 md:py-14">
+        <div className="relative mx-auto max-w-5xl overflow-clip rounded-[2rem] border border-graf-200/80 bg-white px-5 py-8 text-center shadow-[0_38px_100px_-58px_rgb(17_19_21/0.55)] sm:px-8 sm:py-10 md:px-12 md:py-12">
           <span
             aria-hidden
             className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-jb-400/60 to-transparent"
@@ -75,14 +75,14 @@ export function ChamadaFinal({
             </p>
 
             <ul
-              className="jb-revela mx-auto mt-7 grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-3"
+              className="jb-revela mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-2"
               style={{ "--i": 3 } as React.CSSProperties}
               aria-label="O que você encontra ao chamar a JB"
             >
               {provas.map((prova) => (
                 <li
                   key={prova.texto}
-                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-graf-200/90 bg-white/85 px-3 text-xs font-extrabold text-graf-800 shadow-xs"
+                  className="flex min-h-10 items-center justify-center gap-2 rounded-full border border-graf-200/90 bg-white/85 px-3.5 text-xs font-extrabold text-graf-800 shadow-xs"
                 >
                   <prova.icone className="size-4 shrink-0 text-jb-600" aria-hidden />
                   <span>{prova.texto}</span>
@@ -96,7 +96,7 @@ export function ChamadaFinal({
               equipamento={equipamento}
               posicao="fechamento"
               pulso={2}
-              className="jb-revela mt-9 sm:justify-center"
+              className="jb-revela mt-7 sm:justify-center"
               style={{ "--i": 4 } as React.CSSProperties}
             />
 

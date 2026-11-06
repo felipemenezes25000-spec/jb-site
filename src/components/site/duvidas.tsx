@@ -68,7 +68,7 @@ export function Duvidas({
     <section
       id="duvidas"
       aria-labelledby="duvidas-titulo"
-      className="jb-faq-premium scroll-mt-20 py-16 md:py-24 lg:py-28"
+      className="jb-faq-premium scroll-mt-20 jb-secao"
     >
       <JsonLd dados={faqJsonLd(perguntas)} />
       <div className="container-jb grid gap-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-14 xl:gap-20">

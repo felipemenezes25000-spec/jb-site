@@ -189,6 +189,17 @@ Até 23/09/2026 eram onze camadas (`premium`, `ultra-premium`, `mobile-excellenc
 
 Regra para a próxima mudança: procure a seção da peça em `acabamento.css` antes de criar regra nova; não crie folha nova para ajuste pontual.
 
+### Ritmo das seções (06/11/2026)
+
+O dono achou o site "muito vazio": cada seção trazia o próprio respiro (64, 96 ou 112px por lado) e a home somava mais de 200px de branco entre um assunto e outro no computador. Agora existe **um respiro só**, a classe `.jb-secao` (48px no celular, 64px a partir de 768px, 72px a partir de 1024px). Seção nova usa `.jb-secao`, não `py-*` próprio, e não ganha `padding-block` de exceção no `acabamento.css`.
+
+- A grade de equipamentos logo depois da faixa de nomes abre com respiro curto (`.jb-rolagem + .jb-secao`): a faixa já é a abertura dela.
+- Abertura da home e das landings no computador: menos altura acima e abaixo; a 1440px a foto da abertura sobe para perto dos botões.
+- Simulador de parada: a partir de ~640px de largura **do próprio cartão** (container query), deita — controles de um lado, resultado do outro, atendentes embaixo. Na home a coluna dele é a larga.
+- Celular: as provas da faixa de credenciais e os cartões de "Por que a JB" levam o ícone ao lado do título; as fichas de equipamento da triagem ficam deitadas (foto ao lado do nome); a foto de "Na sua clínica ou na nossa bancada" fica paisagem (5:4); os selos da chamada final são pílulas que quebram linha.
+
+Resultado medido (Chromium, movimento reduzido): home de 10.137 para ~9.150px a 1440 e de 14.618 para ~13.470px a 390.
+
 ## Validação final
 
 Comando:

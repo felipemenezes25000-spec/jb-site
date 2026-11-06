@@ -96,7 +96,7 @@ export function SimuladorParada({ contatos }: { contatos: ContatoWhatsapp[] }) {
         </div>
       </div>
 
-      <div className="p-5 sm:p-7">
+      <div className="jb-simulador-corpo p-5 sm:p-7">
         <div className="grid gap-3">
           <Controle
             rotulo="Pacientes por dia"

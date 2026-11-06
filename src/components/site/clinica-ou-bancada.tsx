@@ -34,17 +34,17 @@ export function ClinicaOuBancada({ cidade, mensagem }: { cidade: string; mensage
   return (
     <section
       aria-labelledby="clinica-bancada-titulo"
-      className="jb-clinica-premium py-16 md:py-24 lg:py-28"
+      className="jb-clinica-premium jb-secao"
     >
-      <div className="container-jb grid items-center gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-16 xl:gap-20">
+      <div className="container-jb grid items-center gap-10 sm:gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-16 xl:gap-20">
         <div className="jb-clinica-visual jb-revela relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-graf-100 lg:aspect-[5/6]">
+          <div className="relative aspect-[5/4] overflow-hidden rounded-[2rem] bg-graf-100 sm:aspect-[4/5] lg:aspect-[5/6]">
             <Image
               src="/site/consultorio.webp"
               alt="Consultório odontológico com a cadeira pronta para atendimento"
               fill
               sizes="(min-width: 1024px) 40vw, 90vw"
-              className="object-cover"
+              className="object-cover object-[50%_62%] sm:object-center"
             />
             <span
               aria-hidden

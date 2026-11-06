@@ -54,7 +54,7 @@ export function ComoFunciona({
     <section
       id="como-funciona"
       aria-labelledby="como-funciona-titulo"
-      className="jb-processo-premium scroll-mt-20 py-16 md:py-24 lg:py-28"
+      className="jb-processo-premium scroll-mt-20 jb-secao"
     >
       <div className="container-jb grid gap-10 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)] lg:gap-16 xl:gap-20">
         <div className="lg:sticky lg:top-28 lg:h-max">

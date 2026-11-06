@@ -236,7 +236,7 @@ export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] })
     <section
       id="equipamentos"
       aria-labelledby="equipamentos-titulo"
-      className="scroll-mt-20 bg-white py-16 md:py-24"
+      className="jb-secao scroll-mt-20 bg-white"
     >
       <div className="container-jb">
         <p className="sobretitulo jb-revela">Portfólio de assistência</p>

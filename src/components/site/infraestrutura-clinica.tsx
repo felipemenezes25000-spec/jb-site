@@ -27,7 +27,7 @@ export function InfraestruturaClinica({ contatos }: { contatos: ContatoWhatsapp[
     <section
       id="infraestrutura"
       aria-labelledby="infraestrutura-titulo"
-      className="jb-infra relative scroll-mt-20 overflow-clip border-y border-graf-200 bg-surface-muted py-16 md:py-24"
+      className="jb-infra relative scroll-mt-20 overflow-clip border-y border-graf-200 bg-surface-muted jb-secao"
     >
       <span aria-hidden className="jb-infra-malha pointer-events-none absolute inset-0" />
 

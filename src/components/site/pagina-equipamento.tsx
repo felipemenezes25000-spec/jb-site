@@ -253,7 +253,7 @@ function EnquantoIsso({
   equipamento: string;
 }) {
   return (
-    <section aria-labelledby="enquanto-titulo" className="bg-white py-16 md:py-20">
+    <section aria-labelledby="enquanto-titulo" className="jb-secao bg-white">
       <div className="container-jb grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-16">
         <div>
           <p className="sobretitulo jb-revela flex items-center gap-2">
@@ -311,7 +311,7 @@ function OutrosEquipamentos({ atual }: { atual: string }) {
   const outros = PAGINAS_DE_EQUIPAMENTO.filter((pagina) => pagina.slug !== atual);
 
   return (
-    <section aria-labelledby="outros-titulo" className="border-t border-graf-200 bg-white py-14 md:py-20">
+    <section aria-labelledby="outros-titulo" className="border-t border-graf-200 bg-white py-10 md:py-14">
       <div className="container-jb">
         <h2 id="outros-titulo" className="text-title texto-forte jb-revela">
           A JB também conserta

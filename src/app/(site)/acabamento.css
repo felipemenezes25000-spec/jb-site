@@ -65,6 +65,26 @@
   position: relative;
 }
 
+/* Ritmo das seções: um respiro só, para a página inteira. Até 06/11/2026 cada
+   seção trazia o seu (64, 96 ou 112px por lado), e a home somava mais de 200px
+   de branco entre um assunto e outro no computador — o dono achou o site
+   "muito vazio". Seção nova usa `.jb-secao` em vez de `py-*` próprio. */
+[data-jb-site="assistencia"] .jb-secao {
+  padding-block: 3rem;
+}
+
+@media (min-width: 48rem) {
+  [data-jb-site="assistencia"] .jb-secao {
+    padding-block: 4rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  [data-jb-site="assistencia"] .jb-secao {
+    padding-block: 4.5rem;
+  }
+}
+
 /* Foco visível uniforme. `.foco-jb` continua sendo a fonte principal; isto
    cobre link editorial que não passa pelo helper. */
 [data-jb-site="assistencia"] :where(a, button, summary, input, textarea, select):focus-visible {
@@ -551,8 +571,8 @@
 
 @media (min-width: 64rem) {
   [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
-    padding-top: 3.5rem;
-    padding-bottom: 4.25rem;
+    padding-top: 2.75rem;
+    padding-bottom: 3.25rem;
   }
 }
 
@@ -560,10 +580,10 @@
   [data-jb-site="assistencia"] .jb-hero-premium > .container-jb {
     width: min(100% - 6rem, 96rem);
     grid-template-columns: minmax(0, 1.08fr) minmax(34rem, 0.92fr);
-    row-gap: 5.5rem;
+    row-gap: 3rem;
     column-gap: clamp(4rem, 5vw, 6.75rem);
-    padding-top: 4rem;
-    padding-bottom: 5rem;
+    padding-top: 3rem;
+    padding-bottom: 3.5rem;
   }
 }
 
@@ -1281,8 +1301,8 @@
     width: min(100% - 7rem, 92rem);
     grid-template-columns: minmax(0, 1.08fr) minmax(31rem, 0.82fr);
     column-gap: clamp(4.5rem, 6vw, 7.5rem);
-    padding-top: 4.5rem;
-    padding-bottom: 5rem;
+    padding-top: 3rem;
+    padding-bottom: 3.5rem;
   }
 
   [data-jb-site="assistencia"] .jb-landing-hero #abertura-titulo {
@@ -1506,7 +1526,7 @@
   display: grid;
   gap: 0.04em;
   overflow: clip;
-  padding-block: clamp(1.9rem, 5vw, 4.25rem) clamp(0.6rem, 2vw, 1.5rem);
+  padding-block: clamp(1.25rem, 3.5vw, 2.75rem) clamp(0.5rem, 1.5vw, 1.25rem);
   background: #fff;
   font-family: var(--font-display);
   font-size: clamp(2.65rem, 9.2vw, 8.75rem);
@@ -1516,6 +1536,18 @@
   user-select: none;
   pointer-events: none;
   mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+
+/* A faixa já abre o portfólio: a grade logo abaixo não ganha um segundo
+   respiro inteiro, senão os nomes ficam soltos entre dois vazios. */
+[data-jb-site="assistencia"] .jb-rolagem + .jb-secao {
+  padding-top: 1.75rem;
+}
+
+@media (min-width: 64rem) {
+  [data-jb-site="assistencia"] .jb-rolagem + .jb-secao {
+    padding-top: 2.5rem;
+  }
 }
 
 [data-jb-site="assistencia"] .jb-rolagem-fileira {
@@ -1830,10 +1862,6 @@
 }
 
 @media (max-width: 39.99rem) {
-  [data-jb-site="assistencia"] #equipamentos {
-    padding-block: 3.75rem;
-  }
-
   [data-jb-site="assistencia"] .jb-portfolio-grade[data-recolhida="true"] > li[data-recolhe] {
     display: none;
   }
@@ -2098,6 +2126,34 @@
 
 [data-jb-site="assistencia"] .jb-simulador-premium a[data-whatsapp] {
   min-height: 3.45rem;
+}
+
+/* Com largura (computador a partir de ~1200px), o simulador deita: os dois
+   controles de um lado, o resultado do outro e os atendentes embaixo. Em pé,
+   ao lado de três linhas de texto, ele deixava meia seção vazia. Medido pelo
+   próprio cartão, não pela tela. */
+[data-jb-site="assistencia"] .jb-simulador-premium {
+  container-type: inline-size;
+}
+
+@container (min-width: 40rem) {
+  [data-jb-site="assistencia"] .jb-simulador-corpo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem 1.25rem;
+  }
+
+  [data-jb-site="assistencia"] .jb-simulador-corpo > .jb-simulador-resultado {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 0;
+  }
+
+  [data-jb-site="assistencia"] .jb-simulador-corpo > :last-child {
+    grid-column: 1 / -1;
+    margin-top: 0.25rem;
+  }
 }
 
 @media (max-width: 39.99rem) {
@@ -2463,10 +2519,6 @@
 }
 
 @media (max-width: 39.99rem) {
-  [data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] {
-    padding-block: 4.6rem;
-  }
-
   [data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] h2 {
     font-size: clamp(2.35rem, 10vw, 3.25rem);
     line-height: 0.98;
