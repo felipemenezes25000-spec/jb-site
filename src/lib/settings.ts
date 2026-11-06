@@ -20,7 +20,10 @@ export const SETTING_DEFAULTS = {
     "Assistência técnica de equipamentos odontológicos de todas as marcas em São Paulo.",
 
   // contato
-  telefone: "(11) 3715-6362",
+  // O fixo (11) 3715-6362 foi desativado em 06/11/2026: sem telefone
+  // configurado, topo e rodapé não mostram linha de telefone e o JSON-LD usa o
+  // WhatsApp principal. Não volte com ele como padrão.
+  telefone: "",
   whatsapp: "(11) 96341-7994",
   whatsapp_nome: "Jeferson",
   whatsapp_alternativo: "(11) 98603-8421",
@@ -108,7 +111,13 @@ export const SETTING_FIELDS: {
     hint: "Uma frase. Aparece no rodapé e em compartilhamentos.",
   },
 
-  { key: "telefone", label: "Telefone principal", group: "contato", type: "tel" },
+  {
+    key: "telefone",
+    label: "Telefone fixo",
+    group: "contato",
+    type: "tel",
+    hint: "Opcional. Em branco, o site não mostra telefone fixo (só os WhatsApps).",
+  },
   {
     key: "whatsapp",
     label: "WhatsApp principal",

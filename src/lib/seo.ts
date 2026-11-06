@@ -166,7 +166,7 @@ function limpo(valor: string | null | undefined) {
   return texto || undefined;
 }
 
-/** "(11) 3715-6362" → "+551137156362". Vazio quando não há telefone. */
+/** "(11) 96341-7994" → "+5511963417994". Vazio quando não há telefone. */
 export function telefoneInternacional(valor: string | null | undefined) {
   const digitos = (valor ?? "").replace(/\D/g, "");
   if (digitos.length < 10) return undefined;
@@ -174,9 +174,9 @@ export function telefoneInternacional(valor: string | null | undefined) {
 }
 
 /**
- * O telefone principal da empresa no JSON-LD: o fixo das configurações
- * (`telefone`), que é o número que a JB publica como telefone. Sem ele, o
- * WhatsApp principal.
+ * O telefone da empresa no JSON-LD: o fixo das configurações (`telefone`),
+ * quando houver. Sem ele — o caso desde 06/11/2026, quando o fixo foi
+ * desativado —, o WhatsApp principal.
  */
 function telefonePrincipal(s: SettingsMap) {
   return telefoneInternacional(s.telefone) ?? telefoneInternacional(s.whatsapp);

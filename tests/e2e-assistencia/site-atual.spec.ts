@@ -32,7 +32,8 @@ const REMOVIDAS = ["/loja", "/carrinho", "/checkout", "/seminovos", "/comparar",
 
 const JEFERSON = "5511963417994";
 const JACKSON = "5511986038421";
-const TELEFONE_FIXO = "tel:+551137156362";
+/* Fixo desativado em 06/11/2026: não pode reaparecer em lugar nenhum. */
+const FIXO_DESATIVADO = "37156362"; // o que sobra do número em `tel:`
 const CHAVE_CONSENTIMENTO = "jb:consentimento-medicao";
 const TERCEIROS = /googletagmanager\.com|google-analytics\.com|googleadservices\.com|doubleclick\.net|facebook\.net|facebook\.com/;
 
@@ -157,11 +158,12 @@ test.describe("JB assistência — jornada pública atual", () => {
     await expect(jeferson).toHaveAttribute("href", new RegExp(`wa\\.me/${JEFERSON}\\?text=`));
     await expect(jackson).toHaveAttribute("href", new RegExp(`wa\\.me/${JACKSON}\\?text=`));
 
-    /* Telefone fixo e os dois WhatsApps no rodapé, com os números da JB. */
-    await expect(page.locator(`footer a[href="${TELEFONE_FIXO}"]`)).toHaveCount(1);
+    /* Os dois WhatsApps no rodapé, com os números da JB, e nada do fixo
+       desativado — nem link, nem texto, nem dado estruturado. */
     await expect(page.locator(`footer a[href*="wa.me/${JEFERSON}"]`)).toHaveCount(1);
     await expect(page.locator(`footer a[href*="wa.me/${JACKSON}"]`)).toHaveCount(1);
-    await expect(page.locator("footer")).toContainText("(11) 3715-6362");
+    await expect(page.locator(`a[href*="${FIXO_DESATIVADO}"]`)).toHaveCount(0);
+    expect(await page.content()).not.toMatch(/3715[\s.-]?6362/);
 
     /* Nenhum resto de loja na página pública. */
     const texto = (await page.locator("body").innerText()).toLowerCase();

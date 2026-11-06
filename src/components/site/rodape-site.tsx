@@ -17,7 +17,8 @@ import { enderecoCompleto, type SettingsMap } from "@/lib/settings";
 
    Fecha a experiência com contraste alto e todos os canais úteis. Continua
    sendo operacional: WhatsApp dos dois atendentes com nome e número, o
-   telefone fixo da JB, e-mail, endereço, horário, páginas de equipamento e a
+   telefone fixo só se houver um configurado (o antigo foi desativado em
+   06/11/2026), e-mail, endereço, horário, páginas de equipamento e a
    fonte oficial de cada autorização (`@/lib/credenciais-de-marca`): só entra
    selo de "autorizada" que tenha página do fabricante para conferir.
    ============================================================================ */

@@ -82,8 +82,8 @@ async function main() {
   const institucional = new Map((legado?.institucional ?? []).map((i) => [i.id, i]));
 
   const doLegado: Partial<Record<SettingKey, string>> = {
-    // o rodapé antigo trazia os dois telefones em um campo só
-    telefone: conf.get("telefone_rodape")?.split("|")[0]?.trim() ?? "",
+    // O fixo do site antigo, (11) 3715-6362, foi desativado em 06/11/2026: não
+    // é importado. O telefone fica em branco até a JB cadastrar outro no painel.
     email: institucional.get(3)?.texto.trim() ?? "",
     facebook: conf.get("fanpage_link") ?? "",
     instagram: conf.get("instagram_link") ?? "",

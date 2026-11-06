@@ -6,7 +6,8 @@ import { telHref } from "@/lib/format";
    Faixa operacional do topo
 
    Informação de operação, parada: o que a JB faz, onde atende, quando atende
-   e o telefone fixo. Até 23/09/2026 era uma marquise infinita com frases de
+   e o telefone fixo, quando há um configurado (o antigo foi desativado em
+   06/11/2026). Até 23/09/2026 era uma marquise infinita com frases de
    efeito ("chame agora"), que se mexia sem botão de pausa acima da dobra —
    movimento automático de mais de cinco segundos sem controle é exatamente o
    que a WCAG 2.2.2 pede para evitar, e frase de urgência não é informação.
