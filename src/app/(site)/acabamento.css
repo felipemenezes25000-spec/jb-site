@@ -97,6 +97,36 @@
   }
 }
 
+/* Borda que acende perto do mouse (`.jb-luz-borda` + `data-luz-item`, dentro
+   de um `data-luz-grupo`). Um anel de 1px pintado só na borda: o miolo do
+   cartão não muda de cor, então nenhum texto perde contraste. Só computador. */
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-luz-borda::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      15rem circle at var(--mx, -999px) var(--my, -999px),
+      rgb(224 20 27 / 0.78),
+      rgb(224 20 27 / 0.16) 42%,
+      transparent 72%
+    );
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    opacity: 0;
+    transition: opacity 320ms ease;
+  }
+
+  [data-jb-site="assistencia"] [data-luz-grupo][data-luz-ativo] .jb-luz-borda::after {
+    opacity: 1;
+  }
+}
+
 /* ==========================================================================
    Botões de WhatsApp (todas as posições)
 
@@ -110,6 +140,7 @@
   letter-spacing: -0.01em;
   transition:
     transform 220ms var(--ease-out-quint),
+    translate 420ms var(--ease-out-quint),
     box-shadow 260ms var(--ease-out-quint),
     border-color 220ms ease,
     background-color 220ms ease,
@@ -156,6 +187,36 @@
      pixel a menos na fonte deixa folga nas duas plataformas. */
   [data-jb-site="assistencia"] a[data-whatsapp^="diagnostico"] {
     font-size: 0.9375rem;
+  }
+}
+
+/* Computador: o botão puxa poucos pixels na direção do mouse (`--ix`/`--iy`,
+   de `EfeitosDoPonteiro`) e um brilho atravessa uma vez quando o mouse
+   chega. O brilho é fundo andando dentro do próprio botão, sem `overflow`
+   nenhum: nada de texto recortado, e a barra do celular (`.jb-pulso`, que
+   tem o anel por fora) fica de fora. Links de texto (rodapé, erro) também. */
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] a:is([data-whatsapp^="cabecalho"], [data-whatsapp^="abertura"], [data-whatsapp^="diagnostico"], [data-whatsapp^="defeito"], [data-whatsapp^="secao"], [data-whatsapp^="fechamento"]) {
+    position: relative;
+    isolation: isolate;
+    translate: var(--ix, 0px) var(--iy, 0px);
+  }
+
+  [data-jb-site="assistencia"] a:is([data-whatsapp^="cabecalho"], [data-whatsapp^="abertura"], [data-whatsapp^="diagnostico"], [data-whatsapp^="defeito"], [data-whatsapp^="secao"], [data-whatsapp^="fechamento"])::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 36%, rgb(255 255 255 / 0.5) 50%, transparent 64%) no-repeat;
+    background-size: 260% 100%;
+    background-position: 135% 0;
+  }
+
+  [data-jb-site="assistencia"] a:is([data-whatsapp^="cabecalho"], [data-whatsapp^="abertura"], [data-whatsapp^="diagnostico"], [data-whatsapp^="defeito"], [data-whatsapp^="secao"], [data-whatsapp^="fechamento"]):hover::before {
+    background-position: -35% 0;
+    transition: background-position 820ms var(--ease-out-quint);
   }
 }
 
@@ -265,6 +326,25 @@
   [data-jb-site="assistencia"] .jb-leitura {
     animation: jb-leitura-progresso linear both;
     animation-timeline: scroll(root);
+  }
+}
+
+/* Rolou, o cabeçalho ganha corpo: fundo mais firme e uma sombra curta, nos
+   primeiros 160px de rolagem. Parado no topo, ele some no branco da abertura. */
+@keyframes jb-cabecalho-firme {
+  to {
+    background-color: rgb(255 255 255 / 0.95);
+    box-shadow: 0 18px 40px -30px rgb(17 19 21 / 0.42);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-jb-site="assistencia"] .jb-cabecalho {
+      animation: jb-cabecalho-firme linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 160px;
+    }
   }
 }
 
@@ -391,6 +471,35 @@
     linear-gradient(to bottom, rgb(26 28 30 / 0.035) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at 54% 32%, #000 0%, transparent 72%);
+}
+
+/* A mesma malha, em vermelho, num disco de 520px que segue o mouse. O disco
+   anda por `transform` e o desenho dentro dele recua pelo
+   `background-position` na mesma medida, então as linhas acesas caem
+   exatamente sobre as apagadas. Só repinta o disco, nunca a abertura toda. */
+[data-jb-site="assistencia"] .jb-hero-malha-luz {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-hero-malha-luz {
+    display: block;
+    width: 520px;
+    height: 520px;
+    opacity: 0;
+    background-image:
+      linear-gradient(to right, rgb(224 20 27 / 0.26) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(224 20 27 / 0.26) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: calc(260px - var(--mx, -999px)) calc(260px - var(--my, -999px));
+    transform: translate3d(calc(var(--mx, -999px) - 260px), calc(var(--my, -999px) - 260px), 0);
+    mask-image: radial-gradient(closest-side, #000 0%, rgb(0 0 0 / 0.35) 40%, transparent 78%);
+    transition: opacity 600ms ease;
+  }
+
+  [data-jb-site="assistencia"] .jb-hero-premium[data-luz-ativo] > .jb-hero-malha-luz {
+    opacity: 1;
+  }
 }
 
 /* ------------------------------------------------------------- grade */
@@ -537,10 +646,13 @@
 }
 
 /* 1024–1279: a coluna do texto tem ~310px. O título cabe palavra por palavra,
-   sem partir "Equipamento" no meio. */
+   sem partir "Equipamento" no meio — e desde 06/11/2026 cada palavra é uma
+   peça inteira (`TituloConserto`), que não quebra: em 1024 ela ocupava 307 dos
+   312px. A fonte do Chromium no Linux sai até 6% mais larga que no Windows,
+   então a faixa ganhou folga. */
 @media (min-width: 64rem) and (max-width: 79.99rem) {
   [data-jb-site="assistencia"] .jb-hero-title {
-    font-size: clamp(3rem, 5.4vw, 3.6rem);
+    font-size: clamp(2.85rem, 5.15vw, 3.6rem);
   }
 }
 
@@ -1186,6 +1298,267 @@
 }
 
 /* ==========================================================================
+   Raio-X das fotos (abertura da home, landings e grade)
+
+   O quadro da foto leva `.jb-raiox` e `data-raiox`; as camadas vêm de
+   `CamadasRaioX`. A faixa é grafite com papel milimetrado, os traços são
+   brancos com brilho vermelho, e a borda que lidera é o feixe. O movimento
+   mora em `site.css`; parada, a faixa fica fora do quadro, à esquerda.
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-raiox {
+  isolation: isolate;
+}
+
+[data-jb-site="assistencia"] .jb-raiox-faixa {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  z-index: 2;
+  width: 36%;
+  pointer-events: none;
+  transform: translate3d(calc(-100% - 48px), 0, 0);
+}
+
+/* O feixe: fora da janela, para o brilho não ser cortado por ela. */
+[data-jb-site="assistencia"] .jb-raiox-faixa::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  right: -1px;
+  width: 2px;
+  background: #ff3d44;
+  box-shadow:
+    0 0 10px 1px rgb(255 61 68 / 0.95),
+    0 0 34px 6px rgb(224 20 27 / 0.5);
+}
+
+[data-jb-site="assistencia"] .jb-raiox-janela {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  background:
+    linear-gradient(90deg, transparent 0%, rgb(224 20 27 / 0.2) 100%),
+    linear-gradient(rgb(255 255 255 / 0.055) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(90deg, rgb(255 255 255 / 0.055) 1px, transparent 1px) 0 0 / 22px 22px,
+    #111316;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 46%);
+}
+
+[data-jb-site="assistencia"] .jb-raiox-planta {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: calc(100% / 0.36);
+  transform: translate3d(calc(36% + 48px), 0, 0);
+}
+
+[data-jb-site="assistencia"] .jb-raiox-tracos {
+  filter: drop-shadow(0 0 1.5px rgb(255 86 92 / 0.95)) drop-shadow(0 0 7px rgb(224 20 27 / 0.6));
+  user-select: none;
+}
+
+[data-jb-site="assistencia"] .jb-raiox-rotulo {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.7rem;
+  color: #ff7a7f;
+  font-size: 0.5625rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* A grade é pequena demais para rótulo. */
+[data-jb-site="assistencia"] .jb-portfolio-foto .jb-raiox-rotulo {
+  display: none;
+}
+
+/* A foto do cartão cresce no hover; os traços crescem junto. */
+[data-jb-site="assistencia"] .jb-portfolio-foto .jb-raiox-tracos {
+  transform-origin: 50% 62%;
+  transition: transform 520ms var(--ease-out-quint);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover .jb-portfolio-foto .jb-raiox-tracos {
+    transform: scale(1.045);
+  }
+}
+
+/* Lente: só no computador, e só enquanto o mouse está na foto. O círculo é
+   uma máscara na posição do mouse; a mira anda por `transform`. */
+[data-jb-site="assistencia"] :is(.jb-raiox-lente, .jb-raiox-mira) {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-raiox[data-luz] {
+    cursor: crosshair;
+  }
+
+  [data-jb-site="assistencia"] .jb-raiox-lente {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: block;
+    pointer-events: none;
+    background:
+      linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px) 0 0 / 22px 22px,
+      linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px) 0 0 / 22px 22px,
+      #111316;
+    mask-image: radial-gradient(circle 5.75rem at var(--mx, -999px) var(--my, -999px), #000 97%, transparent 100%);
+    opacity: 0;
+    transition: opacity 260ms ease;
+  }
+
+  [data-jb-site="assistencia"] .jb-raiox-mira {
+    position: absolute;
+    left: -5.75rem;
+    top: -5.75rem;
+    z-index: 4;
+    display: block;
+    width: 11.5rem;
+    height: 11.5rem;
+    border: 1.5px solid rgb(255 61 68 / 0.95);
+    border-radius: 999px;
+    pointer-events: none;
+    background:
+      linear-gradient(#ff3d44, #ff3d44) 50% 0 / 1.5px 0.9rem no-repeat,
+      linear-gradient(#ff3d44, #ff3d44) 50% 100% / 1.5px 0.9rem no-repeat,
+      linear-gradient(#ff3d44, #ff3d44) 0 50% / 0.9rem 1.5px no-repeat,
+      linear-gradient(#ff3d44, #ff3d44) 100% 50% / 0.9rem 1.5px no-repeat;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.3),
+      0 0 30px rgb(224 20 27 / 0.55),
+      inset 0 0 26px rgb(224 20 27 / 0.32);
+    transform: translate3d(var(--mx, -999px), var(--my, -999px), 0);
+    opacity: 0;
+    transition: opacity 260ms ease;
+  }
+
+  [data-jb-site="assistencia"] .jb-raiox[data-luz-ativo] > :is(.jb-raiox-lente, .jb-raiox-mira) {
+    opacity: 1;
+  }
+}
+
+/* Dica no canto da foto da abertura: o que fazer com ela. */
+[data-jb-site="assistencia"] .jb-raiox-dica {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.6rem;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 999px;
+  background: rgb(17 19 22 / 0.8);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  transition: opacity 260ms ease;
+}
+
+[data-jb-site="assistencia"] .jb-raiox-dica-ponto {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #ff3d44;
+  box-shadow: 0 0 0 3px rgb(224 20 27 / 0.3), 0 0 10px rgb(255 61 68 / 0.9);
+}
+
+[data-jb-site="assistencia"] .jb-raiox-dica-mouse {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-jb-site="assistencia"] .jb-raiox-dica-mouse {
+    display: inline;
+  }
+
+  [data-jb-site="assistencia"] .jb-raiox-dica-toque {
+    display: none;
+  }
+
+  /* Com a lente na mão, a dica sai da frente. */
+  [data-jb-site="assistencia"] .jb-raiox[data-luz-ativo] > .jb-raiox-dica {
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Equipamentos atravessando a tela
+
+   Duas fileiras de nomes enormes entre a faixa de marcas e a grade. Contorno
+   grafite bem claro, um nome em cada três cheio de vermelho, e um ponto da
+   marca entre eles. As pontas somem num degradê, para a fileira não parecer
+   cortada pela borda da tela. Andam com a rolagem (`site.css`).
+   ========================================================================== */
+
+[data-jb-site="assistencia"] .jb-rolagem {
+  position: relative;
+  display: grid;
+  gap: 0.04em;
+  overflow: clip;
+  padding-block: clamp(1.9rem, 5vw, 4.25rem) clamp(0.6rem, 2vw, 1.5rem);
+  background: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(2.65rem, 9.2vw, 8.75rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  user-select: none;
+  pointer-events: none;
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+
+[data-jb-site="assistencia"] .jb-rolagem-fileira {
+  display: flex;
+  align-items: center;
+  gap: 0.32em;
+  width: max-content;
+  white-space: nowrap;
+  transform: translate3d(-2em, 0, 0);
+}
+
+[data-jb-site="assistencia"] .jb-rolagem-fileira[data-sentido="volta"] {
+  transform: translate3d(-14em, 0, 0);
+}
+
+/* Vazado sem mostrar as costuras da fonte: o traço vai por baixo
+   (`paint-order`) e o miolo branco cobre a metade de dentro dele e as linhas
+   onde os contornos da fonte variável se sobrepõem.
+
+   O que se lê é o contorno, então é ele que tem de ter contraste: `graf-450`
+   (3,39:1, acima dos 3:1 de texto grande) e pelo menos 0,034em de espessura.
+   Abaixo de 0,03em o axe ignora o contorno e mede o miolo branco — 1:1 —, e
+   foi exatamente isso que reprovou a primeira versão, de grafite a 18%. */
+[data-jb-site="assistencia"] .jb-rolagem-nome {
+  color: #fff;
+  -webkit-text-stroke: max(2.6px, 0.034em) var(--color-graf-450);
+  paint-order: stroke fill;
+}
+
+[data-jb-site="assistencia"] .jb-rolagem-nome[data-cheio] {
+  color: var(--color-jb-500);
+  -webkit-text-stroke: 0;
+}
+
+[data-jb-site="assistencia"] .jb-rolagem-marca {
+  flex: none;
+  width: 0.18em;
+  height: 0.18em;
+  border-radius: 999px;
+  background: var(--color-jb-500);
+}
+
+/* ==========================================================================
    Grade de equipamentos (portfólio de assistência)
 
    Cartão fechado = foto + nome, e nada mais. A foto vem de fundo branco e
@@ -1415,6 +1788,25 @@
   padding: 0.15rem 0.35rem 0.35rem;
 }
 
+/* Troca de filtro (`comTransicao`): enquanto a grade tem `data-transicao`,
+   cada cartão ganha o próprio nome (`--vt`, vindo do componente) e o
+   navegador desliza cada um do lugar antigo para o novo; quem sai some,
+   quem entra aparece. Fora da troca, nenhum cartão tem nome. */
+[data-jb-site="assistencia"] .jb-portfolio-grade[data-transicao] > li {
+  view-transition-name: var(--vt);
+  view-transition-class: jb-portfolio;
+}
+
+::view-transition-group(.jb-portfolio) {
+  animation-duration: 460ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(.jb-portfolio),
+::view-transition-new(.jb-portfolio) {
+  animation-duration: 300ms;
+}
+
 [data-jb-site="assistencia"] .jb-portfolio-opcoes:not([hidden]) {
   animation: jb-portfolio-abre 260ms var(--ease-out-quint) both;
 }
@@ -1593,6 +1985,22 @@
   width: 2px;
   border-radius: 2px;
   background: linear-gradient(to bottom, rgb(17 19 21 / 0.14), rgb(17 19 21 / 0.06));
+}
+
+/* O fluxo: o mesmo trecho, em vermelho, que enche de cima para baixo com a
+   rolagem (`site.css`). Sem suporte, ele fica cheio — o cano desenhado como
+   antes, só que já ligado. */
+[data-jb-site="assistencia"] .jb-infra-etapa:not([data-ultima])::after {
+  content: "";
+  position: absolute;
+  top: 2.6rem;
+  bottom: -1.1rem;
+  left: calc(1.25rem - 1.5px);
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, var(--color-jb-500), #ff5a60);
+  box-shadow: 0 0 12px rgb(224 20 27 / 0.45);
+  transform-origin: 50% 0;
 }
 
 [data-jb-site="assistencia"] .jb-infra-etapa-icone {
@@ -1774,6 +2182,29 @@
   top: 1.2rem;
   box-shadow: 0 0 0 5px rgb(224 20 27 / 0.08),
     0 16px 32px -20px rgb(224 20 27 / 0.48);
+}
+
+/* O número da etapa, enorme e só de contorno, no canto do cartão. Anda mais
+   devagar que a rolagem (`site.css`). `overflow: clip` no cartão recorta o
+   número sem virar contêiner de rolagem — a revelação continua viva. */
+[data-jb-site="assistencia"] .jb-fluxo-passo {
+  overflow: clip;
+}
+
+[data-jb-site="assistencia"] .jb-fluxo-numero {
+  position: absolute;
+  right: -0.04em;
+  bottom: -0.2em;
+  z-index: 0;
+  color: transparent;
+  font-family: var(--font-display);
+  font-size: clamp(6.5rem, 12vw, 9.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  -webkit-text-stroke: 1.5px rgb(224 20 27 / 0.2);
+  pointer-events: none;
+  user-select: none;
 }
 
 @media (hover: hover) {
@@ -2002,6 +2433,21 @@
   background: radial-gradient(circle at 16% 10%, rgb(255 255 255 / 0.9), transparent 18rem),
     radial-gradient(circle at 85% 78%, rgb(224 20 27 / 0.11), transparent 24rem),
     linear-gradient(145deg, #fff7f7 0%, #fff 50%, #fff1f2 100%);
+}
+
+/* Uma luz vermelha atrás do cartão, que cresce enquanto a seção sobe
+   (`site.css`). Desfocada uma vez só, no desenho: o que anima é escala e
+   opacidade. */
+[data-jb-site="assistencia"] .jb-chamada-luz {
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: min(68rem, 130vw);
+  height: 30rem;
+  border-radius: 999px;
+  background: radial-gradient(closest-side, rgb(224 20 27 / 0.24), rgb(224 20 27 / 0.08) 55%, transparent);
+  transform: translate3d(-50%, 0, 0);
+  pointer-events: none;
 }
 
 [data-jb-site="assistencia"] section[aria-labelledby="chamada-final-titulo"] .container-estreito {
@@ -2881,8 +3327,19 @@
   }
 
   [data-jb-site="assistencia"] .jb-cartao-equipamento:hover,
-  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover .jb-portfolio-imagem {
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover .jb-portfolio-imagem,
+  [data-jb-site="assistencia"] .jb-cartao-equipamento:hover .jb-raiox-tracos {
     transform: none !important;
+  }
+
+  /* Sem passada de scanner e sem ímã. A lente fica: ela não se move sozinha,
+     só acompanha a mão. */
+  [data-jb-site="assistencia"] .jb-raiox-faixa {
+    display: none;
+  }
+
+  [data-jb-site="assistencia"] a[data-whatsapp] {
+    translate: none !important;
   }
 
   [data-jb-site="assistencia"] .jb-portfolio-imagem,
@@ -2930,10 +3387,18 @@
     outline: 2px solid CanvasText !important;
     outline-offset: 3px;
   }
+
+  /* Enfeite que depende de cor e brilho não sobrevive ao alto contraste. */
+  [data-jb-site="assistencia"] :is(.jb-raiox-faixa, .jb-raiox-lente, .jb-raiox-mira, .jb-raiox-dica, .jb-rolagem, .jb-hero-malha-luz, .jb-chamada-luz, .jb-fluxo-numero),
+  [data-jb-site="assistencia"] .jb-luz-borda::after {
+    display: none;
+  }
 }
 
 @media print {
   [data-jb-site="assistencia"] .jb-ticker,
+  [data-jb-site="assistencia"] .jb-rolagem,
+  [data-jb-site="assistencia"] :is(.jb-raiox-faixa, .jb-raiox-lente, .jb-raiox-mira, .jb-raiox-dica),
   [data-jb-site="assistencia"] .jb-cabecalho,
   [data-jb-site="assistencia"] .jb-barra-movel,
   [data-jb-site="assistencia"] .jb-leitura,

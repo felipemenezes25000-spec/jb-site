@@ -1,7 +1,7 @@
 # Site público JB — assistência técnica
 
 > Fonte curta de verdade para o produto público atual.  
-> Atualizado em 24/09/2026.
+> Atualizado em 06/11/2026.
 
 ## Decisão de produto
 
@@ -52,8 +52,8 @@ A home deve continuar priorizando:
 3. provas objetivas;
 4. Jeferson e Jackson;
 5. diagnóstico em 3 toques;
-6. fotografia técnica;
-7. portfólio de equipamentos atendidos — a grade é a única lista de equipamentos da home; o cartão aberto leva também à landing do equipamento, quando ela existe;
+6. fotografia técnica, com o raio-X da bancada;
+7. portfólio de equipamentos atendidos — a grade é a única lista de equipamentos da home; o cartão aberto leva também à landing do equipamento, quando ela existe. Antes dela, a faixa com os nomes dos equipamentos atravessando a tela (moldura `aria-hidden`, não lista);
 8. infraestrutura hidráulica e de esgoto, com visita técnica antes do orçamento;
 9. impacto potencial de parada, apresentado como cenário e não previsão;
 10. processo;
@@ -142,9 +142,27 @@ O pixel da Meta sobe com `disablePushState` (sem o `PageView` automático a cada
 
 **Configuração fora do código (pendência externa):** no GA4, em *Fluxos de dados → Medição otimizada → Visualizações de página*, desmarque "Mudanças de página com base em eventos do histórico do navegador". O site já envia o `page_view` de cada navegação; com a opção ligada, o GA4 somaria um segundo automático. No Events Manager da Meta, a "correspondência avançada automática" deve ficar desligada para o pixel não ler campos de formulário.
 
+## Peças de impacto (06/11/2026)
+
+O dono pediu "o site mais fora da curva do segmento", com muito efeito, no celular e no computador. A resposta respeita tudo o que está acima — vermelho/branco/grafite, nenhuma biblioteca de animação, nada em laço, movimento reduzido, Jeferson e Jackson — e tira o espanto de três fontes: a **chegada** (uma vez), a **rolagem** (a mão manda) e o **mouse** (só computador). Movimento em `site.css` (seção "Peças de impacto"), desenho em `acabamento.css`, cada um na seção da sua peça.
+
+- **Título que se conserta** (`TituloConserto`, home e landings): "Equipamento parou?" chega com as palavras tortas e encaixa com um tranco curto quando "A JB assume daqui." sobe. Só `transform` — o título é o LCP e aparece pintado (torto, mas legível) desde o primeiro quadro. As palavras são `span`s com os espaços entre elas: `textContent` e leitor de tela continuam iguais. Cada palavra é uma peça inteira (`inline-block`) e **não quebra**: título novo precisa caber palavra por palavra em 320px e em 1024px.
+- **Raio-X** (`CamadasRaioX` + `plantaDaFoto`): uma faixa grafite atravessa a foto e, dentro dela, aparecem os traços do próprio equipamento. Os traços são gerados da foto real por `node scripts/gerar-raiox.mjs` (Sobel, branco sobre transparente, em `public/site/raiox/`) — **foto nova ou trocada exige rodar o script**; `tests/unitarios/raio-x.test.ts` reprova planta faltando. Abertura da home e das landings: no computador passa uma vez na chegada e ganha uma lente que segue o mouse; no celular passa quando a foto cruza o meio da tela. Cartões da grade: no hover (ou foco de teclado) no computador, com a rolagem no celular. A faixa anda por `transform` e a planta recua na mesma medida dentro dela: nada é repintado quadro a quadro.
+- **Equipamentos atravessando a tela** (`FaixaDeRolagem`): duas fileiras de nomes enormes, uma para cada lado, amarradas à rolagem (`view()`). Parou de rolar, parou de andar — não é marquise. Vazado com `paint-order: stroke fill` (o miolo branco cobre as costuras da fonte variável). O contorno é o que se lê, então ele tem contraste de texto grande: `graf-450` (3,39:1) com pelo menos 0,034em. O axe 4.13 só usa a cor do contorno a partir de 0,03em; abaixo disso mede o miolo branco (1:1) e reprova — foi o que aconteceu com a primeira versão, de grafite a 18%.
+- **Cano que enche** (infraestrutura): cada trecho da linha do tempo enche de vermelho com a rolagem e acende o ícone seguinte. Sem suporte, o cano aparece cheio.
+- **Números das etapas** ("Como funciona"): "01…04" enormes e vazados, andando mais devagar que a página.
+- **Luz da chamada final**: brilho vermelho atrás do cartão, que cresce enquanto a seção sobe.
+- **Mouse** (`EfeitosDoPonteiro`, um ouvinte só no documento, só com `hover: hover` e `pointer: fine`): a malha da abertura acende em vermelho em volta do mouse; a borda dos cartões (grade, etapas, "Por que a JB") acende perto dele; os botões de WhatsApp puxam poucos pixels na direção do mouse e um brilho atravessa uma vez no hover. Rodapé, erro e a barra do celular ficam de fora.
+- **Filtros da grade** deslizam os cartões para o lugar novo pela View Transitions API (`document.startViewTransition`); os nomes de transição só existem durante a troca. Sem suporte ou com movimento reduzido, a troca é instantânea.
+- **Cabeçalho** ganha fundo firme e sombra nos primeiros 160px de rolagem (`scroll(root)`).
+- **1024px**: o título da home tinha folga de 5px; a faixa 1024–1279 ganhou fonte um pouco menor, porque o Chromium do Linux desenha a Bricolage até 6% mais larga.
+
+Guardas: movimento reduzido tira a passada do scanner, o ímã e toda animação de rolagem (a lente fica: ela só acompanha a mão); cores forçadas escondem scanner, faixa, malha acesa e bordas acesas; impressão esconde scanner e faixa e desliga as animações com `both`. A legenda da foto da abertura fica acima do scanner (`z-[6]`).
+
 ## Performance
 
-- Nada em laço infinito: sem marquise, blob flutuante, borda girando ou foto "respirando". Movimento automático de mais de cinco segundos sem pausa é o que a WCAG 2.2.2 pede para evitar, e custa compositor sem informar nada.
+- Nada em laço infinito: sem marquise, blob flutuante, borda girando ou foto "respirando". Movimento automático de mais de cinco segundos sem pausa é o que a WCAG 2.2.2 pede para evitar, e custa compositor sem informar nada. Movimento amarrado à rolagem não é automático: anda só enquanto a pessoa rola.
+- As plantas do raio-X são imagens pré-geradas e `lazy` (10–27 KB cada, 68 KB a da bancada): o celular não roda filtro nenhum.
 - O site público não carrega biblioteca de animação: transições da triagem são CSS, e as folhas do Motion System do painel entram só pelo layout do admin.
 - Não pré-carregar imagem que não disputa a primeira dobra no mobile.
 - Não fazer prefetch automático de listas de landings quando isso concorre com a jornada principal.

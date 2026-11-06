@@ -1,11 +1,13 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronDown, Plus, Wrench } from "lucide-react";
 
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
+import { CamadasRaioX } from "@/components/site/raio-x";
 import type { ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { caminhoDoEquipamento } from "@/lib/paginas-equipamento";
 import {
@@ -18,6 +20,7 @@ import {
   type GrupoDoPortfolio,
   type ItemDoPortfolio,
 } from "@/lib/portfolio-assistencia";
+import { plantaDaFoto } from "@/lib/raio-x";
 import { cn } from "@/lib/utils";
 
 /* ============================================================================
@@ -32,7 +35,32 @@ import { cn } from "@/lib/utils";
    vem no HTML do servidor, e "Outro equipamento" fica sempre no fim, porque a
    JB atende o que não está na grade. Os dados moram em
    `@/lib/portfolio-assistencia`.
+
+   Movimento, sem biblioteca: cada foto tem o scanner de raio-X
+   (`CamadasRaioX`, que passa no hover ou, no celular, na rolagem); a borda
+   dos cartões acende perto do mouse (`EfeitosDoPonteiro`); e trocar de filtro
+   desliza os cartões para o lugar novo com a View Transitions API do
+   navegador. Sem suporte ou com movimento reduzido, a troca é instantânea,
+   como sempre foi.
    ============================================================================ */
+
+/** Troca de filtro com os cartões deslizando, quando o navegador sabe fazer. */
+function comTransicao(grade: HTMLElement | null, mudar: () => void, depois?: () => void) {
+  const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!grade || reduzido || !("startViewTransition" in document)) {
+    mudar();
+    if (depois) requestAnimationFrame(depois);
+    return;
+  }
+  /* Os nomes de transição só existem durante a troca: fora dela, os cartões
+     não entram em transição nenhuma de outra parte da página. */
+  grade.dataset.transicao = "";
+  const transicao = document.startViewTransition(() => flushSync(mudar));
+  if (depois) transicao.updateCallbackDone.then(depois, depois);
+  transicao.finished.finally(() => {
+    delete grade.dataset.transicao;
+  });
+}
 
 const DESCRICAO_DO_ALVO = "assistência e manutenção com Jeferson ou Jackson no WhatsApp";
 
@@ -63,11 +91,14 @@ function Cartao({
   aberto,
   alternar,
   foto,
+  planta,
   children,
 }: {
   id: string;
   nome: string;
   indice: number;
+  /** Traços da foto para o raio-X; sem eles, a foto fica sem scanner. */
+  planta?: string | null;
   /** Some da grade recolhida: no celular, ou no celular e no tablet. */
   recolhe?: "celular" | "sempre";
   aberto: boolean;
@@ -78,12 +109,17 @@ function Cartao({
   const idOpcoes = useId();
 
   return (
-    <li className="jb-revela" data-recolhe={recolhe} style={{ "--i": indice % 6 } as React.CSSProperties}>
+    <li
+      className="jb-revela"
+      data-recolhe={recolhe}
+      style={{ "--i": indice % 6, "--vt": `portfolio-${id}` } as React.CSSProperties}
+    >
       <div
         data-aberto={aberto}
         data-portfolio={id}
+        data-luz-item
         className={cn(
-          "jb-cartao-equipamento group relative flex h-full flex-col rounded-2xl border bg-white",
+          "jb-cartao-equipamento jb-luz-borda group relative flex h-full flex-col rounded-2xl border bg-white",
           id === OUTRO ? "border-dashed border-graf-300" : "border-graf-200",
         )}
       >
@@ -94,8 +130,12 @@ function Cartao({
           aria-controls={idOpcoes}
           className="jb-portfolio-alvo foco-jb flex w-full flex-1 flex-col rounded-[inherit] text-left"
         >
-          <span className="jb-portfolio-foto relative block aspect-square w-full overflow-clip">
+          <span
+            data-raiox={planta ? "cartao" : undefined}
+            className="jb-portfolio-foto jb-raiox relative block aspect-square w-full overflow-clip"
+          >
             {foto}
+            {planta ? <CamadasRaioX planta={planta} /> : null}
             <span aria-hidden className="jb-portfolio-mais">
               <Plus className="size-4" />
             </span>
@@ -153,8 +193,10 @@ export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] })
   const recolhida = grupo === null && !listaToda;
 
   function filtrar(proximo: GrupoDoPortfolio | null) {
-    setGrupo(proximo);
-    setAberto(null);
+    comTransicao(grade.current, () => {
+      setGrupo(proximo);
+      setAberto(null);
+    });
     const quantos = itensDoGrupo(proximo).length;
     const rotulo = GRUPOS_DO_PORTFOLIO.find((candidato) => candidato.id === proximo)?.rotulo;
     setAnuncio(rotulo ? `${quantos} equipamentos em ${rotulo}, mais outro equipamento.` : `Todos os ${quantos} equipamentos.`);
@@ -165,11 +207,12 @@ export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] })
     const primeiroEscondido = [...(grade.current?.querySelectorAll<HTMLElement>("li[data-recolhe]") ?? [])].find(
       (item) => item.offsetParent === null,
     );
-    setListaToda(true);
     setAnuncio(`Todos os ${PORTFOLIO_DE_ASSISTENCIA.length} equipamentos.`);
-    requestAnimationFrame(() => {
-      primeiroEscondido?.querySelector<HTMLButtonElement>(".jb-portfolio-alvo")?.focus();
-    });
+    comTransicao(
+      grade.current,
+      () => setListaToda(true),
+      () => primeiroEscondido?.querySelector<HTMLButtonElement>(".jb-portfolio-alvo")?.focus(),
+    );
   }
 
   function alternar(id: string) {
@@ -239,6 +282,7 @@ export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] })
           ref={grade}
           onKeyDown={aoTeclar}
           data-recolhida={recolhida}
+          data-luz-grupo
           className="jb-portfolio-grade mt-6 grid grid-cols-2 items-start gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6 lg:gap-3 xl:gap-4"
         >
           {visiveis.map((item, indice) => (
@@ -252,6 +296,7 @@ export function GradeEquipamentos({ contatos }: { contatos: ContatoWhatsapp[] })
               }
               aberto={aberto === item.slug}
               alternar={() => alternar(item.slug)}
+              planta={plantaDaFoto(imagemDoPortfolio(item.slug))}
               foto={
                 <Image
                   src={imagemDoPortfolio(item.slug)}

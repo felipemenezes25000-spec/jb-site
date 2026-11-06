@@ -85,13 +85,19 @@ export function ComoFunciona({
           </div>
         </div>
 
-        <ol className="grid gap-3 sm:gap-4" aria-label="Passos do atendimento">
+        <ol className="grid gap-3 sm:gap-4" aria-label="Passos do atendimento" data-luz-grupo>
           {PASSOS.map((passo, indice) => (
             <li
               key={passo.titulo}
-              className="jb-fluxo-passo jb-revela"
+              data-luz-item
+              className="jb-fluxo-passo jb-luz-borda jb-revela"
               style={{ "--i": indice % 3 } as React.CSSProperties}
             >
+              {/* O número da etapa, enorme e vazado, andando mais devagar que
+                  a rolagem. Enfeite: a etapa já está escrita logo abaixo. */}
+              <span aria-hidden className="jb-fluxo-numero">
+                {passo.etapa}
+              </span>
               <span className="jb-ponto-acende z-10 flex size-12 items-center justify-center rounded-full border-2 border-jb-500 bg-jb-500 text-white shadow-card">
                 <passo.icone className="size-5" aria-hidden />
               </span>

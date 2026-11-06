@@ -549,6 +549,11 @@ nunca para "conteúdo invisível"**.
 view())`** — em navegador sem suporte não existe animação nenhuma e a seção
 aparece pintada como sempre.
 
+O site público de assistência tem coreografia própria (título que se conserta,
+raio-X das fotos, faixa de equipamentos, cano que enche, luz do mouse),
+descrita em `docs/site-publico-assistencia.md`, seção "Peças de impacto". As
+três guardas abaixo valem para ela também.
+
 ### As três guardas obrigatórias em qualquer animação nova
 
 1. `@media (prefers-reduced-motion: reduce) { animation: none }` — o bloco

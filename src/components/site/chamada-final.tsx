@@ -40,6 +40,8 @@ export function ChamadaFinal({
 
   return (
     <section aria-labelledby="chamada-final-titulo" className="relative overflow-clip bg-jb-50 py-16 md:py-24">
+      {/* Luz vermelha atrás do cartão, que cresce com a rolagem (`site.css`). */}
+      <span aria-hidden className="jb-chamada-luz" />
       <div className="container-jb relative">
         {/* `overflow-clip`, e não `overflow-hidden`: o cartão tem blocos
             `.jb-revela`, e `hidden` viraria contêiner de rolagem, congelando a

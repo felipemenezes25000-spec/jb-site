@@ -323,3 +323,284 @@ html[data-revela-js] .jb-revela[data-revela="visto"] {
     transition: none;
   }
 }
+
+/* ============================================================================
+   Peças de impacto (06/11/2026)
+
+   O pedido foi "o site mais fora da curva do segmento". A regra do resto da
+   folha continua valendo aqui: só `transform` e `opacity` se movem, nada em
+   laço, e tudo some com movimento reduzido. O que é novo é de onde vem o
+   movimento — da chegada (uma vez), da rolagem (a mão manda) ou do mouse
+   (`EfeitosDoPonteiro` escreve a posição, a folha desenha).
+
+   Na ordem da página: o título que se conserta, o raio-X das fotos, os
+   equipamentos que atravessam a tela, o fluxo que enche a linha da
+   infraestrutura, os números do atendimento e a luz da chamada final.
+   ============================================================================ */
+
+/* ------------------------------------------------ o título que se conserta */
+
+/* A pergunta chega torta (cada palavra com o seu `--r`, `--x`, `--y`) e,
+   perto da metade, encaixa: passa um pouco do ponto, volta e trava. A
+   resposta sobe junto, como a peça que entra no lugar. */
+@keyframes jb-conserto-peca {
+  0%,
+  46% {
+    transform: translate(var(--x, 0), var(--y, 0)) rotate(var(--r, 0deg));
+  }
+  62% {
+    transform: translate(0, -0.06em) rotate(calc(var(--r, 0deg) * -0.22));
+  }
+  76% {
+    transform: translate(0, 0.014em) rotate(calc(var(--r, 0deg) * 0.08));
+  }
+  88% {
+    transform: translate(0, -0.004em) rotate(0deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes jb-conserto-resposta {
+  from {
+    transform: translate3d(0, 0.32em, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.jb-conserto-peca {
+  display: inline-block;
+  transform-origin: 50% 85%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .jb-conserto-peca {
+    animation: jb-conserto-peca 1150ms cubic-bezier(0.3, 0.7, 0.2, 1) calc(160ms + var(--d, 0ms)) both;
+  }
+
+  .jb-conserto-resposta {
+    animation: jb-conserto-resposta 760ms cubic-bezier(0.2, 1.3, 0.3, 1) 520ms both;
+  }
+}
+
+/* Papel não roda animação, e `both` seguraria o primeiro quadro: o título
+   sairia torto na impressão. Vale para todas as peças desta seção. */
+@media print {
+  .jb-conserto-peca,
+  .jb-conserto-resposta,
+  .jb-fluxo-numero,
+  .jb-chamada-luz,
+  .jb-infra-etapa::after,
+  .jb-infra-etapa-icone {
+    animation: none !important;
+  }
+}
+
+/* --------------------------------------------------------------- raio-X */
+
+/* A faixa tem 36% da largura do quadro. Ela vai de fora, à esquerda, até
+   fora, à direita (100%/0,36 dela = o quadro inteiro), sempre com 48px de
+   folga para o brilho do feixe não aparecer na borda da foto parada. A
+   planta, dentro dela, faz o caminho contrário na mesma conta, então os
+   traços ficam parados sobre a foto. As duas usam a mesma curva e a mesma
+   duração: é isso que mantém o desenho alinhado em todo quadro. */
+@keyframes jb-raiox-faixa {
+  from {
+    transform: translate3d(calc(-100% - 48px), 0, 0);
+  }
+  to {
+    transform: translate3d(calc(100% / 0.36 + 48px), 0, 0);
+  }
+}
+
+@keyframes jb-raiox-planta {
+  from {
+    transform: translate3d(calc(36% + 48px), 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-100% - 48px), 0, 0);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  /* Computador: a foto da abertura (home e landings) recebe uma passada
+     depois da chegada — ela está na primeira dobra. */
+  .jb-raiox[data-raiox="abertura"] .jb-raiox-faixa {
+    animation: jb-raiox-faixa 1.8s cubic-bezier(0.6, 0, 0.3, 1) 1.15s both;
+  }
+
+  .jb-raiox[data-raiox="abertura"] .jb-raiox-planta {
+    animation: jb-raiox-planta 1.8s cubic-bezier(0.6, 0, 0.3, 1) 1.15s both;
+  }
+
+  /* Cartão da grade: uma passada a cada vez que o mouse (ou o foco do
+     teclado) chega. Saiu antes do fim, a faixa some com ele. */
+  .jb-cartao-equipamento:is(:hover, :has(.jb-portfolio-alvo:focus-visible)) .jb-raiox[data-raiox="cartao"] .jb-raiox-faixa {
+    animation: jb-raiox-faixa 1.05s cubic-bezier(0.55, 0, 0.3, 1) both;
+  }
+
+  .jb-cartao-equipamento:is(:hover, :has(.jb-portfolio-alvo:focus-visible)) .jb-raiox[data-raiox="cartao"] .jb-raiox-planta {
+    animation: jb-raiox-planta 1.05s cubic-bezier(0.55, 0, 0.3, 1) both;
+  }
+}
+
+/* Celular e tablet: a passada é da rolagem, enquanto a foto cruza o meio da
+   tela. O quadro dá nome à linha do tempo, e não a faixa: a faixa se move, e
+   a linha do tempo tem que ser de algo parado. */
+@supports (animation-timeline: view()) {
+  @media (hover: none) and (prefers-reduced-motion: no-preference) {
+    .jb-raiox:is([data-raiox="abertura"], [data-raiox="cartao"]) {
+      view-timeline: --jb-raiox block;
+    }
+
+    .jb-raiox:is([data-raiox="abertura"], [data-raiox="cartao"]) .jb-raiox-faixa {
+      animation: jb-raiox-faixa linear both;
+      animation-timeline: --jb-raiox;
+      animation-range: cover 30% cover 66%;
+    }
+
+    .jb-raiox:is([data-raiox="abertura"], [data-raiox="cartao"]) .jb-raiox-planta {
+      animation: jb-raiox-planta linear both;
+      animation-timeline: --jb-raiox;
+      animation-range: cover 30% cover 66%;
+    }
+  }
+}
+
+/* ------------------------------------- equipamentos atravessando a tela */
+
+/* Em `em`, e não em `%`: a fileira tem metros de texto, e 30% dela passaria
+   correndo. Doze letras de deslocamento por tela rolada é o passo de quem
+   acompanha com o olho. */
+@keyframes jb-rolagem-ida {
+  from {
+    transform: translate3d(-2em, 0, 0);
+  }
+  to {
+    transform: translate3d(-14em, 0, 0);
+  }
+}
+
+@keyframes jb-rolagem-volta {
+  from {
+    transform: translate3d(-14em, 0, 0);
+  }
+  to {
+    transform: translate3d(-2em, 0, 0);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .jb-rolagem {
+      view-timeline: --jb-rolagem block;
+    }
+
+    .jb-rolagem-fileira[data-sentido="ida"] {
+      animation: jb-rolagem-ida linear both;
+      animation-timeline: --jb-rolagem;
+      animation-range: cover 0% cover 100%;
+    }
+
+    .jb-rolagem-fileira[data-sentido="volta"] {
+      animation: jb-rolagem-volta linear both;
+      animation-timeline: --jb-rolagem;
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+/* --------------------------------------------- o fluxo da infraestrutura */
+
+/* Cada trecho do cano enche depois do anterior (`--n` é a etapa), e o ícone
+   seguinte acende quando o fluxo chega nele. */
+@keyframes jb-fluxo-enche {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes jb-fluxo-acende {
+  from {
+    background-color: #fff;
+    border-color: rgb(17 19 21 / 0.1);
+    color: var(--color-graf-800);
+  }
+  to {
+    background-color: var(--color-jb-500);
+    border-color: var(--color-jb-500);
+    color: #fff;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .jb-infra-etapas {
+      view-timeline: --jb-infra block;
+    }
+
+    .jb-infra-etapa:not([data-ultima])::after {
+      animation: jb-fluxo-enche linear both;
+      animation-timeline: --jb-infra;
+      animation-range: cover calc(22% + var(--n, 0) * 11%) cover calc(33% + var(--n, 0) * 11%);
+    }
+
+    .jb-infra-etapa:not(:first-child, [data-ultima]) .jb-infra-etapa-icone {
+      animation: jb-fluxo-acende linear both;
+      animation-timeline: --jb-infra;
+      animation-range: cover calc(20% + var(--n, 0) * 11%) cover calc(23% + var(--n, 0) * 11%);
+    }
+  }
+}
+
+/* ------------------------------------------------ números do atendimento */
+
+/* O "01…04" enorme no fundo de cada etapa anda mais devagar que o cartão:
+   profundidade sem nada se mexer sozinho. */
+@keyframes jb-fluxo-numero {
+  from {
+    transform: translate3d(0, 28%, 0);
+  }
+  to {
+    transform: translate3d(0, -28%, 0);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .jb-fluxo-numero {
+      animation: jb-fluxo-numero linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+/* ------------------------------------------------- a luz da chamada final */
+
+@keyframes jb-chamada-luz {
+  from {
+    opacity: 0.25;
+    transform: translate3d(-50%, 18%, 0) scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0) scale(1);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .jb-chamada-luz {
+      animation: jb-chamada-luz linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 55%;
+    }
+  }
+}

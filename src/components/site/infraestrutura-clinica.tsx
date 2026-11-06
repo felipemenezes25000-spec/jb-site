@@ -81,6 +81,8 @@ export function InfraestruturaClinica({ contatos }: { contatos: ContatoWhatsapp[
                   key={titulo}
                   className="jb-infra-etapa"
                   data-ultima={indice === ETAPAS_DE_INFRAESTRUTURA.length - 1 || undefined}
+                  /* `--n` escalona o fluxo: cada trecho do cano enche depois do anterior. */
+                  style={{ "--n": indice } as React.CSSProperties}
                 >
                   <span className="jb-infra-etapa-icone" aria-hidden>
                     <Icone className="size-[1.15rem]" />

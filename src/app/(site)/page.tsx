@@ -7,6 +7,7 @@ import { ComoFunciona } from "@/components/site/como-funciona";
 import { DiagnosticoWhatsapp } from "@/components/site/diagnostico-whatsapp";
 import { Duvidas } from "@/components/site/duvidas";
 import { FaixaAutorizada } from "@/components/site/faixa-autorizada";
+import { FaixaDeRolagem } from "@/components/site/faixa-de-rolagem";
 import { FotoAbertura } from "@/components/site/foto-abertura";
 import { GradeEquipamentos } from "@/components/site/grade-equipamentos";
 import { InfraestruturaClinica } from "@/components/site/infraestrutura-clinica";
@@ -14,6 +15,7 @@ import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
 import { SimuladorParada } from "@/components/site/simulador-parada";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
+import { TituloConserto } from "@/components/site/titulo-conserto";
 import { contatosWhatsapp } from "@/lib/contatos-whatsapp";
 import { MENSAGEM_PADRAO } from "@/lib/diagnostico";
 import { PERGUNTA_DE_INFRAESTRUTURA } from "@/lib/infraestrutura";
@@ -54,9 +56,12 @@ export default async function HomePage() {
       {/* ------------------------------------------------------- abertura */}
       <section
         aria-labelledby="abertura-titulo"
+        data-luz
         className="jb-hero-premium relative isolate overflow-clip border-b border-graf-200 bg-white"
       >
         <span aria-hidden className="jb-hero-malha pointer-events-none absolute inset-0" />
+        {/* A mesma malha em vermelho, acesa só em volta do mouse (computador). */}
+        <span aria-hidden className="jb-hero-malha-luz pointer-events-none absolute left-0 top-0" />
 
         <div className="container-jb relative grid gap-8 pb-12 pt-7 lg:min-h-[calc(100svh-7rem)] lg:grid-cols-[minmax(0,1.03fr)_minmax(0,34rem)] lg:grid-rows-[auto_auto] lg:items-start lg:gap-x-14 lg:gap-y-8 lg:pb-16 lg:pt-12">
           <div className="flex min-w-0 flex-col lg:pt-6">
@@ -68,15 +73,16 @@ export default async function HomePage() {
 
             <div className="jb-hero-copy">
               {/* Título fixo, sem palavra girando: quem chega do anúncio lê a
-                  promessa inteira de primeira, e nada se mexe em loop acima da
-                  dobra. Os equipamentos aparecem logo abaixo, na triagem. */}
-              <h1
+                  promessa inteira de primeira. A pergunta chega torta e
+                  encaixa uma vez (`TituloConserto`), e nada se mexe em laço
+                  acima da dobra. Os equipamentos aparecem logo abaixo, na
+                  triagem. */}
+              <TituloConserto
                 id="abertura-titulo"
+                pergunta="Equipamento parou?"
+                resposta="A JB assume daqui."
                 className="jb-hero-title texto-forte entrada mt-5 [animation-delay:70ms]"
-              >
-                <span className="block">Equipamento parou?</span>{" "}
-                <span className="block text-jb-600">A JB assume daqui.</span>
-              </h1>
+              />
 
               <p className="jb-hero-subtexto texto-guia entrada mt-5 max-w-xl text-graf-600 [animation-delay:140ms]">
                 Diga o equipamento e o problema em 3 toques. A mensagem fica pronta para a equipe
@@ -136,6 +142,7 @@ export default async function HomePage() {
 
       <FaixaAutorizada desde={s.empresa_desde} cidade={s.endereco_cidade} />
 
+      <FaixaDeRolagem />
       <GradeEquipamentos contatos={contatos} />
       <InfraestruturaClinica contatos={contatos} />
 

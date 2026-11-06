@@ -32,9 +32,11 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
           </p>
         </div>
 
-        <ul className="jb-autoridade-grid mt-10 grid gap-3 sm:gap-4 lg:grid-cols-3">
+        <ul className="jb-autoridade-grid mt-10 grid gap-3 sm:gap-4 lg:grid-cols-3" data-luz-grupo>
           {anos ? (
-            <li className="jb-autoridade-destaque jb-revela relative overflow-hidden rounded-[1.6rem] border border-jb-200 p-6 sm:p-8 lg:col-span-2">
+            <li
+              data-luz-item
+              className="jb-autoridade-destaque jb-luz-borda jb-revela relative overflow-hidden rounded-[1.6rem] border border-jb-200 p-6 sm:p-8 lg:col-span-2">
               <div className="relative flex flex-wrap items-start justify-between gap-5">
                 <div>
                   <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.16em] text-jb-700">
@@ -63,7 +65,8 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
           ) : null}
 
           <li
-            className="jb-autoridade-card jb-revela rounded-[1.45rem] border p-6 sm:p-7"
+            data-luz-item
+            className="jb-autoridade-card jb-luz-borda jb-revela rounded-[1.45rem] border p-6 sm:p-7"
             style={{ "--i": 1 } as React.CSSProperties}
           >
             <span className="flex size-12 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100">
@@ -76,7 +79,8 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
           </li>
 
           <li
-            className="jb-autoridade-card jb-revela rounded-[1.45rem] border p-6 sm:p-7"
+            data-luz-item
+            className="jb-autoridade-card jb-luz-borda jb-revela rounded-[1.45rem] border p-6 sm:p-7"
             style={{ "--i": 2 } as React.CSSProperties}
           >
             <span className="flex size-12 items-center justify-center rounded-xl bg-jb-50 text-jb-600 ring-1 ring-jb-100">
@@ -89,7 +93,8 @@ export function PorQueJb({ anos, desde, cidade }: { anos: number | null; desde: 
           </li>
 
           <li
-            className="jb-autoridade-card jb-revela flex flex-col justify-between gap-6 rounded-[1.45rem] border p-6 sm:flex-row sm:items-center sm:p-7 lg:col-span-2"
+            data-luz-item
+            className="jb-autoridade-card jb-luz-borda jb-revela flex flex-col justify-between gap-6 rounded-[1.45rem] border p-6 sm:flex-row sm:items-center sm:p-7 lg:col-span-2"
             style={{ "--i": 3 } as React.CSSProperties}
           >
             <div>

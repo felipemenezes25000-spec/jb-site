@@ -13,7 +13,9 @@ import { ICONE_DO_EQUIPAMENTO, IMAGEM_DO_EQUIPAMENTO } from "@/components/site/i
 import { EscolhaDoDefeito } from "@/components/site/escolha-do-defeito";
 import { OpcoesWhatsapp } from "@/components/site/opcoes-whatsapp";
 import { PorQueJb } from "@/components/site/por-que-jb";
+import { CamadasRaioX } from "@/components/site/raio-x";
 import { StatusAtendimento } from "@/components/site/status-atendimento";
+import { TituloConserto } from "@/components/site/titulo-conserto";
 import { contatosWhatsapp, type ContatoWhatsapp } from "@/lib/contatos-whatsapp";
 import { montarMensagem } from "@/lib/diagnostico";
 import {
@@ -24,6 +26,7 @@ import {
   tituloDaPagina,
   type PaginaDeEquipamento,
 } from "@/lib/paginas-equipamento";
+import { plantaDaFoto } from "@/lib/raio-x";
 import { JsonLd, metadataDePagina, servicoJsonLd, trilhaJsonLd } from "@/lib/seo";
 import { anosDesde, configuracoesPublicas } from "@/lib/site-publico";
 import { cn } from "@/lib/utils";
@@ -105,10 +108,12 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
               Conserto de {pagina.palavraChave} · {s.endereco_cidade}
             </p>
 
-            <h1 id="abertura-titulo" className="text-hero texto-forte entrada mt-3 [animation-delay:70ms]">
-              <span className="block">{pagina.nomeCurto} parou?</span>{" "}
-              <span className="block text-jb-600">A JB assume daqui.</span>
-            </h1>
+            <TituloConserto
+              id="abertura-titulo"
+              pergunta={`${pagina.nomeCurto} parou?`}
+              resposta="A JB assume daqui."
+              className="text-hero texto-forte entrada mt-3 [animation-delay:70ms]"
+            />
 
             {/* No celular, o título e a escolha do defeito já confirmam o anúncio;
                 o parágrafo de impacto entra a partir do tablet, para os dois
@@ -174,11 +179,17 @@ export async function PaginaEquipamento({ slug }: { slug: string }) {
 function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
   const { visual } = pagina;
   const recorte = visual.tipo === "recorte";
+  /* No computador o scanner passa uma vez na chegada e a lente segue o mouse;
+     no celular, onde a foto vem depois dos botões, ele passa com a rolagem. */
+  const planta = plantaDaFoto(visual.src);
 
   return (
     <div className="relative">
       <div
+        data-raiox={planta ? "abertura" : undefined}
+        data-luz={planta ? "" : undefined}
         className={cn(
+          "jb-raiox",
           "relative h-56 overflow-hidden rounded-3xl ring-1 ring-graf-950/5 sm:h-72 lg:h-[30rem]",
           recorte ? "jb-landing-estudio shadow-card" : "bg-graf-100 shadow-raised",
         )}
@@ -198,6 +209,14 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
                 className="object-contain mix-blend-multiply"
               />
             </div>
+            {planta ? (
+              <CamadasRaioX
+                planta={planta}
+                encaixe="absolute inset-[5%]"
+                lente
+                rotulo={`Raio-X · ${pagina.nomeCurto}`}
+              />
+            ) : null}
             {/* Sem sombra desenhada aqui: a foto do portfólio já traz a
                 própria, colada no pé do equipamento. */}
           </>
@@ -211,6 +230,9 @@ function Visual({ pagina }: { pagina: PaginaDeEquipamento }) {
             style={{ objectPosition: visual.posicao }}
           />
         )}
+        {!recorte && planta ? (
+          <CamadasRaioX planta={planta} ajuste="object-cover" posicao={visual.posicao} lente />
+        ) : null}
       </div>
 
     </div>

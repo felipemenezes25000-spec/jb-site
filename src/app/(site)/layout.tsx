@@ -1,5 +1,6 @@
 import { Medicao } from "@/components/analytics/medicao";
 import { CabecalhoSite, type AtalhoDoCabecalho } from "@/components/site/cabecalho-site";
+import { EfeitosDoPonteiro } from "@/components/site/efeitos-do-ponteiro";
 import { FaixaTopo } from "@/components/site/faixa-topo";
 import { RodapeSite } from "@/components/site/rodape-site";
 import { destinosDeMedicao } from "@/lib/analytics/destinos";
@@ -51,6 +52,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       </main>
       <RodapeSite s={s} />
       <Medicao destinos={destinos} />
+      {/* Um ouvinte de mouse para a página toda (só computador). Mora no
+          layout, e não no template, porque escuta o documento: não precisa
+          remontar a cada navegação. */}
+      <EfeitosDoPonteiro />
     </div>
   );
 }
